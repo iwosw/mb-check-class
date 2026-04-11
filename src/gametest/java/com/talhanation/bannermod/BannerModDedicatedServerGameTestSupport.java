@@ -11,7 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.common.util.FakePlayer;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,7 +22,11 @@ public final class BannerModDedicatedServerGameTestSupport {
     }
 
     public static Player createFakeServerPlayer(ServerLevel level, UUID playerId, String name) {
-        return FakePlayerFactory.get(level, new GameProfile(playerId, name));
+        FakePlayer player = new FakePlayer(level, new GameProfile(playerId, name));
+        if (level.getPlayerByUUID(playerId) == null) {
+            level.addFreshEntity(player);
+        }
+        return player;
     }
 
     public static void assignDetachedOwnership(AbstractRecruitEntity recruit, UUID ownerId) {
