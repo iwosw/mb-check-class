@@ -24,7 +24,19 @@ Status: Complete (2/2 plans complete as of 2026-04-11)
 - Define namespace migration rules for `workers` assets, lang keys, and registry ids.
 - Define packet, config, and save-data compatibility strategy.
 
-Status: complete for mod id, root runtime entrypoint, and active workers registry namespace; broader compatibility cleanup still open.
+**Goal:** BannerMod runtime-unification target is explicit and actionable: release identity, asset/lang namespace end-state, merged-runtime legacy-state boundary, and BannerMod-owned config direction are documented against current code seams.
+
+**Requirements:** [BOOT-05]
+
+**Plans:** 2 plans
+
+Plans:
+- [x] 02-01-PLAN.md — Publish the BannerMod-first release identity and `bannermod` namespace end-state.
+- [ ] 02-02-PLAN.md — Define the merged-runtime compatibility boundary and BannerMod-owned config direction.
+
+Planning artifacts live under `.planning/phases/02-runtime-unification-design/` so the design contracts remain explicit before implementation phases consume them.
+
+Status: In progress (1/2 plans complete as of 2026-04-11); BannerMod-first identity and bannermod namespace end-state are now explicit, with compatibility/config direction still open.
 
 ## Phase 3: Workers Subsystem Absorption
 
