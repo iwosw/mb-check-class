@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Active
-last_updated: "2026-04-11T11:01:07.000Z"
+last_updated: "2026-04-11T19:09:00.000Z"
 progress:
   total_phases: 19
   completed_phases: 6
   total_plans: 38
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
 
-- Current focus: Phase 07 Plan 01 is complete with dedicated-server offline-owner authority coverage; the next queued work is Phase 07 Plan 02 reconnect and persistence-safe ownership recovery validation, followed by the remaining Phase 08 through Phase 10 authority-and-contract backlog and the Phase 11 through Phase 19 large-battle AI/performance roadmap.
+- Current focus: Phase 07 Plan 02 is complete with dedicated-server reconnect and persistence-safe ownership recovery coverage; the remaining blocker before phase completion is unrelated existing GameTest failures outside Phase 07 scope, after which the next queued work is the Phase 08 through Phase 10 authority-and-contract backlog and the Phase 11 through Phase 19 large-battle AI/performance roadmap.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
@@ -34,7 +34,7 @@ progress:
 - Phase 18 planning artifacts: `.planning/phases/18-optional-flow-field-navigation-evaluation/`
 - Phase 19 planning artifacts: `.planning/phases/19-large-battle-performance-validation/`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/07-dedicated-server-authority-edge-validation/07-dedicated-server-authority-edge-validation-01-SUMMARY.md`
+- Latest execution summary: `.planning/phases/07-dedicated-server-authority-edge-validation/07-dedicated-server-authority-edge-validation-02-SUMMARY.md`
 
 ## Decisions
 
@@ -75,6 +75,8 @@ progress:
 - [Performance roadmap]: Treat flow-field navigation as optional and benchmark-gated rather than a mandatory rewrite of the current navigation stack.
 - [Phase 07-dedicated-server-authority-edge-validation]: Create a dedicated-server helper seam now so later reconnect and persistence tests can reuse deterministic fake-player and detached-ownership setup.
 - [Phase 07-dedicated-server-authority-edge-validation]: Model admin recovery with an explicit permission-granting fake player so offline-owner authority remains server-driven without requiring a live owner entity.
+- [Phase 07-dedicated-server-authority-edge-validation]: Dedicated-server reconnect tests should use a live per-call fake player entity, not the cached fake-player factory path, so same-UUID command recovery exercises the real nearby-selection code path.
+- [Phase 07-dedicated-server-authority-edge-validation]: Reconnect persistence tests may reseed the transient recruit command-group state immediately before serialization when the plan is validating ownership round-trips rather than group-manager persistence.
 
 ## Performance Metrics
 
@@ -93,9 +95,10 @@ progress:
 | Phase 06-player-cycle-gametest-validation P03 | 2 min | 1 tasks | 1 files |
 | Phase 06-player-cycle-gametest-validation P04 | 2 min | 1 tasks | 1 files |
 | Phase 07-dedicated-server-authority-edge-validation P01 | 4 min | 2 tasks | 2 files |
+| Phase 07-dedicated-server-authority-edge-validation P02 | 56 min | 1 tasks | 2 files |
 
 ## Session
 
-- Last updated: 2026-04-11T11:00:05Z
-- Stopped at: Completed 07-01-PLAN.md
+- Last updated: 2026-04-11T19:09:00Z
+- Stopped at: Completed 07-02-PLAN.md; phase verification blocked by unrelated existing GameTest failures (`invalidleaderandscoutpacketsfailsafely`, `packetdrivenrecoveryrestoresholdintentaftercombat`)
 - Resume file: .planning/phases/07-dedicated-server-authority-edge-validation/07-CONTEXT.md

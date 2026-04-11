@@ -121,11 +121,11 @@ Status: Complete (4/4 plans complete as of 2026-04-11).
 
 Plans:
 - [x] 07-01-PLAN.md — Validate dedicated-server owner-offline and unresolved-owner authority denial for recruit and worker recovery flows.
-- [ ] 07-02-PLAN.md — Validate dedicated-server reconnect and persistence-safe ownership recovery across recruit, worker, and work-area state.
+- [x] 07-02-PLAN.md — Validate dedicated-server reconnect and persistence-safe ownership recovery across recruit, worker, and work-area state.
 
 Planning artifacts live under `.planning/phases/07-dedicated-server-authority-edge-validation/` so dedicated-server follow-up stays explicit before implementation.
 
-Status: In Progress (1/2 plans complete as of 2026-04-11).
+Status: In Progress (2/2 plans complete as of 2026-04-11); phase verification is still blocked by unrelated existing GameTest failures outside Phase 07 scope.
 
 ## Phase 8: Multiplayer Authority Conflict Validation
 
