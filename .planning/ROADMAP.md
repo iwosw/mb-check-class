@@ -32,11 +32,11 @@ Status: Complete (2/2 plans complete as of 2026-04-11)
 
 Plans:
 - [x] 02-01-PLAN.md — Publish the BannerMod-first release identity and `bannermod` namespace end-state.
-- [ ] 02-02-PLAN.md — Define the merged-runtime compatibility boundary and BannerMod-owned config direction.
+- [x] 02-02-PLAN.md — Define the merged-runtime compatibility boundary and BannerMod-owned config direction.
 
 Planning artifacts live under `.planning/phases/02-runtime-unification-design/` so the design contracts remain explicit before implementation phases consume them.
 
-Status: In progress (1/2 plans complete as of 2026-04-11); BannerMod-first identity and bannermod namespace end-state are now explicit, with compatibility/config direction still open.
+Status: Complete (2/2 plans complete as of 2026-04-11); runtime identity, bannermod namespace destination, compatibility boundary, and BannerMod-owned config direction are all explicit.
 
 ## Phase 3: Workers Subsystem Absorption
 

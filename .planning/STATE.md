@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: In progress
-last_updated: "2026-04-11T05:01:34.984Z"
+status: Ready to plan
+last_updated: "2026-04-11T05:05:19.247Z"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
 
-- Current focus: Phase 02 plan 02 should define the merged-runtime compatibility boundary and BannerMod-owned config direction on top of the new runtime identity contract.
+- Current focus: Phase 03 should consume the explicit BannerMod runtime identity, compatibility boundary, and config ownership contracts during implementation planning.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
 - Pending major work: gameplay smoke validation, any remaining non-critical/custom payload compatibility follow-up, and optional deeper source-tree cleanup
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/02-runtime-unification-design/02-runtime-unification-design-01-SUMMARY.md`
+- Latest execution summary: `.planning/phases/02-runtime-unification-design/02-runtime-unification-design-02-SUMMARY.md`
 
 ## Decisions
 
@@ -30,6 +30,8 @@ progress:
 - [Phase 01-workspace-bootstrap]: Use MERGE_NOTES.md as the active log whenever legacy wording or archived plans disagree with root code and docs.
 - [Phase 02-runtime-unification-design]: BannerMod remains the only active public runtime identity for the merged mod.
 - [Phase 02-runtime-unification-design]: Workers-owned GUI, structure, and language assets now have an explicit bannermod namespace end-state.
+- [Phase 02-runtime-unification-design]: The merged runtime only guarantees known Workers-era migration seams, not standalone workers mod compatibility.
+- [Phase 02-runtime-unification-design]: BannerMod-owned config is the target end-state, while Workers config registration remains transitional only.
 
 ## Performance Metrics
 
@@ -38,9 +40,10 @@ progress:
 | 01-workspace-bootstrap | 01 | 1 min | 2 | 4 |
 | Phase 01-workspace-bootstrap P02 | 11 min | 2 tasks | 4 files |
 | Phase 02-runtime-unification-design P01 | 12 min | 2 tasks | 4 files |
+| Phase 02-runtime-unification-design P02 | 9 min | 2 tasks | 4 files |
 
 ## Session
 
-- Last updated: 2026-04-11T05:01:34.984Z
-- Stopped at: Completed 02-runtime-unification-design-01-PLAN.md
-- Resume file: .planning/phases/02-runtime-unification-design/02-02-PLAN.md
+- Last updated: 2026-04-11T05:05:19.247Z
+- Stopped at: Phase 02 complete; Phase 03 planning not started
+- Resume file: .planning/ROADMAP.md
