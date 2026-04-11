@@ -1,7 +1,7 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
+milestone: merged-runtime-baseline
+milestone_name: merged runtime baseline
 status: Executing Phase 01
 last_updated: "2026-04-11T04:22:06Z"
 progress:
@@ -13,12 +13,13 @@ progress:
 
 # Project State
 
-- Current focus: Phase 01 plan 02 verification and merge-truth follow-up after locking the root workspace contract
+- Current focus: Phase 01 plan 02 verification and merge-truth follow-up after locking the root workspace contract, with explicit bootstrap planning artifacts now tracked under `.planning/phases/01-workspace-bootstrap/`
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
 - Pending major work: gameplay smoke validation, any remaining non-critical/custom payload compatibility follow-up, and optional deeper source-tree cleanup
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
+- Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
 - Latest execution summary: `.planning/phases/01-workspace-bootstrap/01-workspace-bootstrap-01-SUMMARY.md`
 
 ## Decisions
