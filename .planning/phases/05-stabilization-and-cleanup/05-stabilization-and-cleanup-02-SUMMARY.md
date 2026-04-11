@@ -53,7 +53,7 @@ Each task was committed atomically:
 1. **Task 1: Create a pure build-area authoring decision seam with root regression coverage** - `00ba84c` (root test), `workers@edaea8f` (feat)
 2. **Task 2: Gate build-area packet mutation behind the shared authoring decision** - `workers@4e22313` (fix)
 
-**Plan metadata:** pending final docs commit
+**Plan metadata:** `792ef4a` (docs)
 
 ## Files Created/Modified
 - `src/test/java/com/talhanation/workers/BuildAreaUpdateAuthoringTest.java` - Root regression coverage for build-area authorization outcomes.

@@ -56,7 +56,7 @@ Each task was committed atomically:
 1. **Task 1: Publish the stabilized verification and cleanup boundary in active readiness docs** - `a2c040c` (chore)
 2. **Task 2: Align the phase roadmap and current project state to the executed stabilization slices** - `ae4e4ef` (docs)
 
-**Plan metadata:** pending final docs commit
+**Plan metadata:** `792ef4a` (docs)
 
 ## Files Created/Modified
 - `.planning/VERIFICATION.md` - Documents retained Workers root tests, build-area guard coverage, and the still-optional GameTest hook.

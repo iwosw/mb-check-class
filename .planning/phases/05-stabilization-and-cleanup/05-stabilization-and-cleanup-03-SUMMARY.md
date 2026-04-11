@@ -54,7 +54,7 @@ Each task was committed atomically:
 1. **Task 1: Create an explicit merged-runtime cleanup policy for legacy update checkers** - `4717c98` (root test), `workers@6fee2e8` (feat)
 2. **Task 2: Guard both lifecycle registrars so the legacy update checkers stop live-registering** - `recruits@25a90bd0` (fix), `workers@d5a9a94` (fix)
 
-**Plan metadata:** pending final docs commit
+**Plan metadata:** `792ef4a` (docs)
 
 ## Files Created/Modified
 - `src/test/java/com/talhanation/workers/MergedRuntimeCleanupPolicyTest.java` - Root regression coverage for the merged update-check cleanup policy.
