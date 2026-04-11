@@ -56,7 +56,7 @@ sourceSets {
         ]
     }
     test {
-        java.srcDirs = ['src/test/java', 'recruits/src/test/java']
+        java.srcDirs = ['src/test/java', 'recruits/src/test/java', 'workers/src/test/java']
         resources.srcDirs = ['src/test/resources', 'recruits/src/test/resources']
     }
     gametest {
