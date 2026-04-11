@@ -8,7 +8,7 @@
 
 **Goal:** Root workspace bootstrap is explicit and executable: one root Gradle entrypoint, one active root planning context, preserved legacy archives, and documented merge truth/verification rules.
 
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 Plans:
 - [x] 01-01-PLAN.md — Harden the single root build/workspace entrypoint and root source-of-truth docs.
@@ -28,7 +28,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11)
 
 **Requirements:** [BOOT-05]
 
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 Plans:
 - [x] 02-01-PLAN.md — Publish the BannerMod-first release identity and `bannermod` namespace end-state.
@@ -85,7 +85,7 @@ Status: Complete (4/4 plans complete as of 2026-04-11).
 - Latest slice: introduced a shared BannerMod authority contract so worker authoring and worker-control recovery now use the same owner, same-team, admin, and forbidden relationship vocabulary without widening permissions.
 - Latest slice: extended the shared BannerMod supply-status seam so recruit upkeep now joins build-area and worker-storage pressure in one passive logistics vocabulary for low-risk settlement-to-military coupling.
 - Latest slice: unified the bootstrap onto BannerMod-owned `military`, `settlement`, and `client` config file surfaces, with explicit one-way migration from `bannermod-server.toml` and `workers-server.toml` only when the new target files do not yet exist.
-- Latest slice: deepened root GameTest coverage from runtime coexistence to one live recruit-worker-crop-area shared-ownership interaction plus one live build-area-to-recruit-upkeep resupply transition, and `verifyGameTestStage` is currently green with 26 required tests.
+- Latest slice: dedicated-server authority and reconnect validation now extend the root GameTest suite, and `verifyGameTestStage` is currently green with 32 required tests.
 
 ## Phase 6: Player-Cycle GameTest Validation
 
@@ -125,7 +125,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/07-dedicated-server-authority-edge-validation/` so dedicated-server follow-up stays explicit before implementation.
 
-Status: In Progress (2/2 plans complete as of 2026-04-11); phase verification is still blocked by unrelated existing GameTest failures outside Phase 07 scope.
+Status: Complete (2/2 plans complete as of 2026-04-11); `compileGameTestJava` and `verifyGameTestStage` now both pass, with all 32 required GameTests green.
 
 ## Phase 8: Multiplayer Authority Conflict Validation
 
@@ -138,12 +138,12 @@ Status: In Progress (2/2 plans complete as of 2026-04-11); phase verification is
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Validate contested multiplayer authority on shared recruit, worker, and work-area interactions with distinct owner and outsider players.
-- [ ] 08-02-PLAN.md — Validate same-team multiplayer cooperation paths without reopening outsider settlement or control access.
+- [x] 08-01-PLAN.md — Validate contested multiplayer authority on shared recruit, worker, and work-area interactions with distinct owner and outsider players.
+- [x] 08-02-PLAN.md — Validate same-team multiplayer cooperation paths without reopening outsider settlement or control access.
 
 Planning artifacts live under `.planning/phases/08-multiplayer-authority-conflict-validation/` so multiplayer-specific validation remains reviewable and separate from dedicated-server edge coverage.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-11); `verifyGameTestStage` now passes with all 36 required GameTests green, including live multiplayer outsider-denial and same-team cooperation coverage.
 
 ## Phase 9: Settlement-Faction Binding Contract
 
@@ -156,12 +156,12 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 **Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Publish the explicit settlement-faction binding rules and lifecycle vocabulary for the merged runtime.
-- [ ] 09-02-PLAN.md — Add the smallest runtime seam needed so faction-aware settlement legality and status can be queried consistently.
+- [x] 09-01-PLAN.md — Publish the explicit settlement-faction binding rules and lifecycle vocabulary for the merged runtime.
+- [x] 09-02-PLAN.md — Add the smallest runtime seam needed so faction-aware settlement legality and status can be queried consistently.
 
 Planning artifacts live under `.planning/phases/09-settlement-faction-binding-contract/` so the new gameplay contract is explicit before validation and downstream implementation slices consume it.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-11); settlement-faction lifecycle vocabulary is now explicit in active planning docs, and the merged runtime exposes one shared settlement-binding status seam for placement, client legality hints, and work-area participation.
 
 ## Phase 10: Settlement-Faction Enforcement Validation
 
@@ -210,12 +210,12 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 **Plans:** 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Add the shared global pathfinding control seam and route the current high-volume callers through it.
-- [ ] 12-02-PLAN.md — Validate correctness and capture before/after profiling for the new global control boundary.
+- [x] 12-01-PLAN.md — Add the shared global pathfinding control seam and route the current high-volume callers through it.
+- [x] 12-02-PLAN.md — Validate correctness and capture before/after profiling for the new global control boundary.
 
 Planning artifacts live under `.planning/phases/12-global-pathfinding-control/` so the first optimization seam is explicit before more invasive AI changes land.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-11); recruit path issuance now routes through `GlobalPathfindingController`, `GlobalPathfindingControllerTest` passes, and `verifyGameTestStage` is green with controller-aware mixed-squad and dense-battle profiling snapshots.
 
 ## Phase 13: Path Reuse For Cohesion Movement
 
@@ -225,15 +225,17 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 
 **Goal:** BannerMod reduces duplicate path computation in group movement by reusing valid navigation work where actors share compatible movement intent, with explicit profiling to prove the reuse is helping.
 
+**Requirements:** [PATHREUSE-01, PATHREUSE-02]
+
 **Plans:** 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Implement the smallest safe path-reuse seam for nearby or formation-cohesive movement.
-- [ ] 13-02-PLAN.md — Validate path correctness and profile reuse hit rate, invalidation churn, and large-battle impact.
+- [x] 13-01-PLAN.md — Implement the smallest safe path-reuse seam for nearby or formation-cohesive movement.
+- [x] 13-02-PLAN.md — Validate path correctness and profile reuse hit rate, invalidation churn, and large-battle impact.
 
 Planning artifacts live under `.planning/phases/13-path-reuse-for-cohesion-movement/` so path reuse remains a distinct, measurable slice.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-11); recruit path requests now attempt controller-owned reuse with explicit hit/miss/drop counters, and `verifyGameTestStage` remains green with reuse-aware dense-battle and mixed-squad profiling snapshots.
 
 ## Phase 14: Formation-Level Target Selection Rewrite
 
@@ -243,15 +245,18 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 
 **Goal:** Large-group combat target acquisition becomes formation-aware instead of purely per-entity, reducing repeated target-search work while keeping combat intent understandable and testable.
 
+**Requirements:** [TARGETSEL-01, TARGETSEL-02]
+
 **Plans:** 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Replace the highest-cost per-entity target acquisition path with a formation-level selection and assignment seam.
-- [ ] 14-02-PLAN.md — Validate combat behavior and profile target-selection cost after the formation rewrite.
+- [x] 14-01-PLAN.md — Replace the highest-cost per-entity target acquisition path with a formation-level selection and assignment seam.
+- [x] 14-02-PLAN.md — Validate combat behavior and profile target-selection cost after the formation rewrite.
+- [ ] 14-03-PLAN.md — Close the remaining retarget and loss-of-target GameTest gaps without widening the rewrite or reopening unrelated reconnect work.
 
 Planning artifacts live under `.planning/phases/14-formation-level-target-selection-rewrite/` so targeting work stays isolated from later movement-budget changes.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Gap closure attempted (2/3 plans complete plus one deferred follow-up as of 2026-04-11); formation-aware target selection now reports dense-battle profiling counters, `FormationTargetSelectionControllerTest` passes, and Plan 14-03 reduced the runtime stale-target seam but still needs one more brownfield GameTest hardening pass for the optional retarget/loss-of-target checks.
 
 ## Phase 15: Pathfinding Throttling And Budgeting
 

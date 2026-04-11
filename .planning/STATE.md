@@ -3,21 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Active
-last_updated: "2026-04-11T19:09:00.000Z"
+last_updated: "2026-04-11T15:36:00.000Z"
 progress:
   total_phases: 19
-  completed_phases: 6
+  completed_phases: 12
   total_plans: 38
-  completed_plans: 14
+  completed_plans: 26
 ---
 
 # Project State
 
-- Current focus: Phase 07 Plan 02 is complete with dedicated-server reconnect and persistence-safe ownership recovery coverage; the remaining blocker before phase completion is unrelated existing GameTest failures outside Phase 07 scope, after which the next queued work is the Phase 08 through Phase 10 authority-and-contract backlog and the Phase 11 through Phase 19 large-battle AI/performance roadmap.
+- Current focus: Phase 14 gap closure was attempted for the remaining retarget/loss-of-target checks; the controller seam now publishes same-tick null shared-target clears, but the two optional Phase 14 GameTests still need one more brownfield harness follow-up.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: dedicated-server and multiplayer-specific authority validation, explicit settlement-faction gameplay contract definition, focused settlement-faction enforcement coverage, large-battle AI/pathfinding optimization with explicit profiling, and any remaining optional non-critical/custom payload compatibility follow-up
+- Pending major work: focused settlement-faction enforcement coverage, large-battle AI/pathfinding optimization with explicit profiling, and any remaining optional non-critical/custom payload compatibility follow-up
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -34,7 +34,7 @@ progress:
 - Phase 18 planning artifacts: `.planning/phases/18-optional-flow-field-navigation-evaluation/`
 - Phase 19 planning artifacts: `.planning/phases/19-large-battle-performance-validation/`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/07-dedicated-server-authority-edge-validation/07-dedicated-server-authority-edge-validation-02-SUMMARY.md`
+- Latest execution summary: `.planning/phases/14-formation-level-target-selection-rewrite/14-formation-level-target-selection-rewrite-03-SUMMARY.md`
 
 ## Decisions
 
@@ -59,7 +59,7 @@ progress:
 - [Slice follow-up]: Root `gametest` is no longer empty; `src/gametest/java/com/talhanation/bannermod/IntegratedRuntimeGameTests.java` now proves merged runtime coexistence and one live recruit-worker-crop-area interaction inside one BannerMod GameTest runtime.
 - [Slice follow-up]: Root integrated gameplay validation now spawns a recruit, a farmer worker, and a crop area in one live BannerMod GameTest to prove shared-owner recruit friendly-fire protection, worker work-area authorization, and worker control recovery across the merged runtime seam.
 - [Slice follow-up]: Root integrated supply validation now also spawns a recruit and an owned build area in one live BannerMod GameTest to prove settlement build-material pressure and a recruit upkeep transition from blocked to ready project through the same shared `BannerModSupplyStatus` seam.
-- [Slice follow-up]: `./gradlew verifyGameTestStage` is currently green with 26 required tests after adding the live settlement-to-military supply GameTest.
+- [Slice follow-up]: `./gradlew verifyGameTestStage` is currently green with 32 required tests after adding the dedicated-server authority and reconnect GameTests.
 - [Phase 06-player-cycle-gametest-validation]: The next roadmap phase extends root GameTests from isolated merged-runtime seams into player-facing cycle validation for shared ownership, settlement labor, upkeep supply, and one stitched authority-safe gameplay loop.
 - [Phase 06-player-cycle-gametest-validation]: Keep IntegratedRuntimeGameTests limited to merged runtime seam smoke coverage.
 - [Phase 06-player-cycle-gametest-validation]: Move ownership assertions into a dedicated BannerModOwnershipCycleGameTests artifact so later Phase 06 slices can grow independently.
@@ -70,13 +70,25 @@ progress:
 - [Post-Phase-06 roadmap]: Treat settlement-to-faction binding as a first-class gameplay contract that is explicit before later implementation slices expand settlement mechanics.
 - [Post-Phase-06 roadmap]: Prefer derived settlement-plus-claim binding rules over a new deep persistence manager unless a later execution slice proves a dedicated manager is necessary.
 - [Post-Phase-06 roadmap]: Validate faction-binding enforcement separately from contract-definition so each later `/gsd-plan-phase` slice stays small and reviewable.
+- [Phase 09-settlement-faction-binding-contract]: Settlement-faction status now lives in one shared BannerMod seam with explicit `FRIENDLY_CLAIM`, `HOSTILE_CLAIM`, `UNCLAIMED`, and `DEGRADED_MISMATCH` vocabulary.
+- [Phase 09-settlement-faction-binding-contract]: Keep settlement binding utility-shaped and claim-derived until later code proves a dedicated settlement manager is necessary.
 - [Performance roadmap]: Keep large-battle AI/performance work ordered as profiling baseline, global pathfinding control, path reuse, formation-level target selection, pathfinding throttling, async reliability fixes, AI LOD, optional flow-field evaluation, and closing performance validation.
 - [Performance roadmap]: Require explicit profiling evidence before optimization, during each optimization slice, and after the full sequence so future tuning work can compare against one stable baseline.
+- [Phase 11-large-battle-ai-profiling-baseline]: Derive the baseline scenario matrix from existing recruit battle stress fixtures and current target/pathfinding seams before adding any new instrumentation.
+- [Phase 11-large-battle-ai-profiling-baseline]: Every baseline evidence bundle must record async pathfinding, async target-finding, and worker-thread config so later optimization results stay comparable.
 - [Performance roadmap]: Treat flow-field navigation as optional and benchmark-gated rather than a mandatory rewrite of the current navigation stack.
+- [Phase 12-global-pathfinding-control]: Route recruit path issuance through one pass-through `GlobalPathfindingController` seam before adding path reuse, throttling, or async safety changes.
+- [Phase 12-global-pathfinding-control]: Keep controller-aware profiling additive inside the existing mixed-squad and dense-battle GameTests so Phase 11 before/after comparisons stay aligned.
+- [Phase 13-path-reuse-for-cohesion-movement]: Keep path reuse controller-owned and copy reused paths before application so nearby recruits do not share one mutable live `Path` instance.
+- [Phase 13-path-reuse-for-cohesion-movement]: Treat reuse attempts as mandatory observability in dense scenarios, but judge hit rate only in the context of actual compatible movement opportunities.
+- [Phase 14-formation-level-target-selection-rewrite]: Keep formation target selection utility-shaped and cohort-bounded so the rewrite stays on shared combat intent instead of introducing a persistent manager.
+- [Phase 14-formation-level-target-selection-rewrite]: Preserve the retained dense-battle scenario contract by registering formation cohorts only where the original winner expectations stay stable, and keep harder retarget/loss-of-target checks optional until the brownfield arena setup is hardened.
 - [Phase 07-dedicated-server-authority-edge-validation]: Create a dedicated-server helper seam now so later reconnect and persistence tests can reuse deterministic fake-player and detached-ownership setup.
 - [Phase 07-dedicated-server-authority-edge-validation]: Model admin recovery with an explicit permission-granting fake player so offline-owner authority remains server-driven without requiring a live owner entity.
 - [Phase 07-dedicated-server-authority-edge-validation]: Dedicated-server reconnect tests should use a live per-call fake player entity, not the cached fake-player factory path, so same-UUID command recovery exercises the real nearby-selection code path.
 - [Phase 07-dedicated-server-authority-edge-validation]: Reconnect persistence tests may reseed the transient recruit command-group state immediately before serialization when the plan is validating ownership round-trips rather than group-manager persistence.
+- [Phase 08-multiplayer-authority-conflict-validation]: Live multiplayer outsider denial should be validated against a present in-level owner rather than inferred from offline-owner or detached-owner paths.
+- [Phase 08-multiplayer-authority-conflict-validation]: Same-team recruit command cooperation is intentionally limited to the group-command targeting seam, while worker recovery remains owner-or-admin only even for allied players.
 
 ## Performance Metrics
 
@@ -96,9 +108,16 @@ progress:
 | Phase 06-player-cycle-gametest-validation P04 | 2 min | 1 tasks | 1 files |
 | Phase 07-dedicated-server-authority-edge-validation P01 | 4 min | 2 tasks | 2 files |
 | Phase 07-dedicated-server-authority-edge-validation P02 | 56 min | 1 tasks | 2 files |
+| Phase 12-global-pathfinding-control P01 | not recorded | 2 tasks | 5 files |
+| Phase 12-global-pathfinding-control P02 | not recorded | 2 tasks | 5 files |
+| Phase 13-path-reuse-for-cohesion-movement P01 | not recorded | 2 tasks | 3 files |
+| Phase 13-path-reuse-for-cohesion-movement P02 | not recorded | 2 tasks | 4 files |
+| Phase 14-formation-level-target-selection-rewrite P01 | not recorded | 2 tasks | 4 files |
+| Phase 14-formation-level-target-selection-rewrite P02 | not recorded | 2 tasks | 7 files |
+| Phase 14-formation-level-target-selection-rewrite P03 | not recorded | 2 tasks | 5 files |
 
 ## Session
 
-- Last updated: 2026-04-11T19:09:00Z
-- Stopped at: Completed 07-02-PLAN.md; phase verification blocked by unrelated existing GameTest failures (`invalidleaderandscoutpacketsfailsafely`, `packetdrivenrecoveryrestoresholdintentaftercombat`)
-- Resume file: .planning/phases/07-dedicated-server-authority-edge-validation/07-CONTEXT.md
+- Last updated: 2026-04-11T23:43:00Z
+- Stopped at: Attempted Phase 14-03 gap closure; deferred remaining optional GameTest failures
+- Resume file: .planning/phases/14-formation-level-target-selection-rewrite/14-03-PLAN.md
