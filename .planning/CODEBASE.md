@@ -33,7 +33,9 @@
 
 ## Current Coverage Baseline
 
-- Root JUnit coverage exists for merged Workers legacy-id migration and lightweight merged-runtime smoke checks.
+- Root JUnit coverage now includes retained Workers suites routed through the root build plus lightweight merged-runtime smoke checks.
+- Build-area mutation now follows the shared authoring-rule boundary through `BuildAreaUpdateAuthoring` before `MessageUpdateBuildArea` mutates server state.
+- Legacy recruits/workers update-check listeners are intentionally disabled in the merged runtime until one merged release-feed contract exists.
 - Root gametest source set is wired but currently acts as an expansion point rather than an enforced baseline.
 - Full gameplay E2E coverage is still deferred; use targeted smoke/regression tests unless a task explicitly needs runtime validation.
 

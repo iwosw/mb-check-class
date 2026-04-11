@@ -146,6 +146,14 @@
 - This slice intentionally stops short of adding full runtime gameplay E2E or mandatory GameTest coverage; the root `gametest` source set remains an explicitly documented future expansion point.
 - Validation for this slice was run from the root with `./gradlew compileJava`, `./gradlew processResources`, and `./gradlew test`.
 
+## Runtime Merge Slice: Phase 05 Stabilization Hardening
+
+- Retained Workers JUnit suites now run from the active root `./gradlew test` path via `workers/src/test/java`, so preserved worker regressions are no longer hidden behind a separate test entrypoint.
+- `MessageUpdateBuildArea` now uses the shared work-area authoring decision boundary through `BuildAreaUpdateAuthoring` and translated `WorkAreaAuthoringRules` denial messages before mutating a `BuildArea`.
+- The merged `bannermod` runtime now keeps both legacy recruits/workers update-check listeners disabled behind `MergedRuntimeCleanupPolicy` until a single merged release-feed contract exists.
+- These stabilization slices preserve the Phase 02 compatibility contract: they harden root verification and cleanup seams without reviving standalone `workers` compatibility or claiming legacy-tree retirement.
+- Validation for these slices was run from the root with `./gradlew compileJava`, `./gradlew processResources`, and `./gradlew test`.
+
 ## Open Questions
 
 - Which packet/save compatibility guarantees matter for existing worlds during the transition?

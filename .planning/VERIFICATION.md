@@ -10,11 +10,13 @@
 
 ### Unit / Regression Verification
 
-- `test` runs root JUnit 5 coverage from `src/test/java` and `recruits/src/test/java`.
+- `test` runs root JUnit 5 coverage from `src/test/java`, `recruits/src/test/java`, and `workers/src/test/java`.
 - Current root smoke/regression coverage includes:
   - merged Workers runtime identity and asset-path helpers
   - merged Workers builder-progress flow helpers
+  - retained Workers JUnit suites under `workers/src/test/java`
   - legacy `workers:*` id migration for known structure/build NBT paths
+  - build-area authoring and cleanup-policy seams that fence merged worker mutation and legacy update-check registration
 - `verifyUnitTestStage` wraps the unit test stage used by `check`.
 
 ### GameTest Verification
@@ -33,7 +35,7 @@ Run from the repository root:
 
 Phase 2 design outputs must preserve the existing migration helpers and compatibility seams documented in `.planning/phases/02-runtime-unification-design/02-runtime-compatibility-contract.md`.
 
-Use `./gradlew runGameTestServer` only when a later execution slice changes actual gameplay or runtime flow while root GameTests remain sparse.
+Use `./gradlew runGameTestServer` only when a later execution slice changes actual gameplay or runtime flow while root GameTests remain sparse. It remains additive validation rather than the default stabilization baseline.
 
 ## Why This Baseline Exists
 
