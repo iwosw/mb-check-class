@@ -52,7 +52,7 @@ Status: Complete in practice; workers runtime ownership is already absorbed into
 - Resolve duplicate GUI/resource names.
 - Merge access transformers, mixin configs, and pack metadata.
 
-Status: mostly complete; active runtime resources and workers registry-coupled namespaces now route through `bannermod`, with legacy preservation cleanup still pending.
+Status: Complete in practice; active runtime resources, pack wiring, and workers registry-coupled namespaces now route through `bannermod`, while preserved `workers` assets/resources remain cleanup-only follow-up.
 
 ## Phase 5: Stabilization and Cleanup
 
@@ -81,3 +81,28 @@ Status: Complete (4/4 plans complete as of 2026-04-11).
 - Latest slice: documented root verification entrypoints and merged codebase source-of-truth paths, and added lightweight Workers smoke/regression tests for merged runtime helpers and builder progress.
 - Latest slice: routed retained Workers JUnit suites through the root `test` source set so merged regression coverage now runs from `./gradlew test`.
 - Latest slice: fenced build-area mutation behind shared authoring rules and disabled duplicate legacy update-check listeners while keeping the Phase 02 compatibility boundary narrow.
+- Latest slice: published the shared BannerMod system vocabulary in active planning docs and added a root smoke test that asserts the recruit-owned `bannermod` runtime and worker subsystem network seam stay aligned.
+- Latest slice: introduced a shared BannerMod authority contract so worker authoring and worker-control recovery now use the same owner, same-team, admin, and forbidden relationship vocabulary without widening permissions.
+- Latest slice: extended the shared BannerMod supply-status seam so recruit upkeep now joins build-area and worker-storage pressure in one passive logistics vocabulary for low-risk settlement-to-military coupling.
+- Latest slice: unified the bootstrap onto BannerMod-owned `military`, `settlement`, and `client` config file surfaces, with explicit one-way migration from `bannermod-server.toml` and `workers-server.toml` only when the new target files do not yet exist.
+- Latest slice: deepened root GameTest coverage from runtime coexistence to one live recruit-worker-crop-area shared-ownership interaction plus one live build-area-to-recruit-upkeep resupply transition, and `verifyGameTestStage` is currently green with 26 required tests.
+
+## Phase 6: Player-Cycle GameTest Validation
+
+- Validate the integrated BannerMod gameplay loop as one player-facing system through root GameTests.
+- Extend root GameTest coverage from isolated subsystem seams into small end-to-end player-cycle slices.
+- Prefer additive validation rooted in `src/gametest/java/com/talhanation/bannermod/` unless a test exposes a real runtime defect.
+
+**Goal:** Validate the integrated BannerMod gameplay loop as one player-facing system through root GameTests: prove player-owned recruit and worker coexistence, settlement labor participation, settlement-to-military upkeep flow, and a stitched authority-safe gameplay cycle under one merged runtime.
+
+**Plans:** 4 plans
+
+Plans:
+- [x] 06-01-PLAN.md — Validate that one player can own recruit and worker actors in the same BannerMod runtime while shared ownership boundaries stay correct.
+- [ ] 06-02-PLAN.md — Validate that an owned worker can bind to settlement infrastructure and participate in a valid work area under the same authority rules.
+- [ ] 06-03-PLAN.md — Validate that settlement-side supply can satisfy recruit upkeep and readiness through a live runtime transition.
+- [ ] 06-04-PLAN.md — Validate the stitched full BannerMod player cycle with authority and recovery expectations in one root GameTest flow.
+
+Planning artifacts live under `.planning/phases/06-player-cycle-gametest-validation/` so player-cycle validation work stays explicit and reviewable.
+
+Status: In progress (1/4 plans complete as of 2026-04-11).
