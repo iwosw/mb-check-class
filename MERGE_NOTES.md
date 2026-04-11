@@ -84,7 +84,8 @@
 
 - Root runtime identity is `bannermod`; any surviving Workers standalone metadata is archived and no longer lives in the active source tree.
 - `workers/WorkersMain` is intentionally retained as a legacy-preserving subsystem bootstrap helper, while standalone Workers build/metadata files have been moved to the legacy archive.
-- Workers still keeps its historical internal mod id for safe registry/package preservation during migration; changing the actual bootstrap id is deferred until registry and packet absorption work lands.
+- Phase 2 runtime identity and namespace truth is now locked in `.planning/phases/02-runtime-unification-design/02-runtime-identity-contract.md`: BannerMod is the only active public runtime identity, and full `bannermod` ownership of Workers-owned GUI/structure/lang assets is the target end-state.
+- Any surviving `workers:*` compatibility handling or preserved `assets/workers/**` content should be treated as migration-only input, not as evidence for a second live runtime identity or a permanent mixed namespace policy.
 
 ## Runtime Merge Slice: Workers Lifecycle Routed Through BannerMod
 
@@ -147,10 +148,14 @@
 
 ## Open Questions
 
-- Should worker assets remain under `assets/workers` as an internal resource namespace, or be migrated into the final main namespace?
 - Which packet/save compatibility guarantees matter for existing worlds during the transition?
 - Should final packages preserve `com.talhanation.workers.*` as internal subsystem packages or be moved under a shared merged root?
-- Is the final published artifact still conceptually Villager Recruits plus Workers, or should it be rebranded as a new merged mod?
+
+Asset/lang namespace and release identity are no longer open questions for active planning:
+
+- BannerMod is the release-facing identity for the merged runtime.
+- Full `bannermod` ownership is the target end-state for Workers-owned GUI, structure, and language assets.
+- Preserved `workers` namespaces remain migration seams only unless a later plan documents a narrower compatibility exception.
 
 ## Next Merge Tasks
 
