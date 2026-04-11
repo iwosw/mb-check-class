@@ -106,3 +106,239 @@ Plans:
 Planning artifacts live under `.planning/phases/06-player-cycle-gametest-validation/` so player-cycle validation work stays explicit and reviewable.
 
 Status: Complete (4/4 plans complete as of 2026-04-11).
+
+## Phase 7: Dedicated-Server Authority Edge Validation
+
+- Validate merged BannerMod ownership and recovery behavior under dedicated-server execution, not only local single-runtime assumptions.
+- Cover edge cases where the owner player is offline, unresolved, or reconnecting while recruit, worker, and work-area authority must remain deterministic.
+- Keep the slice validation-first and rooted in root GameTests or narrow regressions unless a test exposes a real server-authority defect.
+
+**Goal:** Prove the merged BannerMod authority model survives dedicated-server edge conditions: owner resolution can disappear and return without widening permissions, and recruit-plus-worker control remains server-authoritative when no integrated local-player assumptions exist.
+
+**Requirements:** [DSAUTH-01, DSAUTH-02]
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Validate dedicated-server owner-offline and unresolved-owner authority denial for recruit and worker recovery flows.
+- [ ] 07-02-PLAN.md — Validate dedicated-server reconnect and persistence-safe ownership recovery across recruit, worker, and work-area state.
+
+Planning artifacts live under `.planning/phases/07-dedicated-server-authority-edge-validation/` so dedicated-server follow-up stays explicit before implementation.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 8: Multiplayer Authority Conflict Validation
+
+- Validate contested multiplayer interactions with at least two distinct players in the same merged runtime.
+- Prove same-team cooperation and outsider denial across recruit control, worker control, and settlement authoring seams.
+- Keep slices narrow and deterministic so later plans can extend multiplayer coverage without broad scenario rewrites.
+
+**Goal:** Prove BannerMod's shared authority contract remains correct under true multiplayer contention: cooperative players can use the intended same-team paths, outsiders stay denied, and server-owned state does not silently drift during concurrent recruit and settlement interactions.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Validate contested multiplayer authority on shared recruit, worker, and work-area interactions with distinct owner and outsider players.
+- [ ] 08-02-PLAN.md — Validate same-team multiplayer cooperation paths without reopening outsider settlement or control access.
+
+Planning artifacts live under `.planning/phases/08-multiplayer-authority-conflict-validation/` so multiplayer-specific validation remains reviewable and separate from dedicated-server edge coverage.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 9: Settlement-Faction Binding Contract
+
+- Make settlement-to-faction binding explicit as a first-class BannerMod gameplay contract rather than only an architectural implication.
+- Keep the implementation boundary low-risk by preferring derived settlement-plus-claim rules over a new persistence manager unless the code proves one is necessary.
+- Define how settlement legality, friendly use, and faction mismatch should be interpreted by worker and military systems.
+
+**Goal:** BannerMod gains an explicit settlement-faction contract: settlements are faction-aligned operational footprints derived from claims plus active infrastructure, and that contract becomes actionable for authority, legality, and later logistics work without forcing an immediate deep persistence rewrite.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Publish the explicit settlement-faction binding rules and lifecycle vocabulary for the merged runtime.
+- [ ] 09-02-PLAN.md — Add the smallest runtime seam needed so faction-aware settlement legality and status can be queried consistently.
+
+Planning artifacts live under `.planning/phases/09-settlement-faction-binding-contract/` so the new gameplay contract is explicit before validation and downstream implementation slices consume it.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 10: Settlement-Faction Enforcement Validation
+
+- Validate the new settlement-faction contract through focused runtime tests instead of broad settlement rewrites.
+- Cover legal friendly binding, hostile or unclaimed denial, and claim-loss or faction-mismatch degradation behavior.
+- Keep the slices small so later `/gsd-plan-phase` work can execute them independently.
+
+**Goal:** Prove the first-class settlement-faction contract behaves in live BannerMod validation: friendly claims permit settlement participation, hostile or missing faction authority blocks it, and claim/faction loss degrades civilian throughput before any silent transfer can occur.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Validate friendly-claim settlement binding and hostile or unclaimed denial in root GameTests.
+- [ ] 10-02-PLAN.md — Validate settlement degradation on claim loss or faction mismatch without silent ownership transfer.
+
+Planning artifacts live under `.planning/phases/10-settlement-faction-enforcement-validation/` so faction-binding validation stays isolated from the contract-definition phase.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 11: Large-Battle AI Profiling Baseline
+
+- Establish a reproducible profiling baseline for large-battle AI and pathfinding cost before changing runtime behavior.
+- Make benchmark scenarios, counters, and pass/fail evidence explicit so later optimization slices can be measured honestly.
+- Keep the slice instrumentation-first unless profiling exposes an immediately obvious defect that must be fenced.
+
+**Goal:** BannerMod has a shared large-battle performance baseline: the hot paths, measurement scenarios, and profiling outputs for recruit-heavy combat are documented and repeatable before optimization work starts.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Define the large-battle profiling scenarios, counters, and evidence format for AI and pathfinding work.
+- [ ] 11-02-PLAN.md — Add the smallest instrumentation or harness seams needed to capture baseline measurements without changing AI behavior.
+
+Planning artifacts live under `.planning/phases/11-large-battle-ai-profiling-baseline/` so performance work starts from explicit evidence instead of anecdotal lag reports.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 12: Global Pathfinding Control
+
+- Introduce a global control seam for pathfinding issuance so large groups stop acting like independent unbounded callers.
+- Prefer one shared scheduler or budget boundary over scattered local guards.
+- Validate that the new control point preserves current behavior in small battles before later optimization layers depend on it.
+
+**Goal:** Path requests now flow through one explicit BannerMod control seam, giving later reuse, throttling, and async fixes a stable runtime boundary instead of entity-by-entity ad hoc pathfinding.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Add the shared global pathfinding control seam and route the current high-volume callers through it.
+- [ ] 12-02-PLAN.md — Validate correctness and capture before/after profiling for the new global control boundary.
+
+Planning artifacts live under `.planning/phases/12-global-pathfinding-control/` so the first optimization seam is explicit before more invasive AI changes land.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 13: Path Reuse For Cohesion Movement
+
+- Reuse compatible paths where nearby or formation-linked actors are currently recomputing equivalent navigation work.
+- Keep the reuse rules narrow and observable so invalid-path churn does not silently increase.
+- Profile reuse hit rate and path invalidation behavior as part of the phase, not as follow-up.
+
+**Goal:** BannerMod reduces duplicate path computation in group movement by reusing valid navigation work where actors share compatible movement intent, with explicit profiling to prove the reuse is helping.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Implement the smallest safe path-reuse seam for nearby or formation-cohesive movement.
+- [ ] 13-02-PLAN.md — Validate path correctness and profile reuse hit rate, invalidation churn, and large-battle impact.
+
+Planning artifacts live under `.planning/phases/13-path-reuse-for-cohesion-movement/` so path reuse remains a distinct, measurable slice.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 14: Formation-Level Target Selection Rewrite
+
+- Rewrite target selection around formation-level or squad-level intent so large groups stop paying full per-entity acquisition cost every cycle.
+- Keep the rewrite bounded to selection and assignment rather than bundling navigation or combat-behavior rewrites into the same phase.
+- Make correctness validation explicit for focus fire, retargeting, and loss-of-target behavior.
+
+**Goal:** Large-group combat target acquisition becomes formation-aware instead of purely per-entity, reducing repeated target-search work while keeping combat intent understandable and testable.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Replace the highest-cost per-entity target acquisition path with a formation-level selection and assignment seam.
+- [ ] 14-02-PLAN.md — Validate combat behavior and profile target-selection cost after the formation rewrite.
+
+Planning artifacts live under `.planning/phases/14-formation-level-target-selection-rewrite/` so targeting work stays isolated from later movement-budget changes.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 15: Pathfinding Throttling And Budgeting
+
+- Add explicit throttling and per-tick budgeting once global control, reuse, and formation targeting are in place.
+- Prefer deterministic request deferral over hidden random slowdown so validation remains readable.
+- Measure queue depth, deferred work, and recovery time under load.
+
+**Goal:** BannerMod can cap and defer pathfinding work during large battles with an explicit, measurable budget instead of allowing bursty navigation spikes to dominate server ticks.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — Add deterministic pathfinding throttles and budget accounting to the shared control seam.
+- [ ] 15-02-PLAN.md — Validate under load and profile queue depth, deferred-path latency, and tick-cost stability.
+
+Planning artifacts live under `.planning/phases/15-pathfinding-throttling-and-budgeting/` so budget control stays separate from targeting and async remediation work.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 16: Async Pathfinding Reliability Fixes
+
+- Fix the known async-pathfinding safety and correctness issues only after the synchronous control surfaces are explicit.
+- Keep the scope on correctness, race prevention, stale-result handling, and safe handoff boundaries.
+- Require validation that async gains do not reintroduce authority drift, stuck entities, or invalid path application.
+
+**Goal:** Async pathfinding becomes predictable and safe under the new global control model: stale or unsafe results are fenced, handoff points are explicit, and large-battle path work no longer depends on fragile concurrency assumptions.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Harden async pathfinding handoff, cancellation, and stale-result handling against the current large-battle failure modes.
+- [ ] 16-02-PLAN.md — Validate async correctness and profile whether the fixed async path still improves large-battle cost.
+
+Planning artifacts live under `.planning/phases/16-async-pathfinding-reliability-fixes/` so concurrency fixes remain a focused slice after earlier control work.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 17: AI LOD And Tick Shedding
+
+- Introduce AI level-of-detail rules after the pathing and targeting hot paths are already bounded.
+- Degrade update frequency or decision richness based on distance, relevance, or visibility without breaking authority or battle readability.
+- Make profiling and behavior validation explicit so LOD stays a controlled tradeoff rather than a hidden nerf.
+
+**Goal:** BannerMod can shed non-critical AI work under scale using explicit LOD rules, reducing background decision cost while preserving important combat and ownership behavior close to the player.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 17-01-PLAN.md — Add the smallest explicit AI LOD rules for low-priority actors and decision loops in large battles.
+- [ ] 17-02-PLAN.md — Validate gameplay behavior and profile tick-cost reduction from the new LOD layer.
+
+Planning artifacts live under `.planning/phases/17-ai-lod-and-tick-shedding/` so AI degradation policy remains explicit and reviewable.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 18: Optional Flow-Field Navigation Evaluation
+
+- Treat flow-field navigation as optional, benchmark-gated follow-up rather than a mandatory rewrite.
+- Start with feasibility, boundary conditions, and a guarded prototype in the largest movement cases that still justify the added complexity.
+- Require side-by-side profiling against the prior phases before expanding the approach.
+
+**Goal:** BannerMod has an explicit decision on whether flow-field navigation is worth carrying: the idea is either proven by focused prototype evidence or rejected without destabilizing the core roadmap.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Define the narrow movement scenarios where an optional flow-field prototype is allowed and how it will be isolated.
+- [ ] 18-02-PLAN.md — Build the guarded prototype or spike and benchmark it against the existing pathfinding stack.
+
+Planning artifacts live under `.planning/phases/18-optional-flow-field-navigation-evaluation/` so optional navigation research does not blur into the required optimization backlog.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
+
+## Phase 19: Large-Battle Performance Validation
+
+- Re-run the full large-battle profiling matrix after the earlier AI/pathfinding slices land.
+- Compare results against the Phase 11 baseline and document remaining hotspots honestly.
+- Keep the phase evidence-first so future performance work can branch from measured residual problems instead of assumptions.
+
+**Goal:** BannerMod closes the current AI/performance optimization proposal with explicit end-to-end validation: the large-battle baseline is rerun, gains are documented against the original measurements, and the remaining performance debt is visible.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 19-01-PLAN.md — Re-run the agreed large-battle profiling scenarios against the optimized runtime and capture comparable evidence.
+- [ ] 19-02-PLAN.md — Publish the before/after analysis, residual hotspots, and recommended next performance backlog based on measured results.
+
+Planning artifacts live under `.planning/phases/19-large-battle-performance-validation/` so the optimization proposal ends with explicit proof rather than only implementation slices.
+
+Status: Planned (0/2 plans complete as of 2026-04-11).
