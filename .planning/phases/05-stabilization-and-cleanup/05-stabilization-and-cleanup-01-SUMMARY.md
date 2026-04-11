@@ -49,7 +49,7 @@ Each task was committed atomically:
 
 1. **Task 1: Expand the root test source set to include retained Workers suites** - `6de12a8` (chore)
 
-**Plan metadata:** pending final docs commit
+**Plan metadata:** `ec253b5` (docs)
 
 ## Files Created/Modified
 - `build.gradle` - Extends the root `test` source set to compile retained Workers JUnit classes from the merged workspace.
