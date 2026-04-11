@@ -41,4 +41,5 @@
 
 - `runGameTestServer` is configured in the root build but the root gametest source set is effectively empty, so gameplay verification still leans on compile plus unit smoke checks.
 - Some preserved legacy namespaces and source trees remain intentionally present during stabilization; future cleanup must keep save/runtime compatibility truthful.
-- Unknown third-party datapacks or custom payloads may still contain raw `workers:*` references outside the already-covered migration paths.
+- Remaining `workers:*` compatibility risk is intentionally narrow: uncovered custom payloads, datapacks, or other third-party references outside the known merged-runtime migration seams may still fail.
+- The active scope boundary for that risk now lives in `.planning/phases/02-runtime-unification-design/02-runtime-compatibility-contract.md`, which limits required support to known merged-runtime registry remaps and structure/build NBT migration rather than broad standalone Workers compatibility.

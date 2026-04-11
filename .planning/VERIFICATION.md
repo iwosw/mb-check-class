@@ -31,8 +31,10 @@ Run from the repository root:
 2. `./gradlew processResources`
 3. `./gradlew test`
 
-Use `./gradlew runGameTestServer` only when a change requires runtime/gameplay validation while root GameTests remain sparse.
+Phase 2 design outputs must preserve the existing migration helpers and compatibility seams documented in `.planning/phases/02-runtime-unification-design/02-runtime-compatibility-contract.md`.
+
+Use `./gradlew runGameTestServer` only when a later execution slice changes actual gameplay or runtime flow while root GameTests remain sparse.
 
 ## Why This Baseline Exists
 
-This merge workspace needs fast verification that the unified root build still compiles, resource merging remains stable, and the most fragile Workers compatibility seams do not regress, without requiring full Minecraft runtime E2E on every stabilization slice.
+This merge workspace needs fast verification that the unified root build still compiles, resource merging remains stable, and the known Workers migration helpers do not regress, without promising broader save or integration compatibility than the active contract defines or requiring full Minecraft runtime E2E on every stabilization slice.
