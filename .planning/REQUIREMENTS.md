@@ -27,3 +27,8 @@
 - [x] STAB-02 — Build-area update packets enforce the same authoring access rules as the other merged worker modification packets.
 - [x] STAB-03 — The merged runtime no longer live-registers duplicated legacy update checkers.
 - [x] STAB-04 — Active roadmap/state/readiness docs truthfully describe the stabilization verification baseline and remaining cleanup boundary.
+
+## Active Dedicated-Server Authority Validation Requirements
+
+- [x] DSAUTH-01 — Dedicated-server validation proves outsiders cannot command offline-owned recruits or recover offline-owned workers while admin recovery still works when owner lookup is unresolved.
+- [ ] DSAUTH-02 — Dedicated-server validation proves reconnect and persistence-safe ownership recovery stays deterministic across recruit, worker, and work-area state.

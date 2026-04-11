@@ -2,26 +2,39 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Complete
-last_updated: "2026-04-11T10:10:30Z"
+status: Active
+last_updated: "2026-04-11T11:01:07.000Z"
 progress:
-  total_phases: 6
+  total_phases: 19
   completed_phases: 6
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 38
+  completed_plans: 13
 ---
 
 # Project State
 
-- Current focus: Phase 06 player-cycle GameTest validation is complete; the root BannerMod GameTest suite now covers runtime smoke, ownership, settlement labor, upkeep flow, and one stitched full player cycle, with only optional non-critical follow-up remaining.
+- Current focus: Phase 07 Plan 01 is complete with dedicated-server offline-owner authority coverage; the next queued work is Phase 07 Plan 02 reconnect and persistence-safe ownership recovery validation, followed by the remaining Phase 08 through Phase 10 authority-and-contract backlog and the Phase 11 through Phase 19 large-battle AI/performance roadmap.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: any remaining optional non-critical/custom payload compatibility follow-up and deeper cleanup beyond the now-complete Phase 06 GameTest validation baseline
+- Pending major work: dedicated-server and multiplayer-specific authority validation, explicit settlement-faction gameplay contract definition, focused settlement-faction enforcement coverage, large-battle AI/pathfinding optimization with explicit profiling, and any remaining optional non-critical/custom payload compatibility follow-up
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
+- Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
+- Phase 08 planning artifacts: `.planning/phases/08-multiplayer-authority-conflict-validation/`
+- Phase 09 planning artifacts: `.planning/phases/09-settlement-faction-binding-contract/`
+- Phase 10 planning artifacts: `.planning/phases/10-settlement-faction-enforcement-validation/`
+- Phase 11 planning artifacts: `.planning/phases/11-large-battle-ai-profiling-baseline/`
+- Phase 12 planning artifacts: `.planning/phases/12-global-pathfinding-control/`
+- Phase 13 planning artifacts: `.planning/phases/13-path-reuse-for-cohesion-movement/`
+- Phase 14 planning artifacts: `.planning/phases/14-formation-level-target-selection-rewrite/`
+- Phase 15 planning artifacts: `.planning/phases/15-pathfinding-throttling-and-budgeting/`
+- Phase 16 planning artifacts: `.planning/phases/16-async-pathfinding-reliability-fixes/`
+- Phase 17 planning artifacts: `.planning/phases/17-ai-lod-and-tick-shedding/`
+- Phase 18 planning artifacts: `.planning/phases/18-optional-flow-field-navigation-evaluation/`
+- Phase 19 planning artifacts: `.planning/phases/19-large-battle-performance-validation/`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/06-player-cycle-gametest-validation/06-player-cycle-gametest-validation-04-SUMMARY.md`
+- Latest execution summary: `.planning/phases/07-dedicated-server-authority-edge-validation/07-dedicated-server-authority-edge-validation-01-SUMMARY.md`
 
 ## Decisions
 
@@ -53,6 +66,15 @@ progress:
 - [Phase 06-player-cycle-gametest-validation]: Model settlement-labor outsider checks with a distinct fake player identity so GameTest authority assertions stay deterministic.
 - [Phase 06-player-cycle-gametest-validation]: Direct worker recovery must enforce the same owner-or-admin authority rule even when the owner player entity is not currently resolved in-level.
 - [Phase 06-player-cycle-gametest-validation]: The full player-cycle GameTest should compose the earlier ownership, labor, and upkeep slice contracts rather than inventing a parallel setup path.
+- [Post-Phase-06 roadmap]: Keep the next validation work split into separate dedicated-server and multiplayer phases so offline-owner and contested-player edge cases stay independently executable.
+- [Post-Phase-06 roadmap]: Treat settlement-to-faction binding as a first-class gameplay contract that is explicit before later implementation slices expand settlement mechanics.
+- [Post-Phase-06 roadmap]: Prefer derived settlement-plus-claim binding rules over a new deep persistence manager unless a later execution slice proves a dedicated manager is necessary.
+- [Post-Phase-06 roadmap]: Validate faction-binding enforcement separately from contract-definition so each later `/gsd-plan-phase` slice stays small and reviewable.
+- [Performance roadmap]: Keep large-battle AI/performance work ordered as profiling baseline, global pathfinding control, path reuse, formation-level target selection, pathfinding throttling, async reliability fixes, AI LOD, optional flow-field evaluation, and closing performance validation.
+- [Performance roadmap]: Require explicit profiling evidence before optimization, during each optimization slice, and after the full sequence so future tuning work can compare against one stable baseline.
+- [Performance roadmap]: Treat flow-field navigation as optional and benchmark-gated rather than a mandatory rewrite of the current navigation stack.
+- [Phase 07-dedicated-server-authority-edge-validation]: Create a dedicated-server helper seam now so later reconnect and persistence tests can reuse deterministic fake-player and detached-ownership setup.
+- [Phase 07-dedicated-server-authority-edge-validation]: Model admin recovery with an explicit permission-granting fake player so offline-owner authority remains server-driven without requiring a live owner entity.
 
 ## Performance Metrics
 
@@ -70,9 +92,10 @@ progress:
 | Phase 06-player-cycle-gametest-validation P02 | 5 min | 1 tasks | 2 files |
 | Phase 06-player-cycle-gametest-validation P03 | 2 min | 1 tasks | 1 files |
 | Phase 06-player-cycle-gametest-validation P04 | 2 min | 1 tasks | 1 files |
+| Phase 07-dedicated-server-authority-edge-validation P01 | 4 min | 2 tasks | 2 files |
 
 ## Session
 
-- Last updated: 2026-04-11T10:10:30Z
-- Stopped at: Completed 06-player-cycle-gametest-validation-04-PLAN.md
-- Resume file: .planning/phases/06-player-cycle-gametest-validation/06-player-cycle-gametest-validation-04-SUMMARY.md
+- Last updated: 2026-04-11T11:00:05Z
+- Stopped at: Completed 07-01-PLAN.md
+- Resume file: .planning/phases/07-dedicated-server-authority-edge-validation/07-CONTEXT.md
