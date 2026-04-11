@@ -12,11 +12,11 @@
 
 Plans:
 - [x] 01-01-PLAN.md — Harden the single root build/workspace entrypoint and root source-of-truth docs.
-- [ ] 01-02-PLAN.md — Lock the verification baseline, merge conflict notes, and explicit bootstrap roadmap/state entries.
+- [x] 01-02-PLAN.md — Lock the verification baseline, merge conflict notes, and explicit bootstrap roadmap/state entries.
 
 Planning artifacts live under `.planning/phases/01-workspace-bootstrap/` so Phase 1 bootstrap work stays explicit and reviewable.
 
-Status: In Progress (1/2 plans complete as of 2026-04-11)
+Status: Complete (2/2 plans complete as of 2026-04-11)
 
 ## Phase 2: Runtime Unification Design
 

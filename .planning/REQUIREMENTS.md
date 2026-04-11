@@ -4,8 +4,8 @@
 
 - [x] BOOT-01 — Root workspace has one active build entrypoint.
 - [x] BOOT-02 — Root workspace has one active planning context.
-- [ ] BOOT-03 — Legacy planning context from both source mods remains preserved.
-- [ ] BOOT-04 — Merge conflicts between plans and code are documented.
+- [x] BOOT-03 — Legacy planning context from both source mods remains preserved.
+- [x] BOOT-04 — Merge conflicts between plans and code are documented.
 - [ ] BOOT-05 — Runtime merge work proceeds in explicit stages rather than hidden partial rewrites.
 
 ## Deferred Until Full Runtime Merge
