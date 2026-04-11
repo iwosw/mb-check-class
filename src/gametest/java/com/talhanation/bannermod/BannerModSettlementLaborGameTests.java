@@ -19,6 +19,8 @@ import java.util.UUID;
 @GameTestHolder(Main.MOD_ID)
 public class BannerModSettlementLaborGameTests {
 
+    private static final String TEAM_ID = "phase06_labor";
+
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void settlementLaborKeepsAuthorizationSeparateFromRecoveryControl(GameTestHelper helper) {
@@ -41,6 +43,10 @@ public class BannerModSettlementLaborGameTests {
                 RecruitsBattleGameTestSupport.WEST_RANGED_RIGHT_POS
         );
 
+        BannerModDedicatedServerGameTestSupport.joinTeam(level, TEAM_ID, ownerPlayer, worker);
+        cropArea.setTeamStringID(TEAM_ID);
+        storageArea.setTeamStringID(TEAM_ID);
+        BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), TEAM_ID, ownerPlayer.getUUID(), ownerPlayer.getScoreboardName());
         worker.currentCropArea = cropArea;
         cropArea.setBeingWorkedOn(true);
 

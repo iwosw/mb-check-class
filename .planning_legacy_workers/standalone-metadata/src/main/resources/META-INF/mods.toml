@@ -1,0 +1,41 @@
+license="All rights reserved"
+
+modLoader="javafml"
+
+loaderVersion="[47,)" # Forge 47.x for Minecraft 1.20.1 baseline.
+
+[[mods]] #mandatory
+
+modId="workers"
+
+version="2.0.0TC9"
+
+displayName="BannerMod Workers Staging Subsystem"
+updateJSONURL="https://raw.githubusercontent.com/talhanation/recruits/main/update.json"
+displayURL="https://github.com/talhanation"
+
+logoFile="logo.png"
+
+credits="talhanation"
+
+authors="talhanation"
+# The description text for the mod (multi line!) (#mandatory)
+description='''
+Legacy workers metadata preserved only for staged merge work inside BannerMod.
+This is not the active shipped runtime mod; the merged runtime target is bannermod.
+'''
+
+
+[[dependencies.workers]]
+    modId="recruits"
+    mandatory=true
+    versionRange="[1.14, 1.14.5)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.workers]]
+    modId="bannermod"
+    mandatory=false
+    versionRange="[1.14.3,)"
+    ordering="NONE"
+    side="BOTH"

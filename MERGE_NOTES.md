@@ -62,6 +62,12 @@
 - `workers/.planning/STATE.md` simultaneously says Recruits compatibility and the `1.21.1` port were intentionally deferred from v1.
 - Code reality agrees with the deferred interpretation: the code still targets Forge `1.20.1`, depends on Recruits, and is not ported.
 
+### Settlement wording conflict
+
+- Earlier active architecture wording described settlements as faction-aligned hubs but left the binding implied, which risked later slices inventing different legality and degradation rules from the same code.
+- Current root code and Phase 09 now make the narrower truth explicit: settlement binding is derived from claim ownership plus active worker infrastructure and team affiliation, not from a dedicated settlement manager or save-data type.
+- Active root planning should therefore use the explicit `FRIENDLY_CLAIM`, `HOSTILE_CLAIM`, `UNCLAIMED`, and `DEGRADED_MISMATCH` vocabulary and avoid implying that a deeper persistence rewrite already exists.
+
 ### Recruits metadata conflict
 
 - `recruits/build.gradle`, `recruits/gradle.properties`, `recruits/src/main/resources/META-INF/mods.toml`, and `recruits/update.json` do not agree on version strings.

@@ -8,6 +8,7 @@ import com.talhanation.workers.entities.FarmerEntity;
 import com.talhanation.workers.entities.workarea.CropArea;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -18,9 +19,13 @@ import java.util.UUID;
 @GameTestHolder(Main.MOD_ID)
 public class BannerModOwnershipCycleGameTests {
 
+    private static final String TEAM_ID = "phase06_ownership";
+    private static final String DIVERGENT_TEAM_ID = "phase06_ownership_divergent";
+
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void sharedOwnershipKeepsPlayerCycleAuthorityAligned(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
         Player player = helper.makeMockPlayer();
         AbstractRecruitEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
@@ -54,6 +59,9 @@ public class BannerModOwnershipCycleGameTests {
         worker.setIsOwned(true);
         worker.setFollowState(2);
         worker.setHoldPos(net.minecraft.world.phys.Vec3.atCenterOf(worker.blockPosition()));
+        BannerModDedicatedServerGameTestSupport.joinTeam(level, TEAM_ID, player, worker);
+        cropArea.setTeamStringID(TEAM_ID);
+        BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), TEAM_ID, player.getUUID(), player.getScoreboardName());
         worker.currentCropArea = cropArea;
         cropArea.setBeingWorkedOn(true);
 
@@ -71,6 +79,7 @@ public class BannerModOwnershipCycleGameTests {
                 "Expected worker recovery to clear the crop-area binding during the ownership cycle slice");
 
         worker.setOwnerUUID(Optional.of(UUID.randomUUID()));
+        BannerModDedicatedServerGameTestSupport.joinTeam(level, DIVERGENT_TEAM_ID, worker);
 
         helper.assertTrue(RecruitEvents.canAttack(recruit, worker),
                 "Expected divergent ownership to restore recruit hostility after the BannerMod ownership cycle splits actor control");

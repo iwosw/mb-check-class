@@ -1,0 +1,166 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.+', changing: true
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
+    }
+}
+// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
+
+plugins {
+    id "com.matthewprenger.cursegradle" version "1.4.0"
+    id "com.github.johnrengelman.shadow" version "7.1.0"
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'idea'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+mixin{
+    add sourceSets.main, 'mixins.workers.refmap.json'
+    config 'mixins.workers.json'
+
+    disableTargetValidator = true
+    overwriteErrorLevel = 'error'
+}
+
+version = 'A2.0.0TC9'
+
+group = 'com.talhanation.workers'
+// Legacy standalone build metadata is kept only for staged subsystem migration.
+// The merged runtime artifact is the root bannermod build, not this leaf project.
+archivesBaseName = 'bannermod-workers-staging-1.20.1'
+
+
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg') // Currently, this location cannot be changed from the default.
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            property 'forge.enabledGameTestNamespaces', 'workers'
+
+            Random rnd = new Random()
+
+            args = ['--username', 'talhanation2']
+
+
+            mods {
+                'workers' {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'forge.enabledGameTestNamespaces', 'workers'
+
+
+            mods {
+                'workers' {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            // Keep legacy workers datagen stable until assets are deliberately moved under bannermod.
+            args '--mod', 'workers', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                'workers' {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    maven {
+        name = "henkelmax.public"
+        url = 'https://maven.maxhenkel.de/repository/public'
+    }
+    mavenLocal()
+    maven {
+
+        url "https://www.cursemaven.com"
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.4.1'
+    shadow fg.deobf("de.maxhenkel.corelib:corelib:1.20.1-1.1.3:api")
+    runtimeOnly fg.deobf("de.maxhenkel.corelib:corelib:1.20.1-1.1.3")
+    runtimeOnly fg.deobf("de.maxhenkel.corelib:corelib:1.20.1-1.1.3:javadoc")
+    // Historical standalone dependency; root bannermod build supplies recruits directly during staged merge.
+    implementation fg.deobf("curse.maven:recruits-523860:7374573")
+
+    implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
+    implementation fg.deobf("curse.maven:lets-do-herbal-brews-951221:6458889")
+    implementation fg.deobf("curse.maven:supplementaries-412082:6615104")
+    implementation fg.deobf("curse.maven:selene-499980:6681465")
+    //implementation fg.deobf("curse.maven:small-ships-450659:5324996")
+    implementation fg.deobf("curse.maven:debug-utils-forge-783008:5337491")
+    implementation fg.deobf("curse.maven:farmers-delight-398521:6597298")
+    implementation fg.deobf("curse.maven:worldedit-225608:4586218")
+    testImplementation fg.deobf("de.maxhenkel.corelib:corelib:1.20.1-1.1.3:api")
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Example for how to get properties into the manifest for reading at runtime.
+jar {
+
+}
+
+jar.finalizedBy('reobfJar')
+
+artifacts {
+    archives shadowJar
+}
+
+shadowJar {
+    project.configurations.shadow.setTransitive(true)
+    configurations = [project.configurations.shadow]
+    //classifier = ""
+    relocate 'de.maxhenkel.corelib', "de.maxhenkel.workers.corelib"
+}
+
+reobf {
+    shadowJar {}
+}

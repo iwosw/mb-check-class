@@ -1,0 +1,168 @@
+# Roadmap: Villager Recruits stabilization and 1.21.1 migration prep
+
+## Overview
+
+This roadmap turns the unstable Forge 1.20.1 dev branch into a trustworthy stabilization base by first hardening reproducibility, then adding layered verification, then locking down the highest-risk gameplay systems, and finally extracting the internal seams and inventory needed to make a later 1.21.1 port short and bounded instead of exploratory.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [x] **Phase 1: Build Reproducibility Baseline** - Make clean builds and verification runs trustworthy from the start.
+- [x] **Phase 2: Layered Test Harness Foundations** - Establish unit-test and GameTest workflows with shared fixtures.
+- [x] **Phase 3: Battle and Formation Regression Lockdown** - Stabilize combat-heavy recruit scenarios and formation behavior.
+- [x] **Phase 4: Command and AI State Stabilization** - Lock down command execution and recruit state transitions.
+- [x] **Phase 5: Persistence and Multiplayer Sync Hardening** - Protect saves, reloads, and packet-driven flows from corruption or desync.
+- [x] **Phase 6: Full-Surface Verification and Safe Degradation** - Verify the whole mod surface and contain optional-path failures safely.
+- [x] **Phase 7: Migration-Ready Internal Seams** - Reduce deep Forge coupling in the highest-risk subsystems.
+- [x] **Phase 8: 1.21.1 Port Prep Inventory** - Produce the bounded follow-up checklist for the later port.
+
+## Phase Details
+
+### Phase 1: Build Reproducibility Baseline
+**Goal**: Maintainers can build and interpret the stabilization branch from a clean checkout without relying on drifting local setup.
+**Depends on**: Nothing (first phase)
+**Requirements**: BLD-01, BLD-02, BLD-03, BLD-04
+**Success Criteria** (what must be TRUE):
+  1. Maintainer can build the mod from a clean checkout with a documented one-command Gradle workflow.
+  2. Maintainer can run the standard automated verification entrypoint and tell whether a failure came from build, unit-test, or game-test stages.
+  3. Dependency and tool resolution behave reproducibly instead of depending on undocumented local machine state.
+**Plans**: 3 plans
+
+Plans:
+- [x] `01-01-PLAN.md` — Pin Gradle/plugin/repository resolution to a reproducible canonical baseline.
+- [x] `01-02-PLAN.md` — Expose named build, unit-test, and game-test stages under `check`.
+- [x] `01-03-PLAN.md` — Document the canonical build and verification workflow in README + BUILDING.md.
+
+### Phase 2: Layered Test Harness Foundations
+**Goal**: Maintainers can add new automated coverage quickly through a stable split between pure logic tests and runtime gameplay tests.
+**Depends on**: Phase 1
+**Requirements**: TEST-01, TEST-02, TEST-03
+**Success Criteria** (what must be TRUE):
+  1. Maintainer can add new pure-logic unit tests without booting Minecraft runtime code.
+  2. Maintainer can add new Forge GameTests in a standard project location for gameplay contracts.
+  3. Maintainer can reuse shared helpers for recruit, faction, persistence, and networking scenarios instead of rebuilding fixtures per test.
+**Plans**: 3 plans
+
+Plans:
+- [x] `02-01-PLAN.md` — Standardize the split unit/GameTest harness and replace the GameTest `NO-SOURCE` placeholder with a runnable smoke baseline.
+- [x] `02-02-PLAN.md` — Add reusable JVM fixture helpers plus reference persistence and network codec tests.
+- [x] `02-03-PLAN.md` — Add reusable recruit GameTest helpers and the first gameplay-facing recruit runtime scenarios.
+
+### Phase 3: Battle and Formation Regression Lockdown
+**Goal**: Players can run representative recruit battles and formation flows without obvious regressions, and maintainers can catch battle-heavy failures automatically.
+**Depends on**: Phase 2
+**Requirements**: BATL-01, BATL-02, BATL-03, BATL-04
+**Success Criteria** (what must be TRUE):
+  1. Player can run representative recruit battles on the dev branch without obvious combat-state regressions.
+  2. Player can issue formation-related commands and observe stable formation behavior during movement and combat.
+  3. Maintainer can run automated tests that cover both expected battle flows and regression-prone edge cases.
+  4. Maintainer can use defined baseline or stress scenarios to detect battle-density regressions instead of relying only on ad hoc play sessions.
+**Plans**: 5 plans
+
+Plans:
+- [x] `03-01-PLAN.md` — Create reusable mixed-squad battle and formation GameTest fixtures plus ground templates.
+- [x] `03-02-PLAN.md` — Extract and JVM-test patrol-leader battle tactic decisions.
+- [x] `03-03-PLAN.md` — Add deterministic mixed-squad battle and formation-recovery GameTests through the command path.
+- [x] `03-04-PLAN.md` — Add battle-density stress GameTests with bounded stability alarms.
+- [x] `03-05-PLAN.md` — Stabilize the inherited dense-battle and mixed-squad fixture expectations so the canonical verification path is trustworthy.
+
+### Phase 4: Command and AI State Stabilization
+**Goal**: Players can rely on core recruit commands and AI transitions to resolve predictably under server authority.
+**Depends on**: Phase 3
+**Requirements**: CMD-01, CMD-02, CMD-03, CMD-04
+**Success Criteria** (what must be TRUE):
+  1. Player can issue core recruit commands and get server-authoritative outcomes without command-state desync.
+  2. Recruit AI can transition between major command and combat states without getting trapped in known broken loops or invalid states.
+  3. Maintainer can run automated tests that encode intended command and AI behavior rather than preserving legacy accidents.
+  4. Broken or invalid command flows fail predictably with diagnostics or safe degradation where practical.
+**Plans**: 4 plans
+
+Plans:
+- [x] `04-01-PLAN.md` — Create the shared JVM-tested server-side command-targeting seam for Phase 4 packets.
+- [x] `04-02-PLAN.md` — Rewire movement/formation/attack/shield packets through shared authority validation and cover them with runtime tests.
+- [x] `04-03-PLAN.md` — Harden patrol-leader and scout packet paths with explicit validation plus runtime regression coverage.
+- [x] `04-04-PLAN.md` — Extract/test command-to-AI transition rules and add runtime stuck-state regression scenarios.
+
+### Phase 5: Persistence and Multiplayer Sync Hardening
+**Goal**: Critical world state survives restarts and prioritized packet-driven mechanics stay synchronized in multiplayer play.
+**Depends on**: Phase 4
+**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04
+**Success Criteria** (what must be TRUE):
+  1. Server operator can save and reload worlds without losing or corrupting critical recruit, team, faction, claim, route, or group state.
+  2. Maintainer can run automated persistence round-trip, dirty-marking, and restart checks for the highest-risk saved systems.
+  3. Multiplayer player can use prioritized packet-driven gameplay flows without obvious client/server desync.
+  4. Maintainer can verify invalid, boundary, and side-sensitive packet paths that enforce server-authoritative behavior.
+**Plans**: 4 plans
+
+Plans:
+- [x] `05-01-PLAN.md` — Lock down high-risk SavedData round trips and restart-sensitive default-load behavior in fast JVM tests.
+- [x] `05-02-PLAN.md` — Harden claim/group/player-unit mutation persistence and lazy default creation with explicit save-trigger coverage.
+- [x] `05-03-PLAN.md` — Reset prioritized client sync caches safely and validate boundary/invalid route-transfer packets.
+- [x] `05-04-PLAN.md` — Add runtime join/reload/leader-route persistence GameTests through the real server-authoritative sync path.
+
+### Phase 6: Full-Surface Verification and Safe Degradation
+**Goal**: Maintainers can verify the full mod surface through an explicit coverage matrix, and optional paths fail safely instead of destabilizing the core mod.
+**Depends on**: Phase 5
+**Requirements**: TEST-04, STAB-01, STAB-02, STAB-03
+**Success Criteria** (what must be TRUE):
+  1. Maintainer can execute a defined full-mod verification pass that covers all major gameplay subsystems with extra depth on battles, persistence, commands, AI, networking, and formations.
+  2. Maintainer can inspect a documented verification matrix that clearly distinguishes deep coverage areas from baseline smoke coverage.
+  3. Logic gaps found during verification are either fixed or explicitly documented as deferred with rationale.
+  4. Optional compatibility paths fail safely without destabilizing the core mod when dependencies or contexts are absent.
+**Plans**: 3 plans
+
+Plans:
+- [x] `06-01-PLAN.md` — Publish the repo-level verification matrix and wire it into the canonical build docs.
+- [x] `06-02-PLAN.md` — Add representative safe-degradation regression coverage for optional compat and async-path fallback seams.
+- [x] `06-03-PLAN.md` — Run the full-surface verification pass and publish the Phase 6 verification plus deferred-gap ledger.
+
+### Phase 7: Migration-Ready Internal Seams
+**Goal**: Maintainers can work through narrower seams in the highest-risk subsystems instead of deep direct coupling to Forge-heavy runtime code.
+**Depends on**: Phase 6
+**Requirements**: MIG-01, MIG-02
+**Success Criteria** (what must be TRUE):
+  1. Maintainer can identify the main version-sensitive seams across networking, persistence, client state, compat, pathfinding, and registration glue.
+  2. Maintainer can change high-risk subsystem behavior through narrower adapters or seams instead of editing deeply coupled Forge-heavy paths everywhere.
+  3. Refactored seams reduce the amount of version-sensitive code that must be understood before the later 1.21.1 port starts.
+**Plans**: 4 plans
+
+Plans:
+- [x] `07-01-PLAN.md` — Publish the Phase 7 seam inventory and define interface-first contracts for the migration slices.
+- [x] `07-02-PLAN.md` — Extract dedicated networking and registration-glue helpers from `Main` while preserving packet order.
+- [x] `07-03-PLAN.md` — Extract explicit client-state and faction persistence seams that preserve the Phase 5 behavior contract.
+- [x] `07-04-PLAN.md` — Extract compat-reflection and async-path runtime helpers while preserving Phase 6 safe degradation.
+
+### Phase 8: 1.21.1 Port Prep Inventory
+**Goal**: Maintainers have a concrete migration-prep checklist and code inventory that turns the future 1.21.1 port into a bounded follow-up effort.
+**Depends on**: Phase 7
+**Requirements**: MIG-03
+**Success Criteria** (what must be TRUE):
+  1. Maintainer can open a concrete migration-prep checklist for the future 1.21.1 port.
+  2. Maintainer can identify the relevant code inventory and the specific seam areas that still need version migration work.
+  3. The future 1.21.1 port is described as a bounded follow-up effort instead of open-ended repo exploration.
+**Plans**: 2 plans
+
+Plans:
+- [x] `08-01-PLAN.md` — Publish the seam-grounded port inventory and bounded version-surface map.
+- [x] `08-02-PLAN.md` — Turn the inventory into the ordered future-port checklist and bounded follow-up brief.
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Build Reproducibility Baseline | 3/3 | Complete | 2026-04-05 |
+| 2. Layered Test Harness Foundations | 3/3 | Complete | 2026-04-05 |
+| 3. Battle and Formation Regression Lockdown | 5/5 | Complete | 2026-04-08 |
+| 4. Command and AI State Stabilization | 4/4 | Complete | 2026-04-07 |
+| 5. Persistence and Multiplayer Sync Hardening | 4/4 | Complete | 2026-04-07 |
+| 6. Full-Surface Verification and Safe Degradation | 3/3 | Complete | 2026-04-08 |
+| 7. Migration-Ready Internal Seams | 4/4 | Complete | 2026-04-08 |
+| 8. 1.21.1 Port Prep Inventory | 2/2 | Complete | 2026-04-08 |

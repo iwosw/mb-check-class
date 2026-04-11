@@ -1,0 +1,10 @@
+.gradle/
+build/
+run/
+logs/
+bin/
+
+.classpath
+.factorypath
+.project
+.settings/

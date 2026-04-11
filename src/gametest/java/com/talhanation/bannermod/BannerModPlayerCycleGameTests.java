@@ -12,6 +12,7 @@ import com.talhanation.workers.entities.workarea.CropArea;
 import com.talhanation.workers.world.BuildBlock;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -26,9 +27,13 @@ import java.util.UUID;
 @GameTestHolder(Main.MOD_ID)
 public class BannerModPlayerCycleGameTests {
 
+    private static final String TEAM_ID = "phase06_cycle";
+    private static final String DIVERGENT_TEAM_ID = "phase06_cycle_divergent";
+
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void playerCycleStitchesOwnershipLaborUpkeepAndRecovery(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
         Player player = helper.makeMockPlayer();
         AbstractRecruitEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
@@ -61,6 +66,10 @@ public class BannerModPlayerCycleGameTests {
         helper.assertFalse(RecruitEvents.canAttack(worker, recruit),
                 "Expected the stitched player-cycle scenario to keep the shared-owner worker from attacking the shared-owner recruit");
 
+        BannerModDedicatedServerGameTestSupport.joinTeam(level, TEAM_ID, player, worker);
+        cropArea.setTeamStringID(TEAM_ID);
+        buildArea.setTeamStringID(TEAM_ID);
+        BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), TEAM_ID, player.getUUID(), player.getScoreboardName());
         worker.currentCropArea = cropArea;
         cropArea.setBeingWorkedOn(true);
 
@@ -109,6 +118,7 @@ public class BannerModPlayerCycleGameTests {
                 "Expected stitched player-cycle recovery to clear the worker's current crop-area binding");
 
         worker.setOwnerUUID(Optional.of(UUID.randomUUID()));
+        BannerModDedicatedServerGameTestSupport.joinTeam(level, DIVERGENT_TEAM_ID, worker);
 
         helper.assertTrue(RecruitEvents.canAttack(recruit, worker),
                 "Expected the stitched player-cycle scenario to end with an explicit divergent-ownership hostility boundary");

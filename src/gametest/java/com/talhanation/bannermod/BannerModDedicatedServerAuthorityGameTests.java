@@ -25,6 +25,7 @@ public class BannerModDedicatedServerAuthorityGameTests {
     private static final String OFFLINE_OWNER_NAME = "offline-owner";
     private static final UUID OUTSIDER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000702");
     private static final UUID ADMIN_UUID = UUID.fromString("00000000-0000-0000-0000-000000000703");
+    private static final String OFFLINE_OWNER_TEAM_ID = "phase07_offline_owner";
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
@@ -90,6 +91,8 @@ public class BannerModDedicatedServerAuthorityGameTests {
 
         BannerModDedicatedServerGameTestSupport.assignDetachedOwnership(worker, OFFLINE_OWNER_UUID);
         BannerModDedicatedServerGameTestSupport.assignDetachedOwnership(cropArea, OFFLINE_OWNER_UUID, OFFLINE_OWNER_NAME);
+        cropArea.setTeamStringID(OFFLINE_OWNER_TEAM_ID);
+        BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), OFFLINE_OWNER_TEAM_ID, OFFLINE_OWNER_UUID, OFFLINE_OWNER_NAME);
         worker.currentCropArea = cropArea;
         cropArea.setBeingWorkedOn(true);
 
