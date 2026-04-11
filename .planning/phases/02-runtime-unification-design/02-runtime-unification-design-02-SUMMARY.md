@@ -55,7 +55,7 @@ Each task was committed atomically:
 1. **Task 1: Write the merged-runtime compatibility and config ownership contract** - `f5b5719` (feat)
 2. **Task 2: Publish the compatibility boundary in active readiness docs** - `855d280` (chore)
 
-**Plan metadata:** pending
+**Plan metadata:** `3bcbee2` (docs)
 
 ## Files Created/Modified
 - `.planning/phases/02-runtime-unification-design/02-runtime-compatibility-contract.md` - Documents supported Workers-era migration seams and BannerMod-owned config direction.
