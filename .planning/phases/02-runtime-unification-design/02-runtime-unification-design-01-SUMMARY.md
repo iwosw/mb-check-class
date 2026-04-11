@@ -55,7 +55,7 @@ Each task was committed atomically:
 1. **Task 1: Write the runtime identity and namespace contract** - `29b5ae0` (feat)
 2. **Task 2: Align active metadata and merge notes to the BannerMod-first contract** - `3a53326` root + `0e0beeb2` recruits (chore)
 
-**Plan metadata:** pending
+**Plan metadata:** `fe35754` (docs)
 
 _Note: Task 2 required one root-repo commit and one nested `recruits/` repo commit because the release metadata file lives in the preserved sub-repository._
 
