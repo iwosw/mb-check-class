@@ -1,5 +1,6 @@
 package com.talhanation.bannermod;
 
+import com.mojang.authlib.GameProfile;
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.workers.entities.FarmerEntity;
@@ -7,9 +8,13 @@ import com.talhanation.workers.entities.workarea.CropArea;
 import com.talhanation.workers.entities.workarea.StorageArea;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
+
+import java.util.UUID;
 
 @GameTestHolder(Main.MOD_ID)
 public class BannerModSettlementLaborGameTests {
@@ -17,8 +22,9 @@ public class BannerModSettlementLaborGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void settlementLaborKeepsAuthorizationSeparateFromRecoveryControl(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
         Player ownerPlayer = helper.makeMockPlayer();
-        Player outsiderPlayer = helper.makeMockPlayer();
+        Player outsiderPlayer = FakePlayerFactory.get(level, new GameProfile(UUID.randomUUID(), "settlement-outsider"));
         FarmerEntity worker = BannerModGameTestSupport.spawnOwnedFarmer(
                 helper,
                 ownerPlayer,
@@ -37,6 +43,9 @@ public class BannerModSettlementLaborGameTests {
 
         worker.currentCropArea = cropArea;
         cropArea.setBeingWorkedOn(true);
+
+        helper.assertFalse(ownerPlayer.getUUID().equals(outsiderPlayer.getUUID()),
+                "Expected the settlement labor outsider requester to have a distinct player identity");
 
         helper.assertTrue(cropArea.canWorkHere(worker),
                 "Expected the owned worker to legally participate in the owned crop area during the BannerMod settlement labor slice");
