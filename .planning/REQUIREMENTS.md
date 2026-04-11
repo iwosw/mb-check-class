@@ -20,3 +20,10 @@
 - Active runtime accepts legacy `workers:*` ids on confirmed critical compatibility paths (registry remaps and structure/build NBT migration) without reopening a second live namespace.
 - Root workspace has a documented merged codebase baseline covering active runtime paths, legacy archives, verification entrypoints, and current open risks.
 - Root workspace has lightweight smoke/regression coverage for merged Workers runtime helpers and build-flow progress helpers without requiring full runtime E2E.
+
+## Active Stabilization Requirements
+
+- [x] STAB-01 — Root merged verification runs retained Workers regression tests from the active root workspace.
+- [ ] STAB-02 — Build-area update packets enforce the same authoring access rules as the other merged worker modification packets.
+- [ ] STAB-03 — The merged runtime no longer live-registers duplicated legacy update checkers.
+- [ ] STAB-04 — Active roadmap/state/readiness docs truthfully describe the stabilization verification baseline and remaining cleanup boundary.

@@ -44,7 +44,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11); runtime identity, banner
 - Fold `workers` registries, menus, packets, and client screens into the unified mod.
 - Replace hard imports from `com.talhanation.recruits.*` with same-project integration seams where needed.
 
-Status: merged runtime baseline achieved.
+Status: Complete in practice; workers runtime ownership is already absorbed into the merged BannerMod runtime, with remaining cleanup and smoke validation tracked under Phase 5.
 
 ## Phase 4: Resource and Data Consolidation
 
@@ -60,8 +60,23 @@ Status: mostly complete; active runtime resources and workers registry-coupled n
 - Re-run tests and smoke validation from the unified root.
 - Retire legacy source trees once all runtime ownership has moved.
 
-Status: current active phase.
+**Goal:** Stabilization work turns the merged BannerMod runtime into a lower-risk root baseline: retained Workers regressions run from the active root workspace, high-risk merged-runtime mutation and legacy-listener seams are fenced or retired without violating the Phase 02 compatibility contract, and root docs tell the cleanup truth.
+
+**Requirements:** [STAB-01, STAB-02, STAB-03, STAB-04]
+
+**Plans:** 4 plans
+
+Plans:
+- [x] 05-01-PLAN.md — Expand the root regression pipeline to execute retained Workers JUnit suites.
+- [ ] 05-02-PLAN.md — Harden build-area update authoring so merged worker edits honor the existing access rules.
+- [ ] 05-03-PLAN.md — Retire live registration of duplicated legacy update-check listeners in the merged runtime.
+- [ ] 05-04-PLAN.md — Refresh roadmap/state/readiness docs so the stabilization baseline and remaining cleanup boundary stay truthful.
+
+Planning artifacts live under `.planning/phases/05-stabilization-and-cleanup/` so stabilization work stays explicit before execution.
+
+Status: In Progress (1/4 plans complete as of 2026-04-11).
 
 - Latest slice: workers registry-layer namespace unified under `bannermod`, root compile/resources/test revalidated, and legacy structure entity ids kept readable via migration fallback.
 - Latest slice: added focused legacy `workers:*` compatibility hooks for world/registry remaps plus structure-scan/build NBT migration, then revalidated root compile/processResources/test.
 - Latest slice: documented root verification entrypoints and merged codebase source-of-truth paths, and added lightweight Workers smoke/regression tests for merged runtime helpers and builder progress.
+- Latest slice: routed retained Workers JUnit suites through the root `test` source set so merged regression coverage now runs from `./gradlew test`.
