@@ -24,6 +24,6 @@
 ## Active Stabilization Requirements
 
 - [x] STAB-01 — Root merged verification runs retained Workers regression tests from the active root workspace.
-- [ ] STAB-02 — Build-area update packets enforce the same authoring access rules as the other merged worker modification packets.
-- [ ] STAB-03 — The merged runtime no longer live-registers duplicated legacy update checkers.
-- [ ] STAB-04 — Active roadmap/state/readiness docs truthfully describe the stabilization verification baseline and remaining cleanup boundary.
+- [x] STAB-02 — Build-area update packets enforce the same authoring access rules as the other merged worker modification packets.
+- [x] STAB-03 — The merged runtime no longer live-registers duplicated legacy update checkers.
+- [x] STAB-04 — Active roadmap/state/readiness docs truthfully describe the stabilization verification baseline and remaining cleanup boundary.

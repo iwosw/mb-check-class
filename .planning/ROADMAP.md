@@ -68,15 +68,16 @@ Status: mostly complete; active runtime resources and workers registry-coupled n
 
 Plans:
 - [x] 05-01-PLAN.md — Expand the root regression pipeline to execute retained Workers JUnit suites.
-- [ ] 05-02-PLAN.md — Harden build-area update authoring so merged worker edits honor the existing access rules.
-- [ ] 05-03-PLAN.md — Retire live registration of duplicated legacy update-check listeners in the merged runtime.
-- [ ] 05-04-PLAN.md — Refresh roadmap/state/readiness docs so the stabilization baseline and remaining cleanup boundary stay truthful.
+- [x] 05-02-PLAN.md — Harden build-area update authoring so merged worker edits honor the existing access rules.
+- [x] 05-03-PLAN.md — Retire live registration of duplicated legacy update-check listeners in the merged runtime.
+- [x] 05-04-PLAN.md — Refresh roadmap/state/readiness docs so the stabilization baseline and remaining cleanup boundary stay truthful.
 
 Planning artifacts live under `.planning/phases/05-stabilization-and-cleanup/` so stabilization work stays explicit before execution.
 
-Status: In Progress (1/4 plans complete as of 2026-04-11).
+Status: Complete (4/4 plans complete as of 2026-04-11).
 
 - Latest slice: workers registry-layer namespace unified under `bannermod`, root compile/resources/test revalidated, and legacy structure entity ids kept readable via migration fallback.
 - Latest slice: added focused legacy `workers:*` compatibility hooks for world/registry remaps plus structure-scan/build NBT migration, then revalidated root compile/processResources/test.
 - Latest slice: documented root verification entrypoints and merged codebase source-of-truth paths, and added lightweight Workers smoke/regression tests for merged runtime helpers and builder progress.
 - Latest slice: routed retained Workers JUnit suites through the root `test` source set so merged regression coverage now runs from `./gradlew test`.
+- Latest slice: fenced build-area mutation behind shared authoring rules and disabled duplicate legacy update-check listeners while keeping the Phase 02 compatibility boundary narrow.
