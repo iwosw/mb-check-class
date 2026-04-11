@@ -99,10 +99,10 @@ Status: Complete (4/4 plans complete as of 2026-04-11).
 
 Plans:
 - [x] 06-01-PLAN.md — Validate that one player can own recruit and worker actors in the same BannerMod runtime while shared ownership boundaries stay correct.
-- [ ] 06-02-PLAN.md — Validate that an owned worker can bind to settlement infrastructure and participate in a valid work area under the same authority rules.
-- [ ] 06-03-PLAN.md — Validate that settlement-side supply can satisfy recruit upkeep and readiness through a live runtime transition.
-- [ ] 06-04-PLAN.md — Validate the stitched full BannerMod player cycle with authority and recovery expectations in one root GameTest flow.
+- [x] 06-02-PLAN.md — Validate that an owned worker can bind to settlement infrastructure and participate in a valid work area under the same authority rules.
+- [x] 06-03-PLAN.md — Validate that settlement-side supply can satisfy recruit upkeep and readiness through a live runtime transition.
+- [x] 06-04-PLAN.md — Validate the stitched full BannerMod player cycle with authority and recovery expectations in one root GameTest flow.
 
 Planning artifacts live under `.planning/phases/06-player-cycle-gametest-validation/` so player-cycle validation work stays explicit and reviewable.
 
-Status: In progress (1/4 plans complete as of 2026-04-11).
+Status: Complete (4/4 plans complete as of 2026-04-11).

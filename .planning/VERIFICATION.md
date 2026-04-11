@@ -12,6 +12,10 @@
 
 - `test` runs root JUnit 5 coverage from `src/test/java`, `recruits/src/test/java`, and `workers/src/test/java`.
 - Current root smoke/regression coverage includes:
+  - BannerMod runtime identity plus worker subsystem seam alignment in one root merged-runtime smoke test
+  - shared BannerMod authority vocabulary for inspect, modify, create, and recover-control decisions
+  - shared BannerMod config-file taxonomy and legacy-file migration guardrails for military, settlement, and client surfaces
+  - shared BannerMod supply-status vocabulary for build-material pressure, worker storage blockage, and recruit upkeep food/payment pressure
   - merged Workers runtime identity and asset-path helpers
   - merged Workers builder-progress flow helpers
   - retained Workers JUnit suites under `workers/src/test/java`
@@ -23,7 +27,8 @@
 
 - Root `gametest` source set is wired in `build.gradle` and exposed through `runGameTestServer`.
 - `verifyGameTestStage` depends on `runGameTestServer`.
-- Current root gametest directories are placeholders only; no active root GameTest classes are present yet.
+- Root `gametest` now includes a split BannerMod validation suite under `src/gametest/java/com/talhanation/bannermod/`: `IntegratedRuntimeGameTests.java` for merged runtime smoke, `BannerModOwnershipCycleGameTests.java` for shared-ownership boundaries, `BannerModSettlementLaborGameTests.java` for owned work-area participation plus outsider recovery denial, `BannerModUpkeepFlowGameTests.java` for same-owner supply-to-upkeep transitions, and `BannerModPlayerCycleGameTests.java` for one stitched ownership→labor→upkeep→recovery gameplay loop.
+- `./gradlew verifyGameTestStage` is currently green with 28 required tests.
 
 ## Recommended Default Validation For Stabilization Slices
 
@@ -35,7 +40,7 @@ Run from the repository root:
 
 Phase 2 design outputs must preserve the existing migration helpers and compatibility seams documented in `.planning/phases/02-runtime-unification-design/02-runtime-compatibility-contract.md`.
 
-Use `./gradlew runGameTestServer` only when a later execution slice changes actual gameplay or runtime flow while root GameTests remain sparse. It remains additive validation rather than the default stabilization baseline.
+Use `./gradlew runGameTestServer` or `./gradlew verifyGameTestStage` when a slice changes merged gameplay/runtime wiring or needs root-level smoke validation of recruit-plus-worker coexistence. `compileJava`, `processResources`, and `test` remain the default fast stabilization baseline, while GameTest now also covers dedicated ownership, settlement-labor, upkeep-flow, and stitched player-cycle slices instead of only registry/runtime coexistence.
 
 ## Why This Baseline Exists
 

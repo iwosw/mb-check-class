@@ -2,26 +2,26 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Active
-last_updated: "2026-04-11T09:58:12Z"
+status: Complete
+last_updated: "2026-04-11T10:10:30Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 12
-  completed_plans: 9
+  completed_plans: 12
 ---
 
 # Project State
 
-- Current focus: Phase 06 player-cycle GameTest validation is active; Plan 01 is complete, and the immediate next goal is to extend the new helper/slice baseline into settlement labor, upkeep flow, and the stitched full player cycle without deep production rewrites.
+- Current focus: Phase 06 player-cycle GameTest validation is complete; the root BannerMod GameTest suite now covers runtime smoke, ownership, settlement labor, upkeep flow, and one stitched full player cycle, with only optional non-critical follow-up remaining.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: Phase 06 player-cycle GameTest validation for shared player ownership, settlement labor participation, live supply-to-upkeep transitions, and one stitched authority-safe gameplay loop, plus any remaining non-critical/custom payload compatibility follow-up and optional deeper source-tree cleanup
+- Pending major work: any remaining optional non-critical/custom payload compatibility follow-up and deeper cleanup beyond the now-complete Phase 06 GameTest validation baseline
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/06-player-cycle-gametest-validation/06-player-cycle-gametest-validation-01-SUMMARY.md`
+- Latest execution summary: `.planning/phases/06-player-cycle-gametest-validation/06-player-cycle-gametest-validation-04-SUMMARY.md`
 
 ## Decisions
 
@@ -50,6 +50,9 @@ progress:
 - [Phase 06-player-cycle-gametest-validation]: The next roadmap phase extends root GameTests from isolated merged-runtime seams into player-facing cycle validation for shared ownership, settlement labor, upkeep supply, and one stitched authority-safe gameplay loop.
 - [Phase 06-player-cycle-gametest-validation]: Keep IntegratedRuntimeGameTests limited to merged runtime seam smoke coverage.
 - [Phase 06-player-cycle-gametest-validation]: Move ownership assertions into a dedicated BannerModOwnershipCycleGameTests artifact so later Phase 06 slices can grow independently.
+- [Phase 06-player-cycle-gametest-validation]: Model settlement-labor outsider checks with a distinct fake player identity so GameTest authority assertions stay deterministic.
+- [Phase 06-player-cycle-gametest-validation]: Direct worker recovery must enforce the same owner-or-admin authority rule even when the owner player entity is not currently resolved in-level.
+- [Phase 06-player-cycle-gametest-validation]: The full player-cycle GameTest should compose the earlier ownership, labor, and upkeep slice contracts rather than inventing a parallel setup path.
 
 ## Performance Metrics
 
@@ -64,9 +67,12 @@ progress:
 | Phase 05-stabilization-and-cleanup P03 | 6 min | 2 tasks | 4 files |
 | Phase 05-stabilization-and-cleanup P04 | 4 min | 2 tasks | 6 files |
 | Phase 06-player-cycle-gametest-validation P01 | 5 min | 2 tasks | 3 files |
+| Phase 06-player-cycle-gametest-validation P02 | 5 min | 1 tasks | 2 files |
+| Phase 06-player-cycle-gametest-validation P03 | 2 min | 1 tasks | 1 files |
+| Phase 06-player-cycle-gametest-validation P04 | 2 min | 1 tasks | 1 files |
 
 ## Session
 
-- Last updated: 2026-04-11T09:58:12Z
-- Stopped at: Completed 06-player-cycle-gametest-validation-01-PLAN.md
-- Resume file: .planning/phases/06-player-cycle-gametest-validation/06-02-PLAN.md
+- Last updated: 2026-04-11T10:10:30Z
+- Stopped at: Completed 06-player-cycle-gametest-validation-04-PLAN.md
+- Resume file: .planning/phases/06-player-cycle-gametest-validation/06-player-cycle-gametest-validation-04-SUMMARY.md
