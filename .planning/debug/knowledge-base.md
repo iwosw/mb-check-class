@@ -11,3 +11,11 @@ Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypothe
 - **Fix:** Updated the merged root build so jar and shadowJar explicitly include build/tmp/compileJava/mixins.recruits.refmap.json in the packaged artifact.
 - **Files changed:** build.gradle
 ---
+
+## formation-collision-nearest-free-slot-fallback — blocked formation recruits now retarget to nearby open slots
+- **Date:** 2026-04-12
+- **Error patterns:** formation collision, nearest free slot fallback, recruits keep pushing, blocked formation slot, runtime behavior bug
+- **Root cause:** Formation slot assignment was effectively static. Once a recruit entered hold-position formation movement, RecruitHoldPosGoal only kept pathing back to the same holdPos and never reacted to navigation-stuck or collision states, so blocked recruits kept pushing at occupied paths without releasing or reassigning their slot.
+- **Fix:** Added a runtime formation fallback helper that picks the nearest currently unoccupied formation slot, swaps slot claims between recruits so the blocked recruit releases its original slot, and invoked it from RecruitHoldPosGoal when navigation reports collision or stuck behavior.
+- **Files changed:** recruits/src/main/java/com/talhanation/recruits/util/FormationUtils.java, recruits/src/main/java/com/talhanation/recruits/entities/ai/RecruitHoldPosGoal.java, recruits/src/test/java/com/talhanation/recruits/util/FormationUtilsTest.java
+---
