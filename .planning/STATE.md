@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-last_updated: "2026-04-12T11:48:54.898Z"
+status: Executing Phase 31
+last_updated: "2026-04-12T12:35:16.200Z"
 progress:
   total_phases: 31
   completed_phases: 20
   total_plans: 60
-  completed_plans: 51
+  completed_plans: 52
 ---
 
 # Project State
 
-- Current focus: Phase 29 is complete; miners now have explicit tunnel/branch settings plus planned excavation patterns, builders can load schematic templates through the existing BuildArea pipeline, and Phase 21 source-tree consolidation now has an execution-ready five-plan breakdown.
+- Current focus: Phase 31 is in progress; claim worker growth now has a pure status-driven rules seam plus explicit config inputs, while the remaining Phase 31 plans still need live runtime wiring and miner claim-safe cleanup.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/29-1-3-3-2-branch-mining-strip-mining-3-21-26-04-SUMMARY.md`
+- Latest execution summary: `.planning/phases/31-1-2-mining-area-branch-mine-3/31-1-2-mining-area-branch-mine-3-01-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-CONTEXT.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-02-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-03-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-04-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-05-PLAN.md`
 
 ## Decisions
@@ -124,6 +124,8 @@ progress:
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Mining behavior now uses one explicit `MiningPatternSettings` contract across UI, packets, persisted area state, and miner AI progress.
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Tunnel mining must advance by planned diagonal segments and branch mining must advance by deterministic corridor/branch segments instead of generic scan-box inference.
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Builder template import stays on one BuildArea `CompoundTag` contract through a unified `.nbt`/`.schem`/`.schematic` loader rather than introducing a parallel preview or build pipeline.
+- [Phase 31-1-2-mining-area-branch-mine-3]: Claim worker growth evaluates BannerModSettlementBinding.Status directly. — This keeps the rules seam pure and independent from runtime world state.
+- [Phase 31-1-2-mining-area-branch-mine-3]: Claim growth uses a dedicated immutable config snapshot. — The toggle, cooldown, cap, and profession pool stay explicit and testable for later runtime hooks.
 
 ## Accumulated Context
 
@@ -165,9 +167,10 @@ progress:
 | Phase 29-miner-excavation-recovery-and-builder-schematic-loading P02 | not recorded | 2 tasks | 4 files |
 | Phase 29-miner-excavation-recovery-and-builder-schematic-loading P03 | not recorded | 2 tasks | 4 files |
 | Phase 29-miner-excavation-recovery-and-builder-schematic-loading P04 | not recorded | 2 tasks | 5 files |
+| Phase 31-1-2-mining-area-branch-mine-3 P01 | 3 min | 2 tasks | 3 files |
 
 ## Session
 
-- Last updated: 2026-04-12T09:05:00Z
-- Stopped at: Completed Phase 29 metadata/finalization pass
-- Resume file: .planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md
+- Last updated: 2026-04-12T12:34:17Z
+- Stopped at: Completed 31-1-2-mining-area-branch-mine-3-01-PLAN.md
+- Resume file: .planning/phases/31-1-2-mining-area-branch-mine-3/31-02-PLAN.md
