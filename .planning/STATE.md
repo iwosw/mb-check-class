@@ -13,11 +13,11 @@ progress:
 
 # Project State
 
-- Current focus: Phase 20 runtime ownership audit is complete; the repo now has a code-backed runtime audit plus ownership matrix for the recruit-led merged runtime, and Plan 20-02 target architecture handoff is next.
+- Current focus: Phase 20 is complete; the repo now has a code-backed runtime audit, ownership matrix, and Bannerlord target architecture handoff for the recruit-led merged runtime, and Phase 21 source-tree consolidation planning is next.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: Phase 20 target architecture handoff for the `com.talhanation.bannerlord` package move, with later work still bounded by the audited recruit-led runtime, narrow workers compatibility seams, and any isolated profiling follow-up on low path-reuse/high formation-fallback hotspots.
+- Pending major work: Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, with later work still bounded by the audited recruit-led runtime, the published target architecture, narrow workers compatibility seams, and any isolated profiling follow-up on low path-reuse/high formation-fallback hotspots.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -36,8 +36,8 @@ progress:
 - Phase 20 planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-01-SUMMARY.md`
-- Latest planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-CONTEXT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-01-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-RUNTIME-AUDIT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-OWNERSHIP-MATRIX.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-02-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-01-SUMMARY.md`
+- Latest execution summary: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-02-SUMMARY.md`
+- Latest planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-CONTEXT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-01-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-RUNTIME-AUDIT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-OWNERSHIP-MATRIX.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-02-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-TARGET-ARCHITECTURE.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-02-SUMMARY.md`
 
 ## Decisions
 

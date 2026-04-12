@@ -359,15 +359,15 @@ Status: Complete (2/2 plans complete as of 2026-04-12); the retained required Ga
 
 **Goal:** Turn the current future-feature wishlist into a code-backed baseline with explicit migration, compatibility, and package-move boundaries.
 
-**Plans:** 1/2 plans executed
+**Plans:** 2 plans
 
 Plans:
 - [x] 20-01-PLAN.md — Audit the active runtime ownership surfaces and publish the source-root, package-family, and jar-reference matrix that must survive consolidation.
-- [ ] 20-02-PLAN.md — Publish the Bannerlord target architecture, package-move map, compatibility boundary, and migration risk register for Phase 21 execution.
+- [x] 20-02-PLAN.md — Publish the Bannerlord target architecture, package-move map, compatibility boundary, and migration risk register for Phase 21 execution.
 
 Planning artifacts live under `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`, while roadmap-shaping research remains in `.planning/FUTURE_EXPANSION_RESEARCH.md` and `.planning/phases/FUTURE-EXPANSION-PHASES.md`.
 
-Status: In Progress (1/2 plans complete as of 2026-04-12); runtime ownership is now audited in `20-RUNTIME-AUDIT.md` and `20-OWNERSHIP-MATRIX.md`, with the target-architecture handoff still pending in Plan 20-02.
+Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is audited in `20-RUNTIME-AUDIT.md`, the move-order matrix is published in `20-OWNERSHIP-MATRIX.md`, and the Phase 21 handoff contract now lives in `20-TARGET-ARCHITECTURE.md`.
 
 ## Phase 21: Source Tree Consolidation Into Bannerlord
 
@@ -379,7 +379,7 @@ Status: In Progress (1/2 plans complete as of 2026-04-12); runtime ownership is 
 
 Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/` once planned.
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+Status: Planned (next execution target as of 2026-04-12, using `20-TARGET-ARCHITECTURE.md` as the move contract).
 
 ## Phase 22: Citizen Role Unification
 
