@@ -28,6 +28,97 @@ class WorkerSettlementSpawnRulesTest {
             "settlement",
             null
     );
+    private static final BannerModSettlementBinding.Binding DEGRADED = new BannerModSettlementBinding.Binding(
+            BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
+            "settlement",
+            "other"
+    );
+
+    @Test
+    void friendlyClaimAllowsClaimWorkerGrowthWhenCooldownIsSatisfied() {
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = new WorkerSettlementSpawnRules.ClaimGrowthConfig(
+                true,
+                200L,
+                4,
+                List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER)
+        );
+
+        WorkerSettlementSpawnRules.Decision decision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                0,
+                200L,
+                config
+        );
+
+        assertTrue(decision.allowed());
+        assertEquals(200L, decision.requiredCooldownTicks());
+        assertEquals(WorkerSettlementSpawnRules.WorkerProfession.FARMER, decision.professionOptional().orElseThrow());
+    }
+
+    @Test
+    void hostileDegradedAndUnclaimedClaimsDenyClaimWorkerGrowth() {
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = new WorkerSettlementSpawnRules.ClaimGrowthConfig(
+                true,
+                200L,
+                4,
+                List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER)
+        );
+
+        WorkerSettlementSpawnRules.Decision hostileDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.HOSTILE_CLAIM,
+                0,
+                200L,
+                config
+        );
+        WorkerSettlementSpawnRules.Decision degradedDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
+                0,
+                200L,
+                config
+        );
+        WorkerSettlementSpawnRules.Decision unclaimedDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.UNCLAIMED,
+                0,
+                200L,
+                config
+        );
+
+        assertFalse(hostileDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, hostileDecision.denialReasonOptional().orElseThrow());
+        assertFalse(degradedDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, degradedDecision.denialReasonOptional().orElseThrow());
+        assertFalse(unclaimedDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, unclaimedDecision.denialReasonOptional().orElseThrow());
+    }
+
+    @Test
+    void claimWorkerGrowthCooldownRequirementScalesWithCurrentWorkers() {
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = new WorkerSettlementSpawnRules.ClaimGrowthConfig(
+                true,
+                200L,
+                8,
+                List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER)
+        );
+
+        WorkerSettlementSpawnRules.Decision deniedDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                2,
+                599L,
+                config
+        );
+        WorkerSettlementSpawnRules.Decision allowedDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                2,
+                600L,
+                config
+        );
+
+        assertEquals(600L, deniedDecision.requiredCooldownTicks());
+        assertFalse(deniedDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.COOLDOWN_ACTIVE, deniedDecision.denialReasonOptional().orElseThrow());
+        assertEquals(600L, allowedDecision.requiredCooldownTicks());
+        assertTrue(allowedDecision.allowed());
+    }
 
     @Test
     void friendlyClaimAllowsWorkerBirthWhenQuotaAndCooldownAllowIt() {
@@ -126,4 +217,5 @@ class WorkerSettlementSpawnRulesTest {
         assertFalse(spawnDecision.allowed());
         assertEquals(WorkerSettlementSpawnRules.DenialReason.FEATURE_DISABLED, spawnDecision.denialReasonOptional().orElseThrow());
     }
+
 }
