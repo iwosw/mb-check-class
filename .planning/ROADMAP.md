@@ -377,9 +377,18 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/` once planned.
+**Plans:** 5 plans
 
-Status: Planned (next execution target as of 2026-04-12, using `20-TARGET-ARCHITECTURE.md` as the move contract).
+Plans:
+- [ ] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.
+- [ ] 21-02-PLAN.md — Re-home bootstrap, shared networking, and registry/lifecycle composition into `com.talhanation.bannerlord.bootstrap`, `.network`, and `.registry` without changing the runtime contract.
+- [ ] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannerlord` military/shared packages before worker code follows them.
+- [ ] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannerlord` base while isolating the compatibility layer.
+- [ ] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
+
+Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/`.
+
+Status: Planned (5 plans defined on 2026-04-12; next execution target, using `20-TARGET-ARCHITECTURE.md` as the move contract).
 
 ## Phase 22: Citizen Role Unification
 
@@ -495,7 +504,7 @@ Status: Complete (priority override executed on 2026-04-12 before returning to t
 
 **Requirements:** [WBSP-01, WBSP-02, WBSP-03]
 **Depends on:** Phase 29
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 30-01-PLAN.md — Define the pure claim-aware rules and config contract for worker birth plus settlement spawning.
@@ -505,3 +514,20 @@ Plans:
 Planning artifacts live under `.planning/phases/30-worker-birth-and-claim-based-settlement-spawn/`.
 
 Status: Planned (new decomposition defined as of 2026-04-12).
+
+### Phase 31: Добавляем приоритетную новую фазу. 1. Клеймы считаются поселениями  2. Mining Area майнера - убрать, оставить чисто настройки копания тоннеля по диагонали вниз и branch mine. Настроек как далеко можно копать можно не делать, но сделать так чтобы не пытался всё время сломать блок чужого клейма, если рядом с клеймом чужим к нему не копает (копать вне клейма майнер может)  3. Делаем генерацию воркеров в клеймах, но считаем сколько уже есть, и по убывающей прогрессии добавляем новых.
+
+**Goal:** BannerMod treats friendly claims as settlement-capable worker-growth surfaces, miner authoring exposes only tunnel and branch settings, and miners skip hostile-claim excavation targets without losing friendly or unclaimed mining.
+**Requirements:** [CLAIMGROW-01, CLAIMGROW-02, MINERCFG-01, MINERSAFE-01]
+**Depends on:** Phase 30
+**Plans:** 4 plans
+
+Plans:
+- [ ] 31-01-PLAN.md — Extend the pure worker-growth rules/config seam so friendly claims count as settlement growth surfaces with diminishing cadence.
+- [ ] 31-02-PLAN.md — Wire bounded live claim worker growth and root GameTest validation through one claim-aware runtime spawn path.
+- [ ] 31-03-PLAN.md — Remove the miner's legacy box-style authoring contract and keep only tunnel/branch settings in the packet and screen.
+- [ ] 31-04-PLAN.md — Add hostile-claim excavation guardrails so miners skip foreign-claim blocks while preserving friendly and unclaimed mining.
+
+Planning artifacts live under `.planning/phases/31-1-2-mining-area-branch-mine-3/`.
+
+Status: Planned (4 plans defined on 2026-04-12).

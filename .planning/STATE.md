@@ -2,22 +2,22 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: In Progress
-last_updated: "2026-04-12T07:34:56.937Z"
+status: Ready to plan
+last_updated: "2026-04-12T11:48:54.898Z"
 progress:
-  total_phases: 28
-  completed_phases: 18
-  total_plans: 44
-  completed_plans: 44
+  total_phases: 31
+  completed_phases: 20
+  total_plans: 60
+  completed_plans: 51
 ---
 
 # Project State
 
-- Current focus: Phase 20 is complete; the repo now has a code-backed runtime audit, ownership matrix, and Bannerlord target architecture handoff for the recruit-led merged runtime, and Phase 21 source-tree consolidation planning is next.
+- Current focus: Phase 29 is complete; miners now have explicit tunnel/branch settings plus planned excavation patterns, builders can load schematic templates through the existing BuildArea pipeline, and Phase 21 source-tree consolidation now has an execution-ready five-plan breakdown.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, with later work still bounded by the audited recruit-led runtime, the published target architecture, narrow workers compatibility seams, and any isolated profiling follow-up on low path-reuse/high formation-fallback hotspots.
+- Pending major work: Execute Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, with the move still bounded by the audited recruit-led runtime, the published target architecture, narrow workers compatibility seams, and the now-restored worker mining/build automation baseline from Phase 29.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -34,10 +34,12 @@ progress:
 - Phase 18 planning artifacts: `.planning/phases/18-optional-flow-field-navigation-evaluation/`
 - Phase 19 planning artifacts: `.planning/phases/19-large-battle-performance-validation/`
 - Phase 20 planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`
+- Phase 21 planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/`
+- Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-02-SUMMARY.md`
-- Latest planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-CONTEXT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-01-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-RUNTIME-AUDIT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-OWNERSHIP-MATRIX.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-02-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-TARGET-ARCHITECTURE.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-02-SUMMARY.md`
+- Latest execution summary: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/29-1-3-3-2-branch-mining-strip-mining-3-21-26-04-SUMMARY.md`
+- Latest planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-CONTEXT.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-02-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-03-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-04-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-05-PLAN.md`
 
 ## Decisions
 
@@ -116,6 +118,20 @@ progress:
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Move shared BannerMod seam classes first into com.talhanation.bannerlord before re-homing bootstrap or worker-heavy packages.
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Keep the live bannermod mod id, shared channel, config filenames, and workers legacy-id migration helpers stable through the Phase 21 move.
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Treat worker package relocation as a dependent wave that follows recruit-owned entity, pathfinding, persistence, and client-base relocation.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Execute the physical package move in five waves: shared seams/config, bootstrap/network/registry, recruit-owned controlling systems, worker civilian packages, then source-root retirement plus final validation.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Keep `com.talhanation.bannermod` forwarding wrappers temporary and narrow; they are allowed only to reduce migration risk during import churn.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Do not retire `recruits/` or `workers/` Java source roots until `build.gradle` is updated, the retained compatibility layer is explicit, and root `compileJava`, `processResources`, `test`, and `verifyGameTestStage` are green or explicitly justified.
+- [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Mining behavior now uses one explicit `MiningPatternSettings` contract across UI, packets, persisted area state, and miner AI progress.
+- [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Tunnel mining must advance by planned diagonal segments and branch mining must advance by deterministic corridor/branch segments instead of generic scan-box inference.
+- [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Builder template import stays on one BuildArea `CompoundTag` contract through a unified `.nbt`/`.schem`/`.schematic` loader rather than introducing a parallel preview or build pipeline.
+
+## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 29 added: Майнер не прокапывается к шахте, а просто статично стоит. 1. Добавь майнеру задачу копать тоннель 3х3 (или произвольной ширины) вниз по диагонали (ни в коем случае не под себя) 2. Добавь майнеру задачу копать по тактике branch mining (strip mining) заданной высоты 3. Добавь загрузку схематик билдерам. Задача высочайшего приоритета, сдвинь фазы 21-26 вправо, а это впихни прямо сейчас
+- Phase 30 added: Worker Birth And Claim-Based Settlement Spawn
+- Phase 31 added: Добавляем приоритетную новую фазу. 1. Клеймы считаются поселениями 2. Mining Area майнера - убрать, оставить чисто настройки копания тоннеля по диагонали вниз и branch mine. Настроек как далеко можно копать можно не делать, но сделать так чтобы не пытался всё время сломать блок чужого клейма, если рядом с клеймом чужим к нему не копает (копать вне клейма майнер может) 3. Делаем генерацию воркеров в клеймах, но считаем сколько уже есть, и по убывающей прогрессии добавляем новых.
 
 ## Performance Metrics
 
@@ -145,9 +161,13 @@ progress:
 | Phase 14-formation-level-target-selection-rewrite P04 | not recorded | 2 tasks | 1 files |
 | Phase 20-runtime-audit-and-bannerlord-target-architecture P01 | 7 min | 2 tasks | 3 files |
 | Phase 20-runtime-audit-and-bannerlord-target-architecture P02 | 4 min | 2 tasks | 4 files |
+| Phase 29-miner-excavation-recovery-and-builder-schematic-loading P01 | not recorded | 2 tasks | 6 files |
+| Phase 29-miner-excavation-recovery-and-builder-schematic-loading P02 | not recorded | 2 tasks | 4 files |
+| Phase 29-miner-excavation-recovery-and-builder-schematic-loading P03 | not recorded | 2 tasks | 4 files |
+| Phase 29-miner-excavation-recovery-and-builder-schematic-loading P04 | not recorded | 2 tasks | 5 files |
 
 ## Session
 
-- Last updated: 2026-04-12T07:34:00Z
-- Stopped at: Completed 20-02-PLAN.md
-- Resume file: .planning/phases/21-source-tree-consolidation-into-bannerlord/
+- Last updated: 2026-04-12T09:05:00Z
+- Stopped at: Completed Phase 29 metadata/finalization pass
+- Resume file: .planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md

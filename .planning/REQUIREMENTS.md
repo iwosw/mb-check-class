@@ -32,3 +32,10 @@
 
 - [x] DSAUTH-01 — Dedicated-server validation proves outsiders cannot command offline-owned recruits or recover offline-owned workers while admin recovery still works when owner lookup is unresolved.
 - [ ] DSAUTH-02 — Dedicated-server validation proves reconnect and persistence-safe ownership recovery stays deterministic across recruit, worker, and work-area state.
+
+## Active Phase 31 Requirements
+
+- [ ] CLAIMGROW-01 — Friendly claims count as valid settlement context for worker growth without introducing a new settlement manager.
+- [ ] CLAIMGROW-02 — Claim worker growth counts existing workers, slows via an explicit diminishing cadence, seeds claim leader ownership/team defaults, and denies hostile or unclaimed territory.
+- [ ] MINERCFG-01 — Miner authoring exposes only tunnel and branch settings instead of the legacy generic mining box contract.
+- [ ] MINERSAFE-01 — Miner excavation skips hostile-claim blocks while preserving friendly-claim and unclaimed excavation.
