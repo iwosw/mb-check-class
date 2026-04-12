@@ -6,12 +6,14 @@ import com.talhanation.recruits.world.RecruitsClaim;
 import com.talhanation.workers.VillagerEvents;
 import com.talhanation.workers.config.WorkersServerConfig;
 import com.talhanation.workers.entities.AbstractWorkerEntity;
+import com.talhanation.workers.entities.FarmerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.gametest.GameTestHolder;
@@ -119,6 +121,32 @@ public class BannerModClaimWorkerGrowthGameTests {
         helper.succeed();
     }
 
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void claimGrownFarmerSeedsCropAreaFromPreparedField(GameTestHelper helper) {
+        ClaimGrowthConfigSnapshot snapshot = ClaimGrowthConfigSnapshot.capture();
+        try {
+            configureClaimGrowthForTests(20L, 4);
+
+            ServerLevel level = helper.getLevel();
+            ServerPlayer leader = createLeader(helper, level, FRIENDLY_LEADER_UUID, "phase31-field-leader", FRIENDLY_TEAM_ID);
+            BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+            RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
+            prepareField(level, helper.absolutePos(new BlockPos(8, 2, 8)));
+
+            AbstractWorkerEntity worker = VillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 20L);
+
+            helper.assertTrue(worker instanceof FarmerEntity, "Expected the configured claim-growth profession pool to spawn a farmer.");
+            FarmerEntity farmer = (FarmerEntity) worker;
+            helper.assertTrue(farmer.currentCropArea != null, "Expected a claim-grown farmer on a prepared field to receive a crop area instead of idling without work.");
+            helper.assertTrue(farmer.currentCropArea.isAlive(), "Expected claim-grown farmer field seeding to create a live crop area entity.");
+        } finally {
+            snapshot.restore();
+        }
+
+        helper.succeed();
+    }
+
     private static ServerPlayer createLeader(GameTestHelper helper, ServerLevel level, UUID playerId, String name, String teamId) {
         Player player = BannerModDedicatedServerGameTestSupport.createFakeServerPlayer(level, playerId, name);
         BannerModDedicatedServerGameTestSupport.ensureFaction(level, teamId, playerId, name);
@@ -146,6 +174,19 @@ public class BannerModClaimWorkerGrowthGameTests {
         WorkersServerConfig.ClaimWorkerGrowthBaseCooldownTicks.set(baseCooldownTicks);
         WorkersServerConfig.ClaimWorkerMaxPerClaim.set(workerCap);
         WorkersServerConfig.ClaimWorkerProfessionPool.set(List.of("farmer"));
+    }
+
+    private static void prepareField(ServerLevel level, BlockPos center) {
+        level.setBlockAndUpdate(center, Blocks.WATER.defaultBlockState());
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dz = -4; dz <= 4; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                level.setBlockAndUpdate(center.offset(dx, 0, dz), Blocks.FARMLAND.defaultBlockState());
+                level.setBlockAndUpdate(center.offset(dx, 1, dz), Blocks.WHEAT.defaultBlockState());
+            }
+        }
     }
 
     private record ClaimGrowthConfigSnapshot(boolean enabled,

@@ -7,6 +7,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -63,5 +65,20 @@ class BannerModConfigFilesTest {
         assertEquals(activePath, resolvedPath);
         assertEquals("active-workers=true\n", Files.readString(activePath));
         assertFalse(Files.readString(activePath).contains("legacy-workers"));
+    }
+
+    @Test
+    void prepareConfigPathSynchronizesNewerLegacyMilitaryConfigIntoActiveFile() throws IOException {
+        Path legacyPath = configDir.resolve("bannermod-server.toml");
+        Path activePath = configDir.resolve("bannermod-military.toml");
+        Files.writeString(activePath, "RecruitCurrency=\"minecraft:emerald\"\n");
+        Files.writeString(legacyPath, "RecruitCurrency=\"minecraft:golden_ingot\"\n");
+        Files.setLastModifiedTime(activePath, FileTime.from(Instant.parse("2026-04-13T00:00:00Z")));
+        Files.setLastModifiedTime(legacyPath, FileTime.from(Instant.parse("2026-04-13T00:05:00Z")));
+
+        Path resolvedPath = BannerModConfigFiles.prepareConfigPath(configDir, BannerModConfigFiles.Surface.MILITARY);
+
+        assertEquals(activePath, resolvedPath);
+        assertEquals("RecruitCurrency=\"minecraft:golden_ingot\"\n", Files.readString(activePath));
     }
 }
