@@ -182,6 +182,9 @@ dependencies {
 }
 
 jar {
+    from("$buildDir/tmp/compileJava") {
+        include 'mixins.recruits.refmap.json'
+    }
 }
 
 jar.finalizedBy('reobfJar')
@@ -194,6 +197,9 @@ shadowJar {
     project.configurations.shadow.setTransitive(true)
     configurations = [project.configurations.shadow]
     relocate 'de.maxhenkel.corelib', 'de.maxhenkel.recruits.corelib'
+    from("$buildDir/tmp/compileJava") {
+        include 'mixins.recruits.refmap.json'
+    }
 }
 
 reobf {
