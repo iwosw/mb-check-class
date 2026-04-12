@@ -117,7 +117,7 @@ Status: Complete (4/4 plans complete as of 2026-04-11).
 
 **Requirements:** [DSAUTH-01, DSAUTH-02]
 
-**Plans:** 2 plans
+**Plans:** 4 plans
 
 Plans:
 - [x] 07-01-PLAN.md — Validate dedicated-server owner-offline and unresolved-owner authority denial for recruit and worker recovery flows.
@@ -135,7 +135,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11); `compileGameTestJava` an
 
 **Goal:** Prove BannerMod's shared authority contract remains correct under true multiplayer contention: cooperative players can use the intended same-team paths, outsiders stay denied, and server-owned state does not silently drift during concurrent recruit and settlement interactions.
 
-**Plans:** 2 plans
+**Plans:** 4 plans
 
 Plans:
 - [x] 08-01-PLAN.md — Validate contested multiplayer authority on shared recruit, worker, and work-area interactions with distinct owner and outsider players.
@@ -153,7 +153,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11); `verifyGameTestStage` no
 
 **Goal:** BannerMod gains an explicit settlement-faction contract: settlements are faction-aligned operational footprints derived from claims plus active infrastructure, and that contract becomes actionable for authority, legality, and later logistics work without forcing an immediate deep persistence rewrite.
 
-**Plans:** 2 plans
+**Plans:** 4 plans
 
 Plans:
 - [x] 09-01-PLAN.md — Publish the explicit settlement-faction binding rules and lifecycle vocabulary for the merged runtime.
@@ -174,12 +174,12 @@ Status: Complete (2/2 plans complete as of 2026-04-11); settlement-faction lifec
 **Plans:** 2 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — Validate friendly-claim settlement binding and hostile or unclaimed denial in root GameTests.
-- [ ] 10-02-PLAN.md — Validate settlement degradation on claim loss or faction mismatch without silent ownership transfer.
+- [x] 10-01-PLAN.md — Validate friendly-claim settlement binding and hostile or unclaimed denial in root GameTests.
+- [x] 10-02-PLAN.md — Validate settlement degradation on claim loss or faction mismatch without silent ownership transfer.
 
 Planning artifacts live under `.planning/phases/10-settlement-faction-enforcement-validation/` so faction-binding validation stays isolated from the contract-definition phase.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-12); root GameTests now prove friendly settlement placement and operation, hostile or unclaimed denial, and claim-loss or faction-mismatch degradation without silent ownership transfer.
 
 ## Phase 11: Large-Battle AI Profiling Baseline
 
@@ -192,12 +192,12 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 **Plans:** 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Define the large-battle profiling scenarios, counters, and evidence format for AI and pathfinding work.
-- [ ] 11-02-PLAN.md — Add the smallest instrumentation or harness seams needed to capture baseline measurements without changing AI behavior.
+- [x] 11-01-PLAN.md — Define the large-battle profiling scenarios, counters, and evidence format for AI and pathfinding work.
+- [x] 11-02-PLAN.md — Add the smallest instrumentation or harness seams needed to capture baseline measurements without changing AI behavior.
 
 Planning artifacts live under `.planning/phases/11-large-battle-ai-profiling-baseline/` so performance work starts from explicit evidence instead of anecdotal lag reports.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-11); the dense-battle baseline now has canonical profiling docs, resettable target-search and async-path counters, and GameTest snapshot capture wired into the live stress harness.
 
 ## Phase 12: Global Pathfinding Control
 
@@ -247,16 +247,17 @@ Status: Complete (2/2 plans complete as of 2026-04-11); recruit path requests no
 
 **Requirements:** [TARGETSEL-01, TARGETSEL-02]
 
-**Plans:** 2 plans
+**Plans:** 4 plans
 
 Plans:
 - [x] 14-01-PLAN.md — Replace the highest-cost per-entity target acquisition path with a formation-level selection and assignment seam.
 - [x] 14-02-PLAN.md — Validate combat behavior and profile target-selection cost after the formation rewrite.
-- [ ] 14-03-PLAN.md — Close the remaining retarget and loss-of-target GameTest gaps without widening the rewrite or reopening unrelated reconnect work.
+- [x] 14-03-PLAN.md — Close the remaining retarget and loss-of-target GameTest gaps without widening the rewrite or reopening unrelated reconnect work.
+- [x] 14-04-PLAN.md — Apply the smallest live-candidate filtering and brownfield harness fix needed to turn the remaining optional retarget/loss-of-target checks green.
 
 Planning artifacts live under `.planning/phases/14-formation-level-target-selection-rewrite/` so targeting work stays isolated from later movement-budget changes.
 
-Status: Gap closure attempted (2/3 plans complete plus one deferred follow-up as of 2026-04-11); formation-aware target selection now reports dense-battle profiling counters, `FormationTargetSelectionControllerTest` passes, and Plan 14-03 reduced the runtime stale-target seam but still needs one more brownfield GameTest hardening pass for the optional retarget/loss-of-target checks.
+Status: Complete (4/4 plans complete as of 2026-04-12); formation-aware target selection now reports dense-battle profiling counters, the optional retarget/loss-of-target checks are green on the retained recovery-field harness, and `verifyGameTestStage` passes with all 45 required tests green.
 
 ## Phase 15: Pathfinding Throttling And Budgeting
 
@@ -266,15 +267,15 @@ Status: Gap closure attempted (2/3 plans complete plus one deferred follow-up as
 
 **Goal:** BannerMod can cap and defer pathfinding work during large battles with an explicit, measurable budget instead of allowing bursty navigation spikes to dominate server ticks.
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 15-01-PLAN.md — Add deterministic pathfinding throttles and budget accounting to the shared control seam.
-- [ ] 15-02-PLAN.md — Validate under load and profile queue depth, deferred-path latency, and tick-cost stability.
+- [x] 15-01-PLAN.md — Add deterministic pathfinding throttles and budget accounting to the shared control seam.
+- [x] 15-02-PLAN.md — Validate under load and profile queue depth, deferred-path latency, and tick-cost stability.
 
 Planning artifacts live under `.planning/phases/15-pathfinding-throttling-and-budgeting/` so budget control stays separate from targeting and async remediation work.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-12); pathfinding requests now run through an explicit per-tick budget with bounded deferred-work accounting, retained battle GameTests expose queue/defer/drop pressure in stable profiling snapshots, and Phase 15 has one explicit correctness-and-evidence procedure for later async comparisons.
 
 ## Phase 16: Async Pathfinding Reliability Fixes
 
@@ -287,12 +288,12 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 **Plans:** 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — Harden async pathfinding handoff, cancellation, and stale-result handling against the current large-battle failure modes.
-- [ ] 16-02-PLAN.md — Validate async correctness and profile whether the fixed async path still improves large-battle cost.
+- [x] 16-01-PLAN.md — Harden async pathfinding handoff, cancellation, and stale-result handling against the current large-battle failure modes.
+- [x] 16-02-PLAN.md — Validate async correctness and profile whether the fixed async path still improves large-battle cost.
 
 Planning artifacts live under `.planning/phases/16-async-pathfinding-reliability-fixes/` so concurrency fixes remain a focused slice after earlier control work.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-12); async path ownership and invalidation are now explicit, retained battle GameTests expose delivered-versus-dropped callback accounting, and Phase 16 has one correctness-first async reliability validation procedure.
 
 ## Phase 17: AI LOD And Tick Shedding
 
@@ -305,12 +306,12 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 **Plans:** 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Add the smallest explicit AI LOD rules for low-priority actors and decision loops in large battles.
-- [ ] 17-02-PLAN.md — Validate gameplay behavior and profile tick-cost reduction from the new LOD layer.
+- [x] 17-01-PLAN.md — Add the smallest explicit AI LOD rules for low-priority actors and decision loops in large battles.
+- [x] 17-02-PLAN.md — Validate gameplay behavior and profile tick-cost reduction from the new LOD layer.
 
 Planning artifacts live under `.planning/phases/17-ai-lod-and-tick-shedding/` so AI degradation policy remains explicit and reviewable.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-12); recruit target search now uses one explicit AI LOD policy with operator-visible cadence knobs, retained dense-battle and mixed-squad GameTests publish LOD skip and tier counters beside earlier profiling seams, and `verifyGameTestStage` remains green as the correctness gate for Phase 17 evidence.
 
 ## Phase 18: Optional Flow-Field Navigation Evaluation
 
@@ -320,15 +321,17 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 
 **Goal:** BannerMod has an explicit decision on whether flow-field navigation is worth carrying: the idea is either proven by focused prototype evidence or rejected without destabilizing the core roadmap.
 
-**Plans:** 2 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — Define the narrow movement scenarios where an optional flow-field prototype is allowed and how it will be isolated.
-- [ ] 18-02-PLAN.md — Build the guarded prototype or spike and benchmark it against the existing pathfinding stack.
+- [x] 18-01-PLAN.md — Define the narrow movement scenarios where an optional flow-field prototype is allowed and how it will be isolated.
+- [x] 18-02-PLAN.md — Build the guarded prototype or spike and benchmark it against the existing pathfinding stack.
+- [x] 18-03-PLAN.md — Add one same-destination benchmark path, capture side-by-side evidence, and publish the final keep-or-drop decision.
+- [x] 18-04-PLAN.md — Refresh roadmap, state, and retained summaries so they match the completed Phase 18 outcome.
 
 Planning artifacts live under `.planning/phases/18-optional-flow-field-navigation-evaluation/` so optional navigation research does not blur into the required optimization backlog.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (4/4 plans complete as of 2026-04-12); the optional prototype was exercised on `same_destination_flow_field_lane`, but all 51 prototype attempts fell back with zero hits, so Phase 18 closes with `drop` in `18-DECISION.md`.
 
 ## Phase 19: Large-Battle Performance Validation
 
@@ -341,9 +344,123 @@ Status: Planned (0/2 plans complete as of 2026-04-11).
 **Plans:** 2 plans
 
 Plans:
-- [ ] 19-01-PLAN.md — Re-run the agreed large-battle profiling scenarios against the optimized runtime and capture comparable evidence.
-- [ ] 19-02-PLAN.md — Publish the before/after analysis, residual hotspots, and recommended next performance backlog based on measured results.
+- [x] 19-01-PLAN.md — Re-run the agreed large-battle profiling scenarios against the optimized runtime and capture comparable evidence.
+- [x] 19-02-PLAN.md — Publish the before/after analysis, residual hotspots, and recommended next performance backlog based on measured results.
 
 Planning artifacts live under `.planning/phases/19-large-battle-performance-validation/` so the optimization proposal ends with explicit proof rather than only implementation slices.
 
-Status: Planned (0/2 plans complete as of 2026-04-11).
+Status: Complete (2/2 plans complete as of 2026-04-12); the retained required GameTest gate is green again, optimized-runtime evidence now lives under `.planning/phases/19-large-battle-performance-validation/evidence/`, and the final closeout is published in `19-VALIDATION.md` and `19-RESULTS.md` with explicit caveats about missing Phase 11 raw bundles and external profiler data.
+
+## Phase 20: Runtime Audit And Bannerlord Target Architecture
+
+- Audit what still lives only in `recruits/`, `workers/`, or root-side jars.
+- Map entity, AI, registry, networking, storage, settlement, and config ownership that must survive the physical source-tree merge.
+- Normalize the requested destination into the valid Java package path `src/main/java/com/talhanation/bannerlord/**` before package moves begin.
+
+**Goal:** Turn the current future-feature wishlist into a code-backed baseline with explicit migration, compatibility, and package-move boundaries.
+
+**Plans:** 1/2 plans executed
+
+Plans:
+- [x] 20-01-PLAN.md — Audit the active runtime ownership surfaces and publish the source-root, package-family, and jar-reference matrix that must survive consolidation.
+- [ ] 20-02-PLAN.md — Publish the Bannerlord target architecture, package-move map, compatibility boundary, and migration risk register for Phase 21 execution.
+
+Planning artifacts live under `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`, while roadmap-shaping research remains in `.planning/FUTURE_EXPANSION_RESEARCH.md` and `.planning/phases/FUTURE-EXPANSION-PHASES.md`.
+
+Status: In Progress (1/2 plans complete as of 2026-04-12); runtime ownership is now audited in `20-RUNTIME-AUDIT.md` and `20-OWNERSHIP-MATRIX.md`, with the target-architecture handoff still pending in Plan 20-02.
+
+## Phase 21: Source Tree Consolidation Into Bannerlord
+
+- Move active Java ownership out of `recruits/` and `workers/` into `src/main/java/com/talhanation/bannerlord/**` in controlled slices.
+- Re-home merged recruit and worker code, AI, registries, networking, and client packages into the canonical root tree.
+- Retire legacy source roots only after full root validation is green.
+
+**Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
+
+Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 22: Citizen Role Unification
+
+- Replace profession- and troop-specific entity sprawl with one shared `Citizen` representation plus role/job-driven behavior seams.
+- Move shared state out of concrete entity subclasses and into citizen-owned data, controllers, or role definitions.
+- Keep the migration incremental so recruit combat, worker labor, ownership, and inventory behavior stay testable.
+
+**Goal:** Civilian and military actors converge on one coherent runtime model instead of separate inheritance forests.
+
+Planning artifacts live under `.planning/phases/22-citizen-role-unification/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 23: Settlement Governance And Governor Control
+
+- Add a real governor role that rules a settlement instead of a placeholder promotion slot.
+- Let governors collect taxes from bound citizens, coordinate garrison recommendations, suggest fortification actions, and report incidents or shortages.
+- Keep governor authority layered on top of settlement binding and faction/claim legality.
+
+**Goal:** Settlement governance becomes a first-class gameplay system rather than an implied side effect of ownership and work areas.
+
+Planning artifacts live under `.planning/phases/23-settlement-governance-and-governor-control/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 24: Logistics Backbone And Courier Worker
+
+- Add shared storage-node routing, reservations, filters, stock thresholds, and failure handling.
+- Implement the courier worker so it travels from source chest to destination chest transporting resources.
+- Surface route authoring, priority, and blocked-state feedback to the player.
+
+**Goal:** BannerMod gains an explicit logistics layer and courier profession instead of isolated profession-local item movement.
+
+Planning artifacts live under `.planning/phases/24-logistics-backbone-and-courier-worker/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 25: Treasury, Taxes, And Army Upkeep
+
+- Add treasury and accounting vocabulary tied to settlement identity and faction ownership.
+- Add heartbeat-based tax collection instead of per-tick recomputation.
+- Add army wage and upkeep drains plus starvation/unpaid penalties that can feed morale and discipline systems.
+
+**Goal:** Settlements and armies become fiscally legible through one shared treasury and upkeep model.
+
+Planning artifacts live under `.planning/phases/25-treasury-taxes-and-army-upkeep/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 26: Supply Radius, Trade Routes, And Ports
+
+- Add `SupplyPool`, carried stock, supply sources/sinks, and out-of-supply penalties.
+- Add inland trade routes, convoy abstractions, tariffs, throughput, and route-risk rules.
+- Extend the same stack to ports and maritime routes only after inland logistics is stable.
+
+**Goal:** Supply, trade, and port value all reuse one layered logistics model rather than fragmenting into separate systems.
+
+Planning artifacts live under `.planning/phases/26-supply-radius-trade-routes-and-ports/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 27: Shield Wall, Morale, And Medieval Siege Compatibility
+
+- Promote shield wall into a maintained BannerMod combat system instead of a jar-side reference behavior.
+- Expand morale from the current recruit-centric seam into broader formation and discipline hooks.
+- Port Medieval Siege Machines compatibility into maintained source and integrate it more cleanly than the current reference jar baseline.
+
+**Goal:** Combat extensions and siege compatibility stop living in opaque sidecars and become code-backed BannerMod systems.
+
+Planning artifacts live under `.planning/phases/27-shield-wall-morale-and-medieval-siege-compatibility/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 28: Telemetry, Balance, And Economic Validation
+
+- Add metrics for faction income, army upkeep, supply loss, route usage, richest/poorest settlements, and economy tick cost.
+- Use the metrics to tune taxes, upkeep, logistics, governor behavior, and trade.
+- Close the expansion program with explicit validation instead of anecdotal gameplay reports.
+
+**Goal:** The future expansion block ends with measurable evidence and balancing feedback, not just feature checkboxes.
+
+Planning artifacts live under `.planning/phases/28-telemetry-balance-and-economic-validation/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-12).

@@ -2,22 +2,22 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Active
-last_updated: "2026-04-11T15:36:00.000Z"
+status: In Progress
+last_updated: "2026-04-12T07:26:13Z"
 progress:
-  total_phases: 19
-  completed_phases: 12
-  total_plans: 38
-  completed_plans: 26
+  total_phases: 28
+  completed_phases: 19
+  total_plans: 44
+  completed_plans: 43
 ---
 
 # Project State
 
-- Current focus: Phase 14 gap closure was attempted for the remaining retarget/loss-of-target checks; the controller seam now publishes same-tick null shared-target clears, but the two optional Phase 14 GameTests still need one more brownfield harness follow-up.
+- Current focus: Phase 20 runtime ownership audit is complete; the repo now has a code-backed runtime audit plus ownership matrix for the recruit-led merged runtime, and Plan 20-02 target architecture handoff is next.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: focused settlement-faction enforcement coverage, large-battle AI/pathfinding optimization with explicit profiling, and any remaining optional non-critical/custom payload compatibility follow-up
+- Pending major work: Phase 20 target architecture handoff for the `com.talhanation.bannerlord` package move, with later work still bounded by the audited recruit-led runtime, narrow workers compatibility seams, and any isolated profiling follow-up on low path-reuse/high formation-fallback hotspots.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -33,8 +33,11 @@ progress:
 - Phase 17 planning artifacts: `.planning/phases/17-ai-lod-and-tick-shedding/`
 - Phase 18 planning artifacts: `.planning/phases/18-optional-flow-field-navigation-evaluation/`
 - Phase 19 planning artifacts: `.planning/phases/19-large-battle-performance-validation/`
+- Phase 20 planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`
+- Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/14-formation-level-target-selection-rewrite/14-formation-level-target-selection-rewrite-03-SUMMARY.md`
+- Latest execution summary: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-01-SUMMARY.md`
+- Latest planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-CONTEXT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-01-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-RUNTIME-AUDIT.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-OWNERSHIP-MATRIX.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-02-PLAN.md`, `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-runtime-audit-and-bannerlord-target-architecture-01-SUMMARY.md`
 
 ## Decisions
 
@@ -72,23 +75,44 @@ progress:
 - [Post-Phase-06 roadmap]: Validate faction-binding enforcement separately from contract-definition so each later `/gsd-plan-phase` slice stays small and reviewable.
 - [Phase 09-settlement-faction-binding-contract]: Settlement-faction status now lives in one shared BannerMod seam with explicit `FRIENDLY_CLAIM`, `HOSTILE_CLAIM`, `UNCLAIMED`, and `DEGRADED_MISMATCH` vocabulary.
 - [Phase 09-settlement-faction-binding-contract]: Keep settlement binding utility-shaped and claim-derived until later code proves a dedicated settlement manager is necessary.
+- [Phase 10-settlement-faction-enforcement-validation]: Root GameTests now prove friendly settlement placement and operation, hostile or unclaimed denial, and claim-loss or faction-mismatch degradation through the shared settlement-binding seam.
+- [Phase 10-settlement-faction-enforcement-validation]: `./gradlew verifyGameTestStage` remains green with all 45 required tests after the settlement-faction enforcement and degradation coverage is included in the root suite.
 - [Performance roadmap]: Keep large-battle AI/performance work ordered as profiling baseline, global pathfinding control, path reuse, formation-level target selection, pathfinding throttling, async reliability fixes, AI LOD, optional flow-field evaluation, and closing performance validation.
 - [Performance roadmap]: Require explicit profiling evidence before optimization, during each optimization slice, and after the full sequence so future tuning work can compare against one stable baseline.
+- [Future roadmap phases 20-28]: Treat the post-performance structural/gameplay program as real roadmap phases after the active 10-19 queue, not as a side document outside the milestone.
+- [Future roadmap phases 20-28]: Normalize the requested destination into the valid Java package path `src/main/java/com/talhanation/bannerlord/**` before any source-tree migration begins.
 - [Phase 11-large-battle-ai-profiling-baseline]: Derive the baseline scenario matrix from existing recruit battle stress fixtures and current target/pathfinding seams before adding any new instrumentation.
 - [Phase 11-large-battle-ai-profiling-baseline]: Every baseline evidence bundle must record async pathfinding, async target-finding, and worker-thread config so later optimization results stay comparable.
 - [Performance roadmap]: Treat flow-field navigation as optional and benchmark-gated rather than a mandatory rewrite of the current navigation stack.
+- [Future expansion roadmap]: Sequence the full source-tree move ahead of broad gameplay expansion so entity, AI, registry, and client ownership are clear before deeper system rewrites begin.
+- [Future expansion roadmap]: The one-entity target is a shared `Citizen` representation with role/job-driven behavior; phase planning must treat this as a major refactor because workers and recruits are currently concrete subclass families.
+- [Future expansion roadmap]: Governor gameplay should sit above the existing settlement-binding and authority seams so tax collection, garrison guidance, and incident reporting do not fork ownership rules.
+- [Future expansion roadmap]: Move workers onto the recruit-owned pathfinding stack and add explicit logistics reservations before shipping the courier worker.
+- [Future expansion roadmap]: Treat taxes, treasury, army upkeep, supply, and trade as one layered economy program driven by heartbeat-style updates rather than per-tick full recomputation.
+- [Future expansion roadmap]: Treat Medieval Siege Machines compatibility as optional external compatibility, while shield wall and morale improvements become BannerMod-owned combat systems backed by maintained source.
 - [Phase 12-global-pathfinding-control]: Route recruit path issuance through one pass-through `GlobalPathfindingController` seam before adding path reuse, throttling, or async safety changes.
 - [Phase 12-global-pathfinding-control]: Keep controller-aware profiling additive inside the existing mixed-squad and dense-battle GameTests so Phase 11 before/after comparisons stay aligned.
 - [Phase 13-path-reuse-for-cohesion-movement]: Keep path reuse controller-owned and copy reused paths before application so nearby recruits do not share one mutable live `Path` instance.
 - [Phase 13-path-reuse-for-cohesion-movement]: Treat reuse attempts as mandatory observability in dense scenarios, but judge hit rate only in the context of actual compatible movement opportunities.
 - [Phase 14-formation-level-target-selection-rewrite]: Keep formation target selection utility-shaped and cohort-bounded so the rewrite stays on shared combat intent instead of introducing a persistent manager.
 - [Phase 14-formation-level-target-selection-rewrite]: Preserve the retained dense-battle scenario contract by registering formation cohorts only where the original winner expectations stay stable, and keep harder retarget/loss-of-target checks optional until the brownfield arena setup is hardened.
+- [Phase 14-formation-level-target-selection-rewrite]: Final target publication now revalidates candidate liveness, so stale async search results cannot republish dead or removed enemies during shared retarget/loss-of-target refresh.
+- [Phase 14-formation-level-target-selection-rewrite]: `./gradlew verifyGameTestStage` is green with all 45 required tests after the final Phase 14 brownfield follow-up closed the optional retarget/loss-of-target gaps.
+- [Phase 17-ai-lod-and-tick-shedding]: Keep the first LOD slice bounded to recruit-owned non-critical decision cadence, especially target-search work that is already observable, instead of skipping combat execution or ownership safety behavior.
+- [Phase 17-ai-lod-and-tick-shedding]: Require explicit profiling for LOD runs, skips, and active tiers so later tuning can compare cost savings against any readability or target-acquisition regressions.
+- [Phase 17-ai-lod-and-tick-shedding]: Recruit target search now runs through one explicit `RecruitAiLodPolicy` seam with operator-visible config, while close or combat-relevant recruits stay on the original full-fidelity cadence.
+- [Phase 17-ai-lod-and-tick-shedding]: Retained dense-battle and mixed-squad GameTests now publish and assert LOD opportunity, skip, and tier counters, and `verifyGameTestStage` remains the correctness gate for accepting any AI LOD evidence.
+- [Phase 18-optional-flow-field-navigation-evaluation]: The dedicated same-destination benchmark now exercises the optional prototype on a real in-scope path, but all 51 prototype attempts fell back with zero hits, so the final Phase 18 outcome is `drop`.
+- [Phase 18-optional-flow-field-navigation-evaluation]: Keep the flow-field experiment documented as evaluated and rejected; continue Phase 19 on the existing pathfinding stack rather than expanding the optional prototype.
 - [Phase 07-dedicated-server-authority-edge-validation]: Create a dedicated-server helper seam now so later reconnect and persistence tests can reuse deterministic fake-player and detached-ownership setup.
 - [Phase 07-dedicated-server-authority-edge-validation]: Model admin recovery with an explicit permission-granting fake player so offline-owner authority remains server-driven without requiring a live owner entity.
 - [Phase 07-dedicated-server-authority-edge-validation]: Dedicated-server reconnect tests should use a live per-call fake player entity, not the cached fake-player factory path, so same-UUID command recovery exercises the real nearby-selection code path.
 - [Phase 07-dedicated-server-authority-edge-validation]: Reconnect persistence tests may reseed the transient recruit command-group state immediately before serialization when the plan is validating ownership round-trips rather than group-manager persistence.
 - [Phase 08-multiplayer-authority-conflict-validation]: Live multiplayer outsider denial should be validated against a present in-level owner rather than inferred from offline-owner or detached-owner paths.
 - [Phase 08-multiplayer-authority-conflict-validation]: Same-team recruit command cooperation is intentionally limited to the group-command targeting seam, while worker recovery remains owner-or-admin only even for allied players.
+- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Treat the live merged runtime as recruit-led with workers absorbed through subsystem composition, not as two independent mods.
+- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Keep the Phase 21 physical move target at src/main/java/com/talhanation/bannerlord/** while preserving the live bannermod mod id.
+- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Carry forward only narrow save/runtime-critical workers compatibility seams during source-root retirement planning.
 
 ## Performance Metrics
 
@@ -115,9 +139,11 @@ progress:
 | Phase 14-formation-level-target-selection-rewrite P01 | not recorded | 2 tasks | 4 files |
 | Phase 14-formation-level-target-selection-rewrite P02 | not recorded | 2 tasks | 7 files |
 | Phase 14-formation-level-target-selection-rewrite P03 | not recorded | 2 tasks | 5 files |
+| Phase 14-formation-level-target-selection-rewrite P04 | not recorded | 2 tasks | 1 files |
+| Phase 20-runtime-audit-and-bannerlord-target-architecture P01 | 7 min | 2 tasks | 3 files |
 
 ## Session
 
-- Last updated: 2026-04-11T23:43:00Z
-- Stopped at: Attempted Phase 14-03 gap closure; deferred remaining optional GameTest failures
-- Resume file: .planning/phases/14-formation-level-target-selection-rewrite/14-03-PLAN.md
+- Last updated: 2026-04-12T07:26:13Z
+- Stopped at: Completed 20-runtime-audit-and-bannerlord-target-architecture-01-PLAN.md; continue with 20-02 target architecture using the new audit and ownership matrix outputs.
+- Resume file: .planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-02-PLAN.md
