@@ -480,11 +480,28 @@ Status: Planned (new decomposition defined as of 2026-04-12).
 **Plans:** 4 plans
 
 Plans:
-- [ ] 29-01-PLAN.md — Define the explicit mining-area settings contract and persist it across UI, packet, and entity state.
-- [ ] 29-02-PLAN.md — Implement the diagonal tunnel planner and wire miners to excavate it without digging under themselves.
-- [ ] 29-03-PLAN.md — Extend miner execution to deterministic branch/strip mining at configured height, spacing, and branch length.
-- [ ] 29-04-PLAN.md — Add schematic template loading to BuildArea load mode while preserving the current NBT scan flow.
+- [x] 29-01-PLAN.md — Define the explicit mining-area settings contract and persist it across UI, packet, and entity state.
+- [x] 29-02-PLAN.md — Implement the diagonal tunnel planner and wire miners to excavate it without digging under themselves.
+- [x] 29-03-PLAN.md — Extend miner execution to deterministic branch/strip mining at configured height, spacing, and branch length.
+- [x] 29-04-PLAN.md — Add schematic template loading to BuildArea load mode while preserving the current NBT scan flow.
 
 Planning artifacts live under `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`.
 
-Status: Planned (priority override ahead of the deferred Phase 21+ structural roadmap as of 2026-04-12).
+Status: Complete (priority override executed on 2026-04-12 before returning to the deferred Phase 21+ structural roadmap).
+
+### Phase 30: Worker Birth And Claim-Based Settlement Spawn
+
+**Goal:** BannerMod settlements can grow worker populations through explicit worker birth and claim-backed settlement spawning, with friendly-claim authority, bounded cadence, and automated validation instead of ad hoc village-only spawning.
+
+**Requirements:** [WBSP-01, WBSP-02, WBSP-03]
+**Depends on:** Phase 29
+**Plans:** 3 plans
+
+Plans:
+- [ ] 30-01-PLAN.md — Define the pure claim-aware rules and config contract for worker birth plus settlement spawning.
+- [ ] 30-02-PLAN.md — Wire villager birth and autonomous settlement worker spawning through one runtime claim-aware spawner.
+- [ ] 30-03-PLAN.md — Add root GameTest coverage for friendly worker birth, bounded claim spawn, and hostile or unclaimed denial.
+
+Planning artifacts live under `.planning/phases/30-worker-birth-and-claim-based-settlement-spawn/`.
+
+Status: Planned (new decomposition defined as of 2026-04-12).
