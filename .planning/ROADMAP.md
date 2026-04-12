@@ -520,14 +520,14 @@ Status: Planned (new decomposition defined as of 2026-04-12).
 **Goal:** BannerMod treats friendly claims as settlement-capable worker-growth surfaces, miner authoring exposes only tunnel and branch settings, and miners skip hostile-claim excavation targets without losing friendly or unclaimed mining.
 **Requirements:** [CLAIMGROW-01, CLAIMGROW-02, MINERCFG-01, MINERSAFE-01]
 **Depends on:** Phase 30
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [x] 31-01-PLAN.md — Extend the pure worker-growth rules/config seam so friendly claims count as settlement growth surfaces with diminishing cadence.
 - [ ] 31-02-PLAN.md — Wire bounded live claim worker growth and root GameTest validation through one claim-aware runtime spawn path.
-- [ ] 31-03-PLAN.md — Remove the miner's legacy box-style authoring contract and keep only tunnel/branch settings in the packet and screen.
+- [x] 31-03-PLAN.md — Remove the miner's legacy box-style authoring contract and keep only tunnel/branch settings in the packet and screen.
 - [ ] 31-04-PLAN.md — Add hostile-claim excavation guardrails so miners skip foreign-claim blocks while preserving friendly and unclaimed mining.
 
 Planning artifacts live under `.planning/phases/31-1-2-mining-area-branch-mine-3/`.
 
-Status: In Progress (1/4 plans complete as of 2026-04-12).
+Status: In Progress (2/4 plans complete as of 2026-04-12).
