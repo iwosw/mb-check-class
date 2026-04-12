@@ -6,6 +6,7 @@ import com.talhanation.workers.entities.workarea.BuildArea;
 import com.talhanation.workers.entities.workarea.CropArea;
 import com.talhanation.workers.entities.workarea.StorageArea;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -14,6 +15,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -67,6 +70,23 @@ public final class BannerModGameTestSupport {
         return buildArea;
     }
 
+    public static Villager spawnVillagerWithMemories(GameTestHelper helper, BlockPos relativePos, String name) {
+        Villager villager = spawnEntity(helper, EntityType.VILLAGER, relativePos);
+        villager.setCustomName(Component.literal(name));
+        villager.setCustomNameVisible(true);
+        villager.setPersistenceRequired();
+        villager.setAge(0);
+
+        BlockPos absolutePos = helper.absolutePos(relativePos);
+        GlobalPos home = GlobalPos.of(helper.getLevel().dimension(), absolutePos.north());
+        GlobalPos meeting = GlobalPos.of(helper.getLevel().dimension(), absolutePos.south());
+        GlobalPos jobSite = GlobalPos.of(helper.getLevel().dimension(), absolutePos.east());
+        villager.getBrain().setMemory(MemoryModuleType.HOME, home);
+        villager.getBrain().setMemory(MemoryModuleType.MEETING_POINT, meeting);
+        villager.getBrain().setMemory(MemoryModuleType.JOB_SITE, jobSite);
+        return villager;
+    }
+
     public static CompoundTag createMinimalBuildTemplate() {
         CompoundTag structure = new CompoundTag();
         structure.putInt("width", 1);
@@ -88,8 +108,8 @@ public final class BannerModGameTestSupport {
             throw new IllegalArgumentException("Failed to create integrated runtime test entity");
         }
 
-        BlockPos absolutePos = helper.absolutePos(relativePos);
-        entity.moveTo(absolutePos.getX() + 0.5D, absolutePos.getY(), absolutePos.getZ() + 0.5D, 0.0F, 0.0F);
+        Vec3 spawnCenter = spawnCenter(helper, relativePos);
+        entity.moveTo(spawnCenter.x(), spawnCenter.y(), spawnCenter.z(), 0.0F, 0.0F);
         if (entity instanceof AbstractRecruitEntity recruit) {
             recruit.initSpawn();
         }
@@ -99,6 +119,11 @@ public final class BannerModGameTestSupport {
         }
 
         return entity;
+    }
+
+    private static Vec3 spawnCenter(GameTestHelper helper, BlockPos relativePos) {
+        BlockPos absolutePos = helper.absolutePos(relativePos);
+        return new Vec3(absolutePos.getX() + 0.5D, absolutePos.getY() + 1.0D, absolutePos.getZ() + 0.5D);
     }
 
     private static CompoundTag createTemplateBlock(int x, int y, int z) {
