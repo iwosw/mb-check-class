@@ -7,6 +7,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,7 +21,6 @@ class MessageUpdateMiningAreaCodecTest {
                 java.util.UUID.randomUUID(),
                 5,
                 4,
-                9,
                 -12,
                 false,
                 MiningPatternSettings.Mode.BRANCH.getIndex(),
@@ -36,13 +37,13 @@ class MessageUpdateMiningAreaCodecTest {
         assertEquals(original.uuid, decoded.uuid);
         assertEquals(5, decoded.xSize);
         assertEquals(4, decoded.ySize);
-        assertEquals(9, decoded.zSize);
         assertEquals(-12, decoded.yOffset);
         assertFalse(decoded.closeFloor);
         assertEquals(MiningPatternSettings.Mode.BRANCH.getIndex(), decoded.miningMode);
         assertEquals(6, decoded.branchSpacing);
         assertEquals(14, decoded.branchLength);
         assertEquals(2, decoded.descentStep);
+        assertTrue(Arrays.stream(MessageUpdateMiningArea.class.getDeclaredFields()).noneMatch(field -> field.getName().equals("zSize")));
     }
 
     @Test
