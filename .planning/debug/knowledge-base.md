@@ -27,3 +27,11 @@ Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypothe
 - **Fix:** Added a guarded ClientManager currency accessor that falls back to an emerald ItemStack when claim sync has not initialized currency yet, and updated WorldMapContextMenu plus WorldMapScreen.canPlayerPay to use that accessor instead of dereferencing currencyItemStack directly.
 - **Files changed:** recruits/src/main/java/com/talhanation/recruits/client/ClientManager.java, recruits/src/main/java/com/talhanation/recruits/client/gui/worldmap/WorldMapContextMenu.java, recruits/src/main/java/com/talhanation/recruits/client/gui/worldmap/WorldMapScreen.java
 ---
+
+## multiplayer-recruit-currency-and-farmer-claim-idle — legacy military config sync and claim-grown farmer crop-area seeding
+- **Date:** 2026-04-13
+- **Error patterns:** multiplayer emerald currency, RecruitCurrency golden_ingot ignored, faction creation still uses emerald, recruit hire still uses emerald, worker hire still uses emerald, UI icons still show emerald, farmer idle in claim, farmer_no_area, prepared field ignored
+- **Root cause:** The merged runtime switched military config ownership from `bannermod-server.toml` to `bannermod-military.toml` but only migrated once when the new file was absent, so later legacy-file edits were ignored and multiplayer currency sync stayed on emerald. Separately, claim worker growth spawned farmers without any authored or auto-created `CropArea`, while farmer AI only works against crop-area entities, leaving prepared-field claim farmers permanently idle.
+- **Fix:** Added startup forward-sync from a newer legacy military config into the active military config file, and taught claim-grown farmers to seed/bind a crop area from a prepared field during claim worker spawn. Added regression coverage for both paths.
+- **Files changed:** src/main/java/com/talhanation/bannermod/config/BannerModConfigFiles.java, src/test/java/com/talhanation/bannermod/BannerModConfigFilesTest.java, workers/src/main/java/com/talhanation/workers/settlement/WorkerSettlementSpawner.java, src/gametest/java/com/talhanation/bannermod/BannerModClaimWorkerGrowthGameTests.java
+---
