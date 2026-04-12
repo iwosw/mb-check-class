@@ -73,6 +73,24 @@
 - `recruits/build.gradle`, `recruits/gradle.properties`, `recruits/src/main/resources/META-INF/mods.toml`, and `recruits/update.json` do not agree on version strings.
 - Real runtime metadata currently comes from code/build resources, not the planning notes.
 
+### Future source-layout wording conflict
+
+- Older merge notes in this file described the future tree-retirement destination as `src/main/java/com/talhanation/bannermod/**`.
+- Current active Phase 20 planning and roadmap truth now disagree with that older wording: the normalized destination for the physical move is `src/main/java/com/talhanation/bannerlord/**`, while the live runtime mod id still remains `bannermod`.
+- Current root code still confirms only the present runtime/package split (`build.gradle`, `recruits/src/main/java/com/talhanation/recruits/Main.java`, and `src/main/java/com/talhanation/bannermod/**`); active planning truth for future source-tree retirement is therefore `com.talhanation.bannerlord` packages under the existing `src/main/java/**` root, without changing the live mod id.
+
+### Future jar-feature ownership conflict
+
+- The repo root contains local jars for shield wall, morale, and siege compatibility behavior.
+- Those jars are useful behavior references, but they should not be treated as the long-term maintainable end-state for the merged runtime.
+- Active future-planning truth is to audit and absorb any kept behavior into BannerMod-owned source with explicit contracts and tests, while keeping optional third-party mod compatibility documented separately.
+
+### Future roadmap numbering conflict
+
+- The first future-expansion research draft described its work as Phase 0 through Phase 6.
+- The active roadmap already has real Phases 1 through 19, so that parallel numbering was only acceptable as a temporary research label.
+- Active planning truth is now to treat that same work as future roadmap Phases 20 through 26 so roadmap discovery, resumption, and later phase planning stay numerically unambiguous.
+
 ### Workers metadata conflict
 
 - The archived standalone Workers metadata/build files in `.planning_legacy_workers/standalone-build/` and `.planning_legacy_workers/standalone-metadata/` do not agree on version strings.
