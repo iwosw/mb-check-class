@@ -1,6 +1,7 @@
 package com.talhanation.workers;
 
 import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.workers.config.WorkersServerConfig;
 import com.talhanation.workers.settlement.WorkerSettlementSpawnRules;
 import org.junit.jupiter.api.Test;
 
@@ -87,5 +88,42 @@ class WorkerSettlementSpawnRulesTest {
         assertEquals(WorkerSettlementSpawnRules.DenialReason.WORKER_CAP_REACHED, quotaDecision.denialReasonOptional().orElseThrow());
         assertFalse(cooldownDecision.allowed());
         assertEquals(WorkerSettlementSpawnRules.DenialReason.COOLDOWN_ACTIVE, cooldownDecision.denialReasonOptional().orElseThrow());
+    }
+
+    @Test
+    void configDerivedDefaultsAllowFriendlyBirthAndBoundedSpawn() {
+        WorkerSettlementSpawnRules.Decision birthDecision = WorkerSettlementSpawnRules.evaluateBirth(
+                FRIENDLY,
+                8,
+                1,
+                false,
+                WorkersServerConfig.workerBirthRuleConfig()
+        );
+        WorkerSettlementSpawnRules.Decision spawnDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(
+                FRIENDLY,
+                8,
+                1,
+                false,
+                WorkersServerConfig.workerSettlementSpawnRuleConfig()
+        );
+
+        assertTrue(birthDecision.allowed());
+        assertTrue(spawnDecision.allowed());
+        assertTrue(birthDecision.professionOptional().isPresent());
+        assertTrue(spawnDecision.professionOptional().isPresent());
+    }
+
+    @Test
+    void disablingBirthOrSpawnToggleForcesDenyEvenWhenClaimAndQuotaFit() {
+        WorkerSettlementSpawnRules.RuleConfig disabledBirth = WorkersServerConfig.workerBirthRuleConfig().withEnabled(false);
+        WorkerSettlementSpawnRules.RuleConfig disabledSpawn = WorkersServerConfig.workerSettlementSpawnRuleConfig().withEnabled(false);
+
+        WorkerSettlementSpawnRules.Decision birthDecision = WorkerSettlementSpawnRules.evaluateBirth(FRIENDLY, 8, 1, false, disabledBirth);
+        WorkerSettlementSpawnRules.Decision spawnDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 8, 1, false, disabledSpawn);
+
+        assertFalse(birthDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.FEATURE_DISABLED, birthDecision.denialReasonOptional().orElseThrow());
+        assertFalse(spawnDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.FEATURE_DISABLED, spawnDecision.denialReasonOptional().orElseThrow());
     }
 }
