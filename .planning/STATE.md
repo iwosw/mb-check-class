@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 31
-last_updated: "2026-04-12T12:51:55Z"
+status: Phase 31 complete
+last_updated: "2026-04-12T12:58:56.793Z"
 progress:
   total_phases: 31
-  completed_phases: 20
+  completed_phases: 21
   total_plans: 60
   completed_plans: 55
 ---
 
 # Project State
 
-- Current focus: Phase 31 is in progress; claim worker growth now has a pure status-driven rules seam plus explicit config inputs, miner authoring is now tunnel/branch-only without legacy box-depth editing, and miners now skip hostile-claim excavation targets while the remaining Phase 31 work is live claim growth wiring/GameTest closure.
+- Current focus: Phase 31 is complete; claim worker growth now has a pure rules seam, a live bounded runtime path with claim-led ownership defaults, dedicated root GameTests, tunnel/branch-only miner authoring, and hostile-claim excavation guardrails. The next major execution target remains Phase 21 source-tree consolidation.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/31-1-2-mining-area-branch-mine-3/31-1-2-mining-area-branch-mine-3-04-SUMMARY.md`
+- Latest execution summary: `.planning/phases/31-1-2-mining-area-branch-mine-3/31-1-2-mining-area-branch-mine-3-02-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-CONTEXT.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-02-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-03-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-04-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-05-PLAN.md`
 
 ## Decisions
@@ -130,6 +130,8 @@ progress:
 - [Phase 31-1-2-mining-area-branch-mine-3]: The miner update packet and screen no longer expose z-size; only tunnel/branch settings remain player-authored.
 - [Phase 31-1-2-mining-area-branch-mine-3]: Keep hostile-claim excavation checks in MiningArea scan code so MiningPatternPlanner stays pure.
 - [Phase 31-1-2-mining-area-branch-mine-3]: Resolve claim status per target block with BannerModSettlementBinding.resolveFactionStatus instead of once at the work-area origin.
+- [Phase 31-1-2-mining-area-branch-mine-3]: Run claim worker growth from one periodic server pass keyed by claim UUID cooldown timestamps.
+- [Phase 31-1-2-mining-area-branch-mine-3]: Expose the real VillagerEvents claim-growth helper to GameTests instead of mocking spawn outcomes.
 
 ## Accumulated Context
 
@@ -174,9 +176,10 @@ progress:
 | Phase 31-1-2-mining-area-branch-mine-3 P01 | 3 min | 2 tasks | 3 files |
 | Phase 31-1-2-mining-area-branch-mine-3 P03 | 14 min | 2 tasks | 5 files |
 | Phase 31-1-2-mining-area-branch-mine-3 P04 | 3 min | 2 tasks | 3 files |
+| Phase 31-1-2-mining-area-branch-mine-3 P02 | 10 min | 2 tasks | 4 files |
 
 ## Session
 
-- Last updated: 2026-04-12T12:51:55Z
-- Stopped at: Completed 31-1-2-mining-area-branch-mine-3-04-PLAN.md
+- Last updated: 2026-04-12T12:57:26Z
+- Stopped at: Completed 31-1-2-mining-area-branch-mine-3-02-PLAN.md
 - Resume file: None

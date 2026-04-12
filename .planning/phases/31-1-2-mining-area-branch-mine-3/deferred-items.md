@@ -1,0 +1,1 @@
+- `./gradlew verifyGameTestStage --console=plain` currently fails on the pre-existing required GameTest `validleaderpacketsonlymutatetargetedleader`, which is outside plan 31-02 scope. Claim worker growth GameTests compile, but full GameTest verification remains blocked until that unrelated failure is resolved.
