@@ -38,4 +38,4 @@
 - [x] CLAIMGROW-01 — Friendly claims count as valid settlement context for worker growth without introducing a new settlement manager.
 - [x] CLAIMGROW-02 — Claim worker growth counts existing workers, slows via an explicit diminishing cadence, seeds claim leader ownership/team defaults, and denies hostile or unclaimed territory.
 - [x] MINERCFG-01 — Miner authoring exposes only tunnel and branch settings instead of the legacy generic mining box contract.
-- [ ] MINERSAFE-01 — Miner excavation skips hostile-claim blocks while preserving friendly-claim and unclaimed excavation.
+- [x] MINERSAFE-01 — Miner excavation skips hostile-claim blocks while preserving friendly-claim and unclaimed excavation.
