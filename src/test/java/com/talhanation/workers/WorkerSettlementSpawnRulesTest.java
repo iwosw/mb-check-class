@@ -46,8 +46,8 @@ class WorkerSettlementSpawnRulesTest {
         );
 
         assertTrue(decision.allowed());
-        assertEquals(WorkerSettlementSpawnRules.WorkerProfession.FARMER, decision.profession().orElseThrow());
-        assertFalse(decision.denialReason().isPresent());
+        assertEquals(WorkerSettlementSpawnRules.WorkerProfession.FARMER, decision.professionOptional().orElseThrow());
+        assertFalse(decision.denialReasonOptional().isPresent());
     }
 
     @Test
@@ -63,9 +63,9 @@ class WorkerSettlementSpawnRulesTest {
         WorkerSettlementSpawnRules.Decision unclaimedSpawn = WorkerSettlementSpawnRules.evaluateSettlementSpawn(UNCLAIMED, 6, 0, false, config);
 
         assertFalse(hostileBirth.allowed());
-        assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, hostileBirth.denialReason().orElseThrow());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, hostileBirth.denialReasonOptional().orElseThrow());
         assertFalse(unclaimedSpawn.allowed());
-        assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, unclaimedSpawn.denialReason().orElseThrow());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, unclaimedSpawn.denialReasonOptional().orElseThrow());
     }
 
     @Test
@@ -84,8 +84,8 @@ class WorkerSettlementSpawnRulesTest {
         WorkerSettlementSpawnRules.Decision cooldownDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 6, 1, true, config);
 
         assertFalse(quotaDecision.allowed());
-        assertEquals(WorkerSettlementSpawnRules.DenialReason.WORKER_CAP_REACHED, quotaDecision.denialReason().orElseThrow());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.WORKER_CAP_REACHED, quotaDecision.denialReasonOptional().orElseThrow());
         assertFalse(cooldownDecision.allowed());
-        assertEquals(WorkerSettlementSpawnRules.DenialReason.COOLDOWN_ACTIVE, cooldownDecision.denialReason().orElseThrow());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.COOLDOWN_ACTIVE, cooldownDecision.denialReasonOptional().orElseThrow());
     }
 }
