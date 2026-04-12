@@ -218,4 +218,43 @@ class WorkerSettlementSpawnRulesTest {
         assertEquals(WorkerSettlementSpawnRules.DenialReason.FEATURE_DISABLED, spawnDecision.denialReasonOptional().orElseThrow());
     }
 
+    @Test
+    void configDerivedClaimGrowthDefaultsAllowFriendlyGrowthBelowCap() {
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = WorkersServerConfig.claimWorkerGrowthConfig();
+
+        WorkerSettlementSpawnRules.Decision decision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                1,
+                config.requiredCooldownTicks(1),
+                config
+        );
+
+        assertTrue(decision.allowed());
+        assertTrue(decision.professionOptional().isPresent());
+    }
+
+    @Test
+    void disablingClaimGrowthOrReachingCapDeniesFriendlyClaimGrowth() {
+        WorkerSettlementSpawnRules.ClaimGrowthConfig enabledConfig = WorkersServerConfig.claimWorkerGrowthConfig();
+        WorkerSettlementSpawnRules.ClaimGrowthConfig disabledConfig = enabledConfig.withEnabled(false);
+
+        WorkerSettlementSpawnRules.Decision disabledDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                1,
+                enabledConfig.requiredCooldownTicks(1),
+                disabledConfig
+        );
+        WorkerSettlementSpawnRules.Decision capDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                enabledConfig.workerCap(),
+                enabledConfig.requiredCooldownTicks(enabledConfig.workerCap()),
+                enabledConfig
+        );
+
+        assertFalse(disabledDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.FEATURE_DISABLED, disabledDecision.denialReasonOptional().orElseThrow());
+        assertFalse(capDecision.allowed());
+        assertEquals(WorkerSettlementSpawnRules.DenialReason.WORKER_CAP_REACHED, capDecision.denialReasonOptional().orElseThrow());
+    }
+
 }
