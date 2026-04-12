@@ -464,3 +464,27 @@ Status: Planned (new decomposition defined as of 2026-04-12).
 Planning artifacts live under `.planning/phases/28-telemetry-balance-and-economic-validation/` once planned.
 
 Status: Planned (new decomposition defined as of 2026-04-12).
+
+## Phase 29: Miner Excavation Recovery And Builder Schematic Loading
+
+- Restore miner progression by replacing the current idle-at-mine behavior with a diagonal tunnel pattern that moves away from the worker instead of straight under them.
+- Add a configurable branch/strip-mining mode so miners can harvest a main corridor plus side branches at authored height/spacing.
+- Let build areas load schematic templates through the existing preview/build pipeline, not only locally scanned `.nbt` structures.
+
+**Goal:** Workers recover two blocked core automation loops: miners can excavate authored tunnel and branch-mining patterns without getting stuck, and builders can load schematic templates into the existing BuildArea workflow.
+
+**Requirements:** [MINING-01, MINING-02, MINING-03, BUILD-01]
+
+**Depends on:** Current merged BannerMod runtime baseline; execute before returning to the deferred Phase 21+ structural roadmap.
+
+**Plans:** 4 plans
+
+Plans:
+- [ ] 29-01-PLAN.md — Define the explicit mining-area settings contract and persist it across UI, packet, and entity state.
+- [ ] 29-02-PLAN.md — Implement the diagonal tunnel planner and wire miners to excavate it without digging under themselves.
+- [ ] 29-03-PLAN.md — Extend miner execution to deterministic branch/strip mining at configured height, spacing, and branch length.
+- [ ] 29-04-PLAN.md — Add schematic template loading to BuildArea load mode while preserving the current NBT scan flow.
+
+Planning artifacts live under `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`.
+
+Status: Planned (priority override ahead of the deferred Phase 21+ structural roadmap as of 2026-04-12).
