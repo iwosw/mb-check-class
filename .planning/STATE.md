@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: In Progress
-last_updated: "2026-04-12T07:26:13Z"
+last_updated: "2026-04-12T07:34:56.937Z"
 progress:
   total_phases: 28
-  completed_phases: 19
+  completed_phases: 18
   total_plans: 44
-  completed_plans: 43
+  completed_plans: 44
 ---
 
 # Project State
@@ -113,6 +113,9 @@ progress:
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Treat the live merged runtime as recruit-led with workers absorbed through subsystem composition, not as two independent mods.
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Keep the Phase 21 physical move target at src/main/java/com/talhanation/bannerlord/** while preserving the live bannermod mod id.
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Carry forward only narrow save/runtime-critical workers compatibility seams during source-root retirement planning.
+- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Move shared BannerMod seam classes first into com.talhanation.bannerlord before re-homing bootstrap or worker-heavy packages.
+- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Keep the live bannermod mod id, shared channel, config filenames, and workers legacy-id migration helpers stable through the Phase 21 move.
+- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Treat worker package relocation as a dependent wave that follows recruit-owned entity, pathfinding, persistence, and client-base relocation.
 
 ## Performance Metrics
 
@@ -141,9 +144,10 @@ progress:
 | Phase 14-formation-level-target-selection-rewrite P03 | not recorded | 2 tasks | 5 files |
 | Phase 14-formation-level-target-selection-rewrite P04 | not recorded | 2 tasks | 1 files |
 | Phase 20-runtime-audit-and-bannerlord-target-architecture P01 | 7 min | 2 tasks | 3 files |
+| Phase 20-runtime-audit-and-bannerlord-target-architecture P02 | 4 min | 2 tasks | 4 files |
 
 ## Session
 
-- Last updated: 2026-04-12T07:26:13Z
-- Stopped at: Completed 20-runtime-audit-and-bannerlord-target-architecture-01-PLAN.md; continue with 20-02 target architecture using the new audit and ownership matrix outputs.
-- Resume file: .planning/phases/20-runtime-audit-and-bannerlord-target-architecture/20-02-PLAN.md
+- Last updated: 2026-04-12T07:34:00Z
+- Stopped at: Completed 20-02-PLAN.md
+- Resume file: .planning/phases/21-source-tree-consolidation-into-bannerlord/

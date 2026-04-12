@@ -359,7 +359,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); the retained required Ga
 
 **Goal:** Turn the current future-feature wishlist into a code-backed baseline with explicit migration, compatibility, and package-move boundaries.
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 20-01-PLAN.md — Audit the active runtime ownership surfaces and publish the source-root, package-family, and jar-reference matrix that must survive consolidation.
