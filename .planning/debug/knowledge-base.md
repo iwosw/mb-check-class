@@ -19,3 +19,11 @@ Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypothe
 - **Fix:** Added a runtime formation fallback helper that picks the nearest currently unoccupied formation slot, swaps slot claims between recruits so the blocked recruit releases its original slot, and invoked it from RecruitHoldPosGoal when navigation reports collision or stuck behavior.
 - **Files changed:** recruits/src/main/java/com/talhanation/recruits/util/FormationUtils.java, recruits/src/main/java/com/talhanation/recruits/entities/ai/RecruitHoldPosGoal.java, recruits/src/test/java/com/talhanation/recruits/util/FormationUtilsTest.java
 ---
+
+## worldmap-currency-itemstack-null — world map tolerates unsynced client currency state
+- **Date:** 2026-04-12
+- **Error patterns:** NullPointerException, currencyItemStack is null, WorldMapContextMenu, WorldMapScreen, keybinding world map crash, multiplayer claim sync
+- **Root cause:** World map UI code directly dereferenced ClientManager.currencyItemStack even though client sync resets that field to null and only populates it later through MessageToClientUpdateClaims. Pressing the keybinding on multiplayer can therefore open the screen before currency sync arrives, causing a constructor-time NPE in WorldMapContextMenu and a later payment-check NPE in WorldMapScreen.
+- **Fix:** Added a guarded ClientManager currency accessor that falls back to an emerald ItemStack when claim sync has not initialized currency yet, and updated WorldMapContextMenu plus WorldMapScreen.canPlayerPay to use that accessor instead of dereferencing currencyItemStack directly.
+- **Files changed:** recruits/src/main/java/com/talhanation/recruits/client/ClientManager.java, recruits/src/main/java/com/talhanation/recruits/client/gui/worldmap/WorldMapContextMenu.java, recruits/src/main/java/com/talhanation/recruits/client/gui/worldmap/WorldMapScreen.java
+---
