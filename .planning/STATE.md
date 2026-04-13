@@ -178,6 +178,12 @@ progress:
 | Phase 31-1-2-mining-area-branch-mine-3 P04 | 3 min | 2 tasks | 3 files |
 | Phase 31-1-2-mining-area-branch-mine-3 P02 | 10 min | 2 tasks | 4 files |
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260413-a9x | Убедись, что claims рекрутов защищают от грифа (лавакаст, кража из сундуков, джамплаг) | 2026-04-13 | 5b807e7 | [260413-a9x-claims](./quick/260413-a9x-claims/) |
+
 ## Session
 
 - Last updated: 2026-04-13T00:44:02Z
