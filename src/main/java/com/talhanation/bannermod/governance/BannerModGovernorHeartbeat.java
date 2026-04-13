@@ -2,6 +2,15 @@ package com.talhanation.bannermod.governance;
 
 import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.recruits.world.RecruitsClaim;
+import com.talhanation.recruits.world.RecruitsClaimManager;
+import com.talhanation.workers.entities.AbstractWorkerEntity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -89,6 +98,46 @@ public final class BannerModGovernorHeartbeat {
         return tokens;
     }
 
+    public static void runGovernedClaimHeartbeat(ServerLevel level, RecruitsClaimManager claimManager, BannerModGovernorManager governorManager) {
+        if (level == null || claimManager == null || governorManager == null) {
+            return;
+        }
+
+        for (BannerModGovernorSnapshot snapshot : governorManager.getAllSnapshots()) {
+            if (snapshot == null || !snapshot.hasGovernor()) {
+                continue;
+            }
+
+            RecruitsClaim claim = resolveClaim(claimManager, snapshot);
+            BannerModSettlementBinding.Binding binding = claim == null
+                    ? BannerModSettlementBinding.resolveSettlementStatus((RecruitsClaim) null, snapshot.anchorChunk(), snapshot.settlementFactionId())
+                    : BannerModSettlementBinding.resolveSettlementStatus(claim, resolveAnchorChunk(claim, snapshot), snapshot.settlementFactionId());
+
+            HeartbeatReport report = evaluate(new HeartbeatInput(
+                    binding.status(),
+                    claim != null && claim.isUnderSiege,
+                    claim == null ? 0 : countEntitiesInClaim(level, claim, Villager.class),
+                    claim == null ? 0 : countEntitiesInClaim(level, claim, AbstractWorkerEntity.class),
+                    claim == null ? 0 : countEntitiesInClaim(level, claim, AbstractRecruitEntity.class),
+                    new BannerModSupplyStatus.WorkerSupplyStatus(false, null, null),
+                    new BannerModSupplyStatus.RecruitSupplyStatus(BannerModSupplyStatus.RecruitSupplyState.READY, false, false, false, null),
+                    level.getGameTime(),
+                    snapshot.lastHeartbeatTick(),
+                    snapshot
+            ));
+
+            governorManager.putSnapshot(snapshot.withHeartbeatReport(
+                    report.heartbeatTick(),
+                    report.collectionTick(),
+                    report.citizenCount(),
+                    report.taxesDue(),
+                    report.taxesCollected(),
+                    incidentTokens(report.incidents()),
+                    recommendationTokens(report.recommendations())
+            ));
+        }
+    }
+
     public record HeartbeatInput(BannerModSettlementBinding.Status settlementStatus,
                                  boolean underSiege,
                                  int villagerCount,
@@ -108,5 +157,48 @@ public final class BannerModGovernorHeartbeat {
                                   List<BannerModGovernorRecommendation> recommendations,
                                   long heartbeatTick,
                                   long collectionTick) {
+    }
+
+    private static RecruitsClaim resolveClaim(RecruitsClaimManager claimManager, BannerModGovernorSnapshot snapshot) {
+        RecruitsClaim claim = claimManager.getClaim(snapshot.anchorChunk());
+        if (claim != null && claim.getUUID().equals(snapshot.claimUuid())) {
+            return claim;
+        }
+        for (RecruitsClaim candidate : claimManager.getAllClaims()) {
+            if (candidate != null && candidate.getUUID().equals(snapshot.claimUuid())) {
+                return candidate;
+            }
+        }
+        return claim;
+    }
+
+    private static ChunkPos resolveAnchorChunk(RecruitsClaim claim, BannerModGovernorSnapshot snapshot) {
+        if (claim.getCenter() != null) {
+            return claim.getCenter();
+        }
+        if (!claim.getClaimedChunks().isEmpty()) {
+            return claim.getClaimedChunks().get(0);
+        }
+        return snapshot.anchorChunk();
+    }
+
+    private static <T extends Entity> int countEntitiesInClaim(ServerLevel level, RecruitsClaim claim, Class<T> entityClass) {
+        return level.getEntitiesOfClass(entityClass, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition())).size();
+    }
+
+    private static AABB claimBounds(ServerLevel level, RecruitsClaim claim) {
+        ChunkPos anchor = claim.getCenter() != null ? claim.getCenter() : new ChunkPos(0, 0);
+        int minChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).min().orElse(anchor.x);
+        int maxChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).max().orElse(anchor.x);
+        int minChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).min().orElse(anchor.z);
+        int maxChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).max().orElse(anchor.z);
+        return new AABB(
+                minChunkX * 16.0D,
+                level.getMinBuildHeight(),
+                minChunkZ * 16.0D,
+                (maxChunkX + 1) * 16.0D,
+                level.getMaxBuildHeight(),
+                (maxChunkZ + 1) * 16.0D
+        );
     }
 }
