@@ -420,9 +420,20 @@ Status: Complete (4/4 plans complete as of 2026-04-13); recruit and worker wrapp
 
 **Goal:** Settlement governance becomes a first-class gameplay system rather than an implied side effect of ownership and work areas.
 
+**Requirements:** [GOV-01, GOV-02, GOV-03, GOV-04]
+
+**Plans:** 5 plans
+
+Plans:
+- [ ] 23-01-PLAN.md — Define the claim-keyed governor snapshot, pure rules, and persistence boundary before live runtime wiring begins.
+- [ ] 23-02-PLAN.md — Implement governor designation and revocation as authority-safe runtime services over existing recruit/citizen identities.
+- [ ] 23-03-PLAN.md — Add the bounded governor heartbeat for local tax state, incidents, and settlement recommendations without widening into treasury or logistics rewrites.
+- [ ] 23-04-PLAN.md — Activate the dormant governor promotion path and add a dedicated governor control screen fed by live governance snapshots.
+- [ ] 23-05-PLAN.md — Close Phase 23 with reusable GameTest helpers and live governor designation/reporting validation.
+
 Planning artifacts live under `.planning/phases/23-settlement-governance-and-governor-control/` once planned.
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+Status: Planned (5 plans defined on 2026-04-13).
 
 ## Phase 24: Logistics Backbone And Courier Worker
 
