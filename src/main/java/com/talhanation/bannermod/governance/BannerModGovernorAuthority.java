@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.governance;
 
 import com.talhanation.bannermod.authority.BannerModAuthorityRules;
+import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -25,6 +26,14 @@ public final class BannerModGovernorAuthority {
 
     public static Decision revokeDecision(ActorContext actor, @Nullable UUID governorOwnerUuid, @Nullable String governorTeamId) {
         return fromAuthorityDecision(resolveAuthorityDecision(actor, governorOwnerUuid, governorTeamId));
+    }
+
+    public static ActorContext actor(ServerPlayer player) {
+        return new ActorContext(
+                player == null ? null : player.getUUID(),
+                player == null || player.getTeam() == null ? null : player.getTeam().getName(),
+                player != null && player.isCreative() && player.hasPermissions(2)
+        );
     }
 
     public static boolean isAllowed(Decision decision) {

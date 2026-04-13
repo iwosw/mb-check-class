@@ -3,6 +3,7 @@ package com.talhanation.bannermod.governance;
 import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.world.RecruitsClaim;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 
 import javax.annotation.Nullable;
@@ -56,6 +57,12 @@ public class BannerModGovernorService {
         return assignGovernor(claim, actor, RecruitGovernorTarget.fromRecruit(recruit));
     }
 
+    public OperationResult assignGovernor(RecruitsClaim claim,
+                                          ServerPlayer player,
+                                          AbstractRecruitEntity recruit) {
+        return assignGovernor(claim, BannerModGovernorAuthority.actor(player), recruit);
+    }
+
     public OperationResult revokeGovernor(@Nullable RecruitsClaim claim,
                                           BannerModGovernorAuthority.ActorContext actor) {
         BannerModGovernorSnapshot snapshot = claim == null ? null : this.manager.getSnapshot(claim.getUUID());
@@ -74,6 +81,11 @@ public class BannerModGovernorService {
         BannerModGovernorSnapshot updated = snapshot.withGovernor(null, null);
         this.manager.putSnapshot(updated);
         return new OperationResult(true, authorityDecision, governorDecision, updated);
+    }
+
+    public OperationResult revokeGovernor(@Nullable RecruitsClaim claim,
+                                          ServerPlayer player) {
+        return revokeGovernor(claim, BannerModGovernorAuthority.actor(player));
     }
 
     public BannerModGovernorSnapshot getOrCreateGovernorSnapshot(RecruitsClaim claim) {
