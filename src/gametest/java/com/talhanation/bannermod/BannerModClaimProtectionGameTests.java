@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.util.BlockSnapshot;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.gametest.GameTestHolder;
@@ -98,6 +99,44 @@ public class BannerModClaimProtectionGameTests {
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
+    public static void hostileGenericUseAndBucketClickAreDeniedInsideFriendlyClaim(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer owner = createPlayer(level, helper.absolutePos(new BlockPos(2, 2, 2)), FRIENDLY_OWNER_UUID, "claim-owner", FRIENDLY_TEAM_ID);
+        ServerPlayer hostile = createPlayer(level, helper.absolutePos(new BlockPos(3, 2, 2)), HOSTILE_PLAYER_UUID, "claim-hostile", HOSTILE_TEAM_ID);
+        BlockPos craftingPos = helper.absolutePos(new BlockPos(4, 2, 2));
+        BlockPos bucketTargetPos = helper.absolutePos(new BlockPos(5, 2, 2));
+
+        BannerModDedicatedServerGameTestSupport.seedClaim(level, craftingPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
+        level.setBlockAndUpdate(craftingPos, Blocks.CRAFTING_TABLE.defaultBlockState());
+        level.setBlockAndUpdate(bucketTargetPos, Blocks.STONE.defaultBlockState());
+        hostile.setItemInHand(InteractionHand.MAIN_HAND, Items.STICK.getDefaultInstance());
+
+        com.talhanation.recruits.ClaimEvents claimEvents = new com.talhanation.recruits.ClaimEvents();
+        PlayerInteractEvent.RightClickBlock genericUseEvent = new PlayerInteractEvent.RightClickBlock(
+                hostile,
+                InteractionHand.MAIN_HAND,
+                craftingPos,
+                BlockHitResult.miss(Vec3.atCenterOf(craftingPos), net.minecraft.core.Direction.NORTH, craftingPos)
+        );
+        claimEvents.onBlockInteract(genericUseEvent);
+        helper.assertTrue(genericUseEvent.isCanceled(),
+                "Expected hostile right-click use on a non-container usable block inside a friendly claim to be denied");
+
+        hostile.setItemInHand(InteractionHand.MAIN_HAND, Items.WATER_BUCKET.getDefaultInstance());
+        PlayerInteractEvent.RightClickBlock bucketUseEvent = new PlayerInteractEvent.RightClickBlock(
+                hostile,
+                InteractionHand.MAIN_HAND,
+                bucketTargetPos,
+                BlockHitResult.miss(Vec3.atCenterOf(bucketTargetPos), net.minecraft.core.Direction.NORTH, bucketTargetPos)
+        );
+        claimEvents.onBlockInteract(bucketUseEvent);
+        helper.assertTrue(bucketUseEvent.isCanceled(),
+                "Expected hostile bucket placement clicks inside a friendly claim to be denied before fluid can be placed");
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
     public static void hostileBorderMutationCannotPlaceOrBreakProtectedBlockFromClaimEdge(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos claimAnchor = helper.absolutePos(new BlockPos(2, 2, 2));
@@ -126,6 +165,24 @@ public class BannerModClaimProtectionGameTests {
                     "Expected hostile border block break attempts to stay denied even when repeated from the claim edge");
         }
 
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void hostileAttackCannotHitOwnerInsideFriendlyClaim(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+        ServerPlayer owner = createPlayer(level, claimPos, FRIENDLY_OWNER_UUID, "claim-owner", FRIENDLY_TEAM_ID);
+        ServerPlayer hostile = createPlayer(level, helper.absolutePos(new BlockPos(3, 2, 2)), HOSTILE_PLAYER_UUID, "claim-hostile", HOSTILE_TEAM_ID);
+
+        BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
+
+        AttackEntityEvent attackEvent = new AttackEntityEvent(hostile, owner);
+        new com.talhanation.recruits.ClaimEvents().onAttackEntity(attackEvent);
+
+        helper.assertTrue(attackEvent.isCanceled(),
+                "Expected hostile direct attacks against entities inside a friendly claim to be denied outside siege state");
         helper.succeed();
     }
 
