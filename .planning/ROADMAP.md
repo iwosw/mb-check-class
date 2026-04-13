@@ -400,17 +400,17 @@ Status: Planned (5 plans defined on 2026-04-12; next execution target, using `20
 
 **Requirements:** [CITIZEN-01, CITIZEN-02, CITIZEN-03, CITIZEN-04]
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 22-01-PLAN.md — Define the citizen core contracts and compatibility-safe persistence bridge before live wrappers change.
-- [ ] 22-02-PLAN.md — Add the citizen role/controller seam and wrapper adapters to recruit and worker bases without changing entrypoints.
-- [ ] 22-03-PLAN.md — Convert one recruit live path onto the citizen seam and pin it with targeted regressions plus retained GameTests.
-- [ ] 22-04-PLAN.md — Convert one worker live path onto the citizen seam and revalidate the merged runtime through targeted regressions plus retained GameTests.
+- [x] 22-01-PLAN.md — Define the citizen core contracts and compatibility-safe persistence bridge before live wrappers change.
+- [x] 22-02-PLAN.md — Add the citizen role/controller seam and wrapper adapters to recruit and worker bases without changing entrypoints.
+- [x] 22-03-PLAN.md — Convert one recruit live path onto the citizen seam and pin it with targeted regressions plus retained GameTests.
+- [x] 22-04-PLAN.md — Convert one worker live path onto the citizen seam and revalidate the merged runtime through targeted regressions plus retained GameTests.
 
-Planning artifacts live under `.planning/phases/22-citizen-role-unification/` once planned.
+Planning artifacts live under `.planning/phases/22-citizen-role-unification/`.
 
-Status: Planned (4 plans defined on 2026-04-13; incremental compatibility-safe rollout keeps wrappers, entrypoints, and save-facing identities stable while the citizen seam lands).
+Status: Complete (4/4 plans complete as of 2026-04-13); recruit and worker wrappers now share a citizen core and role/controller seam, and one live recruit plus one live worker path reload through citizen-backed persistence while runtime ids and entrypoints stay stable.
 
 ## Phase 23: Settlement Governance And Governor Control
 

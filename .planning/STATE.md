@@ -13,7 +13,7 @@ progress:
 
 # Project State
 
-- Current focus: Phase 31 is complete; claim worker growth now has a pure rules seam, a live bounded runtime path with claim-led ownership defaults, dedicated root GameTests, tunnel/branch-only miner authoring, hostile-claim excavation guardrails, and a quick-task claim grief protection slice covering lava spread, container denial, and border mutation. The next major execution target remains Phase 21 source-tree consolidation.
+- Current focus: Phase 22 is complete; recruit and worker wrappers now share one citizen core, one role/controller seam, and one live recruit plus one live worker persistence path backed by citizen-owned state while runtime ids, packet entrypoints, and compatibility seams remain stable. The next major execution target remains Phase 21 source-tree consolidation.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/quick/260413-a9x-claims/260413-a9x-SUMMARY.md`
+- Latest execution summary: `.planning/phases/22-citizen-role-unification/22-citizen-role-unification-04-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-CONTEXT.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-02-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-03-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-04-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-05-PLAN.md`
 
 ## Decisions
@@ -121,6 +121,8 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Execute the physical package move in five waves: shared seams/config, bootstrap/network/registry, recruit-owned controlling systems, worker civilian packages, then source-root retirement plus final validation.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Keep `com.talhanation.bannermod` forwarding wrappers temporary and narrow; they are allowed only to reduce migration risk during import churn.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Do not retire `recruits/` or `workers/` Java source roots until `build.gradle` is updated, the retained compatibility layer is explicit, and root `compileJava`, `processResources`, `test`, and `verifyGameTestStage` are green or explicitly justified.
+- [Phase 22-citizen-role-unification]: Keep the citizen seam additive and wrapper-owned; do not change live runtime ids, packet entrypoints, or screen entrypoints during the first recruit and worker conversions.
+- [Phase 22-citizen-role-unification]: Route shared recruit and worker persistence through `CitizenPersistenceBridge` before widening live-path adoption beyond one recruit slice and one worker slice.
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Mining behavior now uses one explicit `MiningPatternSettings` contract across UI, packets, persisted area state, and miner AI progress.
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Tunnel mining must advance by planned diagonal segments and branch mining must advance by deterministic corridor/branch segments instead of generic scan-box inference.
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Builder template import stays on one BuildArea `CompoundTag` contract through a unified `.nbt`/`.schem`/`.schematic` loader rather than introducing a parallel preview or build pipeline.
@@ -177,6 +179,10 @@ progress:
 | Phase 31-1-2-mining-area-branch-mine-3 P03 | 14 min | 2 tasks | 5 files |
 | Phase 31-1-2-mining-area-branch-mine-3 P04 | 3 min | 2 tasks | 3 files |
 | Phase 31-1-2-mining-area-branch-mine-3 P02 | 10 min | 2 tasks | 4 files |
+| Phase 22-citizen-role-unification P01 | not recorded | 2 tasks | 4 files |
+| Phase 22-citizen-role-unification P02 | not recorded | 2 tasks | 6 files |
+| Phase 22-citizen-role-unification P03 | not recorded | 2 tasks | 4 files |
+| Phase 22-citizen-role-unification P04 | not recorded | 2 tasks | 4 files |
 
 ### Quick Tasks Completed
 
@@ -186,6 +192,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-13T00:44:02Z
-- Stopped at: Completed quick task 260413-a9x
+- Last updated: 2026-04-13T19:50:37Z
+- Stopped at: Completed 22-04-PLAN.md
 - Resume file: None

@@ -35,10 +35,10 @@
 
 ## Active Phase 22 Requirements
 
-- [ ] CITIZEN-01 — One shared citizen core owns common authority, team, inventory, persistence, navigation-handoff, and runtime-flag state while recruit and worker wrappers preserve current runtime ids and external save identities.
-- [ ] CITIZEN-02 — Recruit and worker specialization routes through explicit citizen role/job controller seams instead of adding a new deep inheritance tree.
-- [ ] CITIZEN-03 — One controlled recruit path and one controlled worker path use the citizen seam live without changing the live mod id, registry identity, packet entrypoints, screen entrypoints, or current narrow save-compatibility seams.
-- [ ] CITIZEN-04 — Existing root GameTests plus targeted new regression coverage prove the citizen seam keeps recruit and worker behavior compatibility-safe during the incremental rollout.
+- [x] CITIZEN-01 — One shared citizen core owns common authority, team, inventory, persistence, navigation-handoff, and runtime-flag state while recruit and worker wrappers preserve current runtime ids and external save identities.
+- [x] CITIZEN-02 — Recruit and worker specialization routes through explicit citizen role/job controller seams instead of adding a new deep inheritance tree.
+- [x] CITIZEN-03 — One controlled recruit path and one controlled worker path use the citizen seam live without changing the live mod id, registry identity, packet entrypoints, screen entrypoints, or current narrow save-compatibility seams.
+- [x] CITIZEN-04 — Existing root GameTests plus targeted new regression coverage prove the citizen seam keeps recruit and worker behavior compatibility-safe during the incremental rollout.
 
 ## Active Phase 31 Requirements
 
