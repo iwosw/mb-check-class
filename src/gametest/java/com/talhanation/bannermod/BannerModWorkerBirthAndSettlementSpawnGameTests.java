@@ -110,8 +110,8 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             AbstractWorkerEntity hostileWorker = VillagerEvents.attemptBirthWorkerSpawn(level, hostileVillager);
             BannerModSettlementBinding.Binding hostileBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, hostilePos, HOSTILE_TEAM_ID);
 
-            BlockPos unclaimedPos = helper.absolutePos(new BlockPos(8, 2, 2));
-            Villager unclaimedVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(8, 2, 2), "phase30-unclaimed-villager");
+            BlockPos unclaimedPos = helper.absolutePos(new BlockPos(18, 2, 2));
+            Villager unclaimedVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(18, 2, 2), "phase30-unclaimed-villager");
             AbstractWorkerEntity unclaimedWorker = VillagerEvents.attemptSettlementWorkerSpawn(level, unclaimedVillager);
             BannerModSettlementBinding.Binding unclaimedBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, unclaimedPos, FRIENDLY_TEAM_ID);
 
