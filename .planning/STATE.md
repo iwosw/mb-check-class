@@ -13,7 +13,7 @@ progress:
 
 # Project State
 
-- Current focus: Phase 31 is complete; claim worker growth now has a pure rules seam, a live bounded runtime path with claim-led ownership defaults, dedicated root GameTests, tunnel/branch-only miner authoring, and hostile-claim excavation guardrails. The next major execution target remains Phase 21 source-tree consolidation.
+- Current focus: Phase 31 is complete; claim worker growth now has a pure rules seam, a live bounded runtime path with claim-led ownership defaults, dedicated root GameTests, tunnel/branch-only miner authoring, hostile-claim excavation guardrails, and a quick-task claim grief protection slice covering lava spread, container denial, and border mutation. The next major execution target remains Phase 21 source-tree consolidation.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/31-1-2-mining-area-branch-mine-3/31-1-2-mining-area-branch-mine-3-02-SUMMARY.md`
+- Latest execution summary: `.planning/quick/260413-a9x-claims/260413-a9x-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-CONTEXT.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-02-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-03-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-04-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-05-PLAN.md`
 
 ## Decisions
@@ -180,6 +180,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-12T12:57:26Z
-- Stopped at: Completed 31-1-2-mining-area-branch-mine-3-02-PLAN.md
+- Last updated: 2026-04-13T00:44:02Z
+- Stopped at: Completed quick task 260413-a9x
 - Resume file: None
