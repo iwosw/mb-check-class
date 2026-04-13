@@ -124,6 +124,12 @@ public final class BannerModDedicatedServerGameTestSupport {
         recruit.setIsOwned(true);
     }
 
+    public static void assignRecruitToLeader(ServerLevel level, AbstractRecruitEntity recruit, Player leader, String teamId) {
+        assignDetachedOwnership(recruit, leader.getUUID());
+        recruit.setFollowState(1);
+        joinTeam(level, teamId, leader, recruit);
+    }
+
     public static void assignDetachedOwnership(AbstractWorkerEntity worker, UUID ownerId) {
         worker.setOwnerUUID(Optional.of(ownerId));
         worker.setIsOwned(true);

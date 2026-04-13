@@ -1,6 +1,7 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.recruits.entities.RecruitEntity;
 import com.talhanation.workers.entities.FarmerEntity;
 import com.talhanation.workers.entities.workarea.BuildArea;
 import com.talhanation.workers.entities.workarea.CropArea;
@@ -38,6 +39,17 @@ public final class BannerModGameTestSupport {
         worker.setFollowState(2);
         worker.setHoldPos(Vec3.atCenterOf(worker.blockPosition()));
         return worker;
+    }
+
+    public static RecruitEntity spawnOwnedRecruit(GameTestHelper helper, Player player, BlockPos relativePos) {
+        RecruitEntity recruit = spawnEntity(helper, com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(), relativePos);
+        recruit.setCustomName(Component.literal("Governor Recruit"));
+        recruit.setCustomNameVisible(true);
+        recruit.setPersistenceRequired();
+        recruit.setOwnerUUID(Optional.of(player.getUUID()));
+        recruit.setIsOwned(true);
+        recruit.setFollowState(1);
+        return recruit;
     }
 
     public static CropArea spawnOwnedCropArea(GameTestHelper helper, Player player, BlockPos relativePos) {
