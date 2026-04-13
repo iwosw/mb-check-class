@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -69,6 +70,30 @@ public record CitizenStateSnapshot(
             int slot = itemData.getByte("Slot") & 255;
             if (slot < inventory.getContainerSize()) {
                 inventory.setItem(slot, ItemStack.of(itemData));
+            }
+        }
+
+        ListTag armorItems = inventoryData.getList("ArmorItems", 10);
+        for (int i = 0; i < armorItems.size(); ++i) {
+            ItemStack armor = ItemStack.of(armorItems.getCompound(i));
+            EquipmentSlot slot = net.minecraft.world.entity.Mob.getEquipmentSlotForItem(armor);
+            int inventorySlot = switch (slot) {
+                case HEAD -> 0;
+                case CHEST -> 1;
+                case LEGS -> 2;
+                case FEET -> 3;
+                default -> -1;
+            };
+            if (inventorySlot >= 0 && inventorySlot < inventory.getContainerSize()) {
+                inventory.setItem(inventorySlot, armor);
+            }
+        }
+
+        ListTag handItems = inventoryData.getList("HandItems", 10);
+        for (int i = 0; i < handItems.size(); ++i) {
+            int inventorySlot = i == 0 ? 5 : 4;
+            if (inventorySlot < inventory.getContainerSize()) {
+                inventory.setItem(inventorySlot, ItemStack.of(handItems.getCompound(i)));
             }
         }
         inventory.setChanged();
