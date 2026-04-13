@@ -3,8 +3,6 @@ package com.talhanation.bannermod.citizen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +24,7 @@ class CitizenPersistenceBridgeTest {
         legacy.putDouble("HoldPosX", 1.5D);
         legacy.putDouble("HoldPosY", 64.0D);
         legacy.putDouble("HoldPosZ", -2.5D);
-        legacy.put("Items", createItemsTag(0, new ItemStack(Items.IRON_SWORD)));
+        legacy.put("Items", createItemsTag(0, "minecraft:iron_sword", 1));
 
         CitizenStateSnapshot snapshot = CitizenPersistenceBridge.fromRecruitLegacy(legacy);
 
@@ -92,10 +90,11 @@ class CitizenPersistenceBridgeTest {
         assertEquals(8, workerLegacy.getInt("MovePosX"));
     }
 
-    private static ListTag createItemsTag(int slot, ItemStack itemStack) {
+    private static ListTag createItemsTag(int slot, String itemId, int count) {
         CompoundTag itemData = new CompoundTag();
         itemData.putByte("Slot", (byte) slot);
-        itemStack.save(itemData);
+        itemData.putString("id", itemId);
+        itemData.putByte("Count", (byte) count);
         ListTag items = new ListTag();
         items.add(itemData);
         return items;
