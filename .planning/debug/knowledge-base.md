@@ -35,3 +35,11 @@ Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypothe
 - **Fix:** Added startup forward-sync from a newer legacy military config into the active military config file, and taught claim-grown farmers to seed/bind a crop area from a prepared field during claim worker spawn. Added regression coverage for both paths.
 - **Files changed:** src/main/java/com/talhanation/bannermod/config/BannerModConfigFiles.java, src/test/java/com/talhanation/bannermod/BannerModConfigFilesTest.java, workers/src/main/java/com/talhanation/workers/settlement/WorkerSettlementSpawner.java, src/gametest/java/com/talhanation/bannermod/BannerModClaimWorkerGrowthGameTests.java
 ---
+
+## outsider-claim-interaction-bypass — outsiders can no longer interact inside чужие claims
+- **Date:** 2026-04-13
+- **Error patterns:** outsider claim interaction bypass, чужой клейм, water bucket in чужом клейме, lava bucket in чужом клейме, usable blocks inside claim, outsider attack inside claim, no errors
+- **Root cause:** ClaimEvents only denied a narrow subset of RightClickBlock targets and never applied claim-aware checks to entity interaction or direct attack events, so outsiders could still use generic usable blocks, bucket/liquid click paths, and entity actions inside чужие claims.
+- **Fix:** Replaced the whitelist-style block interaction gate with a unified outsider block interaction check, added RightClickItem plus entity interact/attack claim guards, and expanded claim protection gametests to cover generic use, bucket click, and attack denial paths.
+- **Files changed:** recruits/src/main/java/com/talhanation/recruits/ClaimEvents.java, src/gametest/java/com/talhanation/bannermod/BannerModClaimProtectionGameTests.java
+---
