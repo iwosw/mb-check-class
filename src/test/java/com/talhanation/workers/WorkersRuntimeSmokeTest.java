@@ -22,6 +22,6 @@ class WorkersRuntimeSmokeTest {
 
     @Test
     void keepWorkersPacketsOnDedicatedMergedOffset() {
-        assertEquals(102, WorkersRuntime.networkIdOffset());
+        assertEquals(104, WorkersRuntime.networkIdOffset());
     }
 }
