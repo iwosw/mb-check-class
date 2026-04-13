@@ -12,6 +12,7 @@ import com.talhanation.workers.entities.AbstractWorkerEntity;
 import com.talhanation.workers.entities.workarea.AbstractWorkAreaEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -38,6 +39,13 @@ public final class BannerModDedicatedServerGameTestSupport {
 
         FakePlayer player = new FakePlayer(level, new GameProfile(playerId, name));
         level.addFreshEntity(player);
+        return player;
+    }
+
+    public static Player createPositionedFakeServerPlayer(ServerLevel level, UUID playerId, String name, BlockPos pos) {
+        Player player = createFakeServerPlayer(level, playerId, name);
+        Vec3 spawnPos = Vec3.atBottomCenterOf(pos);
+        player.moveTo(spawnPos.x(), spawnPos.y(), spawnPos.z(), 0.0F, 0.0F);
         return player;
     }
 
