@@ -380,15 +380,15 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 **Plans:** 5 plans
 
 Plans:
-- [ ] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.
-- [ ] 21-02-PLAN.md — Re-home bootstrap, shared networking, and registry/lifecycle composition into `com.talhanation.bannerlord.bootstrap`, `.network`, and `.registry` without changing the runtime contract.
+- [x] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.
+- [x] 21-02-PLAN.md — Re-home bootstrap, shared networking, and registry/lifecycle composition into `com.talhanation.bannerlord.bootstrap`, `.network`, and `.registry` without changing the runtime contract. (completed 2026-04-14)
 - [ ] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannerlord` military/shared packages before worker code follows them.
 - [ ] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannerlord` base while isolating the compatibility layer.
 - [ ] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
 
 Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/`.
 
-Status: Planned (5 plans defined on 2026-04-12; next execution target, using `20-TARGET-ARCHITECTURE.md` as the move contract).
+Status: In progress (2/5 plans complete as of 2026-04-14); wave 1 shared/config seams and wave 2 bootstrap/network/registry ownership now live under `src/main/java/com/talhanation/bannerlord/**`, while later Phase 21 waves still need gameplay-package moves and source-root retirement work.
 
 ## Phase 22: Citizen Role Unification
 
@@ -422,14 +422,14 @@ Status: Complete (4/4 plans complete as of 2026-04-13); recruit and worker wrapp
 
 **Requirements:** [GOV-01, GOV-02, GOV-03, GOV-04]
 
-**Plans:** 5 plans
+**Plans:** 5 plans defined
 
 Plans:
 - [ ] 23-01-PLAN.md — Define the claim-keyed governor snapshot, pure rules, and persistence boundary before live runtime wiring begins.
 - [ ] 23-02-PLAN.md — Implement governor designation and revocation as authority-safe runtime services over existing recruit/citizen identities.
 - [ ] 23-03-PLAN.md — Add the bounded governor heartbeat for local tax state, incidents, and settlement recommendations without widening into treasury or logistics rewrites.
 - [ ] 23-04-PLAN.md — Activate the dormant governor promotion path and add a dedicated governor control screen fed by live governance snapshots.
-- [ ] 23-05-PLAN.md — Close Phase 23 with reusable GameTest helpers and live governor designation/reporting validation.
+- [x] 23-05-PLAN.md — Close Phase 23 with reusable GameTest helpers and live governor designation/reporting validation. (completed 2026-04-13)
 
 Planning artifacts live under `.planning/phases/23-settlement-governance-and-governor-control/` once planned.
 
@@ -443,9 +443,20 @@ Status: Planned (5 plans defined on 2026-04-13).
 
 **Goal:** BannerMod gains an explicit logistics layer and courier profession instead of isolated profession-local item movement.
 
+**Requirements:** [LOG-01, LOG-02, LOG-03, LOG-04]
+
+**Plans:** 5/5 plans complete
+
+Plans:
+- [ ] 24-01-PLAN.md — Define the shared route, reservation, rules, and service contracts before live courier or UI wiring begins.
+- [ ] 24-02-PLAN.md — Route current worker and builder storage-demand flows through the shared reservation-aware logistics seam.
+- [ ] 24-03-PLAN.md — Add the courier profession and deterministic pickup/delivery goals on top of the shared logistics service.
+- [ ] 24-04-PLAN.md — Expose route authoring, filters, thresholds, and blocked-state feedback through authority-safe screens and packets.
+- [x] 24-05-PLAN.md — Close Phase 24 with reusable helpers plus root GameTests for courier movement, reservation conflicts, and hostile-authoring denial. (completed 2026-04-14)
+
 Planning artifacts live under `.planning/phases/24-logistics-backbone-and-courier-worker/` once planned.
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+Status: Planned (5 plans defined on 2026-04-14).
 
 ## Phase 25: Treasury, Taxes, And Army Upkeep
 
@@ -552,3 +563,117 @@ Plans:
 Planning artifacts live under `.planning/phases/31-1-2-mining-area-branch-mine-3/`.
 
 Status: Complete (4/4 plans complete as of 2026-04-12).
+
+### Phase 32: Faction And Local Chat Boundaries
+
+**Goal:** BannerMod replaces broad global chat with faction-scoped and local proximity channels so settlement, war, and roleplay coordination happen inside intentional communication boundaries instead of one server-wide stream.
+**Requirements:** [CHAT-01, CHAT-02, CHAT-03]
+**Depends on:** Current merged BannerMod runtime baseline
+**Plans:** 3 plans
+
+Plans:
+- [ ] 32-01-PLAN.md — Define the chat-channel contract, message routing rules, and operator config that disables global chat by default.
+- [ ] 32-02-PLAN.md — Implement server-authoritative faction and local chat delivery, formatting, and permission checks.
+- [ ] 32-03-PLAN.md — Add validation for local-radius delivery, faction-only visibility, and global-chat disable behavior.
+
+Planning artifacts live under `.planning/phases/32-faction-and-local-chat-boundaries/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-14).
+
+### Phase 33: Citizen Growth, Birth, And Building Registration
+
+**Goal:** BannerMod grows civilian population through a MineColonies-style building registration model where claims know their housing and civic capacity, citizen appearance plus birth share one bounded growth system, and overpopulation progressively suppresses then stops new growth.
+**Requirements:** [CITGROW-01, CITGROW-02, CITGROW-03, CITGROW-04]
+**Depends on:** Phase 31
+**Plans:** 4 plans
+
+Plans:
+- [ ] 33-01-PLAN.md — Define the building-registration, housing-capacity, and demographic-pressure contracts for claim-backed settlements.
+- [ ] 33-02-PLAN.md — Implement the settlement registry pass that discovers and persists qualifying housing and civic buildings without introducing a deep settlement manager prematurely.
+- [ ] 33-03-PLAN.md — Rework citizen appearance and worker birth into one capacity-aware growth loop with diminishing fertility under crowding and a hard stop at full overpopulation.
+- [ ] 33-04-PLAN.md — Add runtime validation for housing-driven citizen growth, birth throttling, and overpopulation denial.
+
+Planning artifacts live under `.planning/phases/33-citizen-growth-birth-and-building-registration/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-14).
+
+### Phase 34: Government Forms And Administrative Structure
+
+**Goal:** BannerMod settlements and factions can adopt distinct forms of government with explicit administrative consequences, so authority, office assignment, and civic control stop being one hard-coded governor pattern.
+**Requirements:** [GOV-01, GOV-02, GOV-03]
+**Depends on:** Phase 23
+**Plans:** 3 plans
+
+Plans:
+- [ ] 34-01-PLAN.md — Define the initial government-form taxonomy, administrative offices, and authority boundaries that sit above the existing governor seam.
+- [ ] 34-02-PLAN.md — Implement the smallest runtime state and rules layer needed to apply government-specific administration, succession, and permissions.
+- [ ] 34-03-PLAN.md — Add validation for office assignment, authority transfer, and government-specific administrative constraints.
+
+Planning artifacts live under `.planning/phases/34-government-forms-and-administrative-structure/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-14).
+
+### Phase 35: Clans For Players And NPCs
+
+**Goal:** BannerMod gains a clan layer shared by players and optional NPC membership so diplomacy, administration, recruitment, and war can target persistent social groups instead of only individuals or factions.
+**Requirements:** [CLAN-01, CLAN-02, CLAN-03]
+**Depends on:** Phase 34
+**Plans:** 3 plans
+
+Plans:
+- [ ] 35-01-PLAN.md — Define clan identity, membership, leadership, and relation rules for players first with explicit NPC extension seams.
+- [ ] 35-02-PLAN.md — Implement persistent clan state, invites or assignment flows, and authority hooks for player plus NPC membership.
+- [ ] 35-03-PLAN.md — Add validation for clan persistence, membership changes, and clan-aware authority or diplomacy lookups.
+
+Planning artifacts live under `.planning/phases/35-clans-for-players-and-npcs/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-14).
+
+### Phase 36: Datapack-Driven Formations
+
+**Goal:** Formation definitions move out of hard-coded layouts into datapack-authored content so spacing, slot geometry, role hints, and unlockable variants can be tuned without code patches.
+**Requirements:** [FORMDATA-01, FORMDATA-02, FORMDATA-03]
+**Depends on:** Phase 14
+**Plans:** 3 plans
+
+Plans:
+- [ ] 36-01-PLAN.md — Define the formation datapack schema, validation rules, and fallback behavior for malformed or missing data.
+- [ ] 36-02-PLAN.md — Route runtime formation loading and selection through the new datapack registry without breaking current formation behavior.
+- [ ] 36-03-PLAN.md — Add validation for datapack reload, schema enforcement, and combat-safe fallback to canonical formations.
+
+Planning artifacts live under `.planning/phases/36-datapack-driven-formations/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-14).
+
+### Phase 37: Claim Warfare Damage Restrictions
+
+**Goal:** Friendly and neutral faction territory stops allowing ordinary block grief, while active warfare only permits destruction by valid besiegers using recognized siege-engine damage paths.
+**Requirements:** [SIEGEDMG-01, SIEGEDMG-02, SIEGEDMG-03]
+**Depends on:** Phase 10
+**Plans:** 3 plans
+
+Plans:
+- [ ] 37-01-PLAN.md — Define the claim-damage matrix for defenders, outsiders, besiegers, and siege-engine-only destruction.
+- [ ] 37-02-PLAN.md — Implement runtime enforcement so faction claims reject normal breaking, placement-side bypasses, and non-siege destruction during conflict.
+- [ ] 37-03-PLAN.md — Add validation for siege-engine-only destruction and denial of ordinary grief inside faction territory.
+
+Planning artifacts live under `.planning/phases/37-claim-warfare-damage-restrictions/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-14).
+
+### Phase 38: Siege Declaration, Camp, And Capture Flow
+
+**Goal:** BannerMod sieges become a staged SiegeWar-style campaign: attackers establish a siege camp, wait through a declaration window, then win only by seizing and holding the settlement center while strict attacker and defender interaction rules preserve a readable war state.
+**Requirements:** [SIEGEFLOW-01, SIEGEFLOW-02, SIEGEFLOW-03, SIEGEFLOW-04]
+**Depends on:** Phase 37
+**Plans:** 4 plans
+
+Plans:
+- [ ] 38-01-PLAN.md — Define the siege declaration lifecycle, siege-camp placement contract, and 48-hour warmup before assault begins.
+- [ ] 38-02-PLAN.md — Implement active-siege rule enforcement: attackers cannot place, break, pour fluids, open containers, or interact normally inside the claim, while defenders gain the intended 60-second build-break cooldown.
+- [ ] 38-03-PLAN.md — Implement central-chunk capture and timed hold victory, including Medieval Siege Machines integration for siege-engine-only breach paths.
+- [ ] 38-04-PLAN.md — Add runtime validation for declaration timing, attacker restrictions, defender cooldowns, and center-chunk hold resolution.
+
+Planning artifacts live under `.planning/phases/38-siege-declaration-camp-and-capture-flow/` once planned.
+
+Status: Planned (new decomposition defined as of 2026-04-14).
