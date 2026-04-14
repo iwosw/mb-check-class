@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.citizen;
 
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
 import com.talhanation.workers.entities.AbstractWorkerEntity;
 import org.junit.jupiter.api.Test;
 

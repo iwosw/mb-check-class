@@ -6,7 +6,7 @@ import com.talhanation.bannermod.governance.BannerModGovernorService;
 import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.ClaimEvents;
 import com.talhanation.recruits.Main;
-import com.talhanation.recruits.entities.RecruitEntity;
+import com.talhanation.bannerlord.entity.military.RecruitEntity;
 import com.talhanation.recruits.world.RecruitsClaim;
 import com.talhanation.workers.entities.FarmerEntity;
 import net.minecraft.core.BlockPos;

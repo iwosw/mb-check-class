@@ -1,0 +1,2718 @@
+package com.talhanation.bannerlord.entity.shared;
+//ezgi&talha kantar
+
+import com.talhanation.bannermod.citizen.CitizenCore;
+import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
+import com.talhanation.bannermod.citizen.CitizenRole;
+import com.talhanation.bannermod.citizen.CitizenRoleController;
+import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
+import com.talhanation.recruits.*;
+import com.talhanation.recruits.RecruitEvent;
+import com.talhanation.recruits.compat.IWeapon;
+import com.talhanation.recruits.config.RecruitsClientConfig;
+import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannerlord.ai.military.*;
+import com.talhanation.bannerlord.ai.military.async.AsyncManager;
+import com.talhanation.bannerlord.ai.military.async.AsyncTaskWithCallback;
+import com.talhanation.bannerlord.ai.military.controller.RecruitCommandStateTransitions;
+import com.talhanation.bannerlord.ai.military.compat.BlockWithWeapon;
+import com.talhanation.bannerlord.ai.military.navigation.RecruitPathNavigation;
+import com.talhanation.bannerlord.ai.military.navigation.RecruitsOpenDoorGoal;
+import com.talhanation.recruits.init.ModItems;
+import com.talhanation.recruits.inventory.DebugInvMenu;
+import com.talhanation.recruits.inventory.RecruitHireMenu;
+import com.talhanation.recruits.inventory.RecruitInventoryMenu;
+import com.talhanation.recruits.network.*;
+import com.talhanation.bannerlord.persistence.military.RecruitsDiplomacyManager;
+import com.talhanation.bannerlord.persistence.military.RecruitsFaction;
+import com.talhanation.bannerlord.persistence.military.RecruitsGroup;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.*;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.raid.Raider;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.Team;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
+import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
+    private static final TargetSearchProfilingCounters TARGET_SEARCH_PROFILING = new TargetSearchProfilingCounters();
+    private static final EntityDataAccessor<Integer> DATA_REMAINING_ANGER_TIME = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> FOLLOW_STATE = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> SHOULD_FOLLOW = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SHOULD_BLOCK = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SHOULD_MOUNT = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SHOULD_PROTECT = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SHOULD_HOLD_POS = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SHOULD_MOVE_POS = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Optional<BlockPos>> HOLD_POS = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
+    private static final EntityDataAccessor<Optional<BlockPos>> MOVE_POS = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
+    private static final EntityDataAccessor<Optional<BlockPos>> UPKEEP_POS = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
+    private static final EntityDataAccessor<Boolean> LISTEN = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_FOLLOWING = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Optional<UUID>> MOUNT_ID = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Optional<UUID>> PROTECT_ID = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Optional<UUID>> GROUP = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Integer> XP = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> LEVEL = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> KILLS = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> FLEEING = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> HUNGER = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> MORAL = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Optional<UUID>> OWNER_ID = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Boolean> OWNED = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> COST = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Optional<UUID>> UPKEEP_ID = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Byte> COLOR = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BYTE);
+    private static final EntityDataAccessor<Byte> BIOME = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BYTE);
+    private static final EntityDataAccessor<Boolean> SHOULD_REST = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SHOULD_RANGED = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    public int blockCoolDown;
+    public boolean needsTeamUpdate = true;
+    public boolean needsGroupUpdate = true;
+    public boolean forcedUpkeep;
+    public int dismount = 0;
+    public int upkeepTimer = 0;
+    public int mountTimer = 0;
+    public int despawnTimer = -1;
+    public boolean reachedMovePos;
+    public int attackCooldown = 0;
+    public int paymentTimer;
+    public boolean rotate;
+    public float ownerRot;
+    public int rotateTicks;
+    public int formationPos = -1;
+    private int maxFallDistance;
+    private final int tickOffset = (int)(System.nanoTime() % 20);
+    public Vec3 holdPosVec;
+    public boolean isInFormation;
+    public boolean needsColorUpdate = true;
+    public float moveSpeed = 1;
+    public TargetingConditions targetingConditions;
+    private final CitizenCore citizenCore = new CitizenCore() {
+        @Override
+        public UUID getOwnerUUID() {
+            return AbstractRecruitEntity.this.getOwnerUUID();
+        }
+
+        @Override
+        public void setOwnerUUID(Optional<UUID> ownerUuid) {
+            AbstractRecruitEntity.this.setOwnerUUID(ownerUuid);
+        }
+
+        @Override
+        public int getFollowState() {
+            return AbstractRecruitEntity.this.getFollowState();
+        }
+
+        @Override
+        public void setFollowState(int state) {
+            AbstractRecruitEntity.this.setFollowState(state);
+        }
+
+        @Override
+        public SimpleContainer getInventory() {
+            return AbstractRecruitEntity.this.getInventory();
+        }
+
+        @Override
+        public String getTeamId() {
+            return AbstractRecruitEntity.this.getTeam() == null ? null : AbstractRecruitEntity.this.getTeam().getName();
+        }
+
+        @Override
+        public Vec3 getHoldPos() {
+            return AbstractRecruitEntity.this.getHoldPos();
+        }
+
+        @Override
+        public void setHoldPos(@Nullable Vec3 holdPos) {
+            if (holdPos == null) {
+                AbstractRecruitEntity.this.clearHoldPos();
+            }
+            else {
+                AbstractRecruitEntity.this.setHoldPos(holdPos);
+            }
+        }
+
+        @Override
+        public void clearHoldPos() {
+            AbstractRecruitEntity.this.clearHoldPos();
+        }
+
+        @Override
+        public BlockPos getMovePos() {
+            return AbstractRecruitEntity.this.getMovePos();
+        }
+
+        @Override
+        public void setMovePos(@Nullable BlockPos movePos) {
+            if (movePos == null) {
+                AbstractRecruitEntity.this.clearMovePos();
+            }
+            else {
+                AbstractRecruitEntity.this.setMovePos(movePos);
+            }
+        }
+
+        @Override
+        public void clearMovePos() {
+            AbstractRecruitEntity.this.clearMovePos();
+        }
+
+        @Override
+        public boolean isOwned() {
+            return AbstractRecruitEntity.this.getIsOwned();
+        }
+
+        @Override
+        public void setOwned(boolean owned) {
+            AbstractRecruitEntity.this.setIsOwned(owned);
+        }
+
+        @Override
+        public boolean isWorking() {
+            return AbstractRecruitEntity.this.getFollowState() == 6;
+        }
+
+        @Override
+        public UUID getBoundWorkAreaUUID() {
+            return null;
+        }
+
+        @Override
+        public void setBoundWorkAreaUUID(@Nullable UUID boundWorkAreaUuid) {
+        }
+
+        @Override
+        public boolean getRuntimeFlag(RuntimeFlag flag) {
+            return switch (flag) {
+                case SHOULD_FOLLOW -> AbstractRecruitEntity.this.getShouldFollow();
+                case SHOULD_HOLD_POS -> AbstractRecruitEntity.this.getShouldHoldPos();
+                case SHOULD_MOVE_POS -> AbstractRecruitEntity.this.getShouldMovePos();
+                case SHOULD_PROTECT -> AbstractRecruitEntity.this.getShouldProtect();
+                case SHOULD_MOUNT -> AbstractRecruitEntity.this.getShouldMount();
+                case SHOULD_BLOCK -> AbstractRecruitEntity.this.getShouldBlock();
+                case LISTEN -> AbstractRecruitEntity.this.getListen();
+                case IS_FOLLOWING -> AbstractRecruitEntity.this.isFollowing();
+                case SHOULD_REST -> AbstractRecruitEntity.this.getShouldRest();
+                case SHOULD_RANGED -> AbstractRecruitEntity.this.getShouldRanged();
+                case IS_IN_FORMATION -> AbstractRecruitEntity.this.isInFormation;
+            };
+        }
+
+        @Override
+        public void setRuntimeFlag(RuntimeFlag flag, boolean value) {
+            switch (flag) {
+                case SHOULD_FOLLOW -> AbstractRecruitEntity.this.setShouldFollow(value);
+                case SHOULD_HOLD_POS -> AbstractRecruitEntity.this.setShouldHoldPos(value);
+                case SHOULD_MOVE_POS -> AbstractRecruitEntity.this.setShouldMovePos(value);
+                case SHOULD_PROTECT -> AbstractRecruitEntity.this.setShouldProtect(value);
+                case SHOULD_MOUNT -> AbstractRecruitEntity.this.setShouldMount(value);
+                case SHOULD_BLOCK -> AbstractRecruitEntity.this.setShouldBlock(value);
+                case LISTEN -> AbstractRecruitEntity.this.setListen(value);
+                case IS_FOLLOWING -> AbstractRecruitEntity.this.setIsFollowing(value);
+                case SHOULD_REST -> AbstractRecruitEntity.this.setShouldRest(value);
+                case SHOULD_RANGED -> AbstractRecruitEntity.this.setShouldRanged(value);
+                case IS_IN_FORMATION -> AbstractRecruitEntity.this.isInFormation = value;
+            }
+        }
+    };
+    private CitizenRoleController citizenRoleController = CitizenRoleController.noop(CitizenRole.RECRUIT);
+
+    public AbstractRecruitEntity(EntityType<? extends AbstractInventoryEntity> entityType, Level world) {
+        super(entityType, world);
+        this.xpReward = 6;
+        this.navigation = this.createNavigation(world);
+        this.targetingConditions = TargetingConditions.forCombat().ignoreInvisibilityTesting().selector(this::shouldAttack);
+        this.setMaxUpStep(1F);
+        this.setMaxFallDistance(1);
+    }
+
+    ///////////////////////////////////NAVIGATION/////////////////////////////////////////
+    @NotNull
+    protected PathNavigation createNavigation(@NotNull Level level) {
+        return new RecruitPathNavigation(this, level);
+    }
+
+    public @NotNull PathNavigation getNavigation() {
+        return super.getNavigation();
+    }
+
+    public CitizenCore getCitizenCore() {
+        return this.citizenCore;
+    }
+
+    public CitizenRole getCitizenRole() {
+        return CitizenRole.RECRUIT;
+    }
+
+    public CitizenRoleController getCitizenRoleController() {
+        return this.citizenRoleController;
+    }
+
+    public void setCitizenRoleController(CitizenRoleController controller) {
+        this.citizenRoleController = controller == null ? CitizenRoleController.noop(this.getCitizenRole()) : controller;
+    }
+
+    public void rideTick() {
+        super.rideTick();
+    }
+
+    public double getMyRidingOffset() {
+        return -0.35D;
+    }
+
+    public int getMaxFallDistance() {
+        return maxFallDistance;
+    }
+
+    public void setMaxFallDistance(int x){
+        this.maxFallDistance = x;
+    }
+
+    ///////////////////////////////////TICK/////////////////////////////////////////
+
+    @Override
+    protected float tickHeadTurn(float yRot, float animStep) {
+        if(this.rotateTicks > 0 && this.getNavigation().isDone()) {
+            this.yBodyRot = this.ownerRot;
+            this.yHeadRot = this.ownerRot;
+            return 0;
+        }
+        return super.tickHeadTurn(yRot, animStep);
+    }
+
+    // @Override
+    public void aiStep(){
+        super.aiStep();
+        updateSwingTime();
+        updateShield();
+
+        if (this.getCommandSenderWorld().isClientSide()) return;
+
+        if(needsColorUpdate && this.getTeam() != null) updateColor(this.getTeam().getName());
+        if(this instanceof IRangedRecruit  && (this.tickCount + this.tickOffset) % 20 == 0) pickUpArrows();
+        if(needsTeamUpdate) updateTeam();
+        if(needsGroupUpdate) updateGroup();
+
+    }
+    public void tick() {
+        super.tick();
+        if(this.level().isClientSide()) return;
+
+        if(despawnTimer > 0) despawnTimer--;
+        if(despawnTimer == 0) recruitCheckDespawn();
+
+        if(RecruitsServerConfig.RecruitsPayment.get()){
+            if(paymentTimer > 0) paymentTimer--;
+            if(paymentTimer == 0) {
+                if(getUpkeepPos() != null || getUpkeepUUID() != null) forcedUpkeep = true;
+                else checkPayment(this.getInventory());
+            }
+        }
+
+        if(getMountTimer() > 0) setMountTimer(getMountTimer() - 1);
+        if(getUpkeepTimer() > 0) setUpkeepTimer(getUpkeepTimer() - 1);
+        if(getHunger() >=  70F && getHealth() < getMaxHealth()){
+            this.heal(1.0F/50F);// 1 hp in 2.5s
+        }
+
+        int resolvedFollowState = RecruitCommandStateTransitions.afterMoveArrival(this.reachedMovePos, this.getFollowState());
+        if(this.reachedMovePos){
+            this.setFollowState(resolvedFollowState);
+            this.reachedMovePos = false;
+        }
+
+        if(this.attackCooldown > 0) this.attackCooldown--;
+
+
+        if(this.isAlive() && this.getState() != 3){
+            RecruitAiLodPolicy.Evaluation targetSearchLod = evaluateTargetSearchLod();
+            TARGET_SEARCH_PROFILING.recordLodTier(targetSearchLod.tier());
+
+            if (isBaseTargetSearchTick()) {
+                TARGET_SEARCH_PROFILING.recordSearchOpportunity();
+                if (targetSearchLod.shouldRunSearch()) {
+                    this.searchForTargets();
+                }
+                else {
+                    TARGET_SEARCH_PROFILING.recordLodSkip();
+                }
+            }
+        }
+
+        LivingEntity currentTarget = this.getTarget();
+        if(currentTarget != null && (currentTarget.isDeadOrDying() || currentTarget.isRemoved())) this.setTarget(null);
+
+        // Handle face rotation command
+        if(this.rotateTicks > 0) {
+            if(this.getNavigation().isDone()) {
+                this.setYRot(this.ownerRot);
+                this.yRotO = this.ownerRot;
+                this.rotateTicks--;
+            }
+        }
+
+    }
+
+    public void searchForTargets() {
+        if (!(this.getCommandSenderWorld() instanceof ServerLevel serverLevel)) return;
+
+        TARGET_SEARCH_PROFILING.recordSearch();
+        if(RecruitsServerConfig.UseAsyncTargetFinding.get()) searchForTargetsAsync(serverLevel);
+        else searchForTargetsSync(serverLevel);
+    }
+
+    private boolean isBaseTargetSearchTick() {
+        return (this.tickCount + this.tickOffset) % RecruitAiLodPolicy.DEFAULT_FULL_SEARCH_INTERVAL == 0;
+    }
+
+    private RecruitAiLodPolicy.Evaluation evaluateTargetSearchLod() {
+        RecruitAiLodPolicy.Settings settings = RecruitAiLodPolicy.settingsFromConfig();
+        LivingEntity currentTarget = this.getTarget();
+        boolean hasLiveTarget = currentTarget != null && currentTarget.isAlive() && !currentTarget.isRemoved();
+        double liveTargetDistanceSqr = hasLiveTarget ? this.distanceToSqr(currentTarget) : Double.POSITIVE_INFINITY;
+        double maxRelevantDistance = settings.reducedDistance();
+        Player nearbyPlayer = maxRelevantDistance > 0 ? this.level().getNearestPlayer(this, maxRelevantDistance) : null;
+        double nearestPlayerDistanceSqr = nearbyPlayer != null ? this.distanceToSqr(nearbyPlayer) : Double.POSITIVE_INFINITY;
+
+        return RecruitAiLodPolicy.evaluate(new RecruitAiLodPolicy.Context(
+                this.hurtTime > 0,
+                hasLiveTarget,
+                liveTargetDistanceSqr,
+                nearestPlayerDistanceSqr,
+                this.tickCount,
+                this.tickOffset
+        ), settings);
+    }
+
+    private void searchForTargetsAsync(ServerLevel serverLevel) {
+        FormationTargetSelectionController.RuntimeSelectionRequest selectionRequest = createFormationSelectionRequest();
+        FormationTargetSelectionController.Decision<LivingEntity> selectionDecision = FormationTargetSelectionController.beginRuntimeSelection(
+                selectionRequest,
+                this::isValidSharedTarget
+        );
+
+        if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.REUSED_SHARED_SELECTION) {
+            if (selectionDecision.target() != null) {
+                TARGET_SEARCH_PROFILING.recordTargetAssigned();
+            }
+            this.setTarget(selectionDecision.target());
+            return;
+        }
+
+        AABB searchBox = this.getBoundingBox().inflate(40);
+        List<LivingEntity> nearby = serverLevel.getEntitiesOfClass(
+                LivingEntity.class,
+                searchBox,
+                entity -> entity != this
+        );
+        TARGET_SEARCH_PROFILING.recordAsyncSearch(nearby.size());
+
+        if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
+            nearby.removeIf(potTarget -> !isValidSharedTarget(potTarget));
+            nearby.sort(Comparator.comparingDouble(e -> e.distanceToSqr(this)));
+
+            LivingEntity target = FormationTargetSelectionController.completeRuntimeSelection(
+                    selectionRequest,
+                    chooseTargetFromCandidates(nearby)
+            );
+
+            if (target != null) {
+                TARGET_SEARCH_PROFILING.recordTargetAssigned();
+            }
+            this.setTarget(target);
+            return;
+        }
+
+        // MULTI THREADED
+        Supplier<List<LivingEntity>> findTargetsTask = () -> {
+            List<LivingEntity> copy = new ArrayList<>(nearby);
+            copy.removeIf(potTarget -> !isValidSharedTarget(potTarget));
+            copy.sort(Comparator.comparingDouble(e -> e.distanceToSqr(this)));
+            return copy;
+        };
+
+        Consumer<List<LivingEntity>> handleTargets = targets -> {
+            if (!this.isAlive() || this.isRemoved()) {
+                return;
+            }
+
+            LivingEntity target = chooseTargetFromCandidates(targets);
+            if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
+                target = FormationTargetSelectionController.completeRuntimeSelection(selectionRequest, target);
+            }
+
+            if (target != null) {
+                TARGET_SEARCH_PROFILING.recordTargetAssigned();
+            }
+            this.setTarget(target);
+        };
+
+        AsyncManager.executor.execute(new AsyncTaskWithCallback<>(findTargetsTask, handleTargets, serverLevel));
+    }
+
+    private void searchForTargetsSync(ServerLevel serverLevel) {
+        FormationTargetSelectionController.RuntimeSelectionRequest selectionRequest = createFormationSelectionRequest();
+        FormationTargetSelectionController.Decision<LivingEntity> selectionDecision = FormationTargetSelectionController.beginRuntimeSelection(
+                selectionRequest,
+                this::isValidSharedTarget
+        );
+
+        if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.REUSED_SHARED_SELECTION) {
+            if (selectionDecision.target() != null) {
+                TARGET_SEARCH_PROFILING.recordTargetAssigned();
+            }
+            this.setTarget(selectionDecision.target());
+            return;
+        }
+
+        AABB searchBox = this.getBoundingBox().inflate(40);
+        List<LivingEntity> nearby = serverLevel.getEntitiesOfClass(
+                LivingEntity.class,
+                searchBox,
+                entity -> entity != this
+        );
+        TARGET_SEARCH_PROFILING.recordSyncSearch(nearby.size());
+
+        nearby.removeIf(potTarget -> !isValidSharedTarget(potTarget));
+        nearby.sort(Comparator.comparingDouble(e -> e.distanceToSqr(this)));
+
+        LivingEntity target = chooseTargetFromCandidates(nearby);
+        if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
+            target = FormationTargetSelectionController.completeRuntimeSelection(selectionRequest, target);
+        }
+
+        if (target != null) {
+            TARGET_SEARCH_PROFILING.recordTargetAssigned();
+        }
+        this.setTarget(target);
+    }
+
+    private FormationTargetSelectionController.RuntimeSelectionRequest createFormationSelectionRequest() {
+        clearInvalidTargetForSelection();
+        UUID ownerId = this.getOwnerUUID();
+        UUID groupId = this.getGroup();
+        return new FormationTargetSelectionController.RuntimeSelectionRequest(
+                ownerId,
+                groupId,
+                isEligibleForFormationTargetSelection(ownerId, groupId),
+                this.level().getGameTime()
+        );
+    }
+
+    private boolean isEligibleForFormationTargetSelection(@Nullable UUID ownerId, @Nullable UUID groupId) {
+        if (ownerId == null || groupId == null) {
+            return false;
+        }
+        if (this.getState() != 1 || !this.isAlive()) {
+            return false;
+        }
+        return this.isInFormation || this.getFollowState() == 2 || this.getFollowState() == 3 || this.getFollowState() == 5;
+    }
+
+    private void clearInvalidTargetForSelection() {
+        LivingEntity currentTarget = this.getTarget();
+        if (currentTarget != null && !isValidSharedTarget(currentTarget)) {
+            this.setTarget(null);
+        }
+    }
+
+    private boolean isValidSharedTarget(@Nullable LivingEntity target) {
+        return target != null
+                && target.isAlive()
+                && !target.isRemoved()
+                && this.targetingConditions.test(this, target);
+    }
+
+    private @Nullable LivingEntity chooseTargetFromCandidates(List<LivingEntity> targets) {
+        List<LivingEntity> liveTargets = targets.stream()
+                .filter(this::isValidSharedTarget)
+                .limit(10)
+                .toList();
+
+        if (liveTargets.isEmpty()) {
+            return null;
+        }
+
+        return liveTargets.get(this.getRandom().nextInt(liveTargets.size()));
+    }
+
+    public static void resetTargetSearchProfiling() {
+        TARGET_SEARCH_PROFILING.reset();
+    }
+
+    public static TargetSearchProfilingSnapshot targetSearchProfilingSnapshot() {
+        return TARGET_SEARCH_PROFILING.snapshot();
+    }
+
+    public record TargetSearchProfilingSnapshot(
+            long searchOpportunities,
+            long totalSearches,
+            long asyncSearches,
+            long syncSearches,
+            long candidateEntitiesObserved,
+            long targetsAssigned,
+            long lodSkippedSearches,
+            long lodFullTierTicks,
+            long lodReducedTierTicks,
+            long lodShedTierTicks
+    ) {
+    }
+
+    private static final class TargetSearchProfilingCounters {
+        private final LongAdder searchOpportunities = new LongAdder();
+        private final LongAdder totalSearches = new LongAdder();
+        private final LongAdder asyncSearches = new LongAdder();
+        private final LongAdder syncSearches = new LongAdder();
+        private final LongAdder candidateEntitiesObserved = new LongAdder();
+        private final LongAdder targetsAssigned = new LongAdder();
+        private final LongAdder lodSkippedSearches = new LongAdder();
+        private final LongAdder lodFullTierTicks = new LongAdder();
+        private final LongAdder lodReducedTierTicks = new LongAdder();
+        private final LongAdder lodShedTierTicks = new LongAdder();
+
+        private void recordSearchOpportunity() {
+            searchOpportunities.increment();
+        }
+
+        private void recordSearch() {
+            totalSearches.increment();
+        }
+
+        private void recordAsyncSearch(int candidates) {
+            asyncSearches.increment();
+            candidateEntitiesObserved.add(candidates);
+        }
+
+        private void recordSyncSearch(int candidates) {
+            syncSearches.increment();
+            candidateEntitiesObserved.add(candidates);
+        }
+
+        private void recordTargetAssigned() {
+            targetsAssigned.increment();
+        }
+
+        private void recordLodSkip() {
+            lodSkippedSearches.increment();
+        }
+
+        private void recordLodTier(RecruitAiLodPolicy.LodTier tier) {
+            switch (tier) {
+                case FULL -> lodFullTierTicks.increment();
+                case REDUCED -> lodReducedTierTicks.increment();
+                case SHED -> lodShedTierTicks.increment();
+            }
+        }
+
+        private void reset() {
+            searchOpportunities.reset();
+            totalSearches.reset();
+            asyncSearches.reset();
+            syncSearches.reset();
+            candidateEntitiesObserved.reset();
+            targetsAssigned.reset();
+            lodSkippedSearches.reset();
+            lodFullTierTicks.reset();
+            lodReducedTierTicks.reset();
+            lodShedTierTicks.reset();
+        }
+
+        private TargetSearchProfilingSnapshot snapshot() {
+            return new TargetSearchProfilingSnapshot(
+                    searchOpportunities.sum(),
+                    totalSearches.sum(),
+                    asyncSearches.sum(),
+                    syncSearches.sum(),
+                    candidateEntitiesObserved.sum(),
+                    targetsAssigned.sum(),
+                    lodSkippedSearches.sum(),
+                    lodFullTierTicks.sum(),
+                    lodReducedTierTicks.sum(),
+                    lodShedTierTicks.sum()
+            );
+        }
+    }
+
+    private void recruitCheckDespawn() {
+        if(this.isOwned()) return;
+        Entity entity = this.getCommandSenderWorld().getNearestPlayer(this, -1.0D);
+
+        if (entity != null) {
+            double d0 = entity.distanceToSqr(this);
+            int k = this.getType().getCategory().getNoDespawnDistance();
+            int l = k * k;
+
+            if (this.random.nextInt(800) == 0 && d0 > (double) l) {
+                if(this.getVehicle() instanceof LivingEntity livingMount) livingMount.discard();
+                this.discard();
+            }
+        }
+    }
+
+    @Nullable
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance diff, MobSpawnType reason, @Nullable SpawnGroupData spawnData, @Nullable CompoundTag nbt) {
+        this.setRandomSpawnBonus();
+        this.createNavigation(world.getLevel());
+        return spawnData;
+    }
+    public void setRandomSpawnBonus(){
+        getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus", this.random.nextDouble() * 0.5D, AttributeModifier.Operation.MULTIPLY_BASE));
+        getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus", this.random.nextDouble() * 0.5D, AttributeModifier.Operation.MULTIPLY_BASE));
+        getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus", this.random.nextDouble() * 0.1D, AttributeModifier.Operation.MULTIPLY_BASE));
+        getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus", this.random.nextDouble() * 0.1D, AttributeModifier.Operation.MULTIPLY_BASE));
+    }
+
+    ////////////////////////////////////REGISTER////////////////////////////////////
+
+    protected void registerGoals() {
+        this.goalSelector.addGoal(4, new BlockWithWeapon(this));
+        this.goalSelector.addGoal(0, new RecruitFloatGoal(this));
+        this.goalSelector.addGoal(1, new RecruitQuaffGoal(this));
+        this.goalSelector.addGoal(1, new FleeTNT(this));
+        this.goalSelector.addGoal(1, new FleeFire(this));
+        this.goalSelector.addGoal(6, new RecruitsOpenDoorGoal(this, true) {});
+        this.goalSelector.addGoal(1, new RecruitProtectEntityGoal(this));
+        this.goalSelector.addGoal(0, new RecruitEatGoal(this));
+        this.goalSelector.addGoal(5, new RecruitUpkeepPosGoal(this));
+        this.goalSelector.addGoal(6, new RecruitUpkeepEntityGoal(this));
+        this.goalSelector.addGoal(3, new RecruitMountEntity(this));
+        this.goalSelector.addGoal(3, new RecruitDismountEntity(this));
+        this.goalSelector.addGoal(3, new RecruitMoveToPosGoal(this, 1.05D));
+        this.goalSelector.addGoal(2, new RecruitFollowOwnerGoal(this, 1.05D, 300, 100));
+        this.goalSelector.addGoal(2, new RecruitMeleeAttackGoal(this, 1.05D, this.getMeleeStartRange()));
+        this.goalSelector.addGoal(3, new RecruitHoldPosGoal(this, 32.0F));
+        //this.goalSelector.addGoal(7, new RecruitDodgeGoal(this));
+        this.goalSelector.addGoal(4, new RestGoal(this));
+        this.goalSelector.addGoal(10, new RecruitWanderGoal(this));
+        this.goalSelector.addGoal(11, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(12, new RandomLookAroundGoal(this));
+        //this.goalSelector.addGoal(13, new RecruitPickupWantedItemGoal(this));
+
+        this.targetSelector.addGoal(1, new RecruitProtectHurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new RecruitOwnerHurtByTargetGoal(this));
+
+        this.targetSelector.addGoal(3, (new RecruitHurtByTargetGoal(this)).setAlertOthers());
+        this.targetSelector.addGoal(4, new RecruitOwnerHurtTargetGoal(this));
+
+        this.targetSelector.addGoal(7, new RecruitDefendVillageFromPlayerGoal(this));
+    }
+
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(DATA_REMAINING_ANGER_TIME, 0);
+        this.entityData.define(GROUP, Optional.empty());
+        this.entityData.define(SHOULD_FOLLOW, false);
+        this.entityData.define(SHOULD_BLOCK, false);
+        this.entityData.define(SHOULD_MOUNT, false);
+        this.entityData.define(SHOULD_PROTECT, false);
+        this.entityData.define(SHOULD_HOLD_POS, false);
+        this.entityData.define(SHOULD_MOVE_POS, false);
+        this.entityData.define(FLEEING, false);
+        this.entityData.define(STATE, 0);
+        this.entityData.define(VARIANT, 0);
+        this.entityData.define(XP, 0);
+        this.entityData.define(KILLS, 0);
+        this.entityData.define(LEVEL, 1);
+        this.entityData.define(FOLLOW_STATE, 0);
+        this.entityData.define(HOLD_POS, Optional.empty());
+        this.entityData.define(UPKEEP_POS, Optional.empty());
+        this.entityData.define(MOVE_POS, Optional.empty());
+        this.entityData.define(LISTEN, true);
+        this.entityData.define(MOUNT_ID, Optional.empty());
+        this.entityData.define(PROTECT_ID, Optional.empty());
+        this.entityData.define(IS_FOLLOWING, false);
+        this.entityData.define(HUNGER, 50F);
+        this.entityData.define(MORAL, 50F);
+        this.entityData.define(OWNER_ID, Optional.empty());
+        this.entityData.define(UPKEEP_ID, Optional.empty());
+        this.entityData.define(OWNED, false);
+        this.entityData.define(COST, 1);
+        this.entityData.define(COLOR, (byte) 0);
+        this.entityData.define(BIOME, (byte) 0);
+        this.entityData.define(SHOULD_REST, false);
+        this.entityData.define(SHOULD_RANGED, true);
+        //STATE
+        // 0 = NEUTRAL
+        // 1 = AGGRESSIVE
+        // 2 = RAID
+        // 3 = PASSIVE
+
+        //FOLLOW
+        //0 = wander
+        //1 = follow
+        //2 = hold position
+        //3 = back to position
+        //4 = hold my position
+        //5 = Protect
+        //6 = Work
+
+    }
+    @Override
+    public void addAdditionalSaveData(CompoundTag nbt) {
+        super.addAdditionalSaveData(nbt);
+        nbt.putInt("despawnTimer", this.despawnTimer);
+        nbt.putInt("AggroState", this.getState());
+        nbt.putInt("FollowState", this.getFollowState());
+        nbt.putBoolean("ShouldFollow", this.getShouldFollow());
+        nbt.putBoolean("ShouldMount", this.getShouldMount());
+        nbt.putBoolean("ShouldProtect", this.getShouldProtect());
+        nbt.putBoolean("ShouldBlock", this.getShouldBlock());
+        if(this.getGroup() != null) nbt.putUUID("Group", this.getGroup());
+        nbt.putInt("Variant", this.getVariant());
+        nbt.putBoolean("Listen", this.getListen());
+        nbt.putBoolean("Fleeing", this.getFleeing());
+        nbt.putBoolean("isFollowing", this.isFollowing());
+        nbt.putInt("Xp", this.getXp());
+        nbt.putInt("Level", this.getXpLevel());
+        nbt.putInt("Kills", this.getKills());
+        nbt.putFloat("Hunger", this.getHunger());
+        nbt.putFloat("Moral", this.getMorale());
+        nbt.putBoolean("isOwned", this.getIsOwned());
+        nbt.putInt("Cost", this.getCost());
+        nbt.putInt("mountTimer", this.getMountTimer());
+        nbt.putInt("upkeepTimer", this.getUpkeepTimer());
+        nbt.putInt("Color", this.getColor());
+        nbt.putInt("Biome", this.getBiome());
+        nbt.putInt("MaxFallDistance", this.getMaxFallDistance());
+        nbt.putInt("formationPos", formationPos);
+        nbt.putBoolean("ShouldRest", this.getShouldRest());
+        nbt.putBoolean("ShouldRanged", this.getShouldRanged());
+        nbt.putBoolean("isInFormation", this.isInFormation);
+        nbt.putInt("paymentTimer", this.paymentTimer);
+
+        persistCitizenStateToLegacy(this.getCitizenCore(), nbt);
+
+        if(this.getMountUUID() != null){
+            nbt.putUUID("MountUUID", this.getMountUUID());
+        }
+
+        if(this.getProtectUUID() != null){
+            nbt.putUUID("ProtectUUID", this.getProtectUUID());
+        }
+
+        if(this.getUpkeepUUID() != null){
+            nbt.putUUID("UpkeepUUID", this.getUpkeepUUID());
+        }
+
+        if(this.getUpkeepPos() != null){
+            nbt.putInt("UpkeepPosX", this.getUpkeepPos().getX());
+            nbt.putInt("UpkeepPosY", this.getUpkeepPos().getY());
+            nbt.putInt("UpkeepPosZ", this.getUpkeepPos().getZ());
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag nbt) {
+        super.readAdditionalSaveData(nbt);
+
+        if(nbt.contains("despawnTimer")) this.despawnTimer = nbt.getInt("despawnTimer");
+        else this.despawnTimer = -1;//fixes random recruits disappearing
+
+        this.setXpLevel(nbt.getInt("Level"));
+        this.setAggroState(nbt.getInt("AggroState"));
+        this.setFollowState(nbt.getInt("FollowState"));
+        this.setShouldFollow(nbt.getBoolean("ShouldFollow"));
+        this.setShouldMount(nbt.getBoolean("ShouldMount"));
+        this.setShouldBlock(nbt.getBoolean("ShouldBlock"));
+        this.setShouldProtect(nbt.getBoolean("ShouldProtect"));
+        this.setFleeing(nbt.getBoolean("Fleeing"));
+
+        this.setListen(nbt.getBoolean("Listen"));
+        this.setIsFollowing(nbt.getBoolean("isFollowing"));
+        this.setXp(nbt.getInt("Xp"));
+        this.setKills(nbt.getInt("Kills"));
+        this.setVariant(nbt.getInt("Variant"));
+        this.setHunger(nbt.getFloat("Hunger"));
+        this.setMoral(nbt.getFloat("Moral"));
+        this.setIsOwned(nbt.getBoolean("isOwned"));
+        this.setCost(nbt.getInt("Cost"));
+        this.setMountTimer(nbt.getInt("mountTimer"));
+        this.setUpkeepTimer(nbt.getInt("UpkeepTimer"));
+        this.setColor(nbt.getByte("Color"));
+
+        this.setMaxFallDistance(nbt.getInt("MaxFallDistance"));
+        this.formationPos = (nbt.getInt("formationPos"));
+        this.setShouldRest(nbt.getBoolean("ShouldRest"));
+        this.isInFormation = nbt.getBoolean("isInFormation");
+
+        if(nbt.contains("paymentTimer")){
+            this.paymentTimer = (nbt.getInt("paymentTimer"));
+        }
+        else{
+            resetPaymentTimer();
+        }
+
+        hydrateCitizenStateFromLegacy(this.getCitizenCore(), nbt);
+
+        if (nbt.contains("ProtectUUID")){
+            Optional<UUID> uuid = Optional.of(nbt.getUUID("ProtectUUID"));
+            this.setProtectUUID(uuid);
+        }
+
+        if (nbt.contains("MountUUID")){
+            Optional<UUID> uuid = Optional.of(nbt.getUUID("MountUUID"));
+            this.setMountUUID(uuid);
+        }
+
+        if (nbt.contains("UpkeepUUID")){
+            Optional<UUID> uuid = Optional.of(nbt.getUUID("UpkeepUUID"));
+            this.setUpkeepUUID(uuid);
+        }
+
+        if (nbt.contains("UpkeepPosX") && nbt.contains("UpkeepPosY") && nbt.contains("UpkeepPosZ")) {
+            this.setUpkeepPos(new BlockPos (
+                    nbt.getInt("UpkeepPosX"),
+                    nbt.getInt("UpkeepPosY"),
+                    nbt.getInt("UpkeepPosZ")));
+        }
+
+        if(nbt.contains("Biome"))this.setBiome(nbt.getByte("Biome"));
+        else applyBiomeAndVariant(this);
+
+        if(this.getCommandSenderWorld().isClientSide()) return;
+
+        if(nbt.contains("Group")){
+            Tag tag = nbt.get("Group");
+
+            int type = tag.getId();
+            if (type == Tag.TAG_INT) {
+                int oldGroupIndex = nbt.getInt("Group");
+                RecruitEvents.handleGroupBackwardCompatibility(this, oldGroupIndex);
+            }
+            else{
+                this.setGroupUUID(nbt.getUUID("Group"));
+            }
+        }
+    }
+
+    ////////////////////////////////////GET////////////////////////////////////
+
+    public int getUpkeepTimer(){
+        return this.upkeepTimer;
+    }
+
+    public int getVariant() {
+        return entityData.get(VARIANT);
+    }
+    public int getBlockCoolDown(){
+        return 200;
+    }
+    public UUID getUpkeepUUID(){
+        return  this.entityData.get(UPKEEP_ID).orElse(null);
+    }
+    public BlockPos getUpkeepPos(){
+        return entityData.get(UPKEEP_POS).orElse(null);
+    }
+
+    @Nullable
+    public Player getOwner(){
+        if (this.getOwnerUUID() != null){
+            UUID ownerID = this.getOwnerUUID();
+            return this.getCommandSenderWorld().getPlayerByUUID(ownerID);
+        }
+        else
+            return null;
+    }
+
+    public UUID getOwnerUUID(){
+        return  this.entityData.get(OWNER_ID).orElse(null);
+    }
+
+    public UUID getProtectUUID(){
+        return  this.entityData.get(PROTECT_ID).orElse(null);
+    }
+
+    public UUID getMountUUID(){
+        return  this.entityData.get(MOUNT_ID).orElse(null);
+    }
+
+    public boolean getIsOwned() {
+        return entityData.get(OWNED);
+    }
+
+    public float getMorale() {
+        return this.entityData.get(MORAL);
+    }
+
+    public float getHunger() {
+        return this.entityData.get(HUNGER);
+    }
+    public float getAttackDamage(){
+        return (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE);
+    }
+
+    public float getMovementSpeed(){
+        return (float) this.getAttributeValue(Attributes.MOVEMENT_SPEED);
+    }
+
+    public boolean getFleeing() {
+        return entityData.get(FLEEING);
+    }
+
+    public int getKills() {
+        return entityData.get(KILLS);
+    }
+
+    public int getXpLevel() {
+        return entityData.get(LEVEL);
+    }
+
+    public int getXp() {
+        return entityData.get(XP);
+    }
+
+
+    public boolean getShouldMovePos() {
+        return entityData.get(SHOULD_MOVE_POS);
+    }
+    public boolean getShouldHoldPos() {
+        return entityData.get(SHOULD_HOLD_POS);
+    }
+
+    public boolean getShouldMount() {
+        return entityData.get(SHOULD_MOUNT);
+    }
+
+    public boolean getShouldProtect() {
+        return entityData.get(SHOULD_PROTECT);
+    }
+
+    public boolean getShouldFollow() {
+        return entityData.get(SHOULD_FOLLOW);
+    }
+
+    public boolean getShouldBlock() {
+        return entityData.get(SHOULD_BLOCK);
+    }
+
+    public boolean isFollowing(){
+        return entityData.get(IS_FOLLOWING);
+    }
+    public boolean getShouldRest() {
+        return entityData.get(SHOULD_REST);
+    }
+
+    public boolean getShouldRanged() {
+        return entityData.get(SHOULD_RANGED);
+    }
+    public int getState() {
+        return entityData.get(STATE);
+    }
+    //STATE
+    // 0 = NEUTRAL
+    // 1 = AGGRESSIVE
+    // 2 = RAID
+    // 3 = PASSIVE
+    public UUID getGroup(){
+        return getGroupUUID().isPresent() ? getGroupUUID().get() : null;
+    }
+    public Optional<UUID> getGroupUUID() {
+        return this.entityData.get(GROUP);
+    }
+
+
+    //FOLLOW
+    //0 = wander
+    //1 = follow
+    //2 = hold your position
+    //3 = back to position
+    //4 = hold my position
+    //5 = Protect
+    //6 = Work
+    public int getFollowState(){
+        return entityData.get(FOLLOW_STATE);
+    }
+
+    public SoundEvent getHurtSound(@NotNull DamageSource ds) {
+        if (this.isBlocking())
+            return SoundEvents.SHIELD_BLOCK;
+        return RecruitsClientConfig.RecruitsLookLikeVillagers.get() ? SoundEvents.VILLAGER_HURT : SoundEvents.GENERIC_HURT;
+    }
+
+    protected SoundEvent getDeathSound() {
+        return RecruitsClientConfig.RecruitsLookLikeVillagers.get() ? SoundEvents.VILLAGER_DEATH : SoundEvents.GENERIC_DEATH;
+    }
+
+    protected float getSoundVolume() {
+        return 0.4F;
+    }
+
+    protected float getStandingEyeHeight(@NotNull Pose pos, EntityDimensions size) {
+        return size.height * 0.98F;
+    }
+
+    public int getMaxHeadXRot() {
+        return super.getMaxHeadXRot();
+    }
+
+    public int getMaxSpawnClusterSize() {
+        return 8;
+    }
+
+    public Vec3 getHoldPos(){
+        return this.holdPosVec;
+        //return entityData.get(HOLD_POS).orElse(null);
+    }
+
+    @Nullable
+    public BlockPos getMovePos(){
+        return entityData.get(MOVE_POS).orElse(null);
+    }
+
+    public boolean getListen() {
+        return entityData.get(LISTEN);
+    }
+
+    @Nullable
+    public LivingEntity getProtectingMob(){
+        List<LivingEntity> list = this.getCommandSenderWorld().getEntitiesOfClass(
+                LivingEntity.class,
+                this.getBoundingBox().inflate(64D),
+                (living) -> this.getProtectUUID() != null && living.getUUID().equals(this.getProtectUUID()) && living.isAlive()
+        );
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    public int getColor() {
+        return entityData.get(COLOR);
+    }
+
+    public int getBiome() {
+        return entityData.get(BIOME);
+    }
+    public DyeColor getDyeColor() {
+        return DyeColor.byId(getColor());
+    }
+
+    ////////////////////////////////////SET////////////////////////////////////
+
+    public void setUpkeepTimer(int x){
+        this.upkeepTimer =  x;
+    }
+    public void setVariant(int variant){
+        entityData.set(VARIANT, variant);
+    }
+    public void setColor(byte color){
+        entityData.set(COLOR, color);
+    }
+    public void setBiome(byte biome){
+        entityData.set(BIOME, biome);
+    }
+    public void setUpkeepUUID(Optional<UUID> id) {
+        this.entityData.set(UPKEEP_ID, id);
+    }
+    public void setCost(int cost){
+        entityData.set(COST, cost);
+    }
+    public void setUpkeepPos(BlockPos pos){
+        this.entityData.set(UPKEEP_POS, Optional.of(pos));
+    }
+
+    public void setIsOwned(boolean bool){
+        entityData.set(OWNED, bool);
+    }
+
+    public void setOwnerUUID(Optional<UUID> id) {
+        this.entityData.set(OWNER_ID,id);
+    }
+
+    public void setProtectUUID(Optional<UUID> id) {
+        this.entityData.set(PROTECT_ID, id);
+    }
+
+    public void setMountUUID(Optional<UUID> id) {
+        this.entityData.set(MOUNT_ID, id);
+    }
+
+    public void setMoral(float value) {
+        this.entityData.set(MORAL, value);
+        this.applyMoralEffects();
+    }
+
+    public void setHunger(float value) {
+        float currentHunger = getHunger();
+        if(value < 0 && currentHunger - value <= 0)
+            this.entityData.set(HUNGER, 0F);
+        else
+            this.entityData.set(HUNGER, value);
+    }
+
+    public void setFleeing(boolean bool){
+        entityData.set(FLEEING, bool);
+    }
+    public void setMountTimer(int x){
+        this.mountTimer = x;
+    }
+
+    public void disband(@Nullable Player player, boolean keepTeam, boolean increaseCost){
+        if (!this.getCommandSenderWorld().isClientSide()) {
+            RecruitEvent.Dismissed dismissEvent = new RecruitEvent.Dismissed(this, player, keepTeam);
+            MinecraftForge.EVENT_BUS.post(dismissEvent);
+            if (dismissEvent.isCanceled()) return;
+        }
+        String name = this.getName().getString();
+
+        if(player != null){
+            player.sendSystemMessage(TEXT_DISBAND(name));
+        }
+
+        this.setTarget(null);
+        this.setIsOwned(false);
+
+        if(increaseCost) this.recalculateCost();
+
+        if(this.getCommandSenderWorld().isClientSide()) return;
+        RecruitEvents.recruitsPlayerUnitManager.removeRecruits(this.getOwnerUUID(), 1);
+        this.setOwnerUUID(Optional.empty());
+
+        if (this.getTeam() != null && !keepTeam){
+                FactionEvents.removeRecruitFromTeam(this, this.getTeam(), (ServerLevel) this.getCommandSenderWorld());
+        }
+
+        if(this.getGroup() != null){
+            RecruitEvents.recruitsGroupsManager.removeMember(this.getGroup(), this.getUUID(), (ServerLevel) this.getCommandSenderWorld());
+            this.setGroupUUID(null);
+        }
+    }
+
+    public void addXpLevel(int level){
+        int currentLevel = this.getXpLevel();
+        int newLevel = currentLevel + level;
+
+        if(newLevel > RecruitsServerConfig.RecruitsMaxXpLevel.get()){
+            newLevel = RecruitsServerConfig.RecruitsMaxXpLevel.get();
+        }
+        else{
+            this.makeLevelUpSound();
+            this.addLevelBuffs();
+        }
+
+        this.entityData.set(LEVEL, newLevel);
+    }
+
+    public void setKills(int kills){
+        this.entityData.set(KILLS, kills);
+    }
+
+    public void setXpLevel(int XpLevel){
+        this.entityData.set(LEVEL, XpLevel);
+    }
+
+    public void setXp(int xp){
+        this.entityData.set(XP, xp);
+    }
+
+    public void addXp(int xp){
+        int currentXp = this.getXp();
+        int newXp = currentXp + xp;
+
+        this.entityData.set(XP, newXp);
+    }
+
+    public void setShouldHoldPos(boolean bool){
+        entityData.set(SHOULD_HOLD_POS, bool);
+    }
+
+    public void setShouldMovePos(boolean bool){
+        entityData.set(SHOULD_MOVE_POS, bool);
+    }
+    public void setShouldProtect(boolean bool){
+        entityData.set(SHOULD_PROTECT, bool);
+    }
+
+    public void setShouldMount(boolean bool){
+        entityData.set(SHOULD_MOUNT, bool);
+    }
+
+    public void setShouldFollow(boolean bool){
+        entityData.set(SHOULD_FOLLOW, bool);
+    }
+
+    public void setShouldBlock(boolean bool){
+        entityData.set(SHOULD_BLOCK, bool);
+    }
+
+    public void setIsFollowing(boolean bool){
+        entityData.set(IS_FOLLOWING, bool);
+    }
+
+    public void setGroupUUID(UUID uuid){
+        entityData.set(GROUP, uuid == null ? Optional.empty() : Optional.of(uuid));
+    }
+    public void setShouldRest(boolean bool){
+        if(bool) setFollowState(0);
+        entityData.set(SHOULD_REST, bool);
+    }
+
+    public void setShouldRanged(boolean should) {
+        entityData.set(SHOULD_RANGED, should);
+    }
+
+    public void setAggroState(int state) {
+        switch (state){
+            case 0:
+            case 3:
+                setTarget(null);//wird nur 1x aufgerufen
+                break;
+            case 1:
+                break;
+            case 2:
+                setFollowState(0);
+                break;
+        }
+        entityData.set(STATE, state);
+    }
+
+    //STATE
+    // 0 = NEUTRAL
+    // 1 = AGGRESSIVE
+    // 2 = RAID
+    // 3 = PASSIVE
+
+    //FOLLOW
+    //0 = wander
+    //1 = follow
+    //2 = hold position
+    //3 = back to position
+    //4 = hold my position
+    //5 = Protect
+    //6 = Work
+    public void setFollowState(int state){
+        switch (state) {
+            case 0,6 -> {
+                setShouldFollow(false);
+                setShouldHoldPos(false);
+                setShouldProtect(false);
+                setShouldMovePos(false);
+            }
+            case 1 -> {
+                setShouldFollow(true);
+                setShouldHoldPos(false);
+                setShouldProtect(false);
+                setShouldMovePos(false);
+            }
+            case 2 -> {
+                setShouldFollow(false);
+                setShouldHoldPos(true);
+                clearHoldPos();
+                setHoldPos(position());
+                setShouldProtect(false);
+                setShouldMovePos(false);
+            }
+            case 3 -> {
+                setShouldFollow(false);
+                setShouldHoldPos(true);
+                setShouldProtect(false);
+                setShouldMovePos(false);
+            }
+            case 4 -> {
+                setShouldFollow(false);
+                setShouldHoldPos(true);
+                clearHoldPos();
+                setHoldPos(this.getOwner().position());
+                setShouldProtect(false);
+                setShouldMovePos(false);
+                state = 3;
+            }
+            case 5 -> {
+                setShouldFollow(false);
+                setShouldHoldPos(false);
+                setShouldProtect(true);
+                setShouldMovePos(false);
+            }
+        }
+
+        this.entityData.set(FOLLOW_STATE, state);
+    }
+
+    public void setHoldPos(Vec3 holdPos){
+        //this.entityData.set(HOLD_POS, Optional.of(holdPos));
+        this.holdPosVec = holdPos;
+    }
+    public void setMovePos(BlockPos holdPos){
+        this.entityData.set(MOVE_POS, Optional.of(holdPos));
+        reachedMovePos = false;
+    }
+
+    public void clearHoldPos(){
+        this.holdPosVec = null;
+        this.entityData.set(HOLD_POS, Optional.empty());
+    }
+
+    public void clearMovePos(){
+        this.entityData.set(MOVE_POS, Optional.empty());
+    }
+
+    public static void hydrateCitizenStateFromLegacy(CitizenCore citizenCore, CompoundTag nbt) {
+        citizenCore.apply(CitizenPersistenceBridge.fromRecruitLegacy(nbt));
+    }
+
+    public static CompoundTag persistCitizenStateToLegacy(CitizenCore citizenCore, CompoundTag nbt) {
+        return CitizenPersistenceBridge.writeRecruitLegacy(citizenCore.snapshot(), nbt);
+    }
+
+    public void setListen(boolean bool) {
+        entityData.set(LISTEN, bool);
+    }
+
+    public void setEquipment(){
+        //Equipment
+        List<List<String>> equipmentSets = getEquipment();
+        if(!equipmentSets.isEmpty()){
+
+            int size = equipmentSets.size();
+            int i = this.random.nextInt(0, size);
+
+            if(i >= 0){
+                List<String> equipmentSet = equipmentSets.get(i);
+                while(equipmentSet.size() < 6) equipmentSet.add("");
+
+                String mainHandStr = equipmentSet.get(0);
+                String offHandStr = equipmentSet.get(1);
+                String feetStr = equipmentSet.get(2);
+                String legsStr = equipmentSet.get(3);
+                String chestStr = equipmentSet.get(4);
+                String headStr = equipmentSet.get(5);
+
+                Optional<Holder<Item>> holderHead = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(headStr));
+                holderHead.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.HEAD, itemHolder.value().getDefaultInstance()));
+
+                Optional<Holder<Item>> holderChest = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(chestStr));
+                holderChest.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.CHEST, itemHolder.value().getDefaultInstance()));
+
+                Optional<Holder<Item>> holderLegs = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(legsStr));
+                holderLegs.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.LEGS, itemHolder.value().getDefaultInstance()));
+
+                Optional<Holder<Item>> holderFeet = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(feetStr));
+                holderFeet.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.FEET, itemHolder.value().getDefaultInstance()));
+
+                Optional<Holder<Item>> holderMainHand = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(mainHandStr));
+                holderMainHand.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.MAINHAND, itemHolder.value().getDefaultInstance()));
+
+                Optional<Holder<Item>> holderOffHand = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(offHandStr));
+                holderOffHand.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.OFFHAND, itemHolder.value().getDefaultInstance()));
+            }
+        }
+    }
+
+    @Override
+    public void setTarget(@Nullable LivingEntity p_21544_) {
+        super.setTarget(p_21544_);
+
+        this.setUpkeepTimer(500);
+    }
+
+    public List<List<String>> getEquipment() {
+        return null;
+    }
+
+    public double getMeleeStartRange() {
+        return 32D;
+    }
+
+    public abstract void initSpawn();
+
+    public static void applySpawnValues(AbstractRecruitEntity recruit){
+        recruit.setHunger(50);
+        recruit.setMoral(50);
+        recruit.setListen(true);
+        recruit.setXpLevel(1);
+
+        applyBiomeAndVariant(recruit);
+    }
+
+    public static void applyBiomeAndVariant(AbstractRecruitEntity recruit){
+        //ForgeBiomeTagsProvider
+        Holder<Biome> biome = recruit.getCommandSenderWorld().getBiome(recruit.getOnPos());
+        byte biomeByte = 2; //PLAINS
+        int variant = recruit.random.nextInt(0, 14);
+        //DESERT
+        if(biome.is(Biomes.ERODED_BADLANDS) || biome.containsTag(Tags.Biomes.IS_DESERT) || biome.containsTag(Tags.Biomes.IS_SANDY) && !biome.containsTag(Tags.Biomes.IS_WET_OVERWORLD)){
+            biomeByte = 0;
+            variant = recruit.random.nextInt(15, 19);
+        }
+        //TAIGA
+        else if(biome.is(Tags.Biomes.IS_CONIFEROUS) && biome.is(Tags.Biomes.IS_COLD_OVERWORLD) && !(biome.is(Tags.Biomes.IS_SNOWY))){
+            biomeByte = 6;
+            variant = recruit.random.nextInt(5, 14);
+        }
+        //JUNGLE
+        else if(biome.is(Tags.Biomes.IS_WET_OVERWORLD) && !biome.is(Tags.Biomes.IS_SANDY) && !biome.is(Tags.Biomes.IS_SWAMP)){
+            biomeByte = 1;
+            variant = recruit.random.nextInt(15, 19);
+        }
+        //SVANNA
+        else if(biome.is(Tags.Biomes.IS_HOT_OVERWORLD) && biome.is(Tags.Biomes.IS_SPARSE_OVERWORLD)){
+            biomeByte = 3;
+            variant = recruit.random.nextInt(15, 19);
+        }
+        //SNOWY
+        else if(biome.is(Tags.Biomes.IS_SNOWY)){
+            biomeByte = 4;
+            variant = recruit.random.nextInt(5, 10);
+        }
+        //SWAMP
+        else if(biome.is(Tags.Biomes.IS_SWAMP)){
+            biomeByte = 5;
+            variant = recruit.random.nextInt(5, 14);
+        }
+
+        recruit.setBiome(biomeByte);
+        recruit.setVariant(variant);
+    }
+
+    ////////////////////////////////////is FUNCTIONS////////////////////////////////////
+
+    public boolean isEffectedByCommand(UUID player_uuid) {
+        return isEffectedByCommand(player_uuid, null);
+    }
+
+    public boolean isEffectedByCommand(UUID player_uuid, UUID group) {
+        if (!this.isOwned() || !this.isAlive() || !this.getListen()) return false;
+
+        if (!this.getOwnerUUID().equals(player_uuid)) return false;
+
+        if (group == null) {
+            return true;
+        }
+
+        return this.getGroup() != null && this.getGroup().equals(group);
+    }
+    public boolean isOwned(){
+        return getIsOwned();
+    }
+
+    public boolean isOwnedBy(Player player){
+       return player.getUUID() == this.getOwnerUUID() || player == this.getOwner();
+    }
+
+    ////////////////////////////////////ON FUNCTIONS////////////////////////////////////
+
+    public InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
+        String name = this.getName().getString();
+        Team ownerTeam = this.getTeam();
+        boolean isPlayerTarget = this.getTarget() != null && getTarget().equals(player);
+
+        if(isPlayerTarget) return InteractionResult.PASS;
+
+        if (this.getCommandSenderWorld().isClientSide) {
+            boolean flag = this.isOwnedBy(player) || !this.canBeHired();
+            return flag ? InteractionResult.CONSUME : InteractionResult.PASS;
+        } else {
+            if (player.isCreative() && player.getItemInHand(hand).getItem().equals(ModItems.RECRUIT_SPAWN_EGG.get())){
+                openDebugScreen(player);
+                //Main.LOGGER.warn("" + this.getName().getString() + " Target: " + getTarget());
+
+                return InteractionResult.SUCCESS;
+            }
+            if(this instanceof VillagerNobleEntity noble && !noble.isTrading){
+                noble.openTradeGUI(player);
+                return InteractionResult.SUCCESS;
+            }
+            if ((this.isOwned() && player.getUUID().equals(this.getOwnerUUID()))) {
+                if (player.isCrouching()) {
+                    this.openGUI(player);
+                    this.navigation.stop();
+                    return InteractionResult.SUCCESS;
+                }
+                if(!player.isCrouching()) {
+
+                    this.setUpkeepTimer(this.getUpkeepCooldown());
+                    if(this.getShouldMount()) this.setShouldMount(false);
+
+                    int state = this.getFollowState();
+                    switch (state) {
+                        default -> {
+                            setFollowState(1);
+                            player.sendSystemMessage(TEXT_FOLLOW(name));
+                        }
+                        case 1 -> {
+                            setFollowState(4);
+                            player.sendSystemMessage(TEXT_HOLD_YOUR_POS(name));
+                        }
+                        case 3 -> {
+                            setFollowState(0);
+                            player.sendSystemMessage(TEXT_WANDER(name));
+                        }
+                    }
+                    if(this instanceof AbstractLeaderEntity) CommandEvents.checkPatrolLeaderState(this);
+                    return InteractionResult.SUCCESS;
+                }
+            }
+            else if(this.isOwned() && this.getTeam() != null && !player.getUUID().equals(this.getOwnerUUID()) &&
+                    FactionEvents.recruitsFactionManager.getFactionByStringID(this.getTeam().getName()).getTeamLeaderUUID().equals(player.getUUID())){
+                    Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenTakeOverScreen(this.getUUID()));
+            }
+            else if (!this.isOwned() && !isPlayerTarget && this.canBeHired()) {
+                this.openHireGUI(player);
+                this.dialogue(name, player);
+                this.navigation.stop();
+                return InteractionResult.SUCCESS;
+            }
+            return super.mobInteract(player, hand);
+        }
+    }
+
+    public boolean hire(Player player, RecruitsGroup group, boolean message) {
+        if (!this.getCommandSenderWorld().isClientSide()) {
+            RecruitEvent.Hired hireEvent = new RecruitEvent.Hired(this, player);
+            MinecraftForge.EVENT_BUS.post(hireEvent);
+            if (hireEvent.isCanceled()) return false;
+        }
+        String name = this.getName().getString() + ": ";
+        Team ownerTeam = player.getTeam();// player is the new owner
+        String stringId = ownerTeam != null ? ownerTeam.getName() : "";
+        if (!RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID())) {
+
+            player.sendSystemMessage(INFO_RECRUITING_MAX(name));
+            return false;
+        }
+        else {
+            this.makeHireSound();
+
+            this.resetPaymentTimer();
+            this.setOwnerUUID(Optional.of(player.getUUID()));
+            this.setIsOwned(true);
+            this.navigation.stop();
+            this.setTarget(null);
+            this.setFollowState(2);
+            this.setAggroState(0);
+            if(group != null) this.setGroupUUID(group.getUUID());
+            this.despawnTimer = -1;
+
+            if(!this.getCommandSenderWorld().isClientSide()){
+                RecruitEvents.recruitsPlayerUnitManager.addRecruits(player.getUUID(), 1);
+
+                if(group != null){
+                    RecruitEvents.recruitsGroupsManager.addMember(group.getUUID(), this.getUUID(),  (ServerLevel) this.getCommandSenderWorld());
+                    RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
+                }
+
+                if(ownerTeam != null){
+                    FactionEvents.addRecruitToTeam(this, ownerTeam, (ServerLevel) this.getCommandSenderWorld());
+                }
+            }
+
+            if(message){
+                int i = this.random.nextInt(4);
+                switch (i) {
+                    default -> {
+                        player.sendSystemMessage(TEXT_RECRUITED1(name));
+                    }
+                    case 2 -> {
+                        player.sendSystemMessage(TEXT_RECRUITED2(name));
+                    }
+                    case 3 -> {
+                        player.sendSystemMessage(TEXT_RECRUITED3(name));
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public void dialogue(String name, Player player) {
+        int i = this.random.nextInt(4);
+        switch (i) {
+            case 1 -> {
+                player.sendSystemMessage(TEXT_HELLO_1(name));
+            }
+            case 2 -> {
+                player.sendSystemMessage(TEXT_HELLO_2(name));
+            }
+            case 3 -> {
+                player.sendSystemMessage(TEXT_HELLO_3(name));
+            }
+        }
+    }
+
+    ////////////////////////////////////ATTACK FUNCTIONS////////////////////////////////////
+
+    public boolean hurt(@NotNull DamageSource dmg, float amt) {
+        if (this.isInvulnerableTo(dmg)) {
+            return false;
+        } else {
+            Entity entity = dmg.getEntity();
+            if (entity != null && !(entity instanceof Player) && !(entity instanceof AbstractArrow)) {
+                amt = (amt + 1.0F) / 2.0F;
+            }
+            if(this.getMorale() > 0) this.setMoral(this.getMorale() - 0.25F);
+            if(isBlocking()) hurtCurrentlyUsedShield(amt);
+
+            if(entity instanceof LivingEntity living && RecruitEvents.canAttack(this, living)){
+                if(this.getFollowState() == 5){//Protecting
+                    List<AbstractRecruitEntity> list = this.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, this.getBoundingBox().inflate(32D));
+                    for(AbstractRecruitEntity recruit : list){
+                        if (recruit.getUUID().equals(recruit.getProtectUUID()) && recruit.isAlive() && !recruit.equals(living)){
+                            //Patrolleader
+                            recruit.setTarget(living);
+                        }
+                    }
+                }
+
+
+                if(this.getTarget() != null){
+                    double d1 = this.distanceToSqr(this.getTarget());
+                    double d2 = this.distanceToSqr(living);
+
+                    if(d2 < d1) this.setTarget(living);
+                }
+                else
+                    this.setTarget(living);
+
+                if(this.getShouldProtect() && this.getProtectingMob() instanceof AbstractRecruitEntity patrolLeader){
+                    patrolLeader.setTarget(living);
+                }
+            }
+            return super.hurt(dmg, amt);
+        }
+    }
+
+    public boolean doHurtTarget(@NotNull Entity entity) {
+        float f = (float)this.getAttributeValue(Attributes.ATTACK_DAMAGE);
+        if (entity instanceof LivingEntity) {
+            f += EnchantmentHelper.getDamageBonus(this.getMainHandItem(), ((LivingEntity)entity).getMobType());
+        }
+
+        int i = EnchantmentHelper.getFireAspect(this);
+        if (i > 0) {
+            entity.setSecondsOnFire(i * 4);
+        }
+
+        boolean flag = entity.hurt(this.damageSources().mobAttack(this), f);
+        if (flag) {
+
+            this.doEnchantDamageEffects(this, entity);
+            this.setLastHurtMob(entity);
+        }
+        this.addXp(1);
+        if(this.getHunger() > 0) this.setHunger(this.getHunger() - 0.1F);
+        this.checkLevel();
+        if(this.getMorale() < 100) this.setMoral(this.getMorale() + 0.25F);
+        this.damageMainHandItem();
+        return true;
+    }
+
+    public void addLevelBuffs(){
+        int level = getXpLevel();
+        if(level <= 10){
+            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
+            getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus_level", 0.03D, AttributeModifier.Operation.ADDITION));
+            getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus_level", 0.0012D, AttributeModifier.Operation.ADDITION));
+            getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus_level", 0.0025D, AttributeModifier.Operation.ADDITION));
+        }
+        if(level > 10){
+            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
+        }
+    }
+
+    public void addLevelBuffsForLevel(int level){
+
+        for(int i = 0; i < level; i++) {
+            if (level <= 10) {
+                getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
+                getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus_level", 0.03D, AttributeModifier.Operation.ADDITION));
+                getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus_level", 0.0012D, AttributeModifier.Operation.ADDITION));
+                getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus_level", 0.0025D, AttributeModifier.Operation.ADDITION));}
+            if (level > 10) {
+                getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
+            }
+        }
+    }
+
+    /*
+           .add(Attributes.MAX_HEALTH, 20.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.3D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D)
+                .add(Attributes.ATTACK_DAMAGE, 1.0D)
+                .add(Attributes.FOLLOW_RANGE, 32.0D);
+    */
+    /**
+        Important for mod compat: See smallships or siege weapons mod
+    **/
+    public boolean isAlliedTo(@NotNull Team team) {
+        if(!this.getCommandSenderWorld().isClientSide() && this.getTeam() != null){
+            RecruitsDiplomacyManager.DiplomacyStatus status = FactionEvents.recruitsDiplomacyManager.getRelation(this.getTeam().getName(), team.getName());
+            return status == RecruitsDiplomacyManager.DiplomacyStatus.ALLY;
+        }
+        return super.isAlliedTo(team);
+    }
+
+    public void die(DamageSource dmg) {
+        Component deathMessage = this.getCombatTracker().getDeathMessage();
+        super.die(dmg);
+        if (this.dead) {
+            if (this.getCommandSenderWorld().isClientSide()) return;
+
+            if (this.getCommandSenderWorld().getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES) && this.getOwner() instanceof ServerPlayer) {
+                this.getOwner().sendSystemMessage(deathMessage);
+            }
+
+            if(this.getTeam() != null){
+                RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(this.getTeam().getName());
+                if(faction != null) faction.addNPCs(-1);
+                FactionEvents.recruitsFactionManager.broadcastToFactionPlayers(this.getTeam().getName(), (ServerLevel) this.getCommandSenderWorld());
+            }
+
+            if(this.getGroup() != null){
+                RecruitEvents.recruitsGroupsManager.removeMember(this.getGroup(), this.getUUID(), (ServerLevel) this.getCommandSenderWorld());
+            }
+
+            if(this.isOwned()){
+                RecruitEvents.recruitsPlayerUnitManager.removeRecruits(this.getOwnerUUID(), 1);
+            }
+            FactionEvents.removeRecruitFromTeam(this, this.getTeam(), (ServerLevel) this.getCommandSenderWorld());
+        }
+    }
+
+    ////////////////////////////////////OTHER FUNCTIONS////////////////////////////////////
+
+    public void updateMorale(){
+        if(this instanceof VillagerNobleEntity){
+            return;
+        }
+        //fast recovery
+        float currentMorale = getMorale();
+        float newMorale = currentMorale;
+
+        if (isStarving() && this.isOwned()){
+            if(currentMorale > 0) newMorale -= 2F;
+        }
+
+        if (this.isOwned() && !isSaturated()){
+            if(currentMorale > 35) newMorale -= 1F;
+        }
+
+        if(this.isSaturated() || getHealth() >= getMaxHealth() * 0.85){
+            if(currentMorale < 65) newMorale += 2F;
+        }
+
+        if(newMorale < 0) newMorale = 0;
+
+        this.setMoral(newMorale);
+    }
+
+    public void applyMoralEffects(){
+        boolean confused =  0 <= getMorale() && getMorale() < 20;
+        boolean lowMoral =  20 <= getMorale() && getMorale() < 40;
+        boolean highMoral =  90 <= getMorale() && getMorale() <= 100;
+
+        if (confused) {
+            if (!this.hasEffect(MobEffects.WEAKNESS))
+                this.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 3, false, false, true));
+            if (!this.hasEffect(MobEffects.MOVEMENT_SLOWDOWN))
+                this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2, false, false, true));
+            if (!this.hasEffect(MobEffects.CONFUSION))
+                this.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 200, 1, false, false, true));
+        }
+
+        if (lowMoral) {
+            if (!this.hasEffect(MobEffects.WEAKNESS))
+                this.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 1, false, false, true));
+            if (!this.hasEffect(MobEffects.MOVEMENT_SLOWDOWN))
+                this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 1, false, false, true));
+        }
+
+        if (highMoral) {
+            if (!this.hasEffect(MobEffects.DAMAGE_BOOST))
+                this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 0, false, false, true));
+            if (!this.hasEffect(MobEffects.DAMAGE_RESISTANCE))
+                this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 0, false, false, true));
+        }
+    }
+
+    public void updateHunger(){
+        if(this instanceof VillagerNobleEntity){
+            return;
+        }
+
+        float hunger = getHunger();
+
+        if (this.getFollowState() == 2) {
+            hunger -= 1/60F;
+        }
+        else{
+            hunger -= 2/60F;
+        }
+
+        if (hunger < 0) hunger = 0;
+
+        this.setHunger(hunger);
+
+        if(RecruitsServerConfig.RecruitsStarving.get()){
+            if(hunger == 0){
+                this.hurt(this.damageSources().starve(), 0.25F);
+            }
+        }
+    }
+
+    public boolean needsToGetFood(){
+        int timer = this.getUpkeepTimer();
+        boolean needsToEat = this.needsToEat();
+        boolean hasFood = this.hasFoodInInv();
+        boolean isChest = this.getUpkeepPos() != null;
+        boolean isEntity = this.getUpkeepUUID() != null;
+
+        return (forcedUpkeep || (!hasFood && timer == 0 && needsToEat) && (isChest || isEntity)) && !getShouldProtect();
+    }
+
+    public boolean hasFoodInInv(){
+        return this.getInventory().items
+                .stream()
+                .anyMatch(ItemStack::isEdible);
+    }
+
+    public boolean needsToEat(){
+        if (getHunger() <= 50F){
+            return true;
+        }
+        if (getHunger() <= 70F && getHealth() != getMaxHealth() && this.getTarget() == null && this.getIsOwned()){
+            return true;
+        }
+        else return getHealth() <= (getMaxHealth() * 0.30) && this.getTarget() == null;
+    }
+
+    public boolean needsToPotion(){
+        LivingEntity target = this.getTarget();
+        if(target != null){
+            return getHealth() <= (getMaxHealth() * 0.60) || target.getHealth() > this.getHealth();
+        }
+        return false;
+    }
+
+    public boolean isStarving(){
+        return (getHunger() <= 1F );
+    }
+
+    public boolean isSaturated(){
+        return (getHunger() >= 90F);
+    }
+
+    public void checkLevel(){
+        int currentXp = this.getXp();
+        if (currentXp >= RecruitsServerConfig.RecruitsMaxXpForLevelUp.get()){
+            this.addXpLevel(1);
+            this.setXp(0);
+            this.heal(10F);
+            this.recalculateCost();
+
+            if(this.getMorale() < 100)
+                this.setMoral(getMorale() + 5F);
+            if (!this.getCommandSenderWorld().isClientSide()) {
+                MinecraftForge.EVENT_BUS.post(new RecruitEvent.LevelUp(this, this.getXpLevel()));
+            }
+        }
+    }
+
+    private void recalculateCost() {
+        int currCost = getCost();
+        int armorBonus = this.getArmorValue() * 2;
+        //Main.LOGGER.debug("armorBonus: " + armorBonus);
+
+        int weaponBonus = 4;
+        //Main.LOGGER.debug("weaponBonus: " + weaponBonus);
+
+        int speedBonus = (int) (this.getSpeed() * 2);
+        //Main.LOGGER.debug("speedBonus: " + speedBonus);
+
+        int shieldBonus = this.getOffhandItem().getItem() instanceof ShieldItem ? 10 : 0;
+        //Main.LOGGER.debug("shieldBonus: " + shieldBonus);
+
+        int newCost = Math.abs((shieldBonus + speedBonus + weaponBonus + armorBonus + currCost + getXpLevel() * 2));
+        this.setCost(newCost);
+    }
+
+    public void makeLevelUpSound() {
+        this.getCommandSenderWorld().playSound(null, this.getX(), this.getY() + 1 , this.getZ(), SoundEvents.PLAYER_LEVELUP, this.getSoundSource(), 1.0F, 0.8F + 0.4F * this.random.nextFloat());
+
+        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get())
+            this.getCommandSenderWorld().playSound(null, this.getX(), this.getY() + 1 , this.getZ(), SoundEvents.VILLAGER_CELEBRATE, this.getSoundSource(), 1.0F, 0.8F + 0.4F * this.random.nextFloat());
+    }
+
+    public void makeHireSound() {
+        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get())
+            this.playSound(SoundEvents.VILLAGER_AMBIENT, 1.0F, 0.8F + 0.4F * this.random.nextFloat());
+    }
+
+    @Override
+    public boolean canBeLeashed(@NotNull Player player) {
+        return false;
+    }
+
+    public int getCost(){
+        return entityData.get(COST);
+    }
+
+    protected void hurtArmor(@NotNull DamageSource damageSource, float damage) {
+        if(this.level().isClientSide()) return;
+
+        ItemStack headArmor = this.getItemBySlot(EquipmentSlot.HEAD);
+        boolean hasHeadArmor = !headArmor.isEmpty();
+
+        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !headArmor.getItem().isFireResistant()) && headArmor.getItem() instanceof ArmorItem)){
+        //damage
+            headArmor.hurtAndBreak(1, this, (recruit) -> {
+                recruit.broadcastBreakEvent(EquipmentSlot.HEAD);
+            });
+        }
+
+        if (this.getItemBySlot(EquipmentSlot.HEAD).isEmpty() && hasHeadArmor) {
+            this.inventory.setItem(0, ItemStack.EMPTY);
+            this.getInventory().setChanged();
+            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
+            this.tryToReequip(EquipmentSlot.HEAD);
+        }
+
+        ItemStack chestArmor = this.getItemBySlot(EquipmentSlot.CHEST);
+        boolean hasChestArmor = !chestArmor.isEmpty();
+        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !chestArmor.getItem().isFireResistant()) && chestArmor.getItem() instanceof ArmorItem)){
+            //damage
+            chestArmor.hurtAndBreak(1, this, (recruit) -> {
+                recruit.broadcastBreakEvent(EquipmentSlot.CHEST);
+            });
+        }
+        if (this.getItemBySlot(EquipmentSlot.CHEST).isEmpty() && hasChestArmor) {
+            this.inventory.setItem(1, ItemStack.EMPTY);
+            this.getInventory().setChanged();
+            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
+            this.tryToReequip(EquipmentSlot.CHEST);
+        }
+
+        ItemStack legsArmor = this.getItemBySlot(EquipmentSlot.LEGS);
+        boolean hasLegsArmor = !legsArmor.isEmpty();
+
+        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !legsArmor.getItem().isFireResistant()) && legsArmor.getItem() instanceof ArmorItem)){
+            //damage
+            legsArmor.hurtAndBreak(1, this, (recruit) -> {
+                recruit.broadcastBreakEvent(EquipmentSlot.LEGS);
+            });
+        }
+        if (this.getItemBySlot(EquipmentSlot.LEGS).isEmpty() && hasLegsArmor) {
+            this.inventory.setItem(2, ItemStack.EMPTY);
+            this.getInventory().setChanged();
+            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
+            this.tryToReequip(EquipmentSlot.LEGS);
+        }
+
+
+        ItemStack feetArmor = this.getItemBySlot(EquipmentSlot.FEET);
+        boolean hasFeetArmor = !feetArmor.isEmpty();
+
+        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !feetArmor.getItem().isFireResistant()) && feetArmor.getItem() instanceof ArmorItem)){
+            //damage
+            feetArmor.hurtAndBreak(1, this, (p_43296_) -> {
+
+            });
+
+        }
+        if (this.getItemBySlot(EquipmentSlot.FEET).isEmpty() && hasFeetArmor) {
+            this.inventory.setItem(3, ItemStack.EMPTY);
+            this.getInventory().setChanged();
+            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
+            this.tryToReequip(EquipmentSlot.FEET);
+        }
+    }
+
+    public void damageMainHandItem() {
+        if(this.level().isClientSide()) return;
+
+        ItemStack handItem = this.getItemBySlot(EquipmentSlot.MAINHAND);
+        boolean hasHandItem = !handItem.isEmpty();
+
+        this.getMainHandItem().hurtAndBreak(1, this, (recruit) -> {
+            recruit.broadcastBreakEvent(EquipmentSlot.MAINHAND);
+        });
+
+        if (this.getMainHandItem().isEmpty() && hasHandItem) {
+            this.inventory.setItem(5, ItemStack.EMPTY);
+            this.getInventory().setChanged();
+            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
+            this.tryToReequip(EquipmentSlot.MAINHAND);
+        }
+    }
+
+    public void tryToReequip(EquipmentSlot equipmentSlot){
+        for(int i = 6; i < 15; i++){
+            ItemStack itemStack = this.getInventory().getItem(i);
+            if(canEquipItemToSlot(itemStack, equipmentSlot)) {
+                this.setItemSlot(equipmentSlot, itemStack);
+                this.inventory.setItem(getInventorySlotIndex(equipmentSlot), itemStack);
+                this.inventory.removeItemNoUpdate(i);
+                Equipable equipable = Equipable.get(itemStack);
+                if(equipable != null)
+                    this.getCommandSenderWorld().playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
+            }
+        }
+    }
+
+    public void tryToReequipShield(){
+        for(ItemStack itemStack : this.getInventory().items){
+            if(itemStack.getItem() instanceof ShieldItem){
+                this.setItemSlot(EquipmentSlot.OFFHAND, itemStack);
+                this.inventory.setItem(getInventorySlotIndex(EquipmentSlot.OFFHAND), itemStack);
+                Equipable equipable = Equipable.get(itemStack);
+                if(equipable != null)
+                    this.getCommandSenderWorld().playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
+
+                itemStack.shrink(1);
+            }
+        }
+    }
+
+    @Override
+    protected void hurtCurrentlyUsedShield(float damage) {
+        if(this.level().isClientSide()) return;
+
+        this.getOffhandItem().hurtAndBreak(1, this, (recruit) -> {
+            recruit.broadcastBreakEvent(EquipmentSlot.OFFHAND);
+        });
+
+        if (this.getOffhandItem().isEmpty()) {
+            this.inventory.setItem(4, ItemStack.EMPTY);
+            this.getInventory().setChanged();
+            this.playSound(SoundEvents.SHIELD_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
+            this.tryToReequipShield();
+        }
+    }
+
+    @Override
+    public boolean killedEntity(@NotNull ServerLevel level, @NotNull LivingEntity living) {
+        super.killedEntity(level, living);
+
+        this.addXp(5);
+        this.setKills(this.getKills() + 1);
+        if(this.getMorale() < 100) this.setMoral(this.getMorale() + 1);
+
+        if(living instanceof Player){
+            this.addXp(45);
+            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 9);
+        }
+
+        if(living instanceof Raider){
+            this.addXp(5);
+            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 2);
+        }
+
+        if(living instanceof Villager villager){
+            if (villager.isBaby()) if(this.getMorale() > 0) this.setMoral(this.getMorale() - 10);
+            else {
+                if (this.getMorale() > 0) this.setMoral(this.getMorale() - 2);
+            }
+        }
+
+        if(living instanceof WitherBoss){
+            this.addXp(99);
+            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 9);
+        }
+
+        if(living instanceof IronGolem){
+            this.addXp(49);
+            if(this.getMorale() > 0) this.setMoral(this.getMorale() - 1);
+        }
+
+        if(living instanceof EnderDragon){
+            this.addXp(999);
+            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 49);
+        }
+
+        this.checkLevel();
+        return true;
+    }
+
+    @Override
+    protected void blockUsingShield(@NotNull LivingEntity living) {
+        super.blockUsingShield(living);
+        if (living.getMainHandItem().canDisableShield(this.useItem, this, living))
+            this.disableShield();
+    }
+
+    public void disableShield() {
+            this.blockCoolDown = this.getBlockCoolDown();
+            this.stopUsingItem();
+            this.getCommandSenderWorld().broadcastEntityEvent(this, (byte) 30);
+    }
+
+    public boolean canBlock(){
+        return this.blockCoolDown == 0;
+    }
+
+    public void updateShield(){
+        if(this.blockCoolDown > 0){
+            this.blockCoolDown--;
+        }
+    }
+
+    public int getMountTimer() {
+        return this.mountTimer;
+    }
+
+    @Override
+    public void openGUI(Player player) {
+        if (player instanceof ServerPlayer) {
+            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+                @Override
+                public @NotNull Component getDisplayName() {
+                    return getName();
+                }
+
+                @Override
+                public @NotNull AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
+                    return new RecruitInventoryMenu(i, AbstractRecruitEntity.this, playerInventory);
+                }
+            }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
+        } else {
+            Main.SIMPLE_CHANNEL.sendToServer(new MessageRecruitGui(player, this.getUUID()));
+        }
+    }
+
+    public void openDebugScreen(Player player) {
+        if (player instanceof ServerPlayer) {
+            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+                @Override
+                public @NotNull Component getDisplayName() {
+                    return getName();
+                }
+
+                @Override
+                public AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
+                    return new DebugInvMenu(i, AbstractRecruitEntity.this, playerInventory);
+                }
+            }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
+        } else {
+            Main.SIMPLE_CHANNEL.sendToServer(new MessageDebugScreen(player, this.getUUID()));
+        }
+    }
+
+    public static void openTakeOverGUI(Player player) {
+
+    }
+    public boolean canBeHired(){
+        return true;
+    }
+    @Override
+    public boolean canAttack(@Nonnull LivingEntity target) {
+        if(target instanceof MessengerEntity messenger && messenger.isAtMission()) return false;
+        if(RecruitsServerConfig.TargetBlackList.get().contains(target.getEncodeId())) return false;
+        return RecruitEvents.canAttack(this, target);
+    }
+    // 0 = NEUTRAL
+    // 1 = AGGRESSIVE
+    // 2 = RAID
+    // 3 = PASSIVE
+    public boolean shouldAttack(LivingEntity target) {
+        return switch (this.getState()) {
+            case 3 -> false; // Passive mode: never attack
+            case 0 -> shouldAttackOnNeutral(target) && canAttack(target);
+            case 1 -> (shouldAttackOnNeutral(target) || shouldAttackOnAggressive(target)) && canAttack(target);
+            case 2 -> !RecruitEvents.isAlly(this.getTeam(), target.getTeam()) && canAttack(target);
+            default -> canAttack(target);
+        };
+    }
+
+    private boolean shouldAttackOnNeutral(LivingEntity target){
+        if(isMonster(target) || isAttackingOwnerOrSelf(this, target)) return true;
+
+        if(target instanceof Villager) return false;
+
+        return RecruitEvents.isEnemy(this.getTeam(), target.getTeam());
+    }
+
+    private boolean shouldAttackOnAggressive(LivingEntity target){
+        if(target instanceof Villager) return false;
+
+        return (target instanceof AbstractRecruitEntity || target instanceof Player) && (RecruitEvents.isNeutral(this.getTeam(), target.getTeam()) || RecruitEvents.isEnemy(this.getTeam(), target.getTeam()));
+    }
+
+    private boolean isMonster(LivingEntity target) {
+        return target instanceof Enemy;
+    }
+
+    private boolean isAttackingOwnerOrSelf(AbstractRecruitEntity recruit, LivingEntity target) {
+        return target.getLastHurtByMob() != null &&
+                (target.getLastHurtByMob().equals(recruit) || target.getLastHurtByMob().equals(recruit.getOwner()));
+    }
+
+    public boolean isAlliedTo(Entity target) {
+        if (target instanceof LivingEntity livingTarget) {
+            return !RecruitEvents.canHarmTeam(this, livingTarget);
+        } else {
+            return super.isAlliedTo(target);
+        }
+    }
+
+    //
+    /*********************************************************
+     * Update the current team of the recruit in following conditions:
+     * - If recruit team is not the same team as the owner
+     * - If recruit team is null but owner team != null
+     * - If recruit team is != null but owner team is null
+     *********************************************************/
+    public void updateTeam(){
+        if(this.isOwned() && !this.getCommandSenderWorld().isClientSide()){
+            Player owner = getOwner();
+            if(owner != null) {
+                Team recruitTeam = this.getTeam();
+                Team ownerTeam = owner.getTeam();
+
+                if (ownerTeam == null) {
+                    if(recruitTeam != null){
+                        //Remove from current team because ownerTeam is null
+                        FactionEvents.removeRecruitFromTeam(this, recruitTeam, (ServerLevel) this.getCommandSenderWorld());
+                        FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), recruitTeam.getName(), -1 );
+                    }
+                    //recruit team is also null, so no do nothing
+                    needsTeamUpdate = false;
+                }
+                else if(recruitTeam == null){
+                    FactionEvents.addRecruitToTeam(this, ownerTeam, (ServerLevel) this.getCommandSenderWorld());
+                    FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), ownerTeam.getName(), +1 );
+                    needsTeamUpdate = false;
+                }
+                else if(recruitTeam == ownerTeam){
+                    updateColor(ownerTeam.getName());
+                    needsTeamUpdate = false;
+                }
+                else{
+                    FactionEvents.removeRecruitFromTeam(this, recruitTeam, (ServerLevel) this.getCommandSenderWorld());
+                    FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), recruitTeam.getName(), -1 );
+
+                    FactionEvents.addRecruitToTeam(this, ownerTeam, (ServerLevel) this.getCommandSenderWorld());
+                    FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), ownerTeam.getName(), +1 );
+                    needsTeamUpdate = false;
+                }
+            }
+        }
+    }
+
+    private void updateColor(String name) {
+        if(!this.getCommandSenderWorld().isClientSide()){
+            RecruitsFaction recruitsFaction = FactionEvents.recruitsFactionManager.getFactionByStringID(name);
+            if(recruitsFaction != null && recruitsFaction.getUnitColor() != this.getColor()){
+                this.setColor(recruitsFaction.getUnitColor());
+                this.needsColorUpdate = false;
+            }
+        }
+    }
+
+    public void updateGroup() {
+        if (this.getCommandSenderWorld().isClientSide()) return;
+
+        this.needsGroupUpdate = false;
+        if (this.getGroup() == null) return;
+
+        UUID raw = this.getGroup();
+        UUID resolved = RecruitEvents.recruitsGroupsManager.resolveGroup(raw);
+        UUID finalGroup = RecruitEvents.recruitsGroupsManager.resolveRecruit(this.getUUID(), resolved);
+
+        if (!finalGroup.equals(raw)) {
+            this.setGroupUUID(finalGroup);
+        }
+
+        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(finalGroup);
+
+        if (group == null) {
+            this.setGroupUUID(null);
+            return;
+        }
+
+        if (!group.members.contains(this.getUUID())) {
+            this.setGroupUUID(null);
+            return;
+        }
+
+        if (group.disbandContext != null && group.disbandContext.disband) {
+            this.disband(null, group.disbandContext.keepTeam, group.disbandContext.increaseCost);
+            this.needsTeamUpdate = true;
+            return;
+        }
+
+        if (this.isOwned() && !this.getOwnerUUID().equals(group.getPlayerUUID())) {
+            this.assignToPlayer(group.getPlayerUUID(), group.getUUID());
+        }
+
+        this.needsTeamUpdate = true;
+    }
+
+
+    public void openHireGUI(Player player) {
+        if (player instanceof ServerPlayer) {
+            this.navigation.stop();
+            Team ownerTeam = player.getTeam();
+            String stringId = ownerTeam != null ? ownerTeam.getName() : "";
+            boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID());
+            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
+            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+                @Override
+                public @NotNull Component getDisplayName() {
+                    return getName();
+                }
+
+                @Override
+                public AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
+                    return new RecruitHireMenu(i, playerInventory.player, AbstractRecruitEntity.this, playerInventory);
+                }
+            }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
+        } else {
+            Main.SIMPLE_CHANNEL.sendToServer(new MessageHireGui(player, this.getUUID()));
+        }
+    }
+
+    public void assignToPlayer(UUID newOwner, UUID newGroupUUID){
+        RecruitsGroup currentGroup = RecruitEvents.recruitsGroupsManager.getGroup(this.getGroup());
+        if(currentGroup != null){
+            currentGroup.removeMember(this.getUUID());
+        }
+
+        this.setGroupUUID(newGroupUUID);
+        RecruitsGroup newGroup = RecruitEvents.recruitsGroupsManager.getGroup(newGroupUUID);
+
+        this.disband(null, false, false);
+
+        this.setOwnerUUID(Optional.of(newOwner));
+
+        if(getOwner() != null){
+            this.hire(getOwner(), newGroup, true);
+            this.setFollowState(1);
+        }
+    }
+
+    public void shouldMount(boolean should, UUID mount_uuid) {
+        if (!this.isPassenger()){
+            this.setShouldMount(should);
+            if(mount_uuid != null) {
+                this.setMountUUID(Optional.of(mount_uuid));
+            }
+            else
+                this.setMountUUID(Optional.empty());
+        }
+        if(should) this.dismount = 0;
+    }
+
+    public void shouldProtect(boolean should, UUID protect_uuid) {
+        this.setShouldProtect(should);
+        if(protect_uuid != null) this.setProtectUUID(Optional.of(protect_uuid));
+        else this.setProtectUUID(Optional.empty());
+    }
+
+    public void clearUpkeepPos() {
+        this.entityData.set(UPKEEP_POS, Optional.empty());
+    }
+
+    public void clearUpkeepEntity() {
+        this.entityData.set(UPKEEP_ID, Optional.empty());
+    }
+
+    public boolean hasUpkeep(){
+        return this.getUpkeepPos() != null || this.getUpkeepUUID() != null;
+    }
+
+    public BannerModSupplyStatus.RecruitSupplyStatus getSupplyStatus(@Nullable Container upkeepContainer) {
+        boolean upkeepHasFood = false;
+        boolean upkeepHasPayment = false;
+
+        if (upkeepContainer != null) {
+            upkeepHasFood = this.hasFoodInContainer(upkeepContainer);
+            upkeepHasPayment = this.isPaymentInContainer(upkeepContainer);
+        }
+
+        return BannerModSupplyStatus.recruitSupplyStatus(
+                this.hasUpkeep(),
+                this.needsToGetFood(),
+                this.paymentTimer == 0,
+                upkeepHasFood,
+                upkeepHasPayment,
+                this.isPaymentInContainer(this.getInventory())
+        );
+    }
+
+    public void upkeepReequip(@NotNull Container container) {
+        //Try to reequip
+        for(int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack itemstack = container.getItem(i);
+            ItemStack equipment;
+            if(!this.canEatItemStack(itemstack) && this.wantsToPickUp(itemstack)){
+                if (this.canEquipItem(itemstack)) {
+                    equipment = itemstack.copy();
+                    equipment.setCount(1);
+                    this.equipItem(equipment);
+                    itemstack.shrink(1);
+                }
+                if(this instanceof CrossBowmanEntity crossBowmanEntity && Main.isMusketModLoaded && IWeapon.isMusketModWeapon(crossBowmanEntity.getMainHandItem()) && itemstack.getDescriptionId().contains("cartridge")){
+                    if(this.canTakeCartridge()){
+                        equipment = itemstack.copy();
+                        this.inventory.addItem(equipment);
+                        itemstack.shrink(equipment.getCount());
+                    }
+                }
+                else if (this instanceof IRangedRecruit && itemstack.is(ItemTags.ARROWS)){ //all that are ranged
+                    if(this.canTakeArrows()){
+                        equipment = itemstack.copy();
+                        this.inventory.addItem(equipment);
+                        itemstack.shrink(equipment.getCount());
+                    }
+                }
+            }
+
+            if (this instanceof CaptainEntity && Main.isSmallShipsLoaded){
+                if(itemstack.getDescriptionId().contains("cannon_ball")){
+                    if(this.canTakeCannonBalls()){
+                        equipment = itemstack.copy();
+                        this.inventory.addItem(equipment);
+                        itemstack.shrink(equipment.getCount());
+                    }
+                }
+                else if (itemstack.is(ItemTags.PLANKS)){
+                    if(this.canTakePlanks()){
+                        equipment = itemstack.copy();
+                        this.inventory.addItem(equipment);
+                        itemstack.shrink(equipment.getCount());
+                    }
+                }
+                else if (itemstack.is(Items.IRON_NUGGET)){
+                    if(this.canTakeIronNuggets()){
+                        equipment = itemstack.copy();
+                        this.inventory.addItem(equipment);
+                        itemstack.shrink(equipment.getCount());
+                    }
+                }
+            }
+        }
+    }
+
+    public static enum ArmPose {
+        ATTACKING,
+        BLOCKING,
+        BOW_AND_ARROW,
+        CROSSBOW_HOLD,
+        CROSSBOW_CHARGE,
+        CELEBRATING,
+        NEUTRAL;
+    }
+
+    public int getUpkeepCooldown() {
+        return 3000;
+    }
+
+    public AbstractRecruitEntity.ArmPose getArmPose() {
+        return AbstractRecruitEntity.ArmPose.NEUTRAL;
+    }
+
+    private MutableComponent TEXT_RECRUITED1(String name) {
+        return Component.translatable("chat.bannermod.text.recruited1", name);
+    }
+
+    private MutableComponent TEXT_RECRUITED2(String name) {
+        return Component.translatable("chat.bannermod.text.recruited2", name);
+    }
+
+    private MutableComponent TEXT_RECRUITED3(String name) {
+        return Component.translatable("chat.bannermod.text.recruited3", name);
+    }
+
+    private Component INFO_RECRUITING_MAX(String name) {
+        return Component.translatable("chat.bannermod.info.reached_max", name);
+    }
+
+    private MutableComponent TEXT_DISBAND(String name) {
+        return Component.translatable("chat.bannermod.text.disband", name);
+    }
+
+    private MutableComponent TEXT_WANDER(String name) {
+        return Component.translatable("chat.bannermod.text.wander", name);
+    }
+
+    private MutableComponent TEXT_HOLD_YOUR_POS(String name) {
+        return Component.translatable("chat.bannermod.text.holdPos", name);
+    }
+
+    private MutableComponent TEXT_FOLLOW(String name) {
+        return Component.translatable("chat.bannermod.text.follow", name);
+    }
+
+    private MutableComponent TEXT_HELLO_1(String name) {
+        return Component.translatable("chat.bannermod.text.hello_1", name);
+    }
+
+    private MutableComponent TEXT_HELLO_2(String name) {
+        return Component.translatable("chat.bannermod.text.hello_2", name);
+    }
+
+    private MutableComponent TEXT_HELLO_3(String name) {
+        return Component.translatable("chat.bannermod.text.hello_3", name);
+    }
+
+    private MutableComponent TEXT_NO_PAYMENT(String name) {
+        return Component.translatable("chat.bannermod.text.noPaymentInUpkeep", name);
+    }
+
+    private void pickUpArrows() {
+        this.getCommandSenderWorld().getEntitiesOfClass(
+                AbstractArrow.class,
+                this.getBoundingBox().inflate(7D),
+                (arrow) -> arrow.inGround &&
+                        arrow.pickup == AbstractArrow.Pickup.ALLOWED &&
+                        this.getInventory().canAddItem(Items.ARROW.getDefaultInstance())
+        ).forEach((arrow) -> {
+            this.getInventory().addItem(Items.ARROW.getDefaultInstance());
+            arrow.moveTo(this.position());
+            arrow.discard();
+        });
+    }
+
+    @Override
+    public boolean startRiding(Entity entity) {
+        this.setMountUUID(Optional.of(entity.getUUID()));
+        return super.startRiding(entity);
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double p_21542_) {
+        return false;
+    }
+
+
+    public boolean canEatItemStack(ItemStack stack){
+        ResourceLocation location = ForgeRegistries.ITEMS.getKey(stack.getItem());
+
+        if(RecruitsServerConfig.FoodBlackList.get().contains(location.toString())){
+            return false;
+        }
+        return stack.isEdible();
+    }
+
+    private boolean hasFoodInContainer(Container container) {
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            if (this.canEatItemStack(container.getItem(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void checkPayment(Container container) {
+        if(RecruitsServerConfig.RecruitsPayment.get() && isOwned()){
+            if(isPaymentInContainer(container)){
+                doPayment(container);
+            }
+            else{
+                if(isPaymentInContainer(this.getInventory())){
+                    doPayment(this.getInventory());
+                }
+                else{
+                    this.doNoPaymentAction();
+                    if(this.getOwner() != null){
+                        this.getOwner().sendSystemMessage(TEXT_NO_PAYMENT(this.getName().getString()));
+                    }
+                }
+
+
+            }
+
+            resetPaymentTimer();
+        }
+    }
+
+    public void doNoPaymentAction(){
+        NoPaymentAction action = RecruitsServerConfig.RecruitsNoPaymentAction.get();
+        switch (action){
+            case MORALE_LOSS -> {
+                float current = this.getMorale();
+                float newMorale = (float) Math.max(0, current * 0.7);//30% loss
+                this.setMoral(newMorale);
+            }
+
+            case DISBAND_KEEP_TEAM -> {
+                this.disband(this.getOwner(), true, true);
+            }
+
+            case DISBAND -> {
+                this.disband(this.getOwner(), false, true);
+            }
+
+            case DESPAWN -> {
+                this.discard();
+            }
+        }
+
+    }
+
+    public void resetPaymentTimer(){
+        int interval = RecruitsServerConfig.RecruitsPaymentInterval.get();
+        this.paymentTimer = 20*60*interval;
+    }
+
+    public enum NoPaymentAction{
+        MORALE_LOSS,
+        DISBAND,
+        DISBAND_KEEP_TEAM,
+        DESPAWN;
+
+        public static NoPaymentAction fromString(String name) {
+            try {
+                return NoPaymentAction.valueOf(name.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return MORALE_LOSS;
+            }
+        }
+    }
+}

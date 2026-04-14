@@ -1,7 +1,7 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
-import com.talhanation.recruits.entities.RecruitEntity;
+import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
+import com.talhanation.bannerlord.entity.military.RecruitEntity;
 import com.talhanation.workers.entities.FarmerEntity;
 import com.talhanation.workers.entities.workarea.BuildArea;
 import com.talhanation.workers.entities.workarea.CropArea;

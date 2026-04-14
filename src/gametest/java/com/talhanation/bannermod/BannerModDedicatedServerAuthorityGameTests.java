@@ -2,7 +2,7 @@ package com.talhanation.bannermod;
 
 import com.mojang.authlib.GameProfile;
 import com.talhanation.recruits.Main;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.recruits.gametest.support.RecruitsCommandGameTestSupport;
 import com.talhanation.recruits.network.MessageMovement;
