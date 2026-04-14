@@ -24,6 +24,7 @@
 - `verifyUnitTestStage` wraps the unit test stage used by `check`.
 - Phase 21 wave 1 now has canonical shared seam homes under `src/main/java/com/talhanation/bannerlord/shared/**` and `src/main/java/com/talhanation/bannerlord/config/**`, while `com.talhanation.bannermod/**` remains as a temporary forwarding surface during import churn.
 - Phase 21 wave 2 now keeps the one live `@Mod` entrypoint, shared `SimpleChannel`, and registry/lifecycle composition under `src/main/java/com/talhanation/bannerlord/bootstrap/**`, `.../network/**`, and `.../registry/**`, with recruit and worker package surfaces reduced to temporary compatibility shims where needed.
+- Phase 21 wave 3 now has canonical recruit-owned controlling seams under `src/main/java/com/talhanation/bannerlord/entity/**`, `.../ai/**`, `.../persistence/**`, and `.../client/**`, with worker imports able to target bannerlord-owned entity bases, pathfinding, and shared client widgets while old recruit packages remain as brownfield compatibility surfaces during the staged move.
 
 ### GameTest Verification
 
@@ -46,6 +47,8 @@ Run from the repository root:
 1. `./gradlew compileJava`
 2. `./gradlew processResources`
 3. `./gradlew test`
+
+When a Phase 21 slice changes pathfinding, persistence, or shared client ownership, also treat `./gradlew verifyGameTestStage` as the preferred follow-up gate once the fast compile/test baseline is available. Those package moves can disturb retained performance and correctness seams proven by `GlobalPathfindingControllerTest`, `AsyncPathProcessorTest`, and the root BannerMod ownership / upkeep / multiplayer GameTests.
 
 Phase 2 design outputs must preserve the existing migration helpers and compatibility seams documented in `.planning/phases/02-runtime-unification-design/02-runtime-compatibility-contract.md`.
 
