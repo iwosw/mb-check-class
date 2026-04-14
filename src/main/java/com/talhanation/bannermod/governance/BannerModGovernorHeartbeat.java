@@ -5,7 +5,7 @@ import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
 import com.talhanation.recruits.world.RecruitsClaim;
 import com.talhanation.recruits.world.RecruitsClaimManager;
-import com.talhanation.workers.entities.AbstractWorkerEntity;
+import com.talhanation.bannerlord.entity.civilian.AbstractWorkerEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.Villager;

@@ -3,7 +3,7 @@ package com.talhanation.bannermod;
 import com.talhanation.bannerlord.bootstrap.BannerlordMain;
 import com.talhanation.bannerlord.network.military.RecruitsNetworkRegistrar;
 import com.talhanation.recruits.Main;
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannerlord.compat.workers.WorkersRuntime;
 import com.talhanation.workers.WorkersSubsystem;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

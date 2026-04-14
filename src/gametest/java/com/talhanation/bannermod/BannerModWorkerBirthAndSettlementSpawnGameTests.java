@@ -6,7 +6,7 @@ import com.talhanation.recruits.Main;
 import com.talhanation.recruits.world.RecruitsClaim;
 import com.talhanation.workers.VillagerEvents;
 import com.talhanation.workers.config.WorkersServerConfig;
-import com.talhanation.workers.entities.AbstractWorkerEntity;
+import com.talhanation.bannerlord.entity.civilian.AbstractWorkerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

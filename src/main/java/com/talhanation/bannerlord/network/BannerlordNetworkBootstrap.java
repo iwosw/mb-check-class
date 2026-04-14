@@ -3,7 +3,7 @@ package com.talhanation.bannerlord.network;
 import com.talhanation.bannerlord.bootstrap.BannerlordMain;
 import com.talhanation.bannerlord.network.civilian.WorkersNetworkRegistrar;
 import com.talhanation.bannerlord.network.military.RecruitsNetworkRegistrar;
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannerlord.compat.workers.WorkersRuntime;
 import de.maxhenkel.corelib.CommonRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 

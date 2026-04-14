@@ -2,10 +2,10 @@ package com.talhanation.bannermod;
 
 import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
 import com.talhanation.bannerlord.entity.military.RecruitEntity;
-import com.talhanation.workers.entities.FarmerEntity;
-import com.talhanation.workers.entities.workarea.BuildArea;
-import com.talhanation.workers.entities.workarea.CropArea;
-import com.talhanation.workers.entities.workarea.StorageArea;
+import com.talhanation.bannerlord.entity.civilian.FarmerEntity;
+import com.talhanation.bannerlord.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannerlord.entity.civilian.workarea.CropArea;
+import com.talhanation.bannerlord.entity.civilian.workarea.StorageArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTestHelper;

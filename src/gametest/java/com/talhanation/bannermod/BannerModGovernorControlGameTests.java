@@ -8,7 +8,7 @@ import com.talhanation.recruits.ClaimEvents;
 import com.talhanation.recruits.Main;
 import com.talhanation.bannerlord.entity.military.RecruitEntity;
 import com.talhanation.recruits.world.RecruitsClaim;
-import com.talhanation.workers.entities.FarmerEntity;
+import com.talhanation.bannerlord.entity.civilian.FarmerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

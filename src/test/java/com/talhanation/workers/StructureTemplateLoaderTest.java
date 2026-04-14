@@ -1,6 +1,6 @@
 package com.talhanation.workers;
 
-import com.talhanation.workers.world.StructureTemplateLoader;
+import com.talhanation.bannerlord.persistence.civilian.StructureTemplateLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import org.junit.jupiter.api.Test;
