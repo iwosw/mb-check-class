@@ -43,3 +43,11 @@ Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypothe
 - **Fix:** Replaced the whitelist-style block interaction gate with a unified outsider block interaction check, added RightClickItem plus entity interact/attack claim guards, and expanded claim protection gametests to cover generic use, bucket click, and attack denial paths.
 - **Files changed:** recruits/src/main/java/com/talhanation/recruits/ClaimEvents.java, src/gametest/java/com/talhanation/bannermod/BannerModClaimProtectionGameTests.java
 ---
+
+## upkeep-storage-and-provider-sourcing — upkeep now resolves settlement storage providers
+- **Date:** 2026-04-14
+- **Error patterns:** workers ignore storage chest, upkeep command gray on chest hover, recruits fail to source upkeep, workers fail to source upkeep, no visible errors
+- **Root cause:** Recruit/worker upkeep logic only understood direct Container targets, while settlement storage providers are represented as StorageArea/MarketArea entities that wrap multiple scanned chests. The command UI rejected those entities on hover, and the upkeep goals could not resolve them into consumable containers, so workers/recruits could not source food or payment through the intended settlement provider path.
+- **Fix:** Add a shared upkeep-provider bridge that recognizes StorageArea/MarketArea entities and exposes their scanned chests as one combined Container, then reuse that bridge in the command-screen upkeep target validation and upkeep goals.
+- **Files changed:** src/main/java/com/talhanation/bannermod/logistics/BannerModCombinedContainer.java, src/main/java/com/talhanation/bannermod/logistics/BannerModUpkeepProviders.java, recruits/src/main/java/com/talhanation/recruits/client/gui/commandscreen/OtherCategory.java, recruits/src/main/java/com/talhanation/recruits/entities/ai/RecruitUpkeepPosGoal.java, recruits/src/main/java/com/talhanation/recruits/entities/ai/RecruitUpkeepEntityGoal.java
+---
