@@ -1,7 +1,8 @@
 package com.talhanation.bannermod;
 
+import com.talhanation.bannerlord.bootstrap.BannerlordMain;
+import com.talhanation.bannerlord.network.military.RecruitsNetworkRegistrar;
 import com.talhanation.recruits.Main;
-import com.talhanation.recruits.network.RecruitsNetworkRegistrar;
 import com.talhanation.workers.WorkersRuntime;
 import com.talhanation.workers.WorkersSubsystem;
 import net.minecraft.gametest.framework.GameTest;
@@ -18,7 +19,8 @@ public class IntegratedRuntimeGameTests {
         RecruitsNetworkRegistrar recruitsNetworkRegistrar = new RecruitsNetworkRegistrar();
         WorkersSubsystem workersSubsystem = new WorkersSubsystem();
 
-        helper.assertTrue(Main.MOD_ID.equals("bannermod"), "Expected BannerMod root runtime id");
+        helper.assertTrue(BannerlordMain.MOD_ID.equals("bannermod"), "Expected BannerMod root runtime id");
+        helper.assertTrue(Main.MOD_ID.equals(BannerlordMain.MOD_ID), "Expected legacy main shim to mirror bannerlord bootstrap id");
         helper.assertTrue(WorkersRuntime.modId().equals(Main.MOD_ID), "Expected workers subsystem to share BannerMod mod id");
         helper.assertTrue(WorkersRuntime.networkIdOffset() == recruitsNetworkRegistrar.orderedMessageTypes().size(),
                 "Expected workers packet offset to follow recruits packet catalog size");
