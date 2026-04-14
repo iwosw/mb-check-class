@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 21
-last_updated: "2026-04-14T13:46:04.920Z"
+last_updated: "2026-04-14T17:28:21.708Z"
 progress:
   total_phases: 38
   completed_phases: 14
   total_plans: 50
-  completed_plans: 44
+  completed_plans: 45
 ---
 
 # Project State
@@ -17,7 +17,7 @@ progress:
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: Continue Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, next by moving worker civilian packages onto the wave-3 bannerlord foundations before final source-root retirement.
+- Pending major work: Continue Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, next by shrinking the remaining compatibility boundary and clearing deferred compile blockers before final source-root retirement.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-03-SUMMARY.md`
+- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-04-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 
 ## Decisions
@@ -155,6 +155,9 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Register the shared SimpleChannel through BannerlordNetworkBootstrap and continue deriving the worker packet offset from the recruit packet catalog size. — This keeps worker packet ordering stable while moving shared networking ownership into bannerlord packages.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Copy recruit-owned entity, AI, persistence, and client foundations into root bannerlord packages while leaving the old recruit packages as compatibility surfaces for the staged move. — This keeps wave 3 focused on physical ownership without forcing worker-package relocation early.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Treat verifyGameTestStage as the preferred follow-up gate for wave-3 ownership moves that touch retained pathfinding, persistence, and client seams. — Those package moves intersect the performance and correctness seams established in phases 11-19.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Worker civilian gameplay classes now live under src/main/java/com/talhanation/bannerlord/{entity,ai,persistence,client}/civilian/** while workers/** is reduced to compatibility-facing surfaces.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Legacy worker runtime helpers moved into src/main/java/com/talhanation/bannerlord/compat/workers/**, with only a thin deprecated workers.WorkersRuntime adapter retained during staged source-root retirement.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Worker storage and courier code now compiles against narrow temporary BannerMod logistics compatibility types until the dedicated logistics backbone phase replaces them.
 
 ## Accumulated Context
 
@@ -214,6 +217,7 @@ progress:
 | Phase 23-settlement-governance-and-governor-control P01 | not recorded | 2 tasks | 4 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P02 | 18 min | 2 tasks | 18 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P03 | 1 min | 2 tasks | 235 files |
+| Phase 21-source-tree-consolidation-into-bannerlord P04 | 1 min | 2 tasks | 122 files |
 
 ### Quick Tasks Completed
 
@@ -223,6 +227,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-14T13:46:04Z
-- Stopped at: Completed 21-03-PLAN.md
+- Last updated: 2026-04-14T17:27:59Z
+- Stopped at: Completed 21-04-PLAN.md
 - Resume file: None
