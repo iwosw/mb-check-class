@@ -2,8 +2,8 @@ package com.talhanation.bannermod.registry.civilian;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 
-import com.talhanation.workers.entities.*;
-import com.talhanation.workers.entities.workarea.*;
+import com.talhanation.bannermod.entity.civilian.*;
+import com.talhanation.bannermod.entity.civilian.workarea.*;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.resources.ResourceLocation;

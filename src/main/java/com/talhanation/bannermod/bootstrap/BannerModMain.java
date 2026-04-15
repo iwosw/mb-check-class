@@ -4,7 +4,7 @@ import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.WorkersUpdateChecker;
-import com.talhanation.workers.client.events.ScreenEvents;
+import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
 import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
@@ -127,7 +127,7 @@ public class BannerModMain {
         event.enqueueWork(com.talhanation.workers.world.StructureManager::copyDefaultStructuresIfMissing);
         // Worker command screen
         com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
-                new com.talhanation.workers.client.gui.WorkerCommandScreen());
+                new com.talhanation.bannermod.client.civilian.gui.WorkerCommandScreen());
         MinecraftForge.EVENT_BUS.register(new ScreenEvents());
     }
 

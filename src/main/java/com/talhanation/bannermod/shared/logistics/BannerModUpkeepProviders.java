@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.shared.logistics;
 
-import com.talhanation.workers.entities.workarea.MarketArea;
-import com.talhanation.workers.entities.workarea.StorageArea;
+import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;

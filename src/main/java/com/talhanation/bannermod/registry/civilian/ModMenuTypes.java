@@ -5,9 +5,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.workers.client.gui.MerchantAddEditTradeScreen;
-import com.talhanation.workers.client.gui.MerchantTradeScreen;
-import com.talhanation.workers.entities.MerchantEntity;
+import com.talhanation.bannermod.client.civilian.gui.MerchantAddEditTradeScreen;
+import com.talhanation.bannermod.client.civilian.gui.MerchantTradeScreen;
+import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import com.talhanation.workers.inventory.MerchantAddEditTradeContainer;
 import com.talhanation.workers.inventory.MerchantTradeContainer;
 import com.talhanation.workers.world.WorkersMerchantTrade;
@@ -17,7 +17,7 @@ import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.talhanation.workers.entities.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor;

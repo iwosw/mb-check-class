@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.shared.logistics;
 
-import com.talhanation.workers.entities.WorkerStorageRequestState;
+import com.talhanation.bannermod.entity.civilian.WorkerStorageRequestState;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
