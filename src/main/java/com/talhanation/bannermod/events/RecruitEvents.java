@@ -3,6 +3,10 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.governance.BannerModGovernorService;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
+import com.talhanation.bannermod.governance.BannerModGovernorAuthority;
+import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
+import com.talhanation.bannermod.governance.BannerModGovernorRecommendation;
+import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
@@ -188,9 +192,45 @@ public class RecruitEvents {
                 snapshot == null ? 0 : snapshot.taxesDue(),
                 snapshot == null ? 0 : snapshot.taxesCollected(),
                 snapshot == null ? 0L : snapshot.lastHeartbeatTick(),
+                recommendationLabel(snapshot, true),
+                recommendationLabel(snapshot, false),
+                snapshot == null ? BannerModGovernorPolicy.DEFAULT_VALUE : snapshot.garrisonPriority(),
+                snapshot == null ? BannerModGovernorPolicy.DEFAULT_VALUE : snapshot.fortificationPriority(),
+                snapshot == null ? BannerModGovernorPolicy.DEFAULT_VALUE : snapshot.taxPressure(),
                 snapshot == null ? List.of() : snapshot.incidentTokens(),
                 snapshot == null ? List.of() : snapshot.recommendationTokens()
         ));
+    }
+
+    public static void updateGovernorPolicy(ServerPlayer player, AbstractRecruitEntity recruit, BannerModGovernorPolicy policy, int value) {
+        if (!(recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        RecruitsClaim claim = ClaimEvents.recruitsClaimManager == null
+                ? null
+                : ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(recruit.blockPosition()));
+        BannerModGovernorService service = new BannerModGovernorService(BannerModGovernorManager.get(serverLevel));
+        BannerModGovernorService.OperationResult result = service.updatePolicy(claim, BannerModGovernorAuthority.actor(player), policy, value);
+        if (!result.allowed()) {
+            player.sendSystemMessage(Component.literal("Governor policy update denied: " + result.governorDecision().name().toLowerCase()));
+            return;
+        }
+        syncGovernorScreen(player, recruit);
+    }
+
+    private static String recommendationLabel(BannerModGovernorSnapshot snapshot, boolean garrison) {
+        if (snapshot == null) {
+            return BannerModGovernorRecommendation.HOLD_COURSE.token();
+        }
+        for (String token : snapshot.recommendationTokens()) {
+            if (garrison && BannerModGovernorRecommendation.INCREASE_GARRISON.token().equals(token)) {
+                return token;
+            }
+            if (!garrison && BannerModGovernorRecommendation.STRENGTHEN_FORTIFICATIONS.token().equals(token)) {
+                return token;
+            }
+        }
+        return BannerModGovernorRecommendation.HOLD_COURSE.token();
     }
 
     public static void handleGroupBackwardCompatibility(AbstractRecruitEntity recruit, int oldGroupNumber) {

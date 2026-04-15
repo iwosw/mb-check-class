@@ -17,6 +17,11 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
     private int taxesDue;
     private int taxesCollected;
     private long lastHeartbeatTick;
+    private String garrisonRecommendation;
+    private String fortificationRecommendation;
+    private int garrisonPriority;
+    private int fortificationPriority;
+    private int taxPressure;
     private List<String> incidents;
     private List<String> recommendations;
 
@@ -26,17 +31,27 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
     public MessageToClientUpdateGovernorScreen(UUID recruit,
                                                String settlementStatus,
                                                int citizenCount,
-                                               int taxesDue,
-                                               int taxesCollected,
-                                               long lastHeartbeatTick,
-                                               List<String> incidents,
-                                               List<String> recommendations) {
+                                                int taxesDue,
+                                                int taxesCollected,
+                                                long lastHeartbeatTick,
+                                                String garrisonRecommendation,
+                                                String fortificationRecommendation,
+                                                int garrisonPriority,
+                                                int fortificationPriority,
+                                                int taxPressure,
+                                                List<String> incidents,
+                                                List<String> recommendations) {
         this.recruit = recruit;
         this.settlementStatus = settlementStatus;
         this.citizenCount = citizenCount;
         this.taxesDue = taxesDue;
         this.taxesCollected = taxesCollected;
         this.lastHeartbeatTick = lastHeartbeatTick;
+        this.garrisonRecommendation = garrisonRecommendation;
+        this.fortificationRecommendation = fortificationRecommendation;
+        this.garrisonPriority = garrisonPriority;
+        this.fortificationPriority = fortificationPriority;
+        this.taxPressure = taxPressure;
         this.incidents = incidents;
         this.recommendations = recommendations;
     }
@@ -48,7 +63,9 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
 
     @Override
     public void executeClientSide(NetworkEvent.Context context) {
-        GovernorScreen.applyUpdate(recruit, settlementStatus, citizenCount, taxesDue, taxesCollected, lastHeartbeatTick, incidents, recommendations);
+        GovernorScreen.applyUpdate(recruit, settlementStatus, citizenCount, taxesDue, taxesCollected, lastHeartbeatTick,
+                garrisonRecommendation, fortificationRecommendation, garrisonPriority, fortificationPriority, taxPressure,
+                incidents, recommendations);
     }
 
     @Override
@@ -59,6 +76,11 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
         this.taxesDue = buf.readInt();
         this.taxesCollected = buf.readInt();
         this.lastHeartbeatTick = buf.readLong();
+        this.garrisonRecommendation = buf.readUtf();
+        this.fortificationRecommendation = buf.readUtf();
+        this.garrisonPriority = buf.readInt();
+        this.fortificationPriority = buf.readInt();
+        this.taxPressure = buf.readInt();
         this.incidents = new ArrayList<>(buf.readList(FriendlyByteBuf::readUtf));
         this.recommendations = new ArrayList<>(buf.readList(FriendlyByteBuf::readUtf));
         return this;
@@ -72,6 +94,11 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
         buf.writeInt(this.taxesDue);
         buf.writeInt(this.taxesCollected);
         buf.writeLong(this.lastHeartbeatTick);
+        buf.writeUtf(this.garrisonRecommendation == null ? "" : this.garrisonRecommendation);
+        buf.writeUtf(this.fortificationRecommendation == null ? "" : this.fortificationRecommendation);
+        buf.writeInt(this.garrisonPriority);
+        buf.writeInt(this.fortificationPriority);
+        buf.writeInt(this.taxPressure);
         buf.writeCollection(this.incidents, FriendlyByteBuf::writeUtf);
         buf.writeCollection(this.recommendations, FriendlyByteBuf::writeUtf);
     }

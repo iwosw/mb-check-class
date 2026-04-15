@@ -1,0 +1,63 @@
+package com.talhanation.bannermod.network.messages.military;
+
+import com.talhanation.bannermod.events.RecruitEvents;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
+import de.maxhenkel.corelib.net.Message;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.Objects;
+import java.util.UUID;
+
+public class MessageUpdateGovernorPolicy implements Message<MessageUpdateGovernorPolicy> {
+    private UUID recruit;
+    private int policyOrdinal;
+    private int value;
+
+    public MessageUpdateGovernorPolicy() {
+    }
+
+    public MessageUpdateGovernorPolicy(UUID recruit, BannerModGovernorPolicy policy, int value) {
+        this.recruit = recruit;
+        this.policyOrdinal = policy.ordinal();
+        this.value = value;
+    }
+
+    @Override
+    public Dist getExecutingSide() {
+        return Dist.DEDICATED_SERVER;
+    }
+
+    @Override
+    public void executeServerSide(NetworkEvent.Context context) {
+        ServerPlayer player = Objects.requireNonNull(context.getSender());
+        BannerModGovernorPolicy[] policies = BannerModGovernorPolicy.values();
+        if (this.policyOrdinal < 0 || this.policyOrdinal >= policies.length) {
+            return;
+        }
+        BannerModGovernorPolicy policy = policies[this.policyOrdinal];
+        player.getCommandSenderWorld().getEntitiesOfClass(
+                AbstractRecruitEntity.class,
+                player.getBoundingBox().inflate(16.0D),
+                recruitEntity -> recruitEntity.getUUID().equals(this.recruit) && recruitEntity.isAlive()
+        ).forEach(recruitEntity -> RecruitEvents.updateGovernorPolicy(player, recruitEntity, policy, this.value));
+    }
+
+    @Override
+    public MessageUpdateGovernorPolicy fromBytes(FriendlyByteBuf buf) {
+        this.recruit = buf.readUUID();
+        this.policyOrdinal = buf.readInt();
+        this.value = buf.readInt();
+        return this;
+    }
+
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeUUID(this.recruit);
+        buf.writeInt(this.policyOrdinal);
+        buf.writeInt(this.value);
+    }
+}

@@ -24,6 +24,9 @@ public record BannerModGovernorSnapshot(
         int citizenCount,
         int taxesDue,
         int taxesCollected,
+        int garrisonPriority,
+        int fortificationPriority,
+        int taxPressure,
         List<String> incidentTokens,
         List<String> recommendationTokens
 ) {
@@ -53,6 +56,9 @@ public record BannerModGovernorSnapshot(
                 this.citizenCount,
                 this.taxesDue,
                 this.taxesCollected,
+                this.garrisonPriority,
+                this.fortificationPriority,
+                this.taxPressure,
                 this.incidentTokens,
                 this.recommendationTokens
         );
@@ -71,6 +77,30 @@ public record BannerModGovernorSnapshot(
                 this.citizenCount,
                 this.taxesDue,
                 this.taxesCollected,
+                this.garrisonPriority,
+                this.fortificationPriority,
+                this.taxPressure,
+                this.incidentTokens,
+                this.recommendationTokens
+        );
+    }
+
+    public BannerModGovernorSnapshot withPolicies(int garrisonPriority, int fortificationPriority, int taxPressure) {
+        return new BannerModGovernorSnapshot(
+                this.claimUuid,
+                this.anchorChunkX,
+                this.anchorChunkZ,
+                this.settlementFactionId,
+                this.governorRecruitUuid,
+                this.governorOwnerUuid,
+                this.lastHeartbeatTick,
+                this.lastCollectionTick,
+                this.citizenCount,
+                this.taxesDue,
+                this.taxesCollected,
+                BannerModGovernorPolicy.GARRISON_PRIORITY.clamp(garrisonPriority),
+                BannerModGovernorPolicy.FORTIFICATION_PRIORITY.clamp(fortificationPriority),
+                BannerModGovernorPolicy.TAX_PRESSURE.clamp(taxPressure),
                 this.incidentTokens,
                 this.recommendationTokens
         );
@@ -92,6 +122,9 @@ public record BannerModGovernorSnapshot(
                 citizenCount,
                 taxesDue,
                 taxesCollected,
+                this.garrisonPriority,
+                this.fortificationPriority,
+                this.taxPressure,
                 incidentTokens,
                 recommendationTokens
         );
@@ -116,6 +149,9 @@ public record BannerModGovernorSnapshot(
         tag.putInt("CitizenCount", this.citizenCount);
         tag.putInt("TaxesDue", this.taxesDue);
         tag.putInt("TaxesCollected", this.taxesCollected);
+        tag.putInt("GarrisonPriority", this.garrisonPriority);
+        tag.putInt("FortificationPriority", this.fortificationPriority);
+        tag.putInt("TaxPressure", this.taxPressure);
         tag.put("IncidentTokens", writeTokens(this.incidentTokens));
         tag.put("RecommendationTokens", writeTokens(this.recommendationTokens));
         return tag;
@@ -134,6 +170,9 @@ public record BannerModGovernorSnapshot(
                 0,
                 0,
                 0,
+                BannerModGovernorPolicy.DEFAULT_VALUE,
+                BannerModGovernorPolicy.DEFAULT_VALUE,
+                BannerModGovernorPolicy.DEFAULT_VALUE,
                 List.of(),
                 List.of()
         );
@@ -156,6 +195,9 @@ public record BannerModGovernorSnapshot(
                 tag.getInt("CitizenCount"),
                 tag.getInt("TaxesDue"),
                 tag.getInt("TaxesCollected"),
+                tag.contains("GarrisonPriority", Tag.TAG_INT) ? tag.getInt("GarrisonPriority") : BannerModGovernorPolicy.DEFAULT_VALUE,
+                tag.contains("FortificationPriority", Tag.TAG_INT) ? tag.getInt("FortificationPriority") : BannerModGovernorPolicy.DEFAULT_VALUE,
+                tag.contains("TaxPressure", Tag.TAG_INT) ? tag.getInt("TaxPressure") : BannerModGovernorPolicy.DEFAULT_VALUE,
                 readTokens(tag.getList("IncidentTokens", Tag.TAG_STRING)),
                 readTokens(tag.getList("RecommendationTokens", Tag.TAG_STRING))
         );
