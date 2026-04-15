@@ -436,7 +436,7 @@ Status: Complete (4/4 plans complete as of 2026-04-13); recruit and worker wrapp
 
 **Requirements:** [GOV-01, GOV-02, GOV-03, GOV-04]
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [x] 23-01-PLAN.md — Define the claim-keyed governor snapshot, pure rules, and persistence boundary before live runtime wiring begins.

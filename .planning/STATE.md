@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 23
-last_updated: "2026-04-15T16:06:41Z"
+last_updated: "2026-04-15T16:18:36Z"
 progress:
   total_phases: 31
   completed_phases: 15
   total_plans: 58
-  completed_plans: 57
+  completed_plans: 58
 ---
 
 # Project State
 
-- Current focus: Phase 23 is in progress. Plans 23-01 through 23-03 are complete and now provide the claim-keyed governor snapshot, pure legality rules, persistence manager, authority helper, snapshot-backed runtime assignment/revocation service, and heartbeat-driven local tax/advisory output for downstream UI and validation work. The root test tree still has 39 deferred compile errors outside governance scope that currently block targeted Gradle `test --tests ...` execution; Phase 23-04 is next.
+- Current focus: Phase 23 is in progress. Plans 23-01 through 23-04 are complete and now provide the claim-keyed governor snapshot, pure legality rules, persistence manager, authority helper, snapshot-backed runtime assignment/revocation service, heartbeat-driven local tax/advisory output, and the live governor promotion/control UI path. The root test tree still has 39 deferred compile errors outside governance scope that block full root `./gradlew test`; Phase 23-05 is next.
 - Runtime base: `recruits` (now merged in-place — single source root)
 - Active runtime mod: `bannermod`
 - Workers status: fully absorbed; civilian Java code lives under `bannermod.{entity,ai,client,inventory,items,persistence,registry,settlement}.civilian`; civilian network packets live under `bannermod.network.messages.civilian` at packet-ID offset = MILITARY_MESSAGES.length (104).
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/23-settlement-governance-and-governor-control/23-settlement-governance-and-governor-control-03-SUMMARY.md` (heartbeat-driven governor tax/advisory output and bounded claim-loop wiring)
+- Latest execution summary: `.planning/phases/23-settlement-governance-and-governor-control/23-settlement-governance-and-governor-control-04-SUMMARY.md` (live governor promotion plus packet-synced control UI and bounded policy toggles)
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 
 ## Decisions
@@ -166,6 +166,8 @@ progress:
 - [Phase 23]: Runtime designation and revocation mutate BannerModGovernorSnapshot records in BannerModGovernorManager rather than storing governor state on live claims.
 - [Phase 23]: Keep governor report payloads token-backed via enums so later snapshots and UI use one bounded vocabulary instead of free-form strings.
 - [Phase 23]: Run claim heartbeat work only on server tick END phase with an existing coarse cadence to avoid double-firing and scope creep into per-tick simulation.
+- [Phase 23-settlement-governance-and-governor-control]: Persist the three governor policy toggles on BannerModGovernorSnapshot so UI changes stay bounded and server authoritative.
+- [Phase 23-settlement-governance-and-governor-control]: Keep governor promotion on MessagePromoteRecruit and branch profession id 6 into designation instead of adding a second entrypoint.
 
 ## Accumulated Context
 
@@ -234,6 +236,7 @@ progress:
 | Phase 23-settlement-governance-and-governor-control P01 | 2 min | 2 tasks | 4 files |
 | Phase 23-settlement-governance-and-governor-control P02 | 13 min | 2 tasks | 4 files |
 | Phase 23-settlement-governance-and-governor-control P03 | 7 min | 2 tasks | 5 files |
+| Phase 23-settlement-governance-and-governor-control P04 | 8 min | 2 tasks | 11 files |
 
 ### Quick Tasks Completed
 
@@ -243,6 +246,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-15T16:06:41Z
-- Stopped at: Completed 23-03-PLAN.md
+- Last updated: 2026-04-15T16:18:36Z
+- Stopped at: Completed 23-04-PLAN.md
 - Resume file: None
