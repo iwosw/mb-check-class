@@ -1,8 +1,8 @@
 package com.talhanation.bannermod.bootstrap;
 
 import com.talhanation.recruits.client.events.CommandCategoryManager;
-import com.talhanation.workers.VillagerEvents;
-import com.talhanation.workers.CommandEvents;
+import com.talhanation.bannermod.events.WorkersVillagerEvents;
+import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.workers.client.events.ScreenEvents;
 import com.talhanation.workers.client.gui.WorkerCommandScreen;
 import com.talhanation.workers.world.StructureManager;
@@ -33,8 +33,8 @@ public class WorkersSubsystem {
     }
 
     public void registerCommon(IEventBus modEventBus) {
-        MinecraftForge.EVENT_BUS.register(new VillagerEvents());
-        MinecraftForge.EVENT_BUS.register(new CommandEvents());
+        MinecraftForge.EVENT_BUS.register(new WorkersVillagerEvents());
+        MinecraftForge.EVENT_BUS.register(new WorkersCommandEvents());
     }
 
     public void registerRuntimeListeners() {

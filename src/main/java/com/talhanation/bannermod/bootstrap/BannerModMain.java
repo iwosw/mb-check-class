@@ -1,9 +1,9 @@
 package com.talhanation.bannermod.bootstrap;
 
 import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
-import com.talhanation.workers.VillagerEvents;
-import com.talhanation.workers.CommandEvents;
-import com.talhanation.workers.UpdateChecker;
+import com.talhanation.bannermod.events.WorkersVillagerEvents;
+import com.talhanation.bannermod.events.WorkersCommandEvents;
+import com.talhanation.bannermod.WorkersUpdateChecker;
 import com.talhanation.workers.client.events.ScreenEvents;
 import com.talhanation.workers.config.WorkersServerConfig;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -89,11 +89,11 @@ public class BannerModMain {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void setup(final FMLCommonSetupEvent event) {
         // Workers runtime events
-        MinecraftForge.EVENT_BUS.register(new VillagerEvents());
-        MinecraftForge.EVENT_BUS.register(new CommandEvents());
+        MinecraftForge.EVENT_BUS.register(new WorkersVillagerEvents());
+        MinecraftForge.EVENT_BUS.register(new WorkersCommandEvents());
         MinecraftForge.EVENT_BUS.register(this);
         if (MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers()) {
-            MinecraftForge.EVENT_BUS.register(new UpdateChecker());
+            MinecraftForge.EVENT_BUS.register(new WorkersUpdateChecker());
         }
 
         // Create shared channel; recruits at [0..N), workers at [N..N+M)
