@@ -4,13 +4,13 @@
 
 ### Build Verification
 
-- `compileJava` compiles the merged root source sets: `src/main/java`, `recruits/src/main/java`, and `workers/src/main/java`.
-- `processResources` merges root, recruits, and workers resources into the single root artifact.
+- `compileJava` now compiles the retired root source set only: `src/main/java`.
+- `processResources` now reads from vendored root resources under `src/main/resources` and `src/generated/resources`, including the copied recruit and worker assets that used to live only under legacy source roots.
 - `verifyBuildStage` wraps the build stage used by `check`.
 
 ### Unit / Regression Verification
 
-- `test` runs root JUnit 5 coverage from `src/test/java`, `recruits/src/test/java`, and `workers/src/test/java`.
+- `test` now runs root JUnit 5 coverage from `src/test/java`, which includes the vendored recruit and worker regression suites.
 - Current root smoke/regression coverage includes:
   - BannerMod runtime identity plus worker subsystem seam alignment in one root merged-runtime smoke test
   - shared BannerMod authority vocabulary for inspect, modify, create, and recover-control decisions
@@ -29,10 +29,16 @@
 
 ### GameTest Verification
 
-- Root `gametest` source set is wired in `build.gradle` and exposed through `runGameTestServer`.
+- Root `gametest` source set is wired in `build.gradle` and now resolves from vendored root paths under `src/gametest/**` only.
 - `verifyGameTestStage` depends on `runGameTestServer`.
 - Root `gametest` now includes a split BannerMod validation suite under `src/gametest/java/com/talhanation/bannermod/`: `IntegratedRuntimeGameTests.java` for merged runtime smoke, `BannerModOwnershipCycleGameTests.java` for shared-ownership boundaries, `BannerModSettlementLaborGameTests.java` for owned work-area participation plus outsider recovery denial, `BannerModUpkeepFlowGameTests.java` for same-owner supply-to-upkeep transitions, `BannerModPlayerCycleGameTests.java` for one stitched ownership→labor→upkeep→recovery gameplay loop, `BannerModDedicatedServerAuthorityGameTests.java` for offline-owner and unresolved-owner authority denial, `BannerModDedicatedServerReconnectGameTests.java` for reconnect and persistence-safe ownership recovery, `BannerModMultiplayerAuthorityConflictGameTests.java` for live owner-versus-outsider contention, and `BannerModMultiplayerCooperationGameTests.java` for same-team cooperation with outsider regressions.
-- `./gradlew verifyGameTestStage` is currently green with 36 required tests.
+- The last fully green pre-retirement GameTest baseline was `./gradlew verifyGameTestStage` with 36 required tests before plan 21-05 removed the legacy source-root wiring.
+
+### Current Phase 21 Retirement Gate Status
+
+- `build.gradle` no longer composes Java, test, or resource inputs from `recruits/` or `workers/` source roots.
+- The root tree now vendors the recruit and worker resources, retained JUnit suites, and retained recruit GameTest harness assets under `src/**`.
+- `./gradlew compileJava` is still blocked by retained recruit↔bannerlord compatibility mismatches in moved military/shared classes (for example `AbstractRecruitEntity`, `FactionEvents`, `RecruitEvents`, and related persistence/client seams). Until those type mismatches are fixed, treat `processResources`, `test`, and `verifyGameTestStage` as pending follow-up gates rather than green retirement evidence.
 
 ### Phase 11 Profiling Baseline
 
