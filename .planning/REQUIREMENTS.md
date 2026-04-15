@@ -51,7 +51,7 @@
 
 - [x] GOV-01 — Settlement governance state exists as one explicit persisted claim-keyed seam with pure legality rules before live governor assignment, heartbeat, or UI wiring lands.
 - [x] GOV-02 — Governor designation and revocation route through authority-safe runtime services over existing recruit or citizen identities.
-- [ ] GOV-03 — Governed claims publish bounded local tax, incident, and recommendation output without widening into treasury or logistics rewrites.
+- [x] GOV-03 — Governed claims publish bounded local tax, incident, and recommendation output without widening into treasury or logistics rewrites.
 - [ ] GOV-04 — Governor control is validated through focused GameTests and player-facing UI flows over the real server-side governance snapshot.
 
 ## Active Phase 31 Requirements
