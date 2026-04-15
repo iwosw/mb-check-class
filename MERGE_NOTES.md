@@ -243,3 +243,44 @@ Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{a
 **sed invocations used (inner bannermod tree):**
 - `com.talhanation.recruits.init.` → `com.talhanation.bannermod.registry.military.` — no surviving references found in outer bannermod tree (registry holders reference the new package directly).
 - `com.talhanation.workers.init.` → `com.talhanation.bannermod.registry.civilian.` — fixed in `bannermod.bootstrap.WorkersSubsystem` (static imports retargeted).
+
+### Wave 4 — events + commands + config migration (authored by 21-04)
+
+**What moved to outer repo `src/main/java/com/talhanation/bannermod/`:**
+
+- `bannermod.events.{RecruitEvents,FactionEvents,ClaimEvents,CommandEvents,VillagerEvents,PillagerEvents,AssassinEvents,DamageEvent,DebugEvents,AttributeEvent}` — copied from `recruits/` top-level; package line rewritten to `bannermod.events`.
+- `bannermod.events.{WorkersVillagerEvents,WorkersCommandEvents,WorkersAttributeEvent}` — copied from `workers/` top-level; renamed with `Workers` prefix to avoid collision with recruit counterparts; `WorkersMain.MOD_ID` references replaced with FQN `BannerModMain.MOD_ID`.
+- `bannermod.UpdateChecker` — copied from `recruits/UpdateChecker.java`; package rewritten.
+- `bannermod.WorkersUpdateChecker` — copied from `workers/UpdateChecker.java`; package + class name rewritten to `WorkersUpdateChecker`.
+- `bannermod.Translatable` — copied from `workers/Translatable.java`; package rewritten.
+- `bannermod.commands.military.{PatrolSpawnCommand,RecruitsAdminCommands}` — copied from `recruits/commands/`; package rewritten to `bannermod.commands.military`; `recruits.ClaimEvents/RecruitEvents/FactionEvents` imports retargeted to `bannermod.events.*`.
+- `bannermod.config.{RecruitsClientConfig,RecruitsServerConfig}` — copied from `recruits/config/`; package rewritten; no collision with existing `BannerModConfigFiles`.
+- `bannermod.config.WorkersServerConfig` — copied from `workers/config/`; package rewritten; no collision.
+
+**Naming collisions resolved:**
+- `workers.VillagerEvents` vs `recruits.VillagerEvents` → workers version renamed `WorkersVillagerEvents`.
+- `workers.CommandEvents` vs `recruits.CommandEvents` → workers version renamed `WorkersCommandEvents`.
+- `workers.AttributeEvent` vs `recruits.AttributeEvent` → workers version renamed `WorkersAttributeEvent`.
+- `workers.UpdateChecker` vs `recruits.UpdateChecker` → workers version renamed `WorkersUpdateChecker`.
+- `bannermod.config.WorkersServerConfig` vs existing `bannermod.config.BannerModConfigFiles` → no collision (different class names); both coexist.
+
+**What was deleted from clones:**
+- `recruits/`: `{RecruitEvents,FactionEvents,ClaimEvents,CommandEvents,VillagerEvents,PillagerEvents,AssassinEvents,DamageEvent,DebugEvents,AttributeEvent,UpdateChecker}.java` — git-removed in recruits clone commit `bca0a039`.
+- `recruits/commands/`: `{PatrolSpawnCommand,RecruitsAdminCommands}.java` — git-removed in recruits clone commit `afaccc39`.
+- `recruits/config/`: `{RecruitsClientConfig,RecruitsServerConfig}.java` — git-removed in recruits clone commit `afaccc39`.
+- `workers/`: `{VillagerEvents,CommandEvents,AttributeEvent,UpdateChecker,Translatable}.java` — git-removed in workers clone commit `1a229ff`.
+- `workers/config/`: `WorkersServerConfig.java` — git-removed in workers clone commit `990ddc5`.
+
+**BannerModMain updates:**
+- Imports for `WorkersVillagerEvents`, `WorkersCommandEvents`, `WorkersUpdateChecker` retargeted to `bannermod.events.*` / `bannermod.*`.
+- Import for `WorkersServerConfig` retargeted to `bannermod.config.*`.
+- Added imports and `registerConfig` calls for `RecruitsClientConfig` (CLIENT) and `RecruitsServerConfig` (SERVER).
+- `onRegisterCommands` stub filled with `PatrolSpawnCommand.register()` and `RecruitsAdminCommands.register()`.
+- `WorkersSubsystem`: `VillagerEvents`/`CommandEvents` imports retargeted to `bannermod.events.Workers*`.
+
+**sed invocations used (inner bannermod tree):**
+- `com.talhanation.recruits.config.` → `com.talhanation.bannermod.config.` — applied across all files in `bannermod/` tree.
+- `com.talhanation.workers.config.` → `com.talhanation.bannermod.config.` — applied across all files in `bannermod/` tree.
+- `com.talhanation.recruits.ClaimEvents` → `com.talhanation.bannermod.events.ClaimEvents` — fixed in `WorkersVillagerEvents.java` and `commands/military/RecruitsAdminCommands.java`.
+
+**Note on clone callers:** Files in `recruits/network/`, `recruits/pathfinding/`, `recruits/client/` etc. still import `com.talhanation.recruits.config.*` (now deleted). Per D-22, compile is not required to be clean between waves. These are addressed in waves 21-05..21-09.

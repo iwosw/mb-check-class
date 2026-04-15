@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.events;
 
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.entities.*;
 import com.talhanation.recruits.entities.ai.villager.VillagerBecomeNobleGoal;
 import com.talhanation.recruits.init.ModBlocks;

@@ -2,7 +2,7 @@ package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.governance.BannerModGovernorHeartbeat;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.entities.VillagerNobleEntity;
 import com.talhanation.recruits.util.ClaimUtil;

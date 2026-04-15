@@ -12,7 +12,7 @@ import com.talhanation.workers.init.ModEntityTypes;
 import com.talhanation.recruits.world.RecruitsHireTradesRegistry;
 import com.talhanation.workers.network.MessageToClientUpdateConfig;
 import com.talhanation.recruits.world.RecruitsHireTrade;
-import com.talhanation.workers.config.WorkersServerConfig;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.network.chat.Component;

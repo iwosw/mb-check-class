@@ -1,7 +1,7 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.config.RecruitsClientConfig;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsClientConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;

@@ -4,7 +4,7 @@ import com.talhanation.bannermod.governance.BannerModGovernorService;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.compat.IWeapon;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.util.DelayedExecutor;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.entities.ICompanion;

@@ -5,7 +5,11 @@ import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.WorkersUpdateChecker;
 import com.talhanation.workers.client.events.ScreenEvents;
-import com.talhanation.workers.config.WorkersServerConfig;
+import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
+import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
+import com.talhanation.bannermod.config.RecruitsClientConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -44,6 +48,9 @@ public class BannerModMain {
     public BannerModMain() {
         final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
+        // Register recruits configs
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER);
         // Register workers config
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER);
 
@@ -83,7 +90,8 @@ public class BannerModMain {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        // Commands registered in wave 4
+        PatrolSpawnCommand.register(event.getDispatcher());
+        RecruitsAdminCommands.register(event.getDispatcher());
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
