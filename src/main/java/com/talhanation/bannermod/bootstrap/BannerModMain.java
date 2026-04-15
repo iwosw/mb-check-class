@@ -48,11 +48,13 @@ public class BannerModMain {
     public BannerModMain() {
         final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
-        // Register recruits configs
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER);
+        // Register recruits configs (explicit filenames avoid SERVER filename collision in ConfigTracker;
+        // default `<modid>-<type>.toml` would make both SERVER specs resolve to `bannermod-server.toml`
+        // and throw `Config conflict detected!` at ConfigTracker.trackConfig. See 21-10-PLAN.md.)
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT, "bannermod-recruits-client.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER, "bannermod-recruits-server.toml");
         // Register workers config
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER, "bannermod-workers-server.toml");
 
         // Lifecycle
         modEventBus.addListener(this::setup);
