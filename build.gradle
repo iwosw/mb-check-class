@@ -47,19 +47,21 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 // The repository builds from one root Gradle entrypoint that composes the merged runtime.
 sourceSets {
     main {
-        java.srcDirs = ['src/main/java']
+        java.srcDirs = ['src/main/java', 'recruits/src/main/java', 'workers/src/main/java']
         resources.srcDirs = [
             'src/main/resources',
-            'src/generated/resources'
+            'src/generated/resources',
+            'recruits/src/main/resources',
+            'recruits/src/generated/resources'
         ]
     }
     test {
-        java.srcDirs = ['src/test/java']
-        resources.srcDirs = ['src/test/resources']
+        java.srcDirs = ['src/test/java', 'recruits/src/test/java', 'workers/src/test/java']
+        resources.srcDirs = ['src/test/resources', 'recruits/src/test/resources']
     }
     gametest {
-        java.srcDirs = ['src/gametest/java']
-        resources.srcDirs = ['src/gametest/resources']
+        java.srcDirs = ['src/gametest/java', 'recruits/src/gametest/java']
+        resources.srcDirs = ['src/gametest/resources', 'recruits/src/gametest/resources']
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath + sourceSets.main.runtimeClasspath
         runtimeClasspath += output + compileClasspath
     }
@@ -127,7 +129,7 @@ minecraft {
 
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            args '--mod', 'bannermod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', 'bannermod', '--all', '--output', file('src/generated/resources/'), '--existing', file('recruits/src/main/resources/')
 
             mods {
                 'bannermod' {
@@ -239,22 +241,22 @@ tasks.register('mergeStatus') {
 tasks.named('processResources') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    from('src/main/resources') {
+    from('workers/src/main/resources') {
         exclude 'META-INF/mods.toml'
         exclude 'META-INF/accesstransformer.cfg'
         exclude 'pack.mcmeta'
         exclude 'logo.png'
     }
-    from('src/main/resources/assets/workers/textures/gui') {
+    from('workers/src/main/resources/assets/workers/textures/gui') {
         into 'assets/bannermod/textures/gui/workers'
     }
-    from('src/main/resources/assets/workers/models') {
+    from('workers/src/main/resources/assets/workers/models') {
         into 'assets/bannermod/models'
     }
-    from('src/main/resources/assets/workers/structures') {
+    from('workers/src/main/resources/assets/workers/structures') {
         into 'assets/bannermod/structures/workers'
     }
-    from('src/generated/resources')
+    from('workers/src/generated/resources')
 }
 
 
