@@ -3,7 +3,7 @@ package com.talhanation.bannermod.entity.military;
 import com.talhanation.recruits.Main;
 import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.ai.military.controller.IAttackController;
-import com.talhanation.recruits.inventory.PatrolLeaderContainer;
+import com.talhanation.bannermod.inventory.military.PatrolLeaderContainer;
 import com.talhanation.recruits.network.MessageOpenSpecialScreen;
 import com.talhanation.recruits.network.MessageToClientUpdateLeaderScreen;
 import com.talhanation.bannermod.util.FormationUtils;
@@ -694,14 +694,14 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
     }
 
     @Deprecated
-    public void loadRouteWaypoints(com.talhanation.recruits.world.RecruitsRoute route) {
+    public void loadRouteWaypoints(com.talhanation.bannermod.persistence.military.RecruitsRoute route) {
         if (route == null) return;
         java.util.List<BlockPos> positions = new java.util.ArrayList<>();
         java.util.List<Integer>  waits     = new java.util.ArrayList<>();
-        for (com.talhanation.recruits.world.RecruitsRoute.Waypoint wp : route.getWaypoints()) {
+        for (com.talhanation.bannermod.persistence.military.RecruitsRoute.Waypoint wp : route.getWaypoints()) {
             positions.add(wp.getPosition());
             waits.add(wp.getAction() != null
-                    && wp.getAction().getType() == com.talhanation.recruits.world.RecruitsRoute.WaypointAction.Type.WAIT
+                    && wp.getAction().getType() == com.talhanation.bannermod.persistence.military.RecruitsRoute.WaypointAction.Type.WAIT
                     ? wp.getAction().getWaitSeconds() : 0);
         }
         loadRouteWaypointsFromData(positions, waits);

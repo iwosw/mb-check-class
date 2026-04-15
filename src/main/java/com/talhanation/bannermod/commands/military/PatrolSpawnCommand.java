@@ -2,8 +2,8 @@ package com.talhanation.bannermod.commands.military;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.talhanation.recruits.world.PillagerPatrolSpawn;
-import com.talhanation.recruits.world.RecruitsPatrolSpawn;
+import com.talhanation.bannermod.persistence.military.PillagerPatrolSpawn;
+import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.world.entity.monster.Pillager;

@@ -6,7 +6,7 @@ import com.talhanation.bannermod.client.military.gui.faction.*;
 import com.talhanation.recruits.entities.AbstractLeaderEntity;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.entities.AssassinLeaderEntity;
-import com.talhanation.recruits.inventory.*;
+import com.talhanation.bannermod.inventory.military.*;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;

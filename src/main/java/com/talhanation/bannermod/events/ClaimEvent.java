@@ -1,6 +1,6 @@
 package com.talhanation.recruits;
 
-import com.talhanation.recruits.world.RecruitsClaim;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.eventbus.api.Cancelable;
 import net.minecraftforge.eventbus.api.Event;
@@ -52,7 +52,7 @@ public abstract class ClaimEvent extends Event {
      *
      * <p>Cancelable: {@code setCanceled(true)} verhindert das Speichern der Änderung.</p>
      *
-     * @see com.talhanation.recruits.world.RecruitsClaimManager#addOrUpdateClaim(ServerLevel, RecruitsClaim)
+     * @see com.talhanation.bannermod.persistence.military.RecruitsClaimManager#addOrUpdateClaim(ServerLevel, RecruitsClaim)
      */
     @Cancelable
     public static class Updated extends ClaimEvent {
@@ -76,7 +76,7 @@ public abstract class ClaimEvent extends Event {
      * Wird gefeuert, kurz bevor ein Claim vollständig entfernt wird.
      * Zu diesem Zeitpunkt existiert der Claim noch im Manager.
      *
-     * @see com.talhanation.recruits.world.RecruitsClaimManager#removeClaim(RecruitsClaim)
+     * @see com.talhanation.bannermod.persistence.military.RecruitsClaimManager#removeClaim(RecruitsClaim)
      */
     public static class Removed extends ClaimEvent {
         public Removed(RecruitsClaim claim, ServerLevel level) {

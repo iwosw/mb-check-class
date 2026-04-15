@@ -2,7 +2,7 @@ package com.talhanation.bannermod.registry.military;
 
 import com.google.common.collect.Lists;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.recruits.items.RecruitsSpawnEgg;
+import com.talhanation.bannermod.items.military.RecruitsSpawnEgg;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;

@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.shared.settlement;
 
-import com.talhanation.recruits.world.RecruitsClaim;
-import com.talhanation.recruits.world.RecruitsClaimManager;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 

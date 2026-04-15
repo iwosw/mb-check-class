@@ -5,7 +5,7 @@ import com.talhanation.recruits.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitRangedCrossbowAttackGoal;
 import com.talhanation.bannermod.ai.military.compat.RecruitRangedMusketAttackGoal;
-import com.talhanation.recruits.world.RecruitsPatrolSpawn;
+import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;

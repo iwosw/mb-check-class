@@ -6,7 +6,7 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.entities.VillagerNobleEntity;
 import com.talhanation.bannermod.util.ClaimUtil;
-import com.talhanation.recruits.world.*;
+import com.talhanation.bannermod.persistence.military.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;

@@ -326,3 +326,47 @@ Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{a
 - Partial `recruits/init/` residue (empty or near-empty after 21-03) should be pruned when the clone source set is retired.
 
 **Clone test/gametest note:** Two test files (`recruits/src/test/java/com/talhanation/recruits/pathfinding/{AsyncPathProcessorTest,GlobalPathfindingControllerTest}.java`) still declare `package com.talhanation.recruits.pathfinding;`. Their in-tree package declaration is valid for the clone's own test source root; they survived the migration because test-tree Java lives under the clone's own `src/test/java` root. Their FQN imports have been rewritten to point at the new `bannermod.*` types. If 21-09 retires the clone source set, these tests move with the rest of the clone or are deleted.
+
+### Wave 6 — military UI, inventory, persistence, items migration (authored by 21-06)
+
+**What moved to outer repo `src/main/java/com/talhanation/bannermod/`:**
+
+- `bannermod.client.military.**` — 107 files copied from `recruits/client/` preserving subpackage shape (`api/`, `events/`, `gui/**`, `models/`, `render/**`). Subpackages: `api` (3), `events` (5), `gui` (31 direct + `commandscreen/` 3, `component/` 4, `diplomacy/` 5, `faction/` 10, `group/` 10, `overlay/` 2, `player/` 4, `widgets/` 11, `worldmap/` 11), `models` (1), `render` (2 + `layer/` 8).
+- `bannermod.inventory.military.**` — 11 files from `recruits/inventory/`: AssassinLeaderMenu, CommandMenu, DebugInvMenu, DisbandContainer, GovernorContainer, PatrolLeaderContainer, PromoteContainer, RecruitHireMenu, RecruitInventoryMenu, RecruitSimpleContainer, TeamEditMenu.
+- `bannermod.persistence.military.**` — 22 files from `recruits/world/`: PillagerPatrolSpawn, RecruitPlayerUnitSaveData, RecruitsClaim, RecruitsClaimManager, RecruitsClaimSaveData, RecruitsDiplomacyManager, RecruitsDiplomacySaveData, RecruitsFaction, RecruitsFactionManager, RecruitsGroup, RecruitsGroupsManager, RecruitsGroupsSaveData, RecruitsHireTrade, RecruitsHireTradesRegistry, RecruitsPatrolSpawn, RecruitsPlayerInfo, RecruitsPlayerUnitManager, RecruitsRoute, RecruitsSavedDataFacade, RecruitsTeamSaveData, RecruitsTreatyManager, RecruitsTreatySaveData.
+- `bannermod.items.military.**` — 2 files from `recruits/items/`: HeldBannerItem, RecruitsSpawnEgg.
+
+**What was deleted from clones:**
+- `recruits/client/**` — git-removed in recruits clone commit `43dc9c9c` (107 files).
+- `recruits/inventory/`, `recruits/world/`, `recruits/items/` — git-removed in recruits clone commit `7fb407d4` (35 files).
+
+**sed invocations used (compound pass across all four new outer subtrees):**
+1. Package declaration: `s|^package com.talhanation.recruits.{client|inventory|world|items}.*;|package com.talhanation.bannermod.{client.military|inventory.military|persistence.military|items.military};|`
+2. Cross-ref rewrites applied to new subtrees and full bannermod outer tree:
+   - `recruits.client.` → `bannermod.client.military.`
+   - `recruits.inventory.` → `bannermod.inventory.military.`
+   - `recruits.world.` → `bannermod.persistence.military.`
+   - `recruits.items.` → `bannermod.items.military.`
+   - `recruits.entities.ai.` → `bannermod.ai.military.`
+   - `recruits.entities.` → `bannermod.entity.military.`
+   - `recruits.events.` → `bannermod.events.`
+   - `recruits.util.` → `bannermod.util.`
+   - `recruits.init.` → `bannermod.registry.military.`
+   - `import com.talhanation.recruits.Main;` → `import com.talhanation.bannermod.bootstrap.BannerModMain;`
+   - Top-level event imports: `recruits.{FactionEvents,RecruitEvents,ClaimEvents,ClaimEvent,SiegeEvent,DiplomacyEvent}` → `bannermod.events.*`
+3. Clone-side FQN rewrites applied to `recruits/src/{main,test}/java/**` for the same nine substitutions above.
+
+**Remaining recruits.* references (expected per D-22):**
+- `recruits.network.*` — 40 imports in client/military GUIs, 0+ in other new trees. Network migration deferred to Wave 8.
+
+**Remaining clone working-tree inventory after Wave 6:**
+- `recruits/src/main/java/com/talhanation/recruits/Main.java` — `@Deprecated` shim (no `@Mod`), carries forward static fields from `BannerModMain`.
+- `recruits/src/main/java/com/talhanation/recruits/init/ModLifecycleRegistrar.java` — `@Deprecated` stub (residual from Wave 3).
+- `recruits/src/main/java/com/talhanation/recruits/network/**` — 109 network message files (Wave 8 scope).
+
+**BannerModMain.clientSetup() updated:**
+- `com.talhanation.recruits.client.events.CommandCategoryManager` → `com.talhanation.bannermod.client.military.events.CommandCategoryManager`
+
+**Flagged for 21-09 (carried from Wave 5):**
+- Old `mixins.recruits.json` Gradle config entry still dangling.
+- `recruits/init/ModLifecycleRegistrar.java` stub — prune when clone source set is retired.

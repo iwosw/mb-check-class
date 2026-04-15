@@ -2,7 +2,7 @@ package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.config.RecruitsServerConfig;
-import com.talhanation.recruits.inventory.AssassinLeaderMenu;
+import com.talhanation.bannermod.inventory.military.AssassinLeaderMenu;
 import com.talhanation.recruits.network.MessageAssassinGui;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import net.minecraft.nbt.CompoundTag;

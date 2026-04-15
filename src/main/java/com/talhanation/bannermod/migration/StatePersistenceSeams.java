@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.migration;
 
-import com.talhanation.recruits.world.RecruitsClaim;
-import com.talhanation.recruits.world.RecruitsRoute;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 
 import javax.annotation.Nullable;
 import java.util.List;

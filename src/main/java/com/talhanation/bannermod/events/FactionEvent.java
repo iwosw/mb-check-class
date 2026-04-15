@@ -1,6 +1,6 @@
 package com.talhanation.recruits;
 
-import com.talhanation.recruits.world.RecruitsFaction;
+import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.eventbus.api.Cancelable;

@@ -4,7 +4,7 @@ import com.talhanation.recruits.Main;
 import com.talhanation.recruits.FactionEvents;
 import com.talhanation.bannermod.compat.Corpse;
 import com.talhanation.recruits.config.RecruitsServerConfig;
-import com.talhanation.recruits.inventory.RecruitSimpleContainer;
+import com.talhanation.bannermod.inventory.military.RecruitSimpleContainer;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
