@@ -98,17 +98,11 @@
 
 ## Current Root Layout Notes
 
-- Root `build.gradle` now compiles only vendored root source sets under `src/**`; it no longer composes Java, test, or resource inputs directly from `recruits/` or `workers/`.
+- Root build compiles the Recruits base source tree plus the merged Workers runtime slice.
 - Workers registries, client setup, menus, event listeners, and packets now bootstrap through the root `bannermod` runtime entrypoint.
-- Legacy `recruits/` and `workers/` trees remain physically present only as preserved archive/reference copies outside the active root build inputs.
+- Legacy source trees remain physically present in `recruits/` and `workers/`.
 - Legacy planning trees were moved to root archives.
 - Archived standalone Workers build and metadata now live under `.planning_legacy_workers/standalone-build/` and `.planning_legacy_workers/standalone-metadata/`.
-
-## Source-Root Retirement Reality Check
-
-- Phase 21 wave 5 has retired the active build wiring away from `recruits/src/**` and `workers/src/**` by vendoring the remaining resources, retained JUnit suites, and retained recruit GameTest harness inputs into root `src/**`.
-- The final validation gate is not green yet: `./gradlew compileJava` still fails on retained recruit↔bannerlord compatibility mismatches in shared military/persistence/client seams after the source-root wiring was removed.
-- Current root truth is therefore: source-root retirement is structurally in place, but Phase 21 cannot be claimed complete until those compatibility mismatches are resolved and the root validation commands run green from the retired layout.
 
 ## Metadata Alignment Notes
 

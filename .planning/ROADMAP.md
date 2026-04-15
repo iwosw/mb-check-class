@@ -377,7 +377,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 4/5 plans executed in practice; the final closeout plan is validating the retired root-only source layout and documenting the remaining blockers truthfully.
+**Plans:** 3/5 plans executed
 
 Plans:
 - [x] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.
@@ -388,7 +388,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/`.
 
-Status: In progress (4/5 implementation plans landed as of 2026-04-15); waves 1-4 now live under the root `src/main/java/**` tree, `build.gradle` no longer composes Java/test/resource inputs from `recruits/` or `workers/`, and the remaining Phase 21 work is to close the root validation gap caused by retained recruit↔bannerlord compatibility mismatches before the phase can be marked complete.
+Status: In progress (2/5 plans complete as of 2026-04-14); wave 1 shared/config seams and wave 2 bootstrap/network/registry ownership now live under `src/main/java/com/talhanation/bannerlord/**`, while later Phase 21 waves still need gameplay-package moves and source-root retirement work.
 
 ## Phase 22: Citizen Role Unification
 

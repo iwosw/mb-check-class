@@ -13,11 +13,11 @@ progress:
 
 # Project State
 
-- Current focus: Phase 21 is in progress; waves 1-4 are materially landed, the root build now vendors active Java/test/resource inputs under `src/**`, and plan 21-05 is documenting the remaining recruit↔bannerlord compatibility mismatches that still block a fully green post-retirement validation gate.
+- Current focus: Phase 21 is in progress; waves 1-3 are complete and the shared seams plus bootstrap/network/registry composition and recruit-owned control foundations now have canonical `com.talhanation.bannerlord` homes while worker-package and source-root retirement waves remain.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
-- Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids publish under `bannermod`, worker gameplay ownership is rooted under `bannerlord`, and legacy `workers/` content is now archive-only input after root vendoring.
-- Pending major work: Clear the retained recruit↔bannerlord type mismatches so root `compileJava`, `processResources`, `test`, and `verifyGameTestStage` can all run green against the retired root-only source layout.
+- Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
+- Pending major work: Continue Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, next by shrinking the remaining compatibility boundary and clearing deferred compile blockers before final source-root retirement.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-04-SUMMARY.md` (plan 21-05 is the active follow-up for source-root retirement validation)
+- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-04-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 
 ## Decisions
@@ -158,7 +158,6 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Worker civilian gameplay classes now live under src/main/java/com/talhanation/bannerlord/{entity,ai,persistence,client}/civilian/** while workers/** is reduced to compatibility-facing surfaces.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Legacy worker runtime helpers moved into src/main/java/com/talhanation/bannerlord/compat/workers/**, with only a thin deprecated workers.WorkersRuntime adapter retained during staged source-root retirement.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Worker storage and courier code now compiles against narrow temporary BannerMod logistics compatibility types until the dedicated logistics backbone phase replaces them.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: The root build now vendors active Java, unit-test, GameTest, and resource inputs under `src/**`, and `build.gradle` no longer composes code or tests directly from `recruits/` or `workers/` source roots.
 
 ## Accumulated Context
 
