@@ -1,10 +1,6 @@
 package com.talhanation.bannermod.gametest.support;
 
 import com.talhanation.bannermod.events.RecruitEvents;
-import com.talhanation.bannermod.ai.military.FormationTargetSelectionController;
-import com.talhanation.bannermod.entity.military.AbstractRecruitEntity.TargetSearchProfilingSnapshot;
-import com.talhanation.bannermod.ai.pathfinding.GlobalPathfindingController;
-import com.talhanation.bannermod.ai.pathfinding.AsyncPathProcessor.ProfilingSnapshot;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.BowmanEntity;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
@@ -150,55 +146,6 @@ public final class RecruitsBattleGameTestSupport {
         helper.runAfterDelay(delay, assertions);
     }
 
-    public static BattleProfilingSnapshot captureProfilingSnapshot(GameTestHelper helper, String scenarioId, int warmupTicks) {
-        return new BattleProfilingSnapshot(
-                scenarioId,
-                helper.getLevel().getGameTime(),
-                warmupTicks,
-                AbstractRecruitEntity.targetSearchProfilingSnapshot(),
-                com.talhanation.bannermod.ai.pathfinding.AsyncPathProcessor.profilingSnapshot(),
-                GlobalPathfindingController.profilingSnapshot(),
-                FormationTargetSelectionController.profilingSnapshot()
-        );
-    }
-
-    public static String formatProfilingSnapshot(BattleProfilingSnapshot snapshot) {
-        return "scenario=" + snapshot.scenarioId()
-                + ", tick=" + snapshot.captureGameTime()
-                + ", warmupTicks=" + snapshot.warmupTicks()
-                + ", targetSearches=" + snapshot.targetSearch().totalSearches()
-                + ", asyncSearches=" + snapshot.targetSearch().asyncSearches()
-                + ", syncSearches=" + snapshot.targetSearch().syncSearches()
-                + ", observedCandidates=" + snapshot.targetSearch().candidateEntitiesObserved()
-                + ", assignedTargets=" + snapshot.targetSearch().targetsAssigned()
-                + ", pathQueueSubmissions=" + snapshot.pathfinding().queueSubmissions()
-                + ", pathSyncFallbacks=" + snapshot.pathfinding().syncFallbacks()
-                + ", pathAwaitCalls=" + snapshot.pathfinding().awaitCalls()
-                + ", pathDeliveries=" + snapshot.pathfinding().deliveredPaths()
-                + ", nullPathDeliveries=" + snapshot.pathfinding().deliveredNullPaths()
-                + ", controllerRequests=" + snapshot.controller().totalRequests()
-                + ", controllerBlockRequests=" + snapshot.controller().blockTargetRequests()
-                + ", controllerEntityRequests=" + snapshot.controller().entityTargetRequests()
-                + ", controllerAsyncEnabled=" + snapshot.controller().asyncEnabledRequests()
-                + ", controllerAsyncDisabled=" + snapshot.controller().asyncDisabledRequests()
-                + ", controllerTargetPositions=" + snapshot.controller().targetPositionsObserved()
-                + ", controllerReuseAttempts=" + snapshot.controller().reuseAttempts()
-                + ", controllerReuseHits=" + snapshot.controller().reuseHits()
-                + ", controllerReuseMisses=" + snapshot.controller().reuseMisses()
-                + ", controllerReuseMissesNoCandidate=" + snapshot.controller().reuseMissesNoCandidate()
-                + ", controllerReuseDropsNull=" + snapshot.controller().reuseDropsNullCandidate()
-                + ", controllerReuseDropsUnprocessed=" + snapshot.controller().reuseDropsUnprocessedCandidate()
-                + ", controllerReuseDropsDone=" + snapshot.controller().reuseDropsDoneCandidate()
-                + ", controllerReuseDropsIncompatible=" + snapshot.controller().reuseDropsIncompatibleCandidate()
-                + ", controllerReuseDropsStale=" + snapshot.controller().reuseDropsStaleCandidate()
-                + ", formationRequests=" + snapshot.formationTargeting().formationSelectionRequests()
-                + ", formationComputations=" + snapshot.formationTargeting().formationSelectionComputations()
-                + ", formationAssignments=" + snapshot.formationTargeting().formationSelectionAssignments()
-                + ", formationReuses=" + snapshot.formationTargeting().formationSelectionReuses()
-                + ", formationInvalidations=" + snapshot.formationTargeting().formationSelectionInvalidations()
-                + ", formationLocalFallbacks=" + snapshot.formationTargeting().localFallbackSearches();
-    }
-
     public static Vec3 formationAnchor(GameTestHelper helper, SquadAnchor anchor) {
         return Vec3.atCenterOf(helper.absolutePos(anchor.anchor()));
     }
@@ -272,17 +219,6 @@ public final class RecruitsBattleGameTestSupport {
     }
 
     public record BattleSquad(BlockPos relativeAnchor, List<AbstractRecruitEntity> recruits) {
-    }
-
-    public record BattleProfilingSnapshot(
-            String scenarioId,
-            long captureGameTime,
-            int warmupTicks,
-            TargetSearchProfilingSnapshot targetSearch,
-            ProfilingSnapshot pathfinding,
-            GlobalPathfindingController.ProfilingSnapshot controller,
-            FormationTargetSelectionController.ProfilingSnapshot formationTargeting
-    ) {
     }
 
     public enum SquadAnchor {
