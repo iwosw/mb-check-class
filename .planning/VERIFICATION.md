@@ -38,7 +38,8 @@
 
 - `build.gradle` no longer composes Java, test, or resource inputs from `recruits/` or `workers/` source roots.
 - The root tree now vendors the recruit and worker resources, retained JUnit suites, and retained recruit GameTest harness assets under `src/**`.
-- `./gradlew compileJava` is still blocked by retained recruit↔bannerlord compatibility mismatches in moved military/shared classes (for example `AbstractRecruitEntity`, `FactionEvents`, `RecruitEvents`, and related persistence/client seams). Until those type mismatches are fixed, treat `processResources`, `test`, and `verifyGameTestStage` as pending follow-up gates rather than green retirement evidence.
+- Validation run from the retired layout on 2026-04-15 produced: `./gradlew processResources` ✅, `./gradlew compileJava` ❌, `./gradlew test` ❌, and `./gradlew verifyGameTestStage` ❌.
+- The failing commands all stop at the same retained recruit↔bannerlord compatibility mismatches in moved military/shared classes (for example `AbstractInventoryEntity`, `AbstractRecruitEntity`, `FactionEvents`, and `RecruitEvents`, plus related persistence/client seams). Until those type mismatches are fixed, treat `test` and `verifyGameTestStage` as blocked by the compile step rather than as independently evaluated green gates.
 
 ### Phase 11 Profiling Baseline
 
