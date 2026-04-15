@@ -1,6 +1,6 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
@@ -49,7 +49,11 @@ public class BannerModUpkeepFlowGameTests {
         recruit.setHunger(1.0F);
         recruit.setUpkeepPos(buildArea.blockPosition());
 
-        BannerModSupplyStatus.BuildProjectStatus buildStatus = buildArea.getSupplyStatus();
+        BannerModSupplyStatus.BuildProjectStatus buildStatus = BannerModSupplyStatus.buildProjectStatus(
+                buildArea.hasStructureTemplate(),
+                buildArea.hasPendingBuildWork(),
+                buildArea.getRequiredMaterials()
+        );
         SimpleContainer upkeepContainer = new SimpleContainer(9);
         BannerModSupplyStatus.RecruitSupplyStatus recruitStatus = recruit.getSupplyStatus(upkeepContainer);
 
