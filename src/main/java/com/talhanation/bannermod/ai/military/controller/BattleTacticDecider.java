@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.ai.military.controller;
 
-import com.talhanation.recruits.util.NPCArmy;
+import com.talhanation.bannermod.util.NPCArmy;
 
 public final class BattleTacticDecider {
 

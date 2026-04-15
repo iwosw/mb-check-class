@@ -13,7 +13,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.List;
 
-import static com.talhanation.recruits.util.RegistryUtils.createSpawnEggItem;
+import static com.talhanation.bannermod.util.RegistryUtils.createSpawnEggItem;
 
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BannerModMain.MOD_ID);

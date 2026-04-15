@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.util.FormationUtils;
+import com.talhanation.bannermod.util.FormationUtils;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
 

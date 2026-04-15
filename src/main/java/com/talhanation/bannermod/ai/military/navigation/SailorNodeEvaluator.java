@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.ai.military.navigation;
 
-import com.talhanation.recruits.util.Kalkuel;
+import com.talhanation.bannermod.util.Kalkuel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;

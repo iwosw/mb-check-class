@@ -3,7 +3,7 @@ package com.talhanation.bannermod.ai.military;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.HorsemanEntity;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
-import com.talhanation.recruits.util.AttackUtil;
+import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;

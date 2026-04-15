@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.recruits.compat.IWeapon;
+import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.recruits.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitRangedCrossbowAttackGoal;

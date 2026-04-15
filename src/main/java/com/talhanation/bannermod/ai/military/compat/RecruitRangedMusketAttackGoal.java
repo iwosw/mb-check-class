@@ -1,8 +1,8 @@
 package com.talhanation.bannermod.ai.military.compat;
 
-import com.talhanation.recruits.compat.*;
+import com.talhanation.bannermod.compat.*;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
-import com.talhanation.recruits.util.AttackUtil;
+import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;

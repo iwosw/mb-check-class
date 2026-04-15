@@ -1,14 +1,14 @@
 package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.recruits.Main;
-import com.talhanation.recruits.compat.SmallShips;
+import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.ai.military.controller.IAttackController;
 import com.talhanation.recruits.inventory.PatrolLeaderContainer;
 import com.talhanation.recruits.network.MessageOpenSpecialScreen;
 import com.talhanation.recruits.network.MessageToClientUpdateLeaderScreen;
-import com.talhanation.recruits.util.FormationUtils;
-import com.talhanation.recruits.util.NPCArmy;
-import com.talhanation.recruits.util.RecruitCommanderUtil;
+import com.talhanation.bannermod.util.FormationUtils;
+import com.talhanation.bannermod.util.NPCArmy;
+import com.talhanation.bannermod.util.RecruitCommanderUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

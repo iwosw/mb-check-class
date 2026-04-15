@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.entity.military.HorsemanEntity;
-import com.talhanation.recruits.util.AttackUtil;
+import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;

@@ -6,7 +6,7 @@ import com.talhanation.recruits.entities.*;
 import com.talhanation.recruits.entities.ai.controller.RecruitCommandStateTransitions;
 import com.talhanation.recruits.inventory.CommandMenu;
 import com.talhanation.recruits.network.*;
-import com.talhanation.recruits.util.FormationUtils;
+import com.talhanation.bannermod.util.FormationUtils;
 import com.talhanation.recruits.world.RecruitsGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;

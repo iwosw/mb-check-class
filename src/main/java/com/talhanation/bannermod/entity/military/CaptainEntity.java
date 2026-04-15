@@ -1,13 +1,13 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.recruits.compat.SmallShips;
+import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.ai.military.controller.SmallShipsController;
 import com.talhanation.bannermod.ai.military.controller.CaptainPrepareShipAttackController;
 import com.talhanation.bannermod.ai.military.navigation.SailorPathNavigation;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
-import com.talhanation.recruits.util.RecruitCommanderUtil;
-import com.talhanation.recruits.util.WaterObstacleScanner;
+import com.talhanation.bannermod.util.RecruitCommanderUtil;
+import com.talhanation.bannermod.util.WaterObstacleScanner;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.nbt.CompoundTag;

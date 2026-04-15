@@ -1,9 +1,9 @@
 package com.talhanation.bannermod.ai.military;
 
-import com.talhanation.recruits.compat.SmallShips;
+import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
-import com.talhanation.recruits.util.Kalkuel;
+import com.talhanation.bannermod.util.Kalkuel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;

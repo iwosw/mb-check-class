@@ -1,9 +1,9 @@
 package com.talhanation.bannermod.ai.military.controller;
 
 import com.talhanation.bannermod.entity.military.*;
-import com.talhanation.recruits.util.FormationUtils;
-import com.talhanation.recruits.util.RecruitCommanderUtil;
-import com.talhanation.recruits.util.NPCArmy;
+import com.talhanation.bannermod.util.FormationUtils;
+import com.talhanation.bannermod.util.RecruitCommanderUtil;
+import com.talhanation.bannermod.util.NPCArmy;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;

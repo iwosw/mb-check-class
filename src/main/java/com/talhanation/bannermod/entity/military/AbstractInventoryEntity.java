@@ -2,7 +2,7 @@ package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.FactionEvents;
-import com.talhanation.recruits.compat.Corpse;
+import com.talhanation.bannermod.compat.Corpse;
 import com.talhanation.recruits.config.RecruitsServerConfig;
 import com.talhanation.recruits.inventory.RecruitSimpleContainer;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;

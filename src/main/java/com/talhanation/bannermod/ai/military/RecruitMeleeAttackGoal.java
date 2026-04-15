@@ -3,7 +3,7 @@ package com.talhanation.bannermod.ai.military;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.BowmanEntity;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
-import com.talhanation.recruits.util.AttackUtil;
+import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;

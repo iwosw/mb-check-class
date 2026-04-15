@@ -4,7 +4,7 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.inventory.*;
 import com.talhanation.recruits.network.*;
-import com.talhanation.recruits.util.DelayedExecutor;
+import com.talhanation.bannermod.util.DelayedExecutor;
 import com.talhanation.recruits.world.*;
 import com.talhanation.recruits.FactionEvent;
 import net.minecraft.ChatFormatting;

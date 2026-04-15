@@ -2,7 +2,7 @@ package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.recruits.FactionEvents;
 import com.talhanation.bannermod.ai.military.UseShield;
-import com.talhanation.recruits.util.FormationUtils;
+import com.talhanation.bannermod.util.FormationUtils;
 import com.talhanation.recruits.world.RecruitsPlayerInfo;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;

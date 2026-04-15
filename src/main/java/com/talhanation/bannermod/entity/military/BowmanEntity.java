@@ -4,7 +4,7 @@ import com.talhanation.recruits.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitStrategicFire;
 import com.talhanation.bannermod.ai.military.RecruitRangedBowAttackGoal;
-import com.talhanation.recruits.util.AttackUtil;
+import com.talhanation.bannermod.util.AttackUtil;
 import com.talhanation.recruits.world.RecruitsPatrolSpawn;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;

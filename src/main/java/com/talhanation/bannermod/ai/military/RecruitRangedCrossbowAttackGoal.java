@@ -1,10 +1,10 @@
 package com.talhanation.bannermod.ai.military;
 
-import com.talhanation.recruits.compat.CrossbowWeapon;
-import com.talhanation.recruits.compat.IWeapon;
+import com.talhanation.bannermod.compat.CrossbowWeapon;
+import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.recruits.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
-import com.talhanation.recruits.util.AttackUtil;
+import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;

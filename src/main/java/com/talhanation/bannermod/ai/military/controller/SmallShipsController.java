@@ -1,10 +1,10 @@
 package com.talhanation.bannermod.ai.military.controller;
 
-import com.talhanation.recruits.compat.SmallShips;
+import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
 import com.talhanation.bannermod.ai.military.navigation.SailorPathNavigation;
-import com.talhanation.recruits.util.Kalkuel;
-import com.talhanation.recruits.util.WaterObstacleScanner;
+import com.talhanation.bannermod.util.Kalkuel;
+import com.talhanation.bannermod.util.WaterObstacleScanner;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;

@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.military.controller;
 
 import com.talhanation.bannermod.entity.military.*;
-import com.talhanation.recruits.util.WaterObstacleScanner;
+import com.talhanation.bannermod.util.WaterObstacleScanner;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;

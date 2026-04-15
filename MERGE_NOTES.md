@@ -284,3 +284,45 @@ Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{a
 - `com.talhanation.recruits.ClaimEvents` → `com.talhanation.bannermod.events.ClaimEvents` — fixed in `WorkersVillagerEvents.java` and `commands/military/RecruitsAdminCommands.java`.
 
 **Note on clone callers:** Files in `recruits/network/`, `recruits/pathfinding/`, `recruits/client/` etc. still import `com.talhanation.recruits.config.*` (now deleted). Per D-22, compile is not required to be clean between waves. These are addressed in waves 21-05..21-09.
+
+### Wave 5 — military gameplay subsystem migration (authored by 21-05)
+
+**What moved to outer repo `src/main/java/com/talhanation/bannermod/`:**
+
+- `bannermod.entity.military.**` — 21 classes copied from `recruits/entities/` (non-`ai/` top-level): `AbstractChunkLoaderEntity`, `AbstractInventoryEntity`, `AbstractLeaderEntity`, `AbstractOrderAbleEntity`, `AbstractRecruitEntity`, `AssassinEntity`, `AssassinLeaderEntity`, `BowmanEntity`, `CaptainEntity`, `CommanderEntity`, `CrossBowmanEntity`, `HorsemanEntity`, `ICompanion`, `IRangedRecruit`, `IStrategicFire`, `MessengerEntity`, `NomadEntity`, `RecruitEntity`, `RecruitShieldmanEntity`, `ScoutEntity`, `VillagerNobleEntity`.
+- `bannermod.ai.military.**` — 55 classes copied from `recruits/entities/ai/**` (flat + subpackages `controller/`, `horse/`, `navigation/`, `async/`, `villager/`, `compat/`, `pillager/`).
+- `bannermod.ai.pathfinding.**` — 10 classes copied from `recruits/pathfinding/`: `AsyncGroundPathNavigation`, `AsyncPath`, `AsyncPathNavigation`, `AsyncPathProcessor`, `AsyncPathfinder`, `AsyncPathfinderMob`, `AsyncWaterBoundPathNavigation`, `NodeEvaluatorCache`, `NodeEvaluatorGenerator`, `PathProcessingRuntime`.
+- `bannermod.mixin.**` — 10 mixin classes copied from `recruits/mixin/` (`AbstractHorseMixin`, `AnimalMixin`, `CamelMixin`, `ClassInstanceMultiMapMixin`, `GoalUtilsMixin`, `LivingEntityMixin`, `MixinMinecraft`, `MobMixin`, `RestrictSunGoalMixin`, `WalkNodeEvaluatorMixin`).
+- `bannermod.compat.**` — 11 classes copied from `recruits/compat/` (including `compat/workers/IVillagerWorker.java` preserving the subpackage).
+- `bannermod.migration.**` — 3 seam helpers copied from `recruits/migration/`: `CompatPathingSeams`, `NetworkBootstrapSeams`, `StatePersistenceSeams`.
+- `bannermod.events.**` — 6 event sub-classes copied from `recruits/events/` appended to the 13 event classes landed by Wave 4: `ClaimEvent`, `DiplomacyEvent`, `FactionEvent`, `RecruitEvent`, `RecruitsOnWriteSpawnEggEvent`, `SiegeEvent`. `bannermod.events` now holds 19 files total.
+- `bannermod.util.**` — 12 classes copied from `recruits/util/`: `AttackUtil`, `ClaimUtil`, `DelayedExecutor`, `FormationUtils`, `GameProfileUtils`, `Kalkuel`, `NPCArmy`, `PathAnalyzer`, `ProcessState`, `RecruitCommanderUtil`, `RegistryUtils`, `WaterObstacleScanner`.
+
+**Mixin config reissued:**
+- `src/main/resources/mixins.bannermod.json` created from the old clone config with `"package": "com.talhanation.bannermod.mixin"` and `"refmap": "mixins.bannermod.refmap.json"`. Mixin class list identical.
+- `build.gradle` `mixin { … }` block extended with `add sourceSets.main, 'mixins.bannermod.refmap.json'` and `config 'mixins.bannermod.json'`. Old `mixins.recruits.json` entry left in place until 21-09 retires it — except the clone-owned file itself is deleted, so the old config entry now points at nothing (Gradle will fail-soft on missing mixin json only when build runs; this is acceptable per D-22 "compile-green deferred to 21-09"). Flagged for 21-09.
+- `recruits/src/main/resources/mixins.recruits.json` deleted from clone.
+
+**What was deleted from clones:**
+- `recruits/`: `src/main/java/com/talhanation/recruits/{entities,pathfinding,mixin,compat,migration,events,util}/**` — removed in recruits clone commits `237d6226` (entities+pathfinding) and `99d823e2` (mixin+compat+migration+events+util + mixins.recruits.json).
+
+**sed invocations used:**
+- On the newly copied outer subtrees (Task 1 post-pass): `com.talhanation.recruits.entities.ai.` → `com.talhanation.bannermod.ai.military.`; `com.talhanation.recruits.entities.` → `com.talhanation.bannermod.entity.military.`; `com.talhanation.recruits.pathfinding.` → `com.talhanation.bannermod.ai.pathfinding.`.
+- On the newly copied outer subtrees (Task 2 post-pass, across the full `bannermod/` tree): `com.talhanation.recruits.mixin.` → `com.talhanation.bannermod.mixin.`; `com.talhanation.recruits.compat.` → `com.talhanation.bannermod.compat.`; `com.talhanation.recruits.migration.` → `com.talhanation.bannermod.migration.`; `com.talhanation.recruits.events.` → `com.talhanation.bannermod.events.`; `com.talhanation.recruits.util.` → `com.talhanation.bannermod.util.`.
+- Clone-side (applied to `recruits/` remaining `src/main/java`, `src/test/java`, `src/gametest/java`): the same nine substitutions, so the ~150 clone files that still reference the migrated types resolve against the new `bannermod.*` FQNs. Per D-22 compile-green is still not required across the clone until 21-09, but keeping the FQNs pointing at the live namespace reduces future-wave churn.
+
+**Package-declaration rewrites:**
+- Per-file `sed -i -E 's|^package com\.talhanation\.recruits\.{sub}(\.[a-zA-Z0-9_.]+)?;|package com.talhanation.bannermod.{sub}[.subpkg];|'` computed per destination file from its directory, so nested subpackages (`entity/military/`, `ai/military/controller/`, `compat/workers/`, etc.) keep their relative paths.
+
+**Naming collisions resolved:**
+- `bannermod.events` pre-existing Wave-4 classes (13) vs newly arriving Wave-5 sub-classes (6): no name collision — Wave 4 moved top-level `Recruit*Events`, while Wave 5 added event data classes `RecruitEvent`, `FactionEvent`, `ClaimEvent`, `DiplomacyEvent`, `SiegeEvent`, `RecruitsOnWriteSpawnEggEvent`. Both families coexist as peers.
+- No other subtree collided with preserved `bannermod.{citizen,governance,settlement,logistics,authority,config,shared,bootstrap,network,registry,commands}` packages.
+
+**Note on clone callers and build state:** The clone's main source tree now has no `entities/`, `pathfinding/`, `mixin/`, `compat/`, `migration/`, `events/`, or `util/` packages. Clone callers from `recruits/network/`, `recruits/client/`, `recruits/commands/`, `recruits/inventory/`, `recruits/world/`, `recruits/init/` (gone since 21-03 but `init/` removal is partial — empty dirs), and residual top-level files still reference types that now only exist in outer `bannermod.*`. Because `build.gradle` still compiles `recruits/src/main/java` as part of the outer source set, the outer project will not compile cleanly until Wave 21-09. Per D-22 this is acceptable; per D-22 no compile gate is run in this wave.
+
+**Flagged for 21-09:**
+- Old `mixins.recruits.json` Gradle config entry references a now-missing json.
+- Old `mixins.recruits.refmap.json` entry likewise dead.
+- Partial `recruits/init/` residue (empty or near-empty after 21-03) should be pruned when the clone source set is retired.
+
+**Clone test/gametest note:** Two test files (`recruits/src/test/java/com/talhanation/recruits/pathfinding/{AsyncPathProcessorTest,GlobalPathfindingControllerTest}.java`) still declare `package com.talhanation.recruits.pathfinding;`. Their in-tree package declaration is valid for the clone's own test source root; they survived the migration because test-tree Java lives under the clone's own `src/test/java` root. Their FQN imports have been rewritten to point at the new `bannermod.*` types. If 21-09 retires the clone source set, these tests move with the rest of the clone or are deleted.

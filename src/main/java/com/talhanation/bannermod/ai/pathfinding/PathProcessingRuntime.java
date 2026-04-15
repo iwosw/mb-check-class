@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.talhanation.recruits.migration.CompatPathingSeams;
+import com.talhanation.bannermod.migration.CompatPathingSeams;
 import net.minecraft.world.level.pathfinder.Path;
 import org.jetbrains.annotations.Nullable;
 
