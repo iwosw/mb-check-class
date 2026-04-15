@@ -1,6 +1,6 @@
 package com.talhanation.bannerlord.client.civilian;
 
-import com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.bannerlord.client.shared.ClientManager;
 import net.minecraft.core.BlockPos;
 

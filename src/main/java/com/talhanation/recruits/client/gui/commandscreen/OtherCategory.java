@@ -1,6 +1,6 @@
 package com.talhanation.recruits.client.gui.commandscreen;
 
-import com.talhanation.bannerlord.shared.logistics.BannerModUpkeepProviders;
+import com.talhanation.bannermod.logistics.BannerModUpkeepProviders;
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.client.gui.CommandScreen;
 import com.talhanation.recruits.client.gui.group.RecruitsCommandButton;

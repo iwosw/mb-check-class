@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.authority;
 
-@Deprecated(forRemoval = false)
 public final class BannerModAuthorityRules {
 
     private BannerModAuthorityRules() {
@@ -10,15 +9,7 @@ public final class BannerModAuthorityRules {
         OWNER,
         SAME_TEAM,
         ADMIN,
-        FORBIDDEN;
-
-        private com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.Relationship toShared() {
-            return com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.Relationship.valueOf(this.name());
-        }
-
-        private static Relationship fromShared(com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.Relationship relationship) {
-            return Relationship.valueOf(relationship.name());
-        }
+        FORBIDDEN
     }
 
     public enum Decision {
@@ -27,36 +18,61 @@ public final class BannerModAuthorityRules {
         TARGET_NOT_FOUND,
         OUTSIDE_FACTION_CLAIM,
         OVERLAPPING,
-        INVALID_REQUEST;
-
-        private static Decision fromShared(com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.Decision decision) {
-            return Decision.valueOf(decision.name());
-        }
+        INVALID_REQUEST
     }
 
     public static Relationship resolveRelationship(boolean owner, boolean sameTeam, boolean admin) {
-        return Relationship.fromShared(com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.resolveRelationship(owner, sameTeam, admin));
+        if (admin) {
+            return Relationship.ADMIN;
+        }
+        if (owner) {
+            return Relationship.OWNER;
+        }
+        if (sameTeam) {
+            return Relationship.SAME_TEAM;
+        }
+        return Relationship.FORBIDDEN;
     }
 
     public static Decision inspectDecision(boolean targetExists, Relationship relationship) {
-        return Decision.fromShared(com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.inspectDecision(targetExists, relationship.toShared()));
+        return targetAccessDecision(targetExists, relationship == Relationship.FORBIDDEN);
     }
 
     public static Decision modifyDecision(boolean targetExists, Relationship relationship) {
-        return Decision.fromShared(com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.modifyDecision(targetExists, relationship.toShared()));
+        return targetAccessDecision(targetExists, relationship == Relationship.FORBIDDEN);
     }
 
     public static Decision recoverControlDecision(boolean targetExists, Relationship relationship) {
-        return Decision.fromShared(com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.recoverControlDecision(targetExists, relationship.toShared()));
+        if (!targetExists) {
+            return Decision.TARGET_NOT_FOUND;
+        }
+        if (relationship == Relationship.OWNER || relationship == Relationship.ADMIN) {
+            return Decision.ALLOW;
+        }
+        return Decision.FORBIDDEN;
     }
 
     public static Decision createDecision(boolean insideFactionClaim, boolean overlapping) {
-        return Decision.fromShared(com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.createDecision(insideFactionClaim, overlapping));
+        if (!insideFactionClaim) {
+            return Decision.OUTSIDE_FACTION_CLAIM;
+        }
+        if (overlapping) {
+            return Decision.OVERLAPPING;
+        }
+        return Decision.ALLOW;
     }
 
     public static boolean isAllowed(Decision decision) {
-        return com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.isAllowed(
-                com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules.Decision.valueOf(decision.name())
-        );
+        return decision == Decision.ALLOW;
+    }
+
+    private static Decision targetAccessDecision(boolean targetExists, boolean forbidden) {
+        if (!targetExists) {
+            return Decision.TARGET_NOT_FOUND;
+        }
+        if (forbidden) {
+            return Decision.FORBIDDEN;
+        }
+        return Decision.ALLOW;
     }
 }

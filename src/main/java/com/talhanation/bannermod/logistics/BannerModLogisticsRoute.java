@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.UUID;
 
-@Deprecated(forRemoval = false)
 public record BannerModLogisticsRoute(
         UUID routeId,
         UUID sourceEndpointId,
@@ -21,14 +20,6 @@ public record BannerModLogisticsRoute(
         String blockedReasonToken,
         boolean enabled
 ) {
-    private static BannerModLogisticsRoute fromShared(com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute route) {
-        return new BannerModLogisticsRoute(route.routeId(), route.sourceEndpointId(), route.destinationEndpointId(), route.itemFilterId(), route.priority(), route.minSourceCount(), route.destinationThreshold(), route.blockedReasonToken(), route.enabled());
-    }
-
-    private com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute toShared() {
-        return new com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute(this.routeId, this.sourceEndpointId, this.destinationEndpointId, this.itemFilterId, this.priority, this.minSourceCount, this.destinationThreshold, this.blockedReasonToken, this.enabled);
-    }
-
     public static BannerModLogisticsRoute create(UUID sourceEndpointId,
                                                  UUID destinationEndpointId,
                                                  @Nullable String itemFilterId,
@@ -37,34 +28,93 @@ public record BannerModLogisticsRoute(
                                                  int destinationThreshold,
                                                  String blockedReasonToken,
                                                  boolean enabled) {
-        return fromShared(com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute.create(sourceEndpointId, destinationEndpointId, itemFilterId, priority, minSourceCount, destinationThreshold, blockedReasonToken, enabled));
+        return new BannerModLogisticsRoute(
+                UUID.randomUUID(),
+                sourceEndpointId,
+                destinationEndpointId,
+                normalizeItemFilter(itemFilterId),
+                priority,
+                minSourceCount,
+                destinationThreshold,
+                blockedReasonToken,
+                enabled
+        );
     }
 
     public boolean matchesItem(ItemStack stack) {
-        return this.toShared().matchesItem(stack);
-    }
-
-    public int minimumSourceStock() {
-        return this.minSourceCount;
-    }
-
-    public int desiredDestinationStock() {
-        return this.destinationThreshold;
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        if (this.itemFilterId == null) {
+            return true;
+        }
+        return Objects.equals(ForgeRegistries.ITEMS.getKey(stack.getItem()).toString(), this.itemFilterId);
     }
 
     public CompoundTag toTag() {
-        return this.toShared().toTag();
+        CompoundTag tag = new CompoundTag();
+        tag.putUUID("RouteId", this.routeId);
+        tag.putUUID("SourceEndpointId", this.sourceEndpointId);
+        tag.putUUID("DestinationEndpointId", this.destinationEndpointId);
+        if (this.itemFilterId != null) {
+            tag.putString("ItemFilterId", this.itemFilterId);
+        }
+        tag.putInt("Priority", this.priority);
+        tag.putInt("MinSourceCount", this.minSourceCount);
+        tag.putInt("DestinationThreshold", this.destinationThreshold);
+        tag.putString("BlockedReasonToken", this.blockedReasonToken);
+        tag.putBoolean("Enabled", this.enabled);
+        return tag;
     }
 
     public static BannerModLogisticsRoute fromTag(CompoundTag tag) {
-        return fromShared(com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute.fromTag(tag));
+        return new BannerModLogisticsRoute(
+                tag.hasUUID("RouteId") ? tag.getUUID("RouteId") : UUID.randomUUID(),
+                tag.getUUID("SourceEndpointId"),
+                tag.getUUID("DestinationEndpointId"),
+                normalizeItemFilter(tag.contains("ItemFilterId") ? tag.getString("ItemFilterId") : null),
+                tag.getInt("Priority"),
+                tag.getInt("MinSourceCount"),
+                tag.getInt("DestinationThreshold"),
+                tag.getString("BlockedReasonToken"),
+                !tag.contains("Enabled") || tag.getBoolean("Enabled")
+        );
     }
 
     public void toBytes(FriendlyByteBuf buf) {
-        this.toShared().toBytes(buf);
+        buf.writeUUID(this.routeId);
+        buf.writeUUID(this.sourceEndpointId);
+        buf.writeUUID(this.destinationEndpointId);
+        buf.writeBoolean(this.itemFilterId != null);
+        if (this.itemFilterId != null) {
+            buf.writeUtf(this.itemFilterId);
+        }
+        buf.writeVarInt(this.priority);
+        buf.writeVarInt(this.minSourceCount);
+        buf.writeVarInt(this.destinationThreshold);
+        buf.writeUtf(this.blockedReasonToken);
+        buf.writeBoolean(this.enabled);
     }
 
     public static BannerModLogisticsRoute fromBytes(FriendlyByteBuf buf) {
-        return fromShared(com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute.fromBytes(buf));
+        return new BannerModLogisticsRoute(
+                buf.readUUID(),
+                buf.readUUID(),
+                buf.readUUID(),
+                normalizeItemFilter(buf.readBoolean() ? buf.readUtf() : null),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readUtf(),
+                buf.readBoolean()
+        );
+    }
+
+    @Nullable
+    private static String normalizeItemFilter(@Nullable String itemFilterId) {
+        if (itemFilterId == null || itemFilterId.isBlank()) {
+            return null;
+        }
+        return itemFilterId;
     }
 }

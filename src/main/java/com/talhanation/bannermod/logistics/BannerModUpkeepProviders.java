@@ -23,20 +23,64 @@ public final class BannerModUpkeepProviders {
     }
 
     public static boolean isValidBlockTarget(Level level, @Nullable BlockPos pos) {
-        return com.talhanation.bannerlord.shared.logistics.BannerModUpkeepProviders.isValidBlockTarget(level, pos);
+        return resolveBlockContainer(level, pos) != null;
     }
 
     public static boolean isValidEntityTarget(@Nullable Entity entity) {
-        return com.talhanation.bannerlord.shared.logistics.BannerModUpkeepProviders.isValidEntityTarget(entity);
+        return resolveEntityContainer(entity, entity == null ? null : entity.blockPosition()) != null;
     }
 
     @Nullable
     public static Container resolveBlockContainer(Level level, @Nullable BlockPos pos) {
-        return com.talhanation.bannerlord.shared.logistics.BannerModUpkeepProviders.resolveBlockContainer(level, pos);
+        if (level == null || pos == null) {
+            return null;
+        }
+        BlockEntity entity = level.getBlockEntity(pos);
+        BlockState blockState = level.getBlockState(pos);
+        if (blockState.getBlock() instanceof ChestBlock chestBlock) {
+            return ChestBlock.getContainer(chestBlock, blockState, level, pos, false);
+        }
+        if (entity instanceof Container containerEntity) {
+            return containerEntity;
+        }
+        return null;
     }
 
     @Nullable
     public static Container resolveEntityContainer(@Nullable Entity entity, @Nullable BlockPos seekerPos) {
-        return com.talhanation.bannerlord.shared.logistics.BannerModUpkeepProviders.resolveEntityContainer(entity, seekerPos);
+        if (entity == null) {
+            return null;
+        }
+        if (entity instanceof AbstractHorse horse) {
+            return horse.inventory;
+        }
+        if (entity instanceof InventoryCarrier carrier) {
+            return carrier.getInventory();
+        }
+        if (entity instanceof Container containerEntity) {
+            return containerEntity;
+        }
+        if (entity instanceof StorageArea storageArea) {
+            storageArea.scanStorageBlocks();
+            return combine(storageArea.storageMap, seekerPos);
+        }
+        if (entity instanceof MarketArea marketArea) {
+            marketArea.scanContainers();
+            return combine(marketArea.containerMap, seekerPos);
+        }
+        return null;
+    }
+
+    @Nullable
+    private static Container combine(Map<BlockPos, Container> containers, @Nullable BlockPos seekerPos) {
+        if (containers == null || containers.isEmpty()) {
+            return null;
+        }
+        List<Container> ordered = containers.entrySet().stream()
+                .sorted(Comparator.comparingDouble(entry -> seekerPos == null ? 0.0D : entry.getKey().distSqr(seekerPos)))
+                .map(Map.Entry::getValue)
+                .distinct()
+                .toList();
+        return BannerModCombinedContainer.of(ordered);
     }
 }

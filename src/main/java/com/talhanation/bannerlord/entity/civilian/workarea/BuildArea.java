@@ -1,6 +1,6 @@
 package com.talhanation.bannerlord.entity.civilian.workarea;
 
-import com.talhanation.bannerlord.shared.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
 import com.talhanation.bannerlord.client.civilian.gui.BuildAreaScreen;
 import com.talhanation.bannerlord.compat.workers.WorkersRuntime;
 import com.talhanation.bannerlord.ai.civilian.BuilderBuildProgress;

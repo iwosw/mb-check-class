@@ -1,7 +1,7 @@
 package com.talhanation.recruits.entities.ai;
 
-import com.talhanation.bannerlord.shared.logistics.BannerModUpkeepProviders;
-import com.talhanation.bannerlord.shared.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.logistics.BannerModUpkeepProviders;
+import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

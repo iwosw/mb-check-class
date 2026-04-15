@@ -2,7 +2,7 @@ package com.talhanation.bannerlord.client.shared.gui.commandscreen;
 
 import com.talhanation.bannerlord.entity.shared.*;
 
-import com.talhanation.bannerlord.shared.logistics.BannerModUpkeepProviders;
+import com.talhanation.bannermod.logistics.BannerModUpkeepProviders;
 import com.talhanation.recruits.Main;
 import com.talhanation.bannerlord.client.shared.gui.CommandScreen;
 import com.talhanation.bannerlord.client.shared.gui.group.RecruitsCommandButton;

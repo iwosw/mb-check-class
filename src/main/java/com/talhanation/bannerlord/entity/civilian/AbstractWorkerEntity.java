@@ -1,14 +1,14 @@
 package com.talhanation.bannerlord.entity.civilian;
 
 import com.google.common.collect.ImmutableSet;
-import com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules;
+import com.talhanation.bannermod.authority.BannerModAuthorityRules;
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleContext;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
-import com.talhanation.bannerlord.shared.logistics.BannerModLogisticsService;
-import com.talhanation.bannerlord.shared.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.logistics.BannerModLogisticsService;
+import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
 import com.talhanation.recruits.config.RecruitsClientConfig;
 import com.talhanation.bannerlord.entity.military.AbstractChunkLoaderEntity;
 import com.talhanation.bannerlord.ai.civilian.CourierWorkGoal;
