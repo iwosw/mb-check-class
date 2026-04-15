@@ -5,11 +5,23 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
+/**
+ * @deprecated Use {@link com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus} instead.
+ * Forwarder retained for staged migration per Phase 21 D-05 -- legacy shared-package overlap is
+ * documented in MERGE_NOTES.md and is intentionally NOT deduplicated during Phase 21.
+ *
+ * <p>The nested {@link BuildState}, {@link RecruitSupplyState} enums and status records are
+ * literal mirrors of the canonical types and delegate each calculator through shared -> legacy
+ * mapping helpers. Do not add new members here -- add them to the canonical class.
+ */
+@Deprecated
 public final class BannerModSupplyStatus {
 
     private BannerModSupplyStatus() {
     }
 
+    /** @deprecated Use {@link com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.BuildState}. */
+    @Deprecated
     public enum BuildState {
         NO_TEMPLATE,
         READY,
@@ -17,6 +29,8 @@ public final class BannerModSupplyStatus {
         COMPLETE
     }
 
+    /** @deprecated Use {@link com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.RecruitSupplyState}. */
+    @Deprecated
     public enum RecruitSupplyState {
         NO_UPKEEP,
         READY,
@@ -25,76 +39,57 @@ public final class BannerModSupplyStatus {
         NEEDS_FOOD_AND_PAYMENT
     }
 
+    /** @deprecated Use {@link com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.BuildProjectStatus}. */
+    @Deprecated
     public record BuildProjectStatus(BuildState state, int materialTypes, int materialCount) {
     }
 
+    /** @deprecated Use {@link com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.WorkerSupplyStatus}. */
+    @Deprecated
     public record WorkerSupplyStatus(boolean blocked, String reasonToken, String message) {
     }
 
+    /** @deprecated Use {@link com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.RecruitSupplyStatus}. */
+    @Deprecated
     public record RecruitSupplyStatus(RecruitSupplyState state, boolean blocked, boolean needsFood, boolean needsPayment,
                                       String reasonToken) {
     }
 
     public static BuildProjectStatus buildProjectStatus(boolean hasTemplate, boolean hasPendingWork, List<ItemStack> requiredMaterials) {
-        int materialTypes = 0;
-        int materialCount = 0;
-        if (requiredMaterials != null) {
-            for (ItemStack stack : requiredMaterials) {
-                if (stack == null || stack.isEmpty()) {
-                    continue;
-                }
-                materialTypes++;
-                materialCount += stack.getCount();
-            }
-        }
-
-        return buildProjectStatus(hasTemplate, hasPendingWork, materialTypes, materialCount);
+        return fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.buildProjectStatus(hasTemplate, hasPendingWork, requiredMaterials));
     }
 
     public static BuildProjectStatus buildProjectStatus(boolean hasTemplate, boolean hasPendingWork, int materialTypes, int materialCount) {
-        if (!hasTemplate) {
-            return new BuildProjectStatus(BuildState.NO_TEMPLATE, 0, 0);
-        }
-
-        if (!hasPendingWork) {
-            return new BuildProjectStatus(BuildState.COMPLETE, materialTypes, materialCount);
-        }
-
-        return new BuildProjectStatus(materialCount > 0 ? BuildState.NEEDS_MATERIALS : BuildState.READY, materialTypes, materialCount);
+        return fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.buildProjectStatus(hasTemplate, hasPendingWork, materialTypes, materialCount));
     }
 
     public static WorkerSupplyStatus workerSupplyStatus(WorkerStorageRequestState.PendingComplaint pendingComplaint) {
-        if (pendingComplaint == null) {
-            return new WorkerSupplyStatus(false, null, null);
-        }
-        return new WorkerSupplyStatus(true, pendingComplaint.reasonToken(), pendingComplaint.message());
+        return fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.workerSupplyStatus(pendingComplaint));
     }
 
     public static RecruitSupplyStatus recruitSupplyStatus(boolean hasUpkeepSource, boolean needsFood, boolean paymentDue,
                                                           boolean upkeepHasFood, boolean upkeepHasPayment,
                                                           boolean inventoryHasPayment) {
-        if (!hasUpkeepSource) {
-            return new RecruitSupplyStatus(RecruitSupplyState.NO_UPKEEP, false, false, false, null);
-        }
+        return fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.recruitSupplyStatus(hasUpkeepSource, needsFood, paymentDue, upkeepHasFood, upkeepHasPayment, inventoryHasPayment));
+    }
 
-        boolean missingFood = needsFood && !upkeepHasFood;
-        boolean missingPayment = paymentDue && !upkeepHasPayment && !inventoryHasPayment;
+    private static BuildState fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.BuildState state) {
+        return state == null ? null : BuildState.valueOf(state.name());
+    }
 
-        if (missingFood && missingPayment) {
-            return new RecruitSupplyStatus(RecruitSupplyState.NEEDS_FOOD_AND_PAYMENT, true, true, true,
-                    "recruit_upkeep_missing_food_and_payment");
-        }
+    private static RecruitSupplyState fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.RecruitSupplyState state) {
+        return state == null ? null : RecruitSupplyState.valueOf(state.name());
+    }
 
-        if (missingFood) {
-            return new RecruitSupplyStatus(RecruitSupplyState.NEEDS_FOOD, true, true, false,
-                    "recruit_upkeep_missing_food");
-        }
+    private static BuildProjectStatus fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.BuildProjectStatus status) {
+        return status == null ? null : new BuildProjectStatus(fromShared(status.state()), status.materialTypes(), status.materialCount());
+    }
 
-        if (missingPayment) {
-            return new RecruitSupplyStatus(RecruitSupplyState.NEEDS_PAYMENT, true, false, true,
-                    "recruit_upkeep_missing_payment");
-        }
+    private static WorkerSupplyStatus fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.WorkerSupplyStatus status) {
+        return status == null ? null : new WorkerSupplyStatus(status.blocked(), status.reasonToken(), status.message());
+    }
 
-        return new RecruitSupplyStatus(RecruitSupplyState.READY, false, false, false, null);
+    private static RecruitSupplyStatus fromShared(com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus.RecruitSupplyStatus status) {
+        return status == null ? null : new RecruitSupplyStatus(fromShared(status.state()), status.blocked(), status.needsFood(), status.needsPayment(), status.reasonToken());
     }
 }
