@@ -529,3 +529,24 @@ After the FQN sweep of `src/{test,gametest}/java`, `./gradlew compileJava` is **
 
 These do not affect the runtime build artifact. `./gradlew compileJava` is the hard gate per CONTEXT D-22 and per 21-09 must-have #4, and it passes.
 
+
+## Config filename migration (Phase 21 post-UAT, 2026-04-15)
+
+Phase 21 unified the two clone modIds (`recruits`, `workers`) into a single `bannermod` modId. Forge derives default config filenames from `<modid>-<type>.toml`, so under the unified modId both SERVER config specs would collide on `bannermod-server.toml`. Plan 21-10 fixed this by switching `BannerModMain` to the 3-arg `ModLoadingContext.registerConfig(Type, Spec, fileName)` overload with explicit filenames:
+
+- `config/bannermod-recruits-client.toml` — was `config/recruits-client.toml` pre-pivot
+- `config/bannermod-recruits-server.toml` — was `config/recruits-server.toml` pre-pivot
+- `config/bannermod-workers-server.toml`  — was `config/workers-server.toml` pre-pivot
+
+### Operator impact
+
+On first run of the post-pivot build, Forge will write fresh defaults for all three new filenames. Any customizations an operator made to the pre-pivot `recruits-*.toml` / `workers-server.toml` files will NOT carry over automatically. If an operator wants to preserve settings, the one-time manual procedure is:
+
+1. Stop the server / close the client.
+2. Start the post-pivot build once so Forge generates the new `bannermod-recruits-client.toml`, `bannermod-recruits-server.toml`, and `bannermod-workers-server.toml` with defaults.
+3. Open each old file next to its new counterpart and copy edited values key-by-key (keys are unchanged across the rename; only the file name changed).
+4. Delete or archive the old `recruits-*.toml` / `workers-server.toml` files so they are not mistaken for live config.
+
+### Deferred automation
+
+A best-effort read-through shim (if the new filename is absent and the legacy filename is present, copy contents before Forge writes defaults) was evaluated and deferred: it is not required to unblock UAT and introduces atomic-copy / partial-migration edge cases better addressed in a dedicated follow-up plan if operator friction is reported.
