@@ -41,6 +41,15 @@ public final class BannerModGameTestSupport {
         return worker;
     }
 
+    /**
+     * Spawns an owned recruit configured to be designation-ready as a governor candidate. Additive helper for
+     * Phase 23 governor scenarios and later governance-aware phases (treasury, logistics) so each GameTest
+     * does not re-implement the owner/persistence/follow-state bring-up boilerplate.
+     */
+    public static RecruitEntity spawnGovernorCandidateRecruit(GameTestHelper helper, Player player, BlockPos relativePos) {
+        return spawnOwnedRecruit(helper, player, relativePos);
+    }
+
     public static RecruitEntity spawnOwnedRecruit(GameTestHelper helper, Player player, BlockPos relativePos) {
         RecruitEntity recruit = spawnEntity(helper, com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(), relativePos);
         recruit.setCustomName(Component.literal("Governor Recruit"));

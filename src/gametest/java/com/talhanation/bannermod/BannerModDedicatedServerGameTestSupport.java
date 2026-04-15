@@ -1,7 +1,7 @@
 package com.talhanation.bannermod;
 
 import com.mojang.authlib.GameProfile;
-import com.talhanation.recruits.ClaimEvents;
+import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
@@ -108,6 +108,18 @@ public final class BannerModDedicatedServerGameTestSupport {
     public static void removeClaim(ServerLevel level, RecruitsClaim claim) {
         ensureClaimManager(level);
         ClaimEvents.recruitsClaimManager.removeClaim(claim);
+    }
+
+    /**
+     * Seeds a friendly claim for the given leader and ensures the leader is both factioned in and team-joined.
+     * Additive helper shared by Phase 23 governor GameTests and later logistics/treasury phases so each test
+     * does not duplicate the fake-player/faction/team/claim bring-up sequence.
+     */
+    public static RecruitsClaim seedFriendlyLeaderClaim(ServerLevel level, Player leader, BlockPos claimPos, String factionId) {
+        String leaderName = leader.getName().getString();
+        ensureFaction(level, factionId, leader.getUUID(), leaderName);
+        joinTeam(level, factionId, leader);
+        return seedClaim(level, claimPos, factionId, leader.getUUID(), leaderName);
     }
 
     public static RecruitsClaim swapClaimFaction(ServerLevel level, RecruitsClaim claim, String factionId, UUID leaderId, String leaderName) {
