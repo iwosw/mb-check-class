@@ -207,3 +207,12 @@ All nineteen commits from `f1832af feat(21-02): move bootstrap ownership into ba
 
 ### Re-execution target
 Plans 21-02 through 21-09 re-execute against `com.talhanation.bannermod.**` (convergence namespace, CONTEXT D-01/D-02). Plan 21-02 is the only place the shared-package overlap note lives -- this section does NOT duplicate it.
+
+### Shared-package overlap (authored by 21-02)
+Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{authority,settlement,logistics}` that owns the canonical authority/settlement/logistics seam implementations. The pre-existing peer packages `com.talhanation.bannermod.{authority,settlement,logistics}` were NOT deleted -- per CONTEXT D-05 they were reduced to `@Deprecated` thin forwarders that delegate every public method/enum/record into the new `bannermod.shared.*` canonicals via mapping helpers, with no duplicate logic retained.
+
+**In-scope (shipped this plan):** Five canonical files were created and their legacy peers were reduced to forwarders -- `BannerModAuthorityRules`, `BannerModSettlementBinding`, `BannerModSupplyStatus`, `BannerModUpkeepProviders`, `BannerModCombinedContainer`. All seventeen active callers across `bannermod.governance.**`, `src/test/java/**`, and `src/gametest/java/**` were retargeted to import from `bannermod.shared.*` directly. The `recruits/` and `workers/` legacy source roots had no remaining callers of these seams. Live runtime contract (mod id `bannermod`, config filenames `bannermod-{military,settlement,client}.toml`, claim-derived settlement binding) is unchanged.
+
+**Out of scope / deferred:** Three classes from the original 21-02 plan -- `BannerModLogisticsRoute`, `BannerModLogisticsService`, `BannerModCourierTask` -- were NOT moved in this plan because no implementation exists in `bannermod.logistics.*` today and no callers reference those paths. They depend on the worker civilian seam (`AbstractWorkerEntity`) which lands in wave 21-04. They will be created in `bannermod.shared.logistics` directly by the plan that introduces their first caller.
+
+**Forwarder lifespan:** The `@Deprecated` legacy forwarders are short-lived. Per the plan must-haves they exist only for staged migration safety -- once Phase 21 closes and any external/IDE references have rotated, a follow-up plan deletes the legacy peers. Phase 21 deliberately defers that deletion: phase 21 is a structural move, not a semantic merge (D-05). Reconciliation is owned by a separate, post-Phase-21 cleanup phase.
