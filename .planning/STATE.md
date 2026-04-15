@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 21
-last_updated: "2026-04-14T17:28:21.708Z"
+last_updated: "2026-04-15T01:20:12Z"
 progress:
   total_phases: 38
   completed_phases: 14
   total_plans: 50
-  completed_plans: 45
+  completed_plans: 46
 ---
 
 # Project State
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-04-SUMMARY.md` (plan 21-05 is the active follow-up for source-root retirement validation)
+- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-05-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 
 ## Decisions
@@ -159,6 +159,9 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Legacy worker runtime helpers moved into src/main/java/com/talhanation/bannerlord/compat/workers/**, with only a thin deprecated workers.WorkersRuntime adapter retained during staged source-root retirement.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Worker storage and courier code now compiles against narrow temporary BannerMod logistics compatibility types until the dedicated logistics backbone phase replaces them.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: The root build now vendors active Java, unit-test, GameTest, and resource inputs under `src/**`, and `build.gradle` no longer composes code or tests directly from `recruits/` or `workers/` source roots.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Vendor remaining recruit and worker resources/tests into tracked root src trees so source-root retirement no longer depends on untracked nested repos.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Keep recruits/ and workers/ on disk as archive-only reference copies until a later cleanup slice removes them without changing build truth.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Do not claim Phase 21 complete until compileJava, test, and verifyGameTestStage run green from the retired root-only layout.
 
 ## Accumulated Context
 
@@ -219,6 +222,7 @@ progress:
 | Phase 21-source-tree-consolidation-into-bannerlord P02 | 18 min | 2 tasks | 18 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P03 | 1 min | 2 tasks | 235 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P04 | 1 min | 2 tasks | 122 files |
+| Phase 21-source-tree-consolidation-into-bannerlord P05 | 4 min | 3 tasks | 861 files |
 
 ### Quick Tasks Completed
 
@@ -228,6 +232,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-14T17:27:59Z
-- Stopped at: Completed 21-04-PLAN.md
+- Last updated: 2026-04-15T01:20:12Z
+- Stopped at: Completed 21-05-PLAN.md
 - Resume file: None
