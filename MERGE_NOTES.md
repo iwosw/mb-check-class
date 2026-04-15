@@ -431,3 +431,52 @@ Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{a
 
 **Entity count vs plan threshold:**
 - Plan specified `>= 30` for `entity/civilian`. Actual: 25 (14 top-level + 11 workarea). All available workers entity files were migrated; plan threshold was an overestimate. No files omitted.
+
+## Wave 8: Network Consolidation (2026-04-15)
+
+**What was done:**
+- Migrated all 109 `recruits/network/*.java` files to `bannermod.network.messages.military.**`.
+- Migrated all 24 `workers/network/*.java` files to `bannermod.network.messages.civilian.**`.
+- `BannerModNetworkBootstrap.java` rewritten with canonical class-level `MILITARY_MESSAGES[]` and `CIVILIAN_MESSAGES[]` arrays.
+- `workerPacketOffset()` now returns `MILITARY_MESSAGES.length` (compile-time constant = 104).
+- `createSharedChannel()` registers military at `[0..104)` and civilian at `[104..124)`.
+
+**Packet ID counts:**
+- `MILITARY_MESSAGES.length` = 104 (indices 0..103)
+- `CIVILIAN_MESSAGES.length` = 20 (indices 104..123)
+- `workerPacketOffset()` = 104
+
+**Ordering preservation:**
+- `MILITARY_MESSAGES[]` order is verbatim from the `recruitMessages[]` array in the pre-migration `BannerModNetworkBootstrap.java` (which itself captured the legacy `recruits.Main.setup()` ordering). Packet IDs 0..103 are stable.
+- `CIVILIAN_MESSAGES[]` order is verbatim from the `workerMessages[]` array in the same source (captured from legacy `workers.WorkersMain.setup()`). Packet IDs 104..123 are stable.
+
+**Clone commits:**
+- `recruits` clone: `4138b81b` — `refactor(21-08): remove migrated network subtree (109 files → bannermod.network.messages.military)`
+- `workers` clone: `f4d1023` — `refactor(21-08): remove migrated network subtree (24 files → bannermod.network.messages.civilian)`
+
+**Outer repo commits:**
+- `6f3a4bd` — Task 1: bulk migration + FQN sweeps
+- Task 2 commit: BannerModNetworkBootstrap canonical rewrite + MERGE_NOTES append
+
+**FQN rewrites applied during migration:**
+- `recruits.network.*` → `bannermod.network.messages.military.*`
+- `workers.network.*` → `bannermod.network.messages.civilian.*`
+- `recruits.entities.ai.*` → `bannermod.ai.military.*`
+- `recruits.entities.*` → `bannermod.entity.military.*`
+- `recruits.world.*` → `bannermod.persistence.military.*`
+- `workers.entities.ai.animals.*` → `bannermod.ai.civilian.animals.*`
+- `workers.entities.ai.*` → `bannermod.ai.civilian.*`
+- `workers.entities.workarea.*` → `bannermod.entity.civilian.workarea.*`
+- `workers.entities.*` → `bannermod.entity.civilian.*`
+- `workers.client.*` → `bannermod.client.civilian.*`
+- `workers.world.*` → `bannermod.persistence.civilian.*`
+- `workers.inventory.*` → `bannermod.inventory.civilian.*`
+- `workers.items.*` → `bannermod.items.civilian.*`
+- `workers.settlement.*` → `bannermod.settlement.civilian.*`
+- `workers.init.*` → `bannermod.registry.civilian.*`
+- Top-level recruits event classes → `bannermod.events.*`
+
+**Remaining deferred (Wave 9 scope):**
+- `workers.config.WorkersServerConfig` ref in `MessageAddWorkArea.java` — config migration Wave 9.
+- `workers.WorkersRuntime.bindChannel()` call in `BannerModNetworkBootstrap.createSharedChannel()` — Wave 9 source-root retirement.
+- Neither clone's `src/main/java/` now contains a `network/` subtree. Only deprecated shim groups remain.
