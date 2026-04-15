@@ -40,6 +40,13 @@
 - [x] CITIZEN-03 — One controlled recruit path and one controlled worker path use the citizen seam live without changing the live mod id, registry identity, packet entrypoints, screen entrypoints, or current narrow save-compatibility seams.
 - [x] CITIZEN-04 — Existing root GameTests plus targeted new regression coverage prove the citizen seam keeps recruit and worker behavior compatibility-safe during the incremental rollout.
 
+## Active Phase 21 Requirements
+
+- [ ] SRCMOVE-01 — Canonical shared seam ownership lives under `com.talhanation.bannermod.shared/**` and `com.talhanation.bannermod.config`, and retained legacy `com.talhanation.bannermod.{authority,settlement,logistics}` seam classes are deprecated compatibility forwarders only.
+- [ ] SRCMOVE-02 — Active recruit military/shared gameplay AND worker civilian gameplay (entities, AI, persistence, client flows) are re-homed onto canonical `com.talhanation.bannermod.{entity,ai,pathfinding,persistence,client}/{shared,military,civilian}/**` packages, replacing the legacy `com.talhanation.recruits/**` and `com.talhanation.workers/**` owners of that behavior.
+- [ ] SRCMOVE-03 — Remaining `com.talhanation.recruits/**` files are reduced to documented compatibility surfaces (deprecated forwarders into canonical `bannermod.*` homes, or explicitly enumerated event/adapter/mixin seams in `MERGE_NOTES.md`); no recruit-package file still owns live military/shared gameplay behavior.
+- [ ] SRCMOVE-04 — Remaining `com.talhanation.workers/**` files are reduced to the enumerated narrow compat surface (bootstrap glue, packet registrar, legacy `workers:*` id remap, structure NBT migration, Forge-bus event subscribers, i18n helpers) with canonical civilian ownership living exclusively under `com.talhanation.bannermod.*.civilian/**` and the narrow worker compat under `com.talhanation.bannermod.compat.workers/**`.
+
 ## Active Phase 31 Requirements
 
 - [x] CLAIMGROW-01 — Friendly claims count as valid settlement context for worker growth without introducing a new settlement manager.
