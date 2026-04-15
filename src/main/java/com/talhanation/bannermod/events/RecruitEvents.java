@@ -80,12 +80,20 @@ public class RecruitEvents {
     };
 
     public static void promoteRecruit(AbstractRecruitEntity recruit, int profession, String name, ServerPlayer player) {
+        if (!(recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
         // RecruitEvent.Promoted feuern – cancelable
         RecruitEvent.Promoted promoteEvent = new RecruitEvent.Promoted(recruit, profession, name, player);
         MinecraftForge.EVENT_BUS.post(promoteEvent);
         if (promoteEvent.isCanceled()) return;
 
         if (profession == 6) {
+            if (recruit.getXpLevel() < 7 || recruit.getOwnerUUID() == null) {
+                player.sendSystemMessage(Component.literal("Governor designation denied: recruit is not eligible"));
+                return;
+            }
             if (name != null && !name.isBlank()) {
                 recruit.setCustomName(Component.literal(name));
             }
@@ -94,7 +102,7 @@ public class RecruitEvents {
                     ? null
                     : ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(recruit.blockPosition()));
             BannerModGovernorService service = new BannerModGovernorService(
-                    BannerModGovernorManager.get((ServerLevel) recruit.getCommandSenderWorld())
+                    BannerModGovernorManager.get(serverLevel)
             );
             BannerModGovernorService.OperationResult result = service.assignGovernor(claim, player, recruit);
             if (result.allowed()) {
@@ -107,6 +115,9 @@ public class RecruitEvents {
         }
 
         EntityType<? extends AbstractRecruitEntity> companionType = entitiesByProfession.get(profession);
+        if (companionType == null) {
+            return;
+        }
         AbstractRecruitEntity abstractRecruit = companionType.create(recruit.getCommandSenderWorld());
         if (abstractRecruit instanceof ICompanion companion) {
             abstractRecruit.setCustomName(Component.literal(name));

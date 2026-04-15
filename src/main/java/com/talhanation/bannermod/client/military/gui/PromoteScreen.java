@@ -118,9 +118,13 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
         createProfessionButtons(BUTTON_ASSASSIN, TOOLTIP_ASSASSIN, 4, false && recruit.getXpLevel() >= 5);
         createProfessionButtons(BUTTON_SIEGE_ENGINEER, TOOLTIP_SIEGE_ENGINEER, 5, false && recruit.getXpLevel() >= 5 && BannerModMain.isSiegeWeaponsLoaded);
 
-        createProfessionButtons(BUTTON_GOVERNOR, TOOLTIP_GOVERNOR, 6, recruit.getXpLevel() >= 7);
+        createProfessionButtons(BUTTON_GOVERNOR, TOOLTIP_GOVERNOR, 6, canDesignateGovernor());
         createProfessionButtons(BUTTON_SPY, TOOLTIP_SPY, 7, false && recruit.getXpLevel() >= 7);
         createProfessionButtons(BUTTON_ROGUE, TOOLTIP_ROGUE, 8, false && recruit.getXpLevel() >= 7);
+    }
+
+    private boolean canDesignateGovernor() {
+        return recruit.getXpLevel() >= 7 && recruit.getOwnerUUID() != null;
     }
 
     private Button createProfessionButtons(Component buttonText, Component buttonTooltip, int professionID, boolean active){
