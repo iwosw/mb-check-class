@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "bannermod:block/horseman_table_side",
+    "north": "bannermod:block/horseman_table_side",
+    "south": "bannermod:block/horseman_table_side",
+    "east": "bannermod:block/horseman_table_side",
+    "west": "bannermod:block/horseman_table_side",
+    "up": "bannermod:block/horseman_table_top",
+    "down": "bannermod:block/horseman_table_bottom"
+  }
+}

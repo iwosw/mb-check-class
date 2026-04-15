@@ -1,0 +1,89 @@
+package com.talhanation.workers.network;
+
+import com.talhanation.bannermod.authority.BannerModAuthorityRules;
+import com.talhanation.bannerlord.entity.civilian.AbstractWorkerEntity;
+import de.maxhenkel.corelib.net.Message;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public class MessageRecoverWorkerControl implements Message<MessageRecoverWorkerControl> {
+
+    public List<UUID> workerUuids = new ArrayList<>();
+
+    public MessageRecoverWorkerControl() {
+    }
+
+    public MessageRecoverWorkerControl(List<UUID> workerUuids) {
+        this.workerUuids = new ArrayList<>(workerUuids);
+    }
+
+    @Override
+    public Dist getExecutingSide() {
+        return Dist.DEDICATED_SERVER;
+    }
+
+    @Override
+    public void executeServerSide(NetworkEvent.Context context) {
+        ServerPlayer player = context.getSender();
+        if (player == null) return;
+
+        if (workerUuids.isEmpty()) {
+            player.sendSystemMessage(Component.literal("No workers selected for recovery."));
+            return;
+        }
+
+        int recovered = 0;
+
+        for (UUID workerUuid : workerUuids) {
+            Entity entity = player.serverLevel().getEntity(workerUuid);
+            AbstractWorkerEntity worker = entity instanceof AbstractWorkerEntity abstractWorkerEntity ? abstractWorkerEntity : null;
+
+            BannerModAuthorityRules.Decision decision = BannerModAuthorityRules.recoverControlDecision(
+                    worker != null,
+                    BannerModAuthorityRules.resolveRelationship(
+                            worker != null && player.getUUID().equals(worker.getOwnerUUID()),
+                            false,
+                            player.hasPermissions(2)
+                    )
+            );
+
+            if (!BannerModAuthorityRules.isAllowed(decision)) {
+                continue;
+            }
+
+            if (worker.recoverControl(player)) {
+                recovered++;
+            }
+        }
+
+        if (recovered == 0) {
+            player.sendSystemMessage(Component.literal("No controlled workers could be recovered."));
+        }
+    }
+
+    @Override
+    public MessageRecoverWorkerControl fromBytes(FriendlyByteBuf buf) {
+        int size = buf.readVarInt();
+        this.workerUuids = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            this.workerUuids.add(buf.readUUID());
+        }
+        return this;
+    }
+
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeVarInt(workerUuids.size());
+        for (UUID workerUuid : workerUuids) {
+            buf.writeUUID(workerUuid);
+        }
+    }
+}

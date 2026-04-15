@@ -1,0 +1,113 @@
+package com.talhanation.workers.network;
+
+import com.talhanation.bannerlord.entity.civilian.workarea.AbstractWorkAreaEntity;
+import de.maxhenkel.corelib.net.Message;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.UUID;
+
+import static com.talhanation.bannerlord.entity.civilian.workarea.AbstractWorkAreaEntity.DONE_TIME;
+
+public class MessageUpdateWorkArea implements Message<MessageUpdateWorkArea> {
+    public float x;
+    public float y;
+    public float z;
+    public UUID uuid;
+    public String name;
+    public boolean destroy;
+    public UUID playerUUID;
+    public String playerName;
+    public MessageUpdateWorkArea() {
+
+    }
+
+    public MessageUpdateWorkArea(UUID uuid, String name, Vec3 vec3, boolean destroy) {
+        this.x = (float) vec3.x;
+        this.y = (float) vec3.y;
+        this.z = (float) vec3.z;
+        this.uuid = uuid;
+        this.name = name;
+        this.destroy = destroy;
+    }
+
+    public Dist getExecutingSide() {
+        return Dist.DEDICATED_SERVER;
+    }
+
+    public void executeServerSide(NetworkEvent.Context context){
+        ServerPlayer player = context.getSender();
+        if(player == null) return;
+
+        Entity entity = player.serverLevel().getEntity(this.uuid);
+        if (!(entity instanceof AbstractWorkAreaEntity workArea)) {
+            this.sendDecision(player, WorkAreaAuthoringRules.Decision.AREA_NOT_FOUND);
+            return;
+        }
+
+        WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.modifyDecision(true, workArea.getAuthoringAccess(player));
+        if (!WorkAreaAuthoringRules.isAllowed(decision)) {
+            this.sendDecision(player, decision);
+            return;
+        }
+
+        this.updateWorkArea(player, workArea);
+
+    }
+
+    public void updateWorkArea(ServerPlayer player, AbstractWorkAreaEntity workArea){
+        if (destroy) {
+            workArea.remove(Entity.RemovalReason.DISCARDED);
+            return;
+        }
+
+        workArea.setCustomName(Component.literal(name));
+
+        Vec3 oldPos = workArea.position();
+        workArea.moveTo(this.x, this.y, this.z);
+        workArea.createArea();
+        AABB newArea = workArea.getArea();
+
+        if (AbstractWorkAreaEntity.isAreaOverlapping(workArea.level(), workArea, newArea)) {
+            workArea.moveTo(oldPos);
+            workArea.createArea();
+            this.sendDecision(player, WorkAreaAuthoringRules.Decision.OVERLAPPING);
+            return;
+        }
+
+        workArea.setTime(workArea.getTime() + DONE_TIME);
+    }
+
+    private void sendDecision(ServerPlayer player, WorkAreaAuthoringRules.Decision decision) {
+        String messageKey = WorkAreaAuthoringRules.getMessageKey(decision);
+        if (messageKey != null) {
+            player.sendSystemMessage(Component.translatable(messageKey));
+        }
+    }
+
+    public MessageUpdateWorkArea fromBytes(FriendlyByteBuf buf) {
+        this.x = buf.readFloat();
+        this.y = buf.readFloat();
+        this.z = buf.readFloat();
+        this.uuid = buf.readUUID();
+        this.name = buf.readUtf();
+        this.destroy = buf.readBoolean();
+        return this;
+    }
+
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeFloat(x);
+        buf.writeFloat(y);
+        buf.writeFloat(z);
+        buf.writeUUID(uuid);
+        buf.writeUtf(name);
+        buf.writeBoolean(destroy);
+    }
+
+}

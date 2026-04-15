@@ -1,0 +1,196 @@
+package com.talhanation.workers.init;
+
+import com.talhanation.workers.WorkersRuntime;
+
+import com.talhanation.bannerlord.entity.civilian.*;
+import com.talhanation.bannerlord.entity.civilian.workarea.*;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public class ModEntityTypes {
+
+        public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister
+                        .create(ForgeRegistries.ENTITY_TYPES, WorkersRuntime.modId());
+
+        public static final RegistryObject<EntityType<CropArea>> CROPAREA = ENTITY_TYPES.register("croparea",
+                () -> EntityType.Builder.of(CropArea::new, MobCategory.MISC)
+                        .sized(1.2F, 2.00F)
+                        .fireImmune().noSummon()
+                        .build(WorkersRuntime.id("croparea").toString()));
+        public static final RegistryObject<EntityType<LumberArea>> LUMBERAREA = ENTITY_TYPES.register("lumberarea",
+                () -> EntityType.Builder.of(LumberArea::new, MobCategory.MISC)
+                        .sized(1.2F, 2.00F)
+                        .fireImmune().noSummon()
+                        .build(WorkersRuntime.id("lumberarea").toString()));
+        public static final RegistryObject<EntityType<BuildArea>> BUILDAREA = ENTITY_TYPES.register("buildarea",
+                () -> EntityType.Builder.of(BuildArea::new, MobCategory.MISC)
+                        .sized(1.2F, 2.00F)
+                        .fireImmune().noSummon()
+                        .build(WorkersRuntime.id("buildarea").toString()));
+        public static final RegistryObject<EntityType<MiningArea>> MININGAREA = ENTITY_TYPES.register("miningarea",
+                () -> EntityType.Builder.of(MiningArea::new, MobCategory.MISC)
+                        .sized(1.2F, 2.00F)
+                        .fireImmune().noSummon()
+                        .build(WorkersRuntime.id("miningarea").toString()));
+        public static final RegistryObject<EntityType<StorageArea>> STORAGEAREA = ENTITY_TYPES.register("storagearea",
+                () -> EntityType.Builder.of(StorageArea::new, MobCategory.MISC)
+                        .sized(1.2F, 2.00F)
+                        .fireImmune().noSummon()
+                        .build(WorkersRuntime.id("storagearea").toString()));
+
+        public static final RegistryObject<EntityType<MarketArea>> MARKETAREA = ENTITY_TYPES.register("marketarea",
+                () -> EntityType.Builder.of(MarketArea::new, MobCategory.MISC)
+                        .sized(1.2F, 2.00F)
+                        .fireImmune().noSummon()
+                        .build(WorkersRuntime.id("marketarea").toString()));
+
+        public static final RegistryObject<EntityType<FishingArea>> FISHINGAREA = ENTITY_TYPES.register("fishingarea",
+                () -> EntityType.Builder.of(FishingArea::new, MobCategory.MISC)
+                        .sized(1.2F, 2.00F)
+                        .fireImmune().noSummon()
+                        .build(WorkersRuntime.id("fishingarea").toString()));
+
+    public static final RegistryObject<EntityType<AnimalPenArea>> ANIMAL_PEN_AREA = ENTITY_TYPES.register("animalpenarea",
+            () -> EntityType.Builder.of(AnimalPenArea::new, MobCategory.MISC)
+                    .sized(1.2F, 2.00F)
+                    .fireImmune().noSummon()
+                    .build(WorkersRuntime.id("animalpenarea").toString()));
+
+
+    public static final RegistryObject<EntityType<AnimalFarmerEntity>> ANIMAL_FARMER = ENTITY_TYPES.register("animal_farmer",
+                        () -> EntityType.Builder.of(AnimalFarmerEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(WorkersRuntime.id("animal_farmer").toString()));
+
+        public static final RegistryObject<EntityType<LumberjackEntity>> LUMBERJACK = ENTITY_TYPES.register("lumberjack",
+                () -> EntityType.Builder.of(LumberjackEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .canSpawnFarFromPlayer()
+                        .setTrackingRange(32)
+                        .setShouldReceiveVelocityUpdates(true)
+                        .build(WorkersRuntime.id("lumberjack").toString()));
+
+        public static final RegistryObject<EntityType<FarmerEntity>> FARMER = ENTITY_TYPES.register("farmer",
+                () -> EntityType.Builder.of(FarmerEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .canSpawnFarFromPlayer()
+                        .setTrackingRange(32)
+                        .setShouldReceiveVelocityUpdates(true)
+                        .build(WorkersRuntime.id("farmer").toString()));
+
+        public static final RegistryObject<EntityType<CourierEntity>> COURIER = ENTITY_TYPES.register("courier",
+                () -> EntityType.Builder.of(CourierEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .canSpawnFarFromPlayer()
+                        .setTrackingRange(32)
+                        .setShouldReceiveVelocityUpdates(true)
+                        .build(WorkersRuntime.id("courier").toString()));
+
+        public static final RegistryObject<EntityType<MinerEntity>> MINER = ENTITY_TYPES.register("miner",
+                () -> EntityType.Builder.of(MinerEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .canSpawnFarFromPlayer()
+                        .setTrackingRange(32)
+                        .setShouldReceiveVelocityUpdates(true)
+                        .build(WorkersRuntime.id("miner").toString()));
+
+        public static final RegistryObject<EntityType<BuilderEntity>> BUILDER = ENTITY_TYPES.register("builder",
+                () -> EntityType.Builder.of(BuilderEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .canSpawnFarFromPlayer()
+                        .setTrackingRange(32)
+                        .setShouldReceiveVelocityUpdates(true)
+                        .build(WorkersRuntime.id("builder").toString()));
+
+       public static final RegistryObject<EntityType<MerchantEntity>> MERCHANT = ENTITY_TYPES.register("merchant",
+                () -> EntityType.Builder.of(MerchantEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .canSpawnFarFromPlayer()
+                        .setTrackingRange(32)
+                        .setShouldReceiveVelocityUpdates(true)
+                        .build(WorkersRuntime.id("merchant").toString()));
+
+
+       public static final RegistryObject<EntityType<FishermanEntity>> FISHERMAN = ENTITY_TYPES.register("fisherman",
+                () -> EntityType.Builder.of(FishermanEntity::new, MobCategory.CREATURE)
+                        .sized(0.6F, 1.95F)
+                        .canSpawnFarFromPlayer()
+                        .setTrackingRange(32)
+                        .setShouldReceiveVelocityUpdates(true)
+                        .build(WorkersRuntime.id("fisherman").toString()));
+
+       public static final RegistryObject<EntityType<FishingBobberEntity>> FISHING_BOBBER = ENTITY_TYPES.register("fishing_bobber",
+                        () -> EntityType.Builder.<FishingBobberEntity>of(FishingBobberEntity::new, MobCategory.MISC)
+                                .sized(0.25F, 0.25F)
+                                .clientTrackingRange(4)
+                                .updateInterval(5)
+                                .build(WorkersRuntime.id("fishing_bobber").toString()));
+
+/*
+        public static final RegistryObject<EntityType<FishermanEntity>> FISHERMAN = ENTITY_TYPES.register("fisherman",
+                        () -> EntityType.Builder.of(FishermanEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(new ResourceLocation(Main.MOD_ID, "fisherman").toString()));
+
+        public static final RegistryObject<EntityType<MerchantEntity>> MERCHANT = ENTITY_TYPES.register("merchant",
+                        () -> EntityType.Builder.of(MerchantEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(new ResourceLocation(Main.MOD_ID, "merchant").toString()));
+
+        public static final RegistryObject<EntityType<CattleFarmerEntity>> CATTLE_FARMER = ENTITY_TYPES.register(
+                        "cattle_farmer",
+                        () -> EntityType.Builder.of(CattleFarmerEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(new ResourceLocation(Main.MOD_ID, "cattle_farmer").toString()));
+
+        public static final RegistryObject<EntityType<ChickenFarmerEntity>> CHICKEN_FARMER = ENTITY_TYPES.register(
+                        "chicken_farmer",
+                        () -> EntityType.Builder.of(ChickenFarmerEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(new ResourceLocation(Main.MOD_ID, "chicken_farmer").toString()));
+
+        public static final RegistryObject<EntityType<SwineherdEntity>> SWINEHERD = ENTITY_TYPES.register("swineherd",
+                        () -> EntityType.Builder.of(SwineherdEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(new ResourceLocation(Main.MOD_ID, "swineherd").toString()));
+
+        public static final RegistryObject<EntityType<RabbitFarmerEntity>> RABBIT_FARMER = ENTITY_TYPES.register(
+                        "rabbit_farmer",
+                        () -> EntityType.Builder.of(RabbitFarmerEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(new ResourceLocation(Main.MOD_ID, "rabbit_farmer").toString()));
+
+        public static final RegistryObject<EntityType<BeekeeperEntity>> BEEKEEPER = ENTITY_TYPES.register("beekeeper",
+                        () -> EntityType.Builder.of(BeekeeperEntity::new, MobCategory.CREATURE)
+                                        .sized(0.6F, 1.95F)
+                                        .canSpawnFarFromPlayer()
+                                        .setTrackingRange(32)
+                                        .setShouldReceiveVelocityUpdates(true)
+                                        .build(new ResourceLocation(Main.MOD_ID, "beekeeper").toString()));
+*/
+}

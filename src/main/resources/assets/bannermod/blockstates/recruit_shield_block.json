@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "bannermod:block/recruit_shield_block"
+    }
+  }
+}
