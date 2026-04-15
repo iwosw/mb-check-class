@@ -1,6 +1,13 @@
 package com.talhanation.bannermod.bootstrap;
 
 import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
+import com.talhanation.bannermod.events.ClaimEvents;
+import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.events.DamageEvent;
+import com.talhanation.bannermod.events.FactionEvents;
+import com.talhanation.bannermod.events.PillagerEvents;
+import com.talhanation.bannermod.events.RecruitEvents;
+import com.talhanation.bannermod.events.VillagerEvents;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.WorkersUpdateChecker;
@@ -101,6 +108,18 @@ public class BannerModMain {
         // Workers runtime events
         MinecraftForge.EVENT_BUS.register(new WorkersVillagerEvents());
         MinecraftForge.EVENT_BUS.register(new WorkersCommandEvents());
+        // Recruits runtime events — ports the legacy recruits/Main.java registrations into the
+        // unified entrypoint. RecruitEvents.onServerStarting is what initializes the static
+        // recruitsPlayerUnitManager / recruitsGroupsManager fields read by AbstractRecruitEntity.
+        // Without these, right-click-to-hire (and every other recruits-side flow) trips an NPE.
+        // See 21-UAT.md gap "Right-clicking a recruit opens the Hire GUI without server-side crash".
+        MinecraftForge.EVENT_BUS.register(new RecruitEvents());
+        MinecraftForge.EVENT_BUS.register(new ClaimEvents());
+        MinecraftForge.EVENT_BUS.register(new FactionEvents());
+        MinecraftForge.EVENT_BUS.register(new CommandEvents());
+        MinecraftForge.EVENT_BUS.register(new DamageEvent());
+        MinecraftForge.EVENT_BUS.register(new PillagerEvents());
+        MinecraftForge.EVENT_BUS.register(new VillagerEvents());
         MinecraftForge.EVENT_BUS.register(this);
         if (MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers()) {
             MinecraftForge.EVENT_BUS.register(new WorkersUpdateChecker());
