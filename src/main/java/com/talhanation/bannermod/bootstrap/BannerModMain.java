@@ -12,6 +12,9 @@ import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.WorkersUpdateChecker;
 import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
+import com.talhanation.bannermod.client.military.events.ClientPlayerEvents;
+import com.talhanation.bannermod.client.military.events.KeyEvents;
+import com.talhanation.bannermod.client.military.gui.overlay.ClaimOverlayManager;
 import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
@@ -150,6 +153,15 @@ public class BannerModMain {
         com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
                 new com.talhanation.bannermod.client.civilian.gui.WorkerCommandScreen());
         MinecraftForge.EVENT_BUS.register(new ScreenEvents());
+        // Recruits client-side event handlers — same Phase-21 consolidation defect class
+        // as 21-11 (recruits/Main.java was deprecated to a no-op shim and these registrations
+        // were not ported into the unified entrypoint). KeyEvents owns the R/U/M hotkey
+        // listener that opens Command/Faction/Map screens; ClientPlayerEvents owns
+        // client-tick and world-load hooks; ClaimOverlayManager renders the claim HUD.
+        // See 21-UAT.md gap "Recruits hotkey screens (Command/Faction/Map) and the claim overlay open in dev client".
+        MinecraftForge.EVENT_BUS.register(new KeyEvents());
+        MinecraftForge.EVENT_BUS.register(new ClientPlayerEvents());
+        MinecraftForge.EVENT_BUS.register(new ClaimOverlayManager());
     }
 
     private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {
