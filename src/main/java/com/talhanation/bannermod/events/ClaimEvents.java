@@ -90,13 +90,15 @@ public class ClaimEvents {
 
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event){
-        if(event.getServer().overworld().isClientSide()) return;
+        if (event.phase != TickEvent.Phase.END) return;
+        if (server == null || recruitsClaimManager == null) return;
+
+        ServerLevel level = server.overworld();
+        if(level == null || level.isClientSide()) return;
 
         siegeCounter++;
         detectionCounter++;
         governorCounter++;
-
-        ServerLevel level = server.overworld();
 
         if(siegeCounter >= SIEGE_TICK_INTERVAL){
             siegeCounter = 0;

@@ -17,6 +17,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 public final class BannerModGovernorHeartbeat {
+    private static final int TAX_PER_CITIZEN = 2;
 
     private BannerModGovernorHeartbeat() {
     }
@@ -32,9 +33,9 @@ public final class BannerModGovernorHeartbeat {
         switch (input.settlementStatus()) {
             case HOSTILE_CLAIM -> incidents.add(BannerModGovernorIncident.HOSTILE_CLAIM);
             case DEGRADED_MISMATCH -> incidents.add(BannerModGovernorIncident.DEGRADED_SETTLEMENT);
-            case UNCLAIMED -> incidents.add(BannerModGovernorIncident.DEGRADED_SETTLEMENT);
+            case UNCLAIMED -> incidents.add(BannerModGovernorIncident.UNCLAIMED_SETTLEMENT);
             case FRIENDLY_CLAIM -> {
-                taxesDue = citizens * 2;
+                taxesDue = citizens * TAX_PER_CITIZEN;
                 taxesCollected = taxesDue;
             }
         }
@@ -85,7 +86,7 @@ public final class BannerModGovernorHeartbeat {
     public static List<String> incidentTokens(List<BannerModGovernorIncident> incidents) {
         List<String> tokens = new ArrayList<>();
         for (BannerModGovernorIncident incident : incidents) {
-            tokens.add(incident.name().toLowerCase());
+            tokens.add(incident.token());
         }
         return tokens;
     }
@@ -93,7 +94,7 @@ public final class BannerModGovernorHeartbeat {
     public static List<String> recommendationTokens(List<BannerModGovernorRecommendation> recommendations) {
         List<String> tokens = new ArrayList<>();
         for (BannerModGovernorRecommendation recommendation : recommendations) {
-            tokens.add(recommendation.name().toLowerCase());
+            tokens.add(recommendation.token());
         }
         return tokens;
     }
