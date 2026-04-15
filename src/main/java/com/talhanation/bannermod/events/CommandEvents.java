@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.events;
 
-import com.talhanation.recruits.client.ClientManager;
+import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.entities.*;
 import com.talhanation.recruits.entities.ai.controller.RecruitCommandStateTransitions;

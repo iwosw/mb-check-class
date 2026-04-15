@@ -1,8 +1,8 @@
 package com.talhanation.bannermod.registry.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.recruits.client.gui.*;
-import com.talhanation.recruits.client.gui.faction.*;
+import com.talhanation.bannermod.client.military.gui.*;
+import com.talhanation.bannermod.client.military.gui.faction.*;
 import com.talhanation.recruits.entities.AbstractLeaderEntity;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.entities.AssassinLeaderEntity;

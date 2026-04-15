@@ -126,7 +126,7 @@ public class BannerModMain {
         event.enqueueWork(com.talhanation.bannermod.registry.civilian.ModMenuTypes::registerMenus);
         event.enqueueWork(com.talhanation.workers.world.StructureManager::copyDefaultStructuresIfMissing);
         // Worker command screen
-        com.talhanation.recruits.client.events.CommandCategoryManager.register(
+        com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
                 new com.talhanation.workers.client.gui.WorkerCommandScreen());
         MinecraftForge.EVENT_BUS.register(new ScreenEvents());
     }

@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.bootstrap;
 
-import com.talhanation.recruits.client.events.CommandCategoryManager;
+import com.talhanation.bannermod.client.military.events.CommandCategoryManager;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.workers.client.events.ScreenEvents;

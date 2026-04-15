@@ -1,0 +1,94 @@
+package com.talhanation.bannermod.client.military.gui.component;
+
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.datafixers.util.Pair;
+import com.talhanation.bannermod.persistence.military.RecruitsFaction;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.ModelBakery;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.BannerItem;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BannerBlockEntity;
+import net.minecraft.world.level.block.entity.BannerPattern;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+
+public class BannerRenderer {
+    private List<Pair<Holder<BannerPattern>, DyeColor>> resultBannerPatterns;
+    private final ModelPart flag;
+    private ItemStack bannerItem;
+    private RecruitsFaction recruitsFaction;
+    private final Minecraft minecraft;
+    public BannerRenderer(@Nullable RecruitsFaction team) {
+        this.recruitsFaction = team;
+        boolean fail = true;
+        if (team != null && team.getBanner() != null){
+            ItemStack itemStack = ItemStack.of(team.getBanner());
+            if(itemStack.getItem() instanceof BannerItem bannerItem1){
+                this.bannerItem = itemStack;
+                this.resultBannerPatterns = BannerBlockEntity.createPatterns(
+                        bannerItem1.getColor(),
+                        BannerBlockEntity.getItemPatterns(this.bannerItem)
+                );
+                fail = false;
+            }
+
+        }
+
+        if(fail){
+            this.bannerItem = ItemStack.EMPTY;
+            this.resultBannerPatterns = List.of();
+        }
+
+        this.flag = Minecraft.getInstance().getEntityModels()
+                .bakeLayer(ModelLayers.BANNER)
+                .getChild("flag"); 
+        this.minecraft = Minecraft.getInstance();
+    }
+
+    public void renderBanner(GuiGraphics guiGraphics, int left, int top, int width, int height, int scale0) {
+        if (bannerItem.isEmpty() || this.flag == null || this.resultBannerPatterns == null) return;
+
+        Lighting.setupForFlatItems();
+        guiGraphics.pose().pushPose();
+        try {
+            guiGraphics.pose().translate(left + 10, top + 20, 0.0D);
+            guiGraphics.pose().scale(scale0, -scale0, 1.0F);
+
+            float scale = 0.6666667F;
+            guiGraphics.pose().scale(scale, -scale, -scale);
+            this.flag.xRot = 0.0F;
+            this.flag.y = -32.0F;
+
+            MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+            net.minecraft.client.renderer.blockentity.BannerRenderer.renderPatterns(
+                    guiGraphics.pose(), bufferSource, 15728880, OverlayTexture.NO_OVERLAY,
+                    this.flag, ModelBakery.BANNER_BASE, true, this.resultBannerPatterns);
+            bufferSource.endBatch();
+        } finally {
+            guiGraphics.pose().popPose();
+            Lighting.setupFor3DItems();
+        }
+    }
+
+    public void setBannerItem(ItemStack bannerItem) {
+        if(bannerItem.getItem() instanceof BannerItem){
+            this.bannerItem = bannerItem;
+            this.resultBannerPatterns = BannerBlockEntity.createPatterns(((BannerItem) this.bannerItem.getItem()).getColor(), BannerBlockEntity.getItemPatterns(this.bannerItem));
+        }
+    }
+
+    public void setRecruitsFaction(RecruitsFaction faction){
+        if(faction == null) return;
+        this.recruitsFaction = faction;
+        this.bannerItem = ItemStack.of(faction.getBanner());
+        this.resultBannerPatterns = BannerBlockEntity.createPatterns(((BannerItem) this.bannerItem.getItem()).getColor(), BannerBlockEntity.getItemPatterns(this.bannerItem));
+    }
+}
