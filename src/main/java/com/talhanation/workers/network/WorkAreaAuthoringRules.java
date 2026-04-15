@@ -1,6 +1,6 @@
 package com.talhanation.workers.network;
 
-import com.talhanation.bannermod.authority.BannerModAuthorityRules;
+import com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules;
 
 public final class WorkAreaAuthoringRules {
 

@@ -1,7 +1,7 @@
 package com.talhanation.bannerlord.ai.civilian;
 
-import com.talhanation.bannermod.logistics.BannerModCourierTask;
-import com.talhanation.bannermod.logistics.BannerModLogisticsService;
+import com.talhanation.bannerlord.shared.logistics.BannerModCourierTask;
+import com.talhanation.bannerlord.shared.logistics.BannerModLogisticsService;
 import com.talhanation.bannerlord.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannerlord.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannerlord.entity.civilian.workarea.StorageArea;

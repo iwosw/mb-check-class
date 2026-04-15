@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.governance;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
 import com.talhanation.recruits.world.RecruitsClaim;
 import net.minecraft.server.level.ServerPlayer;
@@ -60,6 +60,18 @@ public class BannerModGovernorService {
     public OperationResult assignGovernor(RecruitsClaim claim,
                                           ServerPlayer player,
                                           AbstractRecruitEntity recruit) {
+        return assignGovernor(claim, BannerModGovernorAuthority.actor(player), recruit);
+    }
+
+    public OperationResult assignGovernor(RecruitsClaim claim,
+                                          BannerModGovernorAuthority.ActorContext actor,
+                                          com.talhanation.recruits.entities.AbstractRecruitEntity recruit) {
+        return assignGovernor(claim, actor, RecruitGovernorTarget.fromRecruit(recruit));
+    }
+
+    public OperationResult assignGovernor(RecruitsClaim claim,
+                                          ServerPlayer player,
+                                          com.talhanation.recruits.entities.AbstractRecruitEntity recruit) {
         return assignGovernor(claim, BannerModGovernorAuthority.actor(player), recruit);
     }
 
@@ -161,6 +173,14 @@ public class BannerModGovernorService {
 
     public record RecruitGovernorTarget(UUID recruitUuid, @Nullable UUID ownerUuid, @Nullable String teamId) {
         public static RecruitGovernorTarget fromRecruit(AbstractRecruitEntity recruit) {
+            return new RecruitGovernorTarget(
+                    recruit.getUUID(),
+                    recruit.getOwnerUUID(),
+                    recruit.getTeam() == null ? null : recruit.getTeam().getName()
+            );
+        }
+
+        public static RecruitGovernorTarget fromRecruit(com.talhanation.recruits.entities.AbstractRecruitEntity recruit) {
             return new RecruitGovernorTarget(
                     recruit.getUUID(),
                     recruit.getOwnerUUID(),

@@ -1,6 +1,6 @@
 package com.talhanation.bannerlord.entity.civilian.workarea;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.ClaimEvents;
 import com.talhanation.bannerlord.compat.workers.WorkersRuntime;
 import com.talhanation.bannerlord.entity.civilian.AbstractWorkerEntity;

@@ -2,7 +2,7 @@ package com.talhanation.recruits;
 
 import com.talhanation.bannermod.governance.BannerModGovernorService;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.compat.IWeapon;
 import com.talhanation.recruits.config.RecruitsServerConfig;
 import com.talhanation.recruits.util.DelayedExecutor;

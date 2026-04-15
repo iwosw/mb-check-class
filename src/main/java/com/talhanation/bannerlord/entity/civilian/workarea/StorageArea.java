@@ -1,7 +1,7 @@
 package com.talhanation.bannerlord.entity.civilian.workarea;
 
-import com.talhanation.bannermod.logistics.BannerModLogisticsRoute;
-import com.talhanation.bannermod.logistics.BannerModLogisticsService;
+import com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute;
+import com.talhanation.bannerlord.shared.logistics.BannerModLogisticsService;
 import com.talhanation.bannerlord.client.civilian.gui.StorageAreaScreen;
 import com.talhanation.bannerlord.entity.civilian.*;
 import net.minecraft.client.gui.screens.Screen;

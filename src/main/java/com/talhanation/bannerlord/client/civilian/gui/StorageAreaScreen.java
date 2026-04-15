@@ -1,7 +1,7 @@
 package com.talhanation.bannerlord.client.civilian.gui;
 
 import com.talhanation.bannerlord.client.shared.gui.widgets.RecruitsCheckBox;
-import com.talhanation.bannermod.logistics.BannerModLogisticsRoute;
+import com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannerlord.compat.workers.WorkersRuntime;
 import com.talhanation.bannerlord.entity.civilian.workarea.StorageArea;
 import com.talhanation.workers.network.MessageUpdateStorageArea;

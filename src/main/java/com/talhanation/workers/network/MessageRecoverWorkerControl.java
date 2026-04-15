@@ -1,6 +1,6 @@
 package com.talhanation.workers.network;
 
-import com.talhanation.bannermod.authority.BannerModAuthorityRules;
+import com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules;
 import com.talhanation.bannerlord.entity.civilian.AbstractWorkerEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;

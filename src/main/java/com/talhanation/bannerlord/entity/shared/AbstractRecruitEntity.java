@@ -5,7 +5,7 @@ import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
-import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
+import com.talhanation.bannerlord.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.recruits.*;
 import com.talhanation.recruits.RecruitEvent;
 import com.talhanation.recruits.compat.IWeapon;

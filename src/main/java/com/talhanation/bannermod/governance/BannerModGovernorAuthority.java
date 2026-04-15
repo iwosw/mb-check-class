@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.governance;
 
-import com.talhanation.bannermod.authority.BannerModAuthorityRules;
+import com.talhanation.bannerlord.shared.authority.BannerModAuthorityRules;
 import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;

@@ -8,6 +8,7 @@ import net.minecraft.world.level.ChunkPos;
 import javax.annotation.Nullable;
 import java.util.List;
 
+@Deprecated(forRemoval = false)
 public final class BannerModSettlementBinding {
 
     private BannerModSettlementBinding() {
@@ -17,7 +18,15 @@ public final class BannerModSettlementBinding {
         FRIENDLY_CLAIM,
         HOSTILE_CLAIM,
         UNCLAIMED,
-        DEGRADED_MISMATCH
+        DEGRADED_MISMATCH;
+
+        private static Status fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.Status status) {
+            return Status.valueOf(status.name());
+        }
+
+        private com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.Status toShared() {
+            return com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.Status.valueOf(this.name());
+        }
     }
 
     public record Binding(Status status, @Nullable String settlementFactionId, @Nullable String claimFactionId) {
@@ -25,89 +34,45 @@ public final class BannerModSettlementBinding {
         public boolean isFriendly() {
             return status == Status.FRIENDLY_CLAIM;
         }
+
+        private static Binding fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.Binding binding) {
+            return new Binding(Status.fromShared(binding.status()), binding.settlementFactionId(), binding.claimFactionId());
+        }
+
+        private com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.Binding toShared() {
+            return new com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.Binding(this.status.toShared(), this.settlementFactionId, this.claimFactionId);
+        }
     }
 
     public static Binding resolveFactionStatus(@Nullable RecruitsClaimManager claimManager, BlockPos pos, @Nullable String factionId) {
-        if (claimManager == null || pos == null) {
-            return new Binding(Status.UNCLAIMED, normalizeFactionId(factionId), null);
-        }
-        ChunkPos chunkPos = new ChunkPos(pos);
-        return resolveFactionStatus(claimManager.getClaim(chunkPos), chunkPos, factionId);
+        return Binding.fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.resolveFactionStatus(claimManager, pos, factionId));
     }
 
-    public static Binding resolveFactionStatus(List<RecruitsClaim> claims, BlockPos pos, @Nullable String factionId) {
-        if (claims == null || pos == null) {
-            return new Binding(Status.UNCLAIMED, normalizeFactionId(factionId), null);
-        }
-        ChunkPos chunkPos = new ChunkPos(pos);
-        return resolveFactionStatus(RecruitsClaimManager.getClaimAt(chunkPos, claims), chunkPos, factionId);
+    public static Binding resolveFactionStatus(List<?> claims, BlockPos pos, @Nullable String factionId) {
+        return Binding.fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.resolveFactionStatus(claims, pos, factionId));
     }
 
     public static Binding resolveFactionStatus(@Nullable RecruitsClaim claim, ChunkPos chunkPos, @Nullable String factionId) {
-        String normalizedFactionId = normalizeFactionId(factionId);
-        String claimFactionId = resolveClaimFactionId(claim, chunkPos);
-        if (claimFactionId == null) {
-            return new Binding(Status.UNCLAIMED, normalizedFactionId, null);
-        }
-        if (normalizedFactionId != null && normalizedFactionId.equals(claimFactionId)) {
-            return new Binding(Status.FRIENDLY_CLAIM, normalizedFactionId, claimFactionId);
-        }
-        return new Binding(Status.HOSTILE_CLAIM, normalizedFactionId, claimFactionId);
+        return Binding.fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.resolveFactionStatus(claim, chunkPos, factionId));
     }
 
     public static Binding resolveSettlementStatus(@Nullable RecruitsClaimManager claimManager, BlockPos pos, @Nullable String settlementFactionId) {
-        if (claimManager == null || pos == null) {
-            return new Binding(Status.UNCLAIMED, normalizeFactionId(settlementFactionId), null);
-        }
-        ChunkPos chunkPos = new ChunkPos(pos);
-        return resolveSettlementStatus(claimManager.getClaim(chunkPos), chunkPos, settlementFactionId);
+        return Binding.fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.resolveSettlementStatus(claimManager, pos, settlementFactionId));
     }
 
-    public static Binding resolveSettlementStatus(List<RecruitsClaim> claims, BlockPos pos, @Nullable String settlementFactionId) {
-        if (claims == null || pos == null) {
-            return new Binding(Status.UNCLAIMED, normalizeFactionId(settlementFactionId), null);
-        }
-        ChunkPos chunkPos = new ChunkPos(pos);
-        return resolveSettlementStatus(RecruitsClaimManager.getClaimAt(chunkPos, claims), chunkPos, settlementFactionId);
+    public static Binding resolveSettlementStatus(List<?> claims, BlockPos pos, @Nullable String settlementFactionId) {
+        return Binding.fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.resolveSettlementStatus(claims, pos, settlementFactionId));
     }
 
     public static Binding resolveSettlementStatus(@Nullable RecruitsClaim claim, ChunkPos chunkPos, @Nullable String settlementFactionId) {
-        String normalizedSettlementFactionId = normalizeFactionId(settlementFactionId);
-        String claimFactionId = resolveClaimFactionId(claim, chunkPos);
-        if (claimFactionId == null) {
-            return new Binding(Status.UNCLAIMED, normalizedSettlementFactionId, null);
-        }
-        if (normalizedSettlementFactionId != null && normalizedSettlementFactionId.equals(claimFactionId)) {
-            return new Binding(Status.FRIENDLY_CLAIM, normalizedSettlementFactionId, claimFactionId);
-        }
-        return new Binding(Status.DEGRADED_MISMATCH, normalizedSettlementFactionId, claimFactionId);
+        return Binding.fromShared(com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.resolveSettlementStatus(claim, chunkPos, settlementFactionId));
     }
 
     public static boolean allowsWorkAreaPlacement(@Nullable RecruitsClaimManager claimManager, BlockPos pos, @Nullable String factionId, boolean claimRestricted) {
-        if (!claimRestricted) {
-            return true;
-        }
-        return resolveFactionStatus(claimManager, pos, factionId).isFriendly();
+        return com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.allowsWorkAreaPlacement(claimManager, pos, factionId, claimRestricted);
     }
 
     public static boolean allowsSettlementOperation(Binding binding) {
-        return binding.status() == Status.FRIENDLY_CLAIM;
-    }
-
-    @Nullable
-    private static String resolveClaimFactionId(@Nullable RecruitsClaim claim, ChunkPos chunkPos) {
-        if (claim == null || !claim.containsChunk(chunkPos) || claim.getOwnerFaction() == null) {
-            return null;
-        }
-        return normalizeFactionId(claim.getOwnerFactionStringID());
-    }
-
-    @Nullable
-    private static String normalizeFactionId(@Nullable String factionId) {
-        if (factionId == null) {
-            return null;
-        }
-        String normalizedFactionId = factionId.trim();
-        return normalizedFactionId.isEmpty() ? null : normalizedFactionId;
+        return binding != null && com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding.allowsSettlementOperation(binding.toShared());
     }
 }

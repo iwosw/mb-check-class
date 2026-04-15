@@ -9,14 +9,15 @@ import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
+@Deprecated(forRemoval = false)
 public final class BannerModLogisticsService {
     private static final BannerModLogisticsService SHARED = new BannerModLogisticsService();
 
-    private final Map<UUID, Reservation> reservations = new ConcurrentHashMap<>();
+    private final com.talhanation.bannerlord.shared.logistics.BannerModLogisticsService delegate;
 
     private BannerModLogisticsService() {
+        this.delegate = com.talhanation.bannerlord.shared.logistics.BannerModLogisticsService.shared();
     }
 
     public static BannerModLogisticsService shared() {
@@ -28,37 +29,29 @@ public final class BannerModLogisticsService {
                                               ItemStack stack,
                                               int requestedCount,
                                               long gameTime) {
-        if (endpointId == null || workerId == null || stack == null || stack.isEmpty() || requestedCount <= 0) {
-            return Optional.empty();
-        }
-        String itemId = ForgeRegistries.ITEMS.getKey(stack.getItem()).toString();
-        Reservation reservation = new Reservation(UUID.randomUUID(), endpointId, workerId, itemId, Math.min(requestedCount, stack.getCount()), gameTime, false);
-        this.reservations.put(reservation.reservationId(), reservation);
-        return Optional.of(reservation);
+        return this.delegate.reserveStack(endpointId, workerId, stack, requestedCount, gameTime).map(Reservation::fromShared);
     }
 
     public void release(UUID reservationId) {
-        if (reservationId != null) {
-            this.reservations.remove(reservationId);
-        }
+        this.delegate.release(reservationId);
     }
 
     public void markInTransit(UUID reservationId, long gameTime) {
-        Reservation reservation = this.reservations.get(reservationId);
-        if (reservation != null) {
-            this.reservations.put(reservationId, reservation.withInTransit(true, gameTime));
-        }
+        this.delegate.markInTransit(reservationId, gameTime);
     }
 
     public Optional<BannerModCourierTask> selectBestTask(ServerLevel level, AbstractWorkerEntity worker) {
-        return Optional.empty();
+        return this.delegate.selectBestTask(level, worker).map(BannerModCourierTask::fromShared);
     }
 
     public Optional<String> selectBlockedReason(ServerLevel level, AbstractWorkerEntity worker) {
-        return Optional.empty();
+        return this.delegate.selectBlockedReason(level, worker);
     }
 
     public record ItemStock(String itemId, int count) {
+        static ItemStock fromShared(com.talhanation.bannerlord.shared.logistics.BannerModLogisticsService.ItemStock stock) {
+            return new ItemStock(stock.itemId(), stock.count());
+        }
     }
 
     public record Reservation(UUID reservationId,
@@ -68,8 +61,8 @@ public final class BannerModLogisticsService {
                               int count,
                               long gameTime,
                               boolean inTransit) {
-        private Reservation withInTransit(boolean nextInTransit, long nextGameTime) {
-            return new Reservation(this.reservationId, this.endpointId, this.workerId, this.itemId, this.count, nextGameTime, nextInTransit);
+        static Reservation fromShared(com.talhanation.bannerlord.shared.logistics.BannerModLogisticsService.Reservation reservation) {
+            return new Reservation(reservation.reservationId(), reservation.endpointId(), reservation.workerId(), reservation.itemId(), reservation.count(), reservation.gameTime(), reservation.inTransit());
         }
     }
 }

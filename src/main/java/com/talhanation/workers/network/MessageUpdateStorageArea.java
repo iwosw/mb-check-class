@@ -1,6 +1,6 @@
 package com.talhanation.workers.network;
 
-import com.talhanation.bannermod.logistics.BannerModLogisticsRoute;
+import com.talhanation.bannerlord.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannerlord.entity.civilian.workarea.StorageArea;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;

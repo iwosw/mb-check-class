@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.governance;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding;
 
 import javax.annotation.Nullable;
 import java.util.UUID;

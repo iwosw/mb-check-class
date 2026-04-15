@@ -1,6 +1,6 @@
 package com.talhanation.bannerlord.ai.civilian;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannerlord.shared.settlement.BannerModSettlementBinding;
 
 public final class MiningClaimExcavationRules {
 
