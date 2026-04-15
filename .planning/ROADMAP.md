@@ -377,7 +377,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 5/9 plans executed
+**Plans:** 6/9 plans executed
 
 Plans:
 - [x] 21-01-PLAN.md — Reset Phase 21 executed state: revert the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`), delete stale executed-plan summaries, and record the convergence-namespace pivot (now `bannermod`) in roadmap and merge notes.
@@ -385,14 +385,14 @@ Plans:
 - [x] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannermod` military/shared packages before worker code follows them.
 - [x] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannermod` base while isolating the compatibility layer.
 - [x] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
-- [ ] 21-06-PLAN.md — Establish the shared `bannermod` seam ownership (shared seam classes and config helpers) with only minimal forwarding adapters where required.
+- [x] 21-06-PLAN.md — Migrate remaining recruits-side subsystems (client UI, inventory menus, world managers/SavedData, items) into `bannermod.{client,inventory,persistence,items}.military`, emptying the recruits clone down to deprecated `Main.java` shim.
 - [ ] 21-07-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-7 contract.
 - [ ] 21-08-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-8 contract.
 - [ ] 21-09-PLAN.md — Final phase closeout for `bannermod` consolidation: full root validation green and all prior plan checkboxes re-confirmed at true closeout.
 
 Planning artifacts live under the original Phase 21 directory (`.planning/phases/21-source-tree-consolidation-into-<prior-namespace>/`, directory name retained verbatim for git history continuity; re-execution targets the `bannermod` convergence namespace per 21-CONTEXT.md D-01/D-02).
 
-Status: In progress (0/9 after convergence-namespace pivot to bannermod, 2026-04-15); the prior-namespace work from `f1832af` through `a792dc3` has been fully reverted per plan 21-01. Plans 21-02 through 21-09 will re-execute against the bannermod convergence namespace locked by 21-CONTEXT.md D-01/D-02.
+Status: In progress (6/9 as of 2026-04-15); waves 1-6 complete under the `bannermod` convergence namespace. Recruits clone working tree is reduced to `Main.java` shim plus `init/ModLifecycleRegistrar.java` and `network/**` (Wave 8 scope). Plans 21-07 through 21-09 remain.
 
 ## Phase 22: Citizen Role Unification
 
