@@ -149,6 +149,15 @@ public class BannerModMain {
         // Civilian menus
         event.enqueueWork(com.talhanation.bannermod.registry.civilian.ModMenuTypes::registerMenus);
         event.enqueueWork(com.talhanation.bannermod.persistence.civilian.StructureManager::copyDefaultStructuresIfMissing);
+        // Recruits command-screen categories — pre-consolidation BannerlordMain.clientSetup
+        // registered these three with priorities so they sort before WorkerCommandScreen
+        // (priority 0). Without them the Command screen shows only the workers tab.
+        com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
+                new com.talhanation.bannermod.client.military.gui.commandscreen.CombatCategory(), -3);
+        com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
+                new com.talhanation.bannermod.client.military.gui.commandscreen.MovementCategory(), -2);
+        com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
+                new com.talhanation.bannermod.client.military.gui.commandscreen.OtherCategory(), -1);
         // Worker command screen
         com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
                 new com.talhanation.bannermod.client.civilian.gui.WorkerCommandScreen());
