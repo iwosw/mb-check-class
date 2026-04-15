@@ -2,22 +2,22 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 21
-last_updated: "2026-04-14T13:25:05.098Z"
+status: Phase 31 complete
+last_updated: "2026-04-12T12:58:56.793Z"
 progress:
-  total_phases: 38
-  completed_phases: 24
-  total_plans: 74
-  completed_plans: 71
+  total_phases: 31
+  completed_phases: 21
+  total_plans: 60
+  completed_plans: 55
 ---
 
 # Project State
 
-- Current focus: Phase 21 is in progress; waves 1-2 are complete and the shared seams plus bootstrap/network/registry composition now have canonical `com.talhanation.bannerlord` homes while gameplay-package and source-root retirement waves remain.
+- Current focus: Phase 22 is complete; recruit and worker wrappers now share one citizen core, one role/controller seam, and one live recruit plus one live worker persistence path backed by citizen-owned state while runtime ids, packet entrypoints, and compatibility seams remain stable. The next major execution target remains Phase 21 source-tree consolidation.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: Continue Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, next by moving recruit-owned controlling systems before the broader worker package moves and final source-root retirement.
+- Pending major work: Execute Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, with the move still bounded by the audited recruit-led runtime, the published target architecture, narrow workers compatibility seams, and the now-restored worker mining/build automation baseline from Phase 29.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -38,8 +38,8 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-02-SUMMARY.md`
-- Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
+- Latest execution summary: `.planning/phases/22-citizen-role-unification/22-citizen-role-unification-04-SUMMARY.md`
+- Latest planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-CONTEXT.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-01-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-02-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-03-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-04-PLAN.md`, `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-05-PLAN.md`
 
 ## Decisions
 
@@ -121,9 +121,6 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Execute the physical package move in five waves: shared seams/config, bootstrap/network/registry, recruit-owned controlling systems, worker civilian packages, then source-root retirement plus final validation.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Keep `com.talhanation.bannermod` forwarding wrappers temporary and narrow; they are allowed only to reduce migration risk during import churn.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Do not retire `recruits/` or `workers/` Java source roots until `build.gradle` is updated, the retained compatibility layer is explicit, and root `compileJava`, `processResources`, `test`, and `verifyGameTestStage` are green or explicitly justified.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Wave 1 canonical package anchors now exist at `src/main/java/com/talhanation/bannerlord/shared/**` and `src/main/java/com/talhanation/bannerlord/config/**`; old `com.talhanation.bannermod` shared seams are now temporary forwarding wrappers.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Move the only live `@Mod` entrypoint to `com.talhanation.bannerlord.bootstrap` while keeping `com.talhanation.recruits.Main` as a compatibility shim.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Register the shared `SimpleChannel` through `BannerlordNetworkBootstrap` and keep the worker packet offset derived from the recruit packet catalog size.
 - [Phase 22-citizen-role-unification]: Keep the citizen seam additive and wrapper-owned; do not change live runtime ids, packet entrypoints, or screen entrypoints during the first recruit and worker conversions.
 - [Phase 22-citizen-role-unification]: Route shared recruit and worker persistence through `CitizenPersistenceBridge` before widening live-path adoption beyond one recruit slice and one worker slice.
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Mining behavior now uses one explicit `MiningPatternSettings` contract across UI, packets, persisted area state, and miner AI progress.
@@ -137,22 +134,6 @@ progress:
 - [Phase 31-1-2-mining-area-branch-mine-3]: Resolve claim status per target block with BannerModSettlementBinding.resolveFactionStatus instead of once at the work-area origin.
 - [Phase 31-1-2-mining-area-branch-mine-3]: Run claim worker growth from one periodic server pass keyed by claim UUID cooldown timestamps.
 - [Phase 31-1-2-mining-area-branch-mine-3]: Expose the real VillagerEvents claim-growth helper to GameTests instead of mocking spawn outcomes.
-- [Phase 23]: Persist governor state by claim UUID in one narrow SavedData manager instead of mutating claims or adding a settlement manager.
-- [Phase 23]: Store heartbeat incidents and recommendations as compact token lists so later runtime and UI slices can reuse one snapshot seam.
-- [Phase 24]: Keep the logistics backbone server-authoritative and service-shaped rather than introducing a settlement-wide logistics manager.
-- [Phase 24]: Use authored entity-backed storage and work-area endpoints in the first slice instead of arbitrary chest discovery.
-- [Phase 24]: Implement reservations as lightweight item intents with timeout and cleanup semantics, not deep slot-level locking.
-- [Phase 24]: Courier task selection should be deterministic and priority-first; defer global optimization to later economy phases.
-- [Phase 32]: Replace server-wide global chat with explicit faction and local channels; keep routing server-authoritative and operator-configurable.
-- [Phase 33]: Unify citizen appearance and birth behind one building-capacity-aware settlement growth loop with overpopulation pressure.
-- [Phase 33]: Prefer a narrow building-registration seam over a deep new settlement manager while MineColonies-style housing capacity is introduced.
-- [Phase 34]: Government forms must extend the governor and authority stack instead of forking settlement control into a parallel power model.
-- [Phase 35]: Clan state should be player-first, but keep NPC membership as a first-class extension seam so diplomacy and administration can converge later.
-- [Phase 36]: Formation layout definitions should become datapack-authored content with strict schema validation and safe runtime fallback.
-- [Phase 37]: Claimed faction territory should only permit wartime destruction through recognized siege-engine paths, not ordinary block breaking.
-- [Phase 38]: Siege flow should be declaration-driven, camp-based, and center-capture-based, with hard attacker restrictions and defender build/break cooldowns during the assault window.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Move the only live @Mod entrypoint to com.talhanation.bannerlord.bootstrap while keeping com.talhanation.recruits.Main as a compatibility shim. — This preserves one bannermod runtime entrypoint while lowering import churn risk during the staged source-tree move.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Register the shared SimpleChannel through BannerlordNetworkBootstrap and continue deriving the worker packet offset from the recruit packet catalog size. — This keeps worker packet ordering stable while moving shared networking ownership into bannerlord packages.
 
 ## Accumulated Context
 
@@ -161,13 +142,6 @@ progress:
 - Phase 29 added: Майнер не прокапывается к шахте, а просто статично стоит. 1. Добавь майнеру задачу копать тоннель 3х3 (или произвольной ширины) вниз по диагонали (ни в коем случае не под себя) 2. Добавь майнеру задачу копать по тактике branch mining (strip mining) заданной высоты 3. Добавь загрузку схематик билдерам. Задача высочайшего приоритета, сдвинь фазы 21-26 вправо, а это впихни прямо сейчас
 - Phase 30 added: Worker Birth And Claim-Based Settlement Spawn
 - Phase 31 added: Добавляем приоритетную новую фазу. 1. Клеймы считаются поселениями 2. Mining Area майнера - убрать, оставить чисто настройки копания тоннеля по диагонали вниз и branch mine. Настроек как далеко можно копать можно не делать, но сделать так чтобы не пытался всё время сломать блок чужого клейма, если рядом с клеймом чужим к нему не копает (копать вне клейма майнер может) 3. Делаем генерацию воркеров в клеймах, но считаем сколько уже есть, и по убывающей прогрессии добавляем новых.
-- Phase 32 added: Чат фракции и локала, глобал вырубить.
-- Phase 33 added: Исправить рождаемость воркеров: система регистраций зданий, появление citizens как в MineColonies, рождаемость и давление перенаселения.
-- Phase 34 added: Внедрить различные формы правления и формы устройства государства с административным вопросом.
-- Phase 35 added: Внедрить систему кланов для игроков и при необходимости NPC.
-- Phase 36 added: Переработать формации на datapack-driven.
-- Phase 37 added: Отключить поломку блоков во фракциях всем кроме осаждающих, и только осадными орудиями.
-- Phase 38 added: Исправить осады на манер SiegeWar: осадный лагерь, 48 часов до старта, центральный чанк, осадные орудия, ограничения интерактов и кулдаун защитников.
 
 ## Performance Metrics
 
@@ -209,8 +183,6 @@ progress:
 | Phase 22-citizen-role-unification P02 | not recorded | 2 tasks | 6 files |
 | Phase 22-citizen-role-unification P03 | not recorded | 2 tasks | 4 files |
 | Phase 22-citizen-role-unification P04 | not recorded | 2 tasks | 4 files |
-| Phase 23-settlement-governance-and-governor-control P01 | not recorded | 2 tasks | 4 files |
-| Phase 21-source-tree-consolidation-into-bannerlord P02 | 18 min | 2 tasks | 18 files |
 
 ### Quick Tasks Completed
 
@@ -220,6 +192,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-14T13:22:42Z
-- Stopped at: Completed 21-02-PLAN.md
+- Last updated: 2026-04-13T19:50:37Z
+- Stopped at: Completed 22-04-PLAN.md
 - Resume file: None
