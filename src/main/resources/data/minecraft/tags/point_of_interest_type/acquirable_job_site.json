@@ -1,10 +1,10 @@
 {
   "values": [
-    "recruits:recruit",
-    "recruits:shieldman",
-    "recruits:bowman",
-    "recruits:crossbowman",
-    "recruits:horseman",
-    "recruits:nomad"
+    "bannermod:recruit",
+    "bannermod:shieldman",
+    "bannermod:bowman",
+    "bannermod:crossbowman",
+    "bannermod:horseman",
+    "bannermod:nomad"
   ]
 }
