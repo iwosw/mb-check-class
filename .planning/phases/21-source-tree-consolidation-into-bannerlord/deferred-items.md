@@ -1,4 +1,3 @@
 # Deferred Items
 
 - Pre-existing compile blocker outside plan 21-03 scope: worker logistics sources reference missing `com.talhanation.bannermod.logistics.BannerModLogisticsService`, `BannerModLogisticsRoute`, and `BannerModCourierTask` classes during `./gradlew compileJava`. Wave-3 bannerlord ownership changes were fixed to compile cleanly against the current tree before this unrelated blocker stopped the full root compile.
-- Pre-existing compile blocker outside plan 21-04 scope: `./gradlew compileJava` now advances past worker logistics, but the retained wave-3 recruit-to-bannerlord migration still has broad type mismatches between `com.talhanation.bannerlord.entity/persistence/**` and `com.talhanation.recruits/**` helpers/events/menus. These failures were not introduced by the worker civilian move and were not fixed in this wave-4 slice.

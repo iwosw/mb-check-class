@@ -1,7 +1,7 @@
 package com.talhanation.workers;
 
-import com.talhanation.bannerlord.ai.civilian.MiningPatternPlanner;
-import com.talhanation.bannerlord.entity.civilian.workarea.MiningPatternSettings;
+import com.talhanation.workers.entities.ai.MiningPatternPlanner;
+import com.talhanation.workers.entities.workarea.MiningPatternSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import org.junit.jupiter.api.Test;

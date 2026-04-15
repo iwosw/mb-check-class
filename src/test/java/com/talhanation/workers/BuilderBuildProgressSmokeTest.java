@@ -1,6 +1,6 @@
 package com.talhanation.workers;
 
-import com.talhanation.bannerlord.ai.civilian.BuilderBuildProgress;
+import com.talhanation.workers.entities.ai.BuilderBuildProgress;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

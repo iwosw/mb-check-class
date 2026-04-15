@@ -2,8 +2,8 @@ package com.talhanation.bannermod;
 
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
-import com.talhanation.bannerlord.entity.civilian.FarmerEntity;
-import com.talhanation.bannerlord.entity.civilian.workarea.CropArea;
+import com.talhanation.workers.entities.FarmerEntity;
+import com.talhanation.workers.entities.workarea.CropArea;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
