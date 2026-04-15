@@ -377,7 +377,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 2/5 plans executed
+**Plans:** 5 plans
 
 Plans:
 - [x] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.

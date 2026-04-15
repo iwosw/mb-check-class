@@ -3,21 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 21
-last_updated: "2026-04-14T13:46:04.920Z"
+last_updated: "2026-04-14T13:25:05.098Z"
 progress:
   total_phases: 38
-  completed_phases: 14
-  total_plans: 50
-  completed_plans: 44
+  completed_phases: 24
+  total_plans: 74
+  completed_plans: 71
 ---
 
 # Project State
 
-- Current focus: Phase 21 is in progress; waves 1-3 are complete and the shared seams plus bootstrap/network/registry composition and recruit-owned control foundations now have canonical `com.talhanation.bannerlord` homes while worker-package and source-root retirement waves remain.
+- Current focus: Phase 21 is in progress; waves 1-2 are complete and the shared seams plus bootstrap/network/registry composition now have canonical `com.talhanation.bannerlord` homes while gameplay-package and source-root retirement waves remain.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids now publish under `bannermod` while legacy source/resources remain preserved under `workers/`
-- Pending major work: Continue Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, next by moving worker civilian packages onto the wave-3 bannerlord foundations before final source-root retirement.
+- Pending major work: Continue Phase 21 source-tree consolidation into `com.talhanation.bannerlord/**`, next by moving recruit-owned controlling systems before the broader worker package moves and final source-root retirement.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-03-SUMMARY.md`
+- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-02-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 
 ## Decisions
@@ -153,8 +153,6 @@ progress:
 - [Phase 38]: Siege flow should be declaration-driven, camp-based, and center-capture-based, with hard attacker restrictions and defender build/break cooldowns during the assault window.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Move the only live @Mod entrypoint to com.talhanation.bannerlord.bootstrap while keeping com.talhanation.recruits.Main as a compatibility shim. — This preserves one bannermod runtime entrypoint while lowering import churn risk during the staged source-tree move.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Register the shared SimpleChannel through BannerlordNetworkBootstrap and continue deriving the worker packet offset from the recruit packet catalog size. — This keeps worker packet ordering stable while moving shared networking ownership into bannerlord packages.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Copy recruit-owned entity, AI, persistence, and client foundations into root bannerlord packages while leaving the old recruit packages as compatibility surfaces for the staged move. — This keeps wave 3 focused on physical ownership without forcing worker-package relocation early.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Treat verifyGameTestStage as the preferred follow-up gate for wave-3 ownership moves that touch retained pathfinding, persistence, and client seams. — Those package moves intersect the performance and correctness seams established in phases 11-19.
 
 ## Accumulated Context
 
@@ -213,7 +211,6 @@ progress:
 | Phase 22-citizen-role-unification P04 | not recorded | 2 tasks | 4 files |
 | Phase 23-settlement-governance-and-governor-control P01 | not recorded | 2 tasks | 4 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P02 | 18 min | 2 tasks | 18 files |
-| Phase 21-source-tree-consolidation-into-bannerlord P03 | 1 min | 2 tasks | 235 files |
 
 ### Quick Tasks Completed
 
@@ -223,6 +220,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-14T13:46:04Z
-- Stopped at: Completed 21-03-PLAN.md
+- Last updated: 2026-04-14T13:22:42Z
+- Stopped at: Completed 21-02-PLAN.md
 - Resume file: None
