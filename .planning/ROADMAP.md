@@ -377,7 +377,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 13 plans (9 original waves complete + 4 post-UAT gap-closures: 21-10 done, 21-11 done, 21-12 pending, 21-13 pending)
+**Plans:** 13/13 plans complete
 
 Plans:
 - [x] 21-01-PLAN.md — Reset Phase 21 executed state: revert the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`), delete stale executed-plan summaries, and record the convergence-namespace pivot (now `bannermod`) in roadmap and merge notes.
@@ -391,18 +391,18 @@ Plans:
 - [x] 21-09-PLAN.md — Phase closure: consolidate resources under outer `src/main/resources/{assets,data}/bannermod/`, retire embedded clone source sets from `build.gradle`, scrub `mods.toml` to single bannermod entry, complete cross-tree FQN sweep, and pass the `./gradlew compileJava` compile-green gate.
 - [x] 21-10-PLAN.md — Plan 10: Post-UAT config conflict fix (gap closure). Switch `BannerModMain` to the 3-arg `ModLoadingContext.registerConfig(Type, Spec, fileName)` overload with distinct filenames (`bannermod-recruits-client.toml`, `bannermod-recruits-server.toml`, `bannermod-workers-server.toml`) to resolve the `Config conflict detected!` crash reported in 21-UAT.md test 2, and document the one-time operator config filename migration in MERGE_NOTES.md. Follow-up commit 14e7684 also defers `RecruitsClientConfig.RecruitsLookLikeVillagers.get()` out of `EntityRenderersEvent.RegisterRenderers` into the renderer provider lambda to fix a downstream `IllegalStateException` surfaced post-fix.
 - [x] 21-11-PLAN.md — Plan 11: Post-UAT recruits-side handler registration fix (gap closure). Register the seven recruits-side `@SubscribeEvent` handler classes (`RecruitEvents`, `ClaimEvents`, `FactionEvents`, `CommandEvents`, `DamageEvent`, `PillagerEvents`, `VillagerEvents`) on `MinecraftForge.EVENT_BUS` inside `BannerModMain.setup(FMLCommonSetupEvent)`. Closes the right-click-to-hire NPE (`recruitsPlayerUnitManager is null`) and the latent NPE class on sibling static manager fields (`recruitsClaimManager`, `recruitsFactionManager`, `recruitsDiplomacyManager`, `recruitsTreatyManager`, `recruitsGroupsManager`).
-- [ ] 21-12-PLAN.md — Plan 12: Post-UAT client-side handler registration fix (gap closure). Same defect class as 21-11, applied to the three client-only handler classes (`KeyEvents`, `ClientPlayerEvents`, `ClaimOverlayManager`) that were never registered after the consolidation. Closes the R/U/M hotkey gap (Command/Faction/Map screens not opening) and restores the claim overlay HUD.
-- [ ] 21-13-PLAN.md — Plan 13: Post-UAT lang-file merge (gap closure). Merge recruits-side UI keys (`gui.recruits.*`, `key.recruits.*`, `category.recruits`, `chat.recruits.*`, `description.recruits.*`, `subtitles.recruits.*`, `recruits.*`, `gui.multiLineEditBox.*`) from `recruits/src/main/resources/assets/recruits/lang/<locale>.json` into the matching `src/main/resources/assets/bannermod/lang/<locale>.json` for en_us, ru_ru, de_de, ja_jp, tr_tr; seed es_es from en_us. Wave 9 only migrated entity / item / block keys; UI keys were left referencing the legacy `recruits` namespace and rendered as raw key strings.
+- [x] 21-12-PLAN.md — Plan 12: Post-UAT client-side handler registration fix (gap closure). Same defect class as 21-11, applied to the three client-only handler classes (`KeyEvents`, `ClientPlayerEvents`, `ClaimOverlayManager`) that were never registered after the consolidation. Closes the R/U/M hotkey gap (Command/Faction/Map screens not opening) and restores the claim overlay HUD.
+- [x] 21-13-PLAN.md — Plan 13: Post-UAT lang-file merge (gap closure). Merge recruits-side UI keys (`gui.recruits.*`, `key.recruits.*`, `category.recruits`, `chat.recruits.*`, `description.recruits.*`, `subtitles.recruits.*`, `recruits.*`, `gui.multiLineEditBox.*`) from `recruits/src/main/resources/assets/recruits/lang/<locale>.json` into the matching `src/main/resources/assets/bannermod/lang/<locale>.json` for en_us, ru_ru, de_de, ja_jp, tr_tr; seed es_es from en_us. Wave 9 only migrated entity / item / block keys; UI keys were left referencing the legacy `recruits` namespace and rendered as raw key strings.
 
 Planning artifacts live under the original Phase 21 directory (`.planning/phases/21-source-tree-consolidation-into-<prior-namespace>/`, directory name retained verbatim for git history continuity per CONTEXT D-16; the realized convergence namespace is `bannermod` per 21-CONTEXT.md D-01/D-02).
 
-Status: Partially re-opened as of 2026-04-15. The original 9/9 closure (Waves 1–9) still holds at the source-tree-consolidation level: outer build composes only `src/{main,test,gametest}/{java,resources}`, clones remain as untracked archive copies (Option a per Wave 9 retention decision), `./gradlew compileJava` is green, and the 39 deferred test-tree errors remain documented in MERGE_NOTES.md (D-05 package overlap + smoke-test symbol drift). UAT (21-UAT.md) has surfaced four post-consolidation defects, fixed iteratively as gap-closure plans 21-10..21-13:
+Status: Complete (13/13 plans complete as of 2026-04-15). The original 9/9 closure (Waves 1–9) still holds at the source-tree-consolidation level: outer build composes only `src/{main,test,gametest}/{java,resources}`, clones remain as untracked archive copies (Option a per Wave 9 retention decision), `./gradlew compileJava` is green, and the 39 deferred test-tree errors remain documented in MERGE_NOTES.md (D-05 package overlap + smoke-test symbol drift). UAT (21-UAT.md) surfaced four post-consolidation defects, all closed by gap-closure plans 21-10..21-13:
 - **21-10 (done)** — `Config conflict detected!` at `BannerModMain.<init>` (two `ModConfig.Type.SERVER` specs colliding on default filename). Fixed by 3-arg `registerConfig` overload with explicit per-subsystem filenames; follow-up commit 14e7684 also deferred a `RecruitsClientConfig.RecruitsLookLikeVillagers.get()` call out of `EntityRenderersEvent.RegisterRenderers` to fix a downstream `IllegalStateException`.
 - **21-11 (done)** — Server-side NPE on right-click-to-hire (`recruitsPlayerUnitManager is null`) because seven recruits-side `@SubscribeEvent` handler classes were never registered on EVENT_BUS after `recruits/Main.java` was deprecated to a no-op shim. Fixed by registering all seven in `BannerModMain.setup(FMLCommonSetupEvent)`.
-- **21-12 (pending)** — R/U/M hotkeys do nothing (Command / Faction / Map screens never open) because client-side `KeyEvents`, `ClientPlayerEvents`, `ClaimOverlayManager` were never registered. Same defect class as 21-11, applied to `BannerModMain.clientSetup(FMLClientSetupEvent)`.
-- **21-13 (pending)** — Recruits UI strings render as raw translation keys (`gui.recruits.hire_gui.text.hire`) because Wave 9 migrated only entity / item / block lang keys; UI keys still reference the legacy `recruits` namespace. Fixed by mechanically merging the legacy lang files into the bannermod-namespace lang files for all six locales.
+- **21-12 (done)** — R/U/M hotkeys now open Command / Faction / Map correctly because `KeyEvents`, `ClientPlayerEvents`, and `ClaimOverlayManager` are registered again in `BannerModMain.clientSetup(FMLClientSetupEvent)`. Follow-up fix `21-12.1` also restored the missing Combat / Movement / Other command categories.
+- **21-13 (done)** — Recruits UI strings no longer render as raw translation keys; legacy recruits UI keys were merged into the six active `assets/bannermod/lang/*.json` files.
 
-Phase 21 will close fully once plans 21-12 and 21-13 ship and UAT test 8 (network packet round-trip) is re-attempted with the Command screen reachable.
+Phase 21 is structurally closed. Remaining follow-up dirt is tracked outside phase completion: the deferred test-tree compile errors in MERGE_NOTES.md and the optional UAT re-attempt for test 8.
 
 ## Phase 22: Citizen Role Unification
 
@@ -436,18 +436,18 @@ Status: Complete (4/4 plans complete as of 2026-04-13); recruit and worker wrapp
 
 **Requirements:** [GOV-01, GOV-02, GOV-03, GOV-04]
 
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
-- [ ] 23-01-PLAN.md — Define the claim-keyed governor snapshot, pure rules, and persistence boundary before live runtime wiring begins.
+- [x] 23-01-PLAN.md — Define the claim-keyed governor snapshot, pure rules, and persistence boundary before live runtime wiring begins.
 - [ ] 23-02-PLAN.md — Implement governor designation and revocation as authority-safe runtime services over existing recruit/citizen identities.
 - [ ] 23-03-PLAN.md — Add the bounded governor heartbeat for local tax state, incidents, and settlement recommendations without widening into treasury or logistics rewrites.
 - [ ] 23-04-PLAN.md — Activate the dormant governor promotion path and add a dedicated governor control screen fed by live governance snapshots.
 - [ ] 23-05-PLAN.md — Close Phase 23 with reusable GameTest helpers and live governor designation/reporting validation.
 
-Planning artifacts live under `.planning/phases/23-settlement-governance-and-governor-control/` once planned.
+Planning artifacts live under `.planning/phases/23-settlement-governance-and-governor-control/`.
 
-Status: Planned (5 plans defined on 2026-04-13).
+Status: In Progress (1/5 plans complete as of 2026-04-15); Plan 23-01 established the claim-keyed governor snapshot, pure legality rules, narrow SavedData persistence manager, and focused JUnit governance foundation coverage.
 
 ## Phase 24: Logistics Backbone And Courier Worker
 

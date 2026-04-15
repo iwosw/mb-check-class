@@ -2,19 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 21
-last_updated: "2026-04-15T11:50:28.119Z"
+status: Executing Phase 23
+last_updated: "2026-04-15T15:59:15.928Z"
 progress:
   total_phases: 31
   completed_phases: 15
-  total_plans: 54
-  completed_plans: 51
-  percent: 94
+  total_plans: 58
+  completed_plans: 56
 ---
 
 # Project State
 
-- Current focus: Phase 21 is COMPLETE (2026-04-15). All 9 waves merged into `com.talhanation.bannermod.**`; outer `build.gradle` no longer references `recruits/` or `workers/` source roots; `mods.toml` declares only `modId="bannermod"`; resources unified under `src/main/resources/{assets,data}/bannermod/**`; `./gradlew compileJava` is green. Embedded `recruits/` and `workers/` clones remain on disk as untracked archive copies (Option a). Test-tree has 39 deferred compile errors documented in MERGE_NOTES.md (D-05 package overlap + smoke-test symbol drift). Next phase: 22 Citizen Role Unification.
+- Current focus: Phase 23 is in progress. Plan 23-01 is complete and established `BannerModGovernorSnapshot`, `BannerModGovernorRules`, and `BannerModGovernorManager` as the claim-keyed governance seam for downstream designation, heartbeat, and UI work. The root test tree still has 39 deferred compile errors outside governance scope that currently block targeted Gradle `test --tests ...` execution; Phase 23-02 is next.
 - Runtime base: `recruits` (now merged in-place — single source root)
 - Active runtime mod: `bannermod`
 - Workers status: fully absorbed; civilian Java code lives under `bannermod.{entity,ai,client,inventory,items,persistence,registry,settlement}.civilian`; civilian network packets live under `bannermod.network.messages.civilian` at packet-ID offset = MILITARY_MESSAGES.length (104).
@@ -39,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-01-SUMMARY.md` (Phase 21 pivot reset; prior-namespace summaries 02..06 were removed as part of the revert)
+- Latest execution summary: `.planning/phases/23-settlement-governance-and-governor-control/23-settlement-governance-and-governor-control-01-SUMMARY.md` (claim-keyed governor snapshot, pure rules, and SavedData persistence foundation)
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 
 ## Decisions
@@ -83,7 +82,7 @@ progress:
 - [Performance roadmap]: Keep large-battle AI/performance work ordered as profiling baseline, global pathfinding control, path reuse, formation-level target selection, pathfinding throttling, async reliability fixes, AI LOD, optional flow-field evaluation, and closing performance validation.
 - [Performance roadmap]: Require explicit profiling evidence before optimization, during each optimization slice, and after the full sequence so future tuning work can compare against one stable baseline.
 - [Future roadmap phases 20-28]: Treat the post-performance structural/gameplay program as real roadmap phases after the active 10-19 queue, not as a side document outside the milestone.
-- [Future roadmap phases 20-28]: Normalize the requested destination into the valid Java package path `src/main/java/com/talhanation/bannerlord/**` before any source-tree migration begins.
+- [Future roadmap phases 20-28]: Sequence the source-tree consolidation before broad gameplay expansion so later phases build on one canonical `bannermod` codebase.
 - [Phase 11-large-battle-ai-profiling-baseline]: Derive the baseline scenario matrix from existing recruit battle stress fixtures and current target/pathfinding seams before adding any new instrumentation.
 - [Phase 11-large-battle-ai-profiling-baseline]: Every baseline evidence bundle must record async pathfinding, async target-finding, and worker-thread config so later optimization results stay comparable.
 - [Performance roadmap]: Treat flow-field navigation as optional and benchmark-gated rather than a mandatory rewrite of the current navigation stack.
@@ -114,17 +113,12 @@ progress:
 - [Phase 08-multiplayer-authority-conflict-validation]: Live multiplayer outsider denial should be validated against a present in-level owner rather than inferred from offline-owner or detached-owner paths.
 - [Phase 08-multiplayer-authority-conflict-validation]: Same-team recruit command cooperation is intentionally limited to the group-command targeting seam, while worker recovery remains owner-or-admin only even for allied players.
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Treat the live merged runtime as recruit-led with workers absorbed through subsystem composition, not as two independent mods.
-- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Keep the Phase 21 physical move target at src/main/java/com/talhanation/bannerlord/** while preserving the live bannermod mod id.
 - [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Carry forward only narrow save/runtime-critical workers compatibility seams during source-root retirement planning.
-- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Move shared BannerMod seam classes first into com.talhanation.bannerlord before re-homing bootstrap or worker-heavy packages.
-- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Keep the live bannermod mod id, shared channel, config filenames, and workers legacy-id migration helpers stable through the Phase 21 move.
-- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Treat worker package relocation as a dependent wave that follows recruit-owned entity, pathfinding, persistence, and client-base relocation.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Execute the physical package move in five waves: shared seams/config, bootstrap/network/registry, recruit-owned controlling systems, worker civilian packages, then source-root retirement plus final validation.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Keep `com.talhanation.bannermod` forwarding wrappers temporary and narrow; they are allowed only to reduce migration risk during import churn.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Do not retire `recruits/` or `workers/` Java source roots until `build.gradle` is updated, the retained compatibility layer is explicit, and root `compileJava`, `processResources`, `test`, and `verifyGameTestStage` are green or explicitly justified.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Wave 1 canonical package anchors now exist at `src/main/java/com/talhanation/bannerlord/shared/**` and `src/main/java/com/talhanation/bannerlord/config/**`; old `com.talhanation.bannermod` shared seams are now temporary forwarding wrappers.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Move the only live `@Mod` entrypoint to `com.talhanation.bannerlord.bootstrap` while keeping `com.talhanation.recruits.Main` as a compatibility shim.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Register the shared `SimpleChannel` through `BannerlordNetworkBootstrap` and keep the worker packet offset derived from the recruit packet catalog size.
+- [Phase 20-runtime-audit-and-bannerlord-target-architecture]: Keep the live `bannermod` mod id, shared channel, config filenames, and workers legacy-id migration helpers stable through the Phase 21 move.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Phase 21 completed with one canonical production tree under `src/main/java/com/talhanation/bannermod/**` and one root-owned resource tree under `src/main/resources/**`.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: The only live `@Mod` entrypoint is `com.talhanation.bannermod.bootstrap.BannerModMain`, which initializes the shared `BannerModNetworkBootstrap` channel and preserves the worker packet offset contract.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: `recruits/` and `workers/` no longer contribute code or resources to the root build; they remain on disk only as archive/reference copies.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Canonical authority, settlement, logistics, and config ownership now lives under active `bannermod` packages; temporary forwarders remain only where Phase 21 explicitly documented compatibility shims.
 - [Phase 22-citizen-role-unification]: Keep the citizen seam additive and wrapper-owned; do not change live runtime ids, packet entrypoints, or screen entrypoints during the first recruit and worker conversions.
 - [Phase 22-citizen-role-unification]: Route shared recruit and worker persistence through `CitizenPersistenceBridge` before widening live-path adoption beyond one recruit slice and one worker slice.
 - [Phase 29-miner-excavation-recovery-and-builder-schematic-loading]: Mining behavior now uses one explicit `MiningPatternSettings` contract across UI, packets, persisted area state, and miner AI progress.
@@ -138,7 +132,6 @@ progress:
 - [Phase 31-1-2-mining-area-branch-mine-3]: Resolve claim status per target block with BannerModSettlementBinding.resolveFactionStatus instead of once at the work-area origin.
 - [Phase 31-1-2-mining-area-branch-mine-3]: Run claim worker growth from one periodic server pass keyed by claim UUID cooldown timestamps.
 - [Phase 31-1-2-mining-area-branch-mine-3]: Expose the real VillagerEvents claim-growth helper to GameTests instead of mocking spawn outcomes.
-- [Phase 23]: Persist governor state by claim UUID in one narrow SavedData manager instead of mutating claims or adding a settlement manager.
 - [Phase 23]: Store heartbeat incidents and recommendations as compact token lists so later runtime and UI slices can reuse one snapshot seam.
 - [Phase 24]: Keep the logistics backbone server-authoritative and service-shaped rather than introducing a settlement-wide logistics manager.
 - [Phase 24]: Use authored entity-backed storage and work-area endpoints in the first slice instead of arbitrary chest discovery.
@@ -152,25 +145,22 @@ progress:
 - [Phase 36]: Formation layout definitions should become datapack-authored content with strict schema validation and safe runtime fallback.
 - [Phase 37]: Claimed faction territory should only permit wartime destruction through recognized siege-engine paths, not ordinary block breaking.
 - [Phase 38]: Siege flow should be declaration-driven, camp-based, and center-capture-based, with hard attacker restrictions and defender build/break cooldowns during the assault window.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Move the only live @Mod entrypoint to com.talhanation.bannerlord.bootstrap while keeping com.talhanation.recruits.Main as a compatibility shim. — This preserves one bannermod runtime entrypoint while lowering import churn risk during the staged source-tree move.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Register the shared SimpleChannel through BannerlordNetworkBootstrap and continue deriving the worker packet offset from the recruit packet catalog size. — This keeps worker packet ordering stable while moving shared networking ownership into bannerlord packages.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Copy recruit-owned entity, AI, persistence, and client foundations into root bannerlord packages while leaving the old recruit packages as compatibility surfaces for the staged move. — This keeps wave 3 focused on physical ownership without forcing worker-package relocation early.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Treat verifyGameTestStage as the preferred follow-up gate for wave-3 ownership moves that touch retained pathfinding, persistence, and client seams. — Those package moves intersect the performance and correctness seams established in phases 11-19.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Worker civilian gameplay classes now live under src/main/java/com/talhanation/bannerlord/{entity,ai,persistence,client}/civilian/** while workers/** is reduced to compatibility-facing surfaces.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Legacy worker runtime helpers moved into src/main/java/com/talhanation/bannerlord/compat/workers/**, with only a thin deprecated workers.WorkersRuntime adapter retained during staged source-root retirement.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Worker storage and courier code now compiles against narrow temporary BannerMod logistics compatibility types until the dedicated logistics backbone phase replaces them.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Wave 3-8 ownership moves landed under `bannermod.{bootstrap,registry,events,commands,config,util,entity,ai,client,inventory,persistence,items,network}` with military/civilian splits preserved as package structure rather than clone boundaries. — This preserves the staged migration intent without carrying forward obsolete package-target assumptions.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Treat `verifyGameTestStage` as the preferred follow-up gate for later pathfinding, persistence, and client changes that build on the consolidated tree. — Those seams still intersect the performance and correctness work from phases 11-19.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Worker storage and courier code still compile against temporary BannerMod logistics compatibility types until the dedicated logistics backbone phase replaces them.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: The root build now vendors active Java, unit-test, GameTest, and resource inputs under `src/**`, and `build.gradle` no longer composes code or tests directly from `recruits/` or `workers/` source roots.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Vendor remaining recruit and worker resources/tests into tracked root src trees so source-root retirement no longer depends on untracked nested repos.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Keep recruits/ and workers/ on disk as archive-only reference copies until a later cleanup slice removes them without changing build truth.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Do not claim Phase 21 complete until compileJava, test, and verifyGameTestStage run green from the retired root-only layout.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Canonical authority, settlement, logistics, and config seam ownership now lives under `com.talhanation.bannerlord.shared/**` and `com.talhanation.bannerlord.config`, while old `com.talhanation.bannermod` seam classes remain deprecated forwarders only.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Make bannerlord.shared and bannerlord.config the real seam owners while keeping deprecated bannermod wrappers only as temporary adapters.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Let the canonical settlement seam accept both retained recruits claims and moved bannerlord claim lists so mixed-package callers can migrate without splitting the rules logic again.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Preserve legacy logistics route accessor names through alias methods while route ownership moves, so existing UI and packet code keeps its contract stable.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Canonical shared seam ownership now lives under `com.talhanation.bannermod.shared/**` and `com.talhanation.bannermod.config`, while the old `com.talhanation.bannermod.{authority,settlement,logistics}` peers remain deprecated forwarders only where documented.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: The canonical settlement seam still accepts retained recruits claims alongside moved claim data so callers can migrate without splitting the rules logic again.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Legacy logistics route accessor aliases stay in place where needed so existing UI and packet code keeps its contract stable.
 - [Phase 21]: 21-02 narrowed Option A scope: only the 5 classes with extant legacy bannermod implementations were moved to bannermod.shared.*. Service/Route/CourierTask deferred -- no impl exists today, no callers, depends on AbstractWorkerEntity from wave 21-04.
 - [Phase 21]: 21-02 forwarder lifespan: per D-05 the legacy bannermod.{authority,settlement,logistics} peers stay live as @Deprecated forwarders for the duration of Phase 21; deletion is owned by a separate post-Phase-21 cleanup phase.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: workerPacketOffset() now returns MILITARY_MESSAGES.length (compile-time=104), making must-have #4 from 21-03 provable
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Wave 9 closed Phase 21: outer src/main/resources owns shipped assets, build.gradle composes only outer src/{main,test,gametest}, ./gradlew compileJava is green, embedded recruits/ and workers/ clones retained on disk untracked (Option a).
+- [Phase 23]: Persist governor state by claim UUID in one narrow SavedData manager instead of mutating claims or introducing a settlement manager.
+- [Phase 23]: Keep legality in one pure rules helper driven by claim-derived settlement binding states before any runtime service or UI wiring.
 
 ## Accumulated Context
 
@@ -236,6 +226,7 @@ progress:
 | Phase 21 P02 | 25min | 4 tasks | 29 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P08 | 10 min | 2 tasks | 133 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P09 | 25 min | 2 tasks | 313 files |
+| Phase 23-settlement-governance-and-governor-control P01 | 2 min | 2 tasks | 4 files |
 
 ### Quick Tasks Completed
 
@@ -245,6 +236,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-15T08:24:09Z
-- Stopped at: Completed 21-02-PLAN.md (bannermod.shared seam ownership; Option A narrowed scope; SRCMOVE-01 done)
+- Last updated: 2026-04-15T15:59:15Z
+- Stopped at: Completed 23-01-PLAN.md
 - Resume file: None
