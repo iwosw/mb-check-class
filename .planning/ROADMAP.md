@@ -377,14 +377,20 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 4/5 plans executed in practice; the final closeout plan is validating the retired root-only source layout and documenting the remaining blockers truthfully.
+**Requirements:** [SRCMOVE-01, SRCMOVE-02, SRCMOVE-03, SRCMOVE-04]
+
+**Plans:** 9 plans total (5 original + 4 gap-closure follow-ups); the gap-closure plans target the failed verification truths blocking honest Phase 21 completion.
 
 Plans:
 - [x] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.
 - [x] 21-02-PLAN.md — Re-home bootstrap, shared networking, and registry/lifecycle composition into `com.talhanation.bannerlord.bootstrap`, `.network`, and `.registry` without changing the runtime contract. (completed 2026-04-14)
-- [ ] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannerlord` military/shared packages before worker code follows them.
-- [ ] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannerlord` base while isolating the compatibility layer.
-- [ ] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
+- [x] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannerlord` military/shared packages before worker code follows them.
+- [x] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannerlord` base while isolating the compatibility layer.
+- [x] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
+- [ ] 21-06-PLAN.md — Re-home the retained shared/config seam ownership into real `bannerlord.shared` and `bannerlord.config` classes.
+- [ ] 21-07-PLAN.md — Fix the bannerlord↔recruits type bridge so the retired root-only layout compiles again.
+- [ ] 21-08-PLAN.md — Demote the copied root `recruits/**` gameplay tree to documented compatibility shims.
+- [ ] 21-09-PLAN.md — Demote the copied root `workers/**` gameplay tree, rerun the full validation gate, and close Phase 21 truthfully.
 
 Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/`.
 
