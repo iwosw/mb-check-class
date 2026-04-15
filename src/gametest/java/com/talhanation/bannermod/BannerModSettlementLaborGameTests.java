@@ -2,7 +2,7 @@ package com.talhanation.bannermod;
 
 import com.mojang.authlib.GameProfile;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
+import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
@@ -16,7 +16,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModSettlementLaborGameTests {
 
     private static final String TEAM_ID = "phase06_labor";

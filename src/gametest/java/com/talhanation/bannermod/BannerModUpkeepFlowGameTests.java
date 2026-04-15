@@ -4,7 +4,7 @@ import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
+import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.persistence.civilian.BuildBlock;
 import net.minecraft.gametest.framework.GameTest;
@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModUpkeepFlowGameTests {
 
     @PrefixGameTestTemplate(false)

@@ -23,7 +23,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModClaimProtectionGameTests {
 
     private static final UUID FRIENDLY_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000002601");
@@ -45,7 +45,7 @@ public class BannerModClaimProtectionGameTests {
 
         BannerModDedicatedServerGameTestSupport.seedClaim(level, protectedPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
         level.setBlockAndUpdate(sourcePos, Blocks.STONE.defaultBlockState());
-        com.talhanation.recruits.ClaimEvents claimEvents = new com.talhanation.recruits.ClaimEvents();
+        com.talhanation.bannermod.events.ClaimEvents claimEvents = new com.talhanation.bannermod.events.ClaimEvents();
 
         BlockEvent.EntityPlaceEvent placeEvent = new BlockEvent.EntityPlaceEvent(
                 BlockSnapshot.create(level.dimension(), level, protectedPos),
@@ -90,7 +90,7 @@ public class BannerModClaimProtectionGameTests {
                 chestPos,
                 BlockHitResult.miss(Vec3.atCenterOf(chestPos), net.minecraft.core.Direction.NORTH, chestPos)
         );
-        new com.talhanation.recruits.ClaimEvents().onBlockInteract(interactEvent);
+        new com.talhanation.bannermod.events.ClaimEvents().onBlockInteract(interactEvent);
 
         helper.assertTrue(interactEvent.isCanceled(),
                 "Expected hostile chest interaction to be denied when the targeted container block entity is inside a friendly claim");
@@ -111,7 +111,7 @@ public class BannerModClaimProtectionGameTests {
         level.setBlockAndUpdate(bucketTargetPos, Blocks.STONE.defaultBlockState());
         hostile.setItemInHand(InteractionHand.MAIN_HAND, Items.STICK.getDefaultInstance());
 
-        com.talhanation.recruits.ClaimEvents claimEvents = new com.talhanation.recruits.ClaimEvents();
+        com.talhanation.bannermod.events.ClaimEvents claimEvents = new com.talhanation.bannermod.events.ClaimEvents();
         PlayerInteractEvent.RightClickBlock genericUseEvent = new PlayerInteractEvent.RightClickBlock(
                 hostile,
                 InteractionHand.MAIN_HAND,
@@ -155,12 +155,12 @@ public class BannerModClaimProtectionGameTests {
                     placedState,
                     hostile
             );
-            new com.talhanation.recruits.ClaimEvents().onBlockPlaceEvent(placeEvent);
+            new com.talhanation.bannermod.events.ClaimEvents().onBlockPlaceEvent(placeEvent);
             helper.assertTrue(placeEvent.isCanceled(),
                     "Expected hostile border block placement attempts to stay denied even when repeated from the claim edge");
 
             BlockEvent.BreakEvent breakEvent = new BlockEvent.BreakEvent(level, protectedPos, level.getBlockState(protectedPos), hostile);
-            new com.talhanation.recruits.ClaimEvents().onBlockBreakEvent(breakEvent);
+            new com.talhanation.bannermod.events.ClaimEvents().onBlockBreakEvent(breakEvent);
             helper.assertTrue(breakEvent.isCanceled(),
                     "Expected hostile border block break attempts to stay denied even when repeated from the claim edge");
         }
@@ -179,7 +179,7 @@ public class BannerModClaimProtectionGameTests {
         BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
 
         AttackEntityEvent attackEvent = new AttackEntityEvent(hostile, owner);
-        new com.talhanation.recruits.ClaimEvents().onAttackEntity(attackEvent);
+        new com.talhanation.bannermod.events.ClaimEvents().onAttackEntity(attackEvent);
 
         helper.assertTrue(attackEvent.isCanceled(),
                 "Expected hostile direct attacks against entities inside a friendly claim to be denied outside siege state");

@@ -20,7 +20,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import java.util.List;
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModSettlementFactionEnforcementGameTests {
 
     private static final UUID FRIENDLY_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000001001");
@@ -79,7 +79,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
 
             boolean placed = new MessageAddWorkArea(workAreaPos, 0).executeForPlayer(hostilePlayer);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                    com.talhanation.recruits.ClaimEvents.recruitsClaimManager,
+                    com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager,
                     workAreaPos,
                     HOSTILE_TEAM_ID
             );
@@ -108,8 +108,8 @@ public class BannerModSettlementFactionEnforcementGameTests {
             ServerPlayer player = createPlayer(helper, level, UNCLAIMED_PLAYER_UUID, "unclaimed-player", FRIENDLY_TEAM_ID);
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
 
-            if (com.talhanation.recruits.ClaimEvents.recruitsClaimManager != null) {
-                com.talhanation.bannermod.persistence.military.RecruitsClaim existingClaim = com.talhanation.recruits.ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
+            if (com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager != null) {
+                com.talhanation.bannermod.persistence.military.RecruitsClaim existingClaim = com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
                 if (existingClaim != null) {
                     BannerModDedicatedServerGameTestSupport.removeClaim(level, existingClaim);
                 }
@@ -117,7 +117,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
 
             boolean placed = new MessageAddWorkArea(workAreaPos, 0).executeForPlayer(player);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                    com.talhanation.recruits.ClaimEvents.recruitsClaimManager,
+                    com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager,
                     workAreaPos,
                     FRIENDLY_TEAM_ID
             );

@@ -1,10 +1,10 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import com.talhanation.recruits.ClaimEvents;
+import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.workers.VillagerEvents;
+import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import net.minecraft.core.BlockPos;
@@ -18,7 +18,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModWorkerBirthAndSettlementSpawnGameTests {
 
     private static final UUID FRIENDLY_LEADER_UUID = UUID.fromString("00000000-0000-0000-0000-000000003001");
@@ -42,7 +42,7 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             BannerModDedicatedServerGameTestSupport.seedClaim(level, villagerPos, FRIENDLY_TEAM_ID, FRIENDLY_LEADER_UUID, "phase30-friendly-leader");
             Villager villager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(2, 2, 2), "phase30-birth-villager");
 
-            AbstractWorkerEntity worker = VillagerEvents.attemptBirthWorkerSpawn(level, villager);
+            AbstractWorkerEntity worker = WorkersVillagerEvents.attemptBirthWorkerSpawn(level, villager);
 
             helper.assertTrue(worker != null, "Expected friendly-claim birth conversion to create a settlement worker through the live VillagerEvents seam");
             helper.assertTrue(worker != null && FRIENDLY_LEADER_UUID.equals(worker.getOwnerUUID()), "Expected the settlement-born worker to inherit the claim leader as owner");
@@ -73,8 +73,8 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             Villager firstVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(2, 2, 2), "phase30-first-spawn-villager");
             Villager secondVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(4, 2, 2), "phase30-second-spawn-villager");
 
-            AbstractWorkerEntity firstWorker = VillagerEvents.attemptSettlementWorkerSpawn(level, firstVillager);
-            AbstractWorkerEntity secondWorker = VillagerEvents.attemptSettlementWorkerSpawn(level, secondVillager);
+            AbstractWorkerEntity firstWorker = WorkersVillagerEvents.attemptSettlementWorkerSpawn(level, firstVillager);
+            AbstractWorkerEntity secondWorker = WorkersVillagerEvents.attemptSettlementWorkerSpawn(level, secondVillager);
 
             helper.assertTrue(firstWorker != null, "Expected friendly claim autonomous spawning to create one worker through the runtime seam");
             helper.assertTrue(secondWorker == null, "Expected the configured cooldown to block a second autonomous spawn in the same claim immediately after the first");
@@ -107,12 +107,12 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             Villager hostileVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(2, 2, 2), "phase30-hostile-villager");
             BannerModDedicatedServerGameTestSupport.joinTeam(level, HOSTILE_TEAM_ID, hostileVillager);
 
-            AbstractWorkerEntity hostileWorker = VillagerEvents.attemptBirthWorkerSpawn(level, hostileVillager);
+            AbstractWorkerEntity hostileWorker = WorkersVillagerEvents.attemptBirthWorkerSpawn(level, hostileVillager);
             BannerModSettlementBinding.Binding hostileBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, hostilePos, HOSTILE_TEAM_ID);
 
             BlockPos unclaimedPos = helper.absolutePos(new BlockPos(18, 2, 2));
             Villager unclaimedVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(18, 2, 2), "phase30-unclaimed-villager");
-            AbstractWorkerEntity unclaimedWorker = VillagerEvents.attemptSettlementWorkerSpawn(level, unclaimedVillager);
+            AbstractWorkerEntity unclaimedWorker = WorkersVillagerEvents.attemptSettlementWorkerSpawn(level, unclaimedVillager);
             BannerModSettlementBinding.Binding unclaimedBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, unclaimedPos, FRIENDLY_TEAM_ID);
 
             helper.assertTrue(hostileWorker == null, "Expected hostile-claim villager conversion to be denied before any worker entity is created");

@@ -2,7 +2,7 @@ package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
+import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -10,7 +10,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModCitizenRecruitGameTests {
 
     @PrefixGameTestTemplate(false)

@@ -3,8 +3,8 @@ package com.talhanation.bannermod;
 import com.mojang.authlib.GameProfile;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
-import com.talhanation.recruits.gametest.support.RecruitsCommandGameTestSupport;
+import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
+import com.talhanation.bannermod.gametest.support.RecruitsCommandGameTestSupport;
 import com.talhanation.bannermod.network.messages.military.MessageMovement;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
@@ -18,7 +18,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModDedicatedServerAuthorityGameTests {
 
     private static final UUID OFFLINE_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000701");

@@ -3,7 +3,7 @@ package com.talhanation.bannermod;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.workers.VillagerEvents;
+import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
@@ -22,7 +22,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import java.util.List;
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModClaimWorkerGrowthGameTests {
 
     private static final UUID FRIENDLY_LEADER_UUID = UUID.fromString("00000000-0000-0000-0000-000000003101");
@@ -42,7 +42,7 @@ public class BannerModClaimWorkerGrowthGameTests {
             BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
             RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
 
-            AbstractWorkerEntity worker = VillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 20L);
+            AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 20L);
             List<AbstractWorkerEntity> claimWorkers = getClaimWorkers(level, claim);
 
             helper.assertTrue(worker != null, "Expected friendly claim growth to spawn one worker when the claim starts empty.");
@@ -69,9 +69,9 @@ public class BannerModClaimWorkerGrowthGameTests {
             BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
             RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
 
-            AbstractWorkerEntity firstWorker = VillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 100L);
-            AbstractWorkerEntity earlyWorker = VillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 139L);
-            AbstractWorkerEntity secondWorker = VillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 140L);
+            AbstractWorkerEntity firstWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 100L);
+            AbstractWorkerEntity earlyWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 139L);
+            AbstractWorkerEntity secondWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 140L);
             List<AbstractWorkerEntity> claimWorkers = getClaimWorkers(level, claim);
 
             helper.assertTrue(firstWorker != null, "Expected the first claim growth attempt to create one worker.");
@@ -98,13 +98,13 @@ public class BannerModClaimWorkerGrowthGameTests {
             BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
             RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
 
-            AbstractWorkerEntity hostileWorker = VillagerEvents.attemptClaimWorkerGrowth(
+            AbstractWorkerEntity hostileWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(
                     level,
                     claim,
                     new BannerModSettlementBinding.Binding(BannerModSettlementBinding.Status.HOSTILE_CLAIM, HOSTILE_TEAM_ID, FRIENDLY_TEAM_ID),
                     200L
             );
-            AbstractWorkerEntity unclaimedWorker = VillagerEvents.attemptClaimWorkerGrowth(
+            AbstractWorkerEntity unclaimedWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(
                     level,
                     null,
                     new BannerModSettlementBinding.Binding(BannerModSettlementBinding.Status.UNCLAIMED, FRIENDLY_TEAM_ID, null),
@@ -134,7 +134,7 @@ public class BannerModClaimWorkerGrowthGameTests {
             RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
             prepareField(level, helper.absolutePos(new BlockPos(8, 2, 8)));
 
-            AbstractWorkerEntity worker = VillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 20L);
+            AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 20L);
 
             helper.assertTrue(worker instanceof FarmerEntity, "Expected the configured claim-growth profession pool to spawn a farmer.");
             FarmerEntity farmer = (FarmerEntity) worker;

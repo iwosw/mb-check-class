@@ -15,7 +15,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModSettlementFactionDegradationGameTests {
 
     private static final UUID OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000001021");
