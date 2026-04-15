@@ -42,7 +42,7 @@ public class RecruitsAdminCommands {
     private static final List<String> RELATIONS = List.of("Ally", "Neutral", "Enemy");
 
     private static final SuggestionProvider<CommandSourceStack> RELATION_SUGGESTIONS =
-            SuggestionProviders.register(new ResourceLocation("recruits:relations"),
+            SuggestionProviders.register(new ResourceLocation("bannermod:relations"),
                     (context, builder) -> {
                         for (String relation : RELATIONS) {
                             builder.suggest(relation);

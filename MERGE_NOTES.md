@@ -480,3 +480,40 @@ Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{a
 - `workers.config.WorkersServerConfig` ref in `MessageAddWorkArea.java` — config migration Wave 9.
 - `workers.WorkersRuntime.bindChannel()` call in `BannerModNetworkBootstrap.createSharedChannel()` — Wave 9 source-root retirement.
 - Neither clone's `src/main/java/` now contains a `network/` subtree. Only deprecated shim groups remain.
+
+## Wave 9: Phase 21 Closure (2026-04-15)
+
+### Resource Consolidation
+
+All shipped resources were copied from the embedded clones into outer `src/main/resources/`:
+- `recruits/src/main/resources/assets/bannermod/**` → `src/main/resources/assets/bannermod/**` (canonical, blockstates/lang/models/textures).
+- `recruits/src/main/resources/data/minecraft/**` → `src/main/resources/data/minecraft/**` (vanilla tag overrides).
+- `recruits/src/main/resources/{logo.png,pack.mcmeta}` → `src/main/resources/`.
+- `recruits/src/main/resources/META-INF/{accesstransformer.cfg,mods.toml}` → `src/main/resources/META-INF/`.
+- `workers/src/main/resources/assets/workers/{models,textures,structures}` → merged into `src/main/resources/assets/bannermod/{models,textures,structures}` (no JSON namespace collisions; workers spawn-egg models reference vanilla parents only).
+- `workers/src/main/resources/assets/workers/lang/*.json` → key-merged into `src/main/resources/assets/bannermod/lang/*.json`. All 109 worker translation keys (`entity.workers.miner`, `entity.workers.lumberjack`, etc.) preserved verbatim alongside existing bannermod keys; lang merge is additive (no key collisions observed).
+
+The old recruits-namespaced asset tree (`recruits/src/main/resources/assets/recruits/**`) is no longer copied into the build output. Code references rewritten via `sed`: `"recruits:` → `"bannermod:` (3 sites: `RecruitsAdminCommands` suggestion provider id, two `enemy.png` ResourceLocations) and `"workers:` → `"bannermod:` (no sites found).
+
+### Build Source Set Cleanup
+
+- `build.gradle` `sourceSets.{main,test,gametest}.java.srcDirs` no longer reference `recruits/src/main/java` or `workers/src/main/java`.
+- `sourceSets.{main,test,gametest}.resources.srcDirs` no longer reference clone resource paths.
+- `processResources` no longer copies from `workers/src/main/resources/**`.
+- `data` run argument `--existing` switched from `recruits/src/main/resources/` → `src/main/resources/`.
+- Mixin config retained: only `mixins.bannermod.json` registered; `mixins.recruits.json` references removed (config never existed in clones).
+- `jar`/`shadowJar` mixin refmap include switched from `mixins.recruits.refmap.json` → `mixins.bannermod.refmap.json`.
+- `shadowJar` corelib relocation target switched from `de.maxhenkel.recruits.corelib` → `de.maxhenkel.bannermod.corelib`.
+
+### Clone Retention Decision (truth #5)
+
+Decision: **Option (a) — keep clone dirs as-is in outer working tree, untracked by outer git.**
+
+Rationale:
+- The clones (`recruits/`, `workers/`) carry their own `.git/` histories and original source for archaeological purposes.
+- They were already `?? recruits/`, `?? workers/` in outer `git status` before this wave; nothing in this plan promotes them to tracked outer paths.
+- After the build.gradle cleanup, they are no longer compiled, packaged, or referenced by the outer build — they exist only as filesystem-visible reference copies.
+- Removing them entirely would discard their per-file git history and force any future archaeological lookup to consult a separate remote. Keeping them costs only disk space.
+
+Wave 8 had already reduced their `src/main/java/` working trees to deprecated shim groups (`recruits/Main.java`, `recruits/init/ModLifecycleRegistrar.java`, `workers/{WorkersMain,WorkersRuntime,WorkersSubsystem,MergedRuntimeCleanupPolicy}.java`, `workers/init/WorkersLifecycleRegistrar.java`). Those shims remain on disk inside the clones but no longer participate in the outer build.
+

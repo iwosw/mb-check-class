@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "bannermod:block/recruit_table_side",
+    "north": "bannermod:block/recruit_table_side",
+    "south": "bannermod:block/recruit_table_side",
+    "east": "bannermod:block/recruit_table_side",
+    "west": "bannermod:block/recruit_table_side",
+    "up": "bannermod:block/recruit_table_top",
+    "down": "bannermod:block/recruit_table_bottom"
+  }
+}

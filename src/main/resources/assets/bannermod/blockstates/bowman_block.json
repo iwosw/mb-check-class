@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "bannermod:block/bowman_block"
+    }
+  }
+}

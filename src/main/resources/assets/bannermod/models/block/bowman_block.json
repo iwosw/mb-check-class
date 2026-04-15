@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "bannermod:block/bowman_table_side",
+    "north": "bannermod:block/bowman_table_side",
+    "south": "bannermod:block/bowman_table_side",
+    "east": "bannermod:block/bowman_table_side",
+    "west": "bannermod:block/bowman_table_side",
+    "up": "bannermod:block/bowman_table_top",
+    "down": "bannermod:block/bowman_table_bottom"
+  }
+}

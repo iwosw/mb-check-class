@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "bannermod:block/nomad_table_side",
+    "north": "bannermod:block/nomad_table_side",
+    "south": "bannermod:block/nomad_table_side",
+    "east": "bannermod:block/nomad_table_side",
+    "west": "bannermod:block/nomad_table_side",
+    "up": "bannermod:block/nomad_table_top",
+    "down": "bannermod:block/nomad_table_bottom"
+  }
+}
