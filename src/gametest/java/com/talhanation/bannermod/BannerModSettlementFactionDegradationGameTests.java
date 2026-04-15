@@ -1,7 +1,8 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
@@ -33,7 +34,7 @@ public class BannerModSettlementFactionDegradationGameTests {
 
         BannerModDedicatedServerGameTestSupport.removeClaim(setup.level, setup.claim);
 
-        helper.assertTrue(setup.cropArea.getSettlementBinding().status() == BannerModSettlementBinding.Status.UNCLAIMED,
+        helper.assertTrue(resolveBinding(setup.cropArea, OWNER_TEAM_ID).status() == BannerModSettlementBinding.Status.UNCLAIMED,
                 "Expected removing the live claim to degrade the settlement footprint to UNCLAIMED");
         helper.assertFalse(setup.cropArea.canWorkHere(setup.worker),
                 "Expected claim loss to stop civilian throughput through the shared settlement operation gate");
@@ -63,7 +64,7 @@ public class BannerModSettlementFactionDegradationGameTests {
                 "claim-holder"
         );
 
-        BannerModSettlementBinding.Binding binding = setup.cropArea.getSettlementBinding();
+        BannerModSettlementBinding.Binding binding = resolveBinding(setup.cropArea, OWNER_TEAM_ID);
         helper.assertTrue(binding.status() == BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
                 "Expected swapping the live claim owner faction to degrade the settlement footprint to DEGRADED_MISMATCH");
         helper.assertTrue(CLAIM_HOLDER_TEAM_ID.equals(binding.claimFactionId()),
@@ -94,7 +95,7 @@ public class BannerModSettlementFactionDegradationGameTests {
                 claimHolder.getScoreboardName()
         );
 
-        helper.assertTrue(setup.cropArea.getSettlementBinding().status() == BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
+        helper.assertTrue(resolveBinding(setup.cropArea, OWNER_TEAM_ID).status() == BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
                 "Expected the recovery authority check to run after the settlement has already degraded to a mismatch state");
         helper.assertFalse(setup.worker.recoverControl(claimHolder),
                 "Expected the new claim holder to remain unable to recover worker control without explicit ownership authority");
@@ -127,7 +128,7 @@ public class BannerModSettlementFactionDegradationGameTests {
         worker.currentCropArea = cropArea;
         cropArea.setBeingWorkedOn(true);
 
-        helper.assertTrue(cropArea.getSettlementBinding().status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+        helper.assertTrue(resolveBinding(cropArea, OWNER_TEAM_ID).status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                 "Expected the degradation tests to begin from a friendly-claim settlement setup");
         helper.assertTrue(cropArea.canWorkHere(worker),
                 "Expected the degradation tests to begin from an operational settlement before mutating the live claim");
@@ -145,5 +146,18 @@ public class BannerModSettlementFactionDegradationGameTests {
     }
 
     private record SettlementSetup(ServerLevel level, Player owner, RecruitsClaim claim, CropArea cropArea, FarmerEntity worker) {
+    }
+
+    /**
+     * Resolves the settlement binding for a work area through the consolidated
+     * {@link BannerModSettlementBinding#resolveFactionStatus(com.talhanation.bannermod.persistence.military.RecruitsClaimManager, BlockPos, String)}
+     * seam, using the live claim manager exposed by {@link ClaimEvents}.
+     */
+    private static BannerModSettlementBinding.Binding resolveBinding(CropArea cropArea, String settlementFactionId) {
+        return BannerModSettlementBinding.resolveSettlementStatus(
+                ClaimEvents.recruitsClaimManager,
+                cropArea.blockPosition(),
+                settlementFactionId
+        );
     }
 }
