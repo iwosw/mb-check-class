@@ -436,14 +436,14 @@ Status: Complete (4/4 plans complete as of 2026-04-13); recruit and worker wrapp
 
 **Requirements:** [GOV-01, GOV-02, GOV-03, GOV-04]
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 23-01-PLAN.md — Define the claim-keyed governor snapshot, pure rules, and persistence boundary before live runtime wiring begins.
 - [x] 23-02-PLAN.md — Implement governor designation and revocation as authority-safe runtime services over existing recruit/citizen identities.
 - [x] 23-03-PLAN.md — Add the bounded governor heartbeat for local tax state, incidents, and settlement recommendations without widening into treasury or logistics rewrites.
 - [ ] 23-04-PLAN.md — Activate the dormant governor promotion path and add a dedicated governor control screen fed by live governance snapshots.
-- [ ] 23-05-PLAN.md — Close Phase 23 with reusable GameTest helpers and live governor designation/reporting validation.
+- [x] 23-05-PLAN.md — Close Phase 23 with reusable GameTest helpers and live governor designation/reporting validation. (completed 2026-04-15)
 
 Planning artifacts live under `.planning/phases/23-settlement-governance-and-governor-control/`.
 
