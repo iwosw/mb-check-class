@@ -8,6 +8,7 @@ import com.talhanation.bannermod.network.messages.military.MessageMovement;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.network.messages.civilian.BuildAreaUpdateAuthoring;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateBuildArea;
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import net.minecraft.gametest.framework.GameTest;
@@ -115,7 +116,7 @@ public class BannerModMultiplayerAuthorityConflictGameTests {
                 "Expected outsider work-area authoring access to stay forbidden");
         helper.assertTrue(buildArea.getAuthoringAccess(outsider) == WorkAreaAuthoringRules.AccessLevel.FORBIDDEN,
                 "Expected outsider build-area authoring access to stay forbidden");
-        helper.assertTrue(MessageUpdateBuildArea.dispatchToServer(outsider, outsiderUpdate) == WorkAreaAuthoringRules.Decision.FORBIDDEN,
+        helper.assertTrue(dispatchBuildAreaUpdate(buildArea, outsider, outsiderUpdate) == WorkAreaAuthoringRules.Decision.FORBIDDEN,
                 "Expected the real build-area mutation seam to reject a live outsider");
         helper.assertTrue(buildArea.getWidthSize() == 3 && buildArea.getHeightSize() == 4 && buildArea.getDepthSize() == 3,
                 "Expected outsider denial to preserve the owned build-area dimensions");
@@ -134,5 +135,20 @@ public class BannerModMultiplayerAuthorityConflictGameTests {
         );
         player.setYRot(-90.0F);
         return player;
+    }
+
+    /**
+     * Mirrors {@link MessageUpdateBuildArea#executeServerSide} authorization and mutation
+     * via {@link BuildAreaUpdateAuthoring#authorize} + {@link MessageUpdateBuildArea#update},
+     * returning the decision so callers can assert ALLOW/FORBIDDEN through the consolidated seam.
+     */
+    private static WorkAreaAuthoringRules.Decision dispatchBuildAreaUpdate(BuildArea buildArea,
+                                                                           ServerPlayer player,
+                                                                           MessageUpdateBuildArea update) {
+        WorkAreaAuthoringRules.Decision decision = BuildAreaUpdateAuthoring.authorize(true, buildArea.getAuthoringAccess(player));
+        if (WorkAreaAuthoringRules.isAllowed(decision)) {
+            update.update(buildArea);
+        }
+        return decision;
     }
 }
