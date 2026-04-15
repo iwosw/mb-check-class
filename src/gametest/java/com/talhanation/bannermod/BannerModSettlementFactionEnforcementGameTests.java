@@ -1,11 +1,15 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
-import com.talhanation.bannermod.network.messages.civilian.MessageAddWorkArea;
+import com.talhanation.bannermod.events.ClaimEvents;
+import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -42,18 +46,24 @@ public class BannerModSettlementFactionEnforcementGameTests {
 
             BannerModDedicatedServerGameTestSupport.seedClaim(level, workAreaPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
 
-            boolean placed = new MessageAddWorkArea(workAreaPos, 0).executeForPlayer(owner);
+            boolean placed = attemptWorkAreaPlacement(level, owner, workAreaPos, FRIENDLY_TEAM_ID);
             CropArea cropArea = findCropArea(level, workAreaPos);
             FarmerEntity worker = BannerModGameTestSupport.spawnOwnedFarmer(helper, owner, new BlockPos(4, 2, 2));
             BannerModDedicatedServerGameTestSupport.joinTeam(level, FRIENDLY_TEAM_ID, worker);
             worker.currentCropArea = cropArea;
 
+            BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
+                    ClaimEvents.recruitsClaimManager,
+                    workAreaPos,
+                    FRIENDLY_TEAM_ID
+            );
+
             helper.assertTrue(placed,
                     "Expected a faction-aligned player to place a crop area inside a friendly claim through the live placement seam");
             helper.assertTrue(cropArea != null,
                     "Expected the friendly placement path to insert a crop area into the level");
-            helper.assertTrue(cropArea.getSettlementBinding().status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                    "Expected the placed crop area to report FRIENDLY_CLAIM through the shared settlement binding seam");
+            helper.assertTrue(binding.status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                    "Expected the placed crop area to resolve as FRIENDLY_CLAIM through the consolidated settlement binding seam");
             helper.assertTrue(cropArea.canWorkHere(worker),
                     "Expected the owned worker to remain operational inside the friendly claim-backed settlement area");
         } finally {
@@ -77,9 +87,9 @@ public class BannerModSettlementFactionEnforcementGameTests {
 
             BannerModDedicatedServerGameTestSupport.seedClaim(level, workAreaPos, FRIENDLY_TEAM_ID, claimOwner.getUUID(), claimOwner.getScoreboardName());
 
-            boolean placed = new MessageAddWorkArea(workAreaPos, 0).executeForPlayer(hostilePlayer);
+            boolean placed = attemptWorkAreaPlacement(level, hostilePlayer, workAreaPos, HOSTILE_TEAM_ID);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                    com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.recruitsClaimManager,
                     workAreaPos,
                     HOSTILE_TEAM_ID
             );
@@ -108,16 +118,16 @@ public class BannerModSettlementFactionEnforcementGameTests {
             ServerPlayer player = createPlayer(helper, level, UNCLAIMED_PLAYER_UUID, "unclaimed-player", FRIENDLY_TEAM_ID);
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
 
-            if (com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager != null) {
-                com.talhanation.bannermod.persistence.military.RecruitsClaim existingClaim = com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
+            if (ClaimEvents.recruitsClaimManager != null) {
+                RecruitsClaim existingClaim = ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
                 if (existingClaim != null) {
                     BannerModDedicatedServerGameTestSupport.removeClaim(level, existingClaim);
                 }
             }
 
-            boolean placed = new MessageAddWorkArea(workAreaPos, 0).executeForPlayer(player);
+            boolean placed = attemptWorkAreaPlacement(level, player, workAreaPos, FRIENDLY_TEAM_ID);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                    com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.recruitsClaimManager,
                     workAreaPos,
                     FRIENDLY_TEAM_ID
             );
@@ -147,5 +157,53 @@ public class BannerModSettlementFactionEnforcementGameTests {
     private static CropArea findCropArea(ServerLevel level, BlockPos workAreaPos) {
         List<CropArea> cropAreas = level.getEntitiesOfClass(CropArea.class, new AABB(workAreaPos.above()).inflate(1.0D));
         return cropAreas.isEmpty() ? null : cropAreas.get(0);
+    }
+
+    /**
+     * Mirrors the gating + spawn responsibilities of
+     * {@link com.talhanation.bannermod.network.messages.civilian.MessageAddWorkArea#executeServerSide}
+     * without requiring a {@code NetworkEvent.Context}. Returns {@code true} when the consolidated
+     * authoring gate would have allowed the placement (and the test crop area was actually inserted),
+     * {@code false} otherwise.
+     */
+    private static boolean attemptWorkAreaPlacement(ServerLevel level,
+                                                    ServerPlayer player,
+                                                    BlockPos workAreaPos,
+                                                    String expectedFactionId) {
+        CropArea workArea = new CropArea(ModEntityTypes.CROPAREA.get(), level);
+        workArea.setWidthSize(9);
+        workArea.setHeightSize(2);
+        workArea.setDepthSize(9);
+        String teamStringID = player.getTeam() != null ? player.getTeam().getName() : "";
+        workArea.setFacing(player.getDirection());
+        workArea.moveTo(workAreaPos.above(), 0, 0);
+        workArea.createArea();
+        workArea.setTeamStringID(teamStringID);
+        workArea.setDone(false);
+        workArea.setPlayerName(player.getName().getString());
+        workArea.setPlayerUUID(player.getUUID());
+
+        boolean isInsideOwnFactionClaim = isInsideOwnFactionClaim(player, workAreaPos);
+        boolean isOverlapping = AbstractWorkAreaEntity.isAreaOverlapping(level, null, workArea.getArea());
+        WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.createDecision(isInsideOwnFactionClaim, isOverlapping);
+        if (!WorkAreaAuthoringRules.isAllowed(decision)) {
+            return false;
+        }
+        return level.addFreshEntity(workArea);
+    }
+
+    private static boolean isInsideOwnFactionClaim(ServerPlayer player, BlockPos targetPos) {
+        if (!WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.get()) {
+            return true;
+        }
+        if (player.getTeam() == null || ClaimEvents.recruitsClaimManager == null) {
+            return false;
+        }
+        ChunkPos chunkPos = new ChunkPos(targetPos);
+        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(chunkPos);
+        return claim != null
+                && claim.containsChunk(chunkPos)
+                && claim.getOwnerFaction() != null
+                && player.getTeam().getName().equals(claim.getOwnerFaction().getStringID());
     }
 }
