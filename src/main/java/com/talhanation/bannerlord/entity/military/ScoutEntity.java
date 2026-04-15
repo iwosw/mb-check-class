@@ -6,7 +6,6 @@ import com.talhanation.recruits.FactionEvents;
 import com.talhanation.bannerlord.ai.military.UseShield;
 import com.talhanation.recruits.util.FormationUtils;
 import com.talhanation.bannerlord.persistence.military.RecruitsPlayerInfo;
-import com.talhanation.recruits.world.RecruitsFaction;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -361,6 +360,7 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
     }
 
 }
+
 
 
 

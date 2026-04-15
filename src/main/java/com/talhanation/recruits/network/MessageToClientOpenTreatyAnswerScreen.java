@@ -30,18 +30,6 @@ public class MessageToClientOpenTreatyAnswerScreen implements Message<MessageToC
         this.recruitUUID = messenger.getUUID();
     }
 
-    public MessageToClientOpenTreatyAnswerScreen(com.talhanation.bannerlord.entity.military.MessengerEntity messenger, int durationHours, RecruitsPlayerInfo playerInfo) {
-        this.durationHours = durationHours;
-        this.nbt = playerInfo.toNBT();
-        this.recruitUUID = messenger.getUUID();
-    }
-
-    public MessageToClientOpenTreatyAnswerScreen(com.talhanation.bannerlord.entity.military.MessengerEntity messenger, int durationHours, com.talhanation.bannerlord.persistence.military.RecruitsPlayerInfo playerInfo) {
-        this.durationHours = durationHours;
-        this.nbt = playerInfo.toNBT();
-        this.recruitUUID = messenger.getUUID();
-    }
-
     @Override
     public Dist getExecutingSide() {
         return Dist.CLIENT;

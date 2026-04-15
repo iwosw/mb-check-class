@@ -306,23 +306,6 @@ public class CommandEvents {
         }
     }
 
-    public static void checkPatrolLeaderState(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit) {
-        if(recruit instanceof com.talhanation.bannerlord.entity.military.AbstractLeaderEntity leader) {
-            com.talhanation.bannerlord.entity.military.AbstractLeaderEntity.State patrolState = com.talhanation.bannerlord.entity.military.AbstractLeaderEntity.State.fromIndex(leader.getPatrollingState());
-            com.talhanation.recruits.entities.AbstractLeaderEntity.State legacyNextState = RecruitCommandStateTransitions.afterManualMovement(
-                    com.talhanation.recruits.entities.AbstractLeaderEntity.State.fromIndex(patrolState.getIndex())
-            );
-            com.talhanation.bannerlord.entity.military.AbstractLeaderEntity.State nextState = com.talhanation.bannerlord.entity.military.AbstractLeaderEntity.State.fromIndex(legacyNextState.getIndex());
-            if(nextState == com.talhanation.bannerlord.entity.military.AbstractLeaderEntity.State.IDLE && patrolState != nextState) {
-                leader.resetPatrolling();
-                leader.setPatrolState(nextState);
-            }
-            else if(nextState != patrolState) {
-                leader.setPatrolState(nextState);
-            }
-        }
-    }
-
     public static void onAggroCommand(UUID player_uuid, AbstractRecruitEntity recruit, int x_state, UUID group, boolean fromGui) {
         if (recruit.isEffectedByCommand(player_uuid, group)){
             int state = recruit.getState();

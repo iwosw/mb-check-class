@@ -48,10 +48,6 @@ public abstract class SiegeEvent extends Event {
         public Start(RecruitsClaim claim, ServerLevel level) {
             super(claim, level);
         }
-
-        public Start(com.talhanation.bannerlord.persistence.military.RecruitsClaim claim, ServerLevel level) {
-            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyClaim(claim), level);
-        }
     }
 
     /**
@@ -62,10 +58,6 @@ public abstract class SiegeEvent extends Event {
         public End(RecruitsClaim claim, ServerLevel level) {
             super(claim, level);
         }
-
-        public End(com.talhanation.bannerlord.persistence.military.RecruitsClaim claim, ServerLevel level) {
-            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyClaim(claim), level);
-        }
     }
 
     /**
@@ -75,10 +67,6 @@ public abstract class SiegeEvent extends Event {
     public static class Success extends SiegeEvent {
         public Success(RecruitsClaim claim, ServerLevel level) {
             super(claim, level);
-        }
-
-        public Success(com.talhanation.bannerlord.persistence.military.RecruitsClaim claim, ServerLevel level) {
-            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyClaim(claim), level);
         }
     }
 
@@ -117,10 +105,6 @@ public abstract class SiegeEvent extends Event {
             this.attackerCount = attackerCount;
             this.defenderCount = defenderCount;
             this.damage = proposedDamage;
-        }
-
-        public Tick(com.talhanation.bannerlord.persistence.military.RecruitsClaim claim, ServerLevel level, int attackerCount, int defenderCount, int proposedDamage) {
-            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyClaim(claim), level, attackerCount, defenderCount, proposedDamage);
         }
 
         /** Anzahl der lebenden Angreifer-Einheiten im Claim. */

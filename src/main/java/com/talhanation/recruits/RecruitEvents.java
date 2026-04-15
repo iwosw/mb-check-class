@@ -198,23 +198,6 @@ public class RecruitEvents {
         }
     }
 
-    public static void handleGroupBackwardCompatibility(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, int oldGroupNumber) {
-        if(recruit.getCommandSenderWorld().isClientSide()) return;
-        if(recruit.getOwner() != null){
-            ServerPlayer serverPlayer = (ServerPlayer) recruit.getOwner();
-            String name = "Group " + oldGroupNumber;
-            RecruitsGroup group = recruitsGroupsManager.getPlayersGroupByName(serverPlayer, name);
-            if(group == null){
-                group = new RecruitsGroup(name, serverPlayer, 0);
-            }
-            recruit.setGroupUUID(group.getUUID());
-            group.addMember(recruit.getUUID());
-            recruitsGroupsManager.addOrUpdateGroup(server.overworld(), serverPlayer, group);
-
-            recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
-        }
-    }
-
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         server = event.getServer();

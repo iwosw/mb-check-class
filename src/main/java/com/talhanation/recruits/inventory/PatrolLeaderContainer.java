@@ -16,12 +16,6 @@ public class PatrolLeaderContainer extends ContainerBase {
         this.recruit = leader;
     }
 
-    public PatrolLeaderContainer(int id, Player playerEntity, com.talhanation.bannerlord.entity.military.AbstractLeaderEntity leader) {
-        super(ModScreens.PATROL_LEADER.get(), id, playerEntity.getInventory(), new SimpleContainer(0));
-        this.playerEntity = playerEntity;
-        this.recruit = null;
-    }
-
     public Player getPlayerEntity() {
         return playerEntity;
     }

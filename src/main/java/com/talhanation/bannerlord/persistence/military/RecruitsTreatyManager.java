@@ -6,7 +6,6 @@ import com.talhanation.recruits.FactionEvents;
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.network.MessageToClientSetDiplomaticToast;
 import com.talhanation.recruits.network.MessageToClientUpdateTreaties;
-import com.talhanation.recruits.world.RecruitsFaction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;

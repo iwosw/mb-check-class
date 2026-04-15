@@ -19,14 +19,6 @@ public class ClaimUtil {
         return list;
     }
 
-    public static List<LivingEntity> getLivingEntitiesInClaim(Level level, com.talhanation.bannerlord.persistence.military.RecruitsClaim claim, Predicate<LivingEntity> filter) {
-        List<LivingEntity> list = new ArrayList<>();
-        for (ChunkPos chunkPos : claim.getClaimedChunks()) {
-            list.addAll(getLivingEntitiesInChunk(level, chunkPos, filter));
-        }
-        return list;
-    }
-
     public static List<LivingEntity> getLivingEntitiesInChunk(Level level, ChunkPos chunkPos, Predicate<LivingEntity> filter) {
         int minX = chunkPos.getMinBlockX();
         int minZ = chunkPos.getMinBlockZ();
@@ -41,3 +33,4 @@ public class ClaimUtil {
         return level.getEntitiesOfClass(LivingEntity.class, area, filter);
     }
 }
+

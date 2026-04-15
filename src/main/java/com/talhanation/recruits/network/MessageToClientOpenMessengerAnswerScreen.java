@@ -30,18 +30,6 @@ public class MessageToClientOpenMessengerAnswerScreen implements Message<Message
         this.recruitUUID = messenger.getUUID();
     }
 
-    public MessageToClientOpenMessengerAnswerScreen(com.talhanation.bannerlord.entity.military.MessengerEntity messenger, String message, RecruitsPlayerInfo playerInfo) {
-        this.message = message;
-        this.nbt = playerInfo.toNBT();
-        this.recruitUUID = messenger.getUUID();
-    }
-
-    public MessageToClientOpenMessengerAnswerScreen(com.talhanation.bannerlord.entity.military.MessengerEntity messenger, String message, com.talhanation.bannerlord.persistence.military.RecruitsPlayerInfo playerInfo) {
-        this.message = message;
-        this.nbt = playerInfo.toNBT();
-        this.recruitUUID = messenger.getUUID();
-    }
-
     @Override
     public Dist getExecutingSide() {
         return Dist.CLIENT;

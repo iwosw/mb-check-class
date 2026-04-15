@@ -1,6 +1,4 @@
 package com.talhanation.recruits.compat;
-
-import com.talhanation.bannerlord.entity.shared.AbstractInventoryEntity;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.LivingEntity;
@@ -28,28 +26,6 @@ public interface IWeapon {
     boolean isBow();
     boolean isCrossBow();
     void performRangedAttackIWeapon(AbstractRecruitEntity shooter, double x, double y, double z, float projectileSpeed);
-
-    default void performRangedAttackIWeapon(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity shooter, double x, double y, double z, float projectileSpeed) {
-        Class<AbstractRecruitEntity> legacyType = AbstractRecruitEntity.class;
-        if (legacyType.isInstance(shooter)) {
-            performRangedAttackIWeapon(legacyType.cast(shooter), x, y, z, projectileSpeed);
-            return;
-        }
-
-        if (isBow() || isCrossBow()) {
-            AbstractArrow projectile = getProjectileArrow(shooter);
-            AbstractArrow firedProjectile = shootArrow(shooter, projectile, x, y, z);
-            shooter.level().addFreshEntity(firedProjectile);
-        }
-        else {
-            AbstractHurtingProjectile projectile = getProjectile(shooter);
-            AbstractHurtingProjectile firedProjectile = shoot(shooter, projectile, x, y, z);
-            shooter.level().addFreshEntity(firedProjectile);
-        }
-
-        shooter.consumeArrow();
-        shooter.playSound(getShootSound(), 1.0F, 1.0F / (shooter.getRandom().nextFloat() * 0.4F + 0.8F));
-    }
 
     static boolean isMusketModWeapon(ItemStack stack){
         return stack.getDescriptionId().equals("item.musketmod.musket") ||

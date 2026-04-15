@@ -38,18 +38,10 @@ public class SmallShips {
 
     private final Boat boat;
     private final CaptainEntity captain;
-    private final com.talhanation.bannerlord.entity.military.CaptainEntity bannerlordCaptain;
 
     public SmallShips(Boat boat, CaptainEntity captain) {
         this.boat = boat;
         this.captain = captain;
-        this.bannerlordCaptain = null;
-    }
-
-    public SmallShips(Boat boat, com.talhanation.bannerlord.entity.military.CaptainEntity captain) {
-        this.boat = boat;
-        this.captain = null;
-        this.bannerlordCaptain = captain;
     }
 
     public Boat getBoat(){
@@ -68,8 +60,7 @@ public class SmallShips {
 
     public boolean isCaptainDriver(){
         List<Entity> passengers = boat.getPassengers();
-        Entity expectedCaptain = captain != null ? captain : bannerlordCaptain;
-        return !passengers.isEmpty() && passengers.get(0).equals(expectedCaptain);
+        return !passengers.isEmpty() && passengers.get(0).equals(captain);
     }
 
     public float getShipSpeed() {
@@ -335,17 +326,6 @@ public class SmallShips {
         );
     }
 
-    public static void shootCannonsSmallShip(com.talhanation.bannerlord.entity.military.CaptainEntity driver, Boat boat, Entity target, boolean leftSide){
-        shootCannonsSmallShip((Entity) driver, boat, target, leftSide);
-    }
-
-    private static void shootCannonsSmallShip(Entity driver, Boat boat, Entity target, boolean leftSide){
-        Optional<Object> cannonable = castBoat(boat, cannonableClass());
-        if (cannonable.isEmpty() || !driver.level().isClientSide()) {
-            invoke(cannonableClass(), cannonable.orElse(null), "shootCannons", new Class[]{Entity.class, Entity.class, boolean.class}, driver, target, leftSide);
-        }
-    }
-
     @Nullable
     public static ItemStack getSmallShipsItem() {
         return ForgeRegistries.ITEMS.getDelegateOrThrow(ResourceLocation.tryParse("smallships:oak_cog")).get().getDefaultInstance();
@@ -377,12 +357,6 @@ public class SmallShips {
                 }
             });
         }
-    }
-
-    public void repairShip(com.talhanation.bannerlord.entity.military.CaptainEntity captain) {
-        Optional<Object> ship = shipObject();
-        if (ship.isEmpty()) return;
-        invoke(shipClass(), ship.get(), "repairShip", new Class[]{Entity.class}, captain);
     }
 
     public float getDamage() {

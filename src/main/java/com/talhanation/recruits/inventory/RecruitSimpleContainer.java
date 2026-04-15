@@ -12,21 +12,11 @@ import static net.minecraft.world.entity.LivingEntity.getEquipmentSlotForItem;
 
 public class RecruitSimpleContainer extends SimpleContainer {
     private final AbstractInventoryEntity recruit;
-    private final com.talhanation.bannerlord.entity.shared.AbstractInventoryEntity bannerlordRecruit;
     private final int size;
-
     public RecruitSimpleContainer(int inventorySize, AbstractInventoryEntity abstractInventoryEntity) {
         super(inventorySize);
         this.size = inventorySize;
         this.recruit = abstractInventoryEntity;
-        this.bannerlordRecruit = null;
-    }
-
-    public RecruitSimpleContainer(int inventorySize, com.talhanation.bannerlord.entity.shared.AbstractInventoryEntity abstractInventoryEntity) {
-        super(inventorySize);
-        this.size = inventorySize;
-        this.recruit = null;
-        this.bannerlordRecruit = abstractInventoryEntity;
     }
 
     public ItemStack addItem(ItemStack itemStack) {
@@ -47,12 +37,7 @@ public class RecruitSimpleContainer extends SimpleContainer {
             if (itemstack.isEmpty() && canPlaceItem(i, itemStack)) {
                 this.setItem(i, itemStack.copy());
                 if(i < 6) {
-                    if (recruit != null) {
-                        recruit.setItemSlot(Objects.requireNonNull(recruit.getEquipmentSlotIndex(i)), itemStack);
-                    }
-                    else if (bannerlordRecruit != null) {
-                        bannerlordRecruit.setItemSlot(Objects.requireNonNull(bannerlordRecruit.getEquipmentSlotIndex(i)), itemStack);
-                    }
+                    recruit.setItemSlot(Objects.requireNonNull(recruit.getEquipmentSlotIndex(i)), itemStack);
                 }
                 itemStack.setCount(0);
                 return;
@@ -86,17 +71,13 @@ public class RecruitSimpleContainer extends SimpleContainer {
     public boolean canPlaceItem(int slot, ItemStack itemStack) {
         if(slot == 0|| slot == 1 || slot == 2 || slot == 3) {
             EquipmentSlot equipmentslottype = RecruitInventoryMenu.SLOT_IDS[slot];
-            return recruit != null
-                    ? itemStack.canEquip(equipmentslottype, recruit)
-                    : bannerlordRecruit != null && itemStack.canEquip(equipmentslottype, bannerlordRecruit); //|| (itemStack.getItem() instanceof BannerItem && equipmentslottype.equals(EquipmentSlot.HEAD))
+            return itemStack.canEquip(equipmentslottype, recruit); //|| (itemStack.getItem() instanceof BannerItem && equipmentslottype.equals(EquipmentSlot.HEAD))
         }
         else if(slot == 4)//offhand
             return (itemStack.getItem() instanceof ShieldItem);
 
         else if (slot == 5)//mainhand
-            return recruit != null
-                    ? recruit.canHoldItem(itemStack)
-                    : bannerlordRecruit != null && bannerlordRecruit.canHoldItem(itemStack);
+            return recruit.canHoldItem(itemStack);
 
         else
             return true;

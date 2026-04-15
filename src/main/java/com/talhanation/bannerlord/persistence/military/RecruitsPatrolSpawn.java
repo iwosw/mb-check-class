@@ -8,7 +8,6 @@ import com.talhanation.bannerlord.entity.military.*;
 import com.talhanation.bannerlord.ai.military.villager.FollowCaravanOwner;
 import com.talhanation.recruits.init.ModEntityTypes;
 import com.talhanation.recruits.util.NPCArmy;
-import com.talhanation.recruits.world.RecruitsGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
