@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 21
-last_updated: "2026-04-15T10:31:41.519Z"
+last_updated: "2026-04-15T11:24:40.305Z"
 progress:
   total_phases: 31
   completed_phases: 14
   total_plans: 54
-  completed_plans: 48
-  percent: 89
+  completed_plans: 50
+  percent: 93
 ---
 
 # Project State
@@ -169,6 +169,7 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Preserve legacy logistics route accessor names through alias methods while route ownership moves, so existing UI and packet code keeps its contract stable.
 - [Phase 21]: 21-02 narrowed Option A scope: only the 5 classes with extant legacy bannermod implementations were moved to bannermod.shared.*. Service/Route/CourierTask deferred -- no impl exists today, no callers, depends on AbstractWorkerEntity from wave 21-04.
 - [Phase 21]: 21-02 forwarder lifespan: per D-05 the legacy bannermod.{authority,settlement,logistics} peers stay live as @Deprecated forwarders for the duration of Phase 21; deletion is owned by a separate post-Phase-21 cleanup phase.
+- [Phase 21-source-tree-consolidation-into-bannerlord]: workerPacketOffset() now returns MILITARY_MESSAGES.length (compile-time=104), making must-have #4 from 21-03 provable
 
 ## Accumulated Context
 
@@ -232,6 +233,7 @@ progress:
 | Phase 21-source-tree-consolidation-into-bannerlord P05 | 4 min | 3 tasks | 861 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P06 | 1 min | 2 tasks | 47 files |
 | Phase 21 P02 | 25min | 4 tasks | 29 files |
+| Phase 21-source-tree-consolidation-into-bannerlord P08 | 10 min | 2 tasks | 133 files |
 
 ### Quick Tasks Completed
 

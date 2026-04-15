@@ -377,7 +377,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 7/9 plans executed
+**Plans:** 8/9 plans executed
 
 Plans:
 - [x] 21-01-PLAN.md — Reset Phase 21 executed state: revert the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`), delete stale executed-plan summaries, and record the convergence-namespace pivot (now `bannermod`) in roadmap and merge notes.
@@ -387,7 +387,7 @@ Plans:
 - [x] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
 - [x] 21-06-PLAN.md — Migrate remaining recruits-side subsystems (client UI, inventory menus, world managers/SavedData, items) into `bannermod.{client,inventory,persistence,items}.military`, emptying the recruits clone down to deprecated `Main.java` shim.
 - [x] 21-07-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-7 contract.
-- [ ] 21-08-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-8 contract.
+- [x] 21-08-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-8 contract.
 - [ ] 21-09-PLAN.md — Final phase closeout for `bannermod` consolidation: full root validation green and all prior plan checkboxes re-confirmed at true closeout.
 
 Planning artifacts live under the original Phase 21 directory (`.planning/phases/21-source-tree-consolidation-into-<prior-namespace>/`, directory name retained verbatim for git history continuity; re-execution targets the `bannermod` convergence namespace per 21-CONTEXT.md D-01/D-02).
