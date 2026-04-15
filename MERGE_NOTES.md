@@ -196,3 +196,14 @@ Asset/lang namespace and release identity are no longer open questions for activ
 3. Merge shared UI/widget and packet infrastructure where Workers currently imports Recruits internals.
 4. Add root-level verification steps that cover merged recruit and worker gameplay flows, not just compilation.
 5. Decide how much further to clean the preserved `workers/` tree itself versus keeping it as a source archive now that the standalone build/metadata tails have been moved out.
+
+## Phase 21 Pivot (2026-04-15)
+
+### Why bannerlord was the wrong convergence namespace
+The wave-1 through wave-5 execution under `com.talhanation.bannerlord.**` was abandoned per CONTEXT D-01/D-02 after the team concluded (i) the bannerlord name collided with the sibling Bannerlord-inspired gameplay subsystem in planning-stage-only docs, creating ambiguity at every cross-reference, and (ii) `bannermod` already owned the active mod id, config filenames, and resource paths -- converging into bannermod aligns the Java package tree with the runtime contract instead of forcing a second rename later.
+
+### Revert range
+All nineteen commits from `f1832af feat(21-02): move bootstrap ownership into bannerlord packages` through `a792dc3 docs(21-06): complete shared seam ownership plan` inclusive are reverted as per-original-commit `revert(21): pivot bannerlord -> bannermod -- <subject>` commits (Task 2). The in-flight working-tree WIP capture (if any, from Task 1) is also reverted with the same preamble. Bisectability is preserved (no squash).
+
+### Re-execution target
+Plans 21-02 through 21-09 re-execute against `com.talhanation.bannermod.**` (convergence namespace, CONTEXT D-01/D-02). Plan 21-02 is the only place the shared-package overlap note lives -- this section does NOT duplicate it.

@@ -369,26 +369,30 @@ Planning artifacts live under `.planning/phases/20-runtime-audit-and-bannerlord-
 
 Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is audited in `20-RUNTIME-AUDIT.md`, the move-order matrix is published in `20-OWNERSHIP-MATRIX.md`, and the Phase 21 handoff contract now lives in `20-TARGET-ARCHITECTURE.md`.
 
-## Phase 21: Source Tree Consolidation Into Bannerlord
+## Phase 21: Source Tree Consolidation Into BannerMod
 
-- Move active Java ownership out of `recruits/` and `workers/` into `src/main/java/com/talhanation/bannerlord/**` in controlled slices.
+- Move active Java ownership out of `recruits/` and `workers/` into `src/main/java/com/talhanation/bannermod/**` in controlled slices.
 - Re-home merged recruit and worker code, AI, registries, networking, and client packages into the canonical root tree.
 - Retire legacy source roots only after full root validation is green.
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 5 plans
+**Plans:** 0/9 plans executed
 
 Plans:
-- [ ] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.
-- [ ] 21-02-PLAN.md — Re-home bootstrap, shared networking, and registry/lifecycle composition into `com.talhanation.bannerlord.bootstrap`, `.network`, and `.registry` without changing the runtime contract.
-- [ ] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannerlord` military/shared packages before worker code follows them.
-- [ ] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannerlord` base while isolating the compatibility layer.
+- [ ] 21-01-PLAN.md — Reset Phase 21 executed state: revert the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`), delete stale executed-plan summaries, and record the convergence-namespace pivot (now `bannermod`) in roadmap and merge notes.
+- [ ] 21-02-PLAN.md — Re-home bootstrap, shared networking, and registry/lifecycle composition into `com.talhanation.bannermod.bootstrap`, `.network`, and `.registry` without changing the runtime contract.
+- [ ] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannermod` military/shared packages before worker code follows them.
+- [ ] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannermod` base while isolating the compatibility layer.
 - [ ] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
+- [ ] 21-06-PLAN.md — Establish the shared `bannermod` seam ownership (shared seam classes and config helpers) with only minimal forwarding adapters where required.
+- [ ] 21-07-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-7 contract.
+- [ ] 21-08-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-8 contract.
+- [ ] 21-09-PLAN.md — Final phase closeout for `bannermod` consolidation: full root validation green and all prior plan checkboxes re-confirmed at true closeout.
 
-Planning artifacts live under `.planning/phases/21-source-tree-consolidation-into-bannerlord/`.
+Planning artifacts live under the original Phase 21 directory (`.planning/phases/21-source-tree-consolidation-into-<prior-namespace>/`, directory name retained verbatim for git history continuity; re-execution targets the `bannermod` convergence namespace per 21-CONTEXT.md D-01/D-02).
 
-Status: Planned (5 plans defined on 2026-04-12; next execution target, using `20-TARGET-ARCHITECTURE.md` as the move contract).
+Status: In progress (0/9 after convergence-namespace pivot to bannermod, 2026-04-15); the prior-namespace work from `f1832af` through `a792dc3` has been fully reverted per plan 21-01. Plans 21-02 through 21-09 will re-execute against the bannermod convergence namespace locked by 21-CONTEXT.md D-01/D-02.
 
 ## Phase 22: Citizen Role Unification
 
