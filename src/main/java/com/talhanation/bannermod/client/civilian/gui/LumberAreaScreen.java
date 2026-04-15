@@ -4,7 +4,7 @@ import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.client.civilian.gui.widgets.ItemScrollDropDownMenu;
 import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
-import com.talhanation.workers.network.MessageUpdateLumberArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateLumberArea;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

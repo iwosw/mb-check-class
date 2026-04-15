@@ -8,7 +8,7 @@ import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
 import com.talhanation.bannermod.client.military.gui.faction.FactionEditScreen;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.client.military.gui.widgets.SelectedPlayerWidget;
-import com.talhanation.recruits.network.MessageUpdateClaim;
+import com.talhanation.bannermod.network.messages.military.MessageUpdateClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.client.Minecraft;

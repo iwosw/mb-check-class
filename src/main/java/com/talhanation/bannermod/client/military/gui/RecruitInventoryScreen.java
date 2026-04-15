@@ -9,7 +9,7 @@ import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.compat.workers.IVillagerWorker;
 import com.talhanation.bannermod.entity.military.*;
 import com.talhanation.bannermod.inventory.military.RecruitInventoryMenu;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;

@@ -6,8 +6,8 @@ import com.talhanation.bannermod.client.military.gui.group.RecruitsCommandButton
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.client.civilian.WorkersClientManager;
-import com.talhanation.workers.network.MessageAddWorkArea;
-import com.talhanation.workers.network.MessageRecoverWorkerControl;
+import com.talhanation.bannermod.network.messages.civilian.MessageAddWorkArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageRecoverWorkerControl;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

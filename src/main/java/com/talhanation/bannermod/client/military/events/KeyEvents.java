@@ -6,7 +6,7 @@ import com.talhanation.bannermod.client.military.gui.worldmap.WorldMapScreen;
 import com.talhanation.bannermod.client.military.gui.faction.FactionMainScreen;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.registry.military.ModShortcuts;
-import com.talhanation.recruits.network.MessageWriteSpawnEgg;
+import com.talhanation.bannermod.network.messages.military.MessageWriteSpawnEgg;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;

@@ -5,7 +5,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.component.ActivateableButton;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.entity.military.ScoutEntity;
-import com.talhanation.recruits.network.MessageScoutTask;
+import com.talhanation.bannermod.network.messages.military.MessageScoutTask;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.GameRenderer;

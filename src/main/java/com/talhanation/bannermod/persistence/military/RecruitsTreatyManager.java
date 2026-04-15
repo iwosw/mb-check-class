@@ -2,8 +2,8 @@ package com.talhanation.bannermod.persistence.military;
 
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.recruits.network.MessageToClientSetDiplomaticToast;
-import com.talhanation.recruits.network.MessageToClientUpdateTreaties;
+import com.talhanation.bannermod.network.messages.military.MessageToClientSetDiplomaticToast;
+import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateTreaties;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;

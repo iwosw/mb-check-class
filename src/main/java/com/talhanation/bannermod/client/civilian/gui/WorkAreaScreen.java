@@ -7,9 +7,9 @@ import com.talhanation.bannermod.client.military.gui.widgets.SelectedPlayerWidge
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import com.talhanation.workers.network.MessageRotateWorkArea;
-import com.talhanation.workers.network.MessageUpdateOwner;
-import com.talhanation.workers.network.MessageUpdateWorkArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageRotateWorkArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateOwner;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateWorkArea;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;

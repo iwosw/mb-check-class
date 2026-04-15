@@ -10,7 +10,7 @@ import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTradesRegistry;
-import com.talhanation.workers.network.MessageToClientUpdateConfig;
+import com.talhanation.bannermod.network.messages.civilian.MessageToClientUpdateConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTrade;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import net.minecraft.core.BlockPos;

@@ -4,7 +4,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
-import com.talhanation.recruits.network.MessageTransferRoute;
+import com.talhanation.bannermod.network.messages.military.MessageTransferRoute;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

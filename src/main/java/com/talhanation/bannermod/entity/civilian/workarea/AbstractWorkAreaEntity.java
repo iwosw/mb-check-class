@@ -2,8 +2,8 @@ package com.talhanation.bannermod.entity.civilian.workarea;
 
 import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
-import com.talhanation.workers.network.MessageToClientOpenWorkAreaScreen;
-import com.talhanation.workers.network.WorkAreaAuthoringRules;
+import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
+import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

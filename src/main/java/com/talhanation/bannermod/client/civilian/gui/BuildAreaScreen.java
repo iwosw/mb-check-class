@@ -8,7 +8,7 @@ import com.talhanation.bannermod.client.civilian.gui.widgets.ScrollDropDownMenuW
 import com.talhanation.bannermod.persistence.civilian.ScannedBlock;
 import com.talhanation.bannermod.client.civilian.gui.structureRenderer.StructurePreviewWidget;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
-import com.talhanation.workers.network.MessageUpdateBuildArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateBuildArea;
 import com.talhanation.bannermod.persistence.civilian.StructureManager;
 import com.talhanation.bannermod.persistence.civilian.StructureTemplateLoader;
 import net.minecraft.client.Minecraft;

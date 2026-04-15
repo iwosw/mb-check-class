@@ -3,7 +3,7 @@ package com.talhanation.bannermod.client.military.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.network.MessageDebugGui;
+import com.talhanation.bannermod.network.messages.military.MessageDebugGui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;

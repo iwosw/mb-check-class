@@ -4,7 +4,7 @@ import com.talhanation.bannermod.client.military.gui.widgets.BlackShowingTextFie
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
-import com.talhanation.workers.network.MessageUpdateMarketArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateMarketArea;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;

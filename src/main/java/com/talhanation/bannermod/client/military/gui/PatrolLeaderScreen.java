@@ -7,7 +7,7 @@ import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity.EnemyAction;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity.InfoMode;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.gui.GuiGraphics;

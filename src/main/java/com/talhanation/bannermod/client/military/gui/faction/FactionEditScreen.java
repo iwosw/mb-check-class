@@ -12,8 +12,8 @@ import com.talhanation.bannermod.client.military.gui.widgets.ColorChatFormatting
 import com.talhanation.bannermod.client.military.gui.widgets.ColorSelectionDropdownMatrix;
 import com.talhanation.bannermod.client.military.gui.widgets.SelectedPlayerWidget;
 import com.talhanation.bannermod.inventory.military.TeamEditMenu;
-import com.talhanation.recruits.network.MessageCreateTeam;
-import com.talhanation.recruits.network.MessageSaveTeamSettings;
+import com.talhanation.bannermod.network.messages.military.MessageCreateTeam;
+import com.talhanation.bannermod.network.messages.military.MessageSaveTeamSettings;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.persistence.military.RecruitsFactionManager;
 import de.maxhenkel.corelib.inventory.ScreenBase;

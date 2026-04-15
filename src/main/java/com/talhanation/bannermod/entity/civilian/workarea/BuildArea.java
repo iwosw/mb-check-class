@@ -4,7 +4,7 @@ import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.client.civilian.gui.BuildAreaScreen;
 import com.talhanation.bannermod.ai.civilian.BuilderBuildProgress;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import com.talhanation.workers.network.MessageToClientOpenWorkAreaScreen;
+import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
 import com.talhanation.bannermod.persistence.civilian.BuildBlock;
 import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
 import net.minecraft.client.gui.screens.Screen;

@@ -6,7 +6,7 @@ import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.events.RecruitsToastManager;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenBase;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenListBase;
-import com.talhanation.recruits.network.MessageSendJoinRequestTeam;
+import com.talhanation.bannermod.network.messages.military.MessageSendJoinRequestTeam;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

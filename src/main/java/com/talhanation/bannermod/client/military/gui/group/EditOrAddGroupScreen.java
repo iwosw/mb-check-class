@@ -7,7 +7,7 @@ import com.talhanation.bannermod.client.military.gui.ConfirmScreen;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
 import com.talhanation.bannermod.client.military.gui.widgets.ImageSelectionDropdownMatrix;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

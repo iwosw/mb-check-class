@@ -5,7 +5,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.component.BannerRenderer;
 import com.talhanation.bannermod.client.military.gui.RecruitsScreenBase;
-import com.talhanation.recruits.network.MessageChangeDiplomacyStatus;
+import com.talhanation.bannermod.network.messages.military.MessageChangeDiplomacyStatus;
 import com.talhanation.bannermod.persistence.military.RecruitsDiplomacyManager;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.client.Minecraft;

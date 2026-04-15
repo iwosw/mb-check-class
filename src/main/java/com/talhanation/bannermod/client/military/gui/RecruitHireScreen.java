@@ -6,7 +6,7 @@ import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.inventory.military.RecruitHireMenu;
-import com.talhanation.recruits.network.MessageHire;
+import com.talhanation.bannermod.network.messages.military.MessageHire;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;

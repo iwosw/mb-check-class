@@ -5,7 +5,7 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.entities.*;
 import com.talhanation.recruits.entities.ai.controller.RecruitCommandStateTransitions;
 import com.talhanation.bannermod.inventory.military.CommandMenu;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.util.FormationUtils;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.core.BlockPos;

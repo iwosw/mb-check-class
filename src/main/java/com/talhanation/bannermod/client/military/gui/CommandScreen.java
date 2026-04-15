@@ -9,7 +9,7 @@ import com.talhanation.bannermod.client.military.gui.group.*;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.inventory.military.CommandMenu;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;

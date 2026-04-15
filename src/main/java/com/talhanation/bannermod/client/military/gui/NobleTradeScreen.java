@@ -6,7 +6,7 @@ import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.component.RecruitsMultiLineEditBox;
 import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
 import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
-import com.talhanation.recruits.network.MessageHireFromNobleVillager;
+import com.talhanation.bannermod.network.messages.military.MessageHireFromNobleVillager;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTrade;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTradesRegistry;

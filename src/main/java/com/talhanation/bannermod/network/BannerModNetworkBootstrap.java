@@ -5,10 +5,10 @@ import de.maxhenkel.corelib.CommonRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 // Recruits network messages
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 
 // Workers network messages
-import com.talhanation.workers.network.*;
+import com.talhanation.bannermod.network.messages.civilian.*;
 
 /**
  * Owns the single shared SimpleChannel for the merged bannermod runtime.

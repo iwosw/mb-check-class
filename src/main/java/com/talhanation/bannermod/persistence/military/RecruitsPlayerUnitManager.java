@@ -4,7 +4,7 @@ import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
-import com.talhanation.recruits.network.MessageToClientUpdateUnitInfo;
+import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateUnitInfo;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;

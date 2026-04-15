@@ -2,7 +2,7 @@ package com.talhanation.bannermod.persistence.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.network.MessageToClientUpdateGroups;
+import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateGroups;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;

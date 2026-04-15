@@ -6,7 +6,7 @@ import com.talhanation.bannermod.client.military.gui.component.RecruitsMultiLine
 import com.talhanation.bannermod.client.military.gui.widgets.BlackShowingTextField;
 import com.talhanation.bannermod.client.military.gui.widgets.SelectedFactionWidget;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
-import com.talhanation.recruits.network.MessageAnswerTreaty;
+import com.talhanation.bannermod.network.messages.military.MessageAnswerTreaty;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;

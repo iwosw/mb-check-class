@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.component.RecruitsMultiLineEditBox;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
-import com.talhanation.recruits.network.MessageAnswerMessenger;
+import com.talhanation.bannermod.network.messages.military.MessageAnswerMessenger;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

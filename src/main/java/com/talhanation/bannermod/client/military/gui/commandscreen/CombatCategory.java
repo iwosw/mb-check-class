@@ -3,7 +3,7 @@ package com.talhanation.bannermod.client.military.gui.commandscreen;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.CommandScreen;
 import com.talhanation.bannermod.client.military.gui.group.RecruitsCommandButton;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;

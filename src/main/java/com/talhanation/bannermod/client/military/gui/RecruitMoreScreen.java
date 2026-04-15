@@ -6,8 +6,8 @@ import com.talhanation.bannermod.client.military.gui.group.RecruitsGroupListScre
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.network.MessageAssignRecruitToPlayer;
-import com.talhanation.recruits.network.MessageDisband;
+import com.talhanation.bannermod.network.messages.military.MessageAssignRecruitToPlayer;
+import com.talhanation.bannermod.network.messages.military.MessageDisband;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;

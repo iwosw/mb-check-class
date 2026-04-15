@@ -3,7 +3,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
-import com.talhanation.workers.network.MessageUpdateStorageArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateStorageArea;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

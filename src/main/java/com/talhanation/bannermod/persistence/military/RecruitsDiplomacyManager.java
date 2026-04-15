@@ -5,8 +5,8 @@ import net.minecraftforge.common.MinecraftForge;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.FactionEvents;
-import com.talhanation.recruits.network.MessageToClientSetDiplomaticToast;
-import com.talhanation.recruits.network.MessageToClientUpdateDiplomacyList;
+import com.talhanation.bannermod.network.messages.military.MessageToClientSetDiplomaticToast;
+import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateDiplomacyList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

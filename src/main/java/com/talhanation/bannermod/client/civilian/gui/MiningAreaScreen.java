@@ -5,7 +5,7 @@ import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.workers.WorkersRuntime;
 import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
 import com.talhanation.bannermod.entity.civilian.workarea.MiningPatternSettings;
-import com.talhanation.workers.network.MessageUpdateMiningArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateMiningArea;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;

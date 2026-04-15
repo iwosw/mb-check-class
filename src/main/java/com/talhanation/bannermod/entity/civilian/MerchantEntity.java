@@ -10,8 +10,8 @@ import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
 import com.talhanation.bannermod.inventory.civilian.MerchantAddEditTradeContainer;
 import com.talhanation.bannermod.inventory.civilian.MerchantTradeContainer;
-import com.talhanation.workers.network.MessageOpenMerchantEditTradeScreen;
-import com.talhanation.workers.network.MessageOpenMerchantTradeScreen;
+import com.talhanation.bannermod.network.messages.civilian.MessageOpenMerchantEditTradeScreen;
+import com.talhanation.bannermod.network.messages.civilian.MessageOpenMerchantTradeScreen;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;

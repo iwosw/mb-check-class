@@ -22,7 +22,7 @@ import com.talhanation.recruits.init.ModItems;
 import com.talhanation.bannermod.inventory.military.DebugInvMenu;
 import com.talhanation.bannermod.inventory.military.RecruitHireMenu;
 import com.talhanation.bannermod.inventory.military.RecruitInventoryMenu;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsDiplomacyManager;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;

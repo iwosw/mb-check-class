@@ -3,7 +3,7 @@ package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.bannermod.inventory.military.*;
-import com.talhanation.recruits.network.*;
+import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.util.DelayedExecutor;
 import com.talhanation.bannermod.persistence.military.*;
 import com.talhanation.recruits.FactionEvent;

@@ -3,7 +3,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.client.civilian.gui.widgets.ItemScrollDropDownMenu;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
-import com.talhanation.workers.network.MessageUpdateCropArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateCropArea;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.player.Player;
