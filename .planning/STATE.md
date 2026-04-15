@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-last_updated: "2026-04-15T06:15:34.368Z"
+last_updated: "2026-04-15T08:26:18.644Z"
 progress:
-  total_phases: 38
+  total_phases: 31
   completed_phases: 14
   total_plans: 54
-  completed_plans: 47
-  percent: 87
+  completed_plans: 44
+  percent: 81
 ---
 
 # Project State
@@ -167,6 +167,8 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Make bannerlord.shared and bannerlord.config the real seam owners while keeping deprecated bannermod wrappers only as temporary adapters.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Let the canonical settlement seam accept both retained recruits claims and moved bannerlord claim lists so mixed-package callers can migrate without splitting the rules logic again.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Preserve legacy logistics route accessor names through alias methods while route ownership moves, so existing UI and packet code keeps its contract stable.
+- [Phase 21]: 21-02 narrowed Option A scope: only the 5 classes with extant legacy bannermod implementations were moved to bannermod.shared.*. Service/Route/CourierTask deferred -- no impl exists today, no callers, depends on AbstractWorkerEntity from wave 21-04.
+- [Phase 21]: 21-02 forwarder lifespan: per D-05 the legacy bannermod.{authority,settlement,logistics} peers stay live as @Deprecated forwarders for the duration of Phase 21; deletion is owned by a separate post-Phase-21 cleanup phase.
 
 ## Accumulated Context
 
@@ -229,6 +231,7 @@ progress:
 | Phase 21-source-tree-consolidation-into-bannerlord P04 | 1 min | 2 tasks | 122 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P05 | 4 min | 3 tasks | 861 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P06 | 1 min | 2 tasks | 47 files |
+| Phase 21 P02 | 25min | 4 tasks | 29 files |
 
 ### Quick Tasks Completed
 
@@ -238,6 +241,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-15T13:40:00Z
-- Stopped at: Completed 21-01-PLAN.md (Phase 21 pivot reset)
+- Last updated: 2026-04-15T08:24:09Z
+- Stopped at: Completed 21-02-PLAN.md (bannermod.shared seam ownership; Option A narrowed scope; SRCMOVE-01 done)
 - Resume file: None
