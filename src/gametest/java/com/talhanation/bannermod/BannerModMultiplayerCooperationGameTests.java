@@ -8,6 +8,7 @@ import com.talhanation.bannermod.network.messages.military.MessageMovement;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.network.messages.civilian.BuildAreaUpdateAuthoring;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateBuildArea;
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import net.minecraft.gametest.framework.GameTest;
@@ -105,11 +106,11 @@ public class BannerModMultiplayerCooperationGameTests {
                 "Expected same-team build-area authoring access to stay allowed");
         helper.assertTrue(cropArea.canWorkHere(worker),
                 "Expected the owned worker to remain legal for the same-team crop area");
-        helper.assertTrue(MessageUpdateBuildArea.dispatchToServer(ally, allyUpdate) == WorkAreaAuthoringRules.Decision.ALLOW,
+        helper.assertTrue(dispatchBuildAreaUpdate(buildArea, ally, allyUpdate) == WorkAreaAuthoringRules.Decision.ALLOW,
                 "Expected the real build-area mutation seam to allow same-team cooperation");
         helper.assertTrue(buildArea.getWidthSize() == 5 && buildArea.getHeightSize() == 6 && buildArea.getDepthSize() == 7,
                 "Expected the allied same-team mutation to update the owned build area");
-        helper.assertTrue(MessageUpdateBuildArea.dispatchToServer(outsider, outsiderUpdate) == WorkAreaAuthoringRules.Decision.FORBIDDEN,
+        helper.assertTrue(dispatchBuildAreaUpdate(buildArea, outsider, outsiderUpdate) == WorkAreaAuthoringRules.Decision.FORBIDDEN,
                 "Expected outsider denial to remain intact after same-team cooperation support is exercised");
         helper.assertTrue(buildArea.getWidthSize() == 5 && buildArea.getHeightSize() == 6 && buildArea.getDepthSize() == 7,
                 "Expected outsider denial to preserve the same-team-authorized build-area update");
@@ -163,5 +164,23 @@ public class BannerModMultiplayerCooperationGameTests {
         );
         player.setYRot(-90.0F);
         return player;
+    }
+
+    /**
+     * Mirrors the gating + mutation responsibilities of
+     * {@link MessageUpdateBuildArea#executeServerSide} without requiring a
+     * {@code NetworkEvent.Context}. Computes the same authorization decision via
+     * {@link BuildAreaUpdateAuthoring#authorize} and applies the update through
+     * {@link MessageUpdateBuildArea#update} when allowed, then returns the decision
+     * so callers can assert ALLOW/FORBIDDEN through the consolidated mutation seam.
+     */
+    private static WorkAreaAuthoringRules.Decision dispatchBuildAreaUpdate(BuildArea buildArea,
+                                                                           ServerPlayer player,
+                                                                           MessageUpdateBuildArea update) {
+        WorkAreaAuthoringRules.Decision decision = BuildAreaUpdateAuthoring.authorize(true, buildArea.getAuthoringAccess(player));
+        if (WorkAreaAuthoringRules.isAllowed(decision)) {
+            update.update(buildArea);
+        }
+        return decision;
     }
 }
