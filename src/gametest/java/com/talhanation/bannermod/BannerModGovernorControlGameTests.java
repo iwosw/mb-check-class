@@ -4,7 +4,7 @@ import com.talhanation.bannermod.governance.BannerModGovernorHeartbeat;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorService;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import com.talhanation.recruits.ClaimEvents;
+import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.RecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
@@ -20,7 +20,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
-@GameTestHolder(Main.MOD_ID)
+@GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModGovernorControlGameTests {
     private static final UUID FRIENDLY_LEADER_UUID = UUID.fromString("00000000-0000-0000-0000-000000002301");
     private static final UUID HOSTILE_LEADER_UUID = UUID.fromString("00000000-0000-0000-0000-000000002302");
