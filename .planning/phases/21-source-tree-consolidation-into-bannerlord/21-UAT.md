@@ -3,12 +3,12 @@ status: partial
 phase: 21-source-tree-consolidation-into-bannerlord
 source: [21-01-SUMMARY.md, 21-02-SUMMARY.md, 21-03-SUMMARY.md, 21-04-SUMMARY.md, 21-05-SUMMARY.md, 21-06-SUMMARY.md, 21-07-SUMMARY.md, 21-08-SUMMARY.md, 21-09-SUMMARY.md, 21-10-SUMMARY.md]
 started: 2026-04-15T20:00:00Z
-updated: 2026-04-15T13:05:04Z
+updated: 2026-04-15T13:22:00Z
 ---
 
 ## Current Test
 
-[testing paused — blocker in test 2; 6 tests deferred until fix lands]
+[test 2 passes end-to-end on 2026-04-15T13:20Z — main menu + world join verified; ready to resume from test 3]
 
 ## Tests
 
@@ -72,7 +72,9 @@ blocked: 0
   debug_session: ""
 
 - truth: "Client reaches main menu in dev client without ForgeConfigSpec timing crash"
-  status: failed
+  status: closed
+  closed_by: "21-10-PLAN.md (follow-up fix commit 14e7684)"
+  resolution: "Fixed by deferring `RecruitsClientConfig.RecruitsLookLikeVillagers.get()` out of `EntityRenderersEvent.RegisterRenderers` and into the `EntityRendererProvider` lambda in BOTH `client/civilian/events/ClientEvent.java` and `client/military/events/ClientEvent.java`. The provider is invoked later in `EntityRenderDispatcher.onResourceManagerReload`, after `ModConfigEvent.Loading`, so `.get()` is safe. Verified on 2026-04-15T13:20Z: `./gradlew runClient` reaches main menu, loads a world (`[Server thread/INFO] talhanation joined the game`), and Forge wrote all three expected config files (`run/config/bannermod-recruits-client.toml`, `run/saves/New World/serverconfig/bannermod-recruits-server.toml`, `run/saves/New World/serverconfig/bannermod-workers-server.toml`) containing the expected keys (`PlayVillagerAmbientSound`, `MaxRecruitsForPlayer`, `FarmerCost`)."
   reason: "After 21-10 resolved the ModLoadingContext.registerConfig collision, re-running `./gradlew runClient` on 2026-04-15T13:05Z surfaces a new downstream crash: `java.lang.IllegalStateException: Cannot get config value before config is loaded` thrown from `ClientEvent.entityRenderersEvent(ClientEvent.java:34)` during the `EntityRenderersEvent.RegisterRenderers` event fired inside `Minecraft.<init>` / `initClientHooks`. Crash report UUID 18e6b9f4-f894-49ba-9d41-1d3838448fc7, run/crash-reports/crash-2026-04-15_19.26.49-client.txt. Suspected Mod: bannermod 1.14.3. This is a pre-existing latent defect that was masked by the earlier `Config conflict detected!` crash — not a regression introduced by 21-10."
   severity: blocker
   test: 2
