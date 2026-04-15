@@ -377,14 +377,14 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 4/9 plans executed
+**Plans:** 5/9 plans executed
 
 Plans:
 - [x] 21-01-PLAN.md — Reset Phase 21 executed state: revert the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`), delete stale executed-plan summaries, and record the convergence-namespace pivot (now `bannermod`) in roadmap and merge notes.
 - [x] 21-02-PLAN.md — Establish canonical shared seam ownership under `com.talhanation.bannermod.shared.{authority,settlement,logistics}` and reduce legacy `com.talhanation.bannermod.{authority,settlement,logistics}` peers to `@Deprecated` thin forwarders. (Option A narrowed scope: 5 of 8 originally-named classes shipped; deferred 3 documented in MERGE_NOTES.)
 - [x] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannermod` military/shared packages before worker code follows them.
 - [x] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannermod` base while isolating the compatibility layer.
-- [ ] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
+- [x] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
 - [ ] 21-06-PLAN.md — Establish the shared `bannermod` seam ownership (shared seam classes and config helpers) with only minimal forwarding adapters where required.
 - [ ] 21-07-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-7 contract.
 - [ ] 21-08-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-8 contract.
