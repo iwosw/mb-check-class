@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.governance;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.world.RecruitsClaim;
 import net.minecraft.server.level.ServerPlayer;

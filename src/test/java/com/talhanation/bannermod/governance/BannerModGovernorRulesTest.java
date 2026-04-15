@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.governance;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.world.RecruitsClaim;
 import com.talhanation.recruits.world.RecruitsFaction;
 import net.minecraft.nbt.CompoundTag;

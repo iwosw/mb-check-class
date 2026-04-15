@@ -3,7 +3,7 @@ package com.talhanation.bannermod;
 import com.talhanation.bannermod.governance.BannerModGovernorHeartbeat;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorService;
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.ClaimEvents;
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.entities.RecruitEntity;

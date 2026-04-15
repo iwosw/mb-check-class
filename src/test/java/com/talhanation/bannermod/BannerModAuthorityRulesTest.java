@@ -1,6 +1,6 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.authority.BannerModAuthorityRules;
+import com.talhanation.bannermod.shared.authority.BannerModAuthorityRules;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

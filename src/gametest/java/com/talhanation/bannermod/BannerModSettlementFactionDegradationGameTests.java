@@ -1,6 +1,6 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.world.RecruitsClaim;
 import com.talhanation.workers.entities.FarmerEntity;

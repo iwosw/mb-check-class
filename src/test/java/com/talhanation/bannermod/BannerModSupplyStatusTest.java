@@ -1,6 +1,6 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.workers.entities.WorkerStorageRequestState;
 import org.junit.jupiter.api.Test;
 
