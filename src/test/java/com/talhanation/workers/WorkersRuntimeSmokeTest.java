@@ -1,5 +1,6 @@
 package com.talhanation.workers;
 
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 

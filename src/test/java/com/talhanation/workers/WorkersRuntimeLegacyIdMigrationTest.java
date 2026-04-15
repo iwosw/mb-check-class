@@ -1,5 +1,6 @@
 package com.talhanation.workers;
 
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import org.junit.jupiter.api.Test;
