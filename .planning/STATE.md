@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 21
-last_updated: "2026-04-15T02:29:25.396Z"
+last_updated: "2026-04-15T01:20:12Z"
 progress:
   total_phases: 38
   completed_phases: 14
-  total_plans: 54
-  completed_plans: 47
+  total_plans: 50
+  completed_plans: 46
 ---
 
 # Project State
 
-- Current focus: Phase 21 is in progress; wave-1 shared seam ownership is now restored under `bannerlord.shared/**` and `bannerlord.config`, while the remaining blocker is the retained recruit↔bannerlord compatibility work needed to turn the retired root-only validation gate green.
+- Current focus: Phase 21 is in progress; waves 1-4 are materially landed, the root build now vendors active Java/test/resource inputs under `src/**`, and plan 21-05 is documenting the remaining recruit↔bannerlord compatibility mismatches that still block a fully green post-retirement validation gate.
 - Runtime base: `recruits`
 - Active runtime mod: `bannermod`
 - Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids publish under `bannermod`, worker gameplay ownership is rooted under `bannerlord`, and legacy `workers/` content is now archive-only input after root vendoring.
@@ -38,7 +38,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-06-SUMMARY.md`
+- Latest execution summary: `.planning/phases/21-source-tree-consolidation-into-bannerlord/21-source-tree-consolidation-into-bannerlord-05-SUMMARY.md`
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 
 ## Decisions
@@ -162,10 +162,6 @@ progress:
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Vendor remaining recruit and worker resources/tests into tracked root src trees so source-root retirement no longer depends on untracked nested repos.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Keep recruits/ and workers/ on disk as archive-only reference copies until a later cleanup slice removes them without changing build truth.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Do not claim Phase 21 complete until compileJava, test, and verifyGameTestStage run green from the retired root-only layout.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Canonical authority, settlement, logistics, and config seam ownership now lives under `com.talhanation.bannerlord.shared/**` and `com.talhanation.bannerlord.config`, while old `com.talhanation.bannermod` seam classes remain deprecated forwarders only.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Make bannerlord.shared and bannerlord.config the real seam owners while keeping deprecated bannermod wrappers only as temporary adapters.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Let the canonical settlement seam accept both retained recruits claims and moved bannerlord claim lists so mixed-package callers can migrate without splitting the rules logic again.
-- [Phase 21-source-tree-consolidation-into-bannerlord]: Preserve legacy logistics route accessor names through alias methods while route ownership moves, so existing UI and packet code keeps its contract stable.
 
 ## Accumulated Context
 
@@ -227,7 +223,6 @@ progress:
 | Phase 21-source-tree-consolidation-into-bannerlord P03 | 1 min | 2 tasks | 235 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P04 | 1 min | 2 tasks | 122 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P05 | 4 min | 3 tasks | 861 files |
-| Phase 21-source-tree-consolidation-into-bannerlord P06 | 1 min | 2 tasks | 47 files |
 
 ### Quick Tasks Completed
 
@@ -237,6 +232,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-15T02:29:25Z
-- Stopped at: Completed 21-06-PLAN.md
+- Last updated: 2026-04-15T01:20:12Z
+- Stopped at: Completed 21-05-PLAN.md
 - Resume file: None

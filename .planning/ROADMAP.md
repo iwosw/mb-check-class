@@ -379,7 +379,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Requirements:** [SRCMOVE-01, SRCMOVE-02, SRCMOVE-03, SRCMOVE-04]
 
-**Plans:** 5/9 plans executed
+**Plans:** 9 plans total (5 original + 4 gap-closure follow-ups); the gap-closure plans target the failed verification truths blocking honest Phase 21 completion.
 
 Plans:
 - [x] 21-01-PLAN.md — Move the shared `bannermod` seam classes and config helpers into `com.talhanation.bannerlord` with only minimal forwarding adapters.

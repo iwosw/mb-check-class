@@ -40,10 +40,6 @@
 - [x] CITIZEN-03 — One controlled recruit path and one controlled worker path use the citizen seam live without changing the live mod id, registry identity, packet entrypoints, screen entrypoints, or current narrow save-compatibility seams.
 - [x] CITIZEN-04 — Existing root GameTests plus targeted new regression coverage prove the citizen seam keeps recruit and worker behavior compatibility-safe during the incremental rollout.
 
-## Active Phase 21 Requirements
-
-- [x] SRCMOVE-01 — Canonical shared seam ownership lives under `com.talhanation.bannerlord.shared/**` and `com.talhanation.bannerlord.config`, and retained `com.talhanation.bannermod` seam classes are compatibility wrappers only.
-
 ## Active Phase 31 Requirements
 
 - [x] CLAIMGROW-01 — Friendly claims count as valid settlement context for worker growth without introducing a new settlement manager.
