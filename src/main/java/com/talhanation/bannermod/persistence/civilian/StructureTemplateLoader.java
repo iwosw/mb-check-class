@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.persistence.civilian;
 
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;

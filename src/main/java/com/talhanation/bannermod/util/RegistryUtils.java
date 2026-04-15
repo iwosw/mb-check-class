@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.util;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.init.ModItems;
+import com.talhanation.bannermod.registry.military.ModItems;
 import com.talhanation.bannermod.items.military.RecruitsSpawnEgg;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;

@@ -21,7 +21,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class MessengerTreatyScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/gui_big.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final int FONT_COLOR_FIELD = FastColor.ARGB32.color(255, 255, 255, 255);
 
     private static final Component TITLE = Component.translatable("gui.recruits.messenger.treaty_title");
@@ -125,7 +125,7 @@ public class MessengerTreatyScreen extends RecruitsScreenBase {
                                 selectedFaction.getTeamLeaderName(),
                                 selectedFaction
                         );
-                        Main.SIMPLE_CHANNEL.sendToServer(new MessageSendTreaty(messenger.getUUID(), leaderInfo, durationHours, true));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSendTreaty(messenger.getUUID(), leaderInfo, durationHours, true));
                         this.onClose();
                     }
                 }

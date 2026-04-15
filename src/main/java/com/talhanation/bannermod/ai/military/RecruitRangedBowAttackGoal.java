@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.ai.military;
 
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.BowmanEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.ItemTags;

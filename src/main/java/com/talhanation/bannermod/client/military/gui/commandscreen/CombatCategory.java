@@ -61,7 +61,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageStrategicFire(player.getUUID(), group.getUUID(), true));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageStrategicFire(player.getUUID(), group.getUUID(), true));
                             }
                         }
                         screen.sendCommandInChat(72);
@@ -78,7 +78,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageStrategicFire(player.getUUID(), group.getUUID(), false));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageStrategicFire(player.getUUID(), group.getUUID(), false));
                             }
                         }
                         screen.sendCommandInChat(73);
@@ -95,7 +95,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageRangedFire(player.getUUID(), group.getUUID(), true));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRangedFire(player.getUUID(), group.getUUID(), true));
                             }
                         }
                         screen.sendCommandInChat(70);
@@ -111,8 +111,8 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageStrategicFire(player.getUUID(), group.getUUID(), false));
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageRangedFire(player.getUUID(), group.getUUID(), false));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageStrategicFire(player.getUUID(), group.getUUID(), false));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRangedFire(player.getUUID(), group.getUUID(), false));
                             }
                         }
                         screen.sendCommandInChat(71);
@@ -128,7 +128,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageShields(player.getUUID(), group.getUUID(), true));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageShields(player.getUUID(), group.getUUID(), true));
                             }
                         }
                         screen.sendCommandInChat(74);
@@ -144,7 +144,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageShields(player.getUUID(), group.getUUID(), false));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageShields(player.getUUID(), group.getUUID(), false));
                             }
                         }
                         screen.sendCommandInChat(75);
@@ -160,7 +160,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageAttack(player.getUUID(), group.getUUID()));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAttack(player.getUUID(), group.getUUID()));
                             }
                         }
                         screen.sendCommandInChat(69);
@@ -176,7 +176,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageClearTarget(player.getUUID(), group.getUUID()));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClearTarget(player.getUUID(), group.getUUID()));
                             }
                         }
                         screen.sendCommandInChat(9);
@@ -192,7 +192,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 3, group.getUUID()));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 3, group.getUUID()));
                             }
                         }
                         screen.sendCommandInChat(13);
@@ -208,7 +208,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 0, group.getUUID()));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 0, group.getUUID()));
                             }
                         }
                         screen.sendCommandInChat(10);
@@ -224,7 +224,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 2, group.getUUID()));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 2, group.getUUID()));
                             }
                         }
                         screen.sendCommandInChat(12);
@@ -240,7 +240,7 @@ public class CombatCategory implements ICommandCategory {
                     if (!groups.isEmpty()) {
                         for (RecruitsGroup group : groups) {
                             if (!group.isDisabled()) {
-                                Main.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 1, group.getUUID()));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggro(player.getUUID(), 1, group.getUUID()));
                             }
                         }
                         screen.sendCommandInChat(11);

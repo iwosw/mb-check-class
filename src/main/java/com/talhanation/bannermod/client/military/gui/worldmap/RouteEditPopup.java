@@ -89,7 +89,7 @@ public class RouteEditPopup {
                 false,
                 PlayersList.FilterType.NONE,
                 (playerInfo) -> {
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageTransferRoute(playerInfo.getUUID(), route));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageTransferRoute(playerInfo.getUUID(), route));
                     Minecraft.getInstance().setScreen(parent);
                 }
         ));

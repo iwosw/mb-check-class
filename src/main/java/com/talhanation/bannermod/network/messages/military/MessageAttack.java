@@ -53,7 +53,7 @@ public class MessageAttack implements Message<MessageAttack> {
 
     private static List<AbstractRecruitEntity> resolveTargets(Player player, UUID playerUuid, UUID group) {
         if (playerUuid == null || !player.getUUID().equals(playerUuid)) {
-            Main.LOGGER.debug("Ignored attack command with mismatched sender UUID");
+            BannerModMain.LOGGER.debug("Ignored attack command with mismatched sender UUID");
             return List.of();
         }
 
@@ -76,7 +76,7 @@ public class MessageAttack implements Message<MessageAttack> {
         );
 
         if (!selection.isSuccess()) {
-            Main.LOGGER.debug("Ignored attack command: {}", selection.failure());
+            BannerModMain.LOGGER.debug("Ignored attack command: {}", selection.failure());
             return List.of();
         }
 

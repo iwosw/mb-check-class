@@ -2,7 +2,7 @@ package com.talhanation.bannermod.governance;
 
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;

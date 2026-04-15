@@ -17,7 +17,7 @@ import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 public class MessengerAnswerScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/professions/blank_gui.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
     private final Player player;
     private final MessengerEntity messenger;
     private RecruitsMultiLineEditBox textFieldMessage;
@@ -57,7 +57,7 @@ public class MessengerAnswerScreen extends RecruitsScreenBase {
     private void setOKButton() {
         Button sendButton = addRenderableWidget(new ExtendedButton(guiLeft + 33, guiTop + ySize - 50, 128, 20, BUTTON_OK,
                 button -> {
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageAnswerMessenger(messenger.getUUID()));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAnswerMessenger(messenger.getUUID()));
 
                     onClose();
                 }

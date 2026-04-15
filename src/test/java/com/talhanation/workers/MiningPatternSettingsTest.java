@@ -1,6 +1,6 @@
 package com.talhanation.workers;
 
-import com.talhanation.workers.entities.workarea.MiningPatternSettings;
+import com.talhanation.bannermod.entity.civilian.workarea.MiningPatternSettings;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 

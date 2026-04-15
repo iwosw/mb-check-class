@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.pathfinder.Path;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +41,7 @@ public class AsyncPathProcessor {
         } catch (InterruptedException e) {
             executor.shutdownNow();
             Thread.currentThread().interrupt();
-            Main.LOGGER.warn("AsyncPathProcessor shutdown interrupted");
+            BannerModMain.LOGGER.warn("AsyncPathProcessor shutdown interrupted");
         }
     }
 

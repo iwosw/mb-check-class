@@ -16,13 +16,13 @@ import net.minecraft.resources.ResourceLocation;
 public class RecruitVillagerBiomeLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
 
     private static final ResourceLocation[] BIOME_TEXTURE = {
-            new ResourceLocation(Main.MOD_ID,"textures/entity/villager/biome/villager_desert.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/villager/biome/villager_jungle.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/villager/biome/villager_plains.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/villager/biome/villager_savanna.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/villager/biome/villager_snowy_tundra.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/villager/biome/villager_swamp.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/villager/biome/villager_taiga.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/biome/villager_desert.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/biome/villager_jungle.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/biome/villager_plains.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/biome/villager_savanna.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/biome/villager_snowy_tundra.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/biome/villager_swamp.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/biome/villager_taiga.png"),
     };
 
     public RecruitVillagerBiomeLayer(LivingEntityRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> renderer) {

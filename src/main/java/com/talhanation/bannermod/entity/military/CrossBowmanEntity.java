@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.compat.IWeapon;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitRangedCrossbowAttackGoal;
 import com.talhanation.bannermod.ai.military.compat.RecruitRangedMusketAttackGoal;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static com.talhanation.recruits.Main.isMusketModLoaded;
+import static com.talhanation.bannermod.bootstrap.BannerModMain.isMusketModLoaded;
 
 
 public class CrossBowmanEntity extends AbstractRecruitEntity implements CrossbowAttackMob, IRangedRecruit, IStrategicFire {

@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
 import com.talhanation.bannermod.entity.military.IRangedRecruit;
 import com.talhanation.bannermod.util.Kalkuel;
@@ -99,7 +99,7 @@ public class SmallShips {
             }
         }
         catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            Main.LOGGER.info("shipClass was not found");
+            BannerModMain.LOGGER.info("shipClass was not found");
         }
     }
      */
@@ -118,7 +118,7 @@ public class SmallShips {
             }
         }
         catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            Main.LOGGER.info("shipClass was not found");
+            BannerModMain.LOGGER.info("shipClass was not found");
         }
     }
 
@@ -164,7 +164,7 @@ public class SmallShips {
         // - Falls der Kapitän in Slot 0 sitzt, wird weiter gemacht.
         if (boat.getPassengers().get(0).equals(captain)) {
             String id = boat.getEncodeId();
-            if (Main.isSmallShipsLoaded && Main.isSmallShipsCompatible && id.contains("smallships")) {
+            if (BannerModMain.isSmallShipsLoaded && BannerModMain.isSmallShipsCompatible && id.contains("smallships")) {
                 //updateSmallShipsRotation(posX, posZ);
             } else {
                 updateVanillaBoatControl(posX, posZ, speedFactor, turnFactor);
@@ -312,7 +312,7 @@ public class SmallShips {
         if(boat == null || target == null || driver == null) return;
 
         double distanceToTarget = driver.distanceToSqr(target);
-        //Main.LOGGER.info("Distance: " + distanceToTarget);
+        //BannerModMain.LOGGER.info("Distance: " + distanceToTarget);
         double speed = 3.2F;
         double accuracy = 2F;// 0 = 100% left right accuracy
         float rotation = leftSide ? (3.14F / 2) : -(3.14F / 2);
@@ -333,7 +333,7 @@ public class SmallShips {
 
     public void repairShip(CaptainEntity captain) {
         int amount = (10 + captain.getCommandSenderWorld().random.nextInt(5));
-        if (Main.isSmallShipsLoaded && Main.isSmallShipsCompatible && boat.getEncodeId().contains("smallships")) {
+        if (BannerModMain.isSmallShipsLoaded && BannerModMain.isSmallShipsCompatible && boat.getEncodeId().contains("smallships")) {
             shipObject().ifPresent(ship -> {
                 float damage = invokeFloat(shipClass(), ship, "getDamage").orElse(0F);
                 if(damage > 5) {

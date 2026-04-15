@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
 import com.google.common.collect.ImmutableSet;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.protocol.game.DebugPackets;

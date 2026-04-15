@@ -3,7 +3,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 import com.talhanation.bannermod.client.military.gui.widgets.BlackShowingTextField;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.workarea.AnimalPenArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateAnimalPenArea;
 import net.minecraft.client.gui.GuiGraphics;
@@ -150,7 +150,7 @@ public class AnimalPenAreaScreen extends WorkAreaScreen {
     }
 
     public void sendUpdate(){
-        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateAnimalPenArea(animalPenArea.getUUID(), animalType, breed, slaughter, special, maxAnimals));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateAnimalPenArea(animalPenArea.getUUID(), animalType, breed, slaughter, special, maxAnimals));
     }
 
 

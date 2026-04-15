@@ -1,11 +1,11 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import com.talhanation.recruits.Main;
-import com.talhanation.workers.config.WorkersServerConfig;
-import com.talhanation.workers.entities.FarmerEntity;
-import com.talhanation.workers.entities.workarea.CropArea;
-import com.talhanation.workers.network.MessageAddWorkArea;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.config.WorkersServerConfig;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.network.messages.civilian.MessageAddWorkArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -109,7 +109,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
 
             if (com.talhanation.recruits.ClaimEvents.recruitsClaimManager != null) {
-                com.talhanation.recruits.world.RecruitsClaim existingClaim = com.talhanation.recruits.ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
+                com.talhanation.bannermod.persistence.military.RecruitsClaim existingClaim = com.talhanation.recruits.ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
                 if (existingClaim != null) {
                     BannerModDedicatedServerGameTestSupport.removeClaim(level, existingClaim);
                 }

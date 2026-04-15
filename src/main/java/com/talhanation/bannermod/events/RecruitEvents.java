@@ -1,4 +1,5 @@
 package com.talhanation.bannermod.events;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.governance.BannerModGovernorService;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
@@ -6,18 +7,18 @@ import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.util.DelayedExecutor;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
-import com.talhanation.recruits.entities.ICompanion;
-import com.talhanation.recruits.entities.MessengerEntity;
-import com.talhanation.recruits.entities.ai.horse.HorseRiddenByRecruitGoal;
-import com.talhanation.recruits.init.ModEntityTypes;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.ICompanion;
+import com.talhanation.bannermod.entity.military.MessengerEntity;
+import com.talhanation.bannermod.ai.military.horse.HorseRiddenByRecruitGoal;
+import com.talhanation.bannermod.registry.military.ModEntityTypes;
 import com.talhanation.bannermod.inventory.military.PromoteContainer;
 import com.talhanation.bannermod.inventory.military.GovernorContainer;
 import com.talhanation.bannermod.network.messages.military.MessageOpenGovernorScreen;
 import com.talhanation.bannermod.network.messages.military.MessageOpenPromoteScreen;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateGovernorScreen;
 import com.talhanation.bannermod.persistence.military.*;
-import com.talhanation.recruits.RecruitEvent;
+import com.talhanation.bannermod.events.RecruitEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -134,7 +135,7 @@ public class RecruitEvents {
                 packetBuffer.writeUUID(recruit.getUUID());
             });
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageOpenPromoteScreen(player, recruit.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenPromoteScreen(player, recruit.getUUID()));
         }
     }
 
@@ -153,7 +154,7 @@ public class RecruitEvents {
             }, packetBuffer -> packetBuffer.writeUUID(recruit.getUUID()));
             syncGovernorScreen(serverPlayer, recruit);
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageOpenGovernorScreen(recruit.getUUID(), true));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenGovernorScreen(recruit.getUUID(), true));
         }
     }
 
@@ -169,7 +170,7 @@ public class RecruitEvents {
                 ? null
                 : service.getOrCreateGovernorSnapshot(claim);
 
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateGovernorScreen(
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateGovernorScreen(
                 recruit.getUUID(),
                 binding.status().name().toLowerCase(),
                 snapshot == null ? 0 : snapshot.citizenCount(),
@@ -216,7 +217,7 @@ public class RecruitEvents {
         // kann dort eine NPE werfen und würde start() nie erreichen lassen.
         // ServerStartedEvent garantiert dass alle Levels geladen sind und der Executor
         // vor dem ersten Entity-Tick bereit ist.
-        com.talhanation.recruits.pathfinding.AsyncPathProcessor.start();
+        com.talhanation.bannermod.ai.pathfinding.AsyncPathProcessor.start();
     }
 
 
@@ -227,7 +228,7 @@ public class RecruitEvents {
         recruitsGroupsManager.save(server.overworld());
 
         // Fix: Async-Executor sauber herunterfahren damit der Server nicht hängt
-        com.talhanation.recruits.pathfinding.AsyncPathProcessor.shutdown();
+        com.talhanation.bannermod.ai.pathfinding.AsyncPathProcessor.shutdown();
     }
 
     @SubscribeEvent
@@ -427,7 +428,7 @@ public class RecruitEvents {
     public void onLivingHurt(LivingHurtEvent event) {
         if(event.getEntity().getCommandSenderWorld().isClientSide()) return;
 
-        if (Main.isMusketModLoaded) {
+        if (BannerModMain.isMusketModLoaded) {
             Entity sourceEntity = event.getSource().getEntity();
             if (sourceEntity instanceof AbstractRecruitEntity owner && IWeapon.isMusketModWeapon(owner.getMainHandItem())) {
                 Entity target = event.getEntity();

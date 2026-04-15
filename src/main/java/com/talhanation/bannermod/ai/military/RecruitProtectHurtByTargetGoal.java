@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.ai.military;
 
-import com.talhanation.recruits.RecruitEvents;
+import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;

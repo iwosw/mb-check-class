@@ -15,13 +15,13 @@ import net.minecraft.resources.ResourceLocation;
 public class RecruitHumanBiomeLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
 
     private static final ResourceLocation[] TEXTURE = {
-            new ResourceLocation(Main.MOD_ID,"textures/entity/human/biome/human_desert.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/human/biome/human_jungle.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/human/biome/human_plains.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/human/biome/human_savanna.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/human/biome/human_snowy_tundra.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/human/biome/human_swamp.png"),
-            new ResourceLocation(Main.MOD_ID,"textures/entity/human/biome/human_taiga.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_desert.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_jungle.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_plains.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_savanna.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_snowy_tundra.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_swamp.png"),
+            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_taiga.png"),
     };
 
     public RecruitHumanBiomeLayer(LivingEntityRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> renderer) {

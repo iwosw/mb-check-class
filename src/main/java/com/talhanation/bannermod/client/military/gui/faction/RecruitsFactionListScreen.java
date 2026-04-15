@@ -26,7 +26,7 @@ import static com.talhanation.bannermod.client.military.events.RecruitsToastMana
 @OnlyIn(Dist.CLIENT)
 public class RecruitsFactionListScreen extends ListScreenBase implements IFactionSelection{
 
-    protected static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/select_player.png");
+    protected static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/select_player.png");
     protected static final Component TITLE = Component.translatable("gui.recruits.team_creation.teams_list");
     protected static final Component JOIN_BUTTON = Component.translatable("gui.recruits.button.join");
     protected static final Component BACK_BUTTON = Component.translatable("gui.recruits.button.back");
@@ -96,7 +96,7 @@ public class RecruitsFactionListScreen extends ListScreenBase implements IFactio
                 button -> {
                     RecruitsToastManager.setTeamToastForPlayer(RecruitsToastManager.Images.LETTER, TOAST_SENT_JOIN_REQUEST_TITLE, TOAST_TO(selected.getTeamDisplayName()), selected);
 
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageSendJoinRequestTeam(parent.getMinecraft().player.getUUID(), selected.getStringID()));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSendJoinRequestTeam(parent.getMinecraft().player.getUUID(), selected.getStringID()));
                 });
         sendJoinRequestButton.active = false;
 

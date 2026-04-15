@@ -1,12 +1,12 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.world.RecruitsClaim;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.workers.VillagerEvents;
-import com.talhanation.workers.config.WorkersServerConfig;
-import com.talhanation.workers.entities.AbstractWorkerEntity;
-import com.talhanation.workers.entities.FarmerEntity;
+import com.talhanation.bannermod.config.WorkersServerConfig;
+import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

@@ -202,7 +202,7 @@ public class BannerModNetworkBootstrap {
         }
 
         // Bind to WorkersRuntime for compatibility
-        com.talhanation.workers.WorkersRuntime.bindChannel(channel);
+        com.talhanation.bannermod.bootstrap.WorkersRuntime.bindChannel(channel);
 
         return channel;
     }

@@ -18,7 +18,7 @@ import net.minecraftforge.client.gui.widget.ExtendedButton;
 @OnlyIn(Dist.CLIENT)
 public class FactionMainScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID,"textures/gui/gui_small.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/gui_small.png");
     private static final MutableComponent CREATE_TEAM = Component.translatable("gui.recruits.team_creation.create_team");
     private static final MutableComponent INSPECT_TEAM = Component.translatable("gui.recruits.team_creation.inspect_team");
     private static final MutableComponent TEAMS_LIST = Component.translatable("gui.recruits.team_creation.teams_list");

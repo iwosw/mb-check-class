@@ -377,22 +377,22 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 8/9 plans executed
+**Plans:** 9/9 plans executed
 
 Plans:
 - [x] 21-01-PLAN.md — Reset Phase 21 executed state: revert the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`), delete stale executed-plan summaries, and record the convergence-namespace pivot (now `bannermod`) in roadmap and merge notes.
 - [x] 21-02-PLAN.md — Establish canonical shared seam ownership under `com.talhanation.bannermod.shared.{authority,settlement,logistics}` and reduce legacy `com.talhanation.bannermod.{authority,settlement,logistics}` peers to `@Deprecated` thin forwarders. (Option A narrowed scope: 5 of 8 originally-named classes shipped; deferred 3 documented in MERGE_NOTES.)
-- [x] 21-03-PLAN.md — Move recruit-owned controlling systems into `bannermod` military/shared packages before worker code follows them.
-- [x] 21-04-PLAN.md — Move worker civilian entities, AI, persistence, and client flows onto the new `bannermod` base while isolating the compatibility layer.
-- [x] 21-05-PLAN.md — Retire legacy Java source roots, refresh root docs, and close the phase only after full root validation is green.
-- [x] 21-06-PLAN.md — Migrate remaining recruits-side subsystems (client UI, inventory menus, world managers/SavedData, items) into `bannermod.{client,inventory,persistence,items}.military`, emptying the recruits clone down to deprecated `Main.java` shim.
-- [x] 21-07-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-7 contract.
-- [x] 21-08-PLAN.md — Gap-closure slice for `bannermod` consolidation per the re-planned wave-8 contract.
-- [ ] 21-09-PLAN.md — Final phase closeout for `bannermod` consolidation: full root validation green and all prior plan checkboxes re-confirmed at true closeout.
+- [x] 21-03-PLAN.md — Move recruit-owned bootstrap, init, and registry packages into `com.talhanation.bannermod.bootstrap/registry` while routing the shared `SimpleChannel` through `BannerModNetworkBootstrap`.
+- [x] 21-04-PLAN.md — Move recruit events, commands, top-level config, and utilities into `bannermod.{events,commands,config,util}` so the recruits clone is reduced to `Main.java` plus subsystem subtrees.
+- [x] 21-05-PLAN.md — Migrate recruits military gameplay (entities, AI, mixin, compat, migration, util) into `bannermod.{entity,ai,mixin,compat,migration,util}.military`.
+- [x] 21-06-PLAN.md — Migrate recruits client UI, inventory menus, world managers/SavedData, and items into `bannermod.{client,inventory,persistence,items}.military`.
+- [x] 21-07-PLAN.md — Migrate workers civilian subsystem (entities, client, world, inventory, items, settlement) into `bannermod.{entity,client,persistence,inventory,items,settlement}.civilian`.
+- [x] 21-08-PLAN.md — Network consolidation: migrate `recruits/network` (109 files) and `workers/network` (24 files) into `bannermod.network.messages.{military,civilian}` and rewrite `BannerModNetworkBootstrap` with canonical `MILITARY_MESSAGES`/`CIVILIAN_MESSAGES` arrays so `workerPacketOffset() == MILITARY_MESSAGES.length` is compile-time provable.
+- [x] 21-09-PLAN.md — Phase closure: consolidate resources under outer `src/main/resources/{assets,data}/bannermod/`, retire embedded clone source sets from `build.gradle`, scrub `mods.toml` to single bannermod entry, complete cross-tree FQN sweep, and pass the `./gradlew compileJava` compile-green gate.
 
-Planning artifacts live under the original Phase 21 directory (`.planning/phases/21-source-tree-consolidation-into-<prior-namespace>/`, directory name retained verbatim for git history continuity; re-execution targets the `bannermod` convergence namespace per 21-CONTEXT.md D-01/D-02).
+Planning artifacts live under the original Phase 21 directory (`.planning/phases/21-source-tree-consolidation-into-<prior-namespace>/`, directory name retained verbatim for git history continuity per CONTEXT D-16; the realized convergence namespace is `bannermod` per 21-CONTEXT.md D-01/D-02).
 
-Status: In progress (6/9 as of 2026-04-15); waves 1-6 complete under the `bannermod` convergence namespace. Recruits clone working tree is reduced to `Main.java` shim plus `init/ModLifecycleRegistrar.java` and `network/**` (Wave 8 scope). Plans 21-07 through 21-09 remain.
+Status: Complete (9/9 as of 2026-04-15). The outer build composes only `src/{main,test,gametest}/{java,resources}`; `recruits/` and `workers/` clones remain on disk as untracked archive copies (Option a per Wave 9 retention decision). `./gradlew compileJava` is green. Test-tree has 39 deferred errors documented in MERGE_NOTES.md (D-05 package overlap + smoke-test symbol drift).
 
 ## Phase 22: Citizen Role Unification
 

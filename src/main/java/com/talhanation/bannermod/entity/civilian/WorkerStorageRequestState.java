@@ -37,6 +37,14 @@ public class WorkerStorageRequestState {
         return this.pendingComplaint != null;
     }
 
+    /**
+     * Returns the current pending complaint without releasing it (callers can repeatedly
+     * inspect supply status without consuming the complaint).
+     */
+    public PendingComplaint peekPendingComplaint() {
+        return this.pendingComplaint;
+    }
+
     public record PendingComplaint(String reasonToken, String message) {
     }
 }

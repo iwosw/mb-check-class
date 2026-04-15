@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.compat;
 
 
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractInventoryEntity;
 import de.maxhenkel.corelib.death.Death;
 import net.minecraft.core.NonNullList;
@@ -115,7 +115,7 @@ public class Corpse {
             createCorpseFromDeath(recruit, death, nbt, (ServerLevel) recruit.getCommandSenderWorld());
 
         } catch (ClassNotFoundException e) {
-            Main.LOGGER.warn("Was not able to spawn recruit corpse for " + recruit.getName().getString());
+            BannerModMain.LOGGER.warn("Was not able to spawn recruit corpse for " + recruit.getName().getString());
         }
     }
 
@@ -155,7 +155,7 @@ public class Corpse {
 
         } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | NoSuchFieldException |
                  IllegalAccessException e) {
-            Main.LOGGER.warn("Was not able to spawn recruit corpse for " + recruit.getName().getString() + e);
+            BannerModMain.LOGGER.warn("Was not able to spawn recruit corpse for " + recruit.getName().getString() + e);
         }
     }
 }

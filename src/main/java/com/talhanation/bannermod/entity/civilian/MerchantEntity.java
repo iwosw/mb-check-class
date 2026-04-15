@@ -1,10 +1,10 @@
 package com.talhanation.bannermod.entity.civilian;
 
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.pathfinding.AsyncGroundPathNavigation;
-import com.talhanation.workers.WorkersMain;
-import com.talhanation.workers.config.WorkersServerConfig;
+import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.MerchantWorkGoal;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
@@ -225,7 +225,7 @@ public class MerchantEntity extends AbstractWorkerEntity {
                 }
             }, buf -> buf.writeUUID(this.getUUID()));
         } else {
-            WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenMerchantTradeScreen(player, this.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenMerchantTradeScreen(player, this.getUUID()));
         }
     }
 
@@ -239,7 +239,7 @@ public class MerchantEntity extends AbstractWorkerEntity {
                 }
             }, buf -> { buf.writeUUID(this.getUUID()); buf.writeNbt(trade.toNbt()); });
         } else {
-            WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenMerchantEditTradeScreen(player, this.getUUID(), trade));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenMerchantEditTradeScreen(player, this.getUUID(), trade));
         }
     }
 

@@ -3,8 +3,8 @@ package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.governance.BannerModGovernorHeartbeat;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
-import com.talhanation.recruits.entities.VillagerNobleEntity;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
 import com.talhanation.bannermod.util.ClaimUtil;
 import com.talhanation.bannermod.persistence.military.*;
 import net.minecraft.core.BlockPos;
@@ -152,7 +152,7 @@ public class ClaimEvents {
             int baseDamage = 3;
 
             // SiegeEvent.Tick feuern – cancelable, Addons können Damage überschreiben
-            com.talhanation.recruits.SiegeEvent.Tick tickEvent = new com.talhanation.recruits.SiegeEvent.Tick(claim, level, attackerSize, defenderSize, baseDamage);
+            com.talhanation.bannermod.events.SiegeEvent.Tick tickEvent = new com.talhanation.bannermod.events.SiegeEvent.Tick(claim, level, attackerSize, defenderSize, baseDamage);
             MinecraftForge.EVENT_BUS.post(tickEvent);
 
             if(!tickEvent.isCanceled()){

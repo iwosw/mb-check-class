@@ -5,7 +5,7 @@ import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
 import com.talhanation.bannermod.client.military.gui.widgets.SelectedPlayerWidget;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.network.messages.civilian.MessageRotateWorkArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateOwner;
@@ -21,7 +21,7 @@ import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 public abstract class WorkAreaScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(WorkersMain.MOD_ID, "textures/gui/workareascreen.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/workareascreen.png");
     private static final MutableComponent TEXT_FORWARD = Component.translatable("gui.workers.command.text.forward");
     private static final MutableComponent TEXT_BACKWARD = Component.translatable("gui.workers.command.text.back");
     private static final MutableComponent TEXT_LEFT = Component.translatable("gui.workers.command.text.left");
@@ -73,7 +73,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                     x = 5;
                 }
                 Vec3 newPos = workArea.position().relative(player.getDirection(), x);
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
                 this.onAreaMoved();
             }
         ));
@@ -87,7 +87,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                             x = 5;
                         }
                         Vec3 newPos = workArea.position().relative(player.getDirection().getOpposite(), x);
-                        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
                         this.onAreaMoved();
                     }
         ));
@@ -101,7 +101,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                     x = 5;
                 }
                 Vec3 newPos = workArea.position().relative(player.getDirection().getCounterClockWise(), x);
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
                 this.onAreaMoved();
             }
         ));
@@ -115,7 +115,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                     x = 5;
                 }
                 Vec3 newPos = workArea.position().relative(player.getDirection().getClockWise(), x);
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
                 this.onAreaMoved();
             }
         ));
@@ -123,7 +123,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
         // Destroy
         destroy = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y - buttonHeight / 2, buttonWidth, buttonHeight, TEXT_DESTROY,
             btn -> {
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), workArea.position(), true));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), workArea.position(), true));
                 this.onClose();
             }
         ));
@@ -131,7 +131,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
         rotateLeft = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2 - buttonWidth, y - buttonHeight / 2 + buttonHeight, buttonWidth, buttonHeight, Component.literal("\u21BB"),
             btn -> {
                 this.workArea.showBox = true;
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageRotateWorkArea(this.workArea.getUUID(), false));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRotateWorkArea(this.workArea.getUUID(), false));
                 this.onAreaMoved();
             }
         ));
@@ -139,7 +139,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
         rotateRight = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2 + buttonWidth, y - buttonHeight / 2 + buttonHeight, buttonWidth, buttonHeight, Component.literal("\u21BA"),
             btn -> {
                 this.workArea.showBox = true;
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageRotateWorkArea(this.workArea.getUUID(), true));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRotateWorkArea(this.workArea.getUUID(), true));
                 this.onAreaMoved();
             }
         ));
@@ -162,7 +162,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                     minecraft.setScreen(new SelectPlayerScreen(this, player, SelectPlayerScreen.TITLE, SelectPlayerScreen.BUTTON_SELECT, SelectPlayerScreen.BUTTON_SELECT_TOOLTIP, false, PlayersList.FilterType.NONE,
                             (playerInfo) -> {
                                 this.playerInfo = playerInfo;
-                                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateOwner(this.workArea.getUUID(), playerInfo));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateOwner(this.workArea.getUUID(), playerInfo));
                                 this.workArea.setPlayerName(playerInfo.getName());
                                 this.workArea.setPlayerUUID(playerInfo.getUUID());
                                 minecraft.setScreen(this);

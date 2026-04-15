@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.inventory.military.AssassinLeaderMenu;
 import com.talhanation.bannermod.network.messages.military.MessageAssassinGui;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
@@ -124,7 +124,7 @@ public class AssassinLeaderEntity extends AbstractOrderAbleEntity {
                 }
             }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageAssassinGui(player, this.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAssassinGui(player, this.getUUID()));
         }
     }
     @Override

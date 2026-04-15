@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.ai.military.controller.IAttackController;
 import com.talhanation.bannermod.inventory.military.PatrolLeaderContainer;
@@ -854,11 +854,11 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
                 }
             }, packetBuffer -> {packetBuffer.writeUUID(this.getUUID());});
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageOpenSpecialScreen(player, this.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenSpecialScreen(player, this.getUUID()));
         }
 
         if (player instanceof ServerPlayer) {
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientUpdateLeaderScreen(this.WAYPOINTS, this.WAYPOINT_ITEMS, this.army.getTotalUnits()));
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientUpdateLeaderScreen(this.WAYPOINTS, this.WAYPOINT_ITEMS, this.army.getTotalUnits()));
         }
     }
 }

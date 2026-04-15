@@ -16,7 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class RecruitHumanCompanionLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
 
-    private static final ResourceLocation LOCATION = new ResourceLocation(Main.MOD_ID,"textures/entity/human/human_assassin_cloth.png");
+    private static final ResourceLocation LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_assassin_cloth.png");
 
     public RecruitHumanCompanionLayer(LivingEntityRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> renderer) {
         super(renderer);

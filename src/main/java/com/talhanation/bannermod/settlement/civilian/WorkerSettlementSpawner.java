@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.settlement.civilian;
 
 import com.talhanation.bannermod.events.FactionEvents;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;

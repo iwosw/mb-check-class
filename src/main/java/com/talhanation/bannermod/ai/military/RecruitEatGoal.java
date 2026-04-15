@@ -1,4 +1,5 @@
 package com.talhanation.bannermod.ai.military;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.world.InteractionHand;
@@ -64,11 +65,11 @@ public class RecruitEatGoal extends Goal {
 
         this.recruit.startUsingItem(InteractionHand.OFF_HAND);
         /*
-        Main.LOGGER.debug("Start--------------: ");
-        Main.LOGGER.debug("beforeFoodItem: " + beforeFoodItem.copy());
-        Main.LOGGER.debug("isEating: " + recruit.getIsEating());
-        Main.LOGGER.debug("foodStack: " + foodStack.copy());
-        Main.LOGGER.debug("Start--------------:");
+        BannerModMain.LOGGER.debug("Start--------------: ");
+        BannerModMain.LOGGER.debug("beforeFoodItem: " + beforeFoodItem.copy());
+        BannerModMain.LOGGER.debug("isEating: " + recruit.getIsEating());
+        BannerModMain.LOGGER.debug("foodStack: " + foodStack.copy());
+        BannerModMain.LOGGER.debug("Start--------------:");
         */
 
         recruit.heal(Objects.requireNonNull(foodStack.getItem().getFoodProperties(foodStack, recruit)).getSaturationModifier() * 1);

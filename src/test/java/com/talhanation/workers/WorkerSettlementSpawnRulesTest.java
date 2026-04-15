@@ -1,8 +1,8 @@
 package com.talhanation.workers;
 
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import com.talhanation.workers.config.WorkersServerConfig;
-import com.talhanation.workers.settlement.WorkerSettlementSpawnRules;
+import com.talhanation.bannermod.config.WorkersServerConfig;
+import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

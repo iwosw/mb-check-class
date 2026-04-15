@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.ai.military.compat;
 
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.HorsemanEntity;
 import com.talhanation.bannermod.util.AttackUtil;
@@ -23,7 +23,7 @@ public class BlockWithWeapon extends Goal {
     }
 
     public boolean canUse() {
-        if(Main.isEpicKnightsLoaded && recruit.blockCoolDown == 0){
+        if(BannerModMain.isEpicKnightsLoaded && recruit.blockCoolDown == 0){
             boolean noItemInOffhand = this.recruit.getOffhandItem().isEmpty();
             boolean canBlockWithItem = this.recruit.getMainHandItem().getDescriptionId().contains("magistu");
 

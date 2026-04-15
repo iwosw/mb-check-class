@@ -1,4 +1,5 @@
 package com.talhanation.bannermod.entity.military;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 //ezgi&talha kantar
 
 import com.talhanation.bannermod.citizen.CitizenCore;
@@ -6,11 +7,11 @@ import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
 import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
-import com.talhanation.recruits.*;
-import com.talhanation.recruits.RecruitEvent;
+import com.talhanation.bannermod.events.*;
+import com.talhanation.bannermod.events.RecruitEvent;
 import com.talhanation.bannermod.compat.IWeapon;
-import com.talhanation.recruits.config.RecruitsClientConfig;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsClientConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.*;
 import com.talhanation.bannermod.ai.military.async.AsyncManager;
 import com.talhanation.bannermod.ai.military.async.AsyncTaskWithCallback;
@@ -18,7 +19,7 @@ import com.talhanation.bannermod.ai.military.controller.RecruitCommandStateTrans
 import com.talhanation.bannermod.ai.military.compat.BlockWithWeapon;
 import com.talhanation.bannermod.ai.military.navigation.RecruitPathNavigation;
 import com.talhanation.bannermod.ai.military.navigation.RecruitsOpenDoorGoal;
-import com.talhanation.recruits.init.ModItems;
+import com.talhanation.bannermod.registry.military.ModItems;
 import com.talhanation.bannermod.inventory.military.DebugInvMenu;
 import com.talhanation.bannermod.inventory.military.RecruitHireMenu;
 import com.talhanation.bannermod.inventory.military.RecruitInventoryMenu;
@@ -1560,7 +1561,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
         } else {
             if (player.isCreative() && player.getItemInHand(hand).getItem().equals(ModItems.RECRUIT_SPAWN_EGG.get())){
                 openDebugScreen(player);
-                //Main.LOGGER.warn("" + this.getName().getString() + " Target: " + getTarget());
+                //BannerModMain.LOGGER.warn("" + this.getName().getString() + " Target: " + getTarget());
 
                 return InteractionResult.SUCCESS;
             }
@@ -1600,7 +1601,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
             }
             else if(this.isOwned() && this.getTeam() != null && !player.getUUID().equals(this.getOwnerUUID()) &&
                     FactionEvents.recruitsFactionManager.getFactionByStringID(this.getTeam().getName()).getTeamLeaderUUID().equals(player.getUUID())){
-                    Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenTakeOverScreen(this.getUUID()));
+                    BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenTakeOverScreen(this.getUUID()));
             }
             else if (!this.isOwned() && !isPlayerTarget && this.canBeHired()) {
                 this.openHireGUI(player);
@@ -1967,16 +1968,16 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     private void recalculateCost() {
         int currCost = getCost();
         int armorBonus = this.getArmorValue() * 2;
-        //Main.LOGGER.debug("armorBonus: " + armorBonus);
+        //BannerModMain.LOGGER.debug("armorBonus: " + armorBonus);
 
         int weaponBonus = 4;
-        //Main.LOGGER.debug("weaponBonus: " + weaponBonus);
+        //BannerModMain.LOGGER.debug("weaponBonus: " + weaponBonus);
 
         int speedBonus = (int) (this.getSpeed() * 2);
-        //Main.LOGGER.debug("speedBonus: " + speedBonus);
+        //BannerModMain.LOGGER.debug("speedBonus: " + speedBonus);
 
         int shieldBonus = this.getOffhandItem().getItem() instanceof ShieldItem ? 10 : 0;
-        //Main.LOGGER.debug("shieldBonus: " + shieldBonus);
+        //BannerModMain.LOGGER.debug("shieldBonus: " + shieldBonus);
 
         int newCost = Math.abs((shieldBonus + speedBonus + weaponBonus + armorBonus + currCost + getXpLevel() * 2));
         this.setCost(newCost);
@@ -2221,7 +2222,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
                 }
             }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageRecruitGui(player, this.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRecruitGui(player, this.getUUID()));
         }
     }
 
@@ -2239,7 +2240,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
                 }
             }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageDebugScreen(player, this.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDebugScreen(player, this.getUUID()));
         }
     }
 
@@ -2400,7 +2401,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
             Team ownerTeam = player.getTeam();
             String stringId = ownerTeam != null ? ownerTeam.getName() : "";
             boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID());
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
             NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
                 @Override
                 public @NotNull Component getDisplayName() {
@@ -2413,7 +2414,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
                 }
             }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageHireGui(player, this.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageHireGui(player, this.getUUID()));
         }
     }
 
@@ -2497,7 +2498,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
                     this.equipItem(equipment);
                     itemstack.shrink(1);
                 }
-                if(this instanceof CrossBowmanEntity crossBowmanEntity && Main.isMusketModLoaded && IWeapon.isMusketModWeapon(crossBowmanEntity.getMainHandItem()) && itemstack.getDescriptionId().contains("cartridge")){
+                if(this instanceof CrossBowmanEntity crossBowmanEntity && BannerModMain.isMusketModLoaded && IWeapon.isMusketModWeapon(crossBowmanEntity.getMainHandItem()) && itemstack.getDescriptionId().contains("cartridge")){
                     if(this.canTakeCartridge()){
                         equipment = itemstack.copy();
                         this.inventory.addItem(equipment);
@@ -2513,7 +2514,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
                 }
             }
 
-            if (this instanceof CaptainEntity && Main.isSmallShipsLoaded){
+            if (this instanceof CaptainEntity && BannerModMain.isSmallShipsLoaded){
                 if(itemstack.getDescriptionId().contains("cannon_ball")){
                     if(this.canTakeCannonBalls()){
                         equipment = itemstack.copy();

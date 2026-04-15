@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateStorageArea;
 import net.minecraft.client.gui.components.EditBox;
@@ -198,7 +198,7 @@ public class StorageAreaScreen extends WorkAreaScreen {
     }
 
     public void sendMessage(){
-        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateStorageArea(storageArea.getUUID(), storageArea.getStorageMask(types), savedName.getString()));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateStorageArea(storageArea.getUUID(), storageArea.getStorageMask(types), savedName.getString()));
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.entity.military;
 
 
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import net.minecraft.nbt.CompoundTag;

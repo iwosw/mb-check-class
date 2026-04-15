@@ -1,7 +1,7 @@
 package com.talhanation.workers;
 
-import com.talhanation.workers.entities.workarea.MiningPatternContract;
-import com.talhanation.workers.entities.workarea.MiningPatternSettings;
+import com.talhanation.bannermod.entity.civilian.workarea.MiningPatternContract;
+import com.talhanation.bannermod.entity.civilian.workarea.MiningPatternSettings;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -57,7 +57,7 @@ public class MessageShields implements Message<MessageShields> {
 
     private static List<AbstractRecruitEntity> resolveTargets(Player player, UUID playerUuid, UUID group) {
         if (playerUuid == null || !player.getUUID().equals(playerUuid)) {
-            Main.LOGGER.debug("Ignored shields command with mismatched sender UUID");
+            BannerModMain.LOGGER.debug("Ignored shields command with mismatched sender UUID");
             return List.of();
         }
 
@@ -80,7 +80,7 @@ public class MessageShields implements Message<MessageShields> {
         );
 
         if (!selection.isSuccess()) {
-            Main.LOGGER.debug("Ignored shields command: {}", selection.failure());
+            BannerModMain.LOGGER.debug("Ignored shields command: {}", selection.failure());
             return List.of();
         }
 

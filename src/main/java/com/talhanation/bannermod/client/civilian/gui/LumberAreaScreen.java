@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.gui.widgets.ItemScrollDropDownMenu;
 import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateLumberArea;
@@ -74,7 +74,7 @@ public class LumberAreaScreen extends WorkAreaScreen {
             this.shearLeaves,
             (bool) -> {
                 this.shearLeaves = bool;
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
             }
         );
         addRenderableWidget(shearLeavesCheckBox);
@@ -83,7 +83,7 @@ public class LumberAreaScreen extends WorkAreaScreen {
                 this.stripLogs,
                 (bool) -> {
                     this.stripLogs = bool;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
                 }
         );
         addRenderableWidget(stripLogsCheckBox);
@@ -92,14 +92,14 @@ public class LumberAreaScreen extends WorkAreaScreen {
                 this.replant,
                 (bool) -> {
                     this.replant = bool;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
                 }
         );
         addRenderableWidget(replantCheckBox);
     }
 
     public void setCurrentSapling(ItemStack currentSapling) {
-        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
         this.currentSapling = currentSapling;
     }
 

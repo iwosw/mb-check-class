@@ -24,7 +24,7 @@ import java.awt.*;
 
 @OnlyIn(Dist.CLIENT)
 public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(Main.MOD_ID,"textures/gui/assassin_gui.png");
+    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/assassin_gui.png");
 
     private static final MutableComponent TEXT_HEALTH = Component.literal("gui.recruits.inv.health");
     private static final MutableComponent TEXT_LEVEL = Component.literal("gui.recruits.inv.level");
@@ -56,7 +56,7 @@ public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
             this.count = assassinLeaderEntity.getCount();
             if (this.count != 0) {
                 this.count--;
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageAssassinCount(this.count, assassinLeaderEntity.getUUID()));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAssassinCount(this.count, assassinLeaderEntity.getUUID()));
             }
         }));
 
@@ -64,7 +64,7 @@ public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
             this.count = assassinLeaderEntity.getCount();
             if (this.count != assassinLeaderEntity.getMaxAssassinCount()) {
                 this.count++;
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageAssassinCount(this.count, assassinLeaderEntity.getUUID()));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAssassinCount(this.count, assassinLeaderEntity.getUUID()));
             }
         }));
 
@@ -72,7 +72,7 @@ public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
         addRenderableWidget(new Button(leftPos + 77 + 25, topPos + 4, 50, 12, Component.literal("Assassinate"), button -> {
             int assassinateCost = assassinLeaderEntity.calculateAssassinateCosts(assassinLeaderEntity.getAssassinCosts(), this.count);
             //if(AssassinEvents.playerHasEnoughEmeralds(playerInventory.player, assassinateCost))
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageAssassinate(textField.getValue(), this.count, assassinateCost));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAssassinate(textField.getValue(), this.count, assassinateCost));
             //else
                 playerInventory.player.sendSystemMessage(Component.literal(assassinLeaderEntity.getName() + ": You dont have enough Emeralds"));
         onClose();

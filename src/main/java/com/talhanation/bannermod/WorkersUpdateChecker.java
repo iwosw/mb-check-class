@@ -29,12 +29,12 @@ public class WorkersUpdateChecker {
                     player.sendSystemMessage(link);
                 }
                 else{
-                    WorkersMain.LOGGER.warn("Villager workers is outdated!");
+                    com.talhanation.bannermod.bootstrap.BannerModMain.LOGGER.warn("Villager workers is outdated!");
                 }
             }
 
             case FAILED -> {
-                WorkersMain.LOGGER.error("Villager workers could not check for updates!");
+                com.talhanation.bannermod.bootstrap.BannerModMain.LOGGER.error("Villager workers could not check for updates!");
             }
         }
     }
@@ -45,12 +45,12 @@ public class WorkersUpdateChecker {
 
         switch (status){
             case OUTDATED -> {
-                WorkersMain.LOGGER.warn("A new version of Villager Workers is available!");
-                WorkersMain.LOGGER.warn("Download the new update here: https://www.curseforge.com/minecraft/mc-mods/workers/files");
+                com.talhanation.bannermod.bootstrap.BannerModMain.LOGGER.warn("A new version of Villager Workers is available!");
+                com.talhanation.bannermod.bootstrap.BannerModMain.LOGGER.warn("Download the new update here: https://www.curseforge.com/minecraft/mc-mods/workers/files");
             }
 
             case FAILED -> {
-                WorkersMain.LOGGER.error("Villager workers could not check for updates!");
+                com.talhanation.bannermod.bootstrap.BannerModMain.LOGGER.error("Villager workers could not check for updates!");
             }
         }
     }

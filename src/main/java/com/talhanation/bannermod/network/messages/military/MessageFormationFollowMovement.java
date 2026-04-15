@@ -49,7 +49,7 @@ public class MessageFormationFollowMovement implements Message<MessageFormationF
 
     private static List<AbstractRecruitEntity> resolveTargets(Player sender, UUID playerUuid, UUID group) {
         if (playerUuid == null || !sender.getUUID().equals(playerUuid)) {
-            Main.LOGGER.debug("Ignored formation command with mismatched sender UUID");
+            BannerModMain.LOGGER.debug("Ignored formation command with mismatched sender UUID");
             return List.of();
         }
 
@@ -72,7 +72,7 @@ public class MessageFormationFollowMovement implements Message<MessageFormationF
         );
 
         if (!selection.isSuccess()) {
-            Main.LOGGER.debug("Ignored formation command: {}", selection.failure());
+            BannerModMain.LOGGER.debug("Ignored formation command: {}", selection.failure());
             return List.of();
         }
 

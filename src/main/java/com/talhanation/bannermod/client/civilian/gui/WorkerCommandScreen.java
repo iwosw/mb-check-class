@@ -4,7 +4,7 @@ import com.talhanation.bannermod.client.military.gui.CommandScreen;
 import com.talhanation.bannermod.client.military.gui.commandscreen.ICommandCategory;
 import com.talhanation.bannermod.client.military.gui.group.RecruitsCommandButton;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.WorkersClientManager;
 import com.talhanation.bannermod.network.messages.civilian.MessageAddWorkArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageRecoverWorkerControl;
@@ -62,7 +62,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     if(screen.rayBlockPos == null) return;
                     BlockPos pos = screen.rayBlockPos;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 0));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 0));
                 });
 
         addCropFieldButton.setTooltip(Tooltip.create(TOOLTIP_ADD_FIELD));
@@ -73,7 +73,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     if(screen.rayBlockPos == null) return;
                     BlockPos pos = screen.rayBlockPos;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 5));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 5));
                 });
 
         addFishingAreaButton.setTooltip(Tooltip.create(TOOLTIP_ADD_FISHING));
@@ -84,7 +84,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     if(screen.rayBlockPos == null) return;
                     BlockPos pos = screen.rayBlockPos;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 1));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 1));
                 });
 
         addLumberArea.setTooltip(Tooltip.create(TOOLTIP_ADD_LUMBER));
@@ -95,7 +95,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     if(screen.rayBlockPos == null) return;
                     BlockPos pos = screen.rayBlockPos;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 3));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 3));
                 });
 
         addMine.setTooltip(Tooltip.create(TOOLTIP_ADD_MINE));
@@ -106,7 +106,7 @@ public class WorkerCommandScreen implements ICommandCategory {
             button -> {
                 if(screen.rayBlockPos == null) return;
                 BlockPos pos = screen.rayBlockPos;
-                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 4));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 4));
             });
 
         addStorageArea.setTooltip(Tooltip.create(TOOLTIP_ADD_STORAGE));
@@ -117,7 +117,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     if(screen.rayBlockPos == null) return;
                     BlockPos pos = screen.rayBlockPos;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 2));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 2));
                 });
 
         addBuilding.active = canPlace;
@@ -127,7 +127,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     if(screen.rayBlockPos == null) return;
                     BlockPos pos = screen.rayBlockPos;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 6));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 6));
                 });
 
         addAnimalPen.setTooltip(Tooltip.create(TOOLTIP_ADD_ANIMAL_PEN));
@@ -138,7 +138,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     if(screen.rayBlockPos == null) return;
                     BlockPos pos = screen.rayBlockPos;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 7));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddWorkArea(pos, 7));
                 });
 
         addMarket.setTooltip(Tooltip.create(TOOLTIP_ADD_MARKET_AREA));
@@ -149,7 +149,7 @@ public class WorkerCommandScreen implements ICommandCategory {
                 button -> {
                     List<UUID> members = getActiveWorkerMembers(groups);
                     if (members.isEmpty()) return;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageRecoverWorkerControl(members));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRecoverWorkerControl(members));
                 });
 
         recoverControl.setTooltip(Tooltip.create(TOOLTIP_RECOVER_CONTROL));

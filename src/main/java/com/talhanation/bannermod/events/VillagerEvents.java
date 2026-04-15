@@ -1,11 +1,12 @@
 package com.talhanation.bannermod.events;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
-import com.talhanation.recruits.entities.*;
-import com.talhanation.recruits.entities.ai.villager.VillagerBecomeNobleGoal;
-import com.talhanation.recruits.init.ModBlocks;
-import com.talhanation.recruits.init.ModEntityTypes;
-import com.talhanation.recruits.init.ModProfessions;
+import com.talhanation.bannermod.entity.military.*;
+import com.talhanation.bannermod.ai.military.villager.VillagerBecomeNobleGoal;
+import com.talhanation.bannermod.registry.military.ModBlocks;
+import com.talhanation.bannermod.registry.military.ModEntityTypes;
+import com.talhanation.bannermod.registry.military.ModProfessions;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTradesRegistry;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
@@ -456,7 +457,7 @@ public class VillagerEvents {
 
 
         world.addFreshEntity(recruitEntity);
-        //Main.LOGGER.debug("SpawnPatrol: patrol spawned");
+        //BannerModMain.LOGGER.debug("SpawnPatrol: patrol spawned");
     }
 
     private static void createGuardBowman(BlockPos upPos, RecruitEntity patrolLeader, ServerLevel world, Random random) {

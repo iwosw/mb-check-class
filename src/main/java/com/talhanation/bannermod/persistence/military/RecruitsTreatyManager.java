@@ -107,13 +107,13 @@ public class RecruitsTreatyManager {
 
         List<ServerPlayer> playersA = FactionEvents.recruitsFactionManager.getPlayersInTeam(factionAId, level);
         for (ServerPlayer player : playersA) {
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientSetDiplomaticToast(toastId, factionB));
         }
 
         List<ServerPlayer> playersB = FactionEvents.recruitsFactionManager.getPlayersInTeam(factionBId, level);
         for (ServerPlayer player : playersB) {
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientSetDiplomaticToast(toastId, factionA));
         }
     }
@@ -125,14 +125,14 @@ public class RecruitsTreatyManager {
     public void broadcastTreatiesToAll(ServerLevel level) {
         if (level == null) return;
         for (ServerPlayer player : level.players()) {
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientUpdateTreaties(treaties));
         }
     }
 
     public void broadcastTreatiesToPlayer(ServerPlayer player) {
         if (player == null) return;
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new MessageToClientUpdateTreaties(treaties));
     }
 

@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.ai.military.navigation;
 
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinder;
 import com.talhanation.bannermod.ai.pathfinding.NodeEvaluatorGenerator;

@@ -455,7 +455,7 @@ public class WorldMapScreen extends Screen {
         pose.scale(1.5f, 1.5f, 1.5f);
         Lighting.setupForFlatItems();
         ItemStack boat = BOAT_STACK;
-        if (Main.isSmallShipsLoaded && player.getVehicle() != null && SmallShips.isSmallShip(player.getVehicle())) {
+        if (BannerModMain.isSmallShipsLoaded && player.getVehicle() != null && SmallShips.isSmallShip(player.getVehicle())) {
             boat = SmallShips.getSmallShipsItem();
         }
         RenderSystem.disableCull();
@@ -859,9 +859,9 @@ public class WorldMapScreen extends Screen {
             for (ChunkPos pos : area) newClaim.addChunk(pos);
             newClaim.setCenter(selectedChunk);
             newClaim.setPlayer(new RecruitsPlayerInfo(player.getUUID(), player.getName().getString(), ownFaction));
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageDoPayment(player.getUUID(), getClaimCost(ownFaction)));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoPayment(player.getUUID(), getClaimCost(ownFaction)));
             ClientManager.recruitsClaims.add(newClaim);
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(newClaim));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(newClaim));
         }
 
         public void claimChunk() {
@@ -878,8 +878,8 @@ public class WorldMapScreen extends Screen {
                     break;
                 }
             }
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageDoPayment(player.getUUID(), ClientManager.configValueChunkCost));
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(neighborClaim));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoPayment(player.getUUID(), ClientManager.configValueChunkCost));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(neighborClaim));
         }
 
         @Nullable

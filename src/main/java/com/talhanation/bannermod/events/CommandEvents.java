@@ -1,9 +1,10 @@
 package com.talhanation.bannermod.events;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
-import com.talhanation.recruits.entities.*;
-import com.talhanation.recruits.entities.ai.controller.RecruitCommandStateTransitions;
+import com.talhanation.bannermod.entity.military.*;
+import com.talhanation.bannermod.ai.military.controller.RecruitCommandStateTransitions;
 import com.talhanation.bannermod.inventory.military.CommandMenu;
 import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.util.FormationUtils;
@@ -405,7 +406,7 @@ public class CommandEvents {
                 }
             }, packetBuffer -> {packetBuffer.writeUUID(player.getUUID());});
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageCommandScreen(player));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCommandScreen(player));
         }
     }
     @SubscribeEvent
@@ -599,7 +600,7 @@ public class CommandEvents {
 
                 if(player.getTeam() != null){
                     if(player.getCommandSenderWorld().isClientSide){
-                        Main.SIMPLE_CHANNEL.sendToServer(new MessageAddRecruitToTeam(player.getTeam().getName(), 1));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddRecruitToTeam(player.getTeam().getName(), 1));
                     }
                     else {
                         ServerPlayer serverPlayer = (ServerPlayer) player;
@@ -642,7 +643,7 @@ public class CommandEvents {
 
     public static void onClearTargetButton(UUID player_uuid, AbstractRecruitEntity recruit, UUID group) {
         if (recruit.isEffectedByCommand(player_uuid, group)){
-            //Main.LOGGER.debug("event: clear");
+            //BannerModMain.LOGGER.debug("event: clear");
             recruit.setTarget(null);
             recruit.setLastHurtByPlayer(null);
             recruit.setLastHurtMob(null);
@@ -652,7 +653,7 @@ public class CommandEvents {
 
     public static void onClearUpkeepButton(UUID player_uuid, AbstractRecruitEntity recruit, UUID group) {
         if (recruit.isEffectedByCommand(player_uuid, group)){
-            //Main.LOGGER.debug("event: clear");
+            //BannerModMain.LOGGER.debug("event: clear");
             recruit.clearUpkeepEntity();
             recruit.clearUpkeepPos();
         }
@@ -660,7 +661,7 @@ public class CommandEvents {
     public static void onUpkeepCommand(UUID player_uuid, AbstractRecruitEntity recruit, UUID group, boolean isEntity, UUID entity_uuid, BlockPos blockPos) {
         if (recruit.isEffectedByCommand(player_uuid, group)){
             if (isEntity) {
-                //Main.LOGGER.debug("server: entity_uuid: " + entity_uuid);
+                //BannerModMain.LOGGER.debug("server: entity_uuid: " + entity_uuid);
                 recruit.setUpkeepUUID(Optional.of(entity_uuid));
                 recruit.clearUpkeepPos();
             }

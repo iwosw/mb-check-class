@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.recruits.FactionEvents;
+import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.util.FormationUtils;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;

@@ -1,7 +1,7 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -19,7 +19,7 @@ public class BannerModCitizenRecruitGameTests {
         Player player = helper.makeMockPlayer();
         AbstractRecruitEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
-                com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(),
+                com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
                 RecruitsBattleGameTestSupport.WEST_FRONTLINE_POS,
                 "Citizen Recruit",
                 player.getUUID()
@@ -29,7 +29,7 @@ public class BannerModCitizenRecruitGameTests {
         CompoundTag saved = BannerModDedicatedServerGameTestSupport.saveEntity(recruit);
         AbstractRecruitEntity reloaded = BannerModDedicatedServerGameTestSupport.loadEntity(
                 helper,
-                com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(),
+                com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
                 RecruitsBattleGameTestSupport.WEST_FLANK_POS,
                 saved
         );

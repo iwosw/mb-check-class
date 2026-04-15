@@ -2,7 +2,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.client.military.gui.widgets.BlackShowingTextField;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
 import com.talhanation.bannermod.entity.civilian.workarea.MiningPatternSettings;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateMiningArea;

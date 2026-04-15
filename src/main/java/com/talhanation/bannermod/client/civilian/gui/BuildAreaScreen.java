@@ -2,7 +2,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.client.military.gui.component.ActivateableButton;
 import com.talhanation.bannermod.client.military.gui.widgets.BlackShowingTextField;
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.bannermod.client.civilian.gui.widgets.DisplayTextItemScrollDropDownMenu;
 import com.talhanation.bannermod.client.civilian.gui.widgets.ScrollDropDownMenuWithFolders;
 import com.talhanation.bannermod.persistence.civilian.ScannedBlock;

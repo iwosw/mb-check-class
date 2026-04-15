@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
@@ -112,7 +112,7 @@ public abstract class AbstractWorkAreaEntity extends Entity {
             return InteractionResult.SUCCESS;
         }
 
-        WorkersMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenWorkAreaScreen(this.getId(), this.getUUID()));
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenWorkAreaScreen(this.getId(), this.getUUID()));
         return InteractionResult.SUCCESS;
     }
 

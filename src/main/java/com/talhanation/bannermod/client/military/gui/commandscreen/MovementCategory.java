@@ -104,7 +104,7 @@ public class MovementCategory implements ICommandCategory {
                             if (!group.isDisabled()) activeGroups.add(group.getUUID());
                         }
 
-                        Main.SIMPLE_CHANNEL.sendToServer(new MessageSaveFormationFollowMovement(player.getUUID(), activeGroups, CommandScreen.formation.getIndex()));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSaveFormationFollowMovement(player.getUUID(), activeGroups, CommandScreen.formation.getIndex()));
                     } else {
                         screen.sendMovementCommandToServer(1);
                     }

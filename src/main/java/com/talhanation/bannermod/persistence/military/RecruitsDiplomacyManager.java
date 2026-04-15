@@ -96,12 +96,12 @@ public class RecruitsDiplomacyManager {
         if(team != null && otherTeam != null){
             List<ServerPlayer> playersInTeam = FactionEvents.recruitsFactionManager.getPlayersInTeam(team.getStringID(), level);
             for (ServerPlayer player : playersInTeam) {
-                Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> player), new MessageToClientSetDiplomaticToast(relation.getByteValue(), otherTeam));
+                BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> player), new MessageToClientSetDiplomaticToast(relation.getByteValue(), otherTeam));
             }
 
             List<ServerPlayer> playersInTeam2 = FactionEvents.recruitsFactionManager.getPlayersInTeam(otherTeam.getStringID(), level);
             for (ServerPlayer player : playersInTeam2) {
-                Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> player), new MessageToClientSetDiplomaticToast(relation.getByteValue() + 4, team));
+                BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> player), new MessageToClientSetDiplomaticToast(relation.getByteValue() + 4, team));
             }
         }
 
@@ -140,14 +140,14 @@ public class RecruitsDiplomacyManager {
     public void broadcastDiplomacyMapToPlayer(Player player) {
         if (player == null) return;
 
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
                 new MessageToClientUpdateDiplomacyList(diplomacyMap));
     }
     public void broadcastDiplomacyMapToAll(ServerLevel serverLevel) {
         if (serverLevel == null) return;
 
         for(ServerPlayer serverPlayer : serverLevel.players()){
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
                     new MessageToClientUpdateDiplomacyList(diplomacyMap));
         }
     }

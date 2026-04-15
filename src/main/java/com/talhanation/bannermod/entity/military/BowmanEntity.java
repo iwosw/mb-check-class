@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.entity.military;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitStrategicFire;
 import com.talhanation.bannermod.ai.military.RecruitRangedBowAttackGoal;
@@ -175,7 +176,7 @@ public class BowmanEntity extends AbstractRecruitEntity implements IRangedRecrui
             float force = 1.90F + IRangedRecruit.getForceDistanceModifier(distance, 1.90F);
             double morale = this.getMorale();
             float accuracy = Math.max(6 - (float) (0.1F * morale), 0);
-            //Main.LOGGER.info("Distance: " + distance);
+            //BannerModMain.LOGGER.info("Distance: " + distance);
                                                 //angle   = 0.196F           //force     //accuracy 0 = 100%
             arrow.shoot(d0, d1 + d3 * angle, d2, force, accuracy);
 

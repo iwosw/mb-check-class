@@ -2,7 +2,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import com.talhanation.bannermod.inventory.civilian.MerchantTradeContainer;
 import com.talhanation.bannermod.network.messages.civilian.MessageDoTradeWithMerchant;
@@ -29,8 +29,8 @@ import java.util.UUID;
 
 public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
 
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(WorkersMain.MOD_ID,"textures/gui/merchant.png" );
-    private static final ResourceLocation ARROW_IMAGE = new ResourceLocation(WorkersMain.MOD_ID, "textures/gui/arrow.png");
+    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/merchant.png" );
+    private static final ResourceLocation ARROW_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/arrow.png");
     private static final MutableComponent BUTTON_ADD = Component.translatable("gui.workers.button.add");
     private static final MutableComponent BUTTON_EDIT = Component.translatable("gui.workers.button.edit");
     private static final MutableComponent BUTTON_REMOVE = Component.translatable("gui.workers.button.remove");
@@ -116,7 +116,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
         if((merchantEntity.isCreative() && player.isCreative()) || isOwner){
             tradeButton = new ExtendedButton(leftPos + 88, topPos + 58, 60, 18, BUTTON_TRADE,
                     button -> {
-                        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageDoTradeWithMerchant(merchantEntity.getUUID(), selection.uuid));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoTradeWithMerchant(merchantEntity.getUUID(), selection.uuid));
                         this.selection.currentTrades++;
                         this.updateButtonState();
                     });
@@ -136,7 +136,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
             copyTradeButton = new ExtendedButton(leftPos + 88, topPos + 77, 60, 18, BUTTON_COPY,
                     button -> {
                         WorkersMerchantTrade trade = selection == null ? new WorkersMerchantTrade() : selection.copy();
-                        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(this.merchantEntity.getUUID(), trade, false));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(this.merchantEntity.getUUID(), trade, false));
                         tradeList.addEntry(this.tradeList.new TradeEntry(trade));
                         this.selection = null;
                         tradeList.setSelected(null);
@@ -147,7 +147,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
             removeTradeButton = new ExtendedButton(leftPos + 186, topPos + 77, 60, 18, BUTTON_REMOVE,
                     button -> {
                         tradeList.children().removeIf(tradeEntry -> tradeEntry.trade.uuid.equals(selection.uuid));
-                        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(merchantEntity.getUUID(), selection, true));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(merchantEntity.getUUID(), selection, true));
                         this.selection = null;
                         tradeList.setSelected(null);
                         updateButtonState();
@@ -158,7 +158,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                     button -> {
                         if (selection == null) return;
                         UUID selectedUuid = selection.uuid;
-                        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, true));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, true));
                         List<WorkersMerchantTrade> list = new java.util.ArrayList<>(merchantEntity.getTrades());
                         for (int i = 1; i < list.size(); i++) {
                             if (list.get(i).uuid.equals(selectedUuid)) {
@@ -178,7 +178,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                     button -> {
                         if (selection == null) return;
                         UUID selectedUuid = selection.uuid;
-                        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, false));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, false));
                         List<WorkersMerchantTrade> list = new java.util.ArrayList<>(merchantEntity.getTrades());
                         for (int i = 0; i < list.size() - 1; i++) {
                             if (list.get(i).uuid.equals(selectedUuid)) {
@@ -199,7 +199,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                         this.isCreative,
                         (bool) -> {
                             this.isCreative = bool;
-                            WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
+                            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
                             setWidgets(); // rebuild so daily-refresh checkbox shows/hides
                         }
                 );
@@ -210,7 +210,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                             this.isDailyRefresh,
                             (bool) -> {
                                 this.isDailyRefresh = bool;
-                                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
                             }
                     );
                     addRenderableWidget(dailyRefreshCheckbox);
@@ -223,7 +223,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                         this.isCreative,
                         (bool) -> {
                             this.isCreative = bool;
-                            WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
+                            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
                             setWidgets(); // rebuild so daily-refresh checkbox shows/hides
                         }
                 );
@@ -234,7 +234,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                             this.isDailyRefresh,
                             (bool) -> {
                                 this.isDailyRefresh = bool;
-                                WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
+                                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, true, isDailyRefresh));
                             }
                     );
                     addRenderableWidget(dailyRefreshCheckbox);
@@ -243,7 +243,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
 
             tradeButton = new ExtendedButton(leftPos + 97, topPos + 66, 140, 20, BUTTON_TRADE,
                     button -> {
-                        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageDoTradeWithMerchant(merchantEntity.getUUID(), selection.uuid));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoTradeWithMerchant(merchantEntity.getUUID(), selection.uuid));
                         this.selection.currentTrades++;
                         this.updateButtonState();
                     });
@@ -483,7 +483,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
     @Override
     public void onClose() {
         super.onClose();
-        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, false, isDailyRefresh));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchant(merchantEntity.getUUID(), isCreative, false, isDailyRefresh));
     }
 
 }

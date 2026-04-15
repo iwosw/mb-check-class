@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.registry.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.recruits.entities.*;
+import com.talhanation.bannermod.entity.military.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;

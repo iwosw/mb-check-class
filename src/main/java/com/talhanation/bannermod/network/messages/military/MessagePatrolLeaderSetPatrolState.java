@@ -56,7 +56,7 @@ public class MessagePatrolLeaderSetPatrolState implements Message<MessagePatrolL
 
         ValidationResult result = validateSelection(selection, state);
         if (result != ValidationResult.OK) {
-            Main.LOGGER.debug("Ignored patrol state command: {}", result);
+            BannerModMain.LOGGER.debug("Ignored patrol state command: {}", result);
             return;
         }
 

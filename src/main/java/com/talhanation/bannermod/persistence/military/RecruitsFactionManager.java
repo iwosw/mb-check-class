@@ -166,7 +166,7 @@ public class RecruitsFactionManager {
             }
         }
 
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
                 new MessageToClientUpdateOnlinePlayers(playerInfoList));
     }
 
@@ -215,7 +215,7 @@ public class RecruitsFactionManager {
             faction.getMembers().forEach(member -> member.setOnline(onlineNames.contains(member.getName())));
         }
 
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
                 new MessageToClientUpdateOwnFaction(faction));
     }
 
@@ -227,7 +227,7 @@ public class RecruitsFactionManager {
             factionID = player.getTeam().getName();
         }
 
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
                 new MessageToClientUpdateFactions(this.getFactions().stream().toList(),
                         factionID,
                         RecruitsServerConfig.ShouldFactionEditingBeAllowed.get(),
@@ -260,7 +260,7 @@ public class RecruitsFactionManager {
         }
 
         for(ServerPlayer serverPlayer : serverLevel.getServer().getPlayerList().getPlayers()){
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> serverPlayer),
                     new MessageToClientUpdateOnlinePlayers(playerInfoList));
         }
     }

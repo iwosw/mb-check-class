@@ -13,6 +13,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsHireTradesRegistry
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientUpdateConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTrade;
 import com.talhanation.bannermod.config.WorkersServerConfig;
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.network.chat.Component;

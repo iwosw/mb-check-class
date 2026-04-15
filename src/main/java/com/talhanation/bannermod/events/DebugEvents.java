@@ -1,8 +1,8 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
-import com.talhanation.recruits.entities.ICompanion;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.ICompanion;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 

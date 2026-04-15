@@ -2,7 +2,7 @@ package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.compat.CrossbowWeapon;
 import com.talhanation.bannermod.compat.IWeapon;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
 import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;

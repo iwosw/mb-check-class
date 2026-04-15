@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.persistence.civilian;
 
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import net.minecraft.client.Minecraft;

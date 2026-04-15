@@ -1,10 +1,10 @@
 package com.talhanation.bannermod.entity.military;
 
 
-import com.talhanation.recruits.FactionEvents;
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.RecruitEvents;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.events.FactionEvents;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.events.RecruitEvents;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.network.messages.military.MessageToClientOpenNobleTradeScreen;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateHireState;
@@ -196,8 +196,8 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
         String stringID = player.getTeam() != null ? player.getTeam().getName() : "";
 
         boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringID, player.getUUID());
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenNobleTradeScreen(this.getUUID()));
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenNobleTradeScreen(this.getUUID()));
     }
     public void addXpLevel(int level){
         super.addXpLevel(level);

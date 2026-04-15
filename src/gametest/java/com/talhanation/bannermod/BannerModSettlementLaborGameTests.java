@@ -1,11 +1,11 @@
 package com.talhanation.bannermod;
 
 import com.mojang.authlib.GameProfile;
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
-import com.talhanation.workers.entities.FarmerEntity;
-import com.talhanation.workers.entities.workarea.CropArea;
-import com.talhanation.workers.entities.workarea.StorageArea;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;

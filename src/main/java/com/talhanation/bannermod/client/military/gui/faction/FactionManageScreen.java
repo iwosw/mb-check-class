@@ -22,7 +22,7 @@ import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 public class FactionManageScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/gui_big.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final Component TITLE = Component.translatable("gui.recruits.team.manage");
     private static final MutableComponent BACK = Component.translatable("gui.recruits.button.back");
     private static final MutableComponent ADD_PLAYER = Component.translatable("gui.recruits.team.addPlayer");
@@ -59,7 +59,7 @@ public class FactionManageScreen extends RecruitsScreenBase {
                     (playerInfo) -> {
                         if(recruitsFaction.canAddPlayer()){
                             recruitsFaction.removeJoinRequest(playerInfo.getName());
-                            Main.SIMPLE_CHANNEL.sendToServer(new MessageAddPlayerToTeam(recruitsFaction.getStringID(), playerInfo.getName()));
+                            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddPlayerToTeam(recruitsFaction.getStringID(), playerInfo.getName()));
                         }
                     }
                 ));
@@ -70,7 +70,7 @@ public class FactionManageScreen extends RecruitsScreenBase {
             btn -> {
                 minecraft.setScreen(new SelectPlayerScreen(this, player, TOOLTIP_REMOVE_PLAYER,  REMOVE_PLAYER, Component.literal(""), false, PlayersList.FilterType.SAME_TEAM,
                     (playerInfo) -> {
-                        Main.SIMPLE_CHANNEL.sendToServer(new MessageRemoveFromTeam(playerInfo.getName()));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRemoveFromTeam(playerInfo.getName()));
                     }
                 ));
             }

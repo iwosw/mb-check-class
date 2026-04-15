@@ -17,7 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 public class TakeOverScreen extends RecruitsScreenBase {
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/gui_big.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final Component TITLE = Component.translatable("gui.recruits.team.manage");
     private static final MutableComponent MORE = Component.translatable("gui.recruits.inv.more");
     private static final MutableComponent OPEN_INVENTORY = Component.translatable("gui.recruits.inv.openInventory");
@@ -46,7 +46,7 @@ public class TakeOverScreen extends RecruitsScreenBase {
 
         Button takeOwnerShip = addRenderableWidget(new ExtendedButton(guiLeft + 32, guiTop + ySize - 120 - 7, 130, 20, TAKE_OWNERSHIP,
             btn -> {
-                 Main.SIMPLE_CHANNEL.sendToServer(new MessageAssignRecruitToPlayer(this.recruit.getUUID(), this.player.getUUID()));
+                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAssignRecruitToPlayer(this.recruit.getUUID(), this.player.getUUID()));
                  this.recruit.openGUI(player);
             }
         ));

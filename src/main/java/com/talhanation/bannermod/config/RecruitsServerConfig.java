@@ -2,7 +2,7 @@ package com.talhanation.bannermod.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;

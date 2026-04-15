@@ -7,7 +7,7 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = Main.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = BannerModMain.MOD_ID, value = Dist.CLIENT)
 public class ClientSyncLifecycleEvents {
 
     @SubscribeEvent

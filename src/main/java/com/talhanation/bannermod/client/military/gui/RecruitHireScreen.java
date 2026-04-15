@@ -29,7 +29,7 @@ import java.text.DecimalFormat;
 
 @OnlyIn(Dist.CLIENT)
 public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(Main.MOD_ID,"textures/gui/hire_gui.png");
+    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/hire_gui.png");
 
     private static final MutableComponent TEXT_HIRE = Component.translatable("gui.recruits.hire_gui.text.hire");
 
@@ -79,7 +79,7 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     private ExtendedButton createHireButton() {
         return addRenderableWidget(new ExtendedButton(leftPos + 7, topPos + 100, 80, 20, TEXT_HIRE,
                 button -> {
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageHire(player.getUUID(), recruit.getUUID(), group.getUUID()));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageHire(player.getUUID(), recruit.getUUID(), group.getUUID()));
                     this.onClose();
         }));
     }

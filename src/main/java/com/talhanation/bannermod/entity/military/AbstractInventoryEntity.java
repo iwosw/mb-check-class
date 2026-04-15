@@ -1,9 +1,9 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.FactionEvents;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.compat.Corpse;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.inventory.military.RecruitSimpleContainer;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
 import net.minecraft.nbt.CompoundTag;
@@ -253,7 +253,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
     public void die(DamageSource dmg) {
         super.die(dmg);
 
-        if(Main.isCorpseLoaded && !Main.isRPGZLoaded && !this.getCommandSenderWorld().isClientSide() && RecruitsServerConfig.CompatCorpseMod.get()){
+        if(BannerModMain.isCorpseLoaded && !BannerModMain.isRPGZLoaded && !this.getCommandSenderWorld().isClientSide() && RecruitsServerConfig.CompatCorpseMod.get()){
             Corpse.spawnCorpse(this);
         }
         else{

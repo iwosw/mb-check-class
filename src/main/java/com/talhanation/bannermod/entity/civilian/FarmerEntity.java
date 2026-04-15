@@ -2,8 +2,8 @@ package com.talhanation.bannermod.entity.civilian;
 
 import com.google.common.collect.ImmutableSet;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.recruits.pathfinding.AsyncGroundPathNavigation;
-import com.talhanation.workers.config.WorkersServerConfig;
+import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.FarmerWorkGoal;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;

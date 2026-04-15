@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.gui.widgets.ItemScrollDropDownMenu;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateCropArea;
@@ -53,7 +53,7 @@ public class CropAreaScreen extends WorkAreaScreen {
 
 
     public void setCurrentSeeds(ItemStack currentSeeds) {
-        WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateCropArea(this.cropArea.getUUID(), currentSeeds));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateCropArea(this.cropArea.getUUID(), currentSeeds));
         this.currentSeeds = currentSeeds;
     }
 

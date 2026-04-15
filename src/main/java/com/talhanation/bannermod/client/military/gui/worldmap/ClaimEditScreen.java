@@ -153,7 +153,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
                     this.claim.setBlockPlacementAllowed(this.allowBlockPlacing);
                     this.claim.setBlockBreakingAllowed(this.allowBlockBreaking);
 
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(this.claim));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(this.claim));
 
                     this.minecraft.setScreen(this.parent);
                 });
@@ -164,7 +164,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
         deleteButton = new ExtendedButton(x - 75 + 35, y + 112, 70, 20, BUTTON_DELETE,
                 button -> {
                     ClientManager.recruitsClaims.remove(this.claim);
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageDeleteClaim(this.claim));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDeleteClaim(this.claim));
 
                     this.minecraft.setScreen(this.parent);
                 });

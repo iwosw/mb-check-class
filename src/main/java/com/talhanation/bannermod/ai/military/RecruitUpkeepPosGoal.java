@@ -1,4 +1,5 @@
 package com.talhanation.bannermod.ai.military;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.entity.military.*;
 import net.minecraft.core.BlockPos;
@@ -164,7 +165,7 @@ public class RecruitUpkeepPosGoal extends Goal {
                 stop();
             }
             else recruit.setUpkeepPos(chestPos);
-            //Main.LOGGER.debug("Chest not found"
+            //BannerModMain.LOGGER.debug("Chest not found"
         }
 
 

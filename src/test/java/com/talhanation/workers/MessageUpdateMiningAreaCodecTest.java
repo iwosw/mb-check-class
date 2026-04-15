@@ -1,7 +1,7 @@
 package com.talhanation.workers;
 
-import com.talhanation.workers.entities.workarea.MiningPatternSettings;
-import com.talhanation.workers.network.MessageUpdateMiningArea;
+import com.talhanation.bannermod.entity.civilian.workarea.MiningPatternSettings;
+import com.talhanation.bannermod.network.messages.civilian.MessageUpdateMiningArea;
 import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

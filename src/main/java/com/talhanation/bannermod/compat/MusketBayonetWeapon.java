@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.compat;
 
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -33,7 +33,7 @@ public class MusketBayonetWeapon implements IWeapon {
             return (Item) item;
         }
         catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException | InstantiationException e) {
-            Main.LOGGER.error("Items of MusketMod was not found");
+            BannerModMain.LOGGER.error("Items of MusketMod was not found");
             return null;
         }
 
@@ -67,7 +67,7 @@ public class MusketBayonetWeapon implements IWeapon {
             return (boolean) musketItemIsLoaded.invoke(musketItemClass, stack);
         }
         catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            Main.LOGGER.info("MusketItem was not found");
+            BannerModMain.LOGGER.info("MusketItem was not found");
             return false;
         }
     }
@@ -82,7 +82,7 @@ public class MusketBayonetWeapon implements IWeapon {
             musketItemSetLoaded.invoke(musketItemClass, stack, loaded);
         }
         catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            Main.LOGGER.info("MusketItem was not found");
+            BannerModMain.LOGGER.info("MusketItem was not found");
         }
     }
 
@@ -106,7 +106,7 @@ public class MusketBayonetWeapon implements IWeapon {
                 return null;
         }
         catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
-            Main.LOGGER.info("MusketItem was not found");
+            BannerModMain.LOGGER.info("MusketItem was not found");
             return null;
         }
     }
@@ -142,15 +142,15 @@ public class MusketBayonetWeapon implements IWeapon {
                 }
 
             } catch (NoSuchFieldException e) {
-                Main.LOGGER.error("bulletDamageField was not found (NoSuchFieldException)");
+                BannerModMain.LOGGER.error("bulletDamageField was not found (NoSuchFieldException)");
             } catch (ClassNotFoundException e) {
-                Main.LOGGER.error("BulletEntity.class was not found (ClassNotFoundException)");
+                BannerModMain.LOGGER.error("BulletEntity.class was not found (ClassNotFoundException)");
             } catch (InvocationTargetException e) {
-                Main.LOGGER.error("bulletClassSetInitialSpeedMethod was not found (InvocationTargetException)");
+                BannerModMain.LOGGER.error("bulletClassSetInitialSpeedMethod was not found (InvocationTargetException)");
             } catch (NoSuchMethodException e) {
-                Main.LOGGER.error("bulletClassSetDeltaMovementMethod was not found (NoSuchMethodException)");
+                BannerModMain.LOGGER.error("bulletClassSetDeltaMovementMethod was not found (NoSuchMethodException)");
             } catch (IllegalAccessException e) {
-                Main.LOGGER.error("BulletEntity.class was not found (IllegalAccessException)");
+                BannerModMain.LOGGER.error("BulletEntity.class was not found (IllegalAccessException)");
             }
 
             Vec3 forward = new Vec3(x, y, z).normalize();
@@ -162,16 +162,16 @@ public class MusketBayonetWeapon implements IWeapon {
                 sendSmokeEffectMethod.invoke(musketModClass, (ServerLevel) shooter.getCommandSenderWorld(), origin, forward);
 
             } catch (ClassNotFoundException e) {
-                Main.LOGGER.error("MusketMod.class was not found (ClassNotFoundException)");
+                BannerModMain.LOGGER.error("MusketMod.class was not found (ClassNotFoundException)");
 
             } catch (InvocationTargetException e) {
-                Main.LOGGER.error("sendSmokeEffectMethod was not found (InvocationTargetException)");
+                BannerModMain.LOGGER.error("sendSmokeEffectMethod was not found (InvocationTargetException)");
 
             } catch (NoSuchMethodException e) {
-                Main.LOGGER.error("sendSmokeEffectMethod was not found (NoSuchMethodException)");
+                BannerModMain.LOGGER.error("sendSmokeEffectMethod was not found (NoSuchMethodException)");
 
             } catch (IllegalAccessException e) {
-                Main.LOGGER.error("MusketMod.class was not found (IllegalAccessException)");
+                BannerModMain.LOGGER.error("MusketMod.class was not found (IllegalAccessException)");
 
             }
             return projectile;
@@ -195,7 +195,7 @@ public class MusketBayonetWeapon implements IWeapon {
             return (SoundEvent) soundEvent;
         }
         catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException | InstantiationException e) {
-            Main.LOGGER.error("Sounds of MusketMod was not found");
+            BannerModMain.LOGGER.error("Sounds of MusketMod was not found");
             return null;
         }
     }
@@ -211,7 +211,7 @@ public class MusketBayonetWeapon implements IWeapon {
             return (SoundEvent) soundEvent;
         }
         catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException | InstantiationException e) {
-            Main.LOGGER.error("Sounds of MusketMod was not found");
+            BannerModMain.LOGGER.error("Sounds of MusketMod was not found");
             return null;
         }
     }

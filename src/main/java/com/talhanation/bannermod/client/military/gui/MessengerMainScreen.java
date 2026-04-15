@@ -14,7 +14,7 @@ import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 public class MessengerMainScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/gui_big.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
 
     private static final Component BUTTON_MESSAGES = Component.translatable("gui.recruits.messenger.tab.messages");
     private static final Component BUTTON_TREATIES = Component.translatable("gui.recruits.messenger.tab.treaties");

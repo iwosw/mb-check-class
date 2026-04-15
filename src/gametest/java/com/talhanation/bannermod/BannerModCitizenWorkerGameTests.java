@@ -1,9 +1,9 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
-import com.talhanation.workers.entities.FarmerEntity;
-import com.talhanation.workers.entities.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -34,7 +34,7 @@ public class BannerModCitizenWorkerGameTests {
         CompoundTag saved = BannerModDedicatedServerGameTestSupport.saveEntity(worker);
         FarmerEntity reloaded = BannerModDedicatedServerGameTestSupport.loadEntity(
                 helper,
-                com.talhanation.workers.init.ModEntityTypes.FARMER.get(),
+                com.talhanation.bannermod.registry.civilian.ModEntityTypes.FARMER.get(),
                 RecruitsBattleGameTestSupport.WEST_RANGED_RIGHT_POS,
                 saved
         );

@@ -1,11 +1,11 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
-import com.talhanation.recruits.entities.RecruitEntity;
-import com.talhanation.workers.entities.FarmerEntity;
-import com.talhanation.workers.entities.workarea.BuildArea;
-import com.talhanation.workers.entities.workarea.CropArea;
-import com.talhanation.workers.entities.workarea.StorageArea;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitEntity;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -30,7 +30,7 @@ public final class BannerModGameTestSupport {
     }
 
     public static FarmerEntity spawnOwnedFarmer(GameTestHelper helper, Player player, BlockPos relativePos) {
-        FarmerEntity worker = spawnEntity(helper, com.talhanation.workers.init.ModEntityTypes.FARMER.get(), relativePos);
+        FarmerEntity worker = spawnEntity(helper, com.talhanation.bannermod.registry.civilian.ModEntityTypes.FARMER.get(), relativePos);
         worker.setCustomName(Component.literal("Integrated Farmer"));
         worker.setCustomNameVisible(true);
         worker.setPersistenceRequired();
@@ -42,7 +42,7 @@ public final class BannerModGameTestSupport {
     }
 
     public static RecruitEntity spawnOwnedRecruit(GameTestHelper helper, Player player, BlockPos relativePos) {
-        RecruitEntity recruit = spawnEntity(helper, com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(), relativePos);
+        RecruitEntity recruit = spawnEntity(helper, com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(), relativePos);
         recruit.setCustomName(Component.literal("Governor Recruit"));
         recruit.setCustomNameVisible(true);
         recruit.setPersistenceRequired();
@@ -53,7 +53,7 @@ public final class BannerModGameTestSupport {
     }
 
     public static CropArea spawnOwnedCropArea(GameTestHelper helper, Player player, BlockPos relativePos) {
-        CropArea cropArea = spawnEntity(helper, com.talhanation.workers.init.ModEntityTypes.CROPAREA.get(), relativePos);
+        CropArea cropArea = spawnEntity(helper, com.talhanation.bannermod.registry.civilian.ModEntityTypes.CROPAREA.get(), relativePos);
         cropArea.setPlayerUUID(player.getUUID());
         cropArea.setPlayerName(player.getName().getString());
         cropArea.setWidthSize(3);
@@ -63,7 +63,7 @@ public final class BannerModGameTestSupport {
     }
 
     public static StorageArea spawnOwnedStorageArea(GameTestHelper helper, Player player, BlockPos relativePos) {
-        StorageArea storageArea = spawnEntity(helper, com.talhanation.workers.init.ModEntityTypes.STORAGEAREA.get(), relativePos);
+        StorageArea storageArea = spawnEntity(helper, com.talhanation.bannermod.registry.civilian.ModEntityTypes.STORAGEAREA.get(), relativePos);
         storageArea.setPlayerUUID(player.getUUID());
         storageArea.setPlayerName(player.getName().getString());
         storageArea.setWidthSize(3);
@@ -73,7 +73,7 @@ public final class BannerModGameTestSupport {
     }
 
     public static BuildArea spawnOwnedBuildArea(GameTestHelper helper, Player player, BlockPos relativePos) {
-        BuildArea buildArea = spawnEntity(helper, com.talhanation.workers.init.ModEntityTypes.BUILDAREA.get(), relativePos);
+        BuildArea buildArea = spawnEntity(helper, com.talhanation.bannermod.registry.civilian.ModEntityTypes.BUILDAREA.get(), relativePos);
         buildArea.setPlayerUUID(player.getUUID());
         buildArea.setPlayerName(player.getName().getString());
         buildArea.setWidthSize(3);

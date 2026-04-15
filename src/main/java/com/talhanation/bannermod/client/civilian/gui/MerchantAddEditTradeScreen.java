@@ -2,7 +2,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.client.military.gui.widgets.BlackShowingTextField;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import com.talhanation.bannermod.inventory.civilian.MerchantAddEditTradeContainer;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateLumberArea;
@@ -22,7 +22,7 @@ import net.minecraftforge.client.gui.widget.ExtendedButton;
 
 public class MerchantAddEditTradeScreen extends ScreenBase<MerchantAddEditTradeContainer> {
 
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(WorkersMain.MOD_ID,"textures/gui/merchant_add_edit_trade_screen.png" );
+    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/merchant_add_edit_trade_screen.png" );
     private static final MutableComponent BUTTON_CANCEL = Component.translatable("gui.workers.button.cancel");
     private static final MutableComponent BUTTON_SAVE = Component.translatable("gui.workers.button.save");
     private static final MutableComponent BUTTON_EDIT = Component.translatable("gui.workers.button.edit");
@@ -85,7 +85,7 @@ public class MerchantAddEditTradeScreen extends ScreenBase<MerchantAddEditTradeC
                     this.trade.maxTrades = maxTrades;
                     this.trade.allowDamagedCurrency = allowDamagedCurrency;
                     this.trade.enabled = enabled;
-                    WorkersMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(this.merchantEntity.getUUID(), this.trade, false));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(this.merchantEntity.getUUID(), this.trade, false));
 
                     new java.util.Timer().schedule(new java.util.TimerTask() {
                         @Override

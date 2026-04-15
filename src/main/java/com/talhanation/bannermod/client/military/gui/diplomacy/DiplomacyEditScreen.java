@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DiplomacyEditScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/gui_big.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final Component TITLE = Component.translatable("gui.recruits.diplomacy_edit.title");
     protected static final Component BUTTON_CONFIRM = Component.translatable("gui.recruits.button.confirm");
     protected static final Component BUTTON_BACK = Component.translatable("gui.recruits.button.back");
@@ -139,7 +139,7 @@ public class DiplomacyEditScreen extends RecruitsScreenBase {
     }
 
     private void changeDiplomacyStatus(RecruitsDiplomacyManager.DiplomacyStatus status, RecruitsFaction otherTeam) {
-        Main.SIMPLE_CHANNEL.sendToServer(new MessageChangeDiplomacyStatus(ClientManager.ownFaction, otherTeam, status));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageChangeDiplomacyStatus(ClientManager.ownFaction, otherTeam, status));
     }
 
     @Override
@@ -210,9 +210,9 @@ public class DiplomacyEditScreen extends RecruitsScreenBase {
         ResourceLocation location;
 
          switch (status){
-            default -> location = new ResourceLocation(Main.MOD_ID, "textures/gui/image/neutral.png");
-            case ALLY ->  location = new ResourceLocation(Main.MOD_ID, "textures/gui/image/ally.png");
-            case ENEMY ->  location = new ResourceLocation(Main.MOD_ID, "textures/gui/image/enemy.png");
+            default -> location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/neutral.png");
+            case ALLY ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/ally.png");
+            case ENEMY ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/enemy.png");
         }
         return location;
     }

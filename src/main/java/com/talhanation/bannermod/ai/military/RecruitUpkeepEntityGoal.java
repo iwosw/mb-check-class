@@ -1,4 +1,5 @@
 package com.talhanation.bannermod.ai.military;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.core.BlockPos;
@@ -70,13 +71,13 @@ public class RecruitUpkeepEntityGoal extends Goal {
 
             if (entity.get() instanceof AbstractHorse horse) {
                 this.container = horse.inventory;
-                //Main.LOGGER.debug("found horse");
+                //BannerModMain.LOGGER.debug("found horse");
             } else if (entity.get() instanceof InventoryCarrier carrier) {
                 this.container = carrier.getInventory();
-                //Main.LOGGER.debug("found carrier");
+                //BannerModMain.LOGGER.debug("found carrier");
             } else if (entity.get() instanceof Container containerEntity) {
                 this.container = containerEntity;
-                //Main.LOGGER.debug("found containerEntity");
+                //BannerModMain.LOGGER.debug("found containerEntity");
             }
         }
         else {
@@ -92,7 +93,7 @@ public class RecruitUpkeepEntityGoal extends Goal {
     @Override
     public void tick() {
         super.tick();
-        //Main.LOGGER.debug("searching upkeep entity");
+        //BannerModMain.LOGGER.debug("searching upkeep entity");
         if (entity.isPresent()) {
             if (--this.timeToRecalcPath <= 0) {
                 this.timeToRecalcPath = this.adjustedTickDelay(10);

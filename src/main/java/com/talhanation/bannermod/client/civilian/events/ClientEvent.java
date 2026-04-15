@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.client.civilian.events;
 
-import com.talhanation.recruits.config.RecruitsClientConfig;
-import com.talhanation.workers.WorkersMain;
+import com.talhanation.bannermod.config.RecruitsClientConfig;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.render.FishingBobberRenderer;
 import com.talhanation.bannermod.client.civilian.render.WorkerAreaRenderer;
 import com.talhanation.bannermod.client.civilian.render.WorkerVillagerRenderer;
@@ -14,7 +14,7 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = WorkersMain.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD , value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD , value = Dist.CLIENT)
 public class ClientEvent {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)

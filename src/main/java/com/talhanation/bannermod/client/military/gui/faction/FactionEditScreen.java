@@ -43,7 +43,7 @@ import static com.talhanation.bannermod.client.military.gui.faction.FactionInspe
 import static com.talhanation.bannermod.client.military.ClientManager.*;
 public class FactionEditScreen extends ScreenBase<TeamEditMenu> {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/team/team_create_gui.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/team/team_create_gui.png");
     private static final Component EDIT = Component.translatable("gui.recruits.team.edit");
     private static final Component BACK = Component.translatable("gui.recruits.button.back");
     private static final Component SAVE = Component.translatable("gui.recruits.button.save");
@@ -338,7 +338,7 @@ public class FactionEditScreen extends ScreenBase<TeamEditMenu> {
             saveButton = new ExtendedButton(guiLeft + 30, guiTop + imageHeight - 102, 162, 20, CREATE,
                 btn -> {
                     String text = textFieldTeamName.getValue().strip();
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageCreateTeam(this.getCorrectFormatStringID(text), this.getCorrectFormatName(text), banner, teamColor, unitColors.indexOf(unitColor)));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCreateTeam(this.getCorrectFormatStringID(text), this.getCorrectFormatName(text), banner, teamColor, unitColors.indexOf(unitColor)));
                     leaderInfo = null;
                     minecraft.setScreen(new FactionInspectionScreen(new FactionMainScreen(player), player));
                 }
@@ -367,7 +367,7 @@ public class FactionEditScreen extends ScreenBase<TeamEditMenu> {
                     ownFaction.setUnitColor((byte) unitColors.indexOf(unitColor));
                     ownFaction.setMaxNPCsPerPlayer(maxRecruitsPerPlayer);
 
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageSaveTeamSettings(ownFaction, totalCost));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSaveTeamSettings(ownFaction, totalCost));
 
                     minecraft.setScreen(new FactionInspectionScreen(new FactionMainScreen(player), player));
                 }

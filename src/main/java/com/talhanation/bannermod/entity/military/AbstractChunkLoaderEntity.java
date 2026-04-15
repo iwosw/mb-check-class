@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.entity.military;
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -91,7 +91,7 @@ public abstract class AbstractChunkLoaderEntity extends BowmanEntity {
     ////////////////////////////////////SET////////////////////////////////////
 
     private void setForceChunk(RecruitsChunk chunk, boolean add) {
-        ForgeChunkManager.forceChunk((ServerLevel) this.getCommandSenderWorld(), Main.MOD_ID, this, chunk.x, chunk.z, add, false);
+        ForgeChunkManager.forceChunk((ServerLevel) this.getCommandSenderWorld(), BannerModMain.MOD_ID, this, chunk.x, chunk.z, add, false);
     }
 
     public void die(DamageSource dmg) {

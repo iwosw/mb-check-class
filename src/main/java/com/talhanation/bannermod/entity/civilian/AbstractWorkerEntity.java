@@ -8,7 +8,7 @@ import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleContext;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
 import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
-import com.talhanation.recruits.config.RecruitsClientConfig;
+import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.entity.military.AbstractChunkLoaderEntity;
 import com.talhanation.bannermod.ai.civilian.DepositItemsToStorage;
 import com.talhanation.bannermod.ai.civilian.GetNeededItemsFromStorage;

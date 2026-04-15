@@ -39,7 +39,7 @@ import java.util.*;
 @OnlyIn(Dist.CLIENT)
 public class CommandScreen extends ScreenBase<CommandMenu> {
 
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(Main.MOD_ID, "textures/gui/command_gui.png");
+    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/command_gui.png");
     private static final MutableComponent TEXT_EVERYONE = Component.translatable("gui.recruits.command.text.everyone");
     private static final int fontColor = 16250871;
     public final Player player;
@@ -169,7 +169,7 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
     public void sendFaceCommandToServer() {
         if(!ClientManager.groups.isEmpty()){
             for(RecruitsGroup group : getActiveGroups()){
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageFaceCommand(player.getUUID(), group.getUUID(), formation.getIndex(), tightFormation));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFaceCommand(player.getUUID(), group.getUUID(), formation.getIndex(), tightFormation));
             }
         }
     }
@@ -216,11 +216,11 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
 
     public void sendMovementCommandToServer(int state) {
         if(state != 1){
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageSaveFormationFollowMovement(player.getUUID(), new ArrayList<>(), -1));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSaveFormationFollowMovement(player.getUUID(), new ArrayList<>(), -1));
         }
         if(!ClientManager.groups.isEmpty()){
             for(RecruitsGroup group : getActiveGroups()){
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageMovement(player.getUUID(), state, group.getUUID(), formation.getIndex(), tightFormation));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMovement(player.getUUID(), state, group.getUUID(), formation.getIndex(), tightFormation));
             }
         }
     }

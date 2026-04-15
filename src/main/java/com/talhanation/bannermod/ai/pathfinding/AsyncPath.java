@@ -137,7 +137,7 @@ public class AsyncPath extends Path {
             try {
                 runnable.run();
             } catch (Exception e) {
-                com.talhanation.recruits.Main.LOGGER.error("Exception in AsyncPath post-processing callback", e);
+                com.talhanation.bannermod.bootstrap.BannerModMain.LOGGER.error("Exception in AsyncPath post-processing callback", e);
             }
         }
     }

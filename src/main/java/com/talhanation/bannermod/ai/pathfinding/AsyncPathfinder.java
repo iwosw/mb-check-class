@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
 import com.google.common.collect.Lists;
-import com.talhanation.recruits.Main;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
@@ -65,7 +65,7 @@ public class AsyncPathfinder extends PathFinder {
             // Nope, no sync pathfinding
             // Either patch mob to add NodeEvaluatorGenerator or go out
             if (this.nodeEvaluatorGenerator == null) {
-                Main.LOGGER.error("No node evaluator generator present for Mob {}", p_77429_);
+                BannerModMain.LOGGER.error("No node evaluator generator present for Mob {}", p_77429_);
                 return null;
             }
             return new AsyncPath(Lists.newArrayList(), p_77430_, this.level, () -> {

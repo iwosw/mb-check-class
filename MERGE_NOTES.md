@@ -517,3 +517,15 @@ Rationale:
 
 Wave 8 had already reduced their `src/main/java/` working trees to deprecated shim groups (`recruits/Main.java`, `recruits/init/ModLifecycleRegistrar.java`, `workers/{WorkersMain,WorkersRuntime,WorkersSubsystem,MergedRuntimeCleanupPolicy}.java`, `workers/init/WorkersLifecycleRegistrar.java`). Those shims remain on disk inside the clones but no longer participate in the outer build.
 
+
+### Test Compilation Status (Wave 9 deferral)
+
+After the FQN sweep of `src/{test,gametest}/java`, `./gradlew compileJava` is **green**.
+`./gradlew compileTestJava` still surfaces 39 errors that fall outside Wave 9 scope:
+
+- **`BannerModSettlementBinding` package overlap (D-05 deferral)** — `bannermod.shared.settlement.BannerModSettlementBinding.Status` vs `bannermod.settlement.BannerModSettlementBinding.Status`. Tests in `src/test/java/com/talhanation/workers/MiningClaimExcavationRulesTest.java` and `BuildAreaUpdateAuthoringTest.java` mix calls from both. CONTEXT D-05 explicitly defers reconciliation of duplicated `bannermod.*` packages to a follow-up phase ("Phase 21 is a structural move, not a semantic merge"). Test fix is part of that follow-up.
+- **`WorkersSubsystem` referenced from tests** — `BannerModIntegratedRuntimeSmokeTest`, `WorkersRuntimeSmokeTest`, `WorkersRuntimeLegacyIdMigrationTest`. The class moved to `bannermod.bootstrap.WorkersSubsystem`; tests still reference unqualified `WorkersSubsystem`/`WorkersRuntime` symbols without imports. Mechanical fix but cross-cuts the integration-smoke surface; deferred to a dedicated post-Phase-21 test-stabilization slice.
+- **`Main.orderedMessageTypes()` removed** — `BannerModIntegratedRuntimeSmokeTest` asserts against a method that no longer exists in `BannerModMain` (replaced by `BannerModNetworkBootstrap.MILITARY_MESSAGES` / `CIVILIAN_MESSAGES` per Wave 8). Test should be updated to assert against the new array contracts.
+
+These do not affect the runtime build artifact. `./gradlew compileJava` is the hard gate per CONTEXT D-22 and per 21-09 must-have #4, and it passes.
+

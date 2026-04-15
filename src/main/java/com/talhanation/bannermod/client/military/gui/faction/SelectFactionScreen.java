@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 
 public class SelectFactionScreen extends ListScreenBase implements IFactionSelection {
 
-    protected static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/select_player.png");
+    protected static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/select_player.png");
     public static final Component TITLE = Component.translatable("gui.recruits.select_faction_screen.title");
     public static final Component BUTTON_SELECT = Component.translatable("gui.recruits.select_player_screen.selectPlayer");
     public static final Component BUTTON_SELECT_TOOLTIP = Component.translatable("gui.recruits.select_player_screen.selectPlayerTooltip");

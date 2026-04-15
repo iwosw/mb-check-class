@@ -53,7 +53,7 @@ public class MessageScoutTask implements Message<MessageScoutTask> {
 
         ValidationResult result = validateSelection(selection, state);
         if (result != ValidationResult.OK) {
-            Main.LOGGER.debug("Ignored scout task command: {}", result);
+            BannerModMain.LOGGER.debug("Ignored scout task command: {}", result);
             return;
         }
 

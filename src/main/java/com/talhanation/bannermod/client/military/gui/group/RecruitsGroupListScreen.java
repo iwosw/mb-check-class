@@ -25,7 +25,7 @@ import java.util.Locale;
 @OnlyIn(Dist.CLIENT)
 public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSelection {
 
-    protected static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/select_player.png");
+    protected static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/select_player.png");
     protected static final Component TITLE = Component.translatable("gui.recruits.groups.title");
     protected static final Component ADD_BUTTON = Component.translatable("gui.recruits.groups.add");
     protected static final Component EDIT_BUTTON = Component.translatable("gui.recruits.groups.edit");
@@ -116,8 +116,8 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
                 ClientManager.groups.removeIf(predicate -> selected.getUUID().equals(predicate.getUUID()));
 
                 selected.removed = true;
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageApplyNoGroup(player.getUUID(), selected.getUUID()));
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageUpdateGroup(selected));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageApplyNoGroup(player.getUUID(), selected.getUUID()));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateGroup(selected));
                 this.selected = null;
 
                 this.init();

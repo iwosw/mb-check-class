@@ -2,7 +2,7 @@ package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.workers.config.WorkersServerConfig;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.workarea.*;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import de.maxhenkel.corelib.net.Message;

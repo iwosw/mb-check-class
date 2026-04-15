@@ -1,12 +1,13 @@
 package com.talhanation.bannermod.events;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.inventory.military.*;
 import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.util.DelayedExecutor;
 import com.talhanation.bannermod.persistence.military.*;
-import com.talhanation.recruits.FactionEvent;
+import com.talhanation.bannermod.events.FactionEvent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Holder;
@@ -169,7 +170,7 @@ public class FactionEvents {
 
             addRecruitToTeam(recruits, newTeam, level);
 
-            Main.LOGGER.info("The new Team " + teamName + " has been created by " + playerName + ".");
+            BannerModMain.LOGGER.info("The new Team " + teamName + " has been created by " + playerName + ".");
 
             recruitsFactionManager.save(server.overworld());
             RecruitsFaction createdFaction = recruitsFactionManager.getFactionByStringID(teamName);
@@ -226,7 +227,7 @@ public class FactionEvents {
                 return;
             }
             else
-                Main.LOGGER.error("Can not remove " + playerName + " from Team, because " + teamName + " does not exist!");
+                BannerModMain.LOGGER.error("Can not remove " + playerName + " from Team, because " + teamName + " does not exist!");
 
             serverSideUpdateTeam(level);
         }
@@ -298,12 +299,12 @@ public class FactionEvents {
     public static void notifyFactionMembers(ServerLevel level, RecruitsFaction recruitsFaction, int id, String notification){
         List<ServerPlayer> playersInTeam = FactionEvents.recruitsFactionManager.getPlayersInTeam(recruitsFaction.getStringID(), level);
         for (ServerPlayer teamPlayer : playersInTeam) {
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> teamPlayer), new MessageToClientSetDiplomaticToast(id, recruitsFaction, notification));
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> teamPlayer), new MessageToClientSetDiplomaticToast(id, recruitsFaction, notification));
         }
     }
 
     public static void notifyPlayer(ServerLevel level, RecruitsPlayerInfo playerInfo, int id, String notification){
-        Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) level.getPlayerByUUID(playerInfo.getUUID())), new MessageToClientSetToast(id, notification));
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) level.getPlayerByUUID(playerInfo.getUUID())), new MessageToClientSetToast(id, notification));
     }
 
     public static void removeTeam(ServerLevel level, String teamName){
@@ -369,14 +370,14 @@ public class FactionEvents {
 
             serverSideUpdateTeam(level);
 
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> playerToAdd), new MessageToClientSetDiplomaticToast(8, recruitsFaction));
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> playerToAdd), new MessageToClientSetDiplomaticToast(8, recruitsFaction));
 
             notifyFactionMembers(level, recruitsFaction, 9, playerToAdd.getName().getString());
 
             recruitsFactionManager.save(server.overworld());
         }
         else
-            Main.LOGGER.error("Can not add " + playerToAdd + " to Team, because " + teamName + " does not exist!");
+            BannerModMain.LOGGER.error("Can not add " + playerToAdd + " to Team, because " + teamName + " does not exist!");
 
     }
 
@@ -428,7 +429,7 @@ public class FactionEvents {
         if(recruitsFaction != null){
             recruitsFaction.addNPCs(x);
         }
-        else Main.LOGGER.error("Could not modify recruits team: "+ teamName + ".Team does not exist.");
+        else BannerModMain.LOGGER.error("Could not modify recruits team: "+ teamName + ".Team does not exist.");
 
         recruitsFactionManager.broadcastToFactionPlayers(teamName, level);
     }
@@ -438,11 +439,11 @@ public class FactionEvents {
 
         if(recruitsFaction != null){
             if(recruitsFaction.addPlayerAsJoinRequest(player.getName().getString())){
-                Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> recruitsFactionManager.getTeamLeader(recruitsFaction, level)), new MessageToClientSetDiplomaticToast(7, recruitsFaction, player.getName().getString()));
+                BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> recruitsFactionManager.getTeamLeader(recruitsFaction, level)), new MessageToClientSetDiplomaticToast(7, recruitsFaction, player.getName().getString()));
                 recruitsFactionManager.broadcastFactionsToAll(level);
             }
         }
-        else Main.LOGGER.error("Could not add join request for "+ stringID + ".Team does not exist.");
+        else BannerModMain.LOGGER.error("Could not add join request for "+ stringID + ".Team does not exist.");
     }
 
     public static void removeOfflinePlayerFromTeam(ServerPlayer player, String nameToRemove, ServerLevel level) {
@@ -465,7 +466,7 @@ public class FactionEvents {
         addPlayerToData(level, teamName, -1, nameToRemove);
 
         recruitsFactionManager.save(server.overworld());
-        Main.LOGGER.info("Offline player " + nameToRemove + " removed from team " + teamName + " by " + player.getName().getString());
+        BannerModMain.LOGGER.info("Offline player " + nameToRemove + " removed from team " + teamName + " by " + player.getName().getString());
     }
 
     public static void tryToRemoveFromTeam(Team team, ServerPlayer serverPlayer, ServerPlayer potentialRemovePlayer, ServerLevel level, String nameToRemove, boolean menu) {
@@ -574,7 +575,7 @@ public class FactionEvents {
                     }
                     recruit.disband(oldOwner, true, true);
 
-                    Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> newOwner), new MessageToClientSetToast(0, oldOwner.getName().getString()));
+                    BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> newOwner), new MessageToClientSetToast(0, oldOwner.getName().getString()));
 
                     recruit.hire(newOwner, null, true);
                 }
@@ -704,7 +705,7 @@ public class FactionEvents {
 
                         recruitsFactionManager.addTeam(teamName, teamName, new UUID(0,0),"none", banner.serializeNBT(), colorByte, newTeam.getColor());
 
-                        Main.LOGGER.info("The new Team " + teamName + " has been created by console.");
+                        BannerModMain.LOGGER.info("The new Team " + teamName + " has been created by console.");
 
                         recruitsFactionManager.save(server.overworld());
                     }
@@ -760,7 +761,7 @@ public class FactionEvents {
 
         boolean flag = playerteam != null && level.getScoreboard().addPlayerToTeam(recruit.getStringUUID(), playerteam);
         if (!flag) {
-            Main.LOGGER.warn("Unable to add mob to team \"{}\" (that team probably doesn't exist)", teamName);
+            BannerModMain.LOGGER.warn("Unable to add mob to team \"{}\" (that team probably doesn't exist)", teamName);
         } else{
             recruit.setTarget(null);// fix "if owner was other team and now same team und was target"
             if(recruitsFaction != null) recruit.setColor(recruitsFaction.getUnitColor());
@@ -805,7 +806,7 @@ public class FactionEvents {
                 packetBuffer.writeUUID(recruit);
             });
         } else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageOpenDisbandScreen(player, recruit));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenDisbandScreen(player, recruit));
         }
     }
 
@@ -827,7 +828,7 @@ public class FactionEvents {
             });
         }
         else {
-            Main.SIMPLE_CHANNEL.sendToServer(new MessageOpenTeamEditScreen(player));
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenTeamEditScreen(player));
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.ai.military.async;
 
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;

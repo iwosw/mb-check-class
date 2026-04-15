@@ -1,7 +1,7 @@
 package com.talhanation.workers;
 
-import com.talhanation.workers.network.BuildAreaUpdateAuthoring;
-import com.talhanation.workers.network.WorkAreaAuthoringRules;
+import com.talhanation.bannermod.network.messages.civilian.BuildAreaUpdateAuthoring;
+import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

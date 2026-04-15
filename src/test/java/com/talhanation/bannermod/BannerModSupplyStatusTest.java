@@ -1,7 +1,7 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
-import com.talhanation.workers.entities.WorkerStorageRequestState;
+import com.talhanation.bannermod.entity.civilian.WorkerStorageRequestState;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

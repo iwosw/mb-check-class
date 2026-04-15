@@ -18,7 +18,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class MessengerTreatyAnswerScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/gui_big.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
 
     private static final Component TITLE        = Component.translatable("gui.recruits.messenger.treaty_title");
     private static final Component BUTTON_ACCEPT  = Component.translatable("gui.recruits.messenger.accept_treaty");
@@ -92,14 +92,14 @@ public class MessengerTreatyAnswerScreen extends RecruitsScreenBase {
         int buttonY = guiTop + 135;
         addRenderableWidget(new ExtendedButton(guiLeft + 10, buttonY, 80, 20, BUTTON_ACCEPT,
                 button -> {
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageAnswerTreaty(messenger.getUUID(), true));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAnswerTreaty(messenger.getUUID(), true));
                     onClose();
                 }
         ));
 
         addRenderableWidget(new ExtendedButton(guiLeft + 105, buttonY, 80, 20, BUTTON_DECLINE,
                 button -> {
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageAnswerTreaty(messenger.getUUID(), false));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAnswerTreaty(messenger.getUUID(), false));
                     onClose();
                 }
         ));

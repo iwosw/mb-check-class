@@ -14,11 +14,11 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 @OnlyIn(Dist.CLIENT)
 public class RecruitsToastManager {
-    private static final ResourceLocation LETTER_IMAGE = new ResourceLocation(Main.MOD_ID, "textures/gui/image/letter.png");
-    private static final ResourceLocation ALLY_IMAGE = new ResourceLocation(Main.MOD_ID, "textures/gui/image/ally.png");
-    private static final ResourceLocation ENEMY_IMAGE = new ResourceLocation(Main.MOD_ID, "textures/gui/image/enemy.png");
-    private static final ResourceLocation NEUTRAL_IMAGE = new ResourceLocation(Main.MOD_ID, "textures/gui/image/neutral.png");
-    private static final ResourceLocation CROWN_IMAGE = new ResourceLocation(Main.MOD_ID, "textures/gui/image/leader_crown.png");
+    private static final ResourceLocation LETTER_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/letter.png");
+    private static final ResourceLocation ALLY_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/ally.png");
+    private static final ResourceLocation ENEMY_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/enemy.png");
+    private static final ResourceLocation NEUTRAL_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/neutral.png");
+    private static final ResourceLocation CROWN_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/leader_crown.png");
     public static Images savedTeamForPlayer;//dirty fix calling twice bug
     public static Images savedForPlayer;//dirty fix for calling twice bug
     public static void setTeamToastForPlayer(Images id, @Nullable Component title, @Nullable Component text, RecruitsFaction team){

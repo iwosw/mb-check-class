@@ -52,7 +52,7 @@ public class MessageMovement implements Message<MessageMovement> {
 
     private static List<AbstractRecruitEntity> resolveTargets(Player sender, UUID playerUuid, UUID group) {
         if (playerUuid == null || !sender.getUUID().equals(playerUuid)) {
-            Main.LOGGER.debug("Ignored movement command with mismatched sender UUID");
+            BannerModMain.LOGGER.debug("Ignored movement command with mismatched sender UUID");
             return List.of();
         }
 
@@ -75,7 +75,7 @@ public class MessageMovement implements Message<MessageMovement> {
         );
 
         if (!selection.isSuccess()) {
-            Main.LOGGER.debug("Ignored movement command: {}", selection.failure());
+            BannerModMain.LOGGER.debug("Ignored movement command: {}", selection.failure());
             return List.of();
         }
 

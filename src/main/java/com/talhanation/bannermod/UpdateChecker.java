@@ -1,4 +1,5 @@
 package com.talhanation.bannermod;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
@@ -30,12 +31,12 @@ public class UpdateChecker {
 						player.sendSystemMessage(link);
                     }
                     else{
-                        Main.LOGGER.warn("Villager recruits is outdated!");
+                        BannerModMain.LOGGER.warn("Villager recruits is outdated!");
                     }
                 }
 
                 case FAILED -> {
-                    Main.LOGGER.error("Villager recruits could not check for updates!");
+                    BannerModMain.LOGGER.error("Villager recruits could not check for updates!");
                 }
             }
         }
@@ -48,12 +49,12 @@ public class UpdateChecker {
 
             switch (status){
                 case OUTDATED -> {
-                    Main.LOGGER.warn("A new version of Villager Recruits is available!");
-                    Main.LOGGER.warn("Download the new update here: https://modrinth.com/mod/villager-recruits/versions");
+                    BannerModMain.LOGGER.warn("A new version of Villager Recruits is available!");
+                    BannerModMain.LOGGER.warn("Download the new update here: https://modrinth.com/mod/villager-recruits/versions");
                 }
 
                 case FAILED -> {
-                    Main.LOGGER.error("Villager recruits could not check for updates!");
+                    BannerModMain.LOGGER.error("Villager recruits could not check for updates!");
                 }
             }
         }

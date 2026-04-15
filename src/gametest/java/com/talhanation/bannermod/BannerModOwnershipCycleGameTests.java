@@ -1,11 +1,11 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.RecruitEvents;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.events.RecruitEvents;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
-import com.talhanation.workers.entities.FarmerEntity;
-import com.talhanation.workers.entities.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
@@ -29,14 +29,14 @@ public class BannerModOwnershipCycleGameTests {
         Player player = helper.makeMockPlayer();
         AbstractRecruitEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
-                com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(),
+                com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
                 RecruitsBattleGameTestSupport.WEST_FRONTLINE_POS,
                 "Integrated Recruit",
                 player.getUUID()
         );
         FarmerEntity worker = BannerModGameTestSupport.spawnEntity(
                 helper,
-                com.talhanation.workers.init.ModEntityTypes.FARMER.get(),
+                com.talhanation.bannermod.registry.civilian.ModEntityTypes.FARMER.get(),
                 RecruitsBattleGameTestSupport.WEST_FLANK_POS
         );
         CropArea cropArea = BannerModGameTestSupport.spawnOwnedCropArea(

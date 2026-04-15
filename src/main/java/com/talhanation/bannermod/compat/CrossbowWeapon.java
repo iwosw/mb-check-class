@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.compat;
 
-import com.talhanation.recruits.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.IRangedRecruit;
 import net.minecraft.sounds.SoundEvent;

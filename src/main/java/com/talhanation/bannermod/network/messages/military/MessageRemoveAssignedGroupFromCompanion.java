@@ -57,7 +57,7 @@ public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageR
             companionEntity.army = null;
             RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
 
-            Main.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
         });
     }
 

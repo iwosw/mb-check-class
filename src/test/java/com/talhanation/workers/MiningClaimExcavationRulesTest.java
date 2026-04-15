@@ -1,7 +1,7 @@
 package com.talhanation.workers;
 
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import com.talhanation.workers.entities.ai.MiningClaimExcavationRules;
+import com.talhanation.bannermod.ai.civilian.MiningClaimExcavationRules;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

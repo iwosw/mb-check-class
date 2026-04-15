@@ -78,7 +78,7 @@ public class MessagePatrolLeaderSetRoute implements Message<MessagePatrolLeaderS
 
         ValidationResult result = validateSelection(selection, routeId, waypoints, waitSeconds);
         if (result != ValidationResult.OK) {
-            Main.LOGGER.debug("Ignored patrol route command: {}", result);
+            BannerModMain.LOGGER.debug("Ignored patrol route command: {}", result);
             return;
         }
 

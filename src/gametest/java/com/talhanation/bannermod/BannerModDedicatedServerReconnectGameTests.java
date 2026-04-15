@@ -1,12 +1,12 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.entities.AbstractRecruitEntity;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.recruits.gametest.support.RecruitsCommandGameTestSupport;
-import com.talhanation.recruits.network.MessageMovement;
-import com.talhanation.workers.entities.FarmerEntity;
-import com.talhanation.workers.entities.workarea.CropArea;
+import com.talhanation.bannermod.network.messages.military.MessageMovement;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -30,7 +30,7 @@ public class BannerModDedicatedServerReconnectGameTests {
         ServerLevel level = helper.getLevel();
         AbstractRecruitEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
-                com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(),
+                com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
                 RecruitsBattleGameTestSupport.WEST_FRONTLINE_POS,
                 "Reconnect Recruit",
                 RECONNECTED_OWNER_UUID
@@ -88,7 +88,7 @@ public class BannerModDedicatedServerReconnectGameTests {
         ServerLevel level = helper.getLevel();
         AbstractRecruitEntity originalRecruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
-                com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(),
+                com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
                 RecruitsBattleGameTestSupport.WEST_FRONTLINE_POS,
                 "Roundtrip Recruit",
                 RECONNECTED_OWNER_UUID
@@ -127,19 +127,19 @@ public class BannerModDedicatedServerReconnectGameTests {
 
             AbstractRecruitEntity loadedRecruit = BannerModDedicatedServerGameTestSupport.loadEntity(
                     helper,
-                    com.talhanation.recruits.init.ModEntityTypes.RECRUIT.get(),
+                    com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
                     RecruitsBattleGameTestSupport.EAST_FRONTLINE_POS,
                     recruitData
             );
             FarmerEntity loadedWorker = BannerModDedicatedServerGameTestSupport.loadEntity(
                     helper,
-                    com.talhanation.workers.init.ModEntityTypes.FARMER.get(),
+                    com.talhanation.bannermod.registry.civilian.ModEntityTypes.FARMER.get(),
                     RecruitsBattleGameTestSupport.EAST_FLANK_POS,
                     workerData
             );
             CropArea loadedCropArea = BannerModDedicatedServerGameTestSupport.loadEntity(
                     helper,
-                    com.talhanation.workers.init.ModEntityTypes.CROPAREA.get(),
+                    com.talhanation.bannermod.registry.civilian.ModEntityTypes.CROPAREA.get(),
                     RecruitsBattleGameTestSupport.EAST_RANGED_LEFT_POS,
                     cropAreaData
             );

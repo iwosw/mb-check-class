@@ -25,7 +25,7 @@ import static com.talhanation.bannermod.client.military.ClientManager.ownFaction
 @OnlyIn(Dist.CLIENT)
 public class DiplomacyTeamListScreen extends ListScreenBase {
 
-    protected static final ResourceLocation TEXTURE = new ResourceLocation(Main.MOD_ID, "textures/gui/select_with_filter.png");
+    protected static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/select_with_filter.png");
     protected static final Component TITLE = Component.translatable("gui.recruits.diplomacy.teams_list");
     protected static final Component SET_STANCE = Component.translatable("gui.recruits.button.setRelation");
     protected static final Component SHOW_STANCE = Component.translatable("gui.recruits.button.showRelation");

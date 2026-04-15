@@ -110,7 +110,7 @@ public class WorldMapContextMenu {
                     if (screen.selectedClaim.containsChunk(screen.selectedChunk)) {
                         screen.selectedClaim.removeChunk(screen.selectedChunk);
                         screen.selectedChunk = null;
-                        Main.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
                     }
                 }
         );
@@ -127,7 +127,7 @@ public class WorldMapContextMenu {
                     if (screen.selectedClaim.containsChunk(screen.selectedChunk)) {
                         screen.selectedClaim.removeChunk(screen.selectedChunk);
                         screen.selectedChunk = null;
-                        Main.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
                     }
                 },
                 "admin"
@@ -137,7 +137,7 @@ public class WorldMapContextMenu {
                 () -> this.worldMapScreen.isPlayerAdminAndCreative() && this.worldMapScreen.selectedClaim != null,
                 (screen) -> {
                     screen.selectedClaim.isRemoved = true;
-                    Main.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
                     screen.selectedClaim = null;
                 },
                 "admin"
@@ -145,7 +145,7 @@ public class WorldMapContextMenu {
 
         addEntry(TEXT_TELEPORT_ADMIN.getString(),
                 worldMapScreen::isPlayerAdminAndCreative,
-                (screen) -> Main.SIMPLE_CHANNEL.sendToServer(new MessageTeleportPlayer(screen.getClickedBlockPos())),
+                (screen) -> BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageTeleportPlayer(screen.getClickedBlockPos())),
                 "admin"
         );
     }

@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.client.civilian.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.bannermod.persistence.civilian.StructureTemplateLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

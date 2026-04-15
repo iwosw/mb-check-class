@@ -97,9 +97,9 @@ public class DiplomacyTeamEntry extends ListScreenEntryBase<DiplomacyTeamEntry> 
         ResourceLocation location;
 
         switch (this.status){
-            default -> location = new ResourceLocation(Main.MOD_ID, "textures/gui/image/neutral.png");
-            case ALLY ->  location = new ResourceLocation(Main.MOD_ID, "textures/gui/image/ally.png");
-            case ENEMY ->  location = new ResourceLocation(Main.MOD_ID, "textures/gui/image/enemy.png");
+            default -> location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/neutral.png");
+            case ALLY ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/ally.png");
+            case ENEMY ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/enemy.png");
         }
         return location;
     }

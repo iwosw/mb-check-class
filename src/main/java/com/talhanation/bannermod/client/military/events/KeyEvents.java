@@ -52,7 +52,7 @@ public class KeyEvents {
 
             Entity target = ClientEvent.getEntityByLooking();
             if(target instanceof AbstractRecruitEntity recruitEntity){
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageWriteSpawnEgg(recruitEntity.getUUID()));
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageWriteSpawnEgg(recruitEntity.getUUID()));
                 event.setCanceled(true);
             }
         }

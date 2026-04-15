@@ -1,8 +1,8 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.recruits.Main;
-import com.talhanation.recruits.network.RecruitsNetworkRegistrar;
-import com.talhanation.workers.WorkersRuntime;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.network.messages.military.RecruitsNetworkRegistrar;
+import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.workers.WorkersSubsystem;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
