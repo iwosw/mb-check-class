@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.civilian.*;
-import com.talhanation.workers.init.ModEntityTypes;
+import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;

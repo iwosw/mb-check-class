@@ -5,7 +5,7 @@ import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
 import com.talhanation.bannermod.client.civilian.gui.WorkerCommandScreen;
-import com.talhanation.workers.world.StructureManager;
+import com.talhanation.bannermod.persistence.civilian.StructureManager;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;

@@ -5,7 +5,7 @@ import com.talhanation.workers.WorkersMain;
 import com.talhanation.bannermod.client.civilian.render.FishingBobberRenderer;
 import com.talhanation.bannermod.client.civilian.render.WorkerAreaRenderer;
 import com.talhanation.bannermod.client.civilian.render.WorkerVillagerRenderer;
-import com.talhanation.workers.init.ModEntityTypes;
+import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.client.civilian.render.WorkerHumanRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;

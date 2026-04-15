@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.entity.civilian;
 
-import com.talhanation.workers.init.ModEntityTypes;
+import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;

@@ -370,3 +370,64 @@ Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{a
 **Flagged for 21-09 (carried from Wave 5):**
 - Old `mixins.recruits.json` Gradle config entry still dangling.
 - `recruits/init/ModLifecycleRegistrar.java` stub — prune when clone source set is retired.
+
+### Wave 7 — civilian subsystem migration (workers entities/AI/workarea/client/world/inventory/items/settlement) (authored by 21-07)
+
+**What moved to outer repo `src/main/java/com/talhanation/bannermod/`:**
+
+- `bannermod.entity.civilian.**` — 14 top-level entity files + 11 workarea files (25 total). Top-level: AbstractWorkerEntity, AnimalFarmerEntity, BuilderEntity, FarmerEntity, FishermanEntity, FishingBobberEntity, LumberjackEntity, MerchantAccessControl, MerchantEntity, MerchantTradeRules, MinerEntity, WorkerBindingResume, WorkerControlStatus, WorkerStorageRequestState. Workarea: AbstractWorkAreaEntity, AnimalPenArea, BuildArea, CropArea, FishingArea, LumberArea, MarketArea, MiningArea, MiningPatternContract, MiningPatternSettings, StorageArea.
+- `bannermod.ai.civilian.**` — 22 files from `workers/entities/ai/`. Top-level: AbstractChestGoal, AnimalFarmerLoopProgress, AnimalFarmerWorkGoal, BuilderBuildProgress, BuilderWorkGoal, DebugSyncWorkerPathNavigation, DepositItemsToStorage, FarmerAreaSelectionTiming, FarmerLoopProgress, FarmerPlantingPreparation, FarmerWorkGoal, FishermanWorkGoal, GetNeededItemsFromStorage, LumberjackWorkGoal, MerchantWorkGoal, MinerWorkGoal, MiningClaimExcavationRules, MiningPatternPlanner, MiningPositionSelection, RecruitsPathNodeEvaluator, StorageDepositRules. Subpackage `animals/`: WorkerTemptGoal.
+- `bannermod.client.civilian.**` — 24 files from `workers/client/`. Top-level: WorkersClientManager. Subpackages: `events/` (ClientEvent, ScreenEvents), `gui/` (AnimalPenAreaScreen, BuildAreaScreen, CropAreaScreen, FishingAreaScreen, LumberAreaScreen, MarketAreaScreen, MerchantAddEditTradeScreen, MerchantTradeScreen, MiningAreaScreen, StorageAreaScreen, WorkAreaScreen, WorkerCommandScreen), `gui/structureRenderer/` (StructurePreviewWidget), `gui/widgets/` (DisplayTextItemScrollDropDownMenu, ItemScrollDropDownMenu, ScrollDropDownMenuWithFolders), `render/` (FishingBobberRenderer, IRenderWorkArea, WorkerAreaRenderer, WorkerHumanRenderer, WorkerVillagerRenderer).
+- `bannermod.persistence.civilian.**` — 8 files from `workers/world/`: BuildBlock, BuildBlockParse, NeededItem, ScannedBlock, StructureManager, StructureTemplateLoader, Tree, WorkersMerchantTrade.
+- `bannermod.inventory.civilian.**` — 2 files from `workers/inventory/`: MerchantAddEditTradeContainer, MerchantTradeContainer.
+- `bannermod.items.civilian.**` — 1 file from `workers/items/`: WorkersSpawnEgg.
+- `bannermod.settlement.civilian.**` — 2 files from `workers/settlement/`: WorkerSettlementSpawnRules, WorkerSettlementSpawner. These land as a new sibling subpackage under the preserved `bannermod.settlement.*` (see two-subpackage structure note below).
+
+**Two-subpackage structure under `bannermod.settlement`:**
+- `bannermod.settlement.*` — preserved from prior phases: BannerModSettlementBinding (and other existing settlement seam classes). Do NOT modify.
+- `bannermod.settlement.civilian.*` — new: WorkerSettlementSpawnRules (pure utility, no state), WorkerSettlementSpawner (spawn logic). These are siblings, not replacements.
+
+**Mixin config fold:**
+- `workers/src/main/resources/mixins.workers.json` had empty `mixins`, `client`, and `server` arrays — no mixin classes to merge.
+- Deleted `mixins.workers.json` from workers clone (commit `070d6d1`).
+- Removed `add sourceSets.main, 'mixins.workers.refmap.json'` and `config 'mixins.workers.json'` entries from outer `build.gradle`.
+- `mixins.bannermod.json` unchanged — all existing bannermod mixin classes preserved.
+
+**What was deleted from workers clone:**
+- `workers/entities/**` and `workers/client/**` — git-removed in workers clone commit `07dfaaf` (71 files).
+- `workers/world/**`, `workers/inventory/**`, `workers/items/**`, `workers/settlement/**`, `workers/src/main/resources/mixins.workers.json` — git-removed in workers clone commit `070d6d1` (14 files).
+
+**sed invocations used (compound pass):**
+1. Package declarations: per-directory sed for each target package root.
+2. Cross-ref rewrites applied to all new subtrees + full outer bannermod tree:
+   - `workers.entities.ai.animals.` → `bannermod.ai.civilian.animals.`
+   - `workers.entities.ai.` → `bannermod.ai.civilian.`
+   - `workers.entities.workarea.` → `bannermod.entity.civilian.workarea.`
+   - `workers.entities.` → `bannermod.entity.civilian.`
+   - `workers.client.*` → `bannermod.client.civilian.*`
+   - `workers.world.` → `bannermod.persistence.civilian.`
+   - `workers.inventory.` → `bannermod.inventory.civilian.`
+   - `workers.items.` → `bannermod.items.civilian.`
+   - `workers.settlement.` → `bannermod.settlement.civilian.`
+   - `workers.init.` → `bannermod.registry.civilian.`
+   - `recruits.entities.ai.` → `bannermod.ai.military.`
+   - `recruits.entities.` → `bannermod.entity.military.`
+   - `recruits.client.` → `bannermod.client.military.`
+   - `recruits.world.` → `bannermod.persistence.military.`
+   - Top-level recruits event imports → `bannermod.events.*`
+
+**Remaining workers.* references (expected per D-22):**
+- `workers.network.*` — network messages in entity/GUI files, deferred to Wave 8.
+- `workers.config.WorkersServerConfig` — config deferred (Wave 9 scope).
+- `workers.WorkersRuntime.bindChannel()` — in bootstrap, deferred to Wave 8.
+
+**Remaining workers clone working-tree inventory after Wave 7:**
+- `workers/src/main/java/com/talhanation/workers/WorkersMain.java` — `@Deprecated` shim.
+- `workers/src/main/java/com/talhanation/workers/WorkersRuntime.java` — runtime binding helper.
+- `workers/src/main/java/com/talhanation/workers/WorkersSubsystem.java` — subsystem bootstrap.
+- `workers/src/main/java/com/talhanation/workers/MergedRuntimeCleanupPolicy.java` — cleanup policy.
+- `workers/src/main/java/com/talhanation/workers/init/WorkersLifecycleRegistrar.java` — lifecycle stub.
+- `workers/src/main/java/com/talhanation/workers/network/**` — 18 network files (Wave 8 scope).
+
+**Entity count vs plan threshold:**
+- Plan specified `>= 30` for `entity/civilian`. Actual: 25 (14 top-level + 11 workarea). All available workers entity files were migrated; plan threshold was an overestimate. No files omitted.

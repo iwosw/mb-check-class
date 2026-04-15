@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.config;
 
-import com.talhanation.workers.settlement.WorkerSettlementSpawnRules;
+import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.ArrayList;

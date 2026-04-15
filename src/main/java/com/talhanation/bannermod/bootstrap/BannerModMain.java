@@ -124,7 +124,7 @@ public class BannerModMain {
         event.enqueueWork(com.talhanation.bannermod.registry.military.ModScreens::registerMenus);
         // Civilian menus
         event.enqueueWork(com.talhanation.bannermod.registry.civilian.ModMenuTypes::registerMenus);
-        event.enqueueWork(com.talhanation.workers.world.StructureManager::copyDefaultStructuresIfMissing);
+        event.enqueueWork(com.talhanation.bannermod.persistence.civilian.StructureManager::copyDefaultStructuresIfMissing);
         // Worker command screen
         com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
                 new com.talhanation.bannermod.client.civilian.gui.WorkerCommandScreen());
