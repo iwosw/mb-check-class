@@ -216,3 +216,30 @@ Plan 21-02 introduced a new sibling subtree `com.talhanation.bannermod.shared.{a
 **Out of scope / deferred:** Three classes from the original 21-02 plan -- `BannerModLogisticsRoute`, `BannerModLogisticsService`, `BannerModCourierTask` -- were NOT moved in this plan because no implementation exists in `bannermod.logistics.*` today and no callers reference those paths. They depend on the worker civilian seam (`AbstractWorkerEntity`) which lands in wave 21-04. They will be created in `bannermod.shared.logistics` directly by the plan that introduces their first caller.
 
 **Forwarder lifespan:** The `@Deprecated` legacy forwarders are short-lived. Per the plan must-haves they exist only for staged migration safety -- once Phase 21 closes and any external/IDE references have rotated, a follow-up plan deletes the legacy peers. Phase 21 deliberately defers that deletion: phase 21 is a structural move, not a semantic merge (D-05). Reconciliation is owned by a separate, post-Phase-21 cleanup phase.
+
+### Wave 3 — composition-root migration (authored by 21-03)
+
+**What moved to outer repo `src/main/java/com/talhanation/bannermod/`:**
+
+- `bannermod.bootstrap.BannerModMain` — unified `@Mod("bannermod")` entrypoint replacing both `recruits.Main` and `workers.WorkersMain`; wires lifecycle, DeferredRegisters, channel creation, and compat-flag detection.
+- `bannermod.bootstrap.BannerModLifecycle` — extracted lifecycle event handlers.
+- `bannermod.bootstrap.WorkersRuntime` — outer-repo canonical copy of workers runtime helper (mod id, legacy migration, channel binding).
+- `bannermod.bootstrap.WorkersSubsystem` — outer-repo canonical copy of workers lifecycle/network subsystem glue.
+- `bannermod.bootstrap.MergedRuntimeCleanupPolicy` — legacy update-checker disable policy.
+- `bannermod.network.BannerModNetworkBootstrap` — single shared `SimpleChannel`; recruits at `[0..103]`, workers at `[104..123]` (offset = `WORKER_PACKET_OFFSET = 104`).
+- `bannermod.registry.military.{ModBlocks,ModEntityTypes,ModItems,ModPois,ModProfessions,ModScreens,ModShortcuts,ModSounds}` — copied from `recruits/init/`, package and `Main.MOD_ID` references rewritten to `BannerModMain.MOD_ID`.
+- `bannermod.registry.civilian.{ModBlocks,ModEntityTypes,ModItems,ModMenuTypes,ModPois,ModProfessions,ModShortcuts,ModSounds}` — copied from `workers/init/`, package and `WorkersMain.MOD_ID` references rewritten to `BannerModMain.MOD_ID`.
+
+**What stayed as forwarders:**
+
+- `recruits.Main` — `@Deprecated` forwarder; no `@Mod`, forwards static fields from `BannerModMain`.
+- `workers.WorkersMain` — `@Deprecated` forwarder; `@Mod` removed, forwards `MOD_ID`/`LOGGER`/`SIMPLE_CHANNEL` from `BannerModMain`.
+
+**What was deleted from clones:**
+
+- `recruits/init/Mod{Blocks,EntityTypes,Items,Pois,Professions,Screens,Shortcuts,Sounds}.java` — git-removed in recruits clone commit `d45d0955`.
+- `workers/init/Mod{Blocks,EntityTypes,Items,MenuTypes,Pois,Professions,Shortcuts,Sounds}.java` — git-removed in workers clone commit `2f806fd`.
+
+**sed invocations used (inner bannermod tree):**
+- `com.talhanation.recruits.init.` → `com.talhanation.bannermod.registry.military.` — no surviving references found in outer bannermod tree (registry holders reference the new package directly).
+- `com.talhanation.workers.init.` → `com.talhanation.bannermod.registry.civilian.` — fixed in `bannermod.bootstrap.WorkersSubsystem` (static imports retargeted).

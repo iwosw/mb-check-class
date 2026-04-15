@@ -5,7 +5,6 @@ import com.talhanation.workers.VillagerEvents;
 import com.talhanation.workers.CommandEvents;
 import com.talhanation.workers.client.events.ScreenEvents;
 import com.talhanation.workers.client.gui.WorkerCommandScreen;
-import com.talhanation.workers.init.ModMenuTypes;
 import com.talhanation.workers.world.StructureManager;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
@@ -16,13 +15,13 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-import static com.talhanation.workers.init.ModItems.ANIMAL_FARMER_SPAWN_EGG;
-import static com.talhanation.workers.init.ModItems.BUILDER_SPAWN_EGG;
-import static com.talhanation.workers.init.ModItems.FARMER_SPAWN_EGG;
-import static com.talhanation.workers.init.ModItems.FISHERMAN_SPAWN_EGG;
-import static com.talhanation.workers.init.ModItems.LUMBERJACK_SPAWN_EGG;
-import static com.talhanation.workers.init.ModItems.MERCHANT_SPAWN_EGG;
-import static com.talhanation.workers.init.ModItems.MINER_SPAWN_EGG;
+import static com.talhanation.bannermod.registry.civilian.ModItems.ANIMAL_FARMER_SPAWN_EGG;
+import static com.talhanation.bannermod.registry.civilian.ModItems.BUILDER_SPAWN_EGG;
+import static com.talhanation.bannermod.registry.civilian.ModItems.FARMER_SPAWN_EGG;
+import static com.talhanation.bannermod.registry.civilian.ModItems.FISHERMAN_SPAWN_EGG;
+import static com.talhanation.bannermod.registry.civilian.ModItems.LUMBERJACK_SPAWN_EGG;
+import static com.talhanation.bannermod.registry.civilian.ModItems.MERCHANT_SPAWN_EGG;
+import static com.talhanation.bannermod.registry.civilian.ModItems.MINER_SPAWN_EGG;
 
 /**
  * Canonical bannermod.bootstrap copy of the Workers subsystem lifecycle and network glue.
@@ -34,14 +33,11 @@ public class WorkersSubsystem {
     }
 
     public void registerCommon(IEventBus modEventBus) {
-        // Register remaining workers deferred registers not handled by BannerModMain
-        // (ModBlocks, ModEntityTypes, etc. are registered directly in BannerModMain)
         MinecraftForge.EVENT_BUS.register(new VillagerEvents());
         MinecraftForge.EVENT_BUS.register(new CommandEvents());
     }
 
     public void registerRuntimeListeners() {
-        // Additional forge-bus listener registration if needed beyond BannerModMain
     }
 
     public void registerNetwork(SimpleChannel channel) {
@@ -50,14 +46,13 @@ public class WorkersSubsystem {
 
     @OnlyIn(Dist.CLIENT)
     public void clientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(ModMenuTypes::registerMenus);
+        event.enqueueWork(com.talhanation.bannermod.registry.civilian.ModMenuTypes::registerMenus);
         event.enqueueWork(StructureManager::copyDefaultStructuresIfMissing);
         CommandCategoryManager.register(new WorkerCommandScreen());
         MinecraftForge.EVENT_BUS.register(new ScreenEvents());
     }
 
     public void registerClientRuntimeListeners() {
-        // Client-side event listeners beyond standard client setup
     }
 
     public void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {
