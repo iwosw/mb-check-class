@@ -767,6 +767,20 @@ public class FactionEvents {
         }
     }
 
+    public static void addRecruitToTeam(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, Team team, ServerLevel level){
+        String teamName = team.getName();
+        PlayerTeam playerteam = level.getScoreboard().getPlayerTeam(teamName);
+        RecruitsFaction recruitsFaction = recruitsFactionManager.getFactionByStringID(teamName);
+
+        boolean flag = playerteam != null && level.getScoreboard().addPlayerToTeam(recruit.getStringUUID(), playerteam);
+        if (!flag) {
+            Main.LOGGER.warn("Unable to add mob to team \"{}\" (that team probably doesn't exist)", teamName);
+        } else{
+            recruit.setTarget(null);
+            if(recruitsFaction != null) recruit.setColor(recruitsFaction.getUnitColor());
+        }
+    }
+
     public static void removeRecruitFromTeam(String teamName, ServerPlayer player, ServerLevel level){
         List<AbstractRecruitEntity> recruits = getRecruitsOfPlayer(player.getUUID(), level);
         Team team = level.getScoreboard().getPlayerTeam(teamName);
@@ -780,6 +794,17 @@ public class FactionEvents {
         }
     }
     public static void removeRecruitFromTeam(AbstractRecruitEntity recruit, Team team, ServerLevel level){
+        if(recruit == null || team == null) return;
+
+        Team recruitsFaction = recruit.getTeam();
+
+        if(recruitsFaction != null && recruitsFaction.equals(team)){
+            PlayerTeam recruitTeam = level.getScoreboard().getPlayerTeam(team.getName());
+            if(recruitTeam != null) level.getScoreboard().removePlayerFromTeam(recruit.getStringUUID(), recruitTeam);
+        }
+    }
+
+    public static void removeRecruitFromTeam(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, Team team, ServerLevel level){
         if(recruit == null || team == null) return;
 
         Team recruitsFaction = recruit.getTeam();

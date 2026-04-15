@@ -16,7 +16,25 @@ public abstract class AttackUtil {
         }
     }
 
+    public static void checkAndPerformAttack(double distanceSqrToTarget, double reach, com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, LivingEntity target){
+        if(distanceSqrToTarget <= reach){
+            performAttack(recruit, target);
+        }
+    }
+
     public static void performAttack(AbstractRecruitEntity recruit, LivingEntity target) {
+        if(recruit.attackCooldown == 0 && !recruit.swinging && recruit.getLookControl().isLookingAtTarget()){
+            if(canPerformHorseAttack(recruit, target)){
+                if(target.getVehicle() != null) recruit.doHurtTarget(target.getVehicle());
+            }
+            else recruit.doHurtTarget(target);
+
+            recruit.swing(InteractionHand.MAIN_HAND);
+            recruit.attackCooldown = getAttackCooldown(recruit);
+        }
+    }
+
+    public static void performAttack(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, LivingEntity target) {
         if(recruit.attackCooldown == 0 && !recruit.swinging && recruit.getLookControl().isLookingAtTarget()){
             if(canPerformHorseAttack(recruit, target)){
                 if(target.getVehicle() != null) recruit.doHurtTarget(target.getVehicle());
@@ -40,7 +58,27 @@ public abstract class AttackUtil {
             return false;
     }
 
+    public static boolean canPerformHorseAttack(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, LivingEntity target) {
+        Random random = new Random();
+        if(target.getVehicle() instanceof Animal){
+            int level = recruit.getXpLevel();
+            int chance = Math.min(level*2, 100);
+
+            return random.nextInt(0, 100) <= chance;
+        }
+        else
+            return false;
+    }
+
     public static int getAttackCooldown(AbstractRecruitEntity recruit) {
+        double attackSpeed = recruit.getAttributeValue(Attributes.ATTACK_SPEED);
+
+        int base = (int) Math.round(20/attackSpeed);
+
+        return base + 7;
+    }
+
+    public static int getAttackCooldown(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit) {
         double attackSpeed = recruit.getAttributeValue(Attributes.ATTACK_SPEED);
 
         int base = (int) Math.round(20/attackSpeed);

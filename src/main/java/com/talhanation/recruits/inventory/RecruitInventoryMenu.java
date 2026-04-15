@@ -22,6 +22,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class RecruitInventoryMenu extends ContainerBase {
     private final Container recruitInventory;
     private final AbstractRecruitEntity recruit;
+    private final com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity bannerlordRecruit;
     private static final ResourceLocation[] TEXTURE_EMPTY_SLOTS = new ResourceLocation[]{
             InventoryMenu.EMPTY_ARMOR_SLOT_BOOTS,
             InventoryMenu.EMPTY_ARMOR_SLOT_LEGGINGS,
@@ -40,6 +41,20 @@ public class RecruitInventoryMenu extends ContainerBase {
     public RecruitInventoryMenu(int id, AbstractRecruitEntity recruit, Inventory playerInventory) {
         super(ModScreens.RECRUIT_CONTAINER_TYPE.get(), id, playerInventory, recruit.getInventory());
         this.recruit = recruit;
+        this.bannerlordRecruit = null;
+        this.recruitInventory = recruit.getInventory();
+
+        addPlayerInventorySlots();
+
+        addRecruitHandSlots();
+        addRecruitEquipmentSlots();
+        addRecruitInventorySlots();
+    }
+
+    public RecruitInventoryMenu(int id, com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, Inventory playerInventory) {
+        super(ModScreens.RECRUIT_CONTAINER_TYPE.get(), id, playerInventory, recruit.getInventory());
+        this.recruit = null;
+        this.bannerlordRecruit = recruit;
         this.recruitInventory = recruit.getInventory();
 
         addPlayerInventorySlots();
@@ -51,6 +66,53 @@ public class RecruitInventoryMenu extends ContainerBase {
 
     public AbstractRecruitEntity getRecruit() {
         return recruit;
+    }
+
+    public com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity getBannerlordRecruit() {
+        return bannerlordRecruit;
+    }
+
+    private Container recruitContainer() {
+        return recruit != null ? recruit.inventory : bannerlordRecruit.inventory;
+    }
+
+    private boolean recruitIsUsingItem() {
+        return recruit != null ? recruit.isUsingItem() : bannerlordRecruit.isUsingItem();
+    }
+
+    private boolean recruitCanHoldItem(ItemStack stack) {
+        return recruit != null ? recruit.canHoldItem(stack) : bannerlordRecruit.canHoldItem(stack);
+    }
+
+    private void setRecruitItemSlot(EquipmentSlot slot, ItemStack stack) {
+        if (recruit != null) {
+            recruit.setItemSlot(slot, stack);
+        }
+        else {
+            bannerlordRecruit.setItemSlot(slot, stack);
+        }
+    }
+
+    private void onRecruitItemStackAdded(ItemStack stack) {
+        if (recruit != null) {
+            recruit.onItemStackAdded(stack);
+        }
+        else {
+            bannerlordRecruit.onItemStackAdded(stack);
+        }
+    }
+
+    private void onRecruitInventoryChanged() {
+        if (recruit != null) {
+            recruit.onInventoryChanged();
+        }
+        else {
+            bannerlordRecruit.onInventoryChanged();
+        }
+    }
+
+    private int inventoryColumns() {
+        return recruit != null ? recruit.getInventoryColumns() : bannerlordRecruit.getInventoryColumns();
     }
 
     @Override
@@ -68,28 +130,28 @@ public class RecruitInventoryMenu extends ContainerBase {
     //6+ -> inventory
 
     public void addRecruitHandSlots() {
-        this.addSlot(new Slot(recruit.inventory, 4,44,90) {
+        this.addSlot(new Slot(recruitContainer(), 4,44,90) {
             @Override
             public boolean mayPlace(ItemStack stack){
-                return !recruit.isUsingItem() && stack.getItem() instanceof ShieldItem;
+                return !recruitIsUsingItem() && stack.getItem() instanceof ShieldItem;
             }
 
             @Override
             public boolean mayPickup(Player player) {
-                return !recruit.isUsingItem();
+                return !recruitIsUsingItem();
             }
 
             @Override
             public void set(ItemStack stack){
                 super.set(stack);
-                recruit.setItemSlot(EquipmentSlot.OFFHAND, stack);
-                recruit.onItemStackAdded(stack);
+                setRecruitItemSlot(EquipmentSlot.OFFHAND, stack);
+                onRecruitItemStackAdded(stack);
             }
 
             @Override
             public void setChanged() {
                 super.setChanged();
-                recruit.onInventoryChanged();
+                onRecruitInventoryChanged();
             }
 
             @Override
@@ -98,50 +160,50 @@ public class RecruitInventoryMenu extends ContainerBase {
             }
         });
 
-        this.addSlot(new Slot(recruit.inventory, 5,26,90) {
+        this.addSlot(new Slot(recruitContainer(), 5,26,90) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
-                return recruit.canHoldItem(itemStack);
+                return recruitCanHoldItem(itemStack);
             }
 
             @Override
             public void set(ItemStack stack){
                 super.set(stack);
-                recruit.setItemSlot(EquipmentSlot.MAINHAND, stack);
-                recruit.onItemStackAdded(stack);
+                setRecruitItemSlot(EquipmentSlot.MAINHAND, stack);
+                onRecruitItemStackAdded(stack);
             }
 
             @Override
             public void setChanged() {
                 super.setChanged();
-                recruit.onInventoryChanged();
+                onRecruitInventoryChanged();
             }
         });
     }
     public void addRecruitEquipmentSlots() {
         for (int slotIndex = 0; slotIndex < 4; ++slotIndex) {
             final EquipmentSlot equipmentslottype = SLOT_IDS[slotIndex];
-            this.addSlot(new Slot(recruit.inventory, slotIndex, 8, 18 + slotIndex * 18) {
+            this.addSlot(new Slot(recruitContainer(), slotIndex, 8, 18 + slotIndex * 18) {
                 public int getMaxStackSize() {
                     return 1;
                 }
 
                 public boolean mayPlace(ItemStack itemStack) {
-                    return itemStack.canEquip(equipmentslottype, recruit)
+                    return itemStack.canEquip(equipmentslottype, recruit != null ? recruit : bannerlordRecruit)
                             || (itemStack.getItem() instanceof BannerItem && equipmentslottype.equals(EquipmentSlot.HEAD));
                 }
 
                 @Override
                 public void set(ItemStack stack){
                     super.set(stack);
-                    recruit.setItemSlot(equipmentslottype, stack);
-                    recruit.onItemStackAdded(stack);
+                    setRecruitItemSlot(equipmentslottype, stack);
+                    onRecruitItemStackAdded(stack);
                 }
 
                 @Override
                 public void setChanged() {
                     super.setChanged();
-                    recruit.onInventoryChanged();
+                    onRecruitInventoryChanged();
                 }
 
                 @OnlyIn(Dist.CLIENT)
@@ -155,17 +217,17 @@ public class RecruitInventoryMenu extends ContainerBase {
     public void addRecruitInventorySlots() {
         for (int k = 0; k < 3; ++k) {
             for (int l = 0; l < 3; ++l) {
-                this.addSlot(new Slot(recruitInventory, 6 + l + k * recruit.getInventoryColumns(), 2 * 18 + 82 + l * 18,  18 + k * 18){
+                this.addSlot(new Slot(recruitInventory, 6 + l + k * inventoryColumns(), 2 * 18 + 82 + l * 18,  18 + k * 18){
                      @Override
                      public void set(ItemStack stack){
                          super.set(stack);
-                         recruit.onItemStackAdded(stack);
+                         onRecruitItemStackAdded(stack);
                      }
 
                     @Override
                     public void setChanged() {
                         super.setChanged();
-                        recruit.onInventoryChanged();
+                        onRecruitInventoryChanged();
                     }
                 }
                 );

@@ -483,6 +483,19 @@ public class ClaimEvents {
         }
     }
 
+    public static void sendVillagersHome(ServerLevel level, com.talhanation.bannerlord.persistence.military.RecruitsClaim claim) {
+        List<LivingEntity> list = ClaimUtil.getLivingEntitiesInClaim(level, claim, livingEntity -> livingEntity instanceof Villager);
+
+        for (LivingEntity living : list) {
+            if(living instanceof Villager villager){
+                Brain<?> brain = villager.getBrain();
+                brain.setActiveActivityIfPossible(Activity.HIDE);
+                brain.setMemory(MemoryModuleType.IS_PANICKING, true);
+                brain.setMemory(MemoryModuleType.HEARD_BELL_TIME, level.getGameTime());
+            }
+        }
+    }
+
     public static void siegeOverVillagers(ServerLevel level, RecruitsClaim claim) {
         List<LivingEntity> list = ClaimUtil.getLivingEntitiesInClaim(level, claim, livingEntity -> livingEntity instanceof Villager);
 

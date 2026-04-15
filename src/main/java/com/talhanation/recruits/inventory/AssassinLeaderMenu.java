@@ -21,6 +21,14 @@ public class AssassinLeaderMenu extends ContainerBase {
         addPlayerInventorySlots();
     }
 
+    public AssassinLeaderMenu(int id, com.talhanation.bannerlord.entity.military.AssassinLeaderEntity assassinLeaderEntity, Inventory playerInventory) {
+        super(ModScreens.ASSASSIN_CONTAINER_TYPE.get(), id, playerInventory, assassinLeaderEntity.getInventory());
+        this.assassinLeaderEntity = null;
+        this.recruitInventory = assassinLeaderEntity.getInventory();
+
+        addPlayerInventorySlots();
+    }
+
     public AssassinLeaderEntity getEntity() {
         return assassinLeaderEntity;
     }
@@ -32,7 +40,7 @@ public class AssassinLeaderMenu extends ContainerBase {
 
     @Override
     public boolean stillValid(Player playerIn) {
-        return this.recruitInventory.stillValid(playerIn) && this.assassinLeaderEntity.isAlive() && this.assassinLeaderEntity.distanceTo(playerIn) < 8.0F;
+        return this.recruitInventory.stillValid(playerIn) && (this.assassinLeaderEntity == null || (this.assassinLeaderEntity.isAlive() && this.assassinLeaderEntity.distanceTo(playerIn) < 8.0F));
     }
 
     @Override

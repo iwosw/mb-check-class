@@ -48,6 +48,10 @@ public abstract class RecruitEvent extends Event {
             this.player = player;
         }
 
+        public Hired(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, Player player) {
+            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyRecruit(recruit), player);
+        }
+
         /** Der Spieler, der den Recruit anheuert. */
         public Player getPlayer() {
             return player;
@@ -71,6 +75,10 @@ public abstract class RecruitEvent extends Event {
             super(recruit);
             this.player = player;
             this.keepTeam = keepTeam;
+        }
+
+        public Dismissed(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, @Nullable Player player, boolean keepTeam) {
+            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyRecruit(recruit), player, keepTeam);
         }
 
         /**
@@ -102,6 +110,10 @@ public abstract class RecruitEvent extends Event {
             this.newLevel = newLevel;
         }
 
+        public LevelUp(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, int newLevel) {
+            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyRecruit(recruit), newLevel);
+        }
+
         /** Das neue Level des Recruits. */
         public int getNewLevel() {
             return newLevel;
@@ -126,6 +138,11 @@ public abstract class RecruitEvent extends Event {
             this.newProfession = newProfession;
             this.newName = newName;
             this.promotingPlayer = promotingPlayer;
+        }
+
+        public Promoted(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, int newProfession, String newName,
+                        net.minecraft.server.level.ServerPlayer promotingPlayer) {
+            this(com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat.toLegacyRecruit(recruit), newProfession, newName, promotingPlayer);
         }
 
         /** Profession-ID des neuen Rangs (0=Messenger, 1=Scout, 2=PatrolLeader, 3=Captain). */

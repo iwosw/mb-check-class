@@ -5,6 +5,8 @@ import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
+import com.talhanation.bannermod.governance.BannerModGovernorService;
+import com.talhanation.bannerlord.compat.recruits.RecruitsEntityCompat;
 import com.talhanation.bannerlord.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.recruits.*;
 import com.talhanation.recruits.RecruitEvent;
@@ -18,14 +20,20 @@ import com.talhanation.bannerlord.ai.military.controller.RecruitCommandStateTran
 import com.talhanation.bannerlord.ai.military.compat.BlockWithWeapon;
 import com.talhanation.bannerlord.ai.military.navigation.RecruitPathNavigation;
 import com.talhanation.bannerlord.ai.military.navigation.RecruitsOpenDoorGoal;
+import com.talhanation.bannerlord.entity.military.AbstractLeaderEntity;
+import com.talhanation.bannerlord.entity.military.CaptainEntity;
+import com.talhanation.bannerlord.entity.military.CrossBowmanEntity;
+import com.talhanation.bannerlord.entity.military.IRangedRecruit;
+import com.talhanation.bannerlord.entity.military.MessengerEntity;
+import com.talhanation.bannerlord.entity.military.VillagerNobleEntity;
 import com.talhanation.recruits.init.ModItems;
 import com.talhanation.recruits.inventory.DebugInvMenu;
 import com.talhanation.recruits.inventory.RecruitHireMenu;
 import com.talhanation.recruits.inventory.RecruitInventoryMenu;
 import com.talhanation.recruits.network.*;
-import com.talhanation.bannerlord.persistence.military.RecruitsDiplomacyManager;
-import com.talhanation.bannerlord.persistence.military.RecruitsFaction;
-import com.talhanation.bannerlord.persistence.military.RecruitsGroup;
+import com.talhanation.recruits.world.RecruitsDiplomacyManager;
+import com.talhanation.recruits.world.RecruitsFaction;
+import com.talhanation.recruits.world.RecruitsGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
@@ -90,6 +98,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
+    public BannerModGovernorService.RecruitGovernorTarget asGovernorTarget() {
+        return RecruitsEntityCompat.toGovernorTarget(this);
+    }
+
     private static final TargetSearchProfilingCounters TARGET_SEARCH_PROFILING = new TargetSearchProfilingCounters();
     private static final EntityDataAccessor<Integer> DATA_REMAINING_ANGER_TIME = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
@@ -2673,23 +2685,23 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public void doNoPaymentAction(){
-        NoPaymentAction action = RecruitsServerConfig.RecruitsNoPaymentAction.get();
-        switch (action){
-            case MORALE_LOSS -> {
+        com.talhanation.recruits.entities.AbstractRecruitEntity.NoPaymentAction action = RecruitsServerConfig.RecruitsNoPaymentAction.get();
+        switch (action.name()){
+            case "MORALE_LOSS" -> {
                 float current = this.getMorale();
                 float newMorale = (float) Math.max(0, current * 0.7);//30% loss
                 this.setMoral(newMorale);
             }
 
-            case DISBAND_KEEP_TEAM -> {
+            case "DISBAND_KEEP_TEAM" -> {
                 this.disband(this.getOwner(), true, true);
             }
 
-            case DISBAND -> {
+            case "DISBAND" -> {
                 this.disband(this.getOwner(), false, true);
             }
 
-            case DESPAWN -> {
+            case "DESPAWN" -> {
                 this.discard();
             }
         }

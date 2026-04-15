@@ -19,13 +19,17 @@ public class RecruitsPlayerInfo {
     private final RecruitsFaction recruitsFaction;
 
     public RecruitsPlayerInfo(UUID uuid, String name) {
-        this(uuid, name, null);
+        this(uuid, name, (RecruitsFaction) null);
     }
 
     public RecruitsPlayerInfo(UUID uuid, String name, @Nullable RecruitsFaction recruitsFaction) {
         this.uuid = uuid;
         this.name = name;
         this.recruitsFaction = recruitsFaction;
+    }
+
+    public RecruitsPlayerInfo(UUID uuid, String name, @Nullable com.talhanation.recruits.world.RecruitsFaction recruitsFaction) {
+        this(uuid, name, recruitsFaction == null ? null : RecruitsFaction.fromNBT(recruitsFaction.toNBT()));
     }
 
     public UUID getUUID() {

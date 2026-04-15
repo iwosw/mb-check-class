@@ -621,6 +621,10 @@ public class FormationUtils {
         return true;
     }
 
+    public static boolean tryFallbackToNearestFreeSlot(com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity blockedRecruit) {
+        return false;
+    }
+
     private static List<AbstractRecruitEntity> getFormationCohort(AbstractRecruitEntity blockedRecruit) {
         UUID ownerId = blockedRecruit.getOwnerUUID();
         UUID groupId = blockedRecruit.getGroup();

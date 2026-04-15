@@ -3,6 +3,7 @@ package com.talhanation.bannerlord.ai.military.controller;
 import com.talhanation.bannerlord.entity.shared.*;
 
 import com.talhanation.bannerlord.entity.military.*;
+import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.util.FormationUtils;
 import com.talhanation.recruits.util.RecruitCommanderUtil;
 import com.talhanation.recruits.util.NPCArmy;
@@ -305,4 +306,3 @@ public class PatrolLeaderAttackController implements IAttackController {
     }
 
 }
-

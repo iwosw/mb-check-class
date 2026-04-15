@@ -15,10 +15,22 @@ public class DebugInvMenu extends ContainerBase {
 
     private final Container container;
     private final AbstractRecruitEntity recruit;
+    private final com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity bannerlordRecruit;
 
     public DebugInvMenu(int id, AbstractRecruitEntity recruit, Inventory playerInventory) {
         super(ModScreens.DEBUG_CONTAINER_TYPE.get(), id, playerInventory, recruit.getInventory());
         this.recruit = recruit;
+        this.bannerlordRecruit = null;
+        this.container = recruit.getInventory();
+
+        addPlayerInventorySlots();
+        addWorkerInventorySlots();
+    }
+
+    public DebugInvMenu(int id, com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity recruit, Inventory playerInventory) {
+        super(ModScreens.DEBUG_CONTAINER_TYPE.get(), id, playerInventory, recruit.getInventory());
+        this.recruit = null;
+        this.bannerlordRecruit = recruit;
         this.container = recruit.getInventory();
 
         addPlayerInventorySlots();
@@ -40,8 +52,15 @@ public class DebugInvMenu extends ContainerBase {
                     public void set(ItemStack stack) {
                         super.set(stack);
                         if(slot <= 5) {
-                            EquipmentSlot equipmentSlot = recruit.getEquipmentSlotIndex(slot);
-                            recruit.setItemSlot(equipmentSlot, stack);
+                            EquipmentSlot equipmentSlot = recruit != null
+                                    ? recruit.getEquipmentSlotIndex(slot)
+                                    : bannerlordRecruit.getEquipmentSlotIndex(slot);
+                            if (recruit != null) {
+                                recruit.setItemSlot(equipmentSlot, stack);
+                            }
+                            else {
+                                bannerlordRecruit.setItemSlot(equipmentSlot, stack);
+                            }
                         }
                     }
                 });
@@ -55,7 +74,7 @@ public class DebugInvMenu extends ContainerBase {
 
     @Override
     public boolean stillValid(Player playerIn) {
-        return this.container.stillValid(playerIn) && this.recruit.isAlive();
+        return this.container.stillValid(playerIn) && (this.recruit != null ? this.recruit.isAlive() : this.bannerlordRecruit.isAlive());
     }
 
     @Override
