@@ -33,41 +33,29 @@ public class ClientEvent {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void entityRenderersEvent(EntityRenderersEvent.RegisterRenderers event){
-        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get()){
-            EntityRenderers.register(ModEntityTypes.RECRUIT.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.BOWMAN.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.NOMAD.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.HORSEMAN.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.CROSSBOWMAN.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.RECRUIT_SHIELDMAN.get(), RecruitVillagerRenderer::new );
+        // Config read is deferred into the provider lambda — `provider.create(ctx)` runs in
+        // `EntityRenderDispatcher.onResourceManagerReload`, AFTER `ModConfigEvent.Loading`, so
+        // `.get()` is safe. Reading at RegisterRenderers time trips `ForgeConfigSpec$ConfigValue.get`
+        // precondition (IllegalStateException: Cannot get config value before config is loaded).
+        net.minecraft.client.renderer.entity.EntityRendererProvider<com.talhanation.bannermod.entity.military.AbstractRecruitEntity> recruitProvider =
+                ctx -> RecruitsClientConfig.RecruitsLookLikeVillagers.get()
+                        ? new RecruitVillagerRenderer(ctx)
+                        : new RecruitHumanRenderer(ctx);
+        EntityRenderers.register(ModEntityTypes.RECRUIT.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.BOWMAN.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.NOMAD.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.HORSEMAN.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.CROSSBOWMAN.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.RECRUIT_SHIELDMAN.get(), recruitProvider);
 
-            //COMPANIONS
-            EntityRenderers.register(ModEntityTypes.MESSENGER.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.SCOUT.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.PATROL_LEADER.get(), RecruitVillagerRenderer::new );
-            EntityRenderers.register(ModEntityTypes.CAPTAIN.get(), RecruitVillagerRenderer::new );
+        //COMPANIONS
+        EntityRenderers.register(ModEntityTypes.MESSENGER.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.SCOUT.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.PATROL_LEADER.get(), recruitProvider);
+        EntityRenderers.register(ModEntityTypes.CAPTAIN.get(), recruitProvider);
 
-            //OTHER
-            EntityRenderers.register(ModEntityTypes.VILLAGER_NOBLE.get(), RecruitVillagerRenderer::new );
-
-        }
-        else{
-            EntityRenderers.register(ModEntityTypes.RECRUIT.get(), RecruitHumanRenderer::new);
-            EntityRenderers.register(ModEntityTypes.BOWMAN.get(), RecruitHumanRenderer::new );
-            EntityRenderers.register(ModEntityTypes.NOMAD.get(), RecruitHumanRenderer::new );
-            EntityRenderers.register(ModEntityTypes.HORSEMAN.get(), RecruitHumanRenderer::new );
-            EntityRenderers.register(ModEntityTypes.CROSSBOWMAN.get(), RecruitHumanRenderer::new );
-            EntityRenderers.register(ModEntityTypes.RECRUIT_SHIELDMAN.get(), RecruitHumanRenderer::new );
-
-            //COMPANIONS
-            EntityRenderers.register(ModEntityTypes.MESSENGER.get(), RecruitHumanRenderer::new );
-            EntityRenderers.register(ModEntityTypes.SCOUT.get(), RecruitHumanRenderer::new );
-            EntityRenderers.register(ModEntityTypes.PATROL_LEADER.get(), RecruitHumanRenderer::new );
-            EntityRenderers.register(ModEntityTypes.CAPTAIN.get(), RecruitHumanRenderer::new );
-
-            //OTHER
-            EntityRenderers.register(ModEntityTypes.VILLAGER_NOBLE.get(), RecruitHumanRenderer::new );
-        }
+        //OTHER
+        EntityRenderers.register(ModEntityTypes.VILLAGER_NOBLE.get(), recruitProvider);
     }
 
     @SubscribeEvent

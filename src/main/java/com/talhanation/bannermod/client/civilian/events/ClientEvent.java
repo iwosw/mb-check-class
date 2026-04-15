@@ -31,23 +31,20 @@ public class ClientEvent {
         EntityRenderers.register(ModEntityTypes.FISHING_BOBBER.get(), FishingBobberRenderer::new);
 
 
-        if (RecruitsClientConfig.RecruitsLookLikeVillagers.get()) {
-            EntityRenderers.register(ModEntityTypes.FARMER.get(), WorkerVillagerRenderer::new);
-            EntityRenderers.register(ModEntityTypes.LUMBERJACK.get(), WorkerVillagerRenderer::new);
-            EntityRenderers.register(ModEntityTypes.MINER.get(), WorkerVillagerRenderer::new);
-            EntityRenderers.register(ModEntityTypes.BUILDER.get(), WorkerVillagerRenderer::new);
-            EntityRenderers.register(ModEntityTypes.MERCHANT.get(), WorkerVillagerRenderer::new);
-            EntityRenderers.register(ModEntityTypes.FISHERMAN.get(), WorkerVillagerRenderer::new);
-            EntityRenderers.register(ModEntityTypes.ANIMAL_FARMER.get(), WorkerVillagerRenderer::new);
-        }
-        else{
-            EntityRenderers.register(ModEntityTypes.FARMER.get(), WorkerHumanRenderer::new);
-            EntityRenderers.register(ModEntityTypes.LUMBERJACK.get(), WorkerHumanRenderer::new);
-            EntityRenderers.register(ModEntityTypes.MINER.get(), WorkerHumanRenderer::new);
-            EntityRenderers.register(ModEntityTypes.BUILDER.get(), WorkerHumanRenderer::new);
-            EntityRenderers.register(ModEntityTypes.MERCHANT.get(), WorkerHumanRenderer::new);
-            EntityRenderers.register(ModEntityTypes.FISHERMAN.get(), WorkerHumanRenderer::new);
-            EntityRenderers.register(ModEntityTypes.ANIMAL_FARMER.get(), WorkerHumanRenderer::new);
-        }
+        // Config read is deferred into the provider lambda — `provider.create(ctx)` runs in
+        // `EntityRenderDispatcher.onResourceManagerReload`, AFTER `FMLClientSetupEvent` / `ModConfigEvent.Loading`,
+        // so `RecruitsClientConfig.CLIENT` is loaded by the time `.get()` is invoked. Reading at
+        // RegisterRenderers time would trip `ForgeConfigSpec$ConfigValue.get` precondition (#21-UAT gap).
+        net.minecraft.client.renderer.entity.EntityRendererProvider<com.talhanation.bannermod.entity.military.AbstractRecruitEntity> workerProvider =
+                ctx -> RecruitsClientConfig.RecruitsLookLikeVillagers.get()
+                        ? new WorkerVillagerRenderer(ctx)
+                        : new WorkerHumanRenderer(ctx);
+        EntityRenderers.register(ModEntityTypes.FARMER.get(), workerProvider);
+        EntityRenderers.register(ModEntityTypes.LUMBERJACK.get(), workerProvider);
+        EntityRenderers.register(ModEntityTypes.MINER.get(), workerProvider);
+        EntityRenderers.register(ModEntityTypes.BUILDER.get(), workerProvider);
+        EntityRenderers.register(ModEntityTypes.MERCHANT.get(), workerProvider);
+        EntityRenderers.register(ModEntityTypes.FISHERMAN.get(), workerProvider);
+        EntityRenderers.register(ModEntityTypes.ANIMAL_FARMER.get(), workerProvider);
     }
 }
