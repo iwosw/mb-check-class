@@ -377,7 +377,7 @@ Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is aud
 
 **Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
 
-**Plans:** 9/9 plans executed
+**Plans:** 9/9 plans complete
 
 Plans:
 - [x] 21-01-PLAN.md — Reset Phase 21 executed state: revert the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`), delete stale executed-plan summaries, and record the convergence-namespace pivot (now `bannermod`) in roadmap and merge notes.

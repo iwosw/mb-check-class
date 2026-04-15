@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 21
-last_updated: "2026-04-15T11:24:40.305Z"
+last_updated: "2026-04-15T11:50:28.119Z"
 progress:
   total_phases: 31
-  completed_phases: 14
+  completed_phases: 15
   total_plans: 54
-  completed_plans: 50
-  percent: 93
+  completed_plans: 51
+  percent: 94
 ---
 
 # Project State
 
-- Current focus: Phase 21 is in progress post-pivot (2026-04-15): plan 21-01 has reverted the prior-namespace wave-1..5 work (commit range `f1832af..a792dc3`) and recorded the convergence-namespace pivot to `bannermod` in `.planning/ROADMAP.md` and `MERGE_NOTES.md`. Plans 21-02 through 21-09 will re-execute against the `com.talhanation.bannermod.**` convergence namespace locked by 21-CONTEXT.md D-01/D-02.
-- Runtime base: `recruits`
+- Current focus: Phase 21 is COMPLETE (2026-04-15). All 9 waves merged into `com.talhanation.bannermod.**`; outer `build.gradle` no longer references `recruits/` or `workers/` source roots; `mods.toml` declares only `modId="bannermod"`; resources unified under `src/main/resources/{assets,data}/bannermod/**`; `./gradlew compileJava` is green. Embedded `recruits/` and `workers/` clones remain on disk as untracked archive copies (Option a). Test-tree has 39 deferred compile errors documented in MERGE_NOTES.md (D-05 package overlap + smoke-test symbol drift). Next phase: 22 Citizen Role Unification.
+- Runtime base: `recruits` (now merged in-place — single source root)
 - Active runtime mod: `bannermod`
-- Workers status: absorbed into the active root runtime as a subsystem; registry-layer ids publish under `bannermod`, and legacy `workers/` content remains archive-only input awaiting the re-executed wave-4 civilian re-home.
-- Pending major work: Re-execute plans 21-02..21-09 against the `com.talhanation.bannermod` convergence namespace.
+- Workers status: fully absorbed; civilian Java code lives under `bannermod.{entity,ai,client,inventory,items,persistence,registry,settlement}.civilian`; civilian network packets live under `bannermod.network.messages.civilian` at packet-ID offset = MILITARY_MESSAGES.length (104).
+- Pending major work: Phase 22 onwards proceeds against the consolidated single-source-tree baseline.
 - Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
@@ -170,6 +170,7 @@ progress:
 - [Phase 21]: 21-02 narrowed Option A scope: only the 5 classes with extant legacy bannermod implementations were moved to bannermod.shared.*. Service/Route/CourierTask deferred -- no impl exists today, no callers, depends on AbstractWorkerEntity from wave 21-04.
 - [Phase 21]: 21-02 forwarder lifespan: per D-05 the legacy bannermod.{authority,settlement,logistics} peers stay live as @Deprecated forwarders for the duration of Phase 21; deletion is owned by a separate post-Phase-21 cleanup phase.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: workerPacketOffset() now returns MILITARY_MESSAGES.length (compile-time=104), making must-have #4 from 21-03 provable
+- [Phase 21-source-tree-consolidation-into-bannerlord]: Wave 9 closed Phase 21: outer src/main/resources owns shipped assets, build.gradle composes only outer src/{main,test,gametest}, ./gradlew compileJava is green, embedded recruits/ and workers/ clones retained on disk untracked (Option a).
 
 ## Accumulated Context
 
@@ -234,6 +235,7 @@ progress:
 | Phase 21-source-tree-consolidation-into-bannerlord P06 | 1 min | 2 tasks | 47 files |
 | Phase 21 P02 | 25min | 4 tasks | 29 files |
 | Phase 21-source-tree-consolidation-into-bannerlord P08 | 10 min | 2 tasks | 133 files |
+| Phase 21-source-tree-consolidation-into-bannerlord P09 | 25 min | 2 tasks | 313 files |
 
 ### Quick Tasks Completed
 
