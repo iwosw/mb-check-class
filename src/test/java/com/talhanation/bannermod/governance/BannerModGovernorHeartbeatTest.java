@@ -4,6 +4,7 @@ import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -88,5 +89,22 @@ class BannerModGovernorHeartbeatTest {
         assertTrue(report.recommendations().contains(BannerModGovernorRecommendation.INCREASE_GARRISON));
         assertTrue(report.recommendations().contains(BannerModGovernorRecommendation.STRENGTHEN_FORTIFICATIONS));
         assertTrue(report.recommendations().contains(BannerModGovernorRecommendation.RELIEVE_SUPPLY_PRESSURE));
+
+        assertEquals(
+                List.of("worker_shortage", "supply_blocked", "recruit_upkeep_blocked"),
+                BannerModGovernorHeartbeat.incidentTokens(List.of(
+                        BannerModGovernorIncident.WORKER_SHORTAGE,
+                        BannerModGovernorIncident.SUPPLY_BLOCKED,
+                        BannerModGovernorIncident.RECRUIT_UPKEEP_BLOCKED
+                ))
+        );
+        assertEquals(
+                List.of("increase_garrison", "strengthen_fortifications", "relieve_supply_pressure"),
+                BannerModGovernorHeartbeat.recommendationTokens(List.of(
+                        BannerModGovernorRecommendation.INCREASE_GARRISON,
+                        BannerModGovernorRecommendation.STRENGTHEN_FORTIFICATIONS,
+                        BannerModGovernorRecommendation.RELIEVE_SUPPLY_PRESSURE
+                ))
+        );
     }
 }
