@@ -2,10 +2,10 @@ package com.talhanation.bannerlord.bootstrap;
 
 import com.talhanation.bannerlord.network.BannerlordNetworkBootstrap;
 import com.talhanation.recruits.Main;
-import com.talhanation.bannerlord.client.shared.events.CommandCategoryManager;
-import com.talhanation.bannerlord.client.shared.gui.commandscreen.CombatCategory;
-import com.talhanation.bannerlord.client.shared.gui.commandscreen.MovementCategory;
-import com.talhanation.bannerlord.client.shared.gui.commandscreen.OtherCategory;
+import com.talhanation.recruits.client.events.CommandCategoryManager;
+import com.talhanation.recruits.client.gui.commandscreen.CombatCategory;
+import com.talhanation.recruits.client.gui.commandscreen.MovementCategory;
+import com.talhanation.recruits.client.gui.commandscreen.OtherCategory;
 import com.talhanation.recruits.commands.PatrolSpawnCommand;
 import com.talhanation.recruits.commands.RecruitsAdminCommands;
 import com.talhanation.recruits.init.ModBlocks;

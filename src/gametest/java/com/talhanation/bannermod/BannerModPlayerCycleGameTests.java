@@ -4,7 +4,7 @@ import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
 import com.talhanation.recruits.FactionEvents;
 import com.talhanation.recruits.Main;
 import com.talhanation.recruits.RecruitEvents;
-import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
+import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.workers.entities.FarmerEntity;
 import com.talhanation.workers.entities.workarea.BuildArea;

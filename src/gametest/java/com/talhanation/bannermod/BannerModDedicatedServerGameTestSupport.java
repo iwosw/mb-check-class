@@ -7,7 +7,7 @@ import com.talhanation.recruits.world.RecruitsClaim;
 import com.talhanation.recruits.world.RecruitsClaimManager;
 import com.talhanation.recruits.world.RecruitsFaction;
 import com.talhanation.recruits.world.RecruitsFactionManager;
-import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
+import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.workers.entities.AbstractWorkerEntity;
 import com.talhanation.workers.entities.workarea.AbstractWorkAreaEntity;
 import net.minecraft.ChatFormatting;

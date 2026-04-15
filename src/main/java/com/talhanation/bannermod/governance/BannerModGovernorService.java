@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.governance;
 
 import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
-import com.talhanation.bannerlord.entity.shared.AbstractRecruitEntity;
+import com.talhanation.recruits.entities.AbstractRecruitEntity;
 import com.talhanation.recruits.world.RecruitsClaim;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
