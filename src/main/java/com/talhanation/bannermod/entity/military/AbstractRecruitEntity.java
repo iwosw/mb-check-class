@@ -1083,14 +1083,27 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
         return entityData.get(FOLLOW_STATE);
     }
 
+    /**
+     * Safe accessor for {@code RecruitsClientConfig.RecruitsLookLikeVillagers} that
+     * returns the config default ({@code true}) when Forge config has not loaded yet
+     * (e.g. gametest harness early-tick).
+     */
+    static boolean recruitsLookLikeVillagers() {
+        try {
+            return RecruitsClientConfig.RecruitsLookLikeVillagers.get();
+        } catch (IllegalStateException e) {
+            return true;
+        }
+    }
+
     public SoundEvent getHurtSound(@NotNull DamageSource ds) {
         if (this.isBlocking())
             return SoundEvents.SHIELD_BLOCK;
-        return RecruitsClientConfig.RecruitsLookLikeVillagers.get() ? SoundEvents.VILLAGER_HURT : SoundEvents.GENERIC_HURT;
+        return recruitsLookLikeVillagers() ? SoundEvents.VILLAGER_HURT : SoundEvents.GENERIC_HURT;
     }
 
     protected SoundEvent getDeathSound() {
-        return RecruitsClientConfig.RecruitsLookLikeVillagers.get() ? SoundEvents.VILLAGER_DEATH : SoundEvents.GENERIC_DEATH;
+        return recruitsLookLikeVillagers() ? SoundEvents.VILLAGER_DEATH : SoundEvents.GENERIC_DEATH;
     }
 
     protected float getSoundVolume() {
@@ -1986,12 +1999,12 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     public void makeLevelUpSound() {
         this.getCommandSenderWorld().playSound(null, this.getX(), this.getY() + 1 , this.getZ(), SoundEvents.PLAYER_LEVELUP, this.getSoundSource(), 1.0F, 0.8F + 0.4F * this.random.nextFloat());
 
-        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get())
+        if(recruitsLookLikeVillagers())
             this.getCommandSenderWorld().playSound(null, this.getX(), this.getY() + 1 , this.getZ(), SoundEvents.VILLAGER_CELEBRATE, this.getSoundSource(), 1.0F, 0.8F + 0.4F * this.random.nextFloat());
     }
 
     public void makeHireSound() {
-        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get())
+        if(recruitsLookLikeVillagers())
             this.playSound(SoundEvents.VILLAGER_AMBIENT, 1.0F, 0.8F + 0.4F * this.random.nextFloat());
     }
 

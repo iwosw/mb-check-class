@@ -509,9 +509,17 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity {
         hydrateCitizenStateFromLegacy(this.getCitizenCore(), nbt);
     }
 
+    private static boolean recruitsLookLikeVillagers() {
+        try {
+            return RecruitsClientConfig.RecruitsLookLikeVillagers.get();
+        } catch (IllegalStateException e) {
+            return true;
+        }
+    }
+
     @OnlyIn(Dist.CLIENT)
     public SoundEvent getHurtSound(DamageSource ds) {
-        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get()){
+        if(recruitsLookLikeVillagers()){
             return SoundEvents.VILLAGER_HURT;
         }
         else
@@ -520,7 +528,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity {
 
     @OnlyIn(Dist.CLIENT)
     protected SoundEvent getDeathSound() {
-        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get()){
+        if(recruitsLookLikeVillagers()){
             return SoundEvents.VILLAGER_DEATH;
         }
         else
