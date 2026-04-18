@@ -3,6 +3,10 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.events.runtime.FactionEconomyService;
+import com.talhanation.bannermod.events.runtime.FactionLifecycleService;
+import com.talhanation.bannermod.events.runtime.FactionMembershipService;
+import com.talhanation.bannermod.events.runtime.FactionNotifier;
 import com.talhanation.bannermod.inventory.military.*;
 import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.util.DelayedExecutor;
@@ -52,37 +56,17 @@ public class FactionEvents {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         this.server = event.getServer();
-        ServerLevel level = this.server.overworld();
-
-        Collection<PlayerTeam> list =  level.getScoreboard().getPlayerTeams();
-        for(PlayerTeam playerTeam : list){
-            playerTeam.setAllowFriendlyFire(RecruitsServerConfig.GlobalTeamSetting.get() && RecruitsServerConfig.GlobalTeamFriendlyFireSetting.get());
-            playerTeam.setSeeFriendlyInvisibles(RecruitsServerConfig.GlobalTeamSetting.get() && RecruitsServerConfig.GlobalTeamSeeFriendlyInvisibleSetting.get());
-
-        }
-
-        recruitsFactionManager = new RecruitsFactionManager();
-        recruitsFactionManager.load(server.overworld());
-
-        recruitsDiplomacyManager = new RecruitsDiplomacyManager();
-        recruitsDiplomacyManager.load(server.overworld());
-
-        recruitsTreatyManager = new RecruitsTreatyManager();
-        recruitsTreatyManager.load(server.overworld());
+        FactionLifecycleService.onServerStarting(this.server);
     }
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
-        recruitsFactionManager.save(server.overworld());
-        recruitsDiplomacyManager.save(server.overworld());
-        recruitsTreatyManager.save(server.overworld());
+        FactionLifecycleService.saveAll(this.server);
     }
 
     @SubscribeEvent
     public void onWorldSave(LevelEvent.Save event){
-        recruitsFactionManager.save(server.overworld());
-        recruitsDiplomacyManager.save(server.overworld());
-        recruitsTreatyManager.save(server.overworld());
+        FactionLifecycleService.saveAll(this.server);
     }
 
     @SubscribeEvent
@@ -90,21 +74,7 @@ public class FactionEvents {
         if(event.getLevel().isClientSide()) return;
 
         if(event.getEntity() instanceof Player player){
-
-            //Migration of old world factions
-            if(player.getTeam() != null){
-                RecruitsFaction faction = recruitsFactionManager.getFactionByStringID(player.getTeam().getName());
-                if(faction != null && faction.getMembers().stream().noneMatch(m -> m.getUUID().equals(player.getUUID()))){
-                    faction.addMember(player.getUUID(), player.getName().getString());
-                }
-            }
-
-            if (player instanceof ServerPlayer serverPlayer) {
-                recruitsFactionManager.broadcastOnlinePlayersToAll(server.overworld());
-                recruitsFactionManager.broadcastFactionsToPlayer(serverPlayer);
-                recruitsDiplomacyManager.broadcastDiplomacyMapToPlayer(serverPlayer);
-                recruitsTreatyManager.broadcastTreatiesToPlayer(serverPlayer);
-            }
+            FactionLifecycleService.onPlayerJoin(this.server.overworld(), player, this.server);
         }
     }
 
@@ -113,224 +83,33 @@ public class FactionEvents {
         if(event.getLevel().isClientSide()) return;
 
         if(event.getEntity() instanceof Player){
-            DelayedExecutor.runLater(()-> recruitsFactionManager.broadcastOnlinePlayersToAll(server.overworld()),1000L);
+            FactionLifecycleService.onPlayerLeave(this.server);
         }
     }
 
 
     public static void createTeam(boolean menu, ServerPlayer serverPlayer, @NotNull ServerLevel level, String teamName, String displayName, String playerName, ItemStack banner, ChatFormatting color, byte colorByte) {
-        MinecraftServer server = level.getServer();
-        PlayerTeam team = server.getScoreboard().getPlayerTeam(teamName);
-        int cost = RecruitsServerConfig.FactionCreationCost.get();
-        if(banner == null) banner = Items.BROWN_BANNER.getDefaultInstance();
-        CompoundTag nbt = banner.serializeNBT();
-
-        if (team != null) {
-            serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.team_exists").withStyle(ChatFormatting.RED));
-        }
-        else if (teamName.chars().count() > 32) {
-            serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.teamname_to_long").withStyle(ChatFormatting.RED));
-        }
-        else if (teamName.isBlank() || teamName.isEmpty()) {
-            serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.noname").withStyle(ChatFormatting.RED));
-        }
-        else if(recruitsFactionManager.isNameInUse(teamName)) {
-            serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.team_exists").withStyle(ChatFormatting.RED));
-        }
-        else if(!playerHasEnoughEmeralds(serverPlayer, cost) && menu) {
-            serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.noenough_money").withStyle(ChatFormatting.RED));
-        }
-        else if(recruitsFactionManager.isBannerBlank(banner) && menu) {
-            serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.wrongbanner"));
-        }
-        else if (recruitsFactionManager.isBannerInUse(nbt) && menu) {
-            serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.banner_exists").withStyle(ChatFormatting.RED));
-        }
-        else {
-            Scoreboard scoreboard = server.getScoreboard();
-            PlayerTeam newTeam = scoreboard.addPlayerTeam(teamName);
-            newTeam.setDisplayName(Component.literal(displayName));
-
-            newTeam.setColor(color);
-            newTeam.setAllowFriendlyFire(RecruitsServerConfig.GlobalTeamSetting.get() && RecruitsServerConfig.GlobalTeamFriendlyFireSetting.get());
-            newTeam.setSeeFriendlyInvisibles(RecruitsServerConfig.GlobalTeamSetting.get() && RecruitsServerConfig.GlobalTeamSeeFriendlyInvisibleSetting.get());
-
-            server.getScoreboard().addPlayerToTeam(playerName, newTeam);
-            //TeamCommand
-            if (menu) doPayment(serverPlayer, cost);
-
-            recruitsFactionManager.addTeam(teamName, displayName, serverPlayer.getUUID(), serverPlayer.getScoreboardName(), banner.serializeNBT(), colorByte, newTeam.getColor());
-            addPlayerToData(level, teamName, 1, playerName);
-            RecruitsFaction createdFactionForMember = recruitsFactionManager.getFactionByStringID(teamName);
-            if (createdFactionForMember != null) createdFactionForMember.addMember(serverPlayer.getUUID(), playerName);
-
-            List<AbstractRecruitEntity> recruits = getRecruitsOfPlayer(serverPlayer.getUUID(), level);
-            int recruitCount = recruits.size();
-            addNPCToData(level, teamName, recruitCount);
-
-            addRecruitToTeam(recruits, newTeam, level);
-
-            BannerModMain.LOGGER.info("The new Team " + teamName + " has been created by " + playerName + ".");
-
-            recruitsFactionManager.save(server.overworld());
-            RecruitsFaction createdFaction = recruitsFactionManager.getFactionByStringID(teamName);
-            if (createdFaction != null) {
-                FactionEvent.Created createdEvent = new FactionEvent.Created(createdFaction, level, serverPlayer);
-                if (MinecraftForge.EVENT_BUS.post(createdEvent)) {
-                    // Addon hat gecanceled – Fraktion wieder entfernen
-                    removeTeam(level, teamName);
-                }
-            }
-        }
+        FactionMembershipService.createTeam(menu, serverPlayer, level, teamName, displayName, playerName, banner, color, colorByte);
     }
 
     public static void leaveTeam(boolean command, ServerPlayer player, String teamName, ServerLevel level, boolean fromLeader) {
-        MinecraftServer server = level.getServer();
-        String playerName = player.getName().getString();
-        Team team = player.getTeam();
-
-        if(team != null){
-            if(teamName == null) teamName = team.getName();
-
-            PlayerTeam playerTeam = server.getScoreboard().getPlayerTeam(teamName);
-
-            RecruitsFaction recruitsFaction = recruitsFactionManager.getFactionByStringID(teamName);
-
-            boolean isLeader;
-            if(recruitsFaction != null) {
-                isLeader = recruitsFaction.getTeamLeaderUUID().equals(player.getUUID());
-            }
-            else
-                isLeader = command;
-
-            if (recruitsFaction != null) {
-                MinecraftForge.EVENT_BUS.post(new FactionEvent.PlayerLeft(recruitsFaction, level, player, isLeader));
-            }
-            int recruits = getRecruitsOfPlayer(player.getUUID(), level).size();
-            addNPCToData(level, teamName, -recruits);
-
-            if(playerTeam != null){
-                if(isLeader){
-                    removeTeam(level, teamName);
-                    return;
-                }
-                else {
-                    ServerPlayer leaderOfTeam = server.getPlayerList().getPlayerByName(recruitsFaction.getTeamLeaderName());
-                    if(!fromLeader && leaderOfTeam != null) leaderOfTeam.sendSystemMessage(PLAYER_LEFT_TEAM_LEADER(playerName));
-
-                    server.getScoreboard().removePlayerFromTeam(playerName, playerTeam);
-                    recruitsFaction.removeMember(playerName);
-                    addPlayerToData(level,teamName,-1, playerName);
-
-                }
-                removeRecruitFromTeam(teamName, player, level);
-                return;
-            }
-            else
-                BannerModMain.LOGGER.error("Can not remove " + playerName + " from Team, because " + teamName + " does not exist!");
-
-            serverSideUpdateTeam(level);
-        }
-
-        else {
-            PlayerTeam playerTeam = server.getScoreboard().getPlayerTeam(teamName);
-
-            if(playerTeam != null){
-                recruitsFactionManager.removeTeam(teamName);
-            }
-
-        }
-        recruitsFactionManager.save(server.overworld());
+        FactionMembershipService.leaveTeam(command, player, teamName, level, fromLeader);
     }
 
     public static void modifyTeam(ServerLevel level, String stringID, RecruitsFaction editedTeam, @Nullable ServerPlayer serverPlayer, int cost) {
-        MinecraftServer server = level.getServer();
-        RecruitsFaction recruitsFaction = recruitsFactionManager.getFactionByStringID(stringID);
-        PlayerTeam playerTeam = server.getScoreboard().getPlayerTeam(stringID);
-
-        if(serverPlayer != null){
-            if(cost > 0 && !playerHasEnoughEmeralds(serverPlayer, cost)) {
-                serverPlayer.sendSystemMessage(Component.translatable("chat.recruits.team_creation.noenough_money").withStyle(ChatFormatting.RED));
-                return;
-            }
-            else{
-                doPayment(serverPlayer, cost);
-            }
-
-        }
-
-        if(recruitsFaction != null && playerTeam != null){
-            if(!recruitsFaction.getTeamLeaderUUID().equals(editedTeam.getTeamLeaderUUID())){
-                notifyFactionMembers(level, recruitsFaction, 10, editedTeam.getTeamLeaderName());
-                recruitsFaction.setTeamLeaderID(editedTeam.getTeamLeaderUUID());
-                recruitsFaction.setTeamLeaderName(editedTeam.getTeamLeaderName());
-            }
-
-            if(!recruitsFaction.getTeamDisplayName().equals(editedTeam.getTeamDisplayName())){
-                notifyFactionMembers(level, recruitsFaction, 11, editedTeam.getTeamDisplayName());
-                recruitsFaction.setTeamDisplayName(editedTeam.getTeamDisplayName());
-            }
-
-            if(!recruitsFaction.getBanner().equals(editedTeam.getBanner())){
-                notifyFactionMembers(level, recruitsFaction, 12, "");
-                recruitsFaction.setBanner(editedTeam.getBanner());
-            }
-
-            recruitsFaction.setUnitColor(editedTeam.getUnitColor());
-            recruitsFaction.setTeamColor(editedTeam.getTeamColor());
-            recruitsFaction.setMaxNPCsPerPlayer(editedTeam.getMaxNPCsPerPlayer());
-
-            playerTeam.setDisplayName(Component.literal(editedTeam.getTeamDisplayName()));
-            playerTeam.setColor(ChatFormatting.getById(editedTeam.getTeamColor()));
-
-
-            for(RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()){
-                if(claim.getOwnerFaction().getStringID().equals(editedTeam.getStringID())){
-                    claim.setOwnerFaction(editedTeam);
-                }
-            }
-
-            ClaimEvents.recruitsClaimManager.broadcastClaimsToAll(level);
-
-            recruitsFactionManager.save(level);
-        }
+        FactionMembershipService.modifyTeam(level, stringID, editedTeam, serverPlayer, cost);
     }
 
     public static void notifyFactionMembers(ServerLevel level, RecruitsFaction recruitsFaction, int id, String notification){
-        List<ServerPlayer> playersInTeam = FactionEvents.recruitsFactionManager.getPlayersInTeam(recruitsFaction.getStringID(), level);
-        for (ServerPlayer teamPlayer : playersInTeam) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> teamPlayer), new MessageToClientSetDiplomaticToast(id, recruitsFaction, notification));
-        }
+        FactionNotifier.notifyFactionMembers(level, recruitsFaction, id, notification);
     }
 
     public static void notifyPlayer(ServerLevel level, RecruitsPlayerInfo playerInfo, int id, String notification){
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) level.getPlayerByUUID(playerInfo.getUUID())), new MessageToClientSetToast(id, notification));
+        FactionNotifier.notifyPlayer(level, playerInfo, id, notification);
     }
 
     public static void removeTeam(ServerLevel level, String teamName){
-        MinecraftServer server = level.getServer();
-        PlayerTeam playerTeam = server.getScoreboard().getPlayerTeam(teamName);
-
-        RecruitsFaction disbandingFaction = recruitsFactionManager.getFactionByStringID(teamName);
-        if (disbandingFaction != null) {
-            MinecraftForge.EVENT_BUS.post(new FactionEvent.Disbanded(disbandingFaction, level));
-        }
-        if(playerTeam != null){
-            server.getScoreboard().removePlayerTeam(playerTeam);
-
-            removeRecruitsFactionData(teamName);
-
-            for(RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()){
-                if(claim.getOwnerFaction().getStringID().equals(teamName)){
-                    ClaimEvents.recruitsClaimManager.removeClaim(claim);
-                }
-            }
-
-            ClaimEvents.recruitsClaimManager.broadcastClaimsToAll(level);
-
-            recruitsFactionManager.removeTeam(teamName);
-        }
-        recruitsFactionManager.save(server.overworld());
+        FactionMembershipService.removeTeam(level, teamName);
     }
 
     private static void removeRecruitsFactionData(String teamName) {
@@ -338,56 +117,11 @@ public class FactionEvents {
     }
 
     public static void addPlayerToTeam(@Nullable ServerPlayer player, ServerLevel level, String teamName, String namePlayerToAdd) {
-        MinecraftServer server = level.getServer();
-        ServerPlayer playerToAdd = server.getPlayerList().getPlayerByName(namePlayerToAdd);
-        PlayerTeam playerTeam = server.getScoreboard().getPlayerTeam(teamName);
-        RecruitsFaction recruitsFaction = recruitsFactionManager.getFactionByStringID(teamName);
-
-        if(recruitsFaction == null || playerToAdd == null || !recruitsFaction.canAddPlayer()) return;
-
-        if(isPlayerAlreadyAFactionLeader(playerToAdd)){
-            if(player != null) player.sendSystemMessage(CAN_NOT_ADD_OTHER_LEADER());
-            return;
-        }
-
-        if(playerTeam != null){
-            RecruitsFaction joiningFaction = recruitsFactionManager.getFactionByStringID(teamName);
-            if (joiningFaction != null) {
-                FactionEvent.PlayerJoined joinEvent = new FactionEvent.PlayerJoined(joiningFaction, level, playerToAdd);
-                if (MinecraftForge.EVENT_BUS.post(joinEvent)) return;
-            }
-
-            server.getScoreboard().addPlayerToTeam(namePlayerToAdd, playerTeam);
-
-            playerToAdd.sendSystemMessage(ADDED_PLAYER(teamName));
-            if(player != null) player.sendSystemMessage(ADDED_PLAYER_LEADER(namePlayerToAdd));
-
-            recruitsFaction.addMember(playerToAdd.getUUID(), namePlayerToAdd);
-            addPlayerToData(level,teamName,1, namePlayerToAdd);
-
-            int recruits = getRecruitsOfPlayer(playerToAdd.getUUID(), level).size();
-            addNPCToData(level, teamName, recruits);
-
-            serverSideUpdateTeam(level);
-
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> playerToAdd), new MessageToClientSetDiplomaticToast(8, recruitsFaction));
-
-            notifyFactionMembers(level, recruitsFaction, 9, playerToAdd.getName().getString());
-
-            recruitsFactionManager.save(server.overworld());
-        }
-        else
-            BannerModMain.LOGGER.error("Can not add " + playerToAdd + " to Team, because " + teamName + " does not exist!");
-
+        FactionMembershipService.addPlayerToTeam(player, level, teamName, namePlayerToAdd);
     }
 
     public static boolean isPlayerAlreadyAFactionLeader(ServerPlayer playerToCheck){
-        for(RecruitsFaction recruitsFaction : recruitsFactionManager.getFactions()) {
-            if(recruitsFaction.getTeamLeaderUUID().equals(playerToCheck.getUUID())){
-                return true;
-            }
-        }
-        return false;
+        return FactionMembershipService.isPlayerAlreadyAFactionLeader(playerToCheck);
     }
 
     public static Component REMOVE_PLAYER_LEADER(String player){
@@ -413,25 +147,10 @@ public class FactionEvents {
     }
 
     public static void addPlayerToData(ServerLevel level, String teamName, int x, String namePlayerToAdd){
-        RecruitsFaction recruitsFaction = recruitsFactionManager.getFactionByStringID(teamName);;
-
-        recruitsFaction.addPlayer(x);
-
-        if(x > 0){ //actually adding the player therefor remove it from request list
-            recruitsFaction.removeJoinRequest(namePlayerToAdd);
-        }
-
-        recruitsFactionManager.save(level);
+        FactionMembershipService.addPlayerToData(level, teamName, x, namePlayerToAdd);
     }
     public static void addNPCToData(ServerLevel level, String teamName, int x){
-        RecruitsFaction recruitsFaction = recruitsFactionManager.getFactionByStringID(teamName);;
-
-        if(recruitsFaction != null){
-            recruitsFaction.addNPCs(x);
-        }
-        else BannerModMain.LOGGER.error("Could not modify recruits team: "+ teamName + ".Team does not exist.");
-
-        recruitsFactionManager.broadcastToFactionPlayers(teamName, level);
+        FactionMembershipService.addNPCToData(level, teamName, x);
     }
 
     public static void sendJoinRequest(ServerLevel level, ServerPlayer player, String stringID) {
@@ -488,70 +207,18 @@ public class FactionEvents {
     }
 
     public static ItemStack getCurrency(){
-        ItemStack currencyItemStack;
-        String str = RecruitsServerConfig.RecruitCurrency.get();
-        Optional<Holder<Item>> holder = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(str));
-
-        currencyItemStack = holder.map(itemHolder -> itemHolder.value().getDefaultInstance()).orElseGet(Items.EMERALD::getDefaultInstance);
-
-        return currencyItemStack;
+        return FactionEconomyService.getCurrency();
     }
     public static boolean playerHasEnoughEmeralds(ServerPlayer player, int price){
-        Inventory playerInv = player.getInventory();
-        int playerEmeralds = 0;
-
-        Item currency = getCurrency().getItem();
-
-        //checkPlayerMoney
-        for (int i = 0; i < playerInv.getContainerSize(); i++){
-            ItemStack itemStackInSlot = playerInv.getItem(i);
-            Item itemInSlot = itemStackInSlot.getItem();
-            if (itemInSlot.equals(currency)){
-                playerEmeralds = playerEmeralds + itemStackInSlot.getCount();
-            }
-        }
-
-        return playerEmeralds >= price || player.isCreative();
+        return FactionEconomyService.playerHasEnoughEmeralds(player, price);
     }
 
     public static void doPayment(Player player, int costs){
-        Inventory playerInv = player.getInventory();
-        int playerEmeralds = 0;
-
-        ItemStack currencyItemStack = getCurrency();
-
-
-        //checkPlayerMoney
-        playerEmeralds = playerGetEmeraldsInInventory(player, currencyItemStack.getItem());
-        playerEmeralds = playerEmeralds - costs;
-
-        //remove Player Emeralds
-        for (int i = 0; i < playerInv.getContainerSize(); i++){
-            ItemStack itemStackInSlot = playerInv.getItem(i);
-            Item itemInSlot = itemStackInSlot.getItem();
-            if (itemInSlot == currencyItemStack.getItem()){
-                playerInv.removeItemNoUpdate(i);
-            }
-        }
-
-        //add Player Emeralds what is left
-        ItemStack emeraldsLeft = getCurrency();
-
-        emeraldsLeft.setCount(playerEmeralds);
-        playerInv.add(emeraldsLeft);
+        FactionEconomyService.doPayment(player, costs);
     }
 
     public static int playerGetEmeraldsInInventory(Player player, Item currency) {
-        int emeralds = 0;
-        Inventory playerInv = player.getInventory();
-        for (int i = 0; i < playerInv.getContainerSize(); i++){
-            ItemStack itemStackInSlot = playerInv.getItem(i);
-            Item itemInSlot = itemStackInSlot.getItem();
-            if (itemInSlot == currency){
-                emeralds = emeralds + itemStackInSlot.getCount();
-            }
-        }
-        return emeralds;
+        return FactionEconomyService.playerGetEmeraldsInInventory(player, currency);
     }
 
     public static void assignToTeamMate(ServerPlayer oldOwner, UUID newOwnerUUID, AbstractRecruitEntity recruit) {
@@ -724,16 +391,7 @@ public class FactionEvents {
 
 
     public static void serverSideUpdateTeam(ServerLevel level){
-        List<AbstractRecruitEntity> recruitList = new ArrayList<>();
-        for(Entity entity : level.getEntities().getAll()){
-            if(entity instanceof AbstractRecruitEntity recruit)
-                recruitList.add(recruit);
-        }
-        for(AbstractRecruitEntity recruit : recruitList){
-            recruit.needsTeamUpdate = true;
-        }
-
-        recruitsFactionManager.save(level);
+        FactionMembershipService.serverSideUpdateTeam(level);
     }
 
     ////////////////////////////////////Recruit TEAM JOIN AND REMOVE////////////////////////////

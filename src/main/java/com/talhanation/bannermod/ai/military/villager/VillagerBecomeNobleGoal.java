@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.military.villager;
 
-import com.talhanation.bannermod.events.VillagerEvents;
 import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
+import com.talhanation.bannermod.events.runtime.VillagerConversionService;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.npc.Villager;
@@ -56,7 +56,7 @@ public class VillagerBecomeNobleGoal extends Goal {
 
         int villagers = (int) list.stream().filter(e -> e instanceof Villager).count();
         if(villagers >= 7){
-            VillagerEvents.createNobleVillager(villager);
+            VillagerConversionService.createNobleVillager(villager);
         }
     }
 }

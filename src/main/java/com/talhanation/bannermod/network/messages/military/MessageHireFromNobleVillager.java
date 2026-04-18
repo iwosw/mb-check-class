@@ -2,9 +2,9 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
-import com.talhanation.bannermod.events.VillagerEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
+import com.talhanation.bannermod.events.runtime.VillagerConversionService;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTrade;
 import de.maxhenkel.corelib.net.Message;
@@ -81,7 +81,7 @@ public class MessageHireFromNobleVillager implements Message<MessageHireFromNobl
         else{
             String string = resource.toString();
             Optional<EntityType<?>> optionalType = EntityType.byString(string);
-            optionalType.ifPresent(type -> VillagerEvents.spawnHiredRecruit(serverLevel, (EntityType<? extends AbstractRecruitEntity>) type, player, group));
+            optionalType.ifPresent(type -> VillagerConversionService.spawnHiredRecruit(serverLevel, (EntityType<? extends AbstractRecruitEntity>) type, player, group));
 
             villagerNoble.doTrade(resource);
         }
@@ -95,7 +95,7 @@ public class MessageHireFromNobleVillager implements Message<MessageHireFromNobl
         Optional<EntityType<?>> optionalType = EntityType.byString(string);
 
         optionalType.ifPresent(type -> {
-            VillagerEvents.createHiredRecruitFromVillager(serverLevel, villager, (EntityType<? extends AbstractRecruitEntity>) type, player, group);
+            VillagerConversionService.createHiredRecruitFromVillager(serverLevel, villager, (EntityType<? extends AbstractRecruitEntity>) type, player, group);
         });
 
         villagerNoble.doTrade(resource);
