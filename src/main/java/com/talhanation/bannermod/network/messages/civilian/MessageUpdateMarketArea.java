@@ -31,14 +31,13 @@ public class MessageUpdateMarketArea implements Message<MessageUpdateMarketArea>
         ServerPlayer player = context.getSender();
         if (player == null) return;
 
-        player.getCommandSenderWorld()
-                .getEntitiesOfClass(MarketArea.class, player.getBoundingBox().inflate(64),
-                        v -> v.getUUID().equals(this.uuid))
-                .stream().findAny()
-                .ifPresent(market -> {
-                    market.setOpen(isOpen);
-                    market.setMarketName(marketName);
-                });
+        MarketArea market = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, MarketArea.class);
+        if (market == null) {
+            return;
+        }
+
+        market.setOpen(isOpen);
+        market.setMarketName(marketName);
     }
 
     @Override

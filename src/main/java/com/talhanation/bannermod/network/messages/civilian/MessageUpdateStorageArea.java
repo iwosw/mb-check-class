@@ -1,11 +1,11 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsAuthoringState;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -16,14 +16,22 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
     public UUID uuid;
     public int mask;
     public String name;
+    public String routeDestination;
+    public String routeFilter;
+    public String routeCount;
+    public String routePriority;
     public MessageUpdateStorageArea() {
 
     }
 
-    public MessageUpdateStorageArea(UUID uuid, int mask, String name) {
+    public MessageUpdateStorageArea(UUID uuid, int mask, String name, String routeDestination, String routeFilter, String routeCount, String routePriority) {
         this.uuid = uuid;
         this.mask = mask;
         this.name = name;
+        this.routeDestination = routeDestination;
+        this.routeFilter = routeFilter;
+        this.routeCount = routeCount;
+        this.routePriority = routePriority;
     }
 
     public Dist getExecutingSide() {
@@ -34,38 +42,33 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (!(entity instanceof StorageArea storageArea)) {
-            this.sendDecision(player, WorkAreaAuthoringRules.Decision.AREA_NOT_FOUND);
+        StorageArea storageArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, StorageArea.class);
+        if (storageArea == null) {
             return;
         }
 
-        WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.modifyDecision(true, storageArea.getAuthoringAccess(player));
-        if (!WorkAreaAuthoringRules.isAllowed(decision)) {
-            this.sendDecision(player, decision);
-            return;
-        }
-
-        this.update(storageArea);
+        this.update(storageArea, player);
 
     }
 
-    public void update(StorageArea storageArea){
+    public void update(StorageArea storageArea, ServerPlayer player){
         storageArea.setStorageTypes(mask);
         storageArea.setCustomName(Component.literal(name));
-    }
-
-    private void sendDecision(ServerPlayer player, WorkAreaAuthoringRules.Decision decision) {
-        String messageKey = WorkAreaAuthoringRules.getMessageKey(decision);
-        if (messageKey != null) {
-            player.sendSystemMessage(Component.translatable(messageKey));
+        try {
+            storageArea.setLogisticsRoute(BannerModLogisticsAuthoringState.parse(this.routeDestination, this.routeFilter, this.routeCount, this.routePriority));
+            storageArea.clearRouteBlockedState();
+        } catch (IllegalArgumentException exception) {
+            player.sendSystemMessage(Component.literal(exception.getMessage()));
         }
     }
-
     public MessageUpdateStorageArea fromBytes(FriendlyByteBuf buf) {
         this.uuid = buf.readUUID();
         this.mask = buf.readInt();
         this.name = buf.readUtf();
+        this.routeDestination = buf.readUtf();
+        this.routeFilter = buf.readUtf();
+        this.routeCount = buf.readUtf();
+        this.routePriority = buf.readUtf();
         return this;
     }
 
@@ -73,6 +76,10 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
         buf.writeUUID(uuid);
         buf.writeInt(mask);
         buf.writeUtf(name);
+        buf.writeUtf(routeDestination == null ? "" : routeDestination);
+        buf.writeUtf(routeFilter == null ? "" : routeFilter);
+        buf.writeUtf(routeCount == null ? "" : routeCount);
+        buf.writeUtf(routePriority == null ? "" : routePriority);
     }
 
 }

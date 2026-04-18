@@ -3,6 +3,7 @@ package com.talhanation.bannermod;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitEntity;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
@@ -32,6 +33,18 @@ public final class BannerModGameTestSupport {
     public static FarmerEntity spawnOwnedFarmer(GameTestHelper helper, Player player, BlockPos relativePos) {
         FarmerEntity worker = spawnEntity(helper, com.talhanation.bannermod.registry.civilian.ModEntityTypes.FARMER.get(), relativePos);
         worker.setCustomName(Component.literal("Integrated Farmer"));
+        worker.setCustomNameVisible(true);
+        worker.setPersistenceRequired();
+        worker.setOwnerUUID(Optional.of(player.getUUID()));
+        worker.setIsOwned(true);
+        worker.setFollowState(2);
+        worker.setHoldPos(Vec3.atCenterOf(worker.blockPosition()));
+        return worker;
+    }
+
+    public static MerchantEntity spawnOwnedMerchant(GameTestHelper helper, Player player, BlockPos relativePos) {
+        MerchantEntity worker = spawnEntity(helper, com.talhanation.bannermod.registry.civilian.ModEntityTypes.MERCHANT.get(), relativePos);
+        worker.setCustomName(Component.literal("Courier Merchant"));
         worker.setCustomNameVisible(true);
         worker.setPersistenceRequired();
         worker.setOwnerUUID(Optional.of(player.getUUID()));

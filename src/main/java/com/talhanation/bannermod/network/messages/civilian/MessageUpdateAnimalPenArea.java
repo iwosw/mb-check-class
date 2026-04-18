@@ -2,10 +2,8 @@ package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.AnimalPenArea;
 import de.maxhenkel.corelib.net.Message;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -40,14 +38,12 @@ public class MessageUpdateAnimalPenArea implements Message<MessageUpdateAnimalPe
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        player.getCommandSenderWorld().getEntitiesOfClass(AnimalPenArea.class, player.getBoundingBox()
-                        .inflate(16.0D), v -> v
-                        .getUUID()
-                        .equals(this.uuid))
-                .stream()
-                .findAny()
-                .ifPresent(this::update);
+        AnimalPenArea animalPenArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AnimalPenArea.class);
+        if (animalPenArea == null) {
+            return;
+        }
 
+        this.update(animalPenArea);
     }
 
     public void update(AnimalPenArea animalPenArea){

@@ -1,6 +1,6 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;

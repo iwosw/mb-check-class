@@ -8,7 +8,6 @@ import com.talhanation.bannermod.network.messages.military.MessageMovement;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
-import com.talhanation.bannermod.network.messages.civilian.BuildAreaUpdateAuthoring;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateBuildArea;
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import net.minecraft.gametest.framework.GameTest;
@@ -170,14 +169,14 @@ public class BannerModMultiplayerCooperationGameTests {
      * Mirrors the gating + mutation responsibilities of
      * {@link MessageUpdateBuildArea#executeServerSide} without requiring a
      * {@code NetworkEvent.Context}. Computes the same authorization decision via
-     * {@link BuildAreaUpdateAuthoring#authorize} and applies the update through
+     * {@link WorkAreaAuthoringRules#modifyDecision} and applies the update through
      * {@link MessageUpdateBuildArea#update} when allowed, then returns the decision
      * so callers can assert ALLOW/FORBIDDEN through the consolidated mutation seam.
      */
     private static WorkAreaAuthoringRules.Decision dispatchBuildAreaUpdate(BuildArea buildArea,
                                                                            ServerPlayer player,
                                                                            MessageUpdateBuildArea update) {
-        WorkAreaAuthoringRules.Decision decision = BuildAreaUpdateAuthoring.authorize(true, buildArea.getAuthoringAccess(player));
+        WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.modifyDecision(true, buildArea.getAuthoringAccess(player));
         if (WorkAreaAuthoringRules.isAllowed(decision)) {
             update.update(buildArea);
         }

@@ -2,6 +2,7 @@ package com.talhanation.bannermod.ai.civilian;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsBlockedReason;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
@@ -166,9 +167,14 @@ public class DepositItemsToStorage extends AbstractChestGoal {
                 worker.farmedItems = 0;
                 worker.forcedDeposit = false;
                 this.worker.lastStorage = storageArea.getUUID();
+                worker.completeActiveCourierDelivery();
             }
 
             case ERROR_NO_STORAGE_FOUND -> {
+                if (worker.hasActiveCourierTask()) {
+                    worker.abandonActiveCourierTask(BannerModLogisticsBlockedReason.DESTINATION_CONTAINER_MISSING, "I could not reach the courier delivery storage.");
+                    return;
+                }
                 reportBlockedReason("deposit_storage_missing", "No available storage found nearby.");
                 if(!errorMessageDone){
                     errorMessageDone = true;
@@ -181,6 +187,10 @@ public class DepositItemsToStorage extends AbstractChestGoal {
             }
 
             case ERROR_STORAGE_FULL -> {
+                if (worker.hasActiveCourierTask()) {
+                    worker.abandonActiveCourierTask(BannerModLogisticsBlockedReason.DESTINATION_FULL, storageArea != null ? storageArea.getName().getString() + " cannot accept the courier delivery." : "The courier delivery storage is full.");
+                    return;
+                }
                 reportBlockedReason("deposit_storage_full", storageArea != null ? storageArea.getName().getString() + " is full." : "Storage is full.");
                 if(!errorMessageDone){
                     errorMessageDone = true;
@@ -190,6 +200,10 @@ public class DepositItemsToStorage extends AbstractChestGoal {
             }
 
             case ERROR_STORAGE_NO_CONTAINERS -> {
+                if (worker.hasActiveCourierTask()) {
+                    worker.abandonActiveCourierTask(BannerModLogisticsBlockedReason.DESTINATION_CONTAINER_MISSING, storageArea != null ? storageArea.getName().getString() + " has no courier delivery containers." : "The courier delivery storage has no containers.");
+                    return;
+                }
                 reportBlockedReason("deposit_storage_no_containers", storageArea != null ? storageArea.getName().getString() + " has no containers." : "Storage has no containers.");
                 if(!errorMessageDone){
                     errorMessageDone = true;

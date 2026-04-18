@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.client.civilian.gui.MiningAreaScreen;
 import com.talhanation.bannermod.config.WorkersServerConfig;

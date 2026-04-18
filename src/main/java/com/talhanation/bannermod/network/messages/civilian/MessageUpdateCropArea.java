@@ -36,14 +36,12 @@ public class MessageUpdateCropArea implements Message<MessageUpdateCropArea> {
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        player.getCommandSenderWorld().getEntitiesOfClass(CropArea.class, player.getBoundingBox()
-                        .inflate(16.0D), v -> v
-                        .getUUID()
-                        .equals(this.uuid))
-                .stream()
-                .findAny()
-                .ifPresent(this::update);
+        CropArea cropArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, CropArea.class);
+        if (cropArea == null) {
+            return;
+        }
 
+        this.update(cropArea);
     }
 
     public void update(CropArea cropArea){

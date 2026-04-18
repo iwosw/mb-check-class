@@ -4,9 +4,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -37,15 +35,8 @@ public class MessageUpdateOwner implements Message<MessageUpdateOwner> {
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (!(entity instanceof AbstractWorkAreaEntity workArea)) {
-            this.sendDecision(player, WorkAreaAuthoringRules.Decision.AREA_NOT_FOUND);
-            return;
-        }
-
-        WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.modifyDecision(true, workArea.getAuthoringAccess(player));
-        if (!WorkAreaAuthoringRules.isAllowed(decision)) {
-            this.sendDecision(player, decision);
+        AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
+        if (workArea == null) {
             return;
         }
 
@@ -64,14 +55,6 @@ public class MessageUpdateOwner implements Message<MessageUpdateOwner> {
 
         workArea.setTeamStringID(player.getTeam().getName());
     }
-
-    private void sendDecision(ServerPlayer player, WorkAreaAuthoringRules.Decision decision) {
-        String messageKey = WorkAreaAuthoringRules.getMessageKey(decision);
-        if (messageKey != null) {
-            player.sendSystemMessage(Component.translatable(messageKey));
-        }
-    }
-
     public MessageUpdateOwner fromBytes(FriendlyByteBuf buf) {
         this.uuid = buf.readUUID();
         this.playerUUID = buf.readUUID();

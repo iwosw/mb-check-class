@@ -45,15 +45,8 @@ public class MessageUpdateWorkArea implements Message<MessageUpdateWorkArea> {
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (!(entity instanceof AbstractWorkAreaEntity workArea)) {
-            this.sendDecision(player, WorkAreaAuthoringRules.Decision.AREA_NOT_FOUND);
-            return;
-        }
-
-        WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.modifyDecision(true, workArea.getAuthoringAccess(player));
-        if (!WorkAreaAuthoringRules.isAllowed(decision)) {
-            this.sendDecision(player, decision);
+        AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
+        if (workArea == null) {
             return;
         }
 
@@ -77,20 +70,12 @@ public class MessageUpdateWorkArea implements Message<MessageUpdateWorkArea> {
         if (AbstractWorkAreaEntity.isAreaOverlapping(workArea.level(), workArea, newArea)) {
             workArea.moveTo(oldPos);
             workArea.createArea();
-            this.sendDecision(player, WorkAreaAuthoringRules.Decision.OVERLAPPING);
+            WorkAreaMessageSupport.sendDecision(player, WorkAreaAuthoringRules.Decision.OVERLAPPING);
             return;
         }
 
         workArea.setTime(workArea.getTime() + DONE_TIME);
     }
-
-    private void sendDecision(ServerPlayer player, WorkAreaAuthoringRules.Decision decision) {
-        String messageKey = WorkAreaAuthoringRules.getMessageKey(decision);
-        if (messageKey != null) {
-            player.sendSystemMessage(Component.translatable(messageKey));
-        }
-    }
-
     public MessageUpdateWorkArea fromBytes(FriendlyByteBuf buf) {
         this.x = buf.readFloat();
         this.y = buf.readFloat();

@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CitizenWorkerBridgeTest {
 
-    private static final Path WORKER_SOURCE = Path.of("workers/src/main/java/com/talhanation/workers/entities/AbstractWorkerEntity.java");
-    private static final Path BINDING_SOURCE = Path.of("workers/src/main/java/com/talhanation/workers/entities/WorkerBindingResume.java");
+    private static final Path WORKER_SOURCE = Path.of("src/main/java/com/talhanation/bannermod/entity/civilian/AbstractWorkerEntity.java");
+    private static final Path BINDING_SOURCE = Path.of("src/main/java/com/talhanation/bannermod/entity/civilian/WorkerBindingResume.java");
 
     @Test
     void workerRecoveryAndBindingDataCanFlowThroughTheCitizenBridge() {

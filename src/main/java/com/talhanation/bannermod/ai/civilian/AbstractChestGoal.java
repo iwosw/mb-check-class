@@ -120,7 +120,11 @@ public abstract class AbstractChestGoal extends Goal {
 
         list.removeIf(storageArea -> !storageArea.canWorkHere(worker));
 
-        if(this.worker.lastStorage != null && list.stream().anyMatch(area -> area.getUUID().equals(this.worker.lastStorage))){
+        UUID activeCourierTargetStorageId = this.worker.getActiveCourierTargetStorageAreaId();
+        if (activeCourierTargetStorageId != null) {
+            list.removeIf(area -> !activeCourierTargetStorageId.equals(area.getUUID()));
+        }
+        else if(this.worker.lastStorage != null && list.stream().anyMatch(area -> area.getUUID().equals(this.worker.lastStorage))){
             list.removeIf(area -> !area.getUUID().equals(this.worker.lastStorage));
         }
 

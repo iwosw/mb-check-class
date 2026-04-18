@@ -4,6 +4,7 @@ import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateStorageArea;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -23,6 +24,11 @@ public class StorageAreaScreen extends WorkAreaScreen {
     private static final MutableComponent TEXT_FISHERMAN = Component.translatable("gui.workers.checkbox.fisherman");
 
     private static final Component TEXT_STORAGE_NAME = Component.translatable("entity.workers.storage");;
+    private static final Component TEXT_ROUTE_DESTINATION = Component.literal("Route destination UUID");
+    private static final Component TEXT_ROUTE_FILTER = Component.literal("Route filter item ids");
+    private static final Component TEXT_ROUTE_COUNT = Component.literal("Route count");
+    private static final Component TEXT_ROUTE_PRIORITY = Component.literal("Route priority");
+    private static final Component TEXT_ROUTE_BLOCKED = Component.literal("Blocked state");
     public final StorageArea storageArea;
     private boolean replant;
     private boolean stripLogs;
@@ -43,7 +49,15 @@ public class StorageAreaScreen extends WorkAreaScreen {
     private boolean animalFarmer;
     private EnumSet<StorageArea.StorageType> types;
     public EditBox nameEditBox;
+    public EditBox routeDestinationEditBox;
+    public EditBox routeFilterEditBox;
+    public EditBox routeCountEditBox;
+    public EditBox routePriorityEditBox;
     public Component savedName;
+    public String routeDestination;
+    public String routeFilter;
+    public String routeCount;
+    public String routePriority;
     public StorageAreaScreen(StorageArea storageArea, Player player) {
         super(storageArea.getCustomName(), storageArea, player);
         this.storageArea = storageArea;
@@ -55,6 +69,10 @@ public class StorageAreaScreen extends WorkAreaScreen {
         this.merchants = types.contains(StorageArea.StorageType.MERCHANTS);
         this.fisherman = types.contains(StorageArea.StorageType.FISHERMAN);
         this.animalFarmer = types.contains(StorageArea.StorageType.ANIMAL_FARMERS);
+        this.routeDestination = storageArea.getRouteDestinationText();
+        this.routeFilter = storageArea.getRouteFilterText();
+        this.routeCount = Integer.toString(storageArea.getRouteRequestedCount());
+        this.routePriority = storageArea.getRoutePriorityText();
     }
 
     @Override
@@ -72,9 +90,12 @@ public class StorageAreaScreen extends WorkAreaScreen {
 
         int checkBoxWidth = 100;
         int checkBoxHeight = 20;
+        int routeFieldWidth = 150;
 
         int checkBoxX = x - checkBoxWidth / 2;
         int checkBoxY = y + checkBoxHeight / 2 + 40;
+        int routeFieldX = x + 40;
+        int routeFieldY = y - 30;
 
         nameEditBox = new EditBox(font, checkBoxX , checkBoxY - 20, checkBoxWidth, checkBoxHeight, Component.literal(""));
         nameEditBox.setValue(savedName.getString());
@@ -84,6 +105,30 @@ public class StorageAreaScreen extends WorkAreaScreen {
         nameEditBox.setMaxLength(32);
         nameEditBox.setResponder(this::setName);
         this.addRenderableWidget(nameEditBox);
+
+        routeDestinationEditBox = new EditBox(font, routeFieldX, routeFieldY, routeFieldWidth, checkBoxHeight, Component.empty());
+        routeDestinationEditBox.setValue(this.routeDestination);
+        routeDestinationEditBox.setMaxLength(36);
+        routeDestinationEditBox.setResponder(value -> this.routeDestination = value);
+        this.addRenderableWidget(routeDestinationEditBox);
+
+        routeFilterEditBox = new EditBox(font, routeFieldX, routeFieldY + 24, routeFieldWidth, checkBoxHeight, Component.empty());
+        routeFilterEditBox.setValue(this.routeFilter);
+        routeFilterEditBox.setMaxLength(128);
+        routeFilterEditBox.setResponder(value -> this.routeFilter = value);
+        this.addRenderableWidget(routeFilterEditBox);
+
+        routeCountEditBox = new EditBox(font, routeFieldX, routeFieldY + 48, 70, checkBoxHeight, Component.empty());
+        routeCountEditBox.setValue(this.routeCount);
+        routeCountEditBox.setMaxLength(5);
+        routeCountEditBox.setResponder(value -> this.routeCount = value);
+        this.addRenderableWidget(routeCountEditBox);
+
+        routePriorityEditBox = new EditBox(font, routeFieldX + 80, routeFieldY + 48, 70, checkBoxHeight, Component.empty());
+        routePriorityEditBox.setValue(this.routePriority);
+        routePriorityEditBox.setMaxLength(10);
+        routePriorityEditBox.setResponder(value -> this.routePriority = value);
+        this.addRenderableWidget(routePriorityEditBox);
 
         this.minersCheckBox = new RecruitsCheckBox(checkBoxX, 10 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_MINERS,
                 this.miners,
@@ -198,7 +243,31 @@ public class StorageAreaScreen extends WorkAreaScreen {
     }
 
     public void sendMessage(){
-        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateStorageArea(storageArea.getUUID(), storageArea.getStorageMask(types), savedName.getString()));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateStorageArea(
+                storageArea.getUUID(),
+                storageArea.getStorageMask(types),
+                savedName.getString(),
+                this.routeDestination,
+                this.routeFilter,
+                this.routeCount,
+                this.routePriority
+        ));
+    }
+
+    @Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        int labelX = x + 40;
+        int labelY = y - 42;
+        guiGraphics.drawString(font, TEXT_ROUTE_DESTINATION, labelX, labelY, 4210752, false);
+        guiGraphics.drawString(font, TEXT_ROUTE_FILTER, labelX, labelY + 24, 4210752, false);
+        guiGraphics.drawString(font, TEXT_ROUTE_COUNT, labelX, labelY + 48, 4210752, false);
+        guiGraphics.drawString(font, TEXT_ROUTE_PRIORITY, labelX + 80, labelY + 48, 4210752, false);
+        guiGraphics.drawString(font, TEXT_ROUTE_BLOCKED, labelX, labelY + 76, 4210752, false);
+        guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedReasonToken().isBlank() ? "none" : this.storageArea.getRouteBlockedReasonToken()), labelX, labelY + 88, 4210752, false);
+        if (!this.storageArea.getRouteBlockedMessage().isBlank()) {
+            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 100, 4210752, false);
+        }
     }
 
     @Override

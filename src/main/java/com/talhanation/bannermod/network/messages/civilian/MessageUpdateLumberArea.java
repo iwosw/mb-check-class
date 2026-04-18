@@ -41,14 +41,12 @@ public class MessageUpdateLumberArea implements Message<MessageUpdateLumberArea>
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        player.getCommandSenderWorld().getEntitiesOfClass(LumberArea.class, player.getBoundingBox()
-                        .inflate(16.0D), v -> v
-                        .getUUID()
-                        .equals(this.uuid))
-                .stream()
-                .findAny()
-                .ifPresent(this::update);
+        LumberArea lumberArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, LumberArea.class);
+        if (lumberArea == null) {
+            return;
+        }
 
+        this.update(lumberArea);
     }
 
     public void update(LumberArea lumberArea){

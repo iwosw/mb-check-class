@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CitizenRecruitBridgeTest {
 
-    private static final Path RECRUIT_SOURCE = Path.of("recruits/src/main/java/com/talhanation/recruits/entities/AbstractRecruitEntity.java");
+    private static final Path RECRUIT_SOURCE = Path.of("src/main/java/com/talhanation/bannermod/entity/military/AbstractRecruitEntity.java");
 
     @Test
     void recruitOwnershipAndFollowStateCanFlowThroughTheCitizenBridgeWithoutChangingLegacyKeys() {

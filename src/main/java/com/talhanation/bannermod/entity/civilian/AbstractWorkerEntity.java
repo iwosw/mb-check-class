@@ -1,18 +1,23 @@
 package com.talhanation.bannermod.entity.civilian;
 
 import com.google.common.collect.ImmutableSet;
-import com.talhanation.bannermod.authority.BannerModAuthorityRules;
+import com.talhanation.bannermod.shared.authority.BannerModAuthorityRules;
+import com.talhanation.bannermod.ai.civilian.CourierTaskFlow;
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleContext;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
-import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.shared.logistics.BannerModCourierTask;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsBlockedReason;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.entity.military.AbstractChunkLoaderEntity;
 import com.talhanation.bannermod.ai.civilian.DepositItemsToStorage;
 import com.talhanation.bannermod.ai.civilian.GetNeededItemsFromStorage;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -65,6 +70,10 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity {
     private UUID boundWorkArea;
     private final WorkerControlStatus workStatus = new WorkerControlStatus();
     private final WorkerStorageRequestState storageRequestState = new WorkerStorageRequestState();
+    @Nullable
+    private BannerModCourierTask activeCourierTask;
+    @Nullable
+    private NeededItem activeCourierNeededItem;
     private final CitizenCore citizenCore = new CitizenCore() {
         @Override
         public UUID getOwnerUUID() {
@@ -313,6 +322,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity {
         this.neededItems.clear();
         this.forcedDeposit = false;
         this.lastStorage = null;
+        this.clearActiveCourierTask();
         this.clearWorkStatus();
         this.clearCurrentWorkAreaForRecovery();
 
@@ -583,6 +593,9 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity {
     }
 
     public boolean needsToDeposit() {
+        if (this.hasActiveCourierTask() && !this.hasActiveCourierPickupPending() && this.getActiveCourierCarriedCount() > 0) {
+            return true;
+        }
         return forcedDeposit || farmedItems > 128;
     }
     @Nullable
@@ -678,6 +691,9 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity {
 
 
     public boolean needsToGetItems() {
+        if (this.hasActiveCourierPickupPending()) {
+            return true;
+        }
         return neededItems.stream().anyMatch(neededItem -> neededItem.required);
     }
 
@@ -715,6 +731,155 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity {
     @Nullable
     public WorkerStorageRequestState.PendingComplaint releasePendingStorageComplaint() {
         return this.storageRequestState.releasePendingComplaint();
+    }
+
+    @Nullable
+    public BannerModCourierTask getActiveCourierTask() {
+        return this.activeCourierTask;
+    }
+
+    public boolean hasActiveCourierTask() {
+        return this.activeCourierTask != null;
+    }
+
+    public void setActiveCourierTask(@Nullable BannerModCourierTask activeCourierTask) {
+        this.activeCourierTask = activeCourierTask;
+        this.clearCourierBlockedState();
+        this.syncActiveCourierTaskNeeds();
+    }
+
+    public void clearActiveCourierTask() {
+        if (this.activeCourierTask != null) {
+            BannerModLogisticsRuntime.service().releaseReservation(this.activeCourierTask.reservation().reservationId());
+        }
+        this.activeCourierTask = null;
+        if (this.activeCourierNeededItem != null) {
+            this.neededItems.remove(this.activeCourierNeededItem);
+            this.activeCourierNeededItem = null;
+        }
+    }
+
+    public int getActiveCourierCarriedCount() {
+        if (this.activeCourierTask == null) {
+            return 0;
+        }
+        return this.countMatchingItems(this.activeCourierTask.reservation().filter()::matches);
+    }
+
+    public int getActiveCourierPickupMissingCount() {
+        if (this.activeCourierTask == null) {
+            return 0;
+        }
+        return CourierTaskFlow.missingPickupCount(this.activeCourierTask, this.getActiveCourierCarriedCount());
+    }
+
+    public boolean hasActiveCourierPickupPending() {
+        if (this.activeCourierTask == null) {
+            return false;
+        }
+        return CourierTaskFlow.pickupPending(this.activeCourierTask, this.getActiveCourierCarriedCount());
+    }
+
+    @Nullable
+    public UUID getActiveCourierTargetStorageAreaId() {
+        if (this.activeCourierTask == null) {
+            return null;
+        }
+        return CourierTaskFlow.targetStorageAreaId(this.activeCourierTask, this.getActiveCourierCarriedCount());
+    }
+
+    public void markActiveCourierPickupComplete() {
+        this.syncActiveCourierTaskNeeds();
+        this.clearPendingStorageComplaint();
+    }
+
+    public void completeActiveCourierDelivery() {
+        this.clearCourierBlockedState();
+        this.clearActiveCourierTask();
+        this.clearPendingStorageComplaint();
+        this.forcedDeposit = false;
+    }
+
+    public void abandonActiveCourierTask(BannerModLogisticsBlockedReason reason, String message) {
+        if (this.activeCourierTask == null || reason == null) {
+            return;
+        }
+        this.updateCourierBlockedState(reason, message);
+        this.clearActiveCourierTask();
+        this.forcedDeposit = false;
+        this.reportBlockedReason(reason.reasonToken(), Component.literal(this.getName().getString() + ": " + message));
+    }
+
+    private void syncActiveCourierTaskNeeds() {
+        if (this.activeCourierNeededItem != null) {
+            this.neededItems.remove(this.activeCourierNeededItem);
+            this.activeCourierNeededItem = null;
+        }
+
+        if (this.activeCourierTask == null) {
+            return;
+        }
+
+        int missingCount = this.getActiveCourierPickupMissingCount();
+        if (missingCount <= 0) {
+            return;
+        }
+
+        this.activeCourierNeededItem = new NeededItem(this.activeCourierTask.reservation().filter()::matches, missingCount, true);
+        this.neededItems.add(this.activeCourierNeededItem);
+    }
+
+    private void clearCourierBlockedState() {
+        this.updateStorageAreaBlockedState(this.resolveActiveCourierSourceStorage(), null, null);
+        this.updateStorageAreaBlockedState(this.resolveActiveCourierDestinationStorage(), null, null);
+    }
+
+    private void updateCourierBlockedState(BannerModLogisticsBlockedReason reason, String message) {
+        StorageArea sourceStorage = this.resolveActiveCourierSourceStorage();
+        StorageArea destinationStorage = this.resolveActiveCourierDestinationStorage();
+        switch (reason) {
+            case SOURCE_SHORTAGE, SOURCE_CONTAINER_MISSING -> this.updateStorageAreaBlockedState(sourceStorage, reason, message);
+            case DESTINATION_CONTAINER_MISSING, DESTINATION_FULL -> this.updateStorageAreaBlockedState(destinationStorage, reason, message);
+            case RESERVATION_TIMEOUT -> {
+                this.updateStorageAreaBlockedState(sourceStorage, reason, message);
+                this.updateStorageAreaBlockedState(destinationStorage, reason, message);
+            }
+        }
+    }
+
+    private void updateStorageAreaBlockedState(@Nullable StorageArea storageArea,
+                                               @Nullable BannerModLogisticsBlockedReason reason,
+                                               @Nullable String message) {
+        if (storageArea == null) {
+            return;
+        }
+        if (reason == null) {
+            storageArea.clearRouteBlockedState();
+            return;
+        }
+        storageArea.setRouteBlockedState(reason, message);
+    }
+
+    @Nullable
+    private StorageArea resolveActiveCourierSourceStorage() {
+        if (this.activeCourierTask == null || this.level().isClientSide()) {
+            return null;
+        }
+        return this.level() instanceof ServerLevel serverLevel ? this.findStorageArea(serverLevel, this.activeCourierTask.route().source().storageAreaId()) : null;
+    }
+
+    @Nullable
+    private StorageArea resolveActiveCourierDestinationStorage() {
+        if (this.activeCourierTask == null || this.level().isClientSide()) {
+            return null;
+        }
+        return this.level() instanceof ServerLevel serverLevel ? this.findStorageArea(serverLevel, this.activeCourierTask.route().destination().storageAreaId()) : null;
+    }
+
+    @Nullable
+    private StorageArea findStorageArea(ServerLevel level, UUID storageAreaId) {
+        Entity entity = level.getEntity(storageAreaId);
+        return entity instanceof StorageArea storageArea ? storageArea : null;
     }
 
     public BannerModSupplyStatus.WorkerSupplyStatus getSupplyStatus() {

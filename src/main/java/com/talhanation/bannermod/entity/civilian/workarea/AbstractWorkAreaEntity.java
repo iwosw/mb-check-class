@@ -1,7 +1,9 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import net.minecraft.client.gui.screens.Screen;
@@ -193,7 +195,28 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     public boolean canWorkHere(AbstractWorkerEntity worker) {
-        return worker.isOwned() && (worker.getOwnerUUID().equals(this.getPlayerUUID()) || (worker.getTeam() != null && this.getTeamStringID() != null && this.getTeamStringID().equals(worker.getTeam().getName())));
+        if (!worker.isOwned()) {
+            return false;
+        }
+
+        UUID ownerUuid = worker.getOwnerUUID();
+        boolean ownerMatch = ownerUuid != null && ownerUuid.equals(this.getPlayerUUID());
+        boolean sameTeam = worker.getTeam() != null && this.getTeamStringID() != null && this.getTeamStringID().equals(worker.getTeam().getName());
+        if (!ownerMatch && !sameTeam) {
+            return false;
+        }
+
+        String settlementFactionId = this.getTeamStringID();
+        if (settlementFactionId == null || settlementFactionId.isBlank()) {
+            return true;
+        }
+
+        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveSettlementStatus(
+                ClaimEvents.recruitsClaimManager,
+                this.blockPosition(),
+                settlementFactionId
+        );
+        return BannerModSettlementBinding.allowsSettlementOperation(binding);
     }
 
     public void setDone(boolean b) {
@@ -262,16 +285,20 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
     public void setWidthSize(int size) {
         this.entityData.set(WIDTH, size);
+        this.area = null;
     }
     public void setHeightSize(int height) {
         this.entityData.set(HEIGHT, height);
+        this.area = null;
     }
     public void setDepthSize(int size) {
         this.entityData.set(DEPTH, size);
+        this.area = null;
     }
 
     public void setFacing(Direction direction) {
         this.entityData.set(FACING, direction);
+        this.area = null;
     }
 
     public void setPlayerName(String playerName) {
@@ -316,6 +343,12 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     public abstract Item getRenderItem();
     @OnlyIn(Dist.CLIENT)
     public abstract Screen getScreen(Player player);
+
+    @Override
+    public void moveTo(double x, double y, double z, float yRot, float xRot) {
+        super.moveTo(x, y, z, yRot, xRot);
+        this.area = null;
+    }
 
     public BlockPos getOriginPos() {
         return this.getOnPos();

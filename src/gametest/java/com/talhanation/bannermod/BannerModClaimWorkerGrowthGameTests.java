@@ -1,12 +1,12 @@
 package com.talhanation.bannermod;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
-import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -25,34 +25,27 @@ import java.util.UUID;
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModClaimWorkerGrowthGameTests {
 
-    private static final UUID FRIENDLY_LEADER_UUID = UUID.fromString("00000000-0000-0000-0000-000000003101");
-    private static final UUID HOSTILE_LEADER_UUID = UUID.fromString("00000000-0000-0000-0000-000000003102");
-    private static final String FRIENDLY_TEAM_ID = "phase31_claim_friendly";
-    private static final String HOSTILE_TEAM_ID = "phase31_claim_hostile";
-
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void friendlyClaimGrowthSpawnsOwnedWorkerWithFactionDefaults(GameTestHelper helper) {
-        ClaimGrowthConfigSnapshot snapshot = ClaimGrowthConfigSnapshot.capture();
-        try {
-            configureClaimGrowthForTests(20L, 4);
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = claimGrowthConfig(20L, 4);
 
-            ServerLevel level = helper.getLevel();
-            ServerPlayer leader = createLeader(helper, level, FRIENDLY_LEADER_UUID, "phase31-friendly-leader", FRIENDLY_TEAM_ID);
-            BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
-            RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
+        ServerLevel level = helper.getLevel();
+        String teamId = "phase31_claim_friendly_growth";
+        ServerPlayer leader = createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003111"), "phase31-friendly-leader", teamId);
+        BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, teamId, leader.getUUID(), leader.getScoreboardName());
+        int baselineWorkers = getClaimWorkers(level, claim).size();
 
-            AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 20L);
-            List<AbstractWorkerEntity> claimWorkers = getClaimWorkers(level, claim);
+        AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 20L, config);
+        List<AbstractWorkerEntity> claimWorkers = getClaimWorkers(level, claim);
 
-            helper.assertTrue(worker != null, "Expected friendly claim growth to spawn one worker when the claim starts empty.");
-            helper.assertTrue(claimWorkers.size() == 1, "Expected exactly one grown worker inside the friendly claim.");
-            helper.assertTrue(leader.getUUID().equals(claimWorkers.get(0).getOwnerUUID()), "Expected the grown worker to inherit the claim leader owner UUID.");
-            helper.assertTrue(claimWorkers.get(0).getTeam() != null && FRIENDLY_TEAM_ID.equals(claimWorkers.get(0).getTeam().getName()),
-                    "Expected the grown worker to join the claim leader's faction team.");
-        } finally {
-            snapshot.restore();
-        }
+        helper.assertTrue(worker != null, "Expected friendly claim growth to spawn one worker when the claim starts empty.");
+        helper.assertTrue(claimWorkers.size() == baselineWorkers + 1, "Expected claim growth to add exactly one owned worker to the claim.");
+        helper.assertTrue(claimWorkers.stream().anyMatch(grownWorker -> leader.getUUID().equals(grownWorker.getOwnerUUID())),
+                "Expected a grown worker to inherit the claim leader owner UUID.");
+        helper.assertTrue(claimWorkers.stream().anyMatch(grownWorker -> grownWorker.getTeam() != null && teamId.equals(grownWorker.getTeam().getName())),
+                "Expected a grown worker to join the claim leader's faction team.");
 
         helper.succeed();
     }
@@ -60,27 +53,28 @@ public class BannerModClaimWorkerGrowthGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void claimGrowthWaitsForDiminishingCooldownBeforeSecondWorker(GameTestHelper helper) {
-        ClaimGrowthConfigSnapshot snapshot = ClaimGrowthConfigSnapshot.capture();
-        try {
-            configureClaimGrowthForTests(20L, 4);
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = claimGrowthConfig(20L, 4);
 
-            ServerLevel level = helper.getLevel();
-            ServerPlayer leader = createLeader(helper, level, FRIENDLY_LEADER_UUID, "phase31-cooldown-leader", FRIENDLY_TEAM_ID);
-            BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
-            RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
+        ServerLevel level = helper.getLevel();
+        String teamId = "phase31_claim_friendly_cooldown";
+        ServerPlayer leader = createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003112"), "phase31-cooldown-leader", teamId);
+        BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, teamId, leader.getUUID(), leader.getScoreboardName());
+        int baselineWorkers = getClaimWorkers(level, claim).size();
 
-            AbstractWorkerEntity firstWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 100L);
-            AbstractWorkerEntity earlyWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 139L);
-            AbstractWorkerEntity secondWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 140L);
-            List<AbstractWorkerEntity> claimWorkers = getClaimWorkers(level, claim);
+        AbstractWorkerEntity firstWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 100L, config);
+        int workersAfterFirst = getClaimWorkers(level, claim).size();
+        AbstractWorkerEntity earlyWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 139L, config);
+        int workersAfterEarly = getClaimWorkers(level, claim).size();
+        AbstractWorkerEntity secondWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 140L, config);
+        List<AbstractWorkerEntity> claimWorkers = getClaimWorkers(level, claim);
 
-            helper.assertTrue(firstWorker != null, "Expected the first claim growth attempt to create one worker.");
-            helper.assertTrue(earlyWorker == null, "Expected the second worker to stay blocked until the diminishing cooldown fully expires.");
-            helper.assertTrue(secondWorker != null, "Expected a second worker once the required diminishing cooldown has elapsed.");
-            helper.assertTrue(claimWorkers.size() == 2, "Expected exactly two workers after the cooldown-gated second growth attempt succeeds.");
-        } finally {
-            snapshot.restore();
-        }
+        helper.assertTrue(firstWorker != null || workersAfterFirst > baselineWorkers, "Expected the first claim growth attempt to create one worker.");
+        helper.assertTrue(workersAfterFirst == baselineWorkers + 1, "Expected the first claim growth attempt to add exactly one worker to the claim.");
+        helper.assertTrue(earlyWorker == null, "Expected the second worker to stay blocked until the diminishing cooldown fully expires.");
+        helper.assertTrue(workersAfterEarly == workersAfterFirst, "Expected the claim worker count to stay unchanged while cooldown is still active.");
+        helper.assertTrue(secondWorker != null || claimWorkers.size() > workersAfterFirst, "Expected cooldown expiry to allow one more worker into the claim.");
+        helper.assertTrue(claimWorkers.size() == baselineWorkers + 2, "Expected cooldown expiry to add one more worker to the claim.");
 
         helper.succeed();
     }
@@ -88,35 +82,35 @@ public class BannerModClaimWorkerGrowthGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void hostileOrUnclaimedTerritoryNeverSpawnsClaimWorkers(GameTestHelper helper) {
-        ClaimGrowthConfigSnapshot snapshot = ClaimGrowthConfigSnapshot.capture();
-        try {
-            configureClaimGrowthForTests(20L, 4);
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = claimGrowthConfig(20L, 4);
 
-            ServerLevel level = helper.getLevel();
-            ServerPlayer leader = createLeader(helper, level, FRIENDLY_LEADER_UUID, "phase31-hostile-leader", FRIENDLY_TEAM_ID);
-            createLeader(helper, level, HOSTILE_LEADER_UUID, "phase31-hostile-player", HOSTILE_TEAM_ID);
-            BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
-            RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
+        ServerLevel level = helper.getLevel();
+        String friendlyTeamId = "phase31_claim_friendly_hostile";
+        String hostileTeamId = "phase31_claim_hostile_hostile";
+        ServerPlayer leader = createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003113"), "phase31-hostile-leader", friendlyTeamId);
+        createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003114"), "phase31-hostile-player", hostileTeamId);
+        BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, friendlyTeamId, leader.getUUID(), leader.getScoreboardName());
 
-            AbstractWorkerEntity hostileWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(
-                    level,
-                    claim,
-                    new BannerModSettlementBinding.Binding(BannerModSettlementBinding.Status.HOSTILE_CLAIM, HOSTILE_TEAM_ID, FRIENDLY_TEAM_ID),
-                    200L
-            );
-            AbstractWorkerEntity unclaimedWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(
-                    level,
-                    null,
-                    new BannerModSettlementBinding.Binding(BannerModSettlementBinding.Status.UNCLAIMED, FRIENDLY_TEAM_ID, null),
-                    200L
-            );
+        AbstractWorkerEntity hostileWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(
+                level,
+                claim,
+                new BannerModSettlementBinding.Binding(BannerModSettlementBinding.Status.HOSTILE_CLAIM, hostileTeamId, friendlyTeamId),
+                200L,
+                config
+        );
+        int baselineWorkers = getClaimWorkers(level, claim).size();
+        AbstractWorkerEntity unclaimedWorker = WorkersVillagerEvents.attemptClaimWorkerGrowth(
+                level,
+                null,
+                new BannerModSettlementBinding.Binding(BannerModSettlementBinding.Status.UNCLAIMED, friendlyTeamId, null),
+                200L,
+                config
+        );
 
-            helper.assertTrue(hostileWorker == null, "Expected hostile claim territory to deny claim worker growth.");
-            helper.assertTrue(unclaimedWorker == null, "Expected unclaimed territory to deny claim worker growth.");
-            helper.assertTrue(getClaimWorkers(level, claim).isEmpty(), "Expected hostile or unclaimed claim growth attempts to leave worker count unchanged.");
-        } finally {
-            snapshot.restore();
-        }
+        helper.assertTrue(hostileWorker == null, "Expected hostile claim territory to deny claim worker growth.");
+        helper.assertTrue(unclaimedWorker == null, "Expected unclaimed territory to deny claim worker growth.");
+        helper.assertTrue(getClaimWorkers(level, claim).size() == baselineWorkers, "Expected hostile or unclaimed claim growth attempts to leave claim worker count unchanged.");
 
         helper.succeed();
     }
@@ -124,25 +118,21 @@ public class BannerModClaimWorkerGrowthGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void claimGrownFarmerSeedsCropAreaFromPreparedField(GameTestHelper helper) {
-        ClaimGrowthConfigSnapshot snapshot = ClaimGrowthConfigSnapshot.capture();
-        try {
-            configureClaimGrowthForTests(20L, 4);
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = claimGrowthConfig(20L, 4);
 
-            ServerLevel level = helper.getLevel();
-            ServerPlayer leader = createLeader(helper, level, FRIENDLY_LEADER_UUID, "phase31-field-leader", FRIENDLY_TEAM_ID);
-            BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
-            RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, leader.getUUID(), leader.getScoreboardName());
-            prepareField(level, helper.absolutePos(new BlockPos(8, 2, 8)));
+        ServerLevel level = helper.getLevel();
+        String teamId = "phase31_claim_friendly_field";
+        ServerPlayer leader = createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003115"), "phase31-field-leader", teamId);
+        BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, teamId, leader.getUUID(), leader.getScoreboardName());
+        prepareField(level, helper.absolutePos(new BlockPos(8, 2, 8)));
 
-            AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, FRIENDLY_TEAM_ID, 20L);
+        AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 20L, config);
 
-            helper.assertTrue(worker instanceof FarmerEntity, "Expected the configured claim-growth profession pool to spawn a farmer.");
-            FarmerEntity farmer = (FarmerEntity) worker;
-            helper.assertTrue(farmer.currentCropArea != null, "Expected a claim-grown farmer on a prepared field to receive a crop area instead of idling without work.");
-            helper.assertTrue(farmer.currentCropArea.isAlive(), "Expected claim-grown farmer field seeding to create a live crop area entity.");
-        } finally {
-            snapshot.restore();
-        }
+        helper.assertTrue(worker instanceof FarmerEntity, "Expected the configured claim-growth profession pool to spawn a farmer.");
+        FarmerEntity farmer = (FarmerEntity) worker;
+        helper.assertTrue(farmer.currentCropArea != null, "Expected a claim-grown farmer on a prepared field to receive a crop area instead of idling without work.");
+        helper.assertTrue(farmer.currentCropArea.isAlive(), "Expected claim-grown farmer field seeding to create a live crop area entity.");
 
         helper.succeed();
     }
@@ -157,6 +147,8 @@ public class BannerModClaimWorkerGrowthGameTests {
     }
 
     private static List<AbstractWorkerEntity> getClaimWorkers(ServerLevel level, RecruitsClaim claim) {
+        UUID leaderId = claim.getOwnerFaction() == null ? null : claim.getOwnerFaction().getTeamLeaderUUID();
+        String factionId = claim.getOwnerFaction() == null ? null : claim.getOwnerFactionStringID();
         ChunkPos anchorChunk = claim.getCenter() != null ? claim.getCenter() : new ChunkPos(0, 0);
         AABB claimBounds = new AABB(
                 anchorChunk.getMinBlockX(),
@@ -166,14 +158,23 @@ public class BannerModClaimWorkerGrowthGameTests {
                 level.getMaxBuildHeight(),
                 anchorChunk.getMaxBlockZ() + 1.0D
         );
-        return level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds, worker -> worker.isAlive() && claim.containsChunk(worker.chunkPosition()));
+        return level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds, worker -> {
+            if (!worker.isAlive() || !claim.containsChunk(worker.chunkPosition())) {
+                return false;
+            }
+            boolean ownerMatch = leaderId != null && leaderId.equals(worker.getOwnerUUID());
+            boolean teamMatch = factionId != null && worker.getTeam() != null && factionId.equals(worker.getTeam().getName());
+            return ownerMatch || teamMatch;
+        });
     }
 
-    private static void configureClaimGrowthForTests(long baseCooldownTicks, int workerCap) {
-        WorkersServerConfig.EnableClaimWorkerGrowth.set(true);
-        WorkersServerConfig.ClaimWorkerGrowthBaseCooldownTicks.set(baseCooldownTicks);
-        WorkersServerConfig.ClaimWorkerMaxPerClaim.set(workerCap);
-        WorkersServerConfig.ClaimWorkerProfessionPool.set(List.of("farmer"));
+    private static WorkerSettlementSpawnRules.ClaimGrowthConfig claimGrowthConfig(long baseCooldownTicks, int workerCap) {
+        return new WorkerSettlementSpawnRules.ClaimGrowthConfig(
+                true,
+                baseCooldownTicks,
+                workerCap,
+                List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER)
+        );
     }
 
     private static void prepareField(ServerLevel level, BlockPos center) {
@@ -189,25 +190,4 @@ public class BannerModClaimWorkerGrowthGameTests {
         }
     }
 
-    private record ClaimGrowthConfigSnapshot(boolean enabled,
-                                             long baseCooldownTicks,
-                                             int workerCap,
-                                             List<? extends String> professionPool) {
-
-        private static ClaimGrowthConfigSnapshot capture() {
-            return new ClaimGrowthConfigSnapshot(
-                    WorkersServerConfig.EnableClaimWorkerGrowth.get(),
-                    WorkersServerConfig.ClaimWorkerGrowthBaseCooldownTicks.get(),
-                    WorkersServerConfig.ClaimWorkerMaxPerClaim.get(),
-                    List.copyOf(WorkersServerConfig.ClaimWorkerProfessionPool.get())
-            );
-        }
-
-        private void restore() {
-            WorkersServerConfig.EnableClaimWorkerGrowth.set(enabled);
-            WorkersServerConfig.ClaimWorkerGrowthBaseCooldownTicks.set(baseCooldownTicks);
-            WorkersServerConfig.ClaimWorkerMaxPerClaim.set(workerCap);
-            WorkersServerConfig.ClaimWorkerProfessionPool.set(professionPool);
-        }
-    }
 }

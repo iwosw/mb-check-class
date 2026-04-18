@@ -5,9 +5,7 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -44,15 +42,13 @@ public class MessageUpdateBuildArea implements Message<MessageUpdateBuildArea> {
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (!(entity instanceof BuildArea buildArea)) {
-            this.sendDecision(player, WorkAreaAuthoringRules.Decision.AREA_NOT_FOUND);
-            return;
-        }
-
-        WorkAreaAuthoringRules.Decision decision = BuildAreaUpdateAuthoring.authorize(true, buildArea.getAuthoringAccess(player));
-        if (!WorkAreaAuthoringRules.isAllowed(decision)) {
-            this.sendDecision(player, decision);
+        BuildArea buildArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(
+                player,
+                this.uuid,
+                BuildArea.class,
+                area -> WorkAreaAuthoringRules.modifyDecision(true, area.getAuthoringAccess(player))
+        );
+        if (buildArea == null) {
             return;
         }
 
@@ -70,14 +66,6 @@ public class MessageUpdateBuildArea implements Message<MessageUpdateBuildArea> {
             buildArea.clearPlannedBuild();
         }
     }
-
-    private void sendDecision(ServerPlayer player, WorkAreaAuthoringRules.Decision decision) {
-        String messageKey = WorkAreaAuthoringRules.getMessageKey(decision);
-        if (messageKey != null) {
-            player.sendSystemMessage(Component.translatable(messageKey));
-        }
-    }
-
     @Override
     public MessageUpdateBuildArea fromBytes(FriendlyByteBuf buf) {
         this.uuid = buf.readUUID();

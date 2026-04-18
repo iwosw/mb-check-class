@@ -2,6 +2,10 @@ package com.talhanation.bannermod.entity.civilian.workarea;
 
 import com.talhanation.bannermod.client.civilian.gui.StorageAreaScreen;
 import com.talhanation.bannermod.entity.civilian.*;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsAuthoringState;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsBlockedReason;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsPriority;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -24,6 +28,12 @@ import java.util.*;
 public class StorageArea extends AbstractWorkAreaEntity {
 
     public static final EntityDataAccessor<Integer> STORAGE_TYPES = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<String> ROUTE_DESTINATION = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
+    public static final EntityDataAccessor<String> ROUTE_FILTER = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
+    public static final EntityDataAccessor<Integer> ROUTE_REQUESTED_COUNT = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<String> ROUTE_PRIORITY = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
+    public static final EntityDataAccessor<String> ROUTE_BLOCKED_REASON = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
+    public static final EntityDataAccessor<String> ROUTE_BLOCKED_MESSAGE = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
     public Map<BlockPos, Container> storageMap = new HashMap<>();
 
     public StorageArea(EntityType<?> type, Level level) {
@@ -32,18 +42,36 @@ public class StorageArea extends AbstractWorkAreaEntity {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(STORAGE_TYPES, 0);
+        this.entityData.define(ROUTE_DESTINATION, "");
+        this.entityData.define(ROUTE_FILTER, "");
+        this.entityData.define(ROUTE_REQUESTED_COUNT, 16);
+        this.entityData.define(ROUTE_PRIORITY, BannerModLogisticsPriority.NORMAL.name());
+        this.entityData.define(ROUTE_BLOCKED_REASON, "");
+        this.entityData.define(ROUTE_BLOCKED_MESSAGE, "");
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         this.entityData.set(STORAGE_TYPES, tag.getInt("StorageTypes"));
+        this.entityData.set(ROUTE_DESTINATION, tag.getString("LogisticsRouteDestination"));
+        this.entityData.set(ROUTE_FILTER, tag.getString("LogisticsRouteFilter"));
+        this.entityData.set(ROUTE_REQUESTED_COUNT, tag.contains("LogisticsRouteRequestedCount") ? Math.max(1, tag.getInt("LogisticsRouteRequestedCount")) : 16);
+        this.entityData.set(ROUTE_PRIORITY, tag.contains("LogisticsRoutePriority") ? tag.getString("LogisticsRoutePriority") : BannerModLogisticsPriority.NORMAL.name());
+        this.entityData.set(ROUTE_BLOCKED_REASON, tag.getString("LogisticsRouteBlockedReason"));
+        this.entityData.set(ROUTE_BLOCKED_MESSAGE, tag.getString("LogisticsRouteBlockedMessage"));
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putInt("StorageTypes", this.entityData.get(STORAGE_TYPES));
+        tag.putString("LogisticsRouteDestination", this.getRouteDestinationText());
+        tag.putString("LogisticsRouteFilter", this.getRouteFilterText());
+        tag.putInt("LogisticsRouteRequestedCount", this.getRouteRequestedCount());
+        tag.putString("LogisticsRoutePriority", this.getRoutePriorityText());
+        tag.putString("LogisticsRouteBlockedReason", this.getRouteBlockedReasonToken());
+        tag.putString("LogisticsRouteBlockedMessage", this.getRouteBlockedMessage());
     }
 
     public Item getRenderItem(){
@@ -94,6 +122,65 @@ public class StorageArea extends AbstractWorkAreaEntity {
     public void setStorageTypes(int mask) {
         this.entityData.set(STORAGE_TYPES, mask);
     }
+
+    public String getRouteDestinationText() {
+        return this.entityData.get(ROUTE_DESTINATION);
+    }
+
+    public String getRouteFilterText() {
+        return this.entityData.get(ROUTE_FILTER);
+    }
+
+    public int getRouteRequestedCount() {
+        return this.entityData.get(ROUTE_REQUESTED_COUNT);
+    }
+
+    public String getRoutePriorityText() {
+        return this.entityData.get(ROUTE_PRIORITY);
+    }
+
+    public String getRouteBlockedReasonToken() {
+        return this.entityData.get(ROUTE_BLOCKED_REASON);
+    }
+
+    public String getRouteBlockedMessage() {
+        return this.entityData.get(ROUTE_BLOCKED_MESSAGE);
+    }
+
+    public void setLogisticsRoute(BannerModLogisticsAuthoringState state) {
+        this.entityData.set(ROUTE_DESTINATION, state.destinationText());
+        this.entityData.set(ROUTE_FILTER, state.filterText());
+        this.entityData.set(ROUTE_REQUESTED_COUNT, state.requestedCount());
+        this.entityData.set(ROUTE_PRIORITY, state.priorityText());
+    }
+
+    public BannerModLogisticsAuthoringState getLogisticsRouteAuthoringState() {
+        return BannerModLogisticsAuthoringState.parse(
+                this.getRouteDestinationText(),
+                this.getRouteFilterText(),
+                Integer.toString(this.getRouteRequestedCount()),
+                this.getRoutePriorityText()
+        );
+    }
+
+    public Optional<BannerModLogisticsRoute> getAuthoredLogisticsRoute() {
+        BannerModLogisticsAuthoringState state = this.getLogisticsRouteAuthoringState();
+        if (state.destinationStorageAreaId() == null) {
+            return Optional.empty();
+        }
+        return Optional.of(state.toRoute(this.getUUID()));
+    }
+
+    public void clearRouteBlockedState() {
+        this.entityData.set(ROUTE_BLOCKED_REASON, "");
+        this.entityData.set(ROUTE_BLOCKED_MESSAGE, "");
+    }
+
+    public void setRouteBlockedState(BannerModLogisticsBlockedReason reason, String message) {
+        this.entityData.set(ROUTE_BLOCKED_REASON, reason == null ? "" : reason.reasonToken());
+        this.entityData.set(ROUTE_BLOCKED_MESSAGE, message == null ? "" : message);
+    }
+
     public EnumSet<StorageType> getStorageTypes() {
         int mask = this.entityData.get(STORAGE_TYPES);
         EnumSet<StorageType> set = EnumSet.noneOf(StorageType.class);

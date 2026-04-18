@@ -4,6 +4,7 @@ import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerStorageRequestState;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsBlockedReason;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
@@ -170,9 +171,14 @@ public class GetNeededItemsFromStorage extends AbstractChestGoal {
                 worker.clearWorkStatus();
                 worker.neededItems.clear();
                 worker.lastStorage = this.storageArea.getUUID();
+                worker.markActiveCourierPickupComplete();
             }
 
             case ERROR_NO_STORAGE_FOUND -> {
+                if (worker.hasActiveCourierTask()) {
+                    worker.abandonActiveCourierTask(BannerModLogisticsBlockedReason.SOURCE_CONTAINER_MISSING, "I could not reach the courier pickup storage.");
+                    return;
+                }
                 reportStorageFailure("storage_missing", "No available storage found nearby. I need " + worker.neededItems + ".");
                 if(!errorMessageDone) {
                     worker.neededItems.removeIf(neededItem -> neededItem.required);
@@ -191,6 +197,10 @@ public class GetNeededItemsFromStorage extends AbstractChestGoal {
             }
 
             case ERROR_ITEM_NOT_IN_STORAGE -> {
+                if (worker.hasActiveCourierTask()) {
+                    worker.abandonActiveCourierTask(BannerModLogisticsBlockedReason.SOURCE_SHORTAGE, "The courier pickup storage does not have the reserved items.");
+                    return;
+                }
                 reportStorageFailure("storage_missing_items", storageArea != null ? "Storage [" + storageArea.getName().getString() + "] does not have " + worker.neededItems + "." : "I could not find the required items in storage.");
                 if(!errorMessageDone){
                     errorMessageDone = true;
@@ -205,6 +215,10 @@ public class GetNeededItemsFromStorage extends AbstractChestGoal {
             }
 
             case ERROR_STORAGE_NO_CONTAINERS -> {
+                if (worker.hasActiveCourierTask()) {
+                    worker.abandonActiveCourierTask(BannerModLogisticsBlockedReason.SOURCE_CONTAINER_MISSING, "The courier pickup storage has no containers.");
+                    return;
+                }
                 reportBlockedReason("storage_no_containers", "The selected storage has no containers.");
                 if(!errorMessageDone){
                     errorMessageDone = true;

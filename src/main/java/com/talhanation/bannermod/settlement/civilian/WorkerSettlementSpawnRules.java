@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.settlement.civilian;
 
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 
 import javax.annotation.Nullable;
 import java.util.List;

@@ -4,9 +4,7 @@ import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -34,15 +32,8 @@ public class MessageRotateWorkArea implements Message<MessageRotateWorkArea> {
         ServerPlayer player = context.getSender();
         if (player == null) return;
 
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (!(entity instanceof AbstractWorkAreaEntity workArea)) {
-            this.sendDecision(player, WorkAreaAuthoringRules.Decision.AREA_NOT_FOUND);
-            return;
-        }
-
-        WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.modifyDecision(true, workArea.getAuthoringAccess(player));
-        if (!WorkAreaAuthoringRules.isAllowed(decision)) {
-            this.sendDecision(player, decision);
+        AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
+        if (workArea == null) {
             return;
         }
 
@@ -61,14 +52,7 @@ public class MessageRotateWorkArea implements Message<MessageRotateWorkArea> {
             // Revert to original facing
             workArea.setFacing(current);
             workArea.createArea();
-            this.sendDecision(player, WorkAreaAuthoringRules.Decision.OVERLAPPING);
-        }
-    }
-
-    private void sendDecision(ServerPlayer player, WorkAreaAuthoringRules.Decision decision) {
-        String messageKey = WorkAreaAuthoringRules.getMessageKey(decision);
-        if (messageKey != null) {
-            player.sendSystemMessage(Component.translatable(messageKey));
+            WorkAreaMessageSupport.sendDecision(player, WorkAreaAuthoringRules.Decision.OVERLAPPING);
         }
     }
 

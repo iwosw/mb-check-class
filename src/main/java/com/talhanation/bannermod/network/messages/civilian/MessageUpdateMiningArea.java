@@ -44,13 +44,11 @@ public class MessageUpdateMiningArea implements Message<MessageUpdateMiningArea>
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        player.getCommandSenderWorld().getEntitiesOfClass(MiningArea.class, player.getBoundingBox()
-                        .inflate(32.0D), v -> v
-                        .getUUID()
-                        .equals(this.uuid))
-                .stream()
-                .findAny()
-                .ifPresent(this::update);
+        MiningArea miningArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, MiningArea.class);
+        if (miningArea == null) {
+            return;
+        }
+        this.update(miningArea);
     }
 
     public void update(MiningArea miningArea){
