@@ -6,7 +6,6 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.network.messages.military.MessageToClientOpenTreatyAnswerScreen;
-import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
@@ -160,22 +159,13 @@ public class MessengerEntity extends AbstractChunkLoaderEntity implements ICompa
 
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
-        SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
-        ((AsyncGroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
-
-        this.initSpawn();
-
-        return ilivingentitydata;
+        return finishRecruitLeafSpawn(world, difficultyInstance, super.finalizeSpawn(world, difficultyInstance, reason, data, nbt), true, false);
     }
 
     @Override
     public void initSpawn() {
-        if(this.getCustomName() == null || this.getCustomName().getString().isEmpty())  this.setCustomName(Component.literal("Messenger"));
-        this.setPersistenceRequired();
+        initPersistentNamedSpawn("Messenger");
         if(this.getOwner() != null)this.setOwnerName(this.getOwner().getName().getString());
-        AbstractRecruitEntity.applySpawnValues(this);
-
-
     }
 
     @Override

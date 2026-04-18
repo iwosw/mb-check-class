@@ -1,0 +1,171 @@
+package com.talhanation.bannermod.entity.military;
+
+import com.talhanation.bannermod.events.FactionEvents;
+import com.talhanation.bannermod.events.RecruitEvent;
+import com.talhanation.bannermod.events.RecruitEvents;
+import com.talhanation.bannermod.persistence.military.RecruitsFaction;
+import com.talhanation.bannermod.persistence.military.RecruitsGroup;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.scores.Team;
+import net.minecraftforge.common.MinecraftForge;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+final class RecruitLifecycleService {
+    private RecruitLifecycleService() {
+    }
+
+    static void disband(AbstractRecruitEntity recruit, @Nullable Player player, boolean keepTeam, boolean increaseCost, @Nullable Component dismissMessage) {
+        if (!recruit.getCommandSenderWorld().isClientSide()) {
+            RecruitEvent.Dismissed dismissEvent = new RecruitEvent.Dismissed(recruit, player, keepTeam);
+            MinecraftForge.EVENT_BUS.post(dismissEvent);
+            if (dismissEvent.isCanceled()) return;
+        }
+        if (player != null && dismissMessage != null) player.sendSystemMessage(dismissMessage);
+        recruit.setTarget(null);
+        recruit.setIsOwned(false);
+        if (increaseCost) recruit.recalculateCost();
+        if (recruit.getCommandSenderWorld().isClientSide()) return;
+        RecruitEvents.recruitsPlayerUnitManager.removeRecruits(recruit.getOwnerUUID(), 1);
+        recruit.setOwnerUUID(Optional.empty());
+        if (recruit.getTeam() != null && !keepTeam) {
+            FactionEvents.removeRecruitFromTeam(recruit, recruit.getTeam(), (ServerLevel) recruit.getCommandSenderWorld());
+        }
+        if (recruit.getGroup() != null) {
+            RecruitEvents.recruitsGroupsManager.removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
+            recruit.setGroupUUID(null);
+        }
+    }
+
+    static boolean hire(AbstractRecruitEntity recruit, Player player, @Nullable RecruitsGroup group, boolean message, Component recruitingMax, List<Component> recruitedMessages) {
+        if (!recruit.getCommandSenderWorld().isClientSide()) {
+            RecruitEvent.Hired hireEvent = new RecruitEvent.Hired(recruit, player);
+            MinecraftForge.EVENT_BUS.post(hireEvent);
+            if (hireEvent.isCanceled()) return false;
+        }
+        Team ownerTeam = player.getTeam();
+        String stringId = ownerTeam != null ? ownerTeam.getName() : "";
+        if (!RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID())) {
+            player.sendSystemMessage(recruitingMax);
+            return false;
+        }
+        recruit.makeHireSound();
+        RecruitUpkeepService.resetPaymentTimer(recruit);
+        recruit.setOwnerUUID(Optional.of(player.getUUID()));
+        recruit.setIsOwned(true);
+        recruit.stopNavigation();
+        recruit.setTarget(null);
+        recruit.setFollowState(2);
+        recruit.setAggroState(0);
+        if (group != null) recruit.setGroupUUID(group.getUUID());
+        recruit.despawnTimer = -1;
+        if (!recruit.getCommandSenderWorld().isClientSide()) {
+            RecruitEvents.recruitsPlayerUnitManager.addRecruits(player.getUUID(), 1);
+            if (group != null) {
+                RecruitEvents.recruitsGroupsManager.addMember(group.getUUID(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
+                RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
+            }
+            if (ownerTeam != null) {
+                FactionEvents.addRecruitToTeam(recruit, ownerTeam, (ServerLevel) recruit.getCommandSenderWorld());
+            }
+        }
+        if (message && !recruitedMessages.isEmpty()) {
+            player.sendSystemMessage(recruitedMessages.get(recruit.getRandom().nextInt(recruitedMessages.size())));
+        }
+        return true;
+    }
+
+    static void onDeath(AbstractRecruitEntity recruit, DamageSource dmg, Component deathMessage) {
+        recruit.superDie(dmg);
+        if (!recruit.isDeadOrDying() || recruit.getCommandSenderWorld().isClientSide()) return;
+        if (recruit.getCommandSenderWorld().getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_SHOWDEATHMESSAGES) && recruit.getOwner() instanceof ServerPlayer) {
+            recruit.getOwner().sendSystemMessage(deathMessage);
+        }
+        if (recruit.getTeam() != null) {
+            RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(recruit.getTeam().getName());
+            if (faction != null) faction.addNPCs(-1);
+            FactionEvents.recruitsFactionManager.broadcastToFactionPlayers(recruit.getTeam().getName(), (ServerLevel) recruit.getCommandSenderWorld());
+        }
+        if (recruit.getGroup() != null) {
+            RecruitEvents.recruitsGroupsManager.removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
+        }
+        if (recruit.isOwned()) {
+            RecruitEvents.recruitsPlayerUnitManager.removeRecruits(recruit.getOwnerUUID(), 1);
+        }
+        FactionEvents.removeRecruitFromTeam(recruit, recruit.getTeam(), (ServerLevel) recruit.getCommandSenderWorld());
+    }
+
+    static void updateTeam(AbstractRecruitEntity recruit) {
+        if (recruit.isOwned() && !recruit.getCommandSenderWorld().isClientSide()) {
+            Player owner = recruit.getOwner();
+            if (owner != null) {
+                Team recruitTeam = recruit.getTeam();
+                Team ownerTeam = owner.getTeam();
+                if (ownerTeam == null) {
+                    if (recruitTeam != null) {
+                        FactionEvents.removeRecruitFromTeam(recruit, recruitTeam, (ServerLevel) recruit.getCommandSenderWorld());
+                        FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), recruitTeam.getName(), -1);
+                    }
+                    recruit.needsTeamUpdate = false;
+                } else if (recruitTeam == null) {
+                    FactionEvents.addRecruitToTeam(recruit, ownerTeam, (ServerLevel) recruit.getCommandSenderWorld());
+                    FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), ownerTeam.getName(), 1);
+                    recruit.needsTeamUpdate = false;
+                } else if (recruitTeam == ownerTeam) {
+                    recruit.updateColor(ownerTeam.getName());
+                    recruit.needsTeamUpdate = false;
+                } else {
+                    FactionEvents.removeRecruitFromTeam(recruit, recruitTeam, (ServerLevel) recruit.getCommandSenderWorld());
+                    FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), recruitTeam.getName(), -1);
+                    FactionEvents.addRecruitToTeam(recruit, ownerTeam, (ServerLevel) recruit.getCommandSenderWorld());
+                    FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), ownerTeam.getName(), 1);
+                    recruit.needsTeamUpdate = false;
+                }
+            }
+        }
+    }
+
+    static void updateGroup(AbstractRecruitEntity recruit) {
+        if (recruit.getCommandSenderWorld().isClientSide()) return;
+        recruit.needsGroupUpdate = false;
+        if (recruit.getGroup() == null) return;
+        UUID raw = recruit.getGroup();
+        UUID resolved = RecruitEvents.recruitsGroupsManager.resolveGroup(raw);
+        UUID finalGroup = RecruitEvents.recruitsGroupsManager.resolveRecruit(recruit.getUUID(), resolved);
+        if (!finalGroup.equals(raw)) recruit.setGroupUUID(finalGroup);
+        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(finalGroup);
+        if (group == null || !group.members.contains(recruit.getUUID())) {
+            recruit.setGroupUUID(null);
+            return;
+        }
+        if (group.disbandContext != null && group.disbandContext.disband) {
+            recruit.disband(null, group.disbandContext.keepTeam, group.disbandContext.increaseCost);
+            recruit.needsTeamUpdate = true;
+            return;
+        }
+        if (recruit.isOwned() && !recruit.getOwnerUUID().equals(group.getPlayerUUID())) {
+            assignToPlayer(recruit, group.getPlayerUUID(), group.getUUID());
+        }
+        recruit.needsTeamUpdate = true;
+    }
+
+    static void assignToPlayer(AbstractRecruitEntity recruit, UUID newOwner, UUID newGroupUUID) {
+        RecruitsGroup currentGroup = RecruitEvents.recruitsGroupsManager.getGroup(recruit.getGroup());
+        if (currentGroup != null) currentGroup.removeMember(recruit.getUUID());
+        recruit.setGroupUUID(newGroupUUID);
+        RecruitsGroup newGroup = RecruitEvents.recruitsGroupsManager.getGroup(newGroupUUID);
+        recruit.disband(null, false, false);
+        recruit.setOwnerUUID(Optional.of(newOwner));
+        if (recruit.getOwner() != null) {
+            recruit.hire(recruit.getOwner(), newGroup, true);
+            recruit.setFollowState(1);
+        }
+    }
+}

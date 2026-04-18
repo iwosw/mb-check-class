@@ -67,11 +67,13 @@ public class MessageShields implements Message<MessageShields> {
         );
         CommandTargeting.GroupCommandSelection selection = CommandTargeting.forGroupCommand(
                 player.getUUID(),
+                player.getTeam() == null ? null : player.getTeam().getName(),
                 group,
                 nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
                         recruit.getUUID(),
                         recruit.getOwnerUUID(),
                         recruit.getGroup(),
+                        recruit.getTeam() == null ? null : recruit.getTeam().getName(),
                         recruit.isOwned(),
                         recruit.isAlive(),
                         recruit.getListen(),

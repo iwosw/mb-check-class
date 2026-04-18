@@ -8,7 +8,6 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.network.messages.military.MessageToClientOpenNobleTradeScreen;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateHireState;
-import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTrade;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTradesRegistry;
 import net.minecraft.core.BlockPos;
@@ -21,7 +20,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -137,14 +135,7 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
     }
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
-        RandomSource randomsource = world.getRandom();
-        SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
-        ((AsyncGroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
-        this.populateDefaultEquipmentEnchantments(randomsource, difficultyInstance);
-
-        this.initSpawn();
-
-        return ilivingentitydata;
+        return finishRecruitLeafSpawn(world, difficultyInstance, super.finalizeSpawn(world, difficultyInstance, reason, data, nbt), true, true);
     }
 
     @Override
@@ -154,15 +145,7 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
 
     @Override
     public void initSpawn() {
-        this.setCustomName(Component.literal("Noble Villager"));
-        this.setCost(64);
-
-        this.setEquipment();
-
-        this.setRandomSpawnBonus();
-        this.setPersistenceRequired();
-
-        AbstractRecruitEntity.applySpawnValues(this);
+        initStandardRecruitSpawn("Noble Villager", 64);
 
         this.needsNewTrades = true;
 
@@ -384,7 +367,6 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
     }
 
 }
-
 
 
 

@@ -69,6 +69,7 @@ public class MessagePatrolLeaderSetRoute implements Message<MessagePatrolLeaderS
                         leader.getUUID(),
                         leader.getOwnerUUID(),
                         leader.getGroup(),
+                        leader.getTeam() == null ? null : leader.getTeam().getName(),
                         leader.isOwned(),
                         leader.isAlive(),
                         leader.getListen(),

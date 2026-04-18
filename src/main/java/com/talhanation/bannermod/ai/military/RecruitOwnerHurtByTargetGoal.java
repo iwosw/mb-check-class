@@ -1,46 +1,26 @@
 package com.talhanation.bannermod.ai.military;
 
-import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.target.TargetGoal;
-import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 
-import java.util.EnumSet;
-
-public class RecruitOwnerHurtByTargetGoal extends TargetGoal {
-    private final AbstractRecruitEntity recruit;
-    private LivingEntity ownerLastHurtBy;
-    private int timestamp;
+public class RecruitOwnerHurtByTargetGoal extends AbstractRecruitObservedThreatGoal {
 
     public RecruitOwnerHurtByTargetGoal(AbstractRecruitEntity recruit) {
-        super(recruit, false);
-        this.recruit = recruit;
+        super(recruit);
     }
 
-    public boolean canUse() {
-        if (this.recruit.isOwned()) {
-            LivingEntity livingentity = this.recruit.getOwner();
-            if (livingentity == null) {
-                return false;
-            } else {
-                this.ownerLastHurtBy = livingentity.getLastHurtByMob();
-                int i = livingentity.getLastHurtByMobTimestamp();
-                return i != this.timestamp && this.canAttack(this.ownerLastHurtBy, TargetingConditions.DEFAULT) && RecruitEvents.canAttack(livingentity, this.ownerLastHurtBy) && recruit.getState() != 3;
-            }
-        } else {
-            return false;
-        }
+    @Override
+    protected LivingEntity getObservedObserver() {
+        return this.recruit.isOwned() ? this.recruit.getOwner() : null;
     }
 
-    public void start() {
-        this.mob.setTarget(this.ownerLastHurtBy);
-        LivingEntity livingentity = this.recruit.getOwner();
-        if (livingentity != null) {
-            this.timestamp = livingentity.getLastHurtByMobTimestamp();
-        }
+    @Override
+    protected LivingEntity getObservedTarget(LivingEntity observer) {
+        return observer.getLastHurtByMob();
+    }
 
-        super.start();
+    @Override
+    protected int getObservedTimestamp(LivingEntity observer) {
+        return observer.getLastHurtByMobTimestamp();
     }
 }

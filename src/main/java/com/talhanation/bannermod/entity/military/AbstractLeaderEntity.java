@@ -350,9 +350,12 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
 
     private void checkForPotentialEnemies() {
         if(!level().isClientSide()){
-            List<LivingEntity> targets = this.getCommandSenderWorld().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(100D)).stream()
-                    .filter((target) -> shouldAttack(target) && this.hasLineOfSight(target) && !target.isUnderWater())
-                    .toList();
+            NearbyCombatCandidates scan = scanNearbyCombatCandidates((ServerLevel) level(), 100D);
+            List<LivingEntity> targets = filterCombatCandidates(
+                    scan.candidates(),
+                    target -> shouldAttack(target) && this.hasLineOfSight(target) && !target.isUnderWater(),
+                    false
+            );
 
             if(targets.isEmpty()) return;
 
@@ -862,7 +865,6 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
         }
     }
 }
-
 
 
 

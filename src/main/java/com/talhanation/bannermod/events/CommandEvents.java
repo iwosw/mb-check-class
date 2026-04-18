@@ -4,20 +4,15 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.*;
-import com.talhanation.bannermod.ai.military.controller.RecruitCommandStateTransitions;
 import com.talhanation.bannermod.inventory.military.CommandMenu;
 import com.talhanation.bannermod.network.messages.military.*;
-import com.talhanation.bannermod.util.FormationUtils;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
@@ -32,7 +27,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -48,263 +42,30 @@ public class CommandEvents {
     //7 = forward
     //8 = backward
     public static void onMovementCommand(Player player, List<AbstractRecruitEntity> recruits, int movementState, int formation) {
-        onMovementCommand(player, recruits, movementState, formation, false);
+        MovementFormationCommandService.onMovementCommand(player, recruits, movementState, formation);
     }
 
     public static void onMovementCommand(Player player, List<AbstractRecruitEntity> recruits, int movementState, int formation, boolean tight) {
-        if(formation != 0 && (movementState == 2|| movementState == 4 || movementState == 6 || movementState == 7 || movementState == 8)) {
-            Vec3 targetPos = null;
-
-            switch (movementState){
-               case 2 -> {//hold your position
-                   targetPos = FormationUtils.getGeometricMedian(recruits, (ServerLevel) player.getCommandSenderWorld());
-               }
-
-               case 4 -> {//hold my position
-                    targetPos = player.position();
-               }
-
-               case 6 -> {//move
-                   HitResult hitResult = player.pick(200, 1F, true);
-                   targetPos = hitResult.getLocation();
-               }
-
-               case 7 -> {//forward
-                   Vec3 center = getSavedFormationCenter(player);
-                   if(center == null) center = FormationUtils.getGeometricMedian(recruits, (ServerLevel) player.getCommandSenderWorld());
-                   Vec3 forward = player.getForward();
-                   Vec3 pos = center.add(forward.scale(getForwardScale(recruits)));
-                   BlockPos blockPos = FormationUtils.getPositionOrSurface(
-                           player.getCommandSenderWorld(),
-                           new BlockPos((int) pos.x, (int) pos.y, (int) pos.z)
-                   );
-
-                   targetPos = new Vec3(pos.x, blockPos.getY(), pos.z);
-               }
-
-               case 8 -> {//backward
-                   Vec3 center = getSavedFormationCenter(player);
-                   if(center == null) center = FormationUtils.getGeometricMedian(recruits, (ServerLevel) player.getCommandSenderWorld());
-                   Vec3 forward = player.getForward();
-                   Vec3 pos = center.add(forward.scale(-getForwardScale(recruits)));
-                   BlockPos blockPos = FormationUtils.getPositionOrSurface(
-                           player.getCommandSenderWorld(),
-                           new BlockPos((int) pos.x, (int) pos.y, (int) pos.z)
-                   );
-
-                   targetPos = new Vec3(pos.x, blockPos.getY(), pos.z);
-               }
-            }
-            applyFormation(formation, recruits, player, targetPos, tight);
-        }
-        else{
-            for(AbstractRecruitEntity recruit : recruits){
-                int state = recruit.getFollowState();
-
-                switch (movementState) {
-                    case 0 -> {
-                        if (state != 0)
-                            recruit.setFollowState(0);
-                    }
-                    case 1 -> {
-                        if (state != 1)
-                            recruit.setFollowState(1);
-                    }
-                    case 2 -> {
-                        if (state != 2)
-                            recruit.setFollowState(2);
-                    }
-                    case 3 -> {
-                        if (state != 3)
-                            recruit.setFollowState(3);
-                    }
-                    //
-                    case 4 -> {
-                        if (state != 4)
-                            recruit.setFollowState(4);
-                    }
-                    //PROTECT
-                    case 5 -> {
-                        if (state != 5)
-                            recruit.setFollowState(5);
-                    }
-                    //MOVE
-                    case 6 ->{
-                        HitResult hitResult = player.pick(100, 1F, true);
-                        if (hitResult.getType() == HitResult.Type.BLOCK) {
-                            BlockHitResult blockHitResult = (BlockHitResult) hitResult;
-                            BlockPos blockpos = blockHitResult.getBlockPos();
-
-                            recruit.setMovePos(blockpos);// needs to be above setFollowState
-
-                            recruit.setFollowState(0);// needs to be above setShouldMovePos
-
-                            recruit.setShouldMovePos(true);
-                        }
-                    }
-                    //FORWARD
-                    case 7 ->{
-                        Vec3 forward = player.getForward();
-                        Vec3 pos = recruit.position().add(forward.scale(getForwardScale(recruit)));
-                        BlockPos blockPos = FormationUtils.getPositionOrSurface(
-                                player.getCommandSenderWorld(),
-                                new BlockPos((int) pos.x, (int) pos.y, (int) pos.z)
-                        );
-
-                        Vec3 targetPos = new Vec3(pos.x, blockPos.getY(), pos.z);
-
-                        recruit.setHoldPos(targetPos);
-                        recruit.ownerRot = player.getYRot();
-                        recruit.setFollowState(3);
-                    }
-                    //BACKWARD
-                    case 8 ->{
-                        Vec3 forward = player.getForward();
-                        Vec3 pos = recruit.position().add(forward.scale(-getForwardScale(recruit)));
-                        BlockPos blockPos = FormationUtils.getPositionOrSurface(
-                                player.getCommandSenderWorld(),
-                                new BlockPos((int) pos.x, (int) pos.y, (int) pos.z)
-                        );
-
-                        Vec3 targetPos = new Vec3(pos.x, blockPos.getY(), pos.z);
-
-                        recruit.setHoldPos(targetPos);
-                        recruit.ownerRot = player.getYRot();
-                        recruit.setFollowState(3);
-                    }
-                }
-                recruit.isInFormation = false;
-            }
-
-        }
-         for(AbstractRecruitEntity recruit : recruits) {
-             recruit.setUpkeepTimer(recruit.getUpkeepCooldown());
-             if (recruit.getShouldMount()) recruit.setShouldMount(false);
-
-             checkPatrolLeaderState(recruit);
-             recruit.forcedUpkeep = false;
-         }
-    }
-
-    private static double getForwardScale(List<AbstractRecruitEntity> recruits) {
-        for (AbstractRecruitEntity recruit : recruits){
-            if(recruit instanceof CaptainEntity) return getForwardScale(recruit);
-        }
-        return 10;
-    }
-    private static double getForwardScale(AbstractRecruitEntity recruit) {
-        return (recruit instanceof CaptainEntity captain && captain.smallShipsController.ship != null && captain.smallShipsController.ship.isCaptainDriver()) ? 25 : 10;
+        MovementFormationCommandService.onMovementCommand(player, recruits, movementState, formation, tight);
     }
     public static void applyFormation(int formation, List<AbstractRecruitEntity> recruits, Player player, Vec3 targetPos) {
-        applyFormation(formation, recruits, player, targetPos, false);
+        MovementFormationCommandService.applyFormation(formation, recruits, player, targetPos);
     }
 
     public static void applyFormation(int formation, List<AbstractRecruitEntity> recruits, Player player, Vec3 targetPos, boolean tight) {
-        saveFormationCenter(player, targetPos);
-        double spacingMultiplier = tight ? 0.5 : 1.0;
-        switch (formation){
-            case 1 ->{//LINE UP
-                FormationUtils.lineUpFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-            case 2 ->{//SQUARE
-                FormationUtils.squareFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-            case 3 ->{//TRIANGLE
-                FormationUtils.triangleFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-            case 4 ->{//HOLLOW CIRCLE
-                FormationUtils.hollowCircleFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-            case 5 ->{//HOLLOW SQUARE
-                FormationUtils.hollowSquareFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-            case 6 ->{//V Formation
-                FormationUtils.vFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-            case 7 ->{//CIRCLE
-                FormationUtils.circleFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-            case 8 ->{//MOVEMENT
-                FormationUtils.movementFormation(player, recruits, targetPos, spacingMultiplier);
-            }
-        }
+        MovementFormationCommandService.applyFormation(formation, recruits, player, targetPos, tight);
     }
 
     public static void onFaceCommand(Player player, List<AbstractRecruitEntity> recruits, int formation, boolean tight) {
-        if(recruits.isEmpty()) return;
-
-        if(formation != 0) {
-            Vec3 targetPos = getSavedFormationCenter(player);
-            if(targetPos == null) targetPos = FormationUtils.getGeometricMedian(recruits, (ServerLevel) player.getCommandSenderWorld());
-            applyFormation(formation, recruits, player, targetPos, tight);
-        } else {
-            // Without formation: hold current position
-            for(AbstractRecruitEntity recruit : recruits) {
-                recruit.setHoldPos(recruit.position());
-                recruit.setFollowState(3);
-            }
-        }
-
-        for(AbstractRecruitEntity recruit : recruits) {
-            recruit.ownerRot = player.getYRot();
-            recruit.rotateTicks = 40;
-
-            // Captain with ship: rotate the ship
-            if(recruit instanceof CaptainEntity captain && captain.smallShipsController.ship != null && captain.smallShipsController.ship.isCaptainDriver()) {
-                captain.smallShipsController.startFaceRotation(player.getYRot());
-            }
-        }
+        MovementFormationCommandService.onFaceCommand(player, recruits, formation, tight);
     }
 
     public static void onMovementCommandGUI(AbstractRecruitEntity recruit, int movementState) {
-        int state = recruit.getFollowState();
-
-        switch (movementState) {
-            case 0 -> {
-                if (state != 0)
-                    recruit.setFollowState(0);
-            }
-            case 1 -> {
-                if (state != 1)
-                    recruit.setFollowState(1);
-            }
-            case 2 -> {
-                if (state != 2)
-                    recruit.setFollowState(2);
-            }
-            case 3 -> {
-                if (state != 3)
-                    recruit.setFollowState(3);
-            }
-            case 4 -> {
-                if (state != 4)
-                    recruit.setFollowState(4);
-            }
-            case 5 -> {
-                if (state != 5)
-                    recruit.setFollowState(5);
-            }
-        }
-
-        recruit.setUpkeepTimer(recruit.getUpkeepCooldown());
-        if (recruit.getShouldMount()) recruit.setShouldMount(false);
-        //if (recruit instanceof CaptainEntity captain) captain.attackController. = false;
-        checkPatrolLeaderState(recruit);
-        recruit.forcedUpkeep = false;
+        MovementFormationCommandService.onMovementCommandGUI(recruit, movementState);
     }
 
     public static void checkPatrolLeaderState(AbstractRecruitEntity recruit) {
-        if(recruit instanceof AbstractLeaderEntity leader) {
-            AbstractLeaderEntity.State patrolState = AbstractLeaderEntity.State.fromIndex(leader.getPatrollingState());
-            AbstractLeaderEntity.State nextState = RecruitCommandStateTransitions.afterManualMovement(patrolState);
-            if(nextState == AbstractLeaderEntity.State.IDLE && patrolState != nextState) {
-                leader.resetPatrolling();
-                leader.setPatrolState(nextState);
-            }
-            else if(nextState != patrolState) {
-                leader.setPatrolState(nextState);
-            }
-        }
+        MovementFormationCommandService.checkPatrolLeaderState(recruit);
     }
 
     public static void onAggroCommand(UUID player_uuid, AbstractRecruitEntity recruit, int x_state, UUID group, boolean fromGui) {
@@ -360,17 +121,17 @@ public class CommandEvents {
 
         if (list.isEmpty() || validTargets.isEmpty()) return;
 
-        AbstractRecruitEntity firstRecruit = list.get(0);
-        validTargets.removeIf(target -> !firstRecruit.canAttack(target));
+        validTargets.removeIf(target -> list.stream().noneMatch(recruit -> recruit.canAssignCombatTarget(target)));
 
         if (validTargets.isEmpty()) return;
 
         for (int i = 0; i < list.size(); i++) {
             AbstractRecruitEntity recruit = list.get(i);
             LivingEntity target = validTargets.get(i % validTargets.size());
-            recruit.setTarget(target);
-            recruit.setHoldPos(target.position());
-            recruit.setFollowState(3);
+            if (recruit.assignOrderedCombatTarget(target)) {
+                recruit.setHoldPos(target.position());
+                recruit.setFollowState(3);
+            }
         }
     }
 
@@ -412,142 +173,46 @@ public class CommandEvents {
     @SubscribeEvent
     public void onServerPlayerTick(TickEvent.PlayerTickEvent event){
         if(event.player instanceof ServerPlayer serverPlayer && serverPlayer.tickCount % 20 == 0){
-            int formation = getSavedFormation(serverPlayer);
-
-            if(formation > 0){
-                int[] savedPos = getSavedFormationPos(serverPlayer);
-                if(savedPos.length == 0) {
-                    savedPos = new int[]{(int) serverPlayer.getX(), (int) serverPlayer.getZ()};
-                    saveFormationPos(serverPlayer, savedPos);
-                }
-                int savedX = savedPos[0];
-                int savedZ = savedPos[1];
-                Vec3 oldPos = new Vec3(savedX, serverPlayer.getY(), savedZ);
-                Vec3 targetPosition = serverPlayer.position();
-
-                if(targetPosition.distanceToSqr(oldPos) > 50){
-
-                    List<AbstractRecruitEntity> recruits = Objects.requireNonNull(serverPlayer).getCommandSenderWorld().getEntitiesOfClass(
-                                    AbstractRecruitEntity.class,
-                                    serverPlayer.getBoundingBox().inflate(200)
-                            );
-
-                    List<RecruitsGroup> groups = RecruitEvents.recruitsGroupsManager.getPlayerGroups(serverPlayer);
-                    if(groups == null) return;
-
-                    List<UUID> uuid = getSavedUUIDList(serverPlayer, "ActiveGroups");
-
-                    recruits.removeIf(recruit -> !uuid.contains(recruit.getGroup()));
-                    groups.removeIf(group -> !uuid.contains( group.getUUID()));
-
-                    applyFormation(formation, recruits, serverPlayer, targetPosition);
-                    int[] position = new int[]{(int) targetPosition.x, (int) targetPosition.z};
-                    saveFormationPos(serverPlayer, position);
-                }
-            }
+            MovementFormationCommandService.onServerPlayerTick(serverPlayer);
         }
     }
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        CompoundTag playerData = event.getEntity().getPersistentData();
-        CompoundTag data = playerData.getCompound(Player.PERSISTED_NBT_TAG);
-            if (!data.contains("MaxRecruits")) data.putInt("MaxRecruits", RecruitsServerConfig.MaxRecruitsForPlayer.get());
-            if (!data.contains("CommandingGroup")) data.putInt("CommandingGroup", 0);
-            if (!data.contains("TotalRecruits")) data.putInt("TotalRecruits", 0);
-            if (!data.contains("ActiveGroups")) data.put("ActiveGroups", new ListTag());
-            if (!data.contains("Formation")) data.putInt("Formation", 0);
-            if (!data.contains("FormationPos")) data.putIntArray("FormationPos", new int[]{(int) event.getEntity().getX(), (int) event.getEntity().getZ()});
-
-        playerData.put(Player.PERSISTED_NBT_TAG, data);
+        MovementFormationCommandService.initializePlayerCommandState(event.getEntity());
     }
 
     public static int getSavedFormation(Player player) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag nbt = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        return nbt.getInt("Formation");
+        return MovementFormationCommandService.getSavedFormation(player);
     }
 
     public static void saveFormation(Player player, int formation) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag nbt = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        nbt.putInt( "Formation", formation);
-        playerNBT.put(Player.PERSISTED_NBT_TAG, nbt);
+        MovementFormationCommandService.saveFormation(player, formation);
     }
 
 
     public static void saveUUIDList(Player player, String key, Collection<UUID> uuids) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag persisted = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        ListTag list = new ListTag();
-        for (UUID uuid : uuids) {
-            CompoundTag tag = new CompoundTag();
-            tag.putUUID("UUID", uuid);
-            list.add(tag);
-        }
-
-        persisted.put(key, list);
-        playerNBT.put(Player.PERSISTED_NBT_TAG, persisted);
+        MovementFormationCommandService.saveUUIDList(player, key, uuids);
     }
 
     public static List<UUID> getSavedUUIDList(Player player, String key) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag persisted = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        List<UUID> result = new ArrayList<>();
-        if (!persisted.contains(key, Tag.TAG_LIST)) return result;
-
-        ListTag list = persisted.getList(key, Tag.TAG_COMPOUND);
-        for (Tag t : list) {
-            CompoundTag tag = (CompoundTag) t;
-            if (tag.hasUUID("UUID")) {
-                result.add(tag.getUUID("UUID"));
-            }
-        }
-
-        return result;
+        return MovementFormationCommandService.getSavedUUIDList(player, key);
     }
 
     public static int[] getSavedFormationPos(Player player) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag nbt = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        return nbt.getIntArray("FormationPos");
+        return MovementFormationCommandService.getSavedFormationPos(player);
     }
 
     public static void saveFormationPos(Player player, int[] pos) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag nbt = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        nbt.putIntArray( "FormationPos", pos);
-        playerNBT.put(Player.PERSISTED_NBT_TAG, nbt);
+        MovementFormationCommandService.saveFormationPos(player, pos);
     }
 
     public static void saveFormationCenter(Player player, Vec3 center) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag nbt = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        nbt.putDouble("FormationCenterX", center.x);
-        nbt.putDouble("FormationCenterY", center.y);
-        nbt.putDouble("FormationCenterZ", center.z);
-        playerNBT.put(Player.PERSISTED_NBT_TAG, nbt);
+        MovementFormationCommandService.saveFormationCenter(player, center);
     }
 
-    @Nullable
     public static Vec3 getSavedFormationCenter(Player player) {
-        CompoundTag playerNBT = player.getPersistentData();
-        CompoundTag nbt = playerNBT.getCompound(Player.PERSISTED_NBT_TAG);
-
-        if(!nbt.contains("FormationCenterX")) return null;
-
-        return new Vec3(
-                nbt.getDouble("FormationCenterX"),
-                nbt.getDouble("FormationCenterY"),
-                nbt.getDouble("FormationCenterZ")
-        );
+        return MovementFormationCommandService.getSavedFormationCenter(player);
     }
 
     public static boolean handleRecruiting(Player player, RecruitsGroup group, AbstractRecruitEntity recruit, boolean message){

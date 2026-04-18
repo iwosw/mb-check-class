@@ -62,11 +62,13 @@ public class MessageMovement implements Message<MessageMovement> {
         );
         CommandTargeting.GroupCommandSelection selection = CommandTargeting.forGroupCommand(
                 sender.getUUID(),
+                sender.getTeam() == null ? null : sender.getTeam().getName(),
                 group,
                 nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
                         recruit.getUUID(),
                         recruit.getOwnerUUID(),
                         recruit.getGroup(),
+                        recruit.getTeam() == null ? null : recruit.getTeam().getName(),
                         recruit.isOwned(),
                         recruit.isAlive(),
                         recruit.getListen(),

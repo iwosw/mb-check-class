@@ -2,14 +2,11 @@ package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.HorsemanAttackAI;
-import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -90,26 +87,12 @@ public class HorsemanEntity extends RecruitShieldmanEntity {
 
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
-        RandomSource randomsource = world.getRandom();
-        SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
-        ((AsyncGroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
-        this.populateDefaultEquipmentEnchantments(randomsource, difficultyInstance);
-
-        this.initSpawn();
-
-        return ilivingentitydata;
+        return finishRecruitLeafSpawn(world, difficultyInstance, super.finalizeSpawn(world, difficultyInstance, reason, data, nbt), true, true);
     }
 
     @Override
     public void initSpawn() {
-        this.setCustomName(Component.literal("Horseman"));
-        this.setCost(RecruitsServerConfig.HorsemanCost.get());
-
-        this.setEquipment();
-        this.setRandomSpawnBonus();
-        this.setPersistenceRequired();
-
-        AbstractRecruitEntity.applySpawnValues(this);
+        initStandardRecruitSpawn("Horseman", RecruitsServerConfig.HorsemanCost.get());
     }
 
     @Override

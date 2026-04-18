@@ -7,7 +7,7 @@ import com.talhanation.bannermod.governance.BannerModGovernorAuthority;
 import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
 import com.talhanation.bannermod.governance.BannerModGovernorRecommendation;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
-import com.talhanation.bannermod.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.util.DelayedExecutor;
@@ -23,6 +23,7 @@ import com.talhanation.bannermod.network.messages.military.MessageOpenPromoteScr
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateGovernorScreen;
 import com.talhanation.bannermod.persistence.military.*;
 import com.talhanation.bannermod.events.RecruitEvent;
+import com.talhanation.bannermod.events.runtime.RecruitCombatRuntime;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -360,173 +361,29 @@ public class RecruitEvents {
 
     @SubscribeEvent
     public void onProjectileImpact(ProjectileImpactEvent event) {
-        Entity entity = event.getEntity();
-        HitResult rayTrace = event.getRayTraceResult();
-
-        if (canceledProjectiles.contains(entity)) {
-            return;
-        }
-
-        if (!(entity instanceof Projectile projectile)) {
-            return;
-        }
-        Entity owner = projectile.getOwner();
-
-        if(owner == null) return;
-
-        if (rayTrace.getType() != HitResult.Type.ENTITY) {
-            return;
-        }
-
-        Entity impactEntity = ((EntityHitResult) rayTrace).getEntity();
-        String encode = impactEntity.getEncodeId();
-        if (encode != null && encode.contains("corpse:corpse")) {
-            event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
-            return;
-        }
-
-        if (!(impactEntity instanceof LivingEntity impactLiving)) {
-            return;
-        }
-
-        if (projectile instanceof AbstractArrow arrow && arrow.getPierceLevel() > 0) {
-
-            if (!canAttack((LivingEntity) owner, impactLiving)) {
-                event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
-                canceledProjectiles.add(projectile);
-                return;
-            }
-        }
-
-        if (owner instanceof AbstractRecruitEntity recruit) {
-
-            if (impactLiving instanceof Animal animal) {
-                Entity passenger = animal.getFirstPassenger();
-                if (passenger instanceof AbstractRecruitEntity passengerRecruit) {
-                    if (!canAttack(recruit, passengerRecruit)) {
-
-                        event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
-                        return;
-                    }
-                } else if (passenger instanceof Player player) {
-                    if (!canAttack(recruit, player)) {
-
-                        event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
-                        return;
-                    }
-                }
-            }
-
-            if (!canAttack(recruit, impactLiving)) {
-                event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
-                return;
-            } else {
-                recruit.addXp(2);
-                recruit.checkLevel();
-            }
-        }
-
-        if (owner instanceof AbstractIllager illager && !RecruitsServerConfig.PillagerFriendlyFire.get()) {
-            if (illager.isAlliedTo(impactLiving)) {
-                event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
-                canceledProjectiles.add(projectile);
-                return;
-            }
-        }
-
-        if (owner instanceof Player player) {
-            if (!canHarmTeam(player, impactLiving)) {
-                event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
-                return;
-            }
-        }
+        RecruitCombatRuntime.onProjectileImpact(event);
     }
 
     @SubscribeEvent
     public void onEntityLeaveWorld(EntityLeaveLevelEvent event) {
-        if(event.getLevel().isClientSide()) return;
-
-        Entity entity = event.getEntity();
-        if (entity instanceof Projectile projectile) {
-            canceledProjectiles.remove(projectile);
-        }
+        RecruitCombatRuntime.onEntityLeaveWorld(event);
     }
 
     @SubscribeEvent
     public void onPlayerInteractWithCaravan(PlayerInteractEvent.EntityInteract entityInteract) {
-        if(entityInteract.getLevel().isClientSide()) return;
-
-        Player player = entityInteract.getEntity();
-        Entity interacting = entityInteract.getTarget();
-
-        if (interacting instanceof AbstractChestedHorse chestedHorse) {
-            CompoundTag nbt = chestedHorse.getPersistentData();
-            if (!nbt.contains("Caravan") || !chestedHorse.hasChest()) {
-                return;
-            }
-
-            player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(64F),
-                    (recruit) -> !recruit.isOwned() &&
-                            (recruit.getName().getString().equals("Caravan Leader") ||
-                                    recruit.getName().getString().equals("Caravan Guard"))
-            ).forEach((recruit) -> recruit.setTarget(player));
-        }
+        RecruitCombatRuntime.onPlayerInteractWithCaravan(entityInteract);
     }
 
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
-        if(event.getEntity().getCommandSenderWorld().isClientSide()) return;
-
-        if (BannerModMain.isMusketModLoaded) {
-            Entity sourceEntity = event.getSource().getEntity();
-            if (sourceEntity instanceof AbstractRecruitEntity owner && IWeapon.isMusketModWeapon(owner.getMainHandItem())) {
-                Entity target = event.getEntity();
-                if (target instanceof LivingEntity impactEntity) {
-
-                    if (!canAttack(owner, impactEntity)) {
-                        event.setCanceled(true);
-                    } else {
-                        owner.addXp(2);
-                        owner.checkLevel();
-                    }
-                }
-            }
-        }
-
-        Entity target = event.getEntity();
-        Entity source = event.getSource().getEntity();
-        if (source instanceof LivingEntity sourceEntity) {
-            if (target.getTeam() == null) return;
-
-            target.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    target.getBoundingBox().inflate(32D),
-                    (recruit) -> recruit.getTarget() == null &&
-                            recruit.getTeam() != null &&
-                            recruit.getTeam().equals(target.getTeam())
-            ).forEach((recruit) -> recruit.setTarget(sourceEntity));
-        }
+        RecruitCombatRuntime.onLivingHurt(event);
     }
 
     private static final double DAMAGE_THRESHOLD_PERCENTAGE = 0.75;
 
     @SubscribeEvent
     public void onLivingAttack(LivingAttackEvent event) {
-        if(event.getEntity().getCommandSenderWorld().isClientSide()) return;
-
-        Entity target = event.getEntity();
-        Entity source = event.getSource().getEntity();
-
-        if (!target.getCommandSenderWorld().isClientSide() && target instanceof LivingEntity livingTarget && source instanceof LivingEntity livingSource) {
-            if (!canAttack(livingSource, livingTarget)){
-                event.setCanceled(true);
-            }
-            else{
-                handleSignificantDamage(livingSource, livingTarget, event.getAmount(), (ServerLevel) livingTarget.getCommandSenderWorld());
-            }
-        }
+        RecruitCombatRuntime.onLivingAttack(event);
     }
 
     private void handleSignificantDamage(LivingEntity attacker, LivingEntity target, double damage, ServerLevel level) {
@@ -567,162 +424,44 @@ public class RecruitEvents {
     }
 
     public static boolean canAttack(LivingEntity attacker, LivingEntity target) {
-        if (target == null || !target.isAlive()) return false;
-
-        if (target instanceof Player player) {
-            return canAttackPlayer(attacker, player);
-        } else if (target instanceof AbstractRecruitEntity targetRecruit) {
-            return canAttackRecruit(attacker, targetRecruit);
-        } else if (target instanceof Animal animal) {
-            return canAttackAnimal(attacker, animal);
-        } else {
-            return canHarmTeam(attacker, target);
-        }
+        return RecruitCombatRuntime.canAttack(attacker, target);
     }
 
     public static boolean canAttackAnimal(LivingEntity attacker, Animal animal) {
-        if (attacker instanceof AbstractRecruitEntity recruit ){
-            if(recruit.getVehicle() != null && recruit.getVehicle().getUUID().equals(animal.getUUID())) return false;
-
-            if (recruit.getProtectUUID() != null && recruit.getProtectUUID().equals(recruit.getProtectUUID())) return false;
-
-            if(animal.isVehicle()){
-                if(animal.getFirstPassenger() instanceof AbstractRecruitEntity targetRecruit) return canAttackRecruit(attacker, targetRecruit);
-                if(animal.getFirstPassenger() instanceof Player playerTarget) return canAttackPlayer(attacker, playerTarget);
-            }
-        }
-        return canHarmTeam(attacker, animal);
+        return RecruitCombatRuntime.canAttackAnimal(attacker, animal);
     }
 
     public static boolean canAttackPlayer(LivingEntity attacker, Player player) {
-        if (attacker instanceof AbstractRecruitEntity recruit) {
-            if(player.getUUID().equals(recruit.getOwnerUUID())
-                    || player.getUUID().equals(recruit.getProtectUUID())
-                    || player.isCreative()
-                    || player.isSpectator()
-            )
-                return false;
-        }
-        return canHarmTeam(attacker, player);
+        return RecruitCombatRuntime.canAttackPlayer(attacker, player);
     }
 
     public static boolean canAttackRecruit(LivingEntity attacker, AbstractRecruitEntity targetRecruit) {
-        if (attacker.equals(targetRecruit)) return false;
-
-        if (attacker instanceof AbstractRecruitEntity attackerRecruit) {
-            // Same player owner → never attack
-            if (attackerRecruit.isOwned() && targetRecruit.isOwned() &&
-                    attackerRecruit.getOwnerUUID().equals(targetRecruit.getOwnerUUID())) {
-                return false;
-            }
-
-            // Same scoreboards team with friendly fire off → never attack
-            if (attackerRecruit.getTeam() != null && targetRecruit.getTeam() != null &&
-                    attackerRecruit.getTeam().equals(targetRecruit.getTeam()) &&
-                    !attackerRecruit.getTeam().isAllowFriendlyFire()) {
-                return false;
-            }
-
-            // Same patrol group (protectUUID points to same leader) → never attack
-            if (attackerRecruit.getProtectUUID() != null &&
-                    attackerRecruit.getProtectUUID().equals(targetRecruit.getProtectUUID())) {
-                return false;
-            }
-
-            // Same RecruitsGroup UUID → never attack (covers NPC patrol units with no owner/team)
-            if (attackerRecruit.getGroup() != null &&
-                    attackerRecruit.getGroup().equals(targetRecruit.getGroup())) {
-                return false;
-            }
-
-            if(targetRecruit instanceof MessengerEntity messenger && messenger.isAtMission()) return false;
-        }
-
-        return canHarmTeam(attacker, targetRecruit);
+        return RecruitCombatRuntime.canAttackRecruit(attacker, targetRecruit);
     }
 
     public static boolean isAlly(Team team1, Team team2) {
-        if (team1 == null || team2 == null || FactionEvents.recruitsDiplomacyManager == null) {
-            return false;
-        }
-        return FactionEvents.recruitsDiplomacyManager.getRelation(team1.getName(), team2.getName()) ==
-                RecruitsDiplomacyManager.DiplomacyStatus.ALLY;
+        return RecruitCombatRuntime.isAlly(team1, team2);
     }
 
     public static boolean isEnemy(Team team1, Team team2) {
-        if (team1 == null || team2 == null || FactionEvents.recruitsDiplomacyManager == null) {
-            return false;
-        }
-        return FactionEvents.recruitsDiplomacyManager.getRelation(team1.getName(), team2.getName()) ==
-                RecruitsDiplomacyManager.DiplomacyStatus.ENEMY;
+        return RecruitCombatRuntime.isEnemy(team1, team2);
     }
 
     public static boolean isNeutral(Team team1, Team team2) {
-        if (team1 == null || team2 == null || FactionEvents.recruitsDiplomacyManager == null) {
-            return true;
-        }
-        return FactionEvents.recruitsDiplomacyManager.getRelation(team1.getName(), team2.getName()) ==
-                RecruitsDiplomacyManager.DiplomacyStatus.NEUTRAL;
+        return RecruitCombatRuntime.isNeutral(team1, team2);
     }
 
     public static boolean canHarmTeam(LivingEntity attacker, LivingEntity target) {
-        Team attackerTeam = attacker.getTeam();
-        Team targetTeam = target.getTeam();
-
-        if (attackerTeam == null || targetTeam == null) return true;
-
-        if (attackerTeam.equals(targetTeam) && !attackerTeam.isAllowFriendlyFire()) return false;
-
-        if (isAlly(attackerTeam, targetTeam)) return false;
-
-        if (FactionEvents.recruitsTreatyManager != null && FactionEvents.recruitsTreatyManager.hasTreaty(attackerTeam.getName(), targetTeam.getName())) {
-            return false;
-        }
-
-        return true;
+        return RecruitCombatRuntime.canHarmTeam(attacker, target);
     }
 
     public static boolean canHarmTeamNoFriendlyFire(LivingEntity attacker, LivingEntity target) {
-        Team team = attacker.getTeam();
-        Team team1 = target.getTeam();
-
-        if (team == null) {
-            return true;
-        } else if (team1 == null) {
-            return true;
-        } else if (team == team1) {
-            return false;
-        } else {
-            RecruitsDiplomacyManager.DiplomacyStatus relation = FactionEvents.recruitsDiplomacyManager.getRelation(team.getName(), team1.getName());
-            if (relation == RecruitsDiplomacyManager.DiplomacyStatus.ALLY) return false;
-
-            if (FactionEvents.recruitsTreatyManager != null && FactionEvents.recruitsTreatyManager.hasTreaty(team.getName(), team1.getName())) {
-                return false;
-            }
-
-            return true;
-        }
+        return RecruitCombatRuntime.canHarmTeamNoFriendlyFire(attacker, target);
     }
 
     @SubscribeEvent
     public void onRecruitDeath(LivingDeathEvent event) {
-        Entity target = event.getEntity();
-
-        if (target instanceof AbstractRecruitEntity recruit) {
-            if (!recruit.getIsOwned() || server == null) return;
-
-            //Morale loss when recruits teammate die
-            UUID owner = recruit.getOwnerUUID();
-            recruit.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    recruit.getBoundingBox().inflate(64.0D),
-                    (entity) -> entity.getOwnerUUID() != null && entity.getOwnerUUID().equals(owner)
-            ).forEach((entity) -> {
-                float currentMoral = entity.getMorale();
-                float newMorale = currentMoral - 0.1F;
-                entity.setMoral(Math.max(newMorale, 0F));
-            });
-        }
+        RecruitCombatRuntime.onRecruitDeath(event);
     }
 
     private final List<AbstractArrow> trackedArrows = new ArrayList<>();
@@ -730,27 +469,6 @@ public class RecruitEvents {
 
     @SubscribeEvent
     public void onWorldTickArrowCleaner(TickEvent.LevelTickEvent event) {//for 1.18 and 1.19 use TickEvent.WorldTickEvent
-        if (event.level.isClientSide()) return;
-        if (!RecruitsServerConfig.AllowArrowCleaning.get()) return;
-        if (event.phase != TickEvent.Phase.END) return;
-        if (server == null) return;
-
-
-        if (++tickCounter < 100) return; // Alle 5 Sekunden
-        tickCounter = 0;
-
-
-        List<AbstractArrow> arrows = event.level.getEntitiesOfClass(AbstractArrow.class, event.level.getWorldBorder().getCollisionShape().bounds());
-        trackedArrows.addAll(arrows);
-
-
-        Iterator<AbstractArrow> iterator = trackedArrows.iterator();
-        while (iterator.hasNext()) {
-            AbstractArrow arrow = iterator.next();
-            if (arrow.pickup == AbstractArrow.Pickup.DISALLOWED && arrow.inGroundTime > 300) {
-                arrow.discard();
-                iterator.remove();
-            }
-        }
+        RecruitCombatRuntime.onWorldTickArrowCleaner(event);
     }
 }

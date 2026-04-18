@@ -268,7 +268,7 @@ public class PatrolLeaderAttackController implements IAttackController {
         for (int i = 0; i < recruits.size(); i++) {
             AbstractRecruitEntity recruit = recruits.get(i);
             LivingEntity target = enemies.get(i % enemies.size());
-            recruit.setTarget(target);
+            recruit.assignOrderedCombatTarget(target);
         }
     }
 
@@ -303,4 +303,3 @@ public class PatrolLeaderAttackController implements IAttackController {
     }
 
 }
-

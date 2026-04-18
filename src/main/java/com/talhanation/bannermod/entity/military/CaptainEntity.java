@@ -5,13 +5,11 @@ import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.ai.military.controller.SmallShipsController;
 import com.talhanation.bannermod.ai.military.controller.CaptainPrepareShipAttackController;
 import com.talhanation.bannermod.ai.military.navigation.SailorPathNavigation;
-import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.util.RecruitCommanderUtil;
 import com.talhanation.bannermod.util.WaterObstacleScanner;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -36,11 +34,9 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-public class CaptainEntity extends AbstractLeaderEntity implements IStrategicFire {
+public class CaptainEntity extends AbstractLeaderEntity {
     public final SmallShipsController smallShipsController;
     private static final EntityDataAccessor<Optional<BlockPos>> SAIL_POS = SynchedEntityData.defineId(CaptainEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
-    private static final EntityDataAccessor<Optional<BlockPos>> STRATEGIC_FIRE_POS = SynchedEntityData.defineId(CaptainEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
-    private static final EntityDataAccessor<Boolean> SHOULD_STRATEGIC_FIRE = SynchedEntityData.defineId(CaptainEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final Predicate<ItemEntity> ALLOWED_ITEMS = (item) ->
             (!item.hasPickUpDelay() && item.isAlive() && getInventory().canAddItem(item.getItem()) && this.wantsToPickUp(item.getItem()));
@@ -53,8 +49,6 @@ public class CaptainEntity extends AbstractLeaderEntity implements IStrategicFir
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(SAIL_POS, Optional.empty());
-        this.entityData.define(STRATEGIC_FIRE_POS, Optional.empty());
-        this.entityData.define(SHOULD_STRATEGIC_FIRE, false);
     }
     @Override
     protected void registerGoals() {
@@ -107,14 +101,6 @@ public class CaptainEntity extends AbstractLeaderEntity implements IStrategicFir
             nbt.putInt("SailPosY", this.getSailPos().getY());
             nbt.putInt("SailPosZ", this.getSailPos().getZ());
         }
-
-        if(this.StrategicFirePos() != null){
-
-            nbt.putInt("StrategicFirePosX", this.StrategicFirePos().getX());
-            nbt.putInt("StrategicFirePosY", this.StrategicFirePos().getY());
-            nbt.putInt("StrategicFirePosZ", this.StrategicFirePos().getZ());
-            nbt.putBoolean("ShouldStrategicFire", this.getShouldStrategicFire());
-        }
     }
 
     public void readAdditionalSaveData(CompoundTag nbt) {
@@ -124,14 +110,6 @@ public class CaptainEntity extends AbstractLeaderEntity implements IStrategicFir
                     nbt.getInt("SailPosX"),
                     nbt.getInt("SailPosY"),
                     nbt.getInt("SailPosZ")));
-        }
-
-        if (nbt.contains("StrategicFirePosX") && nbt.contains("StrategicFirePosY") && nbt.contains("StrategicFirePosZ")) {
-            this.setStrategicFirePos(new BlockPos (
-                    nbt.getInt("StrategicFirePosX"),
-                    nbt.getInt("StrategicFirePosY"),
-                    nbt.getInt("StrategicFirePosZ")));
-            this.setShouldStrategicFire(nbt.getBoolean("ShouldStrategicFire"));
         }
     }
 
@@ -150,19 +128,12 @@ public class CaptainEntity extends AbstractLeaderEntity implements IStrategicFir
 
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
-        SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
-        ((AsyncGroundPathNavigation) this.getNavigation()).setCanOpenDoors(true);
-
-        this.initSpawn();
-
-        return ilivingentitydata;
+        return finishRecruitLeafSpawn(world, difficultyInstance, super.finalizeSpawn(world, difficultyInstance, reason, data, nbt), true, false);
     }
 
     @Override
     public void initSpawn() {
-        this.setPersistenceRequired();
-
-        if(this.getCustomName() == null || this.getCustomName().getString().isEmpty()) this.setCustomName(Component.literal("Captain"));
+        initPersistentNamedSpawn("Captain");
     }
 
     @Override
@@ -355,21 +326,6 @@ public class CaptainEntity extends AbstractLeaderEntity implements IStrategicFir
         return 1000;
     }
 
-    public void setStrategicFirePos(BlockPos pos) {
-        if(pos != null) this.entityData.set(STRATEGIC_FIRE_POS, Optional.of(pos));
-        else this.entityData.set(STRATEGIC_FIRE_POS, Optional.empty());
-    }
-    public BlockPos StrategicFirePos(){
-        return this.entityData.get(STRATEGIC_FIRE_POS).orElse(null);
-    }
-
-    public void setShouldStrategicFire(boolean bool) {
-        this.entityData.set(SHOULD_STRATEGIC_FIRE, bool);
-    }
-    public boolean getShouldStrategicFire(){
-        return this.entityData.get(SHOULD_STRATEGIC_FIRE);
-    }
-
     public boolean canRepair() {
         return this.getInventory().hasAnyMatching(itemStack -> itemStack.is(Items.IRON_NUGGET)) && this.getInventory().hasAnyMatching(itemStack -> itemStack.is(ItemTags.PLANKS));
     }
@@ -422,8 +378,6 @@ public class CaptainEntity extends AbstractLeaderEntity implements IStrategicFir
         return super.hurt(dmg, amt);
     }
 }
-
-
 
 
 

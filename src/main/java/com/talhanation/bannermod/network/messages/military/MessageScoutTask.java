@@ -44,6 +44,7 @@ public class MessageScoutTask implements Message<MessageScoutTask> {
                         scout.getUUID(),
                         scout.getOwnerUUID(),
                         scout.getGroup(),
+                        scout.getTeam() == null ? null : scout.getTeam().getName(),
                         scout.isOwned(),
                         scout.isAlive(),
                         scout.getListen(),

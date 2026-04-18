@@ -46,7 +46,7 @@ public class RecruitDefendVillageFromPlayerGoal extends TargetGoal {
     }
 
     public void start() {
-        this.recruit.setTarget(this.potentialTarget);
+        this.recruit.assignReactiveCombatTarget(this.potentialTarget);
         super.start();
     }
 }

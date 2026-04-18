@@ -18,7 +18,6 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
@@ -87,22 +86,13 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
 
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
-        SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
-        ((GroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
-
-        this.initSpawn();
-
-        return ilivingentitydata;
+        return finishRecruitLeafSpawn(world, difficultyInstance, super.finalizeSpawn(world, difficultyInstance, reason, data, nbt), true, false);
     }
 
     @Override
     public void initSpawn() {
-        if(this.getCustomName() == null || this.getCustomName().getString().isEmpty()) this.setCustomName(Component.literal("Scout"));
-        this.setPersistenceRequired();
+        initPersistentNamedSpawn("Scout");
         if(this.getOwner() != null) this.setOwnerName(this.getOwner().getName().getString());
-        AbstractRecruitEntity.applySpawnValues(this);
-
-
     }
 
     @Override
@@ -221,17 +211,22 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
         potentialRecruitTargets = new ArrayList<>();
 
         if (!this.getCommandSenderWorld().isClientSide()) {
-            potentialPlayerTargets = this.getCommandSenderWorld().getEntitiesOfClass(
-                    ServerPlayer.class,
-                    this.getBoundingBox().inflate(SEARCH_RADIUS),
-                    (target) -> shouldAttack(target) && this.hasLineOfSight(target)
+            NearbyCombatCandidates scan = scanNearbyCombatCandidates((ServerLevel) this.getCommandSenderWorld(), SEARCH_RADIUS);
+            List<LivingEntity> hostileTargets = filterCombatCandidates(
+                    scan.candidates(),
+                    target -> shouldAttack(target) && this.hasLineOfSight(target),
+                    false
             );
 
-            potentialRecruitTargets = this.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    this.getBoundingBox().inflate(SEARCH_RADIUS),
-                    (target) -> shouldAttack(target) && this.hasLineOfSight(target)
-            );
+            potentialPlayerTargets = hostileTargets.stream()
+                    .filter(ServerPlayer.class::isInstance)
+                    .map(ServerPlayer.class::cast)
+                    .toList();
+
+            potentialRecruitTargets = hostileTargets.stream()
+                    .filter(AbstractRecruitEntity.class::isInstance)
+                    .map(AbstractRecruitEntity.class::cast)
+                    .toList();
 
             if(!potentialPlayerTargets.isEmpty()){
                 for(ServerPlayer player : potentialPlayerTargets){
@@ -358,9 +353,6 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
     }
 
 }
-
-
-
 
 
 

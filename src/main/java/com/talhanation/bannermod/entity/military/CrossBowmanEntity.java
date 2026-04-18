@@ -6,16 +6,12 @@ import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitRangedCrossbowAttackGoal;
 import com.talhanation.bannermod.ai.military.compat.RecruitRangedMusketAttackGoal;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
-import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -32,17 +28,14 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 import static com.talhanation.bannermod.bootstrap.BannerModMain.isMusketModLoaded;
 
 
-public class CrossBowmanEntity extends AbstractRecruitEntity implements CrossbowAttackMob, IRangedRecruit, IStrategicFire {
+public class CrossBowmanEntity extends AbstractStrategicFireRecruitEntity implements CrossbowAttackMob, IRangedRecruit {
 
     private static final EntityDataAccessor<Boolean> DATA_IS_CHARGING_CROSSBOW = SynchedEntityData.defineId(CrossBowmanEntity.class, EntityDataSerializers.BOOLEAN);
-    private static final EntityDataAccessor<Optional<BlockPos>> STRATEGIC_FIRE_POS = SynchedEntityData.defineId(CrossBowmanEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
-    private static final EntityDataAccessor<Boolean> SHOULD_STRATEGIC_FIRE = SynchedEntityData.defineId(CrossBowmanEntity.class, EntityDataSerializers.BOOLEAN);
 
 
     public CrossBowmanEntity(EntityType<? extends AbstractRecruitEntity> entityType, Level world) {
@@ -56,8 +49,6 @@ public class CrossBowmanEntity extends AbstractRecruitEntity implements Crossbow
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_IS_CHARGING_CROSSBOW, false);
-        this.entityData.define(STRATEGIC_FIRE_POS, Optional.empty());
-        this.entityData.define(SHOULD_STRATEGIC_FIRE, false);
     }
 
     @Override
@@ -65,14 +56,6 @@ public class CrossBowmanEntity extends AbstractRecruitEntity implements Crossbow
         super.addAdditionalSaveData(nbt);
 
         nbt.putBoolean("isChargingCrossbow", this.getChargingCrossbow());
-
-        if(this.getStrategicFirePos() != null){
-
-            nbt.putInt("StrategicFirePosX", this.getStrategicFirePos().getX());
-            nbt.putInt("StrategicFirePosY", this.getStrategicFirePos().getY());
-            nbt.putInt("StrategicFirePosZ", this.getStrategicFirePos().getZ());
-            nbt.putBoolean("ShouldStrategicFire", this.getShouldStrategicFire());
-        }
     }
 
     @Override
@@ -80,14 +63,6 @@ public class CrossBowmanEntity extends AbstractRecruitEntity implements Crossbow
         super.readAdditionalSaveData(nbt);
 
         this.setChargingCrossbow(nbt.getBoolean("isChargingCrossbow"));
-
-        if (nbt.contains("StrategicFirePosX") && nbt.contains("StrategicFirePosY") && nbt.contains("StrategicFirePosZ")) {
-            this.setStrategicFirePos(new BlockPos (
-                    nbt.getInt("StrategicFirePosX"),
-                    nbt.getInt("StrategicFirePosY"),
-                    nbt.getInt("StrategicFirePosZ")));
-            this.setShouldStrategicFire(nbt.getBoolean("ShouldStrategicFire"));
-        }
     }
     @Override
     protected void registerGoals() {
@@ -116,21 +91,12 @@ public class CrossBowmanEntity extends AbstractRecruitEntity implements Crossbow
     @Override
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
-        RandomSource randomsource = world.getRandom();
-        SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
-        ((AsyncGroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
-        this.populateDefaultEquipmentEnchantments(randomsource, difficultyInstance);
-        this.initSpawn();
-        return ilivingentitydata;
+        return finishRecruitLeafSpawn(world, difficultyInstance, super.finalizeSpawn(world, difficultyInstance, reason, data, nbt), true, true);
     }
 
     @Override
     public void initSpawn() {
-        this.setCustomName(Component.literal("Crossbowman"));
-        this.setCost(RecruitsServerConfig.CrossbowmanCost.get());
-        this.setEquipment();
-        this.setRandomSpawnBonus();
-        this.setPersistenceRequired();
+        initStandardRecruitSpawn("Crossbowman", RecruitsServerConfig.CrossbowmanCost.get());
 
         if(RecruitsServerConfig.RangedRecruitsNeedArrowsToShoot.get()){
             if(isMusketModLoaded && IWeapon.isMusketModWeapon(this.getMainHandItem())){
@@ -142,7 +108,6 @@ public class CrossBowmanEntity extends AbstractRecruitEntity implements Crossbow
             else RecruitsPatrolSpawn.setRangedArrows(this);
         }
 
-        AbstractRecruitEntity.applySpawnValues(this);
     }
 
     @Override
@@ -193,24 +158,6 @@ public class CrossBowmanEntity extends AbstractRecruitEntity implements Crossbow
     }
     public void onCrossbowAttackPerformed() {
         this.noActionTime = 0;
-    }
-
-    public void setStrategicFirePos(BlockPos pos) {
-        this.entityData.set(STRATEGIC_FIRE_POS, Optional.of(pos));
-    }
-    public BlockPos getStrategicFirePos(){
-        return this.entityData.get(STRATEGIC_FIRE_POS).orElse(null);
-    }
-
-    public void clearArrowsPos(){
-        this.entityData.set(STRATEGIC_FIRE_POS, Optional.empty());
-    }
-
-    public void setShouldStrategicFire(boolean bool) {
-        this.entityData.set(SHOULD_STRATEGIC_FIRE, bool);
-    }
-    public boolean getShouldStrategicFire(){
-        return this.entityData.get(SHOULD_STRATEGIC_FIRE);
     }
 
     public List<List<String>> getEquipment(){

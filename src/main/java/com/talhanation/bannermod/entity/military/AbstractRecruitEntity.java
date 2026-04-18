@@ -6,7 +6,7 @@ import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
-import com.talhanation.bannermod.logistics.BannerModSupplyStatus;
+import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.events.*;
 import com.talhanation.bannermod.events.RecruitEvent;
 import com.talhanation.bannermod.compat.IWeapon;
@@ -54,17 +54,13 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
-import net.minecraft.world.entity.animal.IronGolem;
-import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
-import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Enemy;
-import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -88,9 +84,12 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
+    private static final int TARGET_STICKINESS_RANK_WINDOW = 3;
+    private static final double TARGET_STICKINESS_DISTANCE_BUFFER_SQR = 36.0D;
     private static final TargetSearchProfilingCounters TARGET_SEARCH_PROFILING = new TargetSearchProfilingCounters();
     private static final EntityDataAccessor<Integer> DATA_REMAINING_ANGER_TIME = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
@@ -146,135 +145,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     public boolean needsColorUpdate = true;
     public float moveSpeed = 1;
     public TargetingConditions targetingConditions;
-    private final CitizenCore citizenCore = new CitizenCore() {
-        @Override
-        public UUID getOwnerUUID() {
-            return AbstractRecruitEntity.this.getOwnerUUID();
-        }
-
-        @Override
-        public void setOwnerUUID(Optional<UUID> ownerUuid) {
-            AbstractRecruitEntity.this.setOwnerUUID(ownerUuid);
-        }
-
-        @Override
-        public int getFollowState() {
-            return AbstractRecruitEntity.this.getFollowState();
-        }
-
-        @Override
-        public void setFollowState(int state) {
-            AbstractRecruitEntity.this.setFollowState(state);
-        }
-
-        @Override
-        public SimpleContainer getInventory() {
-            return AbstractRecruitEntity.this.getInventory();
-        }
-
-        @Override
-        public String getTeamId() {
-            return AbstractRecruitEntity.this.getTeam() == null ? null : AbstractRecruitEntity.this.getTeam().getName();
-        }
-
-        @Override
-        public Vec3 getHoldPos() {
-            return AbstractRecruitEntity.this.getHoldPos();
-        }
-
-        @Override
-        public void setHoldPos(@Nullable Vec3 holdPos) {
-            if (holdPos == null) {
-                AbstractRecruitEntity.this.clearHoldPos();
-            }
-            else {
-                AbstractRecruitEntity.this.setHoldPos(holdPos);
-            }
-        }
-
-        @Override
-        public void clearHoldPos() {
-            AbstractRecruitEntity.this.clearHoldPos();
-        }
-
-        @Override
-        public BlockPos getMovePos() {
-            return AbstractRecruitEntity.this.getMovePos();
-        }
-
-        @Override
-        public void setMovePos(@Nullable BlockPos movePos) {
-            if (movePos == null) {
-                AbstractRecruitEntity.this.clearMovePos();
-            }
-            else {
-                AbstractRecruitEntity.this.setMovePos(movePos);
-            }
-        }
-
-        @Override
-        public void clearMovePos() {
-            AbstractRecruitEntity.this.clearMovePos();
-        }
-
-        @Override
-        public boolean isOwned() {
-            return AbstractRecruitEntity.this.getIsOwned();
-        }
-
-        @Override
-        public void setOwned(boolean owned) {
-            AbstractRecruitEntity.this.setIsOwned(owned);
-        }
-
-        @Override
-        public boolean isWorking() {
-            return AbstractRecruitEntity.this.getFollowState() == 6;
-        }
-
-        @Override
-        public UUID getBoundWorkAreaUUID() {
-            return null;
-        }
-
-        @Override
-        public void setBoundWorkAreaUUID(@Nullable UUID boundWorkAreaUuid) {
-        }
-
-        @Override
-        public boolean getRuntimeFlag(RuntimeFlag flag) {
-            return switch (flag) {
-                case SHOULD_FOLLOW -> AbstractRecruitEntity.this.getShouldFollow();
-                case SHOULD_HOLD_POS -> AbstractRecruitEntity.this.getShouldHoldPos();
-                case SHOULD_MOVE_POS -> AbstractRecruitEntity.this.getShouldMovePos();
-                case SHOULD_PROTECT -> AbstractRecruitEntity.this.getShouldProtect();
-                case SHOULD_MOUNT -> AbstractRecruitEntity.this.getShouldMount();
-                case SHOULD_BLOCK -> AbstractRecruitEntity.this.getShouldBlock();
-                case LISTEN -> AbstractRecruitEntity.this.getListen();
-                case IS_FOLLOWING -> AbstractRecruitEntity.this.isFollowing();
-                case SHOULD_REST -> AbstractRecruitEntity.this.getShouldRest();
-                case SHOULD_RANGED -> AbstractRecruitEntity.this.getShouldRanged();
-                case IS_IN_FORMATION -> AbstractRecruitEntity.this.isInFormation;
-            };
-        }
-
-        @Override
-        public void setRuntimeFlag(RuntimeFlag flag, boolean value) {
-            switch (flag) {
-                case SHOULD_FOLLOW -> AbstractRecruitEntity.this.setShouldFollow(value);
-                case SHOULD_HOLD_POS -> AbstractRecruitEntity.this.setShouldHoldPos(value);
-                case SHOULD_MOVE_POS -> AbstractRecruitEntity.this.setShouldMovePos(value);
-                case SHOULD_PROTECT -> AbstractRecruitEntity.this.setShouldProtect(value);
-                case SHOULD_MOUNT -> AbstractRecruitEntity.this.setShouldMount(value);
-                case SHOULD_BLOCK -> AbstractRecruitEntity.this.setShouldBlock(value);
-                case LISTEN -> AbstractRecruitEntity.this.setListen(value);
-                case IS_FOLLOWING -> AbstractRecruitEntity.this.setIsFollowing(value);
-                case SHOULD_REST -> AbstractRecruitEntity.this.setShouldRest(value);
-                case SHOULD_RANGED -> AbstractRecruitEntity.this.setShouldRanged(value);
-                case IS_IN_FORMATION -> AbstractRecruitEntity.this.isInFormation = value;
-            }
-        }
-    };
+    private final CitizenCore citizenCore = RecruitCitizenBridge.createCore(this);
     private CitizenRoleController citizenRoleController = CitizenRoleController.noop(CitizenRole.RECRUIT);
 
     public AbstractRecruitEntity(EntityType<? extends AbstractInventoryEntity> entityType, Level world) {
@@ -455,40 +326,32 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
             if (selectionDecision.target() != null) {
                 TARGET_SEARCH_PROFILING.recordTargetAssigned();
             }
-            this.setTarget(selectionDecision.target());
+            applyCombatTarget(selectionDecision.target());
             return;
         }
 
-        AABB searchBox = this.getBoundingBox().inflate(40);
-        List<LivingEntity> nearby = serverLevel.getEntitiesOfClass(
-                LivingEntity.class,
-                searchBox,
-                entity -> entity != this
-        );
-        TARGET_SEARCH_PROFILING.recordAsyncSearch(nearby.size());
+        NearbyCombatCandidates scan = scanNearbyCombatCandidates(serverLevel, 40D);
+        List<LivingEntity> nearby = scan.candidates();
+        TARGET_SEARCH_PROFILING.recordAsyncSearch(scan.observedCount());
 
         if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
-            nearby.removeIf(potTarget -> !isValidSharedTarget(potTarget));
-            nearby.sort(Comparator.comparingDouble(e -> e.distanceToSqr(this)));
+            List<LivingEntity> candidates = filterCombatCandidates(nearby, this::isValidSharedTarget, true);
 
             LivingEntity target = FormationTargetSelectionController.completeRuntimeSelection(
                     selectionRequest,
-                    chooseTargetFromCandidates(nearby)
+                    resolveCombatTargetFromCandidates(candidates)
             );
 
             if (target != null) {
                 TARGET_SEARCH_PROFILING.recordTargetAssigned();
             }
-            this.setTarget(target);
+            applyCombatTarget(target);
             return;
         }
 
         // MULTI THREADED
         Supplier<List<LivingEntity>> findTargetsTask = () -> {
-            List<LivingEntity> copy = new ArrayList<>(nearby);
-            copy.removeIf(potTarget -> !isValidSharedTarget(potTarget));
-            copy.sort(Comparator.comparingDouble(e -> e.distanceToSqr(this)));
-            return copy;
+            return filterCombatCandidates(nearby, this::isValidSharedTarget, true);
         };
 
         Consumer<List<LivingEntity>> handleTargets = targets -> {
@@ -496,7 +359,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
                 return;
             }
 
-            LivingEntity target = chooseTargetFromCandidates(targets);
+            LivingEntity target = resolveCombatTargetFromCandidates(targets);
             if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
                 target = FormationTargetSelectionController.completeRuntimeSelection(selectionRequest, target);
             }
@@ -504,7 +367,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
             if (target != null) {
                 TARGET_SEARCH_PROFILING.recordTargetAssigned();
             }
-            this.setTarget(target);
+            applyCombatTarget(target);
         };
 
         AsyncManager.executor.execute(new AsyncTaskWithCallback<>(findTargetsTask, handleTargets, serverLevel));
@@ -521,22 +384,16 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
             if (selectionDecision.target() != null) {
                 TARGET_SEARCH_PROFILING.recordTargetAssigned();
             }
-            this.setTarget(selectionDecision.target());
+            applyCombatTarget(selectionDecision.target());
             return;
         }
 
-        AABB searchBox = this.getBoundingBox().inflate(40);
-        List<LivingEntity> nearby = serverLevel.getEntitiesOfClass(
-                LivingEntity.class,
-                searchBox,
-                entity -> entity != this
-        );
-        TARGET_SEARCH_PROFILING.recordSyncSearch(nearby.size());
+        NearbyCombatCandidates scan = scanNearbyCombatCandidates(serverLevel, 40D);
+        TARGET_SEARCH_PROFILING.recordSyncSearch(scan.observedCount());
 
-        nearby.removeIf(potTarget -> !isValidSharedTarget(potTarget));
-        nearby.sort(Comparator.comparingDouble(e -> e.distanceToSqr(this)));
+        List<LivingEntity> nearby = filterCombatCandidates(scan.candidates(), this::isValidSharedTarget, true);
 
-        LivingEntity target = chooseTargetFromCandidates(nearby);
+        LivingEntity target = resolveCombatTargetFromCandidates(nearby);
         if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
             target = FormationTargetSelectionController.completeRuntimeSelection(selectionRequest, target);
         }
@@ -544,7 +401,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
         if (target != null) {
             TARGET_SEARCH_PROFILING.recordTargetAssigned();
         }
-        this.setTarget(target);
+        applyCombatTarget(target);
     }
 
     private FormationTargetSelectionController.RuntimeSelectionRequest createFormationSelectionRequest() {
@@ -570,10 +427,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     private void clearInvalidTargetForSelection() {
-        LivingEntity currentTarget = this.getTarget();
-        if (currentTarget != null && !isValidSharedTarget(currentTarget)) {
-            this.setTarget(null);
-        }
+        RecruitCombatTargeting.clearInvalidTargetForSelection(this, this::isValidSharedTarget);
     }
 
     private boolean isValidSharedTarget(@Nullable LivingEntity target) {
@@ -583,21 +437,39 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
                 && this.targetingConditions.test(this, target);
     }
 
-    private @Nullable LivingEntity chooseTargetFromCandidates(List<LivingEntity> targets) {
-        List<LivingEntity> liveTargets = targets.stream()
-                .filter(this::isValidSharedTarget)
-                .limit(10)
-                .toList();
+    protected NearbyCombatCandidates scanNearbyCombatCandidates(ServerLevel serverLevel, double radius) {
+        return RecruitCombatTargeting.scanNearbyCombatCandidates(this, serverLevel, radius);
+    }
 
-        if (liveTargets.isEmpty()) {
-            return null;
-        }
+    protected List<LivingEntity> filterCombatCandidates(List<LivingEntity> candidates, Predicate<LivingEntity> filter, boolean sortByDistance) {
+        return RecruitCombatTargeting.filterCombatCandidates(this, candidates, filter, sortByDistance);
+    }
 
-        return liveTargets.get(this.getRandom().nextInt(liveTargets.size()));
+    private @Nullable LivingEntity resolveCombatTargetFromCandidates(List<LivingEntity> targets) {
+        return RecruitCombatTargeting.resolveCombatTargetFromCandidates(this, targets, this::isValidSharedTarget);
+    }
+
+    public boolean canAssignCombatTarget(@Nullable LivingEntity target) {
+        return RecruitCombatTargeting.canAssignCombatTarget(this, target);
+    }
+
+    public boolean assignOrderedCombatTarget(@Nullable LivingEntity target) {
+        return RecruitCombatTargeting.assignOrderedCombatTarget(this, target);
+    }
+
+    public boolean assignReactiveCombatTarget(@Nullable LivingEntity target) {
+        return RecruitCombatTargeting.assignReactiveCombatTarget(this, target);
+    }
+
+    private void applyCombatTarget(@Nullable LivingEntity target) {
+        RecruitCombatTargeting.applyCombatTarget(this, target);
     }
 
     public static void resetTargetSearchProfiling() {
         TARGET_SEARCH_PROFILING.reset();
+    }
+
+    protected static record NearbyCombatCandidates(int observedCount, List<LivingEntity> candidates) {
     }
 
     public static TargetSearchProfilingSnapshot targetSearchProfilingSnapshot() {
@@ -711,15 +583,37 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
 
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance diff, MobSpawnType reason, @Nullable SpawnGroupData spawnData, @Nullable CompoundTag nbt) {
-        this.setRandomSpawnBonus();
-        this.createNavigation(world.getLevel());
-        return spawnData;
+        return RecruitSpawnService.prepareBaseRecruitSpawn(this, world, spawnData);
     }
+
+    protected final SpawnGroupData finishRecruitLeafSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, SpawnGroupData spawnData, boolean canOpenDoors, boolean enchantEquipment) {
+        return RecruitSpawnService.finishLeafRecruitSpawn(this, world, difficulty, spawnData, canOpenDoors, enchantEquipment);
+    }
+
+    void rebuildSpawnNavigation(ServerLevelAccessor world) {
+        this.createNavigation(world.getLevel());
+    }
+
+    void enableRecruitSpawnDoors() {
+        if (this.getNavigation() instanceof GroundPathNavigation navigation) {
+            navigation.setCanOpenDoors(true);
+        }
+    }
+
+    void applyRecruitSpawnEnchantments(ServerLevelAccessor world, DifficultyInstance difficulty) {
+        this.populateDefaultEquipmentEnchantments(world.getRandom(), difficulty);
+    }
+
+    protected final void initStandardRecruitSpawn(String defaultName, int cost) {
+        RecruitSpawnService.initStandardRecruitSpawn(this, defaultName, cost);
+    }
+
+    protected final void initPersistentNamedSpawn(String defaultName) {
+        RecruitSpawnService.initPersistentNamedSpawn(this, defaultName);
+    }
+
     public void setRandomSpawnBonus(){
-        getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus", this.random.nextDouble() * 0.5D, AttributeModifier.Operation.MULTIPLY_BASE));
-        getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus", this.random.nextDouble() * 0.5D, AttributeModifier.Operation.MULTIPLY_BASE));
-        getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus", this.random.nextDouble() * 0.1D, AttributeModifier.Operation.MULTIPLY_BASE));
-        getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus", this.random.nextDouble() * 0.1D, AttributeModifier.Operation.MULTIPLY_BASE));
+        RecruitSpawnService.setRandomSpawnBonus(this);
     }
 
     ////////////////////////////////////REGISTER////////////////////////////////////
@@ -810,139 +704,13 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     @Override
     public void addAdditionalSaveData(CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
-        nbt.putInt("despawnTimer", this.despawnTimer);
-        nbt.putInt("AggroState", this.getState());
-        nbt.putInt("FollowState", this.getFollowState());
-        nbt.putBoolean("ShouldFollow", this.getShouldFollow());
-        nbt.putBoolean("ShouldMount", this.getShouldMount());
-        nbt.putBoolean("ShouldProtect", this.getShouldProtect());
-        nbt.putBoolean("ShouldBlock", this.getShouldBlock());
-        if(this.getGroup() != null) nbt.putUUID("Group", this.getGroup());
-        nbt.putInt("Variant", this.getVariant());
-        nbt.putBoolean("Listen", this.getListen());
-        nbt.putBoolean("Fleeing", this.getFleeing());
-        nbt.putBoolean("isFollowing", this.isFollowing());
-        nbt.putInt("Xp", this.getXp());
-        nbt.putInt("Level", this.getXpLevel());
-        nbt.putInt("Kills", this.getKills());
-        nbt.putFloat("Hunger", this.getHunger());
-        nbt.putFloat("Moral", this.getMorale());
-        nbt.putBoolean("isOwned", this.getIsOwned());
-        nbt.putInt("Cost", this.getCost());
-        nbt.putInt("mountTimer", this.getMountTimer());
-        nbt.putInt("upkeepTimer", this.getUpkeepTimer());
-        nbt.putInt("Color", this.getColor());
-        nbt.putInt("Biome", this.getBiome());
-        nbt.putInt("MaxFallDistance", this.getMaxFallDistance());
-        nbt.putInt("formationPos", formationPos);
-        nbt.putBoolean("ShouldRest", this.getShouldRest());
-        nbt.putBoolean("ShouldRanged", this.getShouldRanged());
-        nbt.putBoolean("isInFormation", this.isInFormation);
-        nbt.putInt("paymentTimer", this.paymentTimer);
-
-        persistCitizenStateToLegacy(this.getCitizenCore(), nbt);
-
-        if(this.getMountUUID() != null){
-            nbt.putUUID("MountUUID", this.getMountUUID());
-        }
-
-        if(this.getProtectUUID() != null){
-            nbt.putUUID("ProtectUUID", this.getProtectUUID());
-        }
-
-        if(this.getUpkeepUUID() != null){
-            nbt.putUUID("UpkeepUUID", this.getUpkeepUUID());
-        }
-
-        if(this.getUpkeepPos() != null){
-            nbt.putInt("UpkeepPosX", this.getUpkeepPos().getX());
-            nbt.putInt("UpkeepPosY", this.getUpkeepPos().getY());
-            nbt.putInt("UpkeepPosZ", this.getUpkeepPos().getZ());
-        }
+        RecruitPersistenceBridge.writeRecruitData(this, nbt);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
-
-        if(nbt.contains("despawnTimer")) this.despawnTimer = nbt.getInt("despawnTimer");
-        else this.despawnTimer = -1;//fixes random recruits disappearing
-
-        this.setXpLevel(nbt.getInt("Level"));
-        this.setAggroState(nbt.getInt("AggroState"));
-        this.setFollowState(nbt.getInt("FollowState"));
-        this.setShouldFollow(nbt.getBoolean("ShouldFollow"));
-        this.setShouldMount(nbt.getBoolean("ShouldMount"));
-        this.setShouldBlock(nbt.getBoolean("ShouldBlock"));
-        this.setShouldProtect(nbt.getBoolean("ShouldProtect"));
-        this.setFleeing(nbt.getBoolean("Fleeing"));
-
-        this.setListen(nbt.getBoolean("Listen"));
-        this.setIsFollowing(nbt.getBoolean("isFollowing"));
-        this.setXp(nbt.getInt("Xp"));
-        this.setKills(nbt.getInt("Kills"));
-        this.setVariant(nbt.getInt("Variant"));
-        this.setHunger(nbt.getFloat("Hunger"));
-        this.setMoral(nbt.getFloat("Moral"));
-        this.setIsOwned(nbt.getBoolean("isOwned"));
-        this.setCost(nbt.getInt("Cost"));
-        this.setMountTimer(nbt.getInt("mountTimer"));
-        this.setUpkeepTimer(nbt.getInt("UpkeepTimer"));
-        this.setColor(nbt.getByte("Color"));
-
-        this.setMaxFallDistance(nbt.getInt("MaxFallDistance"));
-        this.formationPos = (nbt.getInt("formationPos"));
-        this.setShouldRest(nbt.getBoolean("ShouldRest"));
-        this.isInFormation = nbt.getBoolean("isInFormation");
-
-        if(nbt.contains("paymentTimer")){
-            this.paymentTimer = (nbt.getInt("paymentTimer"));
-        }
-        else{
-            resetPaymentTimer();
-        }
-
-        hydrateCitizenStateFromLegacy(this.getCitizenCore(), nbt);
-
-        if (nbt.contains("ProtectUUID")){
-            Optional<UUID> uuid = Optional.of(nbt.getUUID("ProtectUUID"));
-            this.setProtectUUID(uuid);
-        }
-
-        if (nbt.contains("MountUUID")){
-            Optional<UUID> uuid = Optional.of(nbt.getUUID("MountUUID"));
-            this.setMountUUID(uuid);
-        }
-
-        if (nbt.contains("UpkeepUUID")){
-            Optional<UUID> uuid = Optional.of(nbt.getUUID("UpkeepUUID"));
-            this.setUpkeepUUID(uuid);
-        }
-
-        if (nbt.contains("UpkeepPosX") && nbt.contains("UpkeepPosY") && nbt.contains("UpkeepPosZ")) {
-            this.setUpkeepPos(new BlockPos (
-                    nbt.getInt("UpkeepPosX"),
-                    nbt.getInt("UpkeepPosY"),
-                    nbt.getInt("UpkeepPosZ")));
-        }
-
-        if(nbt.contains("Biome"))this.setBiome(nbt.getByte("Biome"));
-        else applyBiomeAndVariant(this);
-
-        if(this.getCommandSenderWorld().isClientSide()) return;
-
-        if(nbt.contains("Group")){
-            Tag tag = nbt.get("Group");
-
-            int type = tag.getId();
-            if (type == Tag.TAG_INT) {
-                int oldGroupIndex = nbt.getInt("Group");
-                RecruitEvents.handleGroupBackwardCompatibility(this, oldGroupIndex);
-            }
-            else{
-                this.setGroupUUID(nbt.getUUID("Group"));
-            }
-        }
+        RecruitPersistenceBridge.readRecruitData(this, nbt);
     }
 
     ////////////////////////////////////GET////////////////////////////////////
@@ -1218,49 +986,11 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public void disband(@Nullable Player player, boolean keepTeam, boolean increaseCost){
-        if (!this.getCommandSenderWorld().isClientSide()) {
-            RecruitEvent.Dismissed dismissEvent = new RecruitEvent.Dismissed(this, player, keepTeam);
-            MinecraftForge.EVENT_BUS.post(dismissEvent);
-            if (dismissEvent.isCanceled()) return;
-        }
-        String name = this.getName().getString();
-
-        if(player != null){
-            player.sendSystemMessage(TEXT_DISBAND(name));
-        }
-
-        this.setTarget(null);
-        this.setIsOwned(false);
-
-        if(increaseCost) this.recalculateCost();
-
-        if(this.getCommandSenderWorld().isClientSide()) return;
-        RecruitEvents.recruitsPlayerUnitManager.removeRecruits(this.getOwnerUUID(), 1);
-        this.setOwnerUUID(Optional.empty());
-
-        if (this.getTeam() != null && !keepTeam){
-                FactionEvents.removeRecruitFromTeam(this, this.getTeam(), (ServerLevel) this.getCommandSenderWorld());
-        }
-
-        if(this.getGroup() != null){
-            RecruitEvents.recruitsGroupsManager.removeMember(this.getGroup(), this.getUUID(), (ServerLevel) this.getCommandSenderWorld());
-            this.setGroupUUID(null);
-        }
+        RecruitLifecycleService.disband(this, player, keepTeam, increaseCost, player == null ? null : TEXT_DISBAND(this.getName().getString()));
     }
 
     public void addXpLevel(int level){
-        int currentLevel = this.getXpLevel();
-        int newLevel = currentLevel + level;
-
-        if(newLevel > RecruitsServerConfig.RecruitsMaxXpLevel.get()){
-            newLevel = RecruitsServerConfig.RecruitsMaxXpLevel.get();
-        }
-        else{
-            this.makeLevelUpSound();
-            this.addLevelBuffs();
-        }
-
-        this.entityData.set(LEVEL, newLevel);
+        RecruitProgressionService.addXpLevel(this, level);
     }
 
     public void setKills(int kills){
@@ -1322,18 +1052,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public void setAggroState(int state) {
-        switch (state){
-            case 0:
-            case 3:
-                setTarget(null);//wird nur 1x aufgerufen
-                break;
-            case 1:
-                break;
-            case 2:
-                setFollowState(0);
-                break;
-        }
-        entityData.set(STATE, state);
+        RecruitCommandStateService.setAggroState(this, state);
     }
 
     //STATE
@@ -1351,69 +1070,22 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     //5 = Protect
     //6 = Work
     public void setFollowState(int state){
-        switch (state) {
-            case 0,6 -> {
-                setShouldFollow(false);
-                setShouldHoldPos(false);
-                setShouldProtect(false);
-                setShouldMovePos(false);
-            }
-            case 1 -> {
-                setShouldFollow(true);
-                setShouldHoldPos(false);
-                setShouldProtect(false);
-                setShouldMovePos(false);
-            }
-            case 2 -> {
-                setShouldFollow(false);
-                setShouldHoldPos(true);
-                clearHoldPos();
-                setHoldPos(position());
-                setShouldProtect(false);
-                setShouldMovePos(false);
-            }
-            case 3 -> {
-                setShouldFollow(false);
-                setShouldHoldPos(true);
-                setShouldProtect(false);
-                setShouldMovePos(false);
-            }
-            case 4 -> {
-                setShouldFollow(false);
-                setShouldHoldPos(true);
-                clearHoldPos();
-                setHoldPos(this.getOwner().position());
-                setShouldProtect(false);
-                setShouldMovePos(false);
-                state = 3;
-            }
-            case 5 -> {
-                setShouldFollow(false);
-                setShouldHoldPos(false);
-                setShouldProtect(true);
-                setShouldMovePos(false);
-            }
-        }
-
-        this.entityData.set(FOLLOW_STATE, state);
+        RecruitCommandStateService.setFollowState(this, state);
     }
 
     public void setHoldPos(Vec3 holdPos){
-        //this.entityData.set(HOLD_POS, Optional.of(holdPos));
-        this.holdPosVec = holdPos;
+        RecruitCommandStateService.setHoldPos(this, holdPos);
     }
     public void setMovePos(BlockPos holdPos){
-        this.entityData.set(MOVE_POS, Optional.of(holdPos));
-        reachedMovePos = false;
+        RecruitCommandStateService.setMovePos(this, holdPos);
     }
 
     public void clearHoldPos(){
-        this.holdPosVec = null;
-        this.entityData.set(HOLD_POS, Optional.empty());
+        RecruitCommandStateService.clearHoldPos(this);
     }
 
     public void clearMovePos(){
-        this.entityData.set(MOVE_POS, Optional.empty());
+        RecruitCommandStateService.clearMovePos(this);
     }
 
     public static void hydrateCitizenStateFromLegacy(CitizenCore citizenCore, CompoundTag nbt) {
@@ -1429,43 +1101,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public void setEquipment(){
-        //Equipment
-        List<List<String>> equipmentSets = getEquipment();
-        if(!equipmentSets.isEmpty()){
-
-            int size = equipmentSets.size();
-            int i = this.random.nextInt(0, size);
-
-            if(i >= 0){
-                List<String> equipmentSet = equipmentSets.get(i);
-                while(equipmentSet.size() < 6) equipmentSet.add("");
-
-                String mainHandStr = equipmentSet.get(0);
-                String offHandStr = equipmentSet.get(1);
-                String feetStr = equipmentSet.get(2);
-                String legsStr = equipmentSet.get(3);
-                String chestStr = equipmentSet.get(4);
-                String headStr = equipmentSet.get(5);
-
-                Optional<Holder<Item>> holderHead = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(headStr));
-                holderHead.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.HEAD, itemHolder.value().getDefaultInstance()));
-
-                Optional<Holder<Item>> holderChest = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(chestStr));
-                holderChest.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.CHEST, itemHolder.value().getDefaultInstance()));
-
-                Optional<Holder<Item>> holderLegs = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(legsStr));
-                holderLegs.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.LEGS, itemHolder.value().getDefaultInstance()));
-
-                Optional<Holder<Item>> holderFeet = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(feetStr));
-                holderFeet.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.FEET, itemHolder.value().getDefaultInstance()));
-
-                Optional<Holder<Item>> holderMainHand = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(mainHandStr));
-                holderMainHand.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.MAINHAND, itemHolder.value().getDefaultInstance()));
-
-                Optional<Holder<Item>> holderOffHand = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(offHandStr));
-                holderOffHand.ifPresent(itemHolder -> this.setItemSlot(EquipmentSlot.OFFHAND, itemHolder.value().getDefaultInstance()));
-            }
-        }
+        RecruitEquipmentLoadoutService.applyRandomEquipmentSet(this);
     }
 
     @Override
@@ -1486,52 +1122,11 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     public abstract void initSpawn();
 
     public static void applySpawnValues(AbstractRecruitEntity recruit){
-        recruit.setHunger(50);
-        recruit.setMoral(50);
-        recruit.setListen(true);
-        recruit.setXpLevel(1);
-
-        applyBiomeAndVariant(recruit);
+        RecruitSpawnService.applySpawnValues(recruit);
     }
 
     public static void applyBiomeAndVariant(AbstractRecruitEntity recruit){
-        //ForgeBiomeTagsProvider
-        Holder<Biome> biome = recruit.getCommandSenderWorld().getBiome(recruit.getOnPos());
-        byte biomeByte = 2; //PLAINS
-        int variant = recruit.random.nextInt(0, 14);
-        //DESERT
-        if(biome.is(Biomes.ERODED_BADLANDS) || biome.containsTag(Tags.Biomes.IS_DESERT) || biome.containsTag(Tags.Biomes.IS_SANDY) && !biome.containsTag(Tags.Biomes.IS_WET_OVERWORLD)){
-            biomeByte = 0;
-            variant = recruit.random.nextInt(15, 19);
-        }
-        //TAIGA
-        else if(biome.is(Tags.Biomes.IS_CONIFEROUS) && biome.is(Tags.Biomes.IS_COLD_OVERWORLD) && !(biome.is(Tags.Biomes.IS_SNOWY))){
-            biomeByte = 6;
-            variant = recruit.random.nextInt(5, 14);
-        }
-        //JUNGLE
-        else if(biome.is(Tags.Biomes.IS_WET_OVERWORLD) && !biome.is(Tags.Biomes.IS_SANDY) && !biome.is(Tags.Biomes.IS_SWAMP)){
-            biomeByte = 1;
-            variant = recruit.random.nextInt(15, 19);
-        }
-        //SVANNA
-        else if(biome.is(Tags.Biomes.IS_HOT_OVERWORLD) && biome.is(Tags.Biomes.IS_SPARSE_OVERWORLD)){
-            biomeByte = 3;
-            variant = recruit.random.nextInt(15, 19);
-        }
-        //SNOWY
-        else if(biome.is(Tags.Biomes.IS_SNOWY)){
-            biomeByte = 4;
-            variant = recruit.random.nextInt(5, 10);
-        }
-        //SWAMP
-        else if(biome.is(Tags.Biomes.IS_SWAMP)){
-            biomeByte = 5;
-            variant = recruit.random.nextInt(5, 14);
-        }
-
-        recruit.setBiome(biomeByte);
-        recruit.setVariant(variant);
+        RecruitSpawnService.applyBiomeAndVariant(recruit);
     }
 
     ////////////////////////////////////is FUNCTIONS////////////////////////////////////
@@ -1562,127 +1157,12 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     ////////////////////////////////////ON FUNCTIONS////////////////////////////////////
 
     public InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
-        String name = this.getName().getString();
-        Team ownerTeam = this.getTeam();
-        boolean isPlayerTarget = this.getTarget() != null && getTarget().equals(player);
-
-        if(isPlayerTarget) return InteractionResult.PASS;
-
-        if (this.getCommandSenderWorld().isClientSide) {
-            boolean flag = this.isOwnedBy(player) || !this.canBeHired();
-            return flag ? InteractionResult.CONSUME : InteractionResult.PASS;
-        } else {
-            if (player.isCreative() && player.getItemInHand(hand).getItem().equals(ModItems.RECRUIT_SPAWN_EGG.get())){
-                openDebugScreen(player);
-                //BannerModMain.LOGGER.warn("" + this.getName().getString() + " Target: " + getTarget());
-
-                return InteractionResult.SUCCESS;
-            }
-            if(this instanceof VillagerNobleEntity noble && !noble.isTrading){
-                noble.openTradeGUI(player);
-                return InteractionResult.SUCCESS;
-            }
-            if ((this.isOwned() && player.getUUID().equals(this.getOwnerUUID()))) {
-                if (player.isCrouching()) {
-                    this.openGUI(player);
-                    this.navigation.stop();
-                    return InteractionResult.SUCCESS;
-                }
-                if(!player.isCrouching()) {
-
-                    this.setUpkeepTimer(this.getUpkeepCooldown());
-                    if(this.getShouldMount()) this.setShouldMount(false);
-
-                    int state = this.getFollowState();
-                    switch (state) {
-                        default -> {
-                            setFollowState(1);
-                            player.sendSystemMessage(TEXT_FOLLOW(name));
-                        }
-                        case 1 -> {
-                            setFollowState(4);
-                            player.sendSystemMessage(TEXT_HOLD_YOUR_POS(name));
-                        }
-                        case 3 -> {
-                            setFollowState(0);
-                            player.sendSystemMessage(TEXT_WANDER(name));
-                        }
-                    }
-                    if(this instanceof AbstractLeaderEntity) CommandEvents.checkPatrolLeaderState(this);
-                    return InteractionResult.SUCCESS;
-                }
-            }
-            else if(this.isOwned() && this.getTeam() != null && !player.getUUID().equals(this.getOwnerUUID()) &&
-                    FactionEvents.recruitsFactionManager.getFactionByStringID(this.getTeam().getName()).getTeamLeaderUUID().equals(player.getUUID())){
-                    BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenTakeOverScreen(this.getUUID()));
-            }
-            else if (!this.isOwned() && !isPlayerTarget && this.canBeHired()) {
-                this.openHireGUI(player);
-                this.dialogue(name, player);
-                this.navigation.stop();
-                return InteractionResult.SUCCESS;
-            }
-            return super.mobInteract(player, hand);
-        }
+        return RecruitInteractionService.mobInteract(this, player, hand);
     }
 
     public boolean hire(Player player, RecruitsGroup group, boolean message) {
-        if (!this.getCommandSenderWorld().isClientSide()) {
-            RecruitEvent.Hired hireEvent = new RecruitEvent.Hired(this, player);
-            MinecraftForge.EVENT_BUS.post(hireEvent);
-            if (hireEvent.isCanceled()) return false;
-        }
         String name = this.getName().getString() + ": ";
-        Team ownerTeam = player.getTeam();// player is the new owner
-        String stringId = ownerTeam != null ? ownerTeam.getName() : "";
-        if (!RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID())) {
-
-            player.sendSystemMessage(INFO_RECRUITING_MAX(name));
-            return false;
-        }
-        else {
-            this.makeHireSound();
-
-            this.resetPaymentTimer();
-            this.setOwnerUUID(Optional.of(player.getUUID()));
-            this.setIsOwned(true);
-            this.navigation.stop();
-            this.setTarget(null);
-            this.setFollowState(2);
-            this.setAggroState(0);
-            if(group != null) this.setGroupUUID(group.getUUID());
-            this.despawnTimer = -1;
-
-            if(!this.getCommandSenderWorld().isClientSide()){
-                RecruitEvents.recruitsPlayerUnitManager.addRecruits(player.getUUID(), 1);
-
-                if(group != null){
-                    RecruitEvents.recruitsGroupsManager.addMember(group.getUUID(), this.getUUID(),  (ServerLevel) this.getCommandSenderWorld());
-                    RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
-                }
-
-                if(ownerTeam != null){
-                    FactionEvents.addRecruitToTeam(this, ownerTeam, (ServerLevel) this.getCommandSenderWorld());
-                }
-            }
-
-            if(message){
-                int i = this.random.nextInt(4);
-                switch (i) {
-                    default -> {
-                        player.sendSystemMessage(TEXT_RECRUITED1(name));
-                    }
-                    case 2 -> {
-                        player.sendSystemMessage(TEXT_RECRUITED2(name));
-                    }
-                    case 3 -> {
-                        player.sendSystemMessage(TEXT_RECRUITED3(name));
-                    }
-                }
-            }
-        }
-
-        return true;
+        return RecruitLifecycleService.hire(this, player, group, message, INFO_RECRUITING_MAX(name), List.of(TEXT_RECRUITED1(name), TEXT_RECRUITED2(name), TEXT_RECRUITED3(name)));
     }
 
     public void dialogue(String name, Player player) {
@@ -1706,92 +1186,21 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
         if (this.isInvulnerableTo(dmg)) {
             return false;
         } else {
-            Entity entity = dmg.getEntity();
-            if (entity != null && !(entity instanceof Player) && !(entity instanceof AbstractArrow)) {
-                amt = (amt + 1.0F) / 2.0F;
-            }
-            if(this.getMorale() > 0) this.setMoral(this.getMorale() - 0.25F);
-            if(isBlocking()) hurtCurrentlyUsedShield(amt);
-
-            if(entity instanceof LivingEntity living && RecruitEvents.canAttack(this, living)){
-                if(this.getFollowState() == 5){//Protecting
-                    List<AbstractRecruitEntity> list = this.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, this.getBoundingBox().inflate(32D));
-                    for(AbstractRecruitEntity recruit : list){
-                        if (recruit.getUUID().equals(recruit.getProtectUUID()) && recruit.isAlive() && !recruit.equals(living)){
-                            //Patrolleader
-                            recruit.setTarget(living);
-                        }
-                    }
-                }
-
-
-                if(this.getTarget() != null){
-                    double d1 = this.distanceToSqr(this.getTarget());
-                    double d2 = this.distanceToSqr(living);
-
-                    if(d2 < d1) this.setTarget(living);
-                }
-                else
-                    this.setTarget(living);
-
-                if(this.getShouldProtect() && this.getProtectingMob() instanceof AbstractRecruitEntity patrolLeader){
-                    patrolLeader.setTarget(living);
-                }
-            }
+            amt = RecruitCombatOverrideService.prepareIncomingDamage(this, dmg, amt);
             return super.hurt(dmg, amt);
         }
     }
 
     public boolean doHurtTarget(@NotNull Entity entity) {
-        float f = (float)this.getAttributeValue(Attributes.ATTACK_DAMAGE);
-        if (entity instanceof LivingEntity) {
-            f += EnchantmentHelper.getDamageBonus(this.getMainHandItem(), ((LivingEntity)entity).getMobType());
-        }
-
-        int i = EnchantmentHelper.getFireAspect(this);
-        if (i > 0) {
-            entity.setSecondsOnFire(i * 4);
-        }
-
-        boolean flag = entity.hurt(this.damageSources().mobAttack(this), f);
-        if (flag) {
-
-            this.doEnchantDamageEffects(this, entity);
-            this.setLastHurtMob(entity);
-        }
-        this.addXp(1);
-        if(this.getHunger() > 0) this.setHunger(this.getHunger() - 0.1F);
-        this.checkLevel();
-        if(this.getMorale() < 100) this.setMoral(this.getMorale() + 0.25F);
-        this.damageMainHandItem();
-        return true;
+        return RecruitCombatDecisions.doHurtTarget(this, entity);
     }
 
     public void addLevelBuffs(){
-        int level = getXpLevel();
-        if(level <= 10){
-            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
-            getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus_level", 0.03D, AttributeModifier.Operation.ADDITION));
-            getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus_level", 0.0012D, AttributeModifier.Operation.ADDITION));
-            getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus_level", 0.0025D, AttributeModifier.Operation.ADDITION));
-        }
-        if(level > 10){
-            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
-        }
+        RecruitProgressionService.applyLevelBuffs(this);
     }
 
     public void addLevelBuffsForLevel(int level){
-
-        for(int i = 0; i < level; i++) {
-            if (level <= 10) {
-                getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
-                getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus_level", 0.03D, AttributeModifier.Operation.ADDITION));
-                getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus_level", 0.0012D, AttributeModifier.Operation.ADDITION));
-                getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus_level", 0.0025D, AttributeModifier.Operation.ADDITION));}
-            if (level > 10) {
-                getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
-            }
-        }
+        RecruitProgressionService.applyLevelBuffsForLevel(this, level);
     }
 
     /*
@@ -1813,137 +1222,33 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public void die(DamageSource dmg) {
-        Component deathMessage = this.getCombatTracker().getDeathMessage();
-        super.die(dmg);
-        if (this.dead) {
-            if (this.getCommandSenderWorld().isClientSide()) return;
-
-            if (this.getCommandSenderWorld().getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES) && this.getOwner() instanceof ServerPlayer) {
-                this.getOwner().sendSystemMessage(deathMessage);
-            }
-
-            if(this.getTeam() != null){
-                RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(this.getTeam().getName());
-                if(faction != null) faction.addNPCs(-1);
-                FactionEvents.recruitsFactionManager.broadcastToFactionPlayers(this.getTeam().getName(), (ServerLevel) this.getCommandSenderWorld());
-            }
-
-            if(this.getGroup() != null){
-                RecruitEvents.recruitsGroupsManager.removeMember(this.getGroup(), this.getUUID(), (ServerLevel) this.getCommandSenderWorld());
-            }
-
-            if(this.isOwned()){
-                RecruitEvents.recruitsPlayerUnitManager.removeRecruits(this.getOwnerUUID(), 1);
-            }
-            FactionEvents.removeRecruitFromTeam(this, this.getTeam(), (ServerLevel) this.getCommandSenderWorld());
-        }
+        RecruitLifecycleService.onDeath(this, dmg, this.getCombatTracker().getDeathMessage());
     }
 
     ////////////////////////////////////OTHER FUNCTIONS////////////////////////////////////
 
     public void updateMorale(){
-        if(this instanceof VillagerNobleEntity){
-            return;
-        }
-        //fast recovery
-        float currentMorale = getMorale();
-        float newMorale = currentMorale;
-
-        if (isStarving() && this.isOwned()){
-            if(currentMorale > 0) newMorale -= 2F;
-        }
-
-        if (this.isOwned() && !isSaturated()){
-            if(currentMorale > 35) newMorale -= 1F;
-        }
-
-        if(this.isSaturated() || getHealth() >= getMaxHealth() * 0.85){
-            if(currentMorale < 65) newMorale += 2F;
-        }
-
-        if(newMorale < 0) newMorale = 0;
-
-        this.setMoral(newMorale);
+        RecruitUpkeepService.updateMorale(this);
     }
 
     public void applyMoralEffects(){
-        boolean confused =  0 <= getMorale() && getMorale() < 20;
-        boolean lowMoral =  20 <= getMorale() && getMorale() < 40;
-        boolean highMoral =  90 <= getMorale() && getMorale() <= 100;
-
-        if (confused) {
-            if (!this.hasEffect(MobEffects.WEAKNESS))
-                this.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 3, false, false, true));
-            if (!this.hasEffect(MobEffects.MOVEMENT_SLOWDOWN))
-                this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2, false, false, true));
-            if (!this.hasEffect(MobEffects.CONFUSION))
-                this.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 200, 1, false, false, true));
-        }
-
-        if (lowMoral) {
-            if (!this.hasEffect(MobEffects.WEAKNESS))
-                this.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 1, false, false, true));
-            if (!this.hasEffect(MobEffects.MOVEMENT_SLOWDOWN))
-                this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 1, false, false, true));
-        }
-
-        if (highMoral) {
-            if (!this.hasEffect(MobEffects.DAMAGE_BOOST))
-                this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 0, false, false, true));
-            if (!this.hasEffect(MobEffects.DAMAGE_RESISTANCE))
-                this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 0, false, false, true));
-        }
+        RecruitUpkeepService.applyMoralEffects(this);
     }
 
     public void updateHunger(){
-        if(this instanceof VillagerNobleEntity){
-            return;
-        }
-
-        float hunger = getHunger();
-
-        if (this.getFollowState() == 2) {
-            hunger -= 1/60F;
-        }
-        else{
-            hunger -= 2/60F;
-        }
-
-        if (hunger < 0) hunger = 0;
-
-        this.setHunger(hunger);
-
-        if(RecruitsServerConfig.RecruitsStarving.get()){
-            if(hunger == 0){
-                this.hurt(this.damageSources().starve(), 0.25F);
-            }
-        }
+        RecruitUpkeepService.updateHunger(this);
     }
 
     public boolean needsToGetFood(){
-        int timer = this.getUpkeepTimer();
-        boolean needsToEat = this.needsToEat();
-        boolean hasFood = this.hasFoodInInv();
-        boolean isChest = this.getUpkeepPos() != null;
-        boolean isEntity = this.getUpkeepUUID() != null;
-
-        return (forcedUpkeep || (!hasFood && timer == 0 && needsToEat) && (isChest || isEntity)) && !getShouldProtect();
+        return RecruitUpkeepService.needsToGetFood(this);
     }
 
     public boolean hasFoodInInv(){
-        return this.getInventory().items
-                .stream()
-                .anyMatch(ItemStack::isEdible);
+        return RecruitUpkeepService.hasFoodInInv(this);
     }
 
     public boolean needsToEat(){
-        if (getHunger() <= 50F){
-            return true;
-        }
-        if (getHunger() <= 70F && getHealth() != getMaxHealth() && this.getTarget() == null && this.getIsOwned()){
-            return true;
-        }
-        else return getHealth() <= (getMaxHealth() * 0.30) && this.getTarget() == null;
+        return RecruitUpkeepService.needsToEat(this);
     }
 
     public boolean needsToPotion(){
@@ -1955,45 +1260,19 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public boolean isStarving(){
-        return (getHunger() <= 1F );
+        return RecruitUpkeepService.isStarving(this);
     }
 
     public boolean isSaturated(){
-        return (getHunger() >= 90F);
+        return RecruitUpkeepService.isSaturated(this);
     }
 
     public void checkLevel(){
-        int currentXp = this.getXp();
-        if (currentXp >= RecruitsServerConfig.RecruitsMaxXpForLevelUp.get()){
-            this.addXpLevel(1);
-            this.setXp(0);
-            this.heal(10F);
-            this.recalculateCost();
-
-            if(this.getMorale() < 100)
-                this.setMoral(getMorale() + 5F);
-            if (!this.getCommandSenderWorld().isClientSide()) {
-                MinecraftForge.EVENT_BUS.post(new RecruitEvent.LevelUp(this, this.getXpLevel()));
-            }
-        }
+        RecruitProgressionService.checkLevel(this);
     }
 
-    private void recalculateCost() {
-        int currCost = getCost();
-        int armorBonus = this.getArmorValue() * 2;
-        //BannerModMain.LOGGER.debug("armorBonus: " + armorBonus);
-
-        int weaponBonus = 4;
-        //BannerModMain.LOGGER.debug("weaponBonus: " + weaponBonus);
-
-        int speedBonus = (int) (this.getSpeed() * 2);
-        //BannerModMain.LOGGER.debug("speedBonus: " + speedBonus);
-
-        int shieldBonus = this.getOffhandItem().getItem() instanceof ShieldItem ? 10 : 0;
-        //BannerModMain.LOGGER.debug("shieldBonus: " + shieldBonus);
-
-        int newCost = Math.abs((shieldBonus + speedBonus + weaponBonus + armorBonus + currCost + getXpLevel() * 2));
-        this.setCost(newCost);
+    void recalculateCost() {
+        RecruitProgressionService.recalculateCost(this);
     }
 
     public void makeLevelUpSound() {
@@ -2018,179 +1297,30 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     protected void hurtArmor(@NotNull DamageSource damageSource, float damage) {
-        if(this.level().isClientSide()) return;
-
-        ItemStack headArmor = this.getItemBySlot(EquipmentSlot.HEAD);
-        boolean hasHeadArmor = !headArmor.isEmpty();
-
-        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !headArmor.getItem().isFireResistant()) && headArmor.getItem() instanceof ArmorItem)){
-        //damage
-            headArmor.hurtAndBreak(1, this, (recruit) -> {
-                recruit.broadcastBreakEvent(EquipmentSlot.HEAD);
-            });
-        }
-
-        if (this.getItemBySlot(EquipmentSlot.HEAD).isEmpty() && hasHeadArmor) {
-            this.inventory.setItem(0, ItemStack.EMPTY);
-            this.getInventory().setChanged();
-            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
-            this.tryToReequip(EquipmentSlot.HEAD);
-        }
-
-        ItemStack chestArmor = this.getItemBySlot(EquipmentSlot.CHEST);
-        boolean hasChestArmor = !chestArmor.isEmpty();
-        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !chestArmor.getItem().isFireResistant()) && chestArmor.getItem() instanceof ArmorItem)){
-            //damage
-            chestArmor.hurtAndBreak(1, this, (recruit) -> {
-                recruit.broadcastBreakEvent(EquipmentSlot.CHEST);
-            });
-        }
-        if (this.getItemBySlot(EquipmentSlot.CHEST).isEmpty() && hasChestArmor) {
-            this.inventory.setItem(1, ItemStack.EMPTY);
-            this.getInventory().setChanged();
-            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
-            this.tryToReequip(EquipmentSlot.CHEST);
-        }
-
-        ItemStack legsArmor = this.getItemBySlot(EquipmentSlot.LEGS);
-        boolean hasLegsArmor = !legsArmor.isEmpty();
-
-        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !legsArmor.getItem().isFireResistant()) && legsArmor.getItem() instanceof ArmorItem)){
-            //damage
-            legsArmor.hurtAndBreak(1, this, (recruit) -> {
-                recruit.broadcastBreakEvent(EquipmentSlot.LEGS);
-            });
-        }
-        if (this.getItemBySlot(EquipmentSlot.LEGS).isEmpty() && hasLegsArmor) {
-            this.inventory.setItem(2, ItemStack.EMPTY);
-            this.getInventory().setChanged();
-            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
-            this.tryToReequip(EquipmentSlot.LEGS);
-        }
-
-
-        ItemStack feetArmor = this.getItemBySlot(EquipmentSlot.FEET);
-        boolean hasFeetArmor = !feetArmor.isEmpty();
-
-        if (((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !feetArmor.getItem().isFireResistant()) && feetArmor.getItem() instanceof ArmorItem)){
-            //damage
-            feetArmor.hurtAndBreak(1, this, (p_43296_) -> {
-
-            });
-
-        }
-        if (this.getItemBySlot(EquipmentSlot.FEET).isEmpty() && hasFeetArmor) {
-            this.inventory.setItem(3, ItemStack.EMPTY);
-            this.getInventory().setChanged();
-            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
-            this.tryToReequip(EquipmentSlot.FEET);
-        }
+        RecruitEquipmentService.hurtArmor(this, damageSource, damage);
     }
 
     public void damageMainHandItem() {
-        if(this.level().isClientSide()) return;
-
-        ItemStack handItem = this.getItemBySlot(EquipmentSlot.MAINHAND);
-        boolean hasHandItem = !handItem.isEmpty();
-
-        this.getMainHandItem().hurtAndBreak(1, this, (recruit) -> {
-            recruit.broadcastBreakEvent(EquipmentSlot.MAINHAND);
-        });
-
-        if (this.getMainHandItem().isEmpty() && hasHandItem) {
-            this.inventory.setItem(5, ItemStack.EMPTY);
-            this.getInventory().setChanged();
-            this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
-            this.tryToReequip(EquipmentSlot.MAINHAND);
-        }
+        RecruitEquipmentService.damageMainHandItem(this);
     }
 
     public void tryToReequip(EquipmentSlot equipmentSlot){
-        for(int i = 6; i < 15; i++){
-            ItemStack itemStack = this.getInventory().getItem(i);
-            if(canEquipItemToSlot(itemStack, equipmentSlot)) {
-                this.setItemSlot(equipmentSlot, itemStack);
-                this.inventory.setItem(getInventorySlotIndex(equipmentSlot), itemStack);
-                this.inventory.removeItemNoUpdate(i);
-                Equipable equipable = Equipable.get(itemStack);
-                if(equipable != null)
-                    this.getCommandSenderWorld().playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
-            }
-        }
+        RecruitEquipmentService.tryToReequip(this, equipmentSlot);
     }
 
     public void tryToReequipShield(){
-        for(ItemStack itemStack : this.getInventory().items){
-            if(itemStack.getItem() instanceof ShieldItem){
-                this.setItemSlot(EquipmentSlot.OFFHAND, itemStack);
-                this.inventory.setItem(getInventorySlotIndex(EquipmentSlot.OFFHAND), itemStack);
-                Equipable equipable = Equipable.get(itemStack);
-                if(equipable != null)
-                    this.getCommandSenderWorld().playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
-
-                itemStack.shrink(1);
-            }
-        }
+        RecruitEquipmentService.tryToReequipShield(this);
     }
 
     @Override
     protected void hurtCurrentlyUsedShield(float damage) {
-        if(this.level().isClientSide()) return;
-
-        this.getOffhandItem().hurtAndBreak(1, this, (recruit) -> {
-            recruit.broadcastBreakEvent(EquipmentSlot.OFFHAND);
-        });
-
-        if (this.getOffhandItem().isEmpty()) {
-            this.inventory.setItem(4, ItemStack.EMPTY);
-            this.getInventory().setChanged();
-            this.playSound(SoundEvents.SHIELD_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
-            this.tryToReequipShield();
-        }
+        RecruitEquipmentService.hurtCurrentlyUsedShield(this, damage);
     }
 
     @Override
     public boolean killedEntity(@NotNull ServerLevel level, @NotNull LivingEntity living) {
         super.killedEntity(level, living);
-
-        this.addXp(5);
-        this.setKills(this.getKills() + 1);
-        if(this.getMorale() < 100) this.setMoral(this.getMorale() + 1);
-
-        if(living instanceof Player){
-            this.addXp(45);
-            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 9);
-        }
-
-        if(living instanceof Raider){
-            this.addXp(5);
-            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 2);
-        }
-
-        if(living instanceof Villager villager){
-            if (villager.isBaby()) if(this.getMorale() > 0) this.setMoral(this.getMorale() - 10);
-            else {
-                if (this.getMorale() > 0) this.setMoral(this.getMorale() - 2);
-            }
-        }
-
-        if(living instanceof WitherBoss){
-            this.addXp(99);
-            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 9);
-        }
-
-        if(living instanceof IronGolem){
-            this.addXp(49);
-            if(this.getMorale() > 0) this.setMoral(this.getMorale() - 1);
-        }
-
-        if(living instanceof EnderDragon){
-            this.addXp(999);
-            if(this.getMorale() < 100) this.setMoral(this.getMorale() + 49);
-        }
-
-        this.checkLevel();
-        return true;
+        return RecruitCombatOverrideService.handleKillRewards(this, living);
     }
 
     @Override
@@ -2222,39 +1352,11 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
 
     @Override
     public void openGUI(Player player) {
-        if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
-                @Override
-                public @NotNull Component getDisplayName() {
-                    return getName();
-                }
-
-                @Override
-                public @NotNull AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
-                    return new RecruitInventoryMenu(i, AbstractRecruitEntity.this, playerInventory);
-                }
-            }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
-        } else {
-            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRecruitGui(player, this.getUUID()));
-        }
+        RecruitInteractionService.openGUI(this, player);
     }
 
     public void openDebugScreen(Player player) {
-        if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
-                @Override
-                public @NotNull Component getDisplayName() {
-                    return getName();
-                }
-
-                @Override
-                public AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
-                    return new DebugInvMenu(i, AbstractRecruitEntity.this, playerInventory);
-                }
-            }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
-        } else {
-            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDebugScreen(player, this.getUUID()));
-        }
+        RecruitInteractionService.openDebugScreen(this, player);
     }
 
     public static void openTakeOverGUI(Player player) {
@@ -2274,36 +1376,23 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     // 2 = RAID
     // 3 = PASSIVE
     public boolean shouldAttack(LivingEntity target) {
-        return switch (this.getState()) {
-            case 3 -> false; // Passive mode: never attack
-            case 0 -> shouldAttackOnNeutral(target) && canAttack(target);
-            case 1 -> (shouldAttackOnNeutral(target) || shouldAttackOnAggressive(target)) && canAttack(target);
-            case 2 -> !RecruitEvents.isAlly(this.getTeam(), target.getTeam()) && canAttack(target);
-            default -> canAttack(target);
-        };
+        return RecruitCombatDecisions.shouldAttack(this, target);
     }
 
     private boolean shouldAttackOnNeutral(LivingEntity target){
-        if(isMonster(target) || isAttackingOwnerOrSelf(this, target)) return true;
-
-        if(target instanceof Villager) return false;
-
-        return RecruitEvents.isEnemy(this.getTeam(), target.getTeam());
+        return RecruitCombatDecisions.shouldAttackOnNeutral(this, target);
     }
 
     private boolean shouldAttackOnAggressive(LivingEntity target){
-        if(target instanceof Villager) return false;
-
-        return (target instanceof AbstractRecruitEntity || target instanceof Player) && (RecruitEvents.isNeutral(this.getTeam(), target.getTeam()) || RecruitEvents.isEnemy(this.getTeam(), target.getTeam()));
+        return RecruitCombatDecisions.shouldAttackOnAggressive(this, target);
     }
 
     private boolean isMonster(LivingEntity target) {
-        return target instanceof Enemy;
+        return RecruitCombatDecisions.isMonster(target);
     }
 
     private boolean isAttackingOwnerOrSelf(AbstractRecruitEntity recruit, LivingEntity target) {
-        return target.getLastHurtByMob() != null &&
-                (target.getLastHurtByMob().equals(recruit) || target.getLastHurtByMob().equals(recruit.getOwner()));
+        return RecruitCombatDecisions.isAttackingOwnerOrSelf(recruit, target);
     }
 
     public boolean isAlliedTo(Entity target) {
@@ -2322,43 +1411,10 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
      * - If recruit team is != null but owner team is null
      *********************************************************/
     public void updateTeam(){
-        if(this.isOwned() && !this.getCommandSenderWorld().isClientSide()){
-            Player owner = getOwner();
-            if(owner != null) {
-                Team recruitTeam = this.getTeam();
-                Team ownerTeam = owner.getTeam();
-
-                if (ownerTeam == null) {
-                    if(recruitTeam != null){
-                        //Remove from current team because ownerTeam is null
-                        FactionEvents.removeRecruitFromTeam(this, recruitTeam, (ServerLevel) this.getCommandSenderWorld());
-                        FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), recruitTeam.getName(), -1 );
-                    }
-                    //recruit team is also null, so no do nothing
-                    needsTeamUpdate = false;
-                }
-                else if(recruitTeam == null){
-                    FactionEvents.addRecruitToTeam(this, ownerTeam, (ServerLevel) this.getCommandSenderWorld());
-                    FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), ownerTeam.getName(), +1 );
-                    needsTeamUpdate = false;
-                }
-                else if(recruitTeam == ownerTeam){
-                    updateColor(ownerTeam.getName());
-                    needsTeamUpdate = false;
-                }
-                else{
-                    FactionEvents.removeRecruitFromTeam(this, recruitTeam, (ServerLevel) this.getCommandSenderWorld());
-                    FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), recruitTeam.getName(), -1 );
-
-                    FactionEvents.addRecruitToTeam(this, ownerTeam, (ServerLevel) this.getCommandSenderWorld());
-                    FactionEvents.addNPCToData((ServerLevel) this.getCommandSenderWorld(), ownerTeam.getName(), +1 );
-                    needsTeamUpdate = false;
-                }
-            }
-        }
+        RecruitLifecycleService.updateTeam(this);
     }
 
-    private void updateColor(String name) {
+    void updateColor(String name) {
         if(!this.getCommandSenderWorld().isClientSide()){
             RecruitsFaction recruitsFaction = FactionEvents.recruitsFactionManager.getFactionByStringID(name);
             if(recruitsFaction != null && recruitsFaction.getUnitColor() != this.getColor()){
@@ -2369,103 +1425,24 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public void updateGroup() {
-        if (this.getCommandSenderWorld().isClientSide()) return;
-
-        this.needsGroupUpdate = false;
-        if (this.getGroup() == null) return;
-
-        UUID raw = this.getGroup();
-        UUID resolved = RecruitEvents.recruitsGroupsManager.resolveGroup(raw);
-        UUID finalGroup = RecruitEvents.recruitsGroupsManager.resolveRecruit(this.getUUID(), resolved);
-
-        if (!finalGroup.equals(raw)) {
-            this.setGroupUUID(finalGroup);
-        }
-
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(finalGroup);
-
-        if (group == null) {
-            this.setGroupUUID(null);
-            return;
-        }
-
-        if (!group.members.contains(this.getUUID())) {
-            this.setGroupUUID(null);
-            return;
-        }
-
-        if (group.disbandContext != null && group.disbandContext.disband) {
-            this.disband(null, group.disbandContext.keepTeam, group.disbandContext.increaseCost);
-            this.needsTeamUpdate = true;
-            return;
-        }
-
-        if (this.isOwned() && !this.getOwnerUUID().equals(group.getPlayerUUID())) {
-            this.assignToPlayer(group.getPlayerUUID(), group.getUUID());
-        }
-
-        this.needsTeamUpdate = true;
+        RecruitLifecycleService.updateGroup(this);
     }
 
 
     public void openHireGUI(Player player) {
-        if (player instanceof ServerPlayer) {
-            this.navigation.stop();
-            Team ownerTeam = player.getTeam();
-            String stringId = ownerTeam != null ? ownerTeam.getName() : "";
-            boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID());
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
-                @Override
-                public @NotNull Component getDisplayName() {
-                    return getName();
-                }
-
-                @Override
-                public AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
-                    return new RecruitHireMenu(i, playerInventory.player, AbstractRecruitEntity.this, playerInventory);
-                }
-            }, packetBuffer -> {packetBuffer.writeUUID(getUUID());});
-        } else {
-            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageHireGui(player, this.getUUID()));
-        }
+        RecruitInteractionService.openHireGUI(this, player);
     }
 
     public void assignToPlayer(UUID newOwner, UUID newGroupUUID){
-        RecruitsGroup currentGroup = RecruitEvents.recruitsGroupsManager.getGroup(this.getGroup());
-        if(currentGroup != null){
-            currentGroup.removeMember(this.getUUID());
-        }
-
-        this.setGroupUUID(newGroupUUID);
-        RecruitsGroup newGroup = RecruitEvents.recruitsGroupsManager.getGroup(newGroupUUID);
-
-        this.disband(null, false, false);
-
-        this.setOwnerUUID(Optional.of(newOwner));
-
-        if(getOwner() != null){
-            this.hire(getOwner(), newGroup, true);
-            this.setFollowState(1);
-        }
+        RecruitLifecycleService.assignToPlayer(this, newOwner, newGroupUUID);
     }
 
     public void shouldMount(boolean should, UUID mount_uuid) {
-        if (!this.isPassenger()){
-            this.setShouldMount(should);
-            if(mount_uuid != null) {
-                this.setMountUUID(Optional.of(mount_uuid));
-            }
-            else
-                this.setMountUUID(Optional.empty());
-        }
-        if(should) this.dismount = 0;
+        RecruitCommandStateService.shouldMount(this, should, mount_uuid);
     }
 
     public void shouldProtect(boolean should, UUID protect_uuid) {
-        this.setShouldProtect(should);
-        if(protect_uuid != null) this.setProtectUUID(Optional.of(protect_uuid));
-        else this.setProtectUUID(Optional.empty());
+        RecruitCommandStateService.shouldProtect(this, should, protect_uuid);
     }
 
     public void clearUpkeepPos() {
@@ -2481,76 +1458,11 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public BannerModSupplyStatus.RecruitSupplyStatus getSupplyStatus(@Nullable Container upkeepContainer) {
-        boolean upkeepHasFood = false;
-        boolean upkeepHasPayment = false;
-
-        if (upkeepContainer != null) {
-            upkeepHasFood = this.hasFoodInContainer(upkeepContainer);
-            upkeepHasPayment = this.isPaymentInContainer(upkeepContainer);
-        }
-
-        return BannerModSupplyStatus.recruitSupplyStatus(
-                this.hasUpkeep(),
-                this.needsToGetFood(),
-                this.paymentTimer == 0,
-                upkeepHasFood,
-                upkeepHasPayment,
-                this.isPaymentInContainer(this.getInventory())
-        );
+        return RecruitUpkeepService.getSupplyStatus(this, upkeepContainer);
     }
 
     public void upkeepReequip(@NotNull Container container) {
-        //Try to reequip
-        for(int i = 0; i < container.getContainerSize(); i++) {
-            ItemStack itemstack = container.getItem(i);
-            ItemStack equipment;
-            if(!this.canEatItemStack(itemstack) && this.wantsToPickUp(itemstack)){
-                if (this.canEquipItem(itemstack)) {
-                    equipment = itemstack.copy();
-                    equipment.setCount(1);
-                    this.equipItem(equipment);
-                    itemstack.shrink(1);
-                }
-                if(this instanceof CrossBowmanEntity crossBowmanEntity && BannerModMain.isMusketModLoaded && IWeapon.isMusketModWeapon(crossBowmanEntity.getMainHandItem()) && itemstack.getDescriptionId().contains("cartridge")){
-                    if(this.canTakeCartridge()){
-                        equipment = itemstack.copy();
-                        this.inventory.addItem(equipment);
-                        itemstack.shrink(equipment.getCount());
-                    }
-                }
-                else if (this instanceof IRangedRecruit && itemstack.is(ItemTags.ARROWS)){ //all that are ranged
-                    if(this.canTakeArrows()){
-                        equipment = itemstack.copy();
-                        this.inventory.addItem(equipment);
-                        itemstack.shrink(equipment.getCount());
-                    }
-                }
-            }
-
-            if (this instanceof CaptainEntity && BannerModMain.isSmallShipsLoaded){
-                if(itemstack.getDescriptionId().contains("cannon_ball")){
-                    if(this.canTakeCannonBalls()){
-                        equipment = itemstack.copy();
-                        this.inventory.addItem(equipment);
-                        itemstack.shrink(equipment.getCount());
-                    }
-                }
-                else if (itemstack.is(ItemTags.PLANKS)){
-                    if(this.canTakePlanks()){
-                        equipment = itemstack.copy();
-                        this.inventory.addItem(equipment);
-                        itemstack.shrink(equipment.getCount());
-                    }
-                }
-                else if (itemstack.is(Items.IRON_NUGGET)){
-                    if(this.canTakeIronNuggets()){
-                        equipment = itemstack.copy();
-                        this.inventory.addItem(equipment);
-                        itemstack.shrink(equipment.getCount());
-                    }
-                }
-            }
-        }
+        RecruitUpkeepService.upkeepReequip(this, container);
     }
 
     public static enum ArmPose {
@@ -2619,6 +1531,22 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
         return Component.translatable("chat.bannermod.text.noPaymentInUpkeep", name);
     }
 
+    InteractionResult superMobInteract(Player player, InteractionHand hand) {
+        return super.mobInteract(player, hand);
+    }
+
+    MutableComponent textWander(String name) {
+        return TEXT_WANDER(name);
+    }
+
+    MutableComponent textHoldYourPos(String name) {
+        return TEXT_HOLD_YOUR_POS(name);
+    }
+
+    MutableComponent textFollow(String name) {
+        return TEXT_FOLLOW(name);
+    }
+
     private void pickUpArrows() {
         this.getCommandSenderWorld().getEntitiesOfClass(
                 AbstractArrow.class,
@@ -2664,55 +1592,39 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity{
     }
 
     public void checkPayment(Container container) {
-        if(RecruitsServerConfig.RecruitsPayment.get() && isOwned()){
-            if(isPaymentInContainer(container)){
-                doPayment(container);
-            }
-            else{
-                if(isPaymentInContainer(this.getInventory())){
-                    doPayment(this.getInventory());
-                }
-                else{
-                    this.doNoPaymentAction();
-                    if(this.getOwner() != null){
-                        this.getOwner().sendSystemMessage(TEXT_NO_PAYMENT(this.getName().getString()));
-                    }
-                }
-
-
-            }
-
-            resetPaymentTimer();
-        }
+        RecruitUpkeepService.checkPayment(this, container, this.getOwner() != null ? TEXT_NO_PAYMENT(this.getName().getString()) : null);
     }
 
     public void doNoPaymentAction(){
-        NoPaymentAction action = RecruitsServerConfig.RecruitsNoPaymentAction.get();
-        switch (action){
-            case MORALE_LOSS -> {
-                float current = this.getMorale();
-                float newMorale = (float) Math.max(0, current * 0.7);//30% loss
-                this.setMoral(newMorale);
-            }
-
-            case DISBAND_KEEP_TEAM -> {
-                this.disband(this.getOwner(), true, true);
-            }
-
-            case DISBAND -> {
-                this.disband(this.getOwner(), false, true);
-            }
-
-            case DESPAWN -> {
-                this.discard();
-            }
-        }
-
+        RecruitUpkeepService.doNoPaymentAction(this);
     }
 
     public void resetPaymentTimer(){
-        int interval = RecruitsServerConfig.RecruitsPaymentInterval.get();
-        this.paymentTimer = 20*60*interval;
+        RecruitUpkeepService.resetPaymentTimer(this);
+    }
+
+    void writeAggroState(int state) {
+        this.entityData.set(STATE, state);
+    }
+
+    void writeFollowState(int state) {
+        this.entityData.set(FOLLOW_STATE, state);
+    }
+
+    void writeHoldPos(Optional<BlockPos> holdPos) {
+        this.entityData.set(HOLD_POS, holdPos);
+    }
+
+    void writeMovePos(Optional<BlockPos> movePos) {
+        this.entityData.set(MOVE_POS, movePos);
+    }
+
+    void stopNavigation() {
+        this.navigation.stop();
+    }
+
+    void superDie(DamageSource dmg) {
+        super.die(dmg);
     }
 
     public enum NoPaymentAction{

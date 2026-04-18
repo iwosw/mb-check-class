@@ -7,16 +7,10 @@ import com.talhanation.bannermod.ai.military.RecruitStrategicFire;
 import com.talhanation.bannermod.ai.military.RecruitRangedBowAttackGoal;
 import com.talhanation.bannermod.util.AttackUtil;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
@@ -37,50 +31,15 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 
-public class BowmanEntity extends AbstractRecruitEntity implements IRangedRecruit, IStrategicFire {
+public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements IRangedRecruit {
 
     private final Predicate<ItemEntity> ALLOWED_ITEMS = (item) ->
             (!item.hasPickUpDelay() && item.isAlive() && getInventory().canAddItem(item.getItem()) && this.wantsToPickUp(item.getItem()));
 
-    private static final EntityDataAccessor<Optional<BlockPos>> STRATEGIC_FIRE_POS = SynchedEntityData.defineId(BowmanEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
-    private static final EntityDataAccessor<Boolean> SHOULD_STRATEGIC_FIRE = SynchedEntityData.defineId(BowmanEntity.class, EntityDataSerializers.BOOLEAN);
     public BowmanEntity(EntityType<? extends AbstractRecruitEntity> entityType, Level world) {
         super(entityType, world);
-    }
-
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(STRATEGIC_FIRE_POS, Optional.empty());
-        this.entityData.define(SHOULD_STRATEGIC_FIRE, false);
-    }
-
-    @Override
-    public void addAdditionalSaveData(CompoundTag nbt) {
-        super.addAdditionalSaveData(nbt);
-
-        if(this.StrategicFirePos() != null){
-
-            nbt.putInt("StrategicFirePosX", this.StrategicFirePos().getX());
-            nbt.putInt("StrategicFirePosY", this.StrategicFirePos().getY());
-            nbt.putInt("StrategicFirePosZ", this.StrategicFirePos().getZ());
-            nbt.putBoolean("ShouldStrategicFire", this.getShouldStrategicFire());
-        }
-    }
-
-    @Override
-    public void readAdditionalSaveData(CompoundTag nbt) {
-        super.readAdditionalSaveData(nbt);
-
-        if (nbt.contains("StrategicFirePosX") && nbt.contains("StrategicFirePosY") && nbt.contains("StrategicFirePosZ")) {
-            this.setStrategicFirePos(new BlockPos (
-                    nbt.getInt("StrategicFirePosX"),
-                    nbt.getInt("StrategicFirePosY"),
-                    nbt.getInt("StrategicFirePosZ")));
-            this.setShouldStrategicFire(nbt.getBoolean("ShouldStrategicFire"));
-        }
     }
 
     @Override
@@ -112,26 +71,17 @@ public class BowmanEntity extends AbstractRecruitEntity implements IRangedRecrui
     @Override
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData data, @Nullable CompoundTag nbt) {
-        RandomSource randomsource = world.getRandom();
-        SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
-        this.populateDefaultEquipmentEnchantments(randomsource, difficultyInstance);
-        this.initSpawn();
-        return ilivingentitydata;
+        return finishRecruitLeafSpawn(world, difficultyInstance, super.finalizeSpawn(world, difficultyInstance, reason, data, nbt), false, true);
     }
 
 
     @Override
     public void initSpawn() {
-        this.setCustomName(Component.literal("Bowman"));
-        this.setCost(RecruitsServerConfig.BowmanCost.get());
-        this.setEquipment();
-        this.setRandomSpawnBonus();
-        this.setPersistenceRequired();
+        initStandardRecruitSpawn("Bowman", RecruitsServerConfig.BowmanCost.get());
 
         if(RecruitsServerConfig.RangedRecruitsNeedArrowsToShoot.get()){
             RecruitsPatrolSpawn.setRangedArrows(this);
         }
-        AbstractRecruitEntity.applySpawnValues(this);
     }
 
     @Override
@@ -249,25 +199,6 @@ public class BowmanEntity extends AbstractRecruitEntity implements IRangedRecrui
             Vec3 fleePos = new Vec3(vecBowman.x + rnd + fleeDir.x * fleeDistance, vecBowman.y + fleeDir.y * fleeDistance, vecBowman.z + rnd + fleeDir.z * fleeDistance);
             this.getNavigation().moveTo(fleePos.x, fleePos.y, fleePos.z, 1.1D);
         }
-    }
-
-    public void setStrategicFirePos(BlockPos pos) {
-        if(pos != null) this.entityData.set(STRATEGIC_FIRE_POS, Optional.of(pos));
-        else this.entityData.set(STRATEGIC_FIRE_POS, Optional.empty());
-    }
-    public BlockPos StrategicFirePos(){
-        return this.entityData.get(STRATEGIC_FIRE_POS).orElse(null);
-    }
-
-    public void clearArrowsPos(){
-        this.entityData.set(STRATEGIC_FIRE_POS, Optional.empty());
-    }
-
-    public void setShouldStrategicFire(boolean bool) {
-        this.entityData.set(SHOULD_STRATEGIC_FIRE, bool);
-    }
-    public boolean getShouldStrategicFire(){
-        return this.entityData.get(SHOULD_STRATEGIC_FIRE);
     }
 
     @Override

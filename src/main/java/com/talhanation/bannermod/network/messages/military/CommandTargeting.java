@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 /**
  * Pure command-target selection contract shared by Phase 4 packet handlers.
  * Group commands preserve the existing 100-block nearby-owned-recruits radius,
@@ -20,7 +22,7 @@ public final class CommandTargeting {
     private CommandTargeting() {
     }
 
-    public static GroupCommandSelection forGroupCommand(UUID senderUuid, UUID groupUuid, Iterable<RecruitSnapshot> nearbyRecruits) {
+    public static GroupCommandSelection forGroupCommand(UUID senderUuid, @Nullable String senderTeamId, UUID groupUuid, Iterable<RecruitSnapshot> nearbyRecruits) {
         if (senderUuid == null) {
             return GroupCommandSelection.empty(Failure.INVALID_SENDER);
         }
@@ -31,7 +33,7 @@ public final class CommandTargeting {
 
         List<RecruitSnapshot> selectedRecruits = new ArrayList<>();
         for (RecruitSnapshot recruit : nearbyRecruits) {
-            if (recruit == null || !recruit.canReceiveCommandFrom(senderUuid)) {
+            if (recruit == null || !recruit.canReceiveCommandFrom(senderUuid, senderTeamId)) {
                 continue;
             }
 
@@ -97,6 +99,7 @@ public final class CommandTargeting {
             UUID recruitUuid,
             UUID ownerUuid,
             UUID groupUuid,
+            @Nullable String teamId,
             boolean owned,
             boolean alive,
             boolean listening,
@@ -117,8 +120,10 @@ public final class CommandTargeting {
             return owned && alive && listening;
         }
 
-        public boolean canReceiveCommandFrom(UUID senderUuid) {
-            return isCommandable() && senderUuid.equals(ownerUuid) && isWithinCommandRadius();
+        public boolean canReceiveCommandFrom(UUID senderUuid, @Nullable String senderTeamId) {
+            boolean sameOwner = senderUuid.equals(ownerUuid);
+            boolean sameTeam = senderTeamId != null && teamId != null && senderTeamId.equals(teamId);
+            return isCommandable() && (sameOwner || sameTeam) && isWithinCommandRadius();
         }
 
         public boolean matchesGroup(UUID requestedGroup) {
