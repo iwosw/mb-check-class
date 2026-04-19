@@ -1,0 +1,51 @@
+package com.talhanation.bannermod.settlement.goal;
+
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentRecord;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentSchedulePolicy;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentScheduleWindowSeed;
+import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
+
+import javax.annotation.Nullable;
+import java.util.UUID;
+
+public record ResidentGoalContext(
+        BannerModSettlementResidentRecord resident,
+        @Nullable BannerModSettlementSnapshot settlement,
+        long gameTime
+) {
+
+    public UUID residentId() {
+        return this.resident.residentUuid();
+    }
+
+    public BannerModSettlementResidentSchedulePolicy policy() {
+        return this.resident.schedulePolicy();
+    }
+
+    public BannerModSettlementResidentScheduleWindowSeed window() {
+        return this.resident.scheduleWindowSeed();
+    }
+
+    /** Minecraft day-of-time (0..23999) derived from absolute game time. */
+    public int dayTime() {
+        long time = this.gameTime % 24000L;
+        if (time < 0L) {
+            time += 24000L;
+        }
+        return (int) time;
+    }
+
+    /** True when within the policy-defined active window of the current day. */
+    public boolean isActivePhase() {
+        int t = this.dayTime();
+        BannerModSettlementResidentScheduleWindowSeed w = this.window();
+        return t >= w.activeStartTick() && t < w.activeEndTick();
+    }
+
+    /** True when within the policy-defined rest window of the current day. */
+    public boolean isRestPhase() {
+        int t = this.dayTime();
+        BannerModSettlementResidentScheduleWindowSeed w = this.window();
+        return t >= w.restStartTick() || t < w.activeStartTick();
+    }
+}

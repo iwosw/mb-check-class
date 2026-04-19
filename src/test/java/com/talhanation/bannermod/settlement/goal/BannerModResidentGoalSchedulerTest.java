@@ -1,0 +1,256 @@
+package com.talhanation.bannermod.settlement.goal;
+
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentAssignmentState;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentMode;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentRecord;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentRole;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentRuntimeRoleSeed;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentScheduleSeed;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentServiceContract;
+import com.talhanation.bannermod.settlement.goal.impl.IdleResidentGoal;
+import com.talhanation.bannermod.settlement.goal.impl.RestResidentGoal;
+import com.talhanation.bannermod.settlement.goal.impl.SocialiseResidentGoal;
+import com.talhanation.bannermod.settlement.goal.impl.WorkResidentGoal;
+import net.minecraft.resources.ResourceLocation;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class BannerModResidentGoalSchedulerTest {
+
+    private static final long DAY_TICK_ACTIVE = 6000L;   // mid-day, in active window for LABOR_DAY
+    private static final long DAY_TICK_NIGHT = 15000L;   // night, in rest window for all windows
+
+    @Test
+    void activePhaseLocalWorkerSelectsWorkGoalOverIdleFallback() {
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals();
+        BannerModSettlementResidentRecord worker = buildLocalWorker();
+        ResidentGoalContext ctx = new ResidentGoalContext(worker, null, DAY_TICK_ACTIVE);
+
+        scheduler.tick(ctx);
+
+        Optional<ResidentTask> task = scheduler.currentTask(worker.residentUuid());
+        assertTrue(task.isPresent());
+        assertEquals(WorkResidentGoal.ID, task.get().goalId());
+    }
+
+    @Test
+    void nightTickSelectsRestOverIdle() {
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals();
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+        ResidentGoalContext ctx = new ResidentGoalContext(resident, null, DAY_TICK_NIGHT);
+
+        scheduler.tick(ctx);
+
+        Optional<ResidentTask> task = scheduler.currentTask(resident.residentUuid());
+        assertTrue(task.isPresent());
+        assertEquals(RestResidentGoal.ID, task.get().goalId());
+    }
+
+    @Test
+    void unassignedVillagerInDaylightFlexSocialisesRatherThanWorks() {
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals();
+        BannerModSettlementResidentRecord resident = buildUnassignedVillager();
+        ResidentGoalContext ctx = new ResidentGoalContext(resident, null, DAY_TICK_ACTIVE);
+
+        scheduler.tick(ctx);
+
+        Optional<ResidentTask> task = scheduler.currentTask(resident.residentUuid());
+        assertTrue(task.isPresent());
+        assertEquals(SocialiseResidentGoal.ID, task.get().goalId(),
+                "villager with no workplace falls through work/deliver/fetch to socialise in civic/flex windows");
+    }
+
+    @Test
+    void schedulerWithOnlyIdleGoalReturnsIdleTask() {
+        BannerModResidentGoalScheduler scheduler = new BannerModResidentGoalScheduler(List.of(new IdleResidentGoal()));
+        BannerModSettlementResidentRecord resident = buildUnassignedVillager();
+
+        scheduler.tick(new ResidentGoalContext(resident, null, DAY_TICK_ACTIVE));
+
+        Optional<ResidentTask> task = scheduler.currentTask(resident.residentUuid());
+        assertTrue(task.isPresent());
+        assertEquals(IdleResidentGoal.ID, task.get().goalId());
+    }
+
+    @Test
+    void activeTaskAdvancesUntilMaxTicksThenTimesOut() {
+        ResidentGoal fastGoal = new FixedDurationTestGoal("test/goal/fast", 50, 3, false);
+        BannerModResidentGoalScheduler scheduler = new BannerModResidentGoalScheduler(List.of(fastGoal));
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+        UUID id = resident.residentUuid();
+
+        scheduler.tick(new ResidentGoalContext(resident, null, 100L));
+        assertTrue(scheduler.currentTask(id).isPresent());
+
+        for (int i = 0; i < 3; i++) {
+            scheduler.tick(new ResidentGoalContext(resident, null, 100L + i + 1));
+        }
+
+        Optional<ResidentTask> after = scheduler.currentTask(id);
+        assertTrue(after.isPresent(), "task recorded for post-finish inspection");
+        assertTrue(after.get().isDone());
+        assertEquals(ResidentStopReason.TIMED_OUT, after.get().stopReason());
+    }
+
+    @Test
+    void cooldownSkipsSameGoalAfterCompletion() {
+        ResidentGoal coolingGoal = new FixedDurationTestGoal("test/goal/cooling", 99, 2, true);
+        ResidentGoal fallback = new FixedDurationTestGoal("test/goal/fallback", 1, 1, false);
+        BannerModResidentGoalScheduler scheduler = new BannerModResidentGoalScheduler(List.of(coolingGoal, fallback));
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+        UUID id = resident.residentUuid();
+
+        scheduler.tick(new ResidentGoalContext(resident, null, 200L));
+        scheduler.forceStop(id, ResidentStopReason.COMPLETED);
+
+        scheduler.tick(new ResidentGoalContext(resident, null, 201L));
+
+        Optional<ResidentTask> picked = scheduler.currentTask(id);
+        assertTrue(picked.isPresent());
+        assertEquals(new ResourceLocation(BannerModMain.MOD_ID, "test/goal/fallback"), picked.get().goalId(),
+                "cooling goal should skip until its cooldown expires; fallback picked instead");
+    }
+
+    @Test
+    void tieBreakFallsBackToLexicographicIdOrder() {
+        ResidentGoal goalZ = new FixedDurationTestGoal("test/goal/z", 40, 5, false);
+        ResidentGoal goalA = new FixedDurationTestGoal("test/goal/a", 40, 5, false);
+        BannerModResidentGoalScheduler scheduler = new BannerModResidentGoalScheduler(List.of(goalZ, goalA));
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+
+        scheduler.tick(new ResidentGoalContext(resident, null, 300L));
+
+        Optional<ResidentTask> picked = scheduler.currentTask(resident.residentUuid());
+        assertTrue(picked.isPresent());
+        assertEquals(new ResourceLocation(BannerModMain.MOD_ID, "test/goal/a"), picked.get().goalId(),
+                "tie-break sorts by lexicographic full ID, registration order must not matter");
+    }
+
+    @Test
+    void forceStopMarksTaskDoneWithProvidedReason() {
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals();
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+        UUID id = resident.residentUuid();
+        scheduler.tick(new ResidentGoalContext(resident, null, DAY_TICK_ACTIVE));
+
+        scheduler.forceStop(id, ResidentStopReason.MANUALLY_STOPPED);
+
+        Optional<ResidentTask> task = scheduler.currentTask(id);
+        assertTrue(task.isPresent());
+        assertTrue(task.get().isDone());
+        assertEquals(ResidentStopReason.MANUALLY_STOPPED, task.get().stopReason());
+    }
+
+    @Test
+    void resetClearsActiveTasksAndCooldowns() {
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals();
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+        UUID id = resident.residentUuid();
+        scheduler.tick(new ResidentGoalContext(resident, null, DAY_TICK_ACTIVE));
+        assertNotNull(scheduler.currentTask(id).orElse(null));
+
+        scheduler.reset();
+
+        assertFalse(scheduler.currentTask(id).isPresent());
+    }
+
+    @Test
+    void zeroPriorityGoalIsNotSelectedEvenIfCanStartReturnsTrue() {
+        ResidentGoal zeroPriority = new FixedDurationTestGoal("test/goal/zero", 0, 5, false);
+        BannerModResidentGoalScheduler scheduler = new BannerModResidentGoalScheduler(List.of(zeroPriority));
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+
+        scheduler.tick(new ResidentGoalContext(resident, null, 10L));
+
+        assertFalse(scheduler.currentTask(resident.residentUuid()).isPresent());
+    }
+
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    private static BannerModSettlementResidentRecord buildLocalWorker() {
+        UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        UUID workArea = UUID.fromString("00000000-0000-0000-0000-000000000099");
+        return new BannerModSettlementResidentRecord(
+                id,
+                BannerModSettlementResidentRole.CONTROLLED_WORKER,
+                BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK,
+                BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR,
+                BannerModSettlementResidentServiceContract.notServiceActor(),
+                BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER,
+                UUID.fromString("00000000-0000-0000-0000-0000000000aa"),
+                "teamA",
+                workArea,
+                BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING
+        );
+    }
+
+    private static BannerModSettlementResidentRecord buildUnassignedVillager() {
+        UUID id = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        return new BannerModSettlementResidentRecord(
+                id,
+                BannerModSettlementResidentRole.VILLAGER,
+                BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE,
+                BannerModSettlementResidentRuntimeRoleSeed.VILLAGE_LIFE,
+                BannerModSettlementResidentServiceContract.notServiceActor(),
+                BannerModSettlementResidentMode.SETTLEMENT_RESIDENT,
+                null,
+                null,
+                null,
+                BannerModSettlementResidentAssignmentState.NOT_APPLICABLE
+        );
+    }
+
+    /**
+     * Deterministic stub used by tie-break, cooldown, timeout, and
+     * zero-priority tests. Not meant to run in production.
+     */
+    private static final class FixedDurationTestGoal implements ResidentGoal {
+        private final ResourceLocation id;
+        private final int priority;
+        private final int duration;
+        private final boolean hasCooldown;
+
+        FixedDurationTestGoal(String path, int priority, int duration, boolean hasCooldown) {
+            this.id = new ResourceLocation(BannerModMain.MOD_ID, path);
+            this.priority = priority;
+            this.duration = duration;
+            this.hasCooldown = hasCooldown;
+        }
+
+        @Override
+        public ResourceLocation id() {
+            return this.id;
+        }
+
+        @Override
+        public int computePriority(ResidentGoalContext ctx) {
+            return this.priority;
+        }
+
+        @Override
+        public boolean canStart(ResidentGoalContext ctx) {
+            return true;
+        }
+
+        @Override
+        public ResidentTask start(ResidentGoalContext ctx) {
+            return new ResidentTask(this.id, ctx.gameTime(), this.duration);
+        }
+
+        @Override
+        public int cooldownTicks() {
+            return this.hasCooldown ? 1000 : 0;
+        }
+    }
+}
