@@ -67,6 +67,9 @@ public class RecruitsServerConfig {
     public static ForgeConfigSpec.BooleanValue CompatCorpseMod;
     public static ForgeConfigSpec.BooleanValue UseAsyncPathfinding;
     public static ForgeConfigSpec.IntValue AsyncPathfindingThreadsCount;
+    public static ForgeConfigSpec.IntValue PathfindingRequestBudgetPerTick;
+    public static ForgeConfigSpec.IntValue PathfindingMaxDeferredBacklog;
+    public static ForgeConfigSpec.IntValue PathfindingMaxDeferredTicks;
     public static ForgeConfigSpec.BooleanValue UseAsyncTargetFinding;
     public static ForgeConfigSpec.IntValue AsyncTargetFindingThreadsCount;
     public static ForgeConfigSpec.IntValue MaxPlayersInFaction;
@@ -743,6 +746,29 @@ public class RecruitsServerConfig {
                         \tdefault: 1""")
                 .worldRestart()
                 .defineInRange("AsyncPathfindingThreadsCount", 1, 1, Runtime.getRuntime().availableProcessors());
+
+        PathfindingRequestBudgetPerTick = BUILDER.comment("""
+                        Maximum number of recruit path requests that may be issued in one game tick.
+                        Additional requests are deferred through the global controller instead of bursting immediately.
+                        \t(takes effect after restart)
+                        \tdefault: 32""")
+                .worldRestart()
+                .defineInRange("PathfindingRequestBudgetPerTick", 32, 0, 1024);
+
+        PathfindingMaxDeferredBacklog = BUILDER.comment("""
+                        Maximum number of deferred path requests the global controller will retain.
+                        New requests beyond this backlog are dropped explicitly instead of growing without bound.
+                        \t(takes effect after restart)
+                        \tdefault: 128""")
+                .worldRestart()
+                .defineInRange("PathfindingMaxDeferredBacklog", 128, 0, 4096);
+
+        PathfindingMaxDeferredTicks = BUILDER.comment("""
+                        Maximum age in ticks for a deferred path request before it is discarded as stale.
+                        \t(takes effect after restart)
+                        \tdefault: 20""")
+                .worldRestart()
+                .defineInRange("PathfindingMaxDeferredTicks", 20, 0, 1200);
 
         UseAsyncTargetFinding = BUILDER.comment("""
                         Use asynchronous target finding run on multithread executor.
