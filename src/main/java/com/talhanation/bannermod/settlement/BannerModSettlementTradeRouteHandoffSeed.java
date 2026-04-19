@@ -12,6 +12,8 @@ public record BannerModSettlementTradeRouteHandoffSeed(
         int readySellerDispatchCount,
         int routedStorageCount,
         int portEntrypointCount,
+        int activeReservationCount,
+        int reservedUnitCount,
         List<BannerModSettlementDesiredGoodSeed> desiredGoods,
         List<BannerModSettlementSellerDispatchRecord> sellerDispatches
 ) {
@@ -20,6 +22,8 @@ public record BannerModSettlementTradeRouteHandoffSeed(
         readySellerDispatchCount = Math.max(0, Math.min(readySellerDispatchCount, sellerDispatchCount));
         routedStorageCount = Math.max(0, routedStorageCount);
         portEntrypointCount = Math.max(0, portEntrypointCount);
+        activeReservationCount = Math.max(0, activeReservationCount);
+        reservedUnitCount = Math.max(0, reservedUnitCount);
         desiredGoods = List.copyOf(desiredGoods == null ? List.of() : desiredGoods);
         sellerDispatches = List.copyOf(sellerDispatches == null ? List.of() : sellerDispatches);
     }
@@ -30,6 +34,8 @@ public record BannerModSettlementTradeRouteHandoffSeed(
         tag.putInt("ReadySellerDispatchCount", this.readySellerDispatchCount);
         tag.putInt("RoutedStorageCount", this.routedStorageCount);
         tag.putInt("PortEntrypointCount", this.portEntrypointCount);
+        tag.putInt("ActiveReservationCount", this.activeReservationCount);
+        tag.putInt("ReservedUnitCount", this.reservedUnitCount);
 
         ListTag desiredGoodsList = new ListTag();
         for (BannerModSettlementDesiredGoodSeed desiredGood : this.desiredGoods) {
@@ -51,13 +57,15 @@ public record BannerModSettlementTradeRouteHandoffSeed(
                 tag.getInt("ReadySellerDispatchCount"),
                 tag.getInt("RoutedStorageCount"),
                 tag.getInt("PortEntrypointCount"),
+                tag.getInt("ActiveReservationCount"),
+                tag.getInt("ReservedUnitCount"),
                 readDesiredGoods(tag.getList("DesiredGoods", Tag.TAG_COMPOUND)),
                 readSellerDispatches(tag.getList("SellerDispatches", Tag.TAG_COMPOUND))
         );
     }
 
     public static BannerModSettlementTradeRouteHandoffSeed empty() {
-        return new BannerModSettlementTradeRouteHandoffSeed(0, 0, 0, 0, List.of(), List.of());
+        return new BannerModSettlementTradeRouteHandoffSeed(0, 0, 0, 0, 0, 0, List.of(), List.of());
     }
 
     private static List<BannerModSettlementDesiredGoodSeed> readDesiredGoods(ListTag list) {

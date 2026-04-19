@@ -46,12 +46,14 @@ Always preserve these constraints:
 ## Session Snapshot
 
 - Repo: `/home/kaiserroman/bannermod`
-- Current main-tree commit before latest uncommitted changes: `f459ae6`
-- There are many uncommitted changes after that commit chain.
+- Current main-tree HEAD commit: `329edf1`
+- HEAD commit message: `refactor(runtime): split legacy systems and wire settlement loop`
+- There is one newer verified but still-uncommitted Phase 25 settlement slice on top of that commit.
 - Existing refactor commits already created earlier in session:
   - `cc986b4` `refactor(recruits): split recruit runtime and formation commands`
   - `009df5f` `refactor(events): extract claim faction and villager runtimes`
   - `f459ae6` `refactor(shared): remove legacy forwarders and worker glue`
+  - `329edf1` `refactor(runtime): split legacy systems and wire settlement loop`
 
 ## Absolute Truths
 
@@ -511,6 +513,89 @@ Still to do immediately in next session:
   - `src/main/java/com/talhanation/bannermod/entity/citizen/CitizenEntity.java`
 - Treat it as adjacent enabling architecture, not as the current Phase 25 settlement-simulation owner.
 
+### Latest session continuation after `329edf1`
+
+- The user asked to commit the current verified state first, then finish the remaining broad Phase 25 settlement slice, then transition toward HYW.
+- That commit was created:
+  - `329edf1` `refactor(runtime): split legacy systems and wire settlement loop`
+- After that commit, one additional broad-but-local Phase 25 slice was implemented and verified in the main tree but has **not** been committed yet.
+
+### What the uncommitted post-`329edf1` slice added
+
+- Added read-only logistics reservation visibility:
+  - `BannerModLogisticsService.listReservations()`
+- Folded live reservation state into snapshot-owned settlement signals:
+  - `BannerModSettlementTradeRouteHandoffSeed` now also carries:
+    - `activeReservationCount`
+    - `reservedUnitCount`
+  - `BannerModSettlementService` now derives reservation-aware:
+    - `tradeRouteHandoffSeed`
+    - `supplySignalState`
+- Expanded event-driven settlement refresh coverage for more civilian mutation packets:
+  - `MessageUpdateCropArea`
+  - `MessageUpdateLumberArea`
+  - `MessageUpdateMiningArea`
+  - `MessageUpdateBuildArea`
+  - `MessageUpdateAnimalPenArea`
+- Successful merchant trades now refresh the local settlement snapshot:
+  - `MerchantEntity.doTrade(...)`
+- The live settlement orchestrator now reconciles stale seller dispatch runtime against the current snapshot seed instead of letting sellers drift across market changes:
+  - `BannerModSettlementOrchestrator`
+
+### What was verified in the latest continuation slice
+
+- `./gradlew compileJava --console=plain`
+  - green on 2026-04-19
+- `./gradlew test --tests com.talhanation.bannermod.logistics.BannerModLogisticsServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --tests com.talhanation.bannermod.settlement.BannerModSettlementManagerTest --console=plain`
+  - green on 2026-04-19
+
+### Planning files updated again in the latest continuation slice
+
+- `.planning/ROADMAP.md`
+  - now states that Phase 25 also folds live logistics reservations into snapshot-owned trade/supply signalling
+- `.planning/STATE.md`
+  - now states that broader civilian packet refresh hooks and merchant-trade refresh are in place
+- `.planning/VERIFICATION.md`
+  - now records the reservation-aware focused verification command
+- `.planning/phases/25-treasury-taxes-and-army-upkeep/25-SLICE-STATUS.md`
+  - now records reservation-aware signalling, broader refresh hooks, and stale seller dispatch reconciliation
+
+### Exact currently modified files after `329edf1`
+
+- `.planning/ROADMAP.md`
+- `.planning/STATE.md`
+- `.planning/VERIFICATION.md`
+- `.planning/phases/25-treasury-taxes-and-army-upkeep/25-SLICE-STATUS.md`
+- `CONTINUE-HERE.md`
+- `src/main/java/com/talhanation/bannermod/entity/civilian/MerchantEntity.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateAnimalPenArea.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateBuildArea.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateCropArea.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateLumberArea.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateMiningArea.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementOrchestrator.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementService.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementTradeRouteHandoffSeed.java`
+- `src/main/java/com/talhanation/bannermod/shared/logistics/BannerModLogisticsService.java`
+- `src/test/java/com/talhanation/bannermod/logistics/BannerModLogisticsServiceTest.java`
+- `src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementManagerTest.java`
+- `src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementOrchestratorTest.java`
+- `src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementServiceTest.java`
+
+### HYW transition truth recovered this session
+
+- `.analysis/hyw/**` already contains real raw/extracted/decompiled HYW reference material.
+- The highest-value next HYW step is **not** pathing/UI first.
+- The recommended opener is a bounded Phase 26 seam:
+  - audit current recruit command flags and command packet mutation paths
+  - then add one additive `CommandIntent` / `ArmyAction` seam over the legacy recruit command stack
+- Most likely first-touch files for that HYW opener:
+  - `src/main/java/com/talhanation/bannermod/entity/military/AbstractRecruitEntity.java`
+  - `src/main/java/com/talhanation/bannermod/entity/military/RecruitCommandAccess.java`
+  - `src/main/java/com/talhanation/bannermod/events/CommandEvents.java`
+  - `src/main/java/com/talhanation/bannermod/events/RecruitCommandActionService.java`
+  - `src/main/java/com/talhanation/bannermod/network/messages/military/**`
+
 ## Exact Next Steps Recommended
 
 ### Step 1. Planning normalization
@@ -529,11 +614,35 @@ Current planning truth now reflects:
 ### Step 2. Resume Phase 25 execution in new batches of 5
 
 Updated next batch after the now-landed orchestration seam:
-1. review batch-6 worktree leftovers (`jobtarget`, `shortage`, `routehandoff`) and port only the pieces that still make sense against the current snapshot-owned runtime
-2. expand event-driven refresh to more civil mutation paths
-3. deepen the live orchestration seam so project/growth integration is exercised by more than one synthetic test path
-4. continue resident/job runtime toward non-stub execution using the now-live scheduler seam
-5. decide whether logistics reservation visibility should be ported from the old shortage worktree as a narrow read-only accessor for richer settlement shortage signals
+1. Phase 25 already ported the low-risk shortage-worktree idea: logistics reservation visibility now feeds snapshot-owned settlement supply/trade hints, so the next step is deeper runtime use of those hints rather than another signal model
+2. continue expanding event-driven settlement refresh to the remaining real civil mutation paths not yet covered by work-area packet hooks or merchant trade refresh
+3. continue resident/job runtime toward non-stub execution using the now-live scheduler seam
+4. decide whether merchant trade catalog intent should be projected into the current `tradeRouteHandoffSeed` without introducing a parallel persistence model
+5. shift active exploration toward HYW after Phase 25 stabilization
+
+### Step 2.5. Commit the verified post-`329edf1` Phase 25 slice
+
+Before starting new feature work in the next session:
+
+- review the currently modified files listed above
+- confirm `CONTINUE-HERE.md` is included or intentionally excluded from the commit
+- create one new non-amend commit for the reservation-aware Phase 25 integration slice
+- do **not** include junk/artifacts such as:
+  - `run_gametest/`
+  - jar files
+  - `.analysis/**`
+  - `recruits/`
+  - `workers/`
+
+Suggested commit scope:
+- reservation-aware settlement signalling
+- broader civilian refresh hooks
+- merchant trade refresh
+- stale seller dispatch reconciliation
+- truthful planning/handoff updates
+
+Suggested commit message shape:
+- `feat(25-next): enrich live settlement signals and refresh hooks`
 
 Important:
 - Run each potentially overlapping slice in separate worktrees if they touch the same settlement/planning files.
@@ -554,6 +663,19 @@ Do this as a dedicated audit:
 Suggested audit scope:
 - Phase 1-24 only
 - focus on code/planning mismatches, missing verification, stale completion claims, and obvious integration holes
+
+### Step 4. Start HYW opener after the Phase 25 commit
+
+Do this with isolated worktree + subagent first.
+
+Recommended first HYW task:
+- audit the current recruit command state model and military packet mutation paths
+- produce one bounded implementation seam for additive command intent / action routing
+
+Do **not** jump straight to:
+- formation/pathing rewrite
+- selection UI rewrite
+- broad battlefield AI rewrite
 
 ## User Preferences / Style To Preserve
 

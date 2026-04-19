@@ -8,16 +8,21 @@ import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.MerchantWorkGoal;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
+import com.talhanation.bannermod.events.ClaimEvents;
+import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.inventory.civilian.MerchantAddEditTradeContainer;
 import com.talhanation.bannermod.inventory.civilian.MerchantTradeContainer;
 import com.talhanation.bannermod.network.messages.civilian.MessageOpenMerchantEditTradeScreen;
 import com.talhanation.bannermod.network.messages.civilian.MessageOpenMerchantTradeScreen;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
+import com.talhanation.bannermod.settlement.BannerModSettlementManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.*;
@@ -408,6 +413,7 @@ public class MerchantEntity extends AbstractWorkerEntity {
 
         trade.currentTrades++;
         this.setTrades(currents);
+        this.refreshSettlementSnapshot();
     }
 
     private boolean canAddItemToMerchant(ItemStack itemStack){
@@ -533,6 +539,19 @@ public class MerchantEntity extends AbstractWorkerEntity {
                 return;
             }
         }
+    }
+
+    private void refreshSettlementSnapshot() {
+        if (!(this.level() instanceof ServerLevel serverLevel) || this.currentMarketArea == null || ClaimEvents.recruitsClaimManager == null) {
+            return;
+        }
+        BannerModSettlementService.refreshClaimAt(
+                serverLevel,
+                ClaimEvents.recruitsClaimManager,
+                BannerModSettlementManager.get(serverLevel),
+                BannerModGovernorManager.get(serverLevel),
+                this.currentMarketArea.blockPosition()
+        );
     }
 
     // ── Synced data getters / setters ─────────────────────────────────────────

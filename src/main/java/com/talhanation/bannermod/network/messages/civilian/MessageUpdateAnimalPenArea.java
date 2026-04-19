@@ -44,6 +44,7 @@ public class MessageUpdateAnimalPenArea implements Message<MessageUpdateAnimalPe
         }
 
         this.update(animalPenArea);
+        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), animalPenArea.blockPosition());
     }
 
     public void update(AnimalPenArea animalPenArea){

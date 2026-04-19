@@ -8,6 +8,8 @@ import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsReservation;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeEntrypoint;
 import net.minecraft.resources.ResourceLocation;
@@ -25,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -88,7 +91,13 @@ public final class BannerModSettlementService {
         List<BannerModSettlementResidentRecord> residents = collectResidents(level, claim, governorSnapshot, settlementFactionId);
         List<BannerModSettlementBuildingRecord> buildings = collectBuildings(level, claim);
         BannerModSettlementMarketState marketState = collectMarketState(level, claim);
-        List<BannerModSeaTradeEntrypoint> liveSeaTradeEntrypoints = collectLiveSeaTradeEntrypoints(level, claim);
+        List<StorageArea> storageAreas = collectStorageAreas(level, claim);
+        List<BannerModSeaTradeEntrypoint> liveSeaTradeEntrypoints = collectLiveSeaTradeEntrypoints(storageAreas);
+        ReservationSignalSeed reservationSignalSeed = summarizeReservationSignalSeed(
+                buildings,
+                collectLocalLogisticsRoutes(storageAreas),
+                BannerModLogisticsRuntime.service().listReservations()
+        );
         Set<UUID> localBuildingUuids = new LinkedHashSet<>();
         for (BannerModSettlementBuildingRecord building : buildings) {
             localBuildingUuids.add(building.buildingUuid());
@@ -109,8 +118,8 @@ public final class BannerModSettlementService {
                 governorSnapshot != null && governorSnapshot.governorRecruitUuid() != null,
                 settlementFactionId != null && !settlementFactionId.isBlank()
         );
-        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed);
-        BannerModSettlementSupplySignalState supplySignalState = summarizeSupplySignals(desiredGoodsSeed, stockpileSummary, marketState, residents, buildings);
+        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed);
+        BannerModSettlementSupplySignalState supplySignalState = summarizeSupplySignals(desiredGoodsSeed, stockpileSummary, marketState, residents, buildings, reservationSignalSeed);
         int residentCapacity = 0;
         int workplaceCapacity = 0;
         int assignedWorkerCount = 0;
@@ -587,12 +596,15 @@ public final class BannerModSettlementService {
 
     static BannerModSettlementTradeRouteHandoffSeed summarizeTradeRouteHandoffSeed(BannerModSettlementStockpileSummary stockpileSummary,
                                                                                     BannerModSettlementMarketState marketState,
-                                                                                    BannerModSettlementDesiredGoodsSeed desiredGoodsSeed) {
+                                                                                    BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
+                                                                                    ReservationSignalSeed reservationSignalSeed) {
         return new BannerModSettlementTradeRouteHandoffSeed(
                 marketState.sellerDispatchCount(),
                 marketState.readySellerDispatchCount(),
                 stockpileSummary.routedStorageCount(),
                 stockpileSummary.portEntrypointCount(),
+                reservationSignalSeed.activeReservationCount(),
+                reservationSignalSeed.reservedUnitCount(),
                 desiredGoodsSeed.desiredGoods(),
                 marketState.sellerDispatches()
         );
@@ -602,7 +614,8 @@ public final class BannerModSettlementService {
                                                                        BannerModSettlementStockpileSummary stockpileSummary,
                                                                        BannerModSettlementMarketState marketState,
                                                                        List<BannerModSettlementResidentRecord> residents,
-                                                                       List<BannerModSettlementBuildingRecord> buildings) {
+                                                                       List<BannerModSettlementBuildingRecord> buildings,
+                                                                       ReservationSignalSeed reservationSignalSeed) {
         if (desiredGoodsSeed.desiredGoods().isEmpty()) {
             return BannerModSettlementSupplySignalState.empty();
         }
@@ -638,7 +651,8 @@ public final class BannerModSettlementService {
         for (BannerModSettlementDesiredGoodSeed desiredGood : desiredGoodsSeed.desiredGoods()) {
             int coverageUnits = resolveSupplyCoverageUnits(desiredGood.desiredGoodId(), stockpileSummary, marketState, serviceCoverageByGood);
             int shortageUnits = Math.max(0, desiredGood.driverCount() - coverageUnits);
-            int reservationHintUnits = resolveReservationHintUnits(desiredGood.desiredGoodId(), desiredGood.driverCount(), stockpileSummary, marketState, serviceCoverageByGood);
+            int reservationHintUnits = resolveReservationHintUnits(desiredGood.desiredGoodId(), desiredGood.driverCount(), stockpileSummary, marketState, serviceCoverageByGood)
+                    + reservationSignalSeed.reservationHintUnitsByGood().getOrDefault(desiredGood.desiredGoodId(), 0);
             if (shortageUnits > 0) {
                 shortageSignalCount++;
                 shortageUnitCount += shortageUnits;
@@ -848,10 +862,20 @@ public final class BannerModSettlementService {
         return summarizeMarketState(markets);
     }
 
-    private static List<BannerModSeaTradeEntrypoint> collectLiveSeaTradeEntrypoints(ServerLevel level,
-                                                                                     RecruitsClaim claim) {
-        List<StorageArea> storageAreas = level.getEntitiesOfClass(StorageArea.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+    private static List<StorageArea> collectStorageAreas(ServerLevel level,
+                                                         RecruitsClaim claim) {
+        return level.getEntitiesOfClass(StorageArea.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+    }
+
+    private static List<BannerModSeaTradeEntrypoint> collectLiveSeaTradeEntrypoints(List<StorageArea> storageAreas) {
         return BannerModLogisticsRuntime.listSeaTradeEntrypoints(storageAreas);
+    }
+
+    private static List<BannerModLogisticsRoute> collectLocalLogisticsRoutes(List<StorageArea> storageAreas) {
+        return storageAreas.stream()
+                .map(StorageArea::getAuthoredLogisticsRoute)
+                .flatMap(Optional::stream)
+                .toList();
     }
 
     private static StockpileSeed resolveStockpileSeed(AbstractWorkAreaEntity workArea) {
@@ -958,6 +982,75 @@ public final class BannerModSettlementService {
         );
     }
 
+    static ReservationSignalSeed summarizeReservationSignalSeed(List<BannerModSettlementBuildingRecord> buildings,
+                                                                List<BannerModLogisticsRoute> localRoutes,
+                                                                List<BannerModLogisticsReservation> reservations) {
+        if (buildings.isEmpty() || localRoutes.isEmpty() || reservations.isEmpty()) {
+            return ReservationSignalSeed.empty();
+        }
+
+        Map<UUID, BannerModSettlementBuildingRecord> buildingsByUuid = new LinkedHashMap<>();
+        for (BannerModSettlementBuildingRecord building : buildings) {
+            buildingsByUuid.put(building.buildingUuid(), building);
+        }
+
+        Map<UUID, BannerModLogisticsRoute> routesById = new LinkedHashMap<>();
+        for (BannerModLogisticsRoute route : localRoutes) {
+            routesById.put(route.routeId(), route);
+        }
+
+        Map<String, Integer> reservationHintUnitsByGood = new LinkedHashMap<>();
+        int activeReservationCount = 0;
+        int reservedUnitCount = 0;
+        for (BannerModLogisticsReservation reservation : reservations) {
+            BannerModLogisticsRoute route = routesById.get(reservation.routeId());
+            if (route == null) {
+                continue;
+            }
+
+            BannerModSettlementBuildingRecord sourceBuilding = buildingsByUuid.get(route.source().storageAreaId());
+            BannerModSettlementBuildingRecord destinationBuilding = buildingsByUuid.get(route.destination().storageAreaId());
+            activeReservationCount++;
+            reservedUnitCount += reservation.reservedCount();
+
+            Set<String> goodIds = new LinkedHashSet<>();
+            collectReservationGoodIds(goodIds, sourceBuilding);
+            collectReservationGoodIds(goodIds, destinationBuilding);
+            if (isMerchantStockpile(sourceBuilding) || isMerchantStockpile(destinationBuilding)) {
+                goodIds.add("market_goods");
+            }
+            if (isPortEntrypoint(sourceBuilding) || isPortEntrypoint(destinationBuilding)) {
+                goodIds.add("trade_stock");
+            }
+
+            for (String goodId : goodIds) {
+                reservationHintUnitsByGood.merge(goodId, reservation.reservedCount(), Integer::sum);
+            }
+        }
+
+        return new ReservationSignalSeed(activeReservationCount, reservedUnitCount, reservationHintUnitsByGood);
+    }
+
+    private static void collectReservationGoodIds(Set<String> goodIds,
+                                                  @Nullable BannerModSettlementBuildingRecord building) {
+        if (building == null) {
+            return;
+        }
+        for (String stockpileTypeId : building.stockpileTypeIds()) {
+            if (stockpileTypeId != null && !stockpileTypeId.isBlank()) {
+                goodIds.add("storage_type:" + stockpileTypeId);
+            }
+        }
+    }
+
+    private static boolean isMerchantStockpile(@Nullable BannerModSettlementBuildingRecord building) {
+        return building != null && building.stockpileTypeIds().contains("merchants");
+    }
+
+    private static boolean isPortEntrypoint(@Nullable BannerModSettlementBuildingRecord building) {
+        return building != null && building.stockpilePortEntrypoint();
+    }
+
     private record StockpileSeed(
             boolean stockpileBuilding,
             int containerCount,
@@ -968,6 +1061,22 @@ public final class BannerModSettlementService {
     ) {
         private static StockpileSeed empty() {
             return new StockpileSeed(false, 0, 0, false, false, List.of());
+        }
+    }
+
+    record ReservationSignalSeed(
+            int activeReservationCount,
+            int reservedUnitCount,
+            Map<String, Integer> reservationHintUnitsByGood
+    ) {
+        ReservationSignalSeed {
+            activeReservationCount = Math.max(0, activeReservationCount);
+            reservedUnitCount = Math.max(0, reservedUnitCount);
+            reservationHintUnitsByGood = Map.copyOf(reservationHintUnitsByGood == null ? Map.of() : reservationHintUnitsByGood);
+        }
+
+        static ReservationSignalSeed empty() {
+            return new ReservationSignalSeed(0, 0, Map.of());
         }
     }
 

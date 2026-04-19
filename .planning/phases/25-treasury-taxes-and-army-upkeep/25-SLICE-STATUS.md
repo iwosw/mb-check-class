@@ -19,6 +19,8 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - Added `settlement.household.BannerModHomeAssignmentRuntime` plus advisor/home goals so residents can hold a bounded in-memory home assignment and day/night home-ward intent.
 - Added `settlement.job.JobHandlerRegistry` plus built-in handler stubs so resident job tokens are no longer only passive seeds.
 - Added `BannerModSettlementOrchestrator` and wired it into `ClaimEvents` after snapshot refresh so the additive growth/project/home/seller/goal/job runtimes now execute over fresh `BannerModSettlementSnapshot` data on the governor tick.
+- Added reservation-aware settlement signal enrichment by folding live authored logistics reservations into snapshot-owned `tradeRouteHandoffSeed` and `supplySignalState`, without introducing a second settlement persistence model.
+- Expanded targeted settlement refresh coverage across additional civilian work-area update packets and successful merchant market trades, and made live seller dispatch runtime cancel/rebind stale sellers when the current snapshot seed changes markets.
 - Extended focused settlement JUnit coverage to verify candidate derivation and full snapshot persistence round-trip alongside the already-landed settlement seeds.
 
 ## Not Delivered In This Slice
@@ -34,6 +36,7 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - `./gradlew test --tests com.talhanation.bannermod.settlement.goal.BannerModResidentGoalSchedulerTest --tests com.talhanation.bannermod.settlement.growth.BannerModSettlementGrowthManagerTest --tests com.talhanation.bannermod.settlement.dispatch.BannerModSellerDispatchRuntimeTest --tests com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentRuntimeTest --tests com.talhanation.bannermod.settlement.household.HouseholdGoalsTest --tests com.talhanation.bannermod.settlement.project.BannerModBuildAreaProjectBridgeTest --tests com.talhanation.bannermod.settlement.job.JobHandlerRegistryTest --console=plain` succeeded on 2026-04-19.
 - `./gradlew compileJava` succeeded on 2026-04-19 with the runtime bring-up packages present in the main tree.
 - `./gradlew test --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --tests com.talhanation.bannermod.settlement.goal.BannerModResidentGoalSchedulerTest --tests com.talhanation.bannermod.settlement.project.BannerModBuildAreaProjectBridgeTest --tests com.talhanation.bannermod.settlement.job.JobHandlerRegistryTest --console=plain` succeeded on 2026-04-19 after wiring the live orchestration seam.
+- `./gradlew test --tests com.talhanation.bannermod.logistics.BannerModLogisticsServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --tests com.talhanation.bannermod.settlement.BannerModSettlementManagerTest --console=plain` succeeded on 2026-04-19 after adding reservation-aware signalling and broader civil refresh hooks.
 
 ## Later Confirmed Closeouts
 

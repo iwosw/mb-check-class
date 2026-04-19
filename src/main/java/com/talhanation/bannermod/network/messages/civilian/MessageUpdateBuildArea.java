@@ -53,6 +53,7 @@ public class MessageUpdateBuildArea implements Message<MessageUpdateBuildArea> {
         }
 
         this.update(buildArea);
+        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), buildArea.blockPosition());
     }
 
     public void update(BuildArea buildArea){

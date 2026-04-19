@@ -42,6 +42,7 @@ public class MessageUpdateCropArea implements Message<MessageUpdateCropArea> {
         }
 
         this.update(cropArea);
+        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), cropArea.blockPosition());
     }
 
     public void update(CropArea cropArea){

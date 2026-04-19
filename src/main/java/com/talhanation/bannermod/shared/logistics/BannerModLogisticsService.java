@@ -99,6 +99,13 @@ public class BannerModLogisticsService {
         return 1;
     }
 
+    public List<BannerModLogisticsReservation> listReservations() {
+        return this.reservationsById.values().stream()
+                .sorted(Comparator.comparing(BannerModLogisticsReservation::routeId)
+                        .thenComparing(BannerModLogisticsReservation::reservationId))
+                .toList();
+    }
+
     public List<BannerModSeaTradeEntrypoint> listSeaTradeEntrypoints(Collection<BannerModLogisticsRoute> routes,
                                                                      Predicate<UUID> isPortStorageArea) {
         return this.listSeaTradeEntrypoints(routes, storageAreaId -> true, isPortStorageArea);

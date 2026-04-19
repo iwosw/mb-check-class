@@ -4,6 +4,7 @@ import com.talhanation.bannermod.shared.logistics.BannerModCourierTask;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsNodeRef;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsPriority;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsReservation;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsService;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeDirection;
@@ -114,6 +115,22 @@ class BannerModLogisticsServiceTest {
 
         assertEquals(firstClaim.reservation().reservationId(), secondClaim.reservation().reservationId());
         assertEquals(firstClaim.route().routeId(), secondClaim.route().routeId());
+    }
+
+    @Test
+    void listReservationsReturnsStableSnapshotOrdering() {
+        BannerModLogisticsService service = new BannerModLogisticsService();
+        BannerModLogisticsRoute later = route("00000000-0000-0000-0000-000000000220", BannerModLogisticsPriority.NORMAL);
+        BannerModLogisticsRoute earlier = route("00000000-0000-0000-0000-000000000210", BannerModLogisticsPriority.NORMAL);
+
+        BannerModLogisticsReservation laterReservation = service.claimNextTask(UUID.randomUUID(), List.of(later), candidate -> true, 0L, 20L).orElseThrow().reservation();
+        service.claimNextTask(UUID.randomUUID(), List.of(earlier), candidate -> true, 0L, 20L).orElseThrow();
+
+        List<BannerModLogisticsReservation> snapshot = service.listReservations();
+
+        assertEquals(2, snapshot.size());
+        assertEquals(earlier.routeId(), snapshot.get(0).routeId());
+        assertEquals(laterReservation.routeId(), snapshot.get(1).routeId());
     }
 
     @Test

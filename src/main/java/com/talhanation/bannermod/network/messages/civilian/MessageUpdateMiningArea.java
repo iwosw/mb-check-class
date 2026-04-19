@@ -49,6 +49,7 @@ public class MessageUpdateMiningArea implements Message<MessageUpdateMiningArea>
             return;
         }
         this.update(miningArea);
+        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), miningArea.blockPosition());
     }
 
     public void update(MiningArea miningArea){

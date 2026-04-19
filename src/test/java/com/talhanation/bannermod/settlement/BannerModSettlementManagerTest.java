@@ -65,6 +65,8 @@ class BannerModSettlementManagerTest {
                         1,
                         1,
                         0,
+                        1,
+                        16,
                         List.of(
                                 new BannerModSettlementDesiredGoodSeed("food", 1),
                                 new BannerModSettlementDesiredGoodSeed("market_goods", 1),

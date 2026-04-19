@@ -53,6 +53,56 @@ class BannerModSettlementOrchestratorTest {
         assertEquals(MARKET, handler.lastWorkplaceUuid);
     }
 
+    @Test
+    void tickSnapshotCancelsStaleLiveDispatchesAndRebindsSellerToCurrentSeed() {
+        BannerModSettlementOrchestrator.LevelRuntimeState state = BannerModSettlementOrchestrator.detachedStateForTests(JobHandlerRegistry.defaults());
+
+        BannerModSettlementOrchestrator.tickSnapshot(state, settlementSnapshot(), null, NIGHT_TICK);
+
+        UUID otherMarket = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
+        BannerModSettlementMarketState reboundMarketState = new BannerModSettlementMarketState(
+                1,
+                1,
+                16,
+                8,
+                1,
+                1,
+                List.of(new BannerModSettlementMarketRecord(otherMarket, "Other Market", true, 16, 8)),
+                List.of(new BannerModSettlementSellerDispatchRecord(
+                        RESIDENT,
+                        otherMarket,
+                        "Other Market",
+                        BannerModSettlementSellerDispatchState.READY
+                ))
+        );
+        BannerModSettlementSnapshot reboundSnapshot = new BannerModSettlementSnapshot(
+                CLAIM,
+                0,
+                0,
+                "teamA",
+                NIGHT_TICK + 1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0,
+                BannerModSettlementStockpileSummary.empty(),
+                reboundMarketState,
+                BannerModSettlementDesiredGoodsSeed.empty(),
+                BannerModSettlementProjectCandidateSeed.empty(),
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                BannerModSettlementSupplySignalState.empty(),
+                settlementSnapshot().residents(),
+                settlementSnapshot().buildings()
+        );
+
+        BannerModSettlementOrchestrator.tickSnapshot(state, reboundSnapshot, null, NIGHT_TICK + 1);
+
+        assertEquals(otherMarket, state.sellerRuntime.phase(RESIDENT).orElseThrow().marketRecordUuid());
+        assertEquals(com.talhanation.bannermod.settlement.dispatch.SellerPhase.MOVING_TO_STALL, state.sellerRuntime.phase(RESIDENT).orElseThrow().phase());
+    }
+
     private static BannerModSettlementSnapshot settlementSnapshot() {
         BannerModSettlementResidentServiceContract serviceContract = new BannerModSettlementResidentServiceContract(
                 BannerModSettlementServiceActorState.LOCAL_BUILDING_SERVICE,

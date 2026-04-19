@@ -47,6 +47,7 @@ public class MessageUpdateLumberArea implements Message<MessageUpdateLumberArea>
         }
 
         this.update(lumberArea);
+        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), lumberArea.blockPosition());
     }
 
     public void update(LumberArea lumberArea){

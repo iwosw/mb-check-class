@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -305,13 +306,16 @@ class BannerModSettlementServiceTest {
         BannerModSettlementTradeRouteHandoffSeed handoffSeed = BannerModSettlementService.summarizeTradeRouteHandoffSeed(
                 new BannerModSettlementStockpileSummary(2, 3, 81, 1, 1, List.of("farmers", "merchants")),
                 marketState,
-                desiredGoodsSeed
+                desiredGoodsSeed,
+                new BannerModSettlementService.ReservationSignalSeed(2, 24, Map.of("trade_stock", 24))
         );
 
         assertEquals(2, handoffSeed.sellerDispatchCount());
         assertEquals(1, handoffSeed.readySellerDispatchCount());
         assertEquals(1, handoffSeed.routedStorageCount());
         assertEquals(1, handoffSeed.portEntrypointCount());
+        assertEquals(2, handoffSeed.activeReservationCount());
+        assertEquals(24, handoffSeed.reservedUnitCount());
         assertEquals(desiredGoodsSeed.desiredGoods(), handoffSeed.desiredGoods());
         assertEquals(marketState.sellerDispatches(), handoffSeed.sellerDispatches());
     }
@@ -354,7 +358,8 @@ class BannerModSettlementServiceTest {
                         new BannerModSettlementBuildingRecord(cropAreaUuid, "bannermod:crop_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(UUID.randomUUID()), false, 0, 0, false, false, List.of()),
                         new BannerModSettlementBuildingRecord(mineUuid, "bannermod:mining_area", new BlockPos(10, 64, 10), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(UUID.randomUUID()), false, 0, 0, false, false, List.of()),
                         new BannerModSettlementBuildingRecord(marketUuid, "bannermod:market_area", new BlockPos(20, 64, 20), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(UUID.randomUUID()), false, 0, 0, false, false, List.of())
-                )
+                ),
+                BannerModSettlementService.ReservationSignalSeed.empty()
         );
 
         assertEquals(6, supplySignalState.signalCount());
@@ -369,6 +374,41 @@ class BannerModSettlementServiceTest {
                 new BannerModSettlementSupplySignal("storage_type:farmers", 1, 1, 0, 2),
                 new BannerModSettlementSupplySignal("trade_stock", 1, 2, 0, 3)
         ), supplySignalState.signals());
+    }
+
+    @Test
+    void summarizesReservationSignalSeedAndFeedsTradeAndMerchantHints() {
+        UUID farmerStorageUuid = UUID.randomUUID();
+        UUID merchantPortUuid = UUID.randomUUID();
+        BannerModSettlementService.ReservationSignalSeed reservationSignalSeed = BannerModSettlementService.summarizeReservationSignalSeed(
+                List.of(
+                        new BannerModSettlementBuildingRecord(farmerStorageUuid, "bannermod:storage_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), true, 1, 27, true, false, List.of("farmers")),
+                        new BannerModSettlementBuildingRecord(merchantPortUuid, "bannermod:storage_area", new BlockPos(8, 64, 8), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), true, 1, 27, true, true, List.of("merchants"))
+                ),
+                List.of(new com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute(
+                        UUID.fromString("00000000-0000-0000-0000-000000000510"),
+                        new com.talhanation.bannermod.shared.logistics.BannerModLogisticsNodeRef(farmerStorageUuid),
+                        new com.talhanation.bannermod.shared.logistics.BannerModLogisticsNodeRef(merchantPortUuid),
+                        com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter.any(),
+                        16,
+                        com.talhanation.bannermod.shared.logistics.BannerModLogisticsPriority.NORMAL
+                )),
+                List.of(new com.talhanation.bannermod.shared.logistics.BannerModLogisticsReservation(
+                        UUID.fromString("00000000-0000-0000-0000-000000000511"),
+                        UUID.fromString("00000000-0000-0000-0000-000000000510"),
+                        UUID.randomUUID(),
+                        com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter.any(),
+                        12,
+                        120L
+                ))
+        );
+
+        assertEquals(1, reservationSignalSeed.activeReservationCount());
+        assertEquals(12, reservationSignalSeed.reservedUnitCount());
+        assertEquals(12, reservationSignalSeed.reservationHintUnitsByGood().get("storage_type:farmers"));
+        assertEquals(12, reservationSignalSeed.reservationHintUnitsByGood().get("storage_type:merchants"));
+        assertEquals(12, reservationSignalSeed.reservationHintUnitsByGood().get("market_goods"));
+        assertEquals(12, reservationSignalSeed.reservationHintUnitsByGood().get("trade_stock"));
     }
 
     @Test

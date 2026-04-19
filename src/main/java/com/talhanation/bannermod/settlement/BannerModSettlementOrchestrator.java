@@ -3,6 +3,7 @@ package com.talhanation.bannermod.settlement;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.settlement.dispatch.BannerModSellerDispatchRuntime;
+import com.talhanation.bannermod.settlement.dispatch.SellerPhase;
 import com.talhanation.bannermod.settlement.dispatch.SellerPhaseRecord;
 import com.talhanation.bannermod.settlement.goal.BannerModResidentGoalScheduler;
 import com.talhanation.bannermod.settlement.goal.ResidentGoalContext;
@@ -119,13 +120,26 @@ public final class BannerModSettlementOrchestrator {
                                              BannerModSettlementMarketState marketState,
                                              long gameTime) {
         Set<UUID> openMarkets = new HashSet<>();
+        java.util.Map<UUID, UUID> seededMarketsBySeller = new java.util.LinkedHashMap<>();
         for (BannerModSettlementMarketRecord market : marketState.markets()) {
             if (market != null && market.open() && market.buildingUuid() != null) {
                 openMarkets.add(market.buildingUuid());
             }
         }
+        for (BannerModSettlementSellerDispatchRecord seed : marketState.sellerDispatches()) {
+            if (seed != null && seed.residentUuid() != null && seed.marketUuid() != null) {
+                seededMarketsBySeller.put(seed.residentUuid(), seed.marketUuid());
+            }
+        }
 
         for (SellerPhaseRecord dispatch : sellerRuntime.activeDispatches()) {
+            if (dispatch != null && dispatch.sellerResidentUuid() != null) {
+                UUID seededMarketUuid = seededMarketsBySeller.get(dispatch.sellerResidentUuid());
+                if (seededMarketUuid == null || !seededMarketUuid.equals(dispatch.marketRecordUuid())) {
+                    sellerRuntime.advance(dispatch.sellerResidentUuid(), SellerPhase.CANCELLED, gameTime);
+                    continue;
+                }
+            }
             if (dispatch != null && dispatch.marketRecordUuid() != null && !openMarkets.contains(dispatch.marketRecordUuid())) {
                 sellerRuntime.forceMarketClose(dispatch.marketRecordUuid(), gameTime);
             }
