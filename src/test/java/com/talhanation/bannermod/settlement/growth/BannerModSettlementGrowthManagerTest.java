@@ -7,6 +7,9 @@ import com.talhanation.bannermod.settlement.BannerModSettlementDesiredGoodsSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementMarketState;
 import com.talhanation.bannermod.settlement.BannerModSettlementProjectCandidateSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementStockpileSummary;
+import com.talhanation.bannermod.settlement.BannerModSettlementSupplySignal;
+import com.talhanation.bannermod.settlement.BannerModSettlementSupplySignalState;
+import com.talhanation.bannermod.settlement.BannerModSettlementTradeRouteHandoffSeed;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -66,6 +69,32 @@ class BannerModSettlementGrowthManagerTest {
         PendingProject top = queue.get(0);
         assertSame(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, top.profileSeed());
         assertEquals(BannerModSettlementBuildingCategory.FOOD, top.buildingCategory());
+    }
+
+    @Test
+    void reservationAwareHintsCanSeedDemandWithoutDesiredGoodsSeed() {
+        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = new BannerModSettlementTradeRouteHandoffSeed(
+                1, 1, 0, 0, 2, 12,
+                List.of(new BannerModSettlementDesiredGoodSeed("market_goods", 0)),
+                List.of()
+        );
+        BannerModSettlementSupplySignalState supplySignalState = new BannerModSettlementSupplySignalState(
+                1, 0, 0, 8,
+                List.of(new BannerModSettlementSupplySignal("market_goods", 0, 0, 0, 8))
+        );
+        BannerModSettlementGrowthContext ctx = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                BannerModSettlementDesiredGoodsSeed.empty(),
+                NON_EMPTY_MARKET,
+                tradeRouteHandoffSeed,
+                supplySignalState,
+                0, 0, 0, 0L
+        );
+
+        List<PendingProject> queue = BannerModSettlementGrowthManager.evaluateGrowthQueue(ctx, 4);
+
+        assertFalse(queue.isEmpty());
+        assertSame(BannerModSettlementBuildingProfileSeed.MARKET, queue.get(0).profileSeed());
     }
 
     @Test
@@ -141,9 +170,40 @@ class BannerModSettlementGrowthManagerTest {
                 seed, desired,
                 BannerModSettlementStockpileSummary.empty(),
                 market,
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                BannerModSettlementSupplySignalState.empty(),
                 List.of(), List.of(),
                 residentCapacity, assignedResidentCount, unassignedWorkerCount, 0,
                 null, gameTime
+        );
+    }
+
+    private static BannerModSettlementGrowthContext ctxOf(
+            BannerModSettlementProjectCandidateSeed seed,
+            BannerModSettlementDesiredGoodsSeed desired,
+            BannerModSettlementMarketState market,
+            BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed,
+            BannerModSettlementSupplySignalState supplySignalState,
+            int residentCapacity,
+            int assignedResidentCount,
+            int unassignedWorkerCount,
+            long gameTime
+    ) {
+        return new BannerModSettlementGrowthContext(
+                seed,
+                desired,
+                BannerModSettlementStockpileSummary.empty(),
+                market,
+                tradeRouteHandoffSeed,
+                supplySignalState,
+                List.of(),
+                List.of(),
+                residentCapacity,
+                assignedResidentCount,
+                unassignedWorkerCount,
+                0,
+                null,
+                gameTime
         );
     }
 }

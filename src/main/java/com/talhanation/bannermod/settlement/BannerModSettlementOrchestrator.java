@@ -7,6 +7,8 @@ import com.talhanation.bannermod.settlement.dispatch.SellerPhase;
 import com.talhanation.bannermod.settlement.dispatch.SellerPhaseRecord;
 import com.talhanation.bannermod.settlement.goal.BannerModResidentGoalScheduler;
 import com.talhanation.bannermod.settlement.goal.ResidentGoalContext;
+import com.talhanation.bannermod.settlement.goal.ResidentTask;
+import com.talhanation.bannermod.settlement.goal.impl.WorkResidentGoal;
 import com.talhanation.bannermod.settlement.growth.BannerModSettlementGrowthContext;
 import com.talhanation.bannermod.settlement.growth.BannerModSettlementGrowthManager;
 import com.talhanation.bannermod.settlement.growth.PendingProject;
@@ -20,8 +22,11 @@ import com.talhanation.bannermod.settlement.project.BannerModSettlementProjectRu
 import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
@@ -89,8 +94,9 @@ public final class BannerModSettlementOrchestrator {
             if (resident == null || resident.residentUuid() == null) {
                 continue;
             }
-            state.goalScheduler.tick(new ResidentGoalContext(resident, snapshot, gameTime));
-            runResidentJobStep(state.jobHandlerRegistry, resident, gameTime);
+            ResidentGoalContext goalContext = new ResidentGoalContext(resident, snapshot, gameTime);
+            state.goalScheduler.tick(goalContext);
+            runResidentJobStep(state, goalContext);
         }
     }
 
@@ -168,16 +174,29 @@ public final class BannerModSettlementOrchestrator {
         }
     }
 
-    private static void runResidentJobStep(JobHandlerRegistry jobHandlerRegistry,
-                                           BannerModSettlementResidentRecord resident,
-                                           long gameTime) {
+    private static void runResidentJobStep(LevelRuntimeState state, ResidentGoalContext goalContext) {
+        BannerModSettlementResidentRecord resident = goalContext.resident();
         if (resident.jobDefinition() == null) {
             return;
         }
-        JobExecutionContext context = jobContext(resident, gameTime);
-        jobHandlerRegistry.lookup(resident.jobDefinition().handlerSeed())
+        Optional<ResidentTask> task = state.goalScheduler.currentTask(resident.residentUuid());
+        if (task.isEmpty() || task.get().isDone() || !WorkResidentGoal.ID.equals(task.get().goalId())) {
+            return;
+        }
+        Long cooldownExpiry = state.jobCooldownExpiries.get(resident.residentUuid());
+        if (cooldownExpiry != null && goalContext.gameTime() < cooldownExpiry) {
+            return;
+        }
+
+        JobExecutionContext context = jobContext(resident, goalContext.gameTime());
+        state.jobHandlerRegistry.lookup(resident.jobDefinition().handlerSeed())
                 .filter(handler -> handler.canHandle(context))
-                .ifPresent(handler -> handler.runOneStep(context));
+                .ifPresent(handler -> {
+                    handler.runOneStep(context);
+                    if (handler.cooldownTicks() > 0) {
+                        state.jobCooldownExpiries.put(resident.residentUuid(), goalContext.gameTime() + handler.cooldownTicks());
+                    }
+                });
     }
 
     private static JobExecutionContext jobContext(BannerModSettlementResidentRecord resident, long gameTime) {
@@ -194,19 +213,22 @@ public final class BannerModSettlementOrchestrator {
         final MutableMarketStateSupplier marketStateSupplier;
         final BannerModResidentGoalScheduler goalScheduler;
         final JobHandlerRegistry jobHandlerRegistry;
+        final Map<UUID, Long> jobCooldownExpiries;
 
         private LevelRuntimeState(BannerModSettlementProjectRuntime projectRuntime,
                                   BannerModHomeAssignmentRuntime homeRuntime,
                                   BannerModSellerDispatchRuntime sellerRuntime,
                                   MutableMarketStateSupplier marketStateSupplier,
                                   BannerModResidentGoalScheduler goalScheduler,
-                                  JobHandlerRegistry jobHandlerRegistry) {
+                                  JobHandlerRegistry jobHandlerRegistry,
+                                  Map<UUID, Long> jobCooldownExpiries) {
             this.projectRuntime = projectRuntime;
             this.homeRuntime = homeRuntime;
             this.sellerRuntime = sellerRuntime;
             this.marketStateSupplier = marketStateSupplier;
             this.goalScheduler = goalScheduler;
             this.jobHandlerRegistry = jobHandlerRegistry;
+            this.jobCooldownExpiries = jobCooldownExpiries;
         }
 
         private static LevelRuntimeState create(BannerModSettlementProjectRuntime projectRuntime,
@@ -220,7 +242,8 @@ public final class BannerModSettlementOrchestrator {
                     sellerRuntime,
                     marketStateSupplier,
                     BannerModResidentGoalScheduler.withDefaultGoals(homeRuntime, marketStateSupplier, sellerRuntime),
-                    jobHandlerRegistry == null ? JobHandlerRegistry.defaults() : jobHandlerRegistry
+                    jobHandlerRegistry == null ? JobHandlerRegistry.defaults() : jobHandlerRegistry,
+                    new HashMap<>()
             );
         }
     }

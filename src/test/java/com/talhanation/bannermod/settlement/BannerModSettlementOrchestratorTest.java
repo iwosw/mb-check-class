@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.settlement.goal.ResidentTask;
+import com.talhanation.bannermod.settlement.goal.impl.WorkResidentGoal;
 import com.talhanation.bannermod.settlement.growth.PendingProject;
 import com.talhanation.bannermod.settlement.household.GoHomeResidentGoal;
 import com.talhanation.bannermod.settlement.job.JobExecutionContext;
@@ -25,15 +26,16 @@ class BannerModSettlementOrchestratorTest {
     private static final UUID RESIDENT = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
     private static final UUID HOME = UUID.fromString("00000000-0000-0000-0000-0000000000b1");
     private static final UUID MARKET = UUID.fromString("00000000-0000-0000-0000-0000000000c1");
+    private static final long DAY_TICK = 6000L;
     private static final long NIGHT_TICK = 15000L;
 
     @Test
-    void tickSnapshotComposesGrowthProjectsHomesSellerDispatchGoalsAndJobs() {
+    void tickSnapshotComposesGrowthProjectsHomesSellerDispatchGoalsAndSkipsJobsOutsideWorkTask() {
         RecordingJobHandler handler = new RecordingJobHandler();
         JobHandlerRegistry registry = new JobHandlerRegistry();
         registry.register(handler);
         BannerModSettlementOrchestrator.LevelRuntimeState state = BannerModSettlementOrchestrator.detachedStateForTests(registry);
-        BannerModSettlementSnapshot snapshot = settlementSnapshot();
+        BannerModSettlementSnapshot snapshot = settlementSnapshot(NIGHT_TICK, true);
 
         BannerModSettlementOrchestrator.tickSnapshot(state, snapshot, null, NIGHT_TICK);
 
@@ -48,7 +50,25 @@ class BannerModSettlementOrchestratorTest {
         assertTrue(task.isPresent(), "resident should receive a scheduled task");
         assertEquals(GoHomeResidentGoal.ID, task.get().goalId());
 
-        assertEquals(1, handler.invocationCount);
+        assertEquals(0, handler.invocationCount, "job execution should stay gated behind the work goal");
+    }
+
+    @Test
+    void tickSnapshotRunsJobsDuringWorkGoalAndRespectsHandlerCooldown() {
+        RecordingJobHandler handler = new RecordingJobHandler(20);
+        JobHandlerRegistry registry = new JobHandlerRegistry();
+        registry.register(handler);
+        BannerModSettlementOrchestrator.LevelRuntimeState state = BannerModSettlementOrchestrator.detachedStateForTests(registry);
+        BannerModSettlementSnapshot snapshot = settlementSnapshot(DAY_TICK, false);
+
+        BannerModSettlementOrchestrator.tickSnapshot(state, snapshot, null, DAY_TICK);
+        BannerModSettlementOrchestrator.tickSnapshot(state, snapshot, null, DAY_TICK + 5);
+        BannerModSettlementOrchestrator.tickSnapshot(state, snapshot, null, DAY_TICK + 20);
+
+        Optional<ResidentTask> task = state.goalScheduler.currentTask(RESIDENT);
+        assertTrue(task.isPresent(), "resident should receive a scheduled task");
+        assertEquals(WorkResidentGoal.ID, task.get().goalId());
+        assertEquals(2, handler.invocationCount, "cooldown should block intermediate job ticks");
         assertEquals(RESIDENT, handler.lastResidentUuid);
         assertEquals(MARKET, handler.lastWorkplaceUuid);
     }
@@ -57,7 +77,7 @@ class BannerModSettlementOrchestratorTest {
     void tickSnapshotCancelsStaleLiveDispatchesAndRebindsSellerToCurrentSeed() {
         BannerModSettlementOrchestrator.LevelRuntimeState state = BannerModSettlementOrchestrator.detachedStateForTests(JobHandlerRegistry.defaults());
 
-        BannerModSettlementOrchestrator.tickSnapshot(state, settlementSnapshot(), null, NIGHT_TICK);
+        BannerModSettlementOrchestrator.tickSnapshot(state, settlementSnapshot(NIGHT_TICK, true), null, NIGHT_TICK);
 
         UUID otherMarket = UUID.fromString("00000000-0000-0000-0000-0000000000c2");
         BannerModSettlementMarketState reboundMarketState = new BannerModSettlementMarketState(
@@ -93,8 +113,8 @@ class BannerModSettlementOrchestratorTest {
                 BannerModSettlementProjectCandidateSeed.empty(),
                 BannerModSettlementTradeRouteHandoffSeed.empty(),
                 BannerModSettlementSupplySignalState.empty(),
-                settlementSnapshot().residents(),
-                settlementSnapshot().buildings()
+                settlementSnapshot(NIGHT_TICK, true).residents(),
+                settlementSnapshot(NIGHT_TICK, true).buildings()
         );
 
         BannerModSettlementOrchestrator.tickSnapshot(state, reboundSnapshot, null, NIGHT_TICK + 1);
@@ -103,7 +123,55 @@ class BannerModSettlementOrchestratorTest {
         assertEquals(com.talhanation.bannermod.settlement.dispatch.SellerPhase.MOVING_TO_STALL, state.sellerRuntime.phase(RESIDENT).orElseThrow().phase());
     }
 
-    private static BannerModSettlementSnapshot settlementSnapshot() {
+    @Test
+    void tickSnapshotFeedsReservationAwareHintsIntoGrowthQueue() {
+        BannerModSettlementOrchestrator.LevelRuntimeState state = BannerModSettlementOrchestrator.detachedStateForTests(JobHandlerRegistry.defaults());
+        BannerModSettlementSnapshot base = settlementSnapshot(NIGHT_TICK, true);
+        BannerModSettlementSnapshot hintedSnapshot = new BannerModSettlementSnapshot(
+                base.claimUuid(),
+                0,
+                0,
+                "teamA",
+                NIGHT_TICK,
+                2,
+                1,
+                1,
+                1,
+                0,
+                0,
+                BannerModSettlementStockpileSummary.empty(),
+                base.marketState(),
+                BannerModSettlementDesiredGoodsSeed.empty(),
+                BannerModSettlementProjectCandidateSeed.empty(),
+                new BannerModSettlementTradeRouteHandoffSeed(
+                        1,
+                        1,
+                        0,
+                        0,
+                        2,
+                        12,
+                        List.of(new BannerModSettlementDesiredGoodSeed("market_goods", 0)),
+                        List.of()
+                ),
+                new BannerModSettlementSupplySignalState(
+                        1,
+                        0,
+                        0,
+                        8,
+                        List.of(new BannerModSettlementSupplySignal("market_goods", 0, 0, 0, 8))
+                ),
+                base.residents(),
+                base.buildings()
+        );
+
+        BannerModSettlementOrchestrator.tickSnapshot(state, hintedSnapshot, null, NIGHT_TICK);
+
+        List<PendingProject> queuedProjects = state.projectRuntime.snapshot(CLAIM);
+        assertFalse(queuedProjects.isEmpty(), "reservation-aware hint snapshot should drive live project scoring");
+        assertEquals(BannerModSettlementBuildingProfileSeed.MARKET, queuedProjects.get(0).profileSeed());
+    }
+
+    private static BannerModSettlementSnapshot settlementSnapshot(long gameTime, boolean includeSellerDispatch) {
         BannerModSettlementResidentServiceContract serviceContract = new BannerModSettlementResidentServiceContract(
                 BannerModSettlementServiceActorState.LOCAL_BUILDING_SERVICE,
                 MARKET,
@@ -153,12 +221,14 @@ class BannerModSettlementOrchestratorTest {
                 1,
                 1,
                 List.of(new BannerModSettlementMarketRecord(MARKET, "Market", true, 16, 8)),
-                List.of(new BannerModSettlementSellerDispatchRecord(
+                includeSellerDispatch
+                        ? List.of(new BannerModSettlementSellerDispatchRecord(
                         RESIDENT,
                         MARKET,
                         "Market",
                         BannerModSettlementSellerDispatchState.READY
                 ))
+                        : List.of()
         );
 
         return new BannerModSettlementSnapshot(
@@ -166,7 +236,7 @@ class BannerModSettlementOrchestratorTest {
                 0,
                 0,
                 "teamA",
-                NIGHT_TICK,
+                gameTime,
                 1,
                 1,
                 1,
@@ -185,9 +255,18 @@ class BannerModSettlementOrchestratorTest {
     }
 
     private static final class RecordingJobHandler implements JobHandler {
+        private final int cooldownTicks;
         int invocationCount;
         UUID lastResidentUuid;
         UUID lastWorkplaceUuid;
+
+        private RecordingJobHandler() {
+            this(0);
+        }
+
+        private RecordingJobHandler(int cooldownTicks) {
+            this.cooldownTicks = cooldownTicks;
+        }
 
         @Override
         public ResourceLocation id() {
@@ -210,6 +289,11 @@ class BannerModSettlementOrchestratorTest {
             this.lastResidentUuid = ctx.resident().residentUuid();
             this.lastWorkplaceUuid = ctx.workplace().orElse(null);
             return JobExecutionResult.COMPLETED;
+        }
+
+        @Override
+        public int cooldownTicks() {
+            return this.cooldownTicks;
         }
     }
 }

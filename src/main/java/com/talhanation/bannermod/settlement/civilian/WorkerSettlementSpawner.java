@@ -10,6 +10,7 @@ import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.ai.civilian.FarmerPlantingPreparation;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -122,6 +123,7 @@ public final class WorkerSettlementSpawner {
         level.addFreshEntity(worker);
         seedFactionDefaults(level, worker, faction);
         seedClaimWorkAreaDefaults(level, worker, claim, faction, spawnPos);
+        BannerModSettlementRefreshSupport.refreshSnapshot(level, worker.blockPosition());
 
         return worker;
     }

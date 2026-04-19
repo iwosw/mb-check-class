@@ -2,8 +2,10 @@ package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -41,6 +43,10 @@ public class MessageUpdateOwner implements Message<MessageUpdateOwner> {
         }
 
         this.updateWorkArea(workArea);
+
+        if (player.level() instanceof ServerLevel serverLevel) {
+            BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, workArea.blockPosition());
+        }
 
     }
 

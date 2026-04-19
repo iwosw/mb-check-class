@@ -507,6 +507,7 @@ Status: In Progress; opener slices landed a persisted claim-keyed settlement agg
 - Latest slice: compact Phase 25 moved beyond persistence-only seeds into runtime bring-up: `BannerModResidentGoalScheduler`, `BannerModSettlementGrowthManager`, `BannerModSettlementProjectRuntime`, `BannerModSellerDispatchRuntime`, `BannerModHomeAssignmentRuntime`, and `JobHandlerRegistry` now exist in the main tree with targeted JUnit coverage, while still remaining additive and only partially integrated into the live settlement loop.
 - Latest slice: `ClaimEvents` now calls a new `BannerModSettlementOrchestrator` after settlement refresh, so refreshed claim snapshots feed the additive Phase 25 growth/project/home/seller/goal/job runtimes on the governor tick without changing entity behavior or persistence shape.
 - Latest slice: Phase 25 now also folds live logistics reservations into snapshot-owned trade/supply signalling, refreshes settlement snapshots from more civilian work-area mutation packets plus successful merchant trades, and reconciles stale live seller dispatches against the current snapshot seed instead of letting them drift across market changes.
+- Latest slice: Phase 25 growth scoring now consumes reservation-aware supply/trade hints during live project queue evaluation, remaining settlement-critical civilian mutations now trigger immediate claim snapshot refreshes, and resident job handlers only run during scheduled work windows while respecting per-handler cooldowns.
 
 ## Phase 26: Army Command, Formations, And Warfare
 

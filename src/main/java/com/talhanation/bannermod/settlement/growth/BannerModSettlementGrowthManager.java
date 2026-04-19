@@ -4,10 +4,13 @@ import com.talhanation.bannermod.settlement.BannerModSettlementBuildingCategory;
 import com.talhanation.bannermod.settlement.BannerModSettlementBuildingProfileSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementDesiredGoodSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementProjectCandidateSeed;
+import com.talhanation.bannermod.settlement.BannerModSettlementSupplySignal;
+import com.talhanation.bannermod.settlement.BannerModSettlementTradeRouteHandoffSeed;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -130,17 +133,55 @@ public final class BannerModSettlementGrowthManager {
             BannerModSettlementGrowthContext ctx,
             Map<BannerModSettlementBuildingProfileSeed, ScoredCandidate> byProfile
     ) {
-        if (ctx.desiredGoodsSeed() == null) {
+        Map<String, Integer> demandByGood = hintedDemandByGood(ctx);
+        if (demandByGood.isEmpty()) {
             return;
         }
-        for (BannerModSettlementDesiredGoodSeed good : ctx.desiredGoodsSeed().desiredGoods()) {
-            BannerModSettlementBuildingProfileSeed profile = profileForDesiredGood(good.desiredGoodId());
+        for (Map.Entry<String, Integer> entry : demandByGood.entrySet()) {
+            BannerModSettlementBuildingProfileSeed profile = profileForDesiredGood(entry.getKey());
             if (profile == null) {
                 continue;
             }
-            int score = DESIRED_GOOD_BASE_SCORE + DESIRED_GOOD_PER_DRIVER_BONUS * good.driverCount();
+            int score = DESIRED_GOOD_BASE_SCORE + DESIRED_GOOD_PER_DRIVER_BONUS * entry.getValue()
+                    + tradeRouteDemandBonus(profile, ctx.tradeRouteHandoffSeed());
             mergeOrInsert(byProfile, profile, score);
         }
+    }
+
+    private static Map<String, Integer> hintedDemandByGood(BannerModSettlementGrowthContext ctx) {
+        Map<String, Integer> demandByGood = new LinkedHashMap<>();
+        for (BannerModSettlementDesiredGoodSeed good : ctx.desiredGoodsSeed().desiredGoods()) {
+            mergeDemand(demandByGood, good.desiredGoodId(), good.driverCount());
+        }
+        for (BannerModSettlementDesiredGoodSeed good : ctx.tradeRouteHandoffSeed().desiredGoods()) {
+            mergeDemand(demandByGood, good.desiredGoodId(), good.driverCount());
+        }
+        for (BannerModSettlementSupplySignal signal : ctx.supplySignalState().signals()) {
+            mergeDemand(demandByGood, signal.goodId(), Math.max(signal.desiredUnits(), signal.reservationHintUnits()));
+        }
+        return demandByGood;
+    }
+
+    private static void mergeDemand(Map<String, Integer> demandByGood, String goodId, int units) {
+        if (goodId == null || goodId.isBlank() || units <= 0) {
+            return;
+        }
+        demandByGood.merge(goodId, units, Math::max);
+    }
+
+    private static int tradeRouteDemandBonus(BannerModSettlementBuildingProfileSeed profile,
+                                             BannerModSettlementTradeRouteHandoffSeed handoffSeed) {
+        if (handoffSeed == null) {
+            return 0;
+        }
+        return switch (profile) {
+            case STORAGE -> DESIRED_GOOD_PER_DRIVER_BONUS
+                    * Math.max(handoffSeed.activeReservationCount(), handoffSeed.routedStorageCount());
+            case MARKET -> DESIRED_GOOD_PER_DRIVER_BONUS
+                    * Math.max(handoffSeed.activeReservationCount(),
+                    handoffSeed.readySellerDispatchCount() + handoffSeed.portEntrypointCount());
+            default -> 0;
+        };
     }
 
     private static void applyGovernorAdjustments(

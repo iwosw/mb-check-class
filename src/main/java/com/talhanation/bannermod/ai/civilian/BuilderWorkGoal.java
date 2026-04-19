@@ -7,6 +7,7 @@ import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.persistence.civilian.BuildBlock;
 import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -245,14 +246,18 @@ public class BuilderWorkGoal extends Goal {
             case DONE -> {
                 if(!workDone){
                     workDone = true;
+                    BuildArea completedArea = builderEntity.currentBuildArea;
 
                     // Spawn any entities that were scanned with the structure (work areas, etc.)
-                    spawnScannedEntities(builderEntity.currentBuildArea);
+                    spawnScannedEntities(completedArea);
 
-                    builderEntity.currentBuildArea.setBeingWorkedOn(false);
+                    completedArea.setBeingWorkedOn(false);
 
                     //ONLY FOR BUILDING AREA WILL REMOVE IT
                     this.builderEntity.currentBuildArea.setDone(true);
+                    if (this.builderEntity.level() instanceof ServerLevel serverLevel) {
+                        BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, completedArea.blockPosition());
+                    }
 
                     blockPos = null;
                     builderEntity.currentBuildArea = null;

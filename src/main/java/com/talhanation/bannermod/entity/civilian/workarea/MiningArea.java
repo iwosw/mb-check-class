@@ -7,6 +7,7 @@ import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.MiningClaimExcavationRules;
 import com.talhanation.bannermod.ai.civilian.MiningPatternPlanner;
 import com.talhanation.bannermod.entity.civilian.MinerEntity;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -74,7 +75,12 @@ public class MiningArea extends AbstractWorkAreaEntity {
     @Override
     public void tick() {
         super.tick();
-        if(this.isDone()) this.remove(RemovalReason.DISCARDED);
+        if (this.isDone() && !this.isRemoved()) {
+            if (!this.level().isClientSide() && this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, this.blockPosition());
+            }
+            this.remove(RemovalReason.DISCARDED);
+        }
     }
 
     public Item getRenderItem()  {

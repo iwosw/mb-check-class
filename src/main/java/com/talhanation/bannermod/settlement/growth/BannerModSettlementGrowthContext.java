@@ -8,6 +8,8 @@ import com.talhanation.bannermod.settlement.BannerModSettlementProjectCandidateS
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentRecord;
 import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
 import com.talhanation.bannermod.settlement.BannerModSettlementStockpileSummary;
+import com.talhanation.bannermod.settlement.BannerModSettlementSupplySignalState;
+import com.talhanation.bannermod.settlement.BannerModSettlementTradeRouteHandoffSeed;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -23,6 +25,8 @@ public record BannerModSettlementGrowthContext(
         BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
         BannerModSettlementStockpileSummary stockpileSummary,
         BannerModSettlementMarketState marketState,
+        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed,
+        BannerModSettlementSupplySignalState supplySignalState,
         List<BannerModSettlementBuildingRecord> buildings,
         List<BannerModSettlementResidentRecord> residents,
         int residentCapacity,
@@ -41,6 +45,10 @@ public record BannerModSettlementGrowthContext(
                 ? BannerModSettlementStockpileSummary.empty() : stockpileSummary;
         marketState = marketState == null
                 ? BannerModSettlementMarketState.empty() : marketState;
+        tradeRouteHandoffSeed = tradeRouteHandoffSeed == null
+                ? BannerModSettlementTradeRouteHandoffSeed.empty() : tradeRouteHandoffSeed;
+        supplySignalState = supplySignalState == null
+                ? BannerModSettlementSupplySignalState.empty() : supplySignalState;
         buildings = List.copyOf(buildings == null ? List.of() : buildings);
         residents = List.copyOf(residents == null ? List.of() : residents);
         residentCapacity = Math.max(0, residentCapacity);
@@ -69,6 +77,8 @@ public record BannerModSettlementGrowthContext(
                 snapshot.desiredGoodsSeed(),
                 snapshot.stockpileSummary(),
                 snapshot.marketState(),
+                snapshot.tradeRouteHandoffSeed(),
+                snapshot.supplySignalState(),
                 snapshot.buildings(),
                 snapshot.residents(),
                 snapshot.residentCapacity(),

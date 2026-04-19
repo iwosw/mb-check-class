@@ -63,12 +63,12 @@ public class WorldMapScreen extends Screen {
 
     public WorldMapScreen() {
         super(Component.literal(""));
-        this.contextMenu = new WorldMapContextMenu(this);
-        this.claimInfoMenu = new ClaimInfoMenu(this);
         this.tileManager = ChunkTileManager.getInstance();
         this.claimController = new WorldMapClaimController(this);
         this.player = Minecraft.getInstance().player;
         this.routeInteractionLayer = new WorldMapRouteInteractionLayer(this, player);
+        this.contextMenu = new WorldMapContextMenu(this);
+        this.claimInfoMenu = new ClaimInfoMenu(this);
     }
 
     public BlockPos getHoveredBlockPos() {

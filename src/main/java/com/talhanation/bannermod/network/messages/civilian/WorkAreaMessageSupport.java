@@ -1,10 +1,7 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
-import com.talhanation.bannermod.events.ClaimEvents;
-import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import com.talhanation.bannermod.settlement.BannerModSettlementManager;
-import com.talhanation.bannermod.settlement.BannerModSettlementService;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -51,24 +48,12 @@ final class WorkAreaMessageSupport {
     }
 
     static void refreshSettlementSnapshot(ServerLevel level, @Nullable BlockPos pos) {
-        if (level == null || pos == null || ClaimEvents.recruitsClaimManager == null) {
-            return;
-        }
-        BannerModSettlementService.refreshClaimAt(
-                level,
-                ClaimEvents.recruitsClaimManager,
-                BannerModSettlementManager.get(level),
-                BannerModGovernorManager.get(level),
-                pos
-        );
+        BannerModSettlementRefreshSupport.refreshSnapshot(level, pos);
     }
 
     static void refreshSettlementTransition(ServerLevel level,
                                             @Nullable BlockPos firstPos,
                                             @Nullable BlockPos secondPos) {
-        refreshSettlementSnapshot(level, firstPos);
-        if (firstPos == null || secondPos == null || !firstPos.equals(secondPos)) {
-            refreshSettlementSnapshot(level, secondPos);
-        }
+        BannerModSettlementRefreshSupport.refreshTransition(level, firstPos, secondPos);
     }
 }

@@ -21,6 +21,9 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - Added `BannerModSettlementOrchestrator` and wired it into `ClaimEvents` after snapshot refresh so the additive growth/project/home/seller/goal/job runtimes now execute over fresh `BannerModSettlementSnapshot` data on the governor tick.
 - Added reservation-aware settlement signal enrichment by folding live authored logistics reservations into snapshot-owned `tradeRouteHandoffSeed` and `supplySignalState`, without introducing a second settlement persistence model.
 - Expanded targeted settlement refresh coverage across additional civilian work-area update packets and successful merchant market trades, and made live seller dispatch runtime cancel/rebind stale sellers when the current snapshot seed changes markets.
+- Extended `BannerModSettlementGrowthManager` so the live growth queue can consume reservation-aware `tradeRouteHandoffSeed` and `supplySignalState` hints instead of leaving them snapshot-only.
+- Expanded targeted settlement refresh coverage again for remaining settlement-critical civilian mutation paths: work-area owner changes, claim worker spawning/seeding, build-area completion, and mining-area self-removal.
+- Gated resident job execution behind scheduled work tasks inside `BannerModSettlementOrchestrator` and now honor handler `cooldownTicks()` so jobs no longer fire during home/rest paths or every eligible tick.
 - Extended focused settlement JUnit coverage to verify candidate derivation and full snapshot persistence round-trip alongside the already-landed settlement seeds.
 
 ## Not Delivered In This Slice
@@ -37,6 +40,8 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - `./gradlew compileJava` succeeded on 2026-04-19 with the runtime bring-up packages present in the main tree.
 - `./gradlew test --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --tests com.talhanation.bannermod.settlement.goal.BannerModResidentGoalSchedulerTest --tests com.talhanation.bannermod.settlement.project.BannerModBuildAreaProjectBridgeTest --tests com.talhanation.bannermod.settlement.job.JobHandlerRegistryTest --console=plain` succeeded on 2026-04-19 after wiring the live orchestration seam.
 - `./gradlew test --tests com.talhanation.bannermod.logistics.BannerModLogisticsServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --tests com.talhanation.bannermod.settlement.BannerModSettlementManagerTest --console=plain` succeeded on 2026-04-19 after adding reservation-aware signalling and broader civil refresh hooks.
+- `./gradlew compileJava --console=plain` succeeded on 2026-04-20 after wiring reservation-aware growth hints, broader refresh hooks, and scheduled job gating.
+- `./gradlew test --tests com.talhanation.bannermod.settlement.growth.BannerModSettlementGrowthManagerTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --console=plain` succeeded on 2026-04-20.
 
 ## Later Confirmed Closeouts
 
