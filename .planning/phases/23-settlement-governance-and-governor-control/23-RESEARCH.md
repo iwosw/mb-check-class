@@ -19,19 +19,19 @@
 
 ### Citizen and wrapper convergence
 - `src/main/java/com/talhanation/bannermod/citizen/CitizenRoleController.java`
-- `recruits/src/main/java/com/talhanation/recruits/entities/AbstractRecruitEntity.java`
-- `workers/src/main/java/com/talhanation/workers/entities/AbstractWorkerEntity.java`
+- `src/main/java/com/talhanation/bannermod/entity/military/AbstractRecruitEntity.java`
+- `src/main/java/com/talhanation/bannermod/entity/civilian/AbstractWorkerEntity.java`
 - Phase 22 created a shared citizen seam, but governor should remain an additive designation layered onto the existing recruit wrapper path rather than forcing a new entity base or widening `CitizenRole` beyond wrapper identity.
 
 ### Claim-backed settlement population and growth
-- `workers/src/main/java/com/talhanation/workers/VillagerEvents.java`
-- `workers/src/main/java/com/talhanation/workers/settlement/WorkerSettlementSpawnRules.java`
+- `src/main/java/com/talhanation/bannermod/events/VillagerEvents.java`
+- `src/main/java/com/talhanation/bannermod/settlement/civilian/WorkerSettlementSpawnRules.java`
 - These already provide claim-aware worker growth and settlement participation rules the governor phase can observe.
 
 ### Existing placeholder UI seam
-- `recruits/src/main/java/com/talhanation/recruits/client/gui/PromoteScreen.java`
-- `recruits/src/main/java/com/talhanation/recruits/network/MessagePromoteRecruit.java`
-- `recruits/src/main/java/com/talhanation/recruits/RecruitEvents.java`
+- `src/main/java/com/talhanation/bannermod/client/military/gui/PromoteScreen.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/military/MessagePromoteRecruit.java`
+- `src/main/java/com/talhanation/bannermod/events/RecruitEvents.java`
 - The governor button already exists but is hard-disabled. This is the correct low-risk entrypoint for promotion into a real governor designation.
 
 ## Recommended Architecture

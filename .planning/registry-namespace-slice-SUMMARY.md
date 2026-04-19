@@ -1,5 +1,7 @@
 # Workers Registry Namespace Merge Slice Summary
 
+> Historical summary only. This file documents an earlier namespace slice and should not be treated as the current roadmap or runtime truth.
+
 - Unified Workers deferred registers and `WorkersRuntime.id()/modId()` onto the active `bannermod` mod namespace.
 - Added registry-id fallback for legacy `workers:*` structure entity references so existing scans/templates still resolve after the namespace move.
 - Routed worker spawn-egg item models into `assets/bannermod/models/**`, added active `entity.bannermod.*` / `item.bannermod.*` lang entries, and verified `./gradlew compileJava processResources test` passes from the root.

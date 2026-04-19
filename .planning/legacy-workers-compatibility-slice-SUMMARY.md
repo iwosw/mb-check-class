@@ -1,5 +1,7 @@
 # Legacy Workers Compatibility Slice Summary
 
+> Historical summary only. This file documents an earlier compatibility slice and should not be treated as the current roadmap or runtime truth.
+
 - Audited the real post-merge `workers:*` compatibility surface and limited fixes to confirmed critical paths: Forge missing registry mappings during world/inventory/profession load, plus Workers structure scan/build NBT fields that still persist raw legacy ids.
 - Added a focused runtime remap bridge for legacy Workers entity/item/block/POI/profession ids and in-memory migration for structure `entity_type`, `block`, and block-state `Name` fields before scans/build plans are parsed or replayed.
 - Added regression tests for the migration helpers and revalidated the root build with `./gradlew compileJava`, `./gradlew processResources`, and `./gradlew test`.

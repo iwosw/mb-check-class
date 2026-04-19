@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 23 Complete
-last_updated: "2026-04-15T16:48:30.571Z"
+status: Normalizing compact Phase 24-25 planning after confirmed governance/settlement bugfix closeouts; treasury heartbeat now uses live supply and upkeep state, governor UI surfaces fiscal rollup, and settlement refresh hooks are broader but still incomplete
+last_updated: "2026-04-20T04:15:00Z"
 progress:
-  total_phases: 31
-  completed_phases: 16
-  total_plans: 58
-  completed_plans: 60
-  percent: 100
+  total_phases: 28
+  completed_phases: 23
+  total_plans: 73
+  completed_plans: 72
+  percent: 82
 ---
 
 # Project State
 
-- Current focus: Phase 23 is complete. Plans 23-01 through 23-05 provide the claim-keyed governor snapshot, pure legality rules, persistence manager, authority helper, snapshot-backed runtime assignment/revocation service, heartbeat-driven local tax/advisory output, the live governor promotion/control UI path, and root GameTests exercising live designation, hostile-swap degradation, and real-heartbeat reporting. The root test tree still has ~39 deferred compile errors and the gametest tree has ~34 pre-existing (phase-21) compile errors outside plan 23-05's three-file scope; both are logged in `.planning/phases/23-settlement-governance-and-governor-control/deferred-items.md`.
-- Runtime base: `recruits` (now merged in-place — single source root)
+- Current focus: compact Phase 24 historical `24-05-PLAN.md` closeout remains verified green inside `.planning/phases/24-logistics-backbone-and-courier-worker/`, while the latest confirmed closeout wave fixed governance/settlement follow-through around live supply-upkeep accounting, governor fiscal-rollup UI surfacing, controlled-worker settlement semantics, and targeted event-driven settlement refresh hooks. Immediate next work is to keep compact Phase 24-25 planning truthful and then resume compact Phase 25 execution in isolated 5-slice batches.
+- Runtime base: the root `src/**` tree under `com.talhanation.bannermod` (Phase 21 completed the in-place merge)
 - Active runtime mod: `bannermod`
 - Workers status: fully absorbed; civilian Java code lives under `bannermod.{entity,ai,client,inventory,items,persistence,registry,settlement}.civilian`; civilian network packets live under `bannermod.network.messages.civilian` at packet-ID offset = MILITARY_MESSAGES.length (104).
-- Pending major work: Phase 22 onwards proceeds against the consolidated single-source-tree baseline.
-- Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`
+- Pending major work: the active forward roadmap is now compacted to Phases 24-28. Historical completed branches 29-31 stay on disk as completed execution evidence, while old future phases 32-49 are retained only as crosswalk inputs into compact Phases 24-28, not as separate active queue entries; compact Phase 25 is the settlement-simulation replacement track that retires vanilla-village-dependent gameplay in staged slices.
+- Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`, `DEVELOPMENT.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
 - Phase 08 planning artifacts: `.planning/phases/08-multiplayer-authority-conflict-validation/`
@@ -37,10 +37,17 @@ progress:
 - Phase 20 planning artifacts: `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`
 - Phase 21 planning artifacts: `.planning/phases/21-source-tree-consolidation-into-bannerlord/`
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
-- Phase 21-28 research summary: `.planning/phases/FUTURE-EXPANSION-PHASES.md`
+- Phase 30 consolidated planning artifacts: `.planning/phases/30-worker-birth-and-claim-based-settlement-spawn/`, `.planning/phases/31-1-2-mining-area-branch-mine-3/`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/23-settlement-governance-and-governor-control/23-settlement-governance-and-governor-control-05-SUMMARY.md` (root GameTests for live governor designation, hostile-swap degradation, and real-heartbeat reporting; Phase 23 closed)
+- Latest execution summary: `.planning/phases/24-logistics-backbone-and-courier-worker/24-logistics-backbone-and-courier-worker-05-SUMMARY.md` (live server-side `StorageArea` entities now publish sea-trade entrypoints through the shared logistics runtime, stale authored routes are suppressed from that publication path, and later settlement heuristics now consume those live entrypoint sets more honestly where available)
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
+- Active compact-Phase-25 planning artifacts: `.planning/phases/25-treasury-taxes-and-army-upkeep/` (keep this directory truthful; do not treat it as a future placeholder)
+
+## Phase Number Crosswalk
+
+- Phases 29-31 are historical completed branches. Keep their directories and summaries as execution evidence; do not treat them as folded compact future phases.
+- Phases 32-49 were future-planning placeholders and are now folded into compact Phases 24-28.
+- Compact Phase ownership: 24 absorbs old 25-26; 25 absorbs old 33-47 and owns settlement aggregate/runtime replacement (resident records, building-driven economy, stockpile/market state, resident roles/goal scheduler, growth/projects, village-life loops, and phased retirement of vanilla-village-dependent logic); 26 absorbs old 27, 36-38, and 40-42 and owns the settlement-defense bridge over Phase 25 state; 27 absorbs old 32 and 48 and owns settlement-chief/read-model UI; 28 absorbs old 28, 39, and 49.
 
 ## Decisions
 
@@ -59,9 +66,9 @@ progress:
 - [Phase 05-stabilization-and-cleanup]: Legacy recruits and workers update-check listeners stay disabled until one merged release-feed contract exists.
 - [Slice follow-up]: Shared planning vocabulary for strategic, settlement, military, civilian, and logistics layers lives in `.planning/codebase/INTEGRATED_SYSTEM_ARCHITECTURE.md` and `.planning/CODEBASE.md`.
 - [Slice follow-up]: Root smoke coverage now asserts the recruit-owned `bannermod` runtime identity and the worker subsystem network offset in one merged-runtime regression test.
-- [Slice follow-up]: Shared owner, same-team, admin, and forbidden authority vocabulary now lives in `src/main/java/com/talhanation/bannermod/authority/BannerModAuthorityRules.java` and backs both worker authoring rules and worker-control recovery.
-- [Slice follow-up]: Shared supply-status vocabulary now lives in `src/main/java/com/talhanation/bannermod/logistics/BannerModSupplyStatus.java` and exposes build-project material pressure, worker storage blockage, and recruit upkeep food/payment pressure without changing current AI behavior.
-- [Slice follow-up]: Shared config-file taxonomy now lives in `src/main/java/com/talhanation/bannermod/config/BannerModConfigFiles.java`, and the merged bootstrap resolves `bannermod-military.toml`, `bannermod-settlement.toml`, and `bannermod-client.toml` with explicit low-risk migration from `bannermod-server.toml` and `workers-server.toml`.
+- [Slice follow-up]: Shared owner, same-team, admin, and forbidden authority vocabulary now lives canonically in `src/main/java/com/talhanation/bannermod/shared/authority/BannerModAuthorityRules.java`, with deprecated forwarders left only where Phase 21 documented them, and backs both worker authoring rules and worker-control recovery.
+- [Slice follow-up]: Shared supply-status vocabulary now lives canonically in `src/main/java/com/talhanation/bannermod/shared/logistics/BannerModSupplyStatus.java` and exposes build-project material pressure, worker storage blockage, and recruit upkeep food/payment pressure without changing current AI behavior.
+- [Slice follow-up]: `BannerModConfigFiles` documents the target config taxonomy, but the active merged bootstrap currently registers `bannermod-recruits-client.toml`, `bannermod-recruits-server.toml`, and `bannermod-workers-server.toml` in `BannerModMain` to avoid Forge filename collisions.
 - [Slice follow-up]: Root `gametest` is no longer empty; `src/gametest/java/com/talhanation/bannermod/IntegratedRuntimeGameTests.java` now proves merged runtime coexistence and one live recruit-worker-crop-area interaction inside one BannerMod GameTest runtime.
 - [Slice follow-up]: Root integrated gameplay validation now spawns a recruit, a farmer worker, and a crop area in one live BannerMod GameTest to prove shared-owner recruit friendly-fire protection, worker work-area authorization, and worker control recovery across the merged runtime seam.
 - [Slice follow-up]: Root integrated supply validation now also spawns a recruit and an owned build area in one live BannerMod GameTest to prove settlement build-material pressure and a recruit upkeep transition from blocked to ready project through the same shared `BannerModSupplyStatus` seam.
@@ -82,17 +89,17 @@ progress:
 - [Phase 10-settlement-faction-enforcement-validation]: `./gradlew verifyGameTestStage` remains green with all 45 required tests after the settlement-faction enforcement and degradation coverage is included in the root suite.
 - [Performance roadmap]: Keep large-battle AI/performance work ordered as profiling baseline, global pathfinding control, path reuse, formation-level target selection, pathfinding throttling, async reliability fixes, AI LOD, optional flow-field evaluation, and closing performance validation.
 - [Performance roadmap]: Require explicit profiling evidence before optimization, during each optimization slice, and after the full sequence so future tuning work can compare against one stable baseline.
-- [Future roadmap phases 20-28]: Treat the post-performance structural/gameplay program as real roadmap phases after the active 10-19 queue, not as a side document outside the milestone.
-- [Future roadmap phases 20-28]: Sequence the source-tree consolidation before broad gameplay expansion so later phases build on one canonical `bannermod` codebase.
+- [Compact roadmap refresh]: The active forward roadmap is now Phases 24-28. Older planned phase numbers above 24 are historical references and crosswalk inputs, not separate active queue entries.
+- [Compact roadmap refresh]: Phase 24 keeps the current logistics and courier work in place and absorbs the old treasury, upkeep, supply, trade-route, and port foundation work that used to be split across old Phases 25-26.
+- [Compact roadmap refresh]: Phase 25 now owns the next settlement-economy and resident-simulation expansion over the completed governor, citizen, and claim-growth foundations: settlement aggregate, resident records, building-driven economy, stockpile/market state, resident roles/goal scheduler, growth/projects, village-life loops, and the phased replacement of vanilla-village-dependent settlement logic with custom BannerMod simulation.
+- [Compact roadmap refresh]: Phase 26 now owns the military-side command, formation, morale, siege, and territory-war expansion that used to be spread across old Phases 27, 36-38, and 40-42.
+- [Compact roadmap refresh]: Phase 26 now also owns the settlement-defense bridge that consumes the Phase 25 settlement aggregate during militia, garrison, and war-economy integration work.
+- [Compact roadmap refresh]: Phase 27 now owns read models, communication surfaces, settlement-chief UI, and player/operator tooling that used to be split across old Phases 32 and 48.
+- [Compact roadmap refresh]: Phase 28 now closes the program with architecture integration, telemetry, balance, migration, and rollout work that used to be split across old Phases 28, 39, and 49.
 - [Phase 11-large-battle-ai-profiling-baseline]: Derive the baseline scenario matrix from existing recruit battle stress fixtures and current target/pathfinding seams before adding any new instrumentation.
 - [Phase 11-large-battle-ai-profiling-baseline]: Every baseline evidence bundle must record async pathfinding, async target-finding, and worker-thread config so later optimization results stay comparable.
 - [Performance roadmap]: Treat flow-field navigation as optional and benchmark-gated rather than a mandatory rewrite of the current navigation stack.
-- [Future expansion roadmap]: Sequence the full source-tree move ahead of broad gameplay expansion so entity, AI, registry, and client ownership are clear before deeper system rewrites begin.
-- [Future expansion roadmap]: The one-entity target is a shared `Citizen` representation with role/job-driven behavior; phase planning must treat this as a major refactor because workers and recruits are currently concrete subclass families.
-- [Future expansion roadmap]: Governor gameplay should sit above the existing settlement-binding and authority seams so tax collection, garrison guidance, and incident reporting do not fork ownership rules.
-- [Future expansion roadmap]: Move workers onto the recruit-owned pathfinding stack and add explicit logistics reservations before shipping the courier worker.
-- [Future expansion roadmap]: Treat taxes, treasury, army upkeep, supply, and trade as one layered economy program driven by heartbeat-style updates rather than per-tick full recomputation.
-- [Future expansion roadmap]: Treat Medieval Siege Machines compatibility as optional external compatibility, while shield wall and morale improvements become BannerMod-owned combat systems backed by maintained source.
+- [Compact roadmap refresh]: Legacy future-phase detail below remains useful as design input, but those old numbers no longer define the active queue by themselves.
 - [Phase 12-global-pathfinding-control]: Route recruit path issuance through one pass-through `GlobalPathfindingController` seam before adding path reuse, throttling, or async safety changes.
 - [Phase 12-global-pathfinding-control]: Keep controller-aware profiling additive inside the existing mixed-squad and dense-battle GameTests so Phase 11 before/after comparisons stay aligned.
 - [Phase 13-path-reuse-for-cohesion-movement]: Keep path reuse controller-owned and copy reused paths before application so nearby recruits do not share one mutable live `Path` instance.
@@ -138,6 +145,28 @@ progress:
 - [Phase 24]: Use authored entity-backed storage and work-area endpoints in the first slice instead of arbitrary chest discovery.
 - [Phase 24]: Implement reservations as lightweight item intents with timeout and cleanup semantics, not deep slot-level locking.
 - [Phase 24]: Courier task selection should be deterministic and priority-first; defer global optimization to later economy phases.
+- [Compact Phase 25 opener]: Seed settlement persistence additively from claim-keyed SavedData, existing governor snapshots, live villager/worker identities, and authored work-area registrations before introducing resident AI, housing rules, or broad vanilla-village retirement rewrites.
+- [Compact Phase 25 opener]: Extend the first aggregate seed with derived workplace occupancy from existing worker-to-work-area bindings before introducing deeper housing, job scheduling, or resident-behavior simulation.
+- [Compact Phase 25 opener]: Persist a lightweight settlement resident `scheduleSeed` derived from existing worker assignment and governor seams so later village-life slices can read one settlement-local duty hint without introducing a real scheduler yet.
+- [Compact Phase 25 bridge]: Persist a lightweight settlement resident `residentMode` derived from existing worker ownership seams so later resident and UI slices can distinguish projected controlled workers from settlement residents without changing current worker runtime behavior.
+- [Compact Phase 25 bridge]: Make worker assignment semantics explicit on the aggregate by classifying bound workers as local, unassigned, or missing-building and persisting per-building assigned resident UUIDs before introducing deeper scheduling, housing, or stockpile simulation.
+- [Compact Phase 25 bridge]: Persist one additive resident `runtimeRoleSeed` derived from `role`, `scheduleSeed`, `residentMode`, and `assignmentState` so later scheduler, job, and UI slices can read lightweight labor/governance/village-life intent without introducing a real resident AI loop yet.
+- [Compact Phase 25 bridge]: Persist one additive resident `serviceContract` for projected controlled workers by joining `residentMode` and `assignmentState` to the current local building records, so later economy and resident slices can read local, floating, and orphaned service actors without coupling directly to worker runtime.
+- [Compact Phase 25 bridge]: Persist one additive resident `roleProfile` descriptor derived from `role`, `runtimeRoleSeed`, `residentMode`, and `assignmentState`, carrying a stable profile id, goal-domain hint, and local-building preference for later scheduler/job slices without introducing a full role registry or resident AI loop.
+- [Compact Phase 25 bridge]: Persist one additive resident `jobDefinition` derived from `runtimeRoleSeed`, `serviceContract`, and building category/profile seeds so later resident/job runtime can consume one compact handler plus optional target-building semantics without replacing the existing worker AI loop yet.
+- [Compact Phase 25 bridge]: Persist one additive resident `scheduleWindowSeed` derived from `scheduleSeed` and `runtimeRoleSeed`, carrying compact active/rest tick windows for later village-life timing slices without introducing a real scheduler yet.
+- [Compact Phase 25 bridge]: Persist one additive resident `schedulePolicy` projection derived from `scheduleSeed`, `scheduleWindowSeed`, `runtimeRoleSeed`, and `roleProfile`, so later scheduler slices can consume one stable policy token plus compact schedule/window and goal hints without introducing a full scheduler yet.
+- [Compact Phase 25 bridge]: Persist one additive settlement `stockpileSummary` plus building-local stockpile seed metadata from authored `StorageArea` state and its scanned storage footprint before introducing any real stockpile accounting, market pricing, or goods simulation.
+- [Compact Phase 25 bridge]: Persist a compact settlement `marketState` from authored `MarketArea` seams, carrying per-market open/name/storage-slot snapshots and settlement-level market totals before introducing merchant AI, pricing, or trade-route consumption logic.
+- [Compact Phase 25 bridge]: Persist one additive building `buildingCategory` plus `buildingProfileSeed` from existing work-area types so later growth, market, and resident slices can branch on stable building semantics without pretending the full building economy exists yet.
+- [Compact Phase 25 bridge]: Persist one additive settlement `sellerDispatch` seed from market-profile service contracts plus current `marketState`, so later merchant/runtime slices can consume ready-vs-closed seller targeting without recomputing resident/building/market joins.
+- [Compact Phase 25 bridge]: Persist one additive settlement `desiredGoodsSeed` from building profiles, authored stockpile storage types, and market presence so later economy slices can consume lightweight demand hints without introducing pricing, item accounting, or merchant AI yet.
+- [Compact Phase 25 bridge]: Persist one additive settlement `projectCandidateSeed` from building profiles, `stockpileSummary`, `desiredGoodsSeed`, `marketState`, and governor/claim settlement seams so later project/growth slices can consume one compact next-build hint without introducing a project manager or growth loop yet.
+- [Compact Phase 24-25 closeout]: Governor heartbeat accounting now derives supply and upkeep state from live worker and recruit data, carries bounded treasury debit/credit in one claim-local rollup, and keeps governor-facing fiscal read models aligned with persisted ledger state.
+- [Compact Phase 24-25 closeout]: Compact settlement refresh now reacts to storage updates and worker work-area binding changes in targeted civil paths instead of relying only on governor-heartbeat refreshes, but broader civil mutation coverage is still incomplete.
+- [Compact Phase 25 closeout]: Controlled workers now persist settlement-local assignment and service semantics more consistently, and settlement heuristics prefer live sea-trade entrypoint sets where available instead of authored route flags alone.
+- [Compact Phase 25 closeout]: Enum-load hardening is only partial today; several settlement persistence enums now use safe fallback parsing, but remaining raw `Enum.valueOf(...)` paths still need follow-up before this can be called complete.
+- [Phase 24]: Persist treasury accrual in one narrow claim-keyed SavedData ledger and feed it directly from the existing governor heartbeat instead of introducing a global economy manager, item hauling, or per-tick tax recomputation.
 - [Phase 32]: Replace server-wide global chat with explicit faction and local channels; keep routing server-authoritative and operator-configurable.
 - [Phase 33]: Unify citizen appearance and birth behind one building-capacity-aware settlement growth loop with overpopulation pressure.
 - [Phase 33]: Prefer a narrow building-registration seam over a deep new settlement manager while MineColonies-style housing capacity is introduced.
@@ -146,6 +175,7 @@ progress:
 - [Phase 36]: Formation layout definitions should become datapack-authored content with strict schema validation and safe runtime fallback.
 - [Phase 37]: Claimed faction territory should only permit wartime destruction through recognized siege-engine paths, not ordinary block breaking.
 - [Phase 38]: Siege flow should be declaration-driven, camp-based, and center-capture-based, with hard attacker restrictions and defender build/break cooldowns during the assault window.
+- [Compact roadmap refresh]: BannerMod remains the architectural owner of the merged future runtime; HYW is design input for army-command and warfare work, and Millenaire is design input for settlement/economy/life-sim work, but both now flow through compact Phases 25-28 as replacement architecture rather than permanent parallel layering over vanilla village logic.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Wave 3-8 ownership moves landed under `bannermod.{bootstrap,registry,events,commands,config,util,entity,ai,client,inventory,persistence,items,network}` with military/civilian splits preserved as package structure rather than clone boundaries. — This preserves the staged migration intent without carrying forward obsolete package-target assumptions.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Treat `verifyGameTestStage` as the preferred follow-up gate for later pathfinding, persistence, and client changes that build on the consolidated tree. — Those seams still intersect the performance and correctness work from phases 11-19.
 - [Phase 21-source-tree-consolidation-into-bannerlord]: Worker storage and courier code still compile against temporary BannerMod logistics compatibility types until the dedicated logistics backbone phase replaces them.
@@ -185,6 +215,17 @@ progress:
 - Phase 36 added: Переработать формации на datapack-driven.
 - Phase 37 added: Отключить поломку блоков во фракциях всем кроме осаждающих, и только осадными орудиями.
 - Phase 38 added: Исправить осады на манер SiegeWar: осадный лагерь, 48 часов до старта, центральный чанк, осадные орудия, ограничения интерактов и кулдаун защитников.
+- Phase 39 added: Triple-Merge Domain Contracts And Migration Boundaries
+- Phase 40 added: Army Command Action Layer And Battlefield Selection
+- Phase 41 added: Formation Runtime And Banner Group Pathing
+- Phase 42 added: Tactical Doctrine, Target Policy, And Combat Support Orders
+- Phase 43 added: Settlement Aggregate And Resident Persistence
+- Phase 44 added: Resident Roles, Schedules, And Job Handler Runtime
+- Phase 45 added: Settlement Economy, Goods, Markets, And Trade Integration
+- Phase 46 added: Settlement Projects, Building Growth, And Village Life Loops
+- Phase 47 added: Politics, Defense, And War-Economy Integration
+- Phase 48 added: Aggregate Read Models, UI, And Command Tooling
+- Phase 49 added: Triple-Merge Migration, Telemetry, And Safe Rollout
 
 ## Performance Metrics
 
@@ -249,6 +290,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-15T16:18:36Z
-- Stopped at: Completed 23-04-PLAN.md
+- Last updated: 2026-04-19T23:50:00Z
+- Stopped at: claim-keyed treasury heartbeat accounting now also persists governor-readable fiscal rollups and bounded next-cycle projection; focused treasury/governance JUnit execution is unblocked at the source level — `BannerModSettlementService` is a `final` utility class (private no-arg constructor, all behavior behind `public static` entrypoints like `refreshAllClaims`, `refreshClaimAt`, `refreshClaim`, `buildSnapshot`) with no `new BannerModSettlementService(...)` call sites in the active tree, so the "constructor mismatch" note from earlier sessions no longer reflects reality (re-audited 2026-04-19). Compact-Phase-24 validation for this slice remains open on its own merits, not on a compile-debt blocker.
 - Resume file: None

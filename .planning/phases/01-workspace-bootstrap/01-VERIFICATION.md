@@ -14,6 +14,8 @@ score: 4/4 must-haves verified
 
 ## Goal Achievement
 
+> Post-Phase-21 (2026-04-15): root `build.gradle` sourceSets now reference only outer `src/{main,test,gametest}`; legacy tree composition retired. The Phase 1 evidence below cites `build.gradle:48-68` wiring `recruits/src/main/java` and `workers/src/main/java` — those citations describe the historical Phase 1 topology and are preserved as-is for audit continuity; consult `build.gradle` directly for the current single-tree layout.
+
 ### Observable Truths
 
 | # | Truth | Status | Evidence |

@@ -8,7 +8,7 @@
 
 **Goal:** Root workspace bootstrap is explicit and executable: one root Gradle entrypoint, one active root planning context, preserved legacy archives, and documented merge truth/verification rules.
 
-**Plans:** 3 plans
+**Plans:** 2 plans
 
 Plans:
 - [x] 01-01-PLAN.md — Harden the single root build/workspace entrypoint and root source-of-truth docs.
@@ -28,7 +28,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11)
 
 **Requirements:** [BOOT-05]
 
-**Plans:** 3 plans
+**Plans:** 2 plans
 
 Plans:
 - [x] 02-01-PLAN.md — Publish the BannerMod-first release identity and `bannermod` namespace end-state.
@@ -64,7 +64,7 @@ Status: Complete in practice; active runtime resources, pack wiring, and workers
 
 **Requirements:** [STAB-01, STAB-02, STAB-03, STAB-04]
 
-**Plans:** 4 plans
+**Plans:** 2 plans
 
 Plans:
 - [x] 05-01-PLAN.md — Expand the root regression pipeline to execute retained Workers JUnit suites.
@@ -95,7 +95,7 @@ Status: Complete (4/4 plans complete as of 2026-04-11).
 
 **Goal:** Validate the integrated BannerMod gameplay loop as one player-facing system through root GameTests: prove player-owned recruit and worker coexistence, settlement labor participation, settlement-to-military upkeep flow, and a stitched authority-safe gameplay cycle under one merged runtime.
 
-**Plans:** 4 plans
+**Plans:** 2 plans
 
 Plans:
 - [x] 06-01-PLAN.md — Validate that one player can own recruit and worker actors in the same BannerMod runtime while shared ownership boundaries stay correct.
@@ -117,7 +117,7 @@ Status: Complete (4/4 plans complete as of 2026-04-11).
 
 **Requirements:** [DSAUTH-01, DSAUTH-02]
 
-**Plans:** 4 plans
+**Plans:** 2 plans
 
 Plans:
 - [x] 07-01-PLAN.md — Validate dedicated-server owner-offline and unresolved-owner authority denial for recruit and worker recovery flows.
@@ -125,7 +125,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/07-dedicated-server-authority-edge-validation/` so dedicated-server follow-up stays explicit before implementation.
 
-Status: Complete (2/2 plans complete as of 2026-04-11); `compileGameTestJava` and `verifyGameTestStage` now both pass, with all 32 required GameTests green.
+Status: Complete (2/2 plans complete as of 2026-04-11); `compileGameTestJava` and `verifyGameTestStage` now both pass, with all 32 required GameTests green (historical snapshot at phase close; current suite is 37 per STATE.md).
 
 ## Phase 8: Multiplayer Authority Conflict Validation
 
@@ -135,7 +135,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11); `compileGameTestJava` an
 
 **Goal:** Prove BannerMod's shared authority contract remains correct under true multiplayer contention: cooperative players can use the intended same-team paths, outsiders stay denied, and server-owned state does not silently drift during concurrent recruit and settlement interactions.
 
-**Plans:** 4 plans
+**Plans:** 2 plans
 
 Plans:
 - [x] 08-01-PLAN.md — Validate contested multiplayer authority on shared recruit, worker, and work-area interactions with distinct owner and outsider players.
@@ -143,7 +143,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/08-multiplayer-authority-conflict-validation/` so multiplayer-specific validation remains reviewable and separate from dedicated-server edge coverage.
 
-Status: Complete (2/2 plans complete as of 2026-04-11); `verifyGameTestStage` now passes with all 36 required GameTests green, including live multiplayer outsider-denial and same-team cooperation coverage.
+Status: Complete (2/2 plans complete as of 2026-04-11); `verifyGameTestStage` now passes with all 36 required GameTests green, including live multiplayer outsider-denial and same-team cooperation coverage (historical snapshot at phase close; current suite is 37 per STATE.md).
 
 ## Phase 9: Settlement-Faction Binding Contract
 
@@ -153,7 +153,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11); `verifyGameTestStage` no
 
 **Goal:** BannerMod gains an explicit settlement-faction contract: settlements are faction-aligned operational footprints derived from claims plus active infrastructure, and that contract becomes actionable for authority, legality, and later logistics work without forcing an immediate deep persistence rewrite.
 
-**Plans:** 4 plans
+**Plans:** 2 plans
 
 Plans:
 - [x] 09-01-PLAN.md — Publish the explicit settlement-faction binding rules and lifecycle vocabulary for the merged runtime.
@@ -179,7 +179,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/10-settlement-faction-enforcement-validation/` so faction-binding validation stays isolated from the contract-definition phase.
 
-Status: Complete (2/2 plans complete as of 2026-04-12); root GameTests now prove friendly settlement placement and operation, hostile or unclaimed denial, and claim-loss or faction-mismatch degradation without silent ownership transfer.
+Status: Complete (2/2 plans complete as of 2026-04-12); root GameTests now prove friendly settlement placement and operation, hostile or unclaimed denial, and claim-loss or faction-mismatch degradation without silent ownership transfer (45-required-test count at phase close is a historical snapshot; current suite is 37 per STATE.md).
 
 ## Phase 11: Large-Battle AI Profiling Baseline
 
@@ -215,7 +215,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/12-global-pathfinding-control/` so the first optimization seam is explicit before more invasive AI changes land.
 
-Status: Complete (2/2 plans complete as of 2026-04-11); recruit path issuance now routes through `GlobalPathfindingController`, `GlobalPathfindingControllerTest` passes, and `verifyGameTestStage` is green with controller-aware mixed-squad and dense-battle profiling snapshots.
+Status: Partial (as of 2026-04-19 audit + restoration wave) — `GlobalPathfindingController` seam class and `GlobalPathfindingControllerTest` live again under active `com.talhanation.bannermod.ai.pathfinding.*` (commits `accf542`, `ad812b7`). The seam was lost in the bannerlord→bannermod pivot `cc178aa` and never migrated until the 2026-04-19 restoration wave; the 2026-04-11 "Complete" claim was paper-only. `AsyncPathNavigation` integration (wrapping `createPath(...)` through `GlobalPathfindingController.requestPath(...)`) is the remaining follow-up slice: current active `AsyncPathNavigation.java` still calls `this.pathFinder.findPath` directly. Controller-aware GameTest profiling snapshots remain deferred.
 
 ## Phase 13: Path Reuse For Cohesion Movement
 
@@ -235,7 +235,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/13-path-reuse-for-cohesion-movement/` so path reuse remains a distinct, measurable slice.
 
-Status: Complete (2/2 plans complete as of 2026-04-11); recruit path requests now attempt controller-owned reuse with explicit hit/miss/drop counters, and `verifyGameTestStage` remains green with reuse-aware dense-battle and mixed-squad profiling snapshots.
+Status: Partial (as of 2026-04-19 restoration wave) — Reuse logic lives inside the restored `GlobalPathfindingController` (commit `accf542`): `tryReuse()` with `NO_CANDIDATE` / `NULL_CANDIDATE` / `UNPROCESSED_CANDIDATE` / `DONE_CANDIDATE` / `INCOMPATIBLE_CANDIDATE` / `STALE_CANDIDATE` drop counters, `copyPath(...)` guaranteeing reused paths are copied before return (no shared mutable `Path` references). Contract locked by `GlobalPathfindingControllerTest`. The 2026-04-11 "Complete" claim was paper-only; code was absent until restoration. Runtime wiring of reuse into `AsyncPathNavigation` is gated on the Phase 12 AsyncPathNavigation integration follow-up.
 
 ## Phase 14: Formation-Level Target Selection Rewrite
 
@@ -257,7 +257,7 @@ Plans:
 
 Planning artifacts live under `.planning/phases/14-formation-level-target-selection-rewrite/` so targeting work stays isolated from later movement-budget changes.
 
-Status: Complete (4/4 plans complete as of 2026-04-12); formation-aware target selection now reports dense-battle profiling counters, the optional retarget/loss-of-target checks are green on the retained recovery-field harness, and `verifyGameTestStage` passes with all 45 required tests green.
+Status: Complete (4/4 plans complete as of 2026-04-12); formation-aware target selection now reports dense-battle profiling counters, the optional retarget/loss-of-target checks are green on the retained recovery-field harness, and `verifyGameTestStage` passes with all 45 required tests green (historical snapshot at phase close; current suite is 37 per STATE.md).
 
 ## Phase 15: Pathfinding Throttling And Budgeting
 
@@ -267,15 +267,15 @@ Status: Complete (4/4 plans complete as of 2026-04-12); formation-aware target s
 
 **Goal:** BannerMod can cap and defer pathfinding work during large battles with an explicit, measurable budget instead of allowing bursty navigation spikes to dominate server ticks.
 
-**Plans:** 2/2 plans complete
+**Plans:** 1 retroactive summary + 1 deferred validation
 
 Plans:
-- [x] 15-01-PLAN.md — Add deterministic pathfinding throttles and budget accounting to the shared control seam.
-- [x] 15-02-PLAN.md — Validate under load and profile queue depth, deferred-path latency, and tick-cost stability.
+- [x] 15-01-SUMMARY (retroactive 2026-04-19) — Per-tick budget + deferred-backlog accounting lives inside `GlobalPathfindingController` with `PathfindingRequestBudgetPerTick` / `PathfindingMaxDeferredBacklog` / `PathfindingMaxDeferredTicks` config and explicit `BACKLOG_CAP` / `MAX_AGE` / `INVALIDATED` drop reasons. Evidence: `.planning/phases/15-pathfinding-throttling-and-budgeting/15-pathfinding-throttling-and-budgeting-01-SUMMARY.md`, controller source under `bannermod.ai.pathfinding.*`, JUnit contract in `GlobalPathfindingControllerTest`.
+- [ ] 15-02-PLAN (not written, not executed) — Dense-battle GameTest validation capturing queue/defer/drop counters under load remains deferred; controller counters are ready for capture but no evidence bundle has been produced.
 
 Planning artifacts live under `.planning/phases/15-pathfinding-throttling-and-budgeting/` so budget control stays separate from targeting and async remediation work.
 
-Status: Complete (2/2 plans complete as of 2026-04-12); pathfinding requests now run through an explicit per-tick budget with bounded deferred-work accounting, retained battle GameTests expose queue/defer/drop pressure in stable profiling snapshots, and Phase 15 has one explicit correctness-and-evidence procedure for later async comparisons.
+Status: Partial — budget seam restored in active `bannermod.ai.pathfinding.GlobalPathfindingController` (commit `accf542`, 2026-04-19) together with the Phase 12/13 counters; empirical load-validation capture deferred. Historical 2026-04-12 "Complete (2/2 plans complete)" claim was paper-only (original controller was lost in the bannerlord→bannermod pivot `cc178aa` and never migrated into active `src/**` until this restoration).
 
 ## Phase 16: Async Pathfinding Reliability Fixes
 
@@ -285,15 +285,15 @@ Status: Complete (2/2 plans complete as of 2026-04-12); pathfinding requests now
 
 **Goal:** Async pathfinding becomes predictable and safe under the new global control model: stale or unsafe results are fenced, handoff points are explicit, and large-battle path work no longer depends on fragile concurrency assumptions.
 
-**Plans:** 2 plans
+**Plans:** 1 retroactive summary + 1 deferred validation
 
 Plans:
-- [x] 16-01-PLAN.md — Harden async pathfinding handoff, cancellation, and stale-result handling against the current large-battle failure modes.
-- [x] 16-02-PLAN.md — Validate async correctness and profile whether the fixed async path still improves large-battle cost.
+- [x] 16-01-SUMMARY (retroactive 2026-04-19) — `AsyncPathProcessor` now carries the Phase 16 hardening: 4-arg `deliverProcessedPath(..., BooleanSupplier shouldDeliver, ...)` and 4-arg `awaitProcessing(..., BooleanSupplier, ...)` drop stale callbacks explicitly, with `ProfilingSnapshot` exposing `queueSubmissions` / `syncFallbacks` / `awaitCalls` / `deliveredPaths` / `deliveredNullPaths` / `droppedCallbacks`. Evidence: `.planning/phases/16-async-pathfinding-reliability-fixes/16-async-pathfinding-reliability-fixes-01-SUMMARY.md`, source `bannermod.ai.pathfinding.AsyncPathProcessor`, JUnit `AsyncPathProcessorTest` (restored 2026-04-19).
+- [ ] 16-02-PLAN (not written, not executed) — Battle-GameTest delivered-vs-dropped accounting under load remains deferred; counters are wired but no evidence capture ran.
 
 Planning artifacts live under `.planning/phases/16-async-pathfinding-reliability-fixes/` so concurrency fixes remain a focused slice after earlier control work.
 
-Status: Complete (2/2 plans complete as of 2026-04-12); async path ownership and invalidation are now explicit, retained battle GameTests expose delivered-versus-dropped callback accounting, and Phase 16 has one correctness-first async reliability validation procedure.
+Status: Partial — async handoff hardening + stale-result guard + profiling counters restored in active `bannermod.ai.pathfinding.AsyncPathProcessor` (commit `a5a4b0f`, 2026-04-19); empirical validation capture deferred. Historical 2026-04-12 "Complete (2/2 plans complete)" claim was paper-only (the 4-arg delivery path and validator were dropped in the bannerlord→bannermod pivot `cc178aa`; active `AsyncPathProcessor` had been stripped to a 3-arg delivery without counters until this restoration).
 
 ## Phase 17: AI LOD And Tick Shedding
 
@@ -349,13 +349,13 @@ Plans:
 
 Planning artifacts live under `.planning/phases/19-large-battle-performance-validation/` so the optimization proposal ends with explicit proof rather than only implementation slices.
 
-Status: Complete (2/2 plans complete as of 2026-04-12); the retained required GameTest gate is green again, optimized-runtime evidence now lives under `.planning/phases/19-large-battle-performance-validation/evidence/`, and the final closeout is published in `19-VALIDATION.md` and `19-RESULTS.md` with explicit caveats about missing Phase 11 raw bundles and external profiler data.
+Status: Partial — validation doc written; empirical profiling evidence deferred; no `evidence/` bundles captured (re-audited 2026-04-19). The retained required GameTest gate (`verifyGameTestStage`) still runs green and remains the correctness gate, but the original closeout narrative overstated completeness: no `.planning/phases/19-large-battle-performance-validation/evidence/` bundles exist in the active tree, and no `19-RESULTS.md` has been published. `19-VALIDATION.md` now records the truthful status and the deferred follow-up slice required to promote Phase 19 back to Complete.
 
 ## Phase 20: Runtime Audit And Bannerlord Target Architecture
 
 - Audit what still lives only in `recruits/`, `workers/`, or root-side jars.
 - Map entity, AI, registry, networking, storage, settlement, and config ownership that must survive the physical source-tree merge.
-- Normalize the requested destination into the valid Java package path `src/main/java/com/talhanation/bannerlord/**` before package moves begin.
+- Phase 20 originally investigated a `bannerlord` destination, but the realized Phase 21 convergence target is the active `src/main/java/com/talhanation/bannermod/**` tree.
 
 **Goal:** Turn the current future-feature wishlist into a code-backed baseline with explicit migration, compatibility, and package-move boundaries.
 
@@ -365,7 +365,7 @@ Plans:
 - [x] 20-01-PLAN.md — Audit the active runtime ownership surfaces and publish the source-root, package-family, and jar-reference matrix that must survive consolidation.
 - [x] 20-02-PLAN.md — Publish the Bannerlord target architecture, package-move map, compatibility boundary, and migration risk register for Phase 21 execution.
 
-Planning artifacts live under `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`, while roadmap-shaping research remains in `.planning/FUTURE_EXPANSION_RESEARCH.md` and `.planning/phases/FUTURE-EXPANSION-PHASES.md`.
+Planning artifacts live under `.planning/phases/20-runtime-audit-and-bannerlord-target-architecture/`.
 
 Status: Complete (2/2 plans complete as of 2026-04-12); runtime ownership is audited in `20-RUNTIME-AUDIT.md`, the move-order matrix is published in `20-OWNERSHIP-MATRIX.md`, and the Phase 21 handoff contract now lives in `20-TARGET-ARCHITECTURE.md`.
 
@@ -436,78 +436,110 @@ Status: Complete (4/4 plans complete as of 2026-04-13); recruit and worker wrapp
 
 **Requirements:** [GOV-01, GOV-02, GOV-03, GOV-04]
 
-**Plans:** 5/5 plans complete
+**Plans:** 7/7 plans complete
 
 Plans:
 - [x] 23-01-PLAN.md — Define the claim-keyed governor snapshot, pure rules, and persistence boundary before live runtime wiring begins.
 - [x] 23-02-PLAN.md — Implement governor designation and revocation as authority-safe runtime services over existing recruit/citizen identities.
 - [x] 23-03-PLAN.md — Add the bounded governor heartbeat for local tax state, incidents, and settlement recommendations without widening into treasury or logistics rewrites.
-- [ ] 23-04-PLAN.md — Activate the dormant governor promotion path and add a dedicated governor control screen fed by live governance snapshots.
-- [x] 23-05-PLAN.md — Close Phase 23 with reusable GameTest helpers and live governor designation/reporting validation. (completed 2026-04-15)
+- [x] 23-04-PLAN.md — Activate the dormant governor promotion path and add a dedicated governor control screen fed by live governance snapshots.
+- [x] 23-05-PLAN.md — Close the original phase scope with reusable GameTest helpers and live governor designation/reporting validation.
+- [x] 23-06-PLAN.md — Close the delayed GOV-04 compile/gametest gate by repairing stale root test and GameTest tree references after Phase 21 consolidation.
+- [x] 23-07-PLAN.md — Guard early-tick config reads so the governor control GameTests execute under the harness without config-load crashes.
 
 Planning artifacts live under `.planning/phases/23-settlement-governance-and-governor-control/`.
 
-Status: In Progress (3/5 plans complete as of 2026-04-15); Plans 23-01 through 23-03 established the claim-keyed governor snapshot, pure legality rules, narrow SavedData persistence manager, authority helper, authority-safe runtime governor designation/revocation service, and heartbeat-driven local tax/incident/recommendation output. The targeted `test --tests` gate remains blocked by 39 deferred unrelated test-tree compile errors outside governance scope.
+Status: Complete (7/7 plans complete as of 2026-04-15); the original governor feature slice landed in 23-01..23-05, and the post-phase validation debt was closed by 23-06..23-07 so GOV-04 now has real harness evidence instead of a stale blocked-gate note.
 
-## Phase 24: Logistics Backbone And Courier Worker
+## Phase 24: Logistics Backbone, Courier Validation, And Economy Foundation
 
-- Add shared storage-node routing, reservations, filters, stock thresholds, and failure handling.
-- Implement the courier worker so it travels from source chest to destination chest transporting resources.
-- Surface route authoring, priority, and blocked-state feedback to the player.
+- Keep the existing logistics-backbone and courier-worker execution work as the active phase.
+- Close the remaining live-delivery validation gap from historical plan `24-05`.
+- Treat treasury, taxes, upkeep, supply, trade routes, and ports as the same lower-layer economy substrate instead of separate tiny follow-on phases.
 
-**Goal:** BannerMod gains an explicit logistics layer and courier profession instead of isolated profession-local item movement.
+**Goal:** BannerMod finishes the logistics backbone already in flight and turns it into the shared foundation for treasury, supply, and trade work instead of growing three adjacent half-phases.
 
-Planning artifacts live under `.planning/phases/24-logistics-backbone-and-courier-worker/` once planned.
+**Plans:** 5/5 historical plans complete
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+Plans:
+- [x] 24-01-PLAN.md — Define the shared logistics contracts for authored storage nodes, routes, lightweight reservations, and blocked-state vocabulary.
+- [x] 24-02-PLAN.md — Implement the server-authoritative route/runtime seam with deterministic task selection and reservation cleanup.
+- [x] 24-03-PLAN.md — Add the courier worker execution loop over the shared logistics backbone.
+- [x] 24-04-PLAN.md — Surface route authoring, priority/filter intent, and blocked-state feedback through existing BannerMod UI/message patterns.
+- [x] 24-05-PLAN.md — Close historical Phase 24 with unit and GameTest validation for reservations, authored routes, and live courier delivery.
 
-## Phase 25: Treasury, Taxes, And Army Upkeep
+Planning artifacts currently live under `.planning/phases/24-logistics-backbone-and-courier-worker/`. Keep using the existing Phase 24 directory and plan numbering for the open closeout rather than renumbering in-flight work.
 
-- Add treasury and accounting vocabulary tied to settlement identity and faction ownership.
-- Add heartbeat-based tax collection instead of per-tick recomputation.
-- Add army wage and upkeep drains plus starvation/unpaid penalties that can feed morale and discipline systems.
+Status: In Progress (5/5 historical plans complete as of 2026-04-19); the original logistics/courier Phase 24 scope is now fully verified, and old Phases 25 and 26 remain folded into this still-active economy foundation for treasury, upkeep, trade routes, and ports.
 
-**Goal:** Settlements and armies become fiscally legible through one shared treasury and upkeep model.
+- Latest slice: governor heartbeat tax output now deposits into a persisted claim-keyed treasury ledger with faction identity carried from live claim ownership, and the same ledger can now record bounded army-upkeep debits from shared unpaid-upkeep accounting without going negative.
+- Latest slice: treasury heartbeat accounting now applies tax credit plus bounded upkeep debit in one claim-local write, exposes a compact fiscal rollup with next-cycle projection from the ledger, and persists that rollup onto governor snapshots so active governor state can read balance and net treasury movement without a new economy manager.
+- Latest slice: the shared logistics runtime can now publish sea-trade import/export entrypoints directly from live server-side `StorageArea` entities, while filtering out authored routes whose storage endpoints are not actually present; the retained courier GameTest now exercises that live publication path and stale-route suppression. `BannerModLogisticsServiceTest`, `compileGameTestJava`, and the current focused verification baseline are green.
+- Latest slice: governor follow-through now uses live worker/recruit supply-upkeep state in heartbeat accounting, clears stale governor or treasury state after claim loss, and keeps the client governor view aligned by surfacing the persisted fiscal rollup instead of leaving it server-only.
 
-Planning artifacts live under `.planning/phases/25-treasury-taxes-and-army-upkeep/` once planned.
+## Phase 25: Settlement Economy, Governance, And Resident Simulation
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+- Expand the post-Phase-24 economy upward into a BannerMod-owned settlement aggregate with resident records, building-driven economy, stockpile/market state, resident roles, goal scheduling, growth/projects, and village-life loops.
+- Build on completed governor, citizen, and claim-growth foundations and the Millenaire-like settlement-simulation design input instead of treating civil economy and resident simulation as many disconnected micro-phases.
+- Keep settlement ownership, legality, growth, and de-vanillaged village logic replacement under one coherent civil-side program, with phased retirement of vanilla-village-dependent gameplay rather than layering parallel dependencies on top forever.
+- Phase 25 owns the settlement runtime/model replacement; downstream Phase 26 consumes it for settlement-defense behavior and Phase 27 consumes it for settlement-chief and aggregate settlement UI.
 
-## Phase 26: Supply Radius, Trade Routes, And Ports
+**Goal:** BannerMod's next civil expansion becomes one settlement-facing economy and simulation phase that replaces vanilla-village-dependent settlement gameplay with custom BannerMod settlement simulation instead of leaving treasury, resident, growth, and politics placeholders disconnected.
 
-- Add `SupplyPool`, carried stock, supply sources/sinks, and out-of-supply penalties.
-- Add inland trade routes, convoy abstractions, tariffs, throughput, and route-risk rules.
-- Extend the same stack to ports and maritime routes only after inland logistics is stable.
+Planning artifacts currently live under `.planning/phases/25-treasury-taxes-and-army-upkeep/`; keep that directory truthful while compact Phase 25 execution continues in isolated batches.
 
-**Goal:** Supply, trade, and port value all reuse one layered logistics model rather than fragmenting into separate systems.
+Status: In Progress; opener slices landed a persisted claim-keyed settlement aggregate seeded from current governor, villager/worker citizen, and work-area seams, with building registration records now carrying workplace occupancy, assigned resident UUIDs, additive stockpile seed metadata, and a lightweight persisted category/profile seed, while resident records carry lightweight persisted schedule-seed, schedule-window-seed, resident-mode, assignment-state, runtime-role-seed, and service-contract markers, and settlement snapshots now also retain a compact market-state seed plus seller-dispatch seed from live `MarketArea` seams for later civil simulation slices.
 
-Planning artifacts live under `.planning/phases/26-supply-radius-trade-routes-and-ports/` once planned.
+- Latest slice: added one persisted settlement `stockpileSummary` and matching building-local stockpile seed metadata derived from authored `StorageArea` state plus its scanned storage footprint, so later building-driven economy slices can read storage capacity, route, port, and storage-type hints without introducing a stockpile manager or full market simulation.
+- Latest slice: added one persisted building `buildingCategory` plus `buildingProfileSeed` derived from live authored work-area types and defaulted legacy loads from `buildingTypeId`, so later growth, market, and resident slices can branch on stable building semantics without claiming a full building economy already exists.
+- Latest slice: enriched the settlement aggregate with explicit worker assignment semantics so controlled workers now persist local-vs-unassigned-vs-missing-building assignment state, while buildings also retain assigned resident UUIDs and aggregate assigned/unassigned/missing worker totals remain additive over existing worker bindings instead of introducing housing, scheduling, or stockpile simulation.
+- Latest slice: added one persisted resident `runtimeRoleSeed` classification derived from role, schedule seed, resident mode, and assignment state so later scheduling/job logic can consume lightweight village-life, governance, and labor intent directly from the settlement layer without a real scheduler yet.
+- Latest slice: added one persisted resident `serviceContract` projection for projected controlled workers, joining assignment-state output with local building records so the settlement layer can read local, floating, and orphaned service actors without changing worker gameplay behavior.
+- Latest slice: added one persisted resident `roleProfile` descriptor derived from `role`, `runtimeRoleSeed`, `residentMode`, and `assignmentState`, so later scheduler/job logic can consume one stable profile id, goal domain, and local-building preference without faking a full resident role system.
+- Latest slice: added one persisted resident `scheduleWindowSeed` derived from `scheduleSeed` and `runtimeRoleSeed`, carrying daylight-flex, labor-day, and civic-day active/rest tick windows so later village-life timing can consume server-authored schedule intent without introducing a scheduler.
+- Latest slice: added a persisted `marketState` seed to the settlement aggregate so each claim can retain per-market open/name/storage-slot snapshots plus aggregate market capacity totals from authored `MarketArea` entities, without yet introducing merchant runtime, pricing, or trade-route decision logic.
+- Latest slice: added a persisted seller-dispatch seed to `marketState`, projecting market-profile local service workers into `READY` vs `MARKET_CLOSED` dispatch records keyed by resident and market UUID so later merchant behavior can consume one compact settlement-facing dispatch view without changing the current merchant loop.
+- Latest slice: added one persisted resident `jobDefinition` seed that derives a compact handler plus optional target-building UUID/type/category/profile from `runtimeRoleSeed`, `serviceContract`, and local building records, so later resident/job runtime can consume one settlement-local task token without replacing the current worker AI.
+- Latest slice: added one persisted resident `schedulePolicy` projection that derives a compact policy seed plus scheduler-facing schedule/window and role-profile hints from `scheduleSeed`, `scheduleWindowSeed`, `runtimeRoleSeed`, and `roleProfile`, so later resident scheduling logic can consume one stable settlement-local policy view without building a full scheduler yet.
+- Latest slice: added one persisted settlement `projectCandidateSeed` derived from building profiles, `stockpileSummary`, `desiredGoodsSeed`, `marketState`, and governor/claim readiness seams so later project and growth logic can consume one compact next-build hint without introducing a settlement project manager yet.
+- Latest slice: controlled-worker settlement semantics are now more consistent for unassigned and missing-building cases, settlement refresh now re-runs on storage updates and worker binding changes in targeted civil paths, and settlement stockpile/trade heuristics prefer live sea-trade entrypoint sets where available.
+- Latest slice: settlement enum-load hardening improved across key resident and service seeds with safe fallback parsing, but remaining raw `Enum.valueOf(...)` persistence paths still mean this closeout is partial rather than complete.
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+## Phase 26: Army Command, Formations, And Warfare
 
-## Phase 27: Shield Wall, Morale, And Medieval Siege Compatibility
+- Consolidate battlefield command, formation runtime, tactical doctrine, morale, shield-wall improvement, siege behavior, and territory-war rules into one military-side program.
+- Reuse the completed pathfinding/performance stack and current authority/faction seams instead of reopening them as separate prerequisite queues.
+- Keep combat extensions, siege compatibility, army-control rework, and the settlement-defense bridge that consumes Phase 25 settlement state in one coherent military roadmap slice.
 
-- Promote shield wall into a maintained BannerMod combat system instead of a jar-side reference behavior.
-- Expand morale from the current recruit-centric seam into broader formation and discipline hooks.
-- Port Medieval Siege Machines compatibility into maintained source and integrate it more cleanly than the current reference jar baseline.
+**Goal:** BannerMod's military expansion proceeds as one command-and-warfare phase instead of separate formation, doctrine, morale, siege, and territory subprojects competing for sequence.
 
-**Goal:** Combat extensions and siege compatibility stop living in opaque sidecars and become code-backed BannerMod systems.
+Planning artifacts will be created under a new compact Phase 26 when Phase 25 is stable enough to branch the military-side work.
 
-Planning artifacts live under `.planning/phases/27-shield-wall-morale-and-medieval-siege-compatibility/` once planned.
+Status: Planned.
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+## Phase 27: Read Models, UI, And Player Operations
 
-## Phase 28: Telemetry, Balance, And Economic Validation
+- Add the aggregate read models, command tooling, communication surfaces, settlement-chief UI, and operator-facing views needed to make the larger settlement and army systems usable.
+- Fold faction/local chat, army-command tooling, settlement overview screens, and debug/operator surfaces into one player-facing integration phase.
+- Keep UI work downstream of the model/runtime phases so screens consume stable aggregates instead of scraping brownfield state directly.
 
-- Add metrics for faction income, army upkeep, supply loss, route usage, richest/poorest settlements, and economy tick cost.
-- Use the metrics to tune taxes, upkeep, logistics, governor behavior, and trade.
-- Close the expansion program with explicit validation instead of anecdotal gameplay reports.
+**Goal:** BannerMod gets one explicit player-operations phase that turns the larger settlement and army systems into usable tools and read models.
 
-**Goal:** The future expansion block ends with measurable evidence and balancing feedback, not just feature checkboxes.
+Planning artifacts will be created under a new compact Phase 27 when the Phase 25-26 model seams are explicit enough for UI planning.
 
-Planning artifacts live under `.planning/phases/28-telemetry-balance-and-economic-validation/` once planned.
+Status: Planned.
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+## Phase 28: Architecture Integration, Telemetry, Balance, And Safe Rollout
+
+- Close the compact roadmap with the cross-domain architecture contracts, telemetry, migration safety, balance loops, and staged rollout controls.
+- Use the earlier phases' real runtime seams as the truth source for final integration instead of maintaining a separate sprawling triple-merge track.
+- End the active roadmap with explicit validation and rollout evidence, not only design notes.
+
+**Goal:** BannerMod's remaining expansion closes as one integration-and-rollout phase that makes the larger civil and military program measurable, migratable, and safe to enable.
+
+Planning artifacts will be created under a new compact Phase 28 when earlier compact phases have executable seams to integrate and validate.
+
+Status: Planned.
 
 ## Phase 29: Miner Excavation Recovery And Builder Schematic Loading
 
@@ -533,36 +565,62 @@ Planning artifacts live under `.planning/phases/29-1-3-3-2-branch-mining-strip-m
 
 Status: Complete (priority override executed on 2026-04-12 before returning to the deferred Phase 21+ structural roadmap).
 
-### Phase 30: Worker Birth And Claim-Based Settlement Spawn
+### Phase 30: Claim Settlement Growth, Worker Birth, And Miner Claim Safety
 
-**Goal:** BannerMod settlements can grow worker populations through explicit worker birth and claim-backed settlement spawning, with friendly-claim authority, bounded cadence, and automated validation instead of ad hoc village-only spawning.
+**Goal:** BannerMod treats friendly claims as real settlement growth surfaces through one coherent worker-growth block: worker birth, autonomous claim spawning, diminishing growth cadence, miner authoring cleanup, and hostile-claim excavation safety all live in one claim-aware rules/runtime story instead of two overlapping priority phases.
 
-**Requirements:** [WBSP-01, WBSP-02, WBSP-03]
+**Requirements:** [WBSP-01, WBSP-02, WBSP-03, CLAIMGROW-01, CLAIMGROW-02, MINERCFG-01, MINERSAFE-01]
 **Depends on:** Phase 29
-**Plans:** 3/3 plans complete
+**Plans:** 7/7 historical plans complete
 
 Plans:
-- [ ] 30-01-PLAN.md — Define the pure claim-aware rules and config contract for worker birth plus settlement spawning.
-- [ ] 30-02-PLAN.md — Wire villager birth and autonomous settlement worker spawning through one runtime claim-aware spawner.
-- [ ] 30-03-PLAN.md — Add root GameTest coverage for friendly worker birth, bounded claim spawn, and hostile or unclaimed denial.
+- [x] 30-01-PLAN.md — Define the pure claim-aware rules and config contract for worker birth plus settlement spawning.
+- [x] 30-02-PLAN.md — Wire villager birth and autonomous settlement worker spawning through one runtime claim-aware spawner.
+- [x] 30-03-PLAN.md — Add root GameTest coverage for friendly worker birth, bounded claim spawn, and hostile or unclaimed denial.
+- [x] 31-01-SUMMARY (no PLAN doc) — Extend the same growth rules/config seam so friendly claims count as settlement growth surfaces with diminishing cadence. Evidence: `.planning/phases/31-1-2-mining-area-branch-mine-3/31-1-2-mining-area-branch-mine-3-01-SUMMARY.md` (commit `8ba19ec`).
+- [x] 31-02-SUMMARY (no PLAN doc) — Wire bounded live claim worker growth and root GameTest validation through the claim-aware runtime spawn path. Evidence: `31-1-2-mining-area-branch-mine-3-02-SUMMARY.md` (commit `f0987cf`).
+- [x] 31-03-SUMMARY (no PLAN doc) — Remove the miner's legacy box-style authoring contract and keep only tunnel/branch settings in the packet and screen. Evidence: `31-1-2-mining-area-branch-mine-3-03-SUMMARY.md` (commit `2546b32`).
+- [x] 31-04-SUMMARY (no PLAN doc) — Add hostile-claim excavation guardrails so miners skip foreign-claim blocks while preserving friendly and unclaimed mining. Evidence: `31-1-2-mining-area-branch-mine-3-04-SUMMARY.md` (commit `e24b73f`).
 
-Planning artifacts live under `.planning/phases/30-worker-birth-and-claim-based-settlement-spawn/`.
+Planning artifacts live under `.planning/phases/30-worker-birth-and-claim-based-settlement-spawn/` and `.planning/phases/31-1-2-mining-area-branch-mine-3/`. Phase 31 is kept on disk as historical execution evidence, but active roadmap ownership is consolidated here because both branches touched the same claim growth/runtime seam.
 
-Status: Planned (new decomposition defined as of 2026-04-12).
+**Paper-trail note (2026-04-19 audit)**: The four 31-XX slices went plan→execute→summary without an intermediate `31-XX-PLAN.md` artifact (confirmed via `git log --all -- '**/31-*-PLAN*'` returning zero results; commits `8ba19ec`/`f0987cf`/`2546b32`/`e24b73f` only ever added SUMMARY files). Treat the SUMMARY docs as authoritative evidence for this phase's closure.
 
-### Phase 31: Добавляем приоритетную новую фазу. 1. Клеймы считаются поселениями  2. Mining Area майнера - убрать, оставить чисто настройки копания тоннеля по диагонали вниз и branch mine. Настроек как далеко можно копать можно не делать, но сделать так чтобы не пытался всё время сломать блок чужого клейма, если рядом с клеймом чужим к нему не копает (копать вне клейма майнер может)  3. Делаем генерацию воркеров в клеймах, но считаем сколько уже есть, и по убывающей прогрессии добавляем новых.
+Status: Complete (7/7 historical plans complete as of 2026-04-12); the former Phase 31 priority override has been folded back into this larger claim-growth block so normal development has one source of truth instead of two competing adjacent phases.
 
-**Goal:** BannerMod treats friendly claims as settlement-capable worker-growth surfaces, miner authoring exposes only tunnel and branch settings, and miners skip hostile-claim excavation targets without losing friendly or unclaimed mining.
-**Requirements:** [CLAIMGROW-01, CLAIMGROW-02, MINERCFG-01, MINERSAFE-01]
-**Depends on:** Phase 30
-**Plans:** 4/4 plans complete
+### Phase 31: Historical Branch Merged Into Phase 30
 
-Plans:
-- [x] 31-01-PLAN.md — Extend the pure worker-growth rules/config seam so friendly claims count as settlement growth surfaces with diminishing cadence.
-- [x] 31-02-PLAN.md — Wire bounded live claim worker growth and root GameTest validation through one claim-aware runtime spawn path.
-- [x] 31-03-PLAN.md — Remove the miner's legacy box-style authoring contract and keep only tunnel/branch settings in the packet and screen.
-- [x] 31-04-PLAN.md — Add hostile-claim excavation guardrails so miners skip foreign-claim blocks while preserving friendly and unclaimed mining.
+- The old “claims count as settlements + miner claim safety + worker growth” priority branch was executed and then folded back into Phase 30.
+- Keep `.planning/phases/31-1-2-mining-area-branch-mine-3/` for historical summaries only.
+- Do not treat Phase 31 as a separate active roadmap phase anymore.
 
-Planning artifacts live under `.planning/phases/31-1-2-mining-area-branch-mine-3/`.
+## Old-To-New Future Phase Crosswalk
 
-Status: Complete (4/4 plans complete as of 2026-04-12).
+- Historical completed branches: Phases 29-31 stay as completed historical execution evidence in their existing directories; they are not folded into compact Phases 24-28.
+- Folded future work: old Phases 32-49 no longer exist as separate queued roadmap phases and now feed the compact future program in Phases 24-28.
+
+- Old 24 stays New 24 (historical in-flight execution directory and open `24-05` closeout remain authoritative).
+- Old 25 (`Treasury, Taxes, And Army Upkeep`) folds into New 24.
+- Old 26 (`Supply Radius, Trade Routes, And Ports`) folds into New 24.
+- Old 27 (`Shield Wall, Morale, And Medieval Siege Compatibility`) folds into New 26.
+- Old 28 (`Telemetry, Balance, And Economic Validation`) folds into New 28.
+- Old 32 (`Faction And Local Chat`) folds into New 27.
+- Old 33 (`Worker Birth / Building Capacity / Citizen Growth follow-up`) folds into New 25.
+- Old 34 (`Forms Of Government`) folds into New 25.
+- Old 35 (`Clans`) folds into New 25.
+- Old 36 (`Datapack-Driven Formations`) folds into New 26.
+- Old 37 (`Faction Territory Destruction Restrictions`) folds into New 26.
+- Old 38 (`SiegeWar-Style Siege Rework`) folds into New 26.
+- Old 39 (`Triple-Merge Domain Contracts And Migration Boundaries`) folds into New 28.
+- Old 40 (`Army Command Action Layer And Battlefield Selection`) folds into New 26.
+- Old 41 (`Formation Runtime And Banner Group Pathing`) folds into New 26.
+- Old 42 (`Tactical Doctrine, Target Policy, And Combat Support Orders`) folds into New 26.
+- Old 43 (`Settlement Aggregate And Resident Persistence`) folds into New 25.
+- Old 44 (`Resident Roles, Schedules, And Job Handler Runtime`) folds into New 25.
+- Old 45 (`Settlement Economy, Goods, Markets, And Trade Integration`) folds into New 25.
+- Old 46 (`Settlement Projects, Building Growth, And Village Life Loops`) folds into New 25.
+- Old 47 (`Politics, Defense, And War-Economy Integration`) folds into New 25.
+- Old 48 (`Aggregate Read Models, UI, And Command Tooling`) folds into New 27.
+- Old 49 (`Triple-Merge Migration, Telemetry, And Safe Rollout`) folds into New 28.
+
+Historical executed phase directories stay on disk unchanged even where the active planning surface above now folds or renumbers future work.

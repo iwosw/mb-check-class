@@ -1,130 +1,101 @@
 ---
 phase: 21-source-tree-consolidation-into-bannerlord
-verified: 2026-04-15T19:35:00Z
-status: gaps_found
-score: 5/6 must-haves verified
-overrides_applied: 0
-gaps:
-  - truth: "Unified resources contain no residual recruits:/workers: namespace strings"
-    status: partial
-    reason: "`src/main/resources/data/minecraft/tags/point_of_interest_type/acquirable_job_site.json` still lists six `recruits:*` entity IDs (recruit, shieldman, bowman, crossbowman, horseman, nomad). Entities now register under `bannermod:*` (see `registry/military/ModEntityTypes.java` which calls `new ResourceLocation(BannerModMain.MOD_ID, ...)` where `MOD_ID = \"bannermod\"`), so the tag references dead IDs and no longer points at the live entity registrations. This was copied verbatim from the recruits clone during Wave 9 consolidation and the namespace rewrite pass missed JSON tag payloads under `data/`."
-    artifacts:
-      - path: "src/main/resources/data/minecraft/tags/point_of_interest_type/acquirable_job_site.json"
-        issue: "Six POI tag values reference `recruits:<job>` IDs that no longer exist under that namespace — should be `bannermod:<job>` to match the registered entity IDs."
-    missing:
-      - "Rewrite the six tag values from `recruits:<id>` to `bannermod:<id>` (or delete the tag override if no longer needed for BannerMod)."
-      - "Sweep `src/main/resources/data/**` for other `recruits:`/`workers:` namespace strings missed by the Wave 9 rewrite (current scan shows only this one file)."
-deferred:
-  - truth: "`./gradlew compileTestJava` is green"
-    addressed_in: "Future test-stabilization slice"
-    evidence: "CONTEXT D-22 explicitly scopes outer compile-green gate to `compileJava`; 39 test-tree errors (D-05 `BannerModSettlementBinding` overlap + smoke-test symbol drift on `WorkersSubsystem`/`WorkersRuntime`/`Main.orderedMessageTypes()`) documented in MERGE_NOTES.md and Wave 9 SUMMARY."
+verified: 2026-04-15T15:11:49Z
+status: passed
+score: 7/7 must-haves verified
 ---
 
-# Phase 21 Verification — Post-Wave-9 Refresh (2026-04-15)
+# Phase 21: Source Tree Consolidation Into BannerMod Verification Report
 
-Phase 21 goal (ROADMAP §Phase 21): *BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.* Closure criteria (from the ROADMAP description and the earlier draft of this document):
+**Phase Goal:** BannerMod becomes one physical codebase instead of one root build that still composes legacy source trees.
+**Verified:** 2026-04-15T15:11:49Z
+**Status:** passed
+**Re-verification:** Yes — previous docs-truth gap rechecked and closed.
 
-1. Active Java ownership lives under `src/main/java/com/talhanation/bannermod/**` (single canonical namespace).
-2. The legacy `com.talhanation.bannerlord.*` namespace is fully retired.
-3. The legacy embedded clones (`recruits/`, `workers/`) no longer compile or contribute resources to the outer build.
-4. `./gradlew compileJava` is green from the outer repo root.
-5. Resources are unified under `src/main/resources/{assets,data}/bannermod/**`.
-6. `mods.toml` declares only `modId="bannermod"`; no residual `recruits`/`workers`/`bannerlord` mod-id refs.
+## Goal Achievement
 
-## Observable Truths
+### Observable Truths
 
 | # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 1 | Single source root (clones no longer composed into outer build) | VERIFIED | `build.gradle` `sourceSets.{main,test,gametest}` reference only `src/{main,test,gametest}/{java,resources}` (lines 46–64). No `recruits/src` or `workers/src` srcDir entry. |
-| 2 | Single canonical namespace `com.talhanation.bannermod.*` | VERIFIED | `find src/main/java/com/talhanation -maxdepth 1 -type d` returns only `.../bannermod`. 24 `bannermod.*` subpackages present (authority, ai, bootstrap, citizen, client, commands, compat, config, entity, events, governance, inventory, items, logistics, migration, mixin, network, persistence, registry, settlement, shared, util). Grep for `com.talhanation.bannerlord` across `src/` and `build.gradle`: 0 hits. |
-| 3 | Legacy `com.talhanation.recruits/workers/bannerlord` FQNs retired from production source | VERIFIED | `grep -r "com\.talhanation\.(recruits\|workers\|bannerlord)" src/main/java` → 0 matches. (Test tree still has `src/test/java/com/talhanation/{recruits,workers}/**` — this is the documented deferred test-tree residue; see `deferred` section.) |
-| 4 | `./gradlew compileJava` compile-green gate | VERIFIED | Re-run at verification time: `BUILD SUCCESSFUL in 14s` (daemon forked, `:compileJava UP-TO-DATE`). |
-| 5 | Resources unified under `src/main/resources` | VERIFIED | `src/main/resources/{assets/bannermod,data/minecraft,META-INF/{mods.toml,accesstransformer.cfg},logo.png,pack.mcmeta,mixins.bannermod.json}` all present. `assets/bannermod/` contains `blockstates,lang,models,structures,textures`. No `src/main/resources/assets/{recruits,workers}/` exists. |
-| 6 | `mods.toml` declares exactly one mod with `modId="bannermod"` | VERIFIED | `grep -c "\[\[mods\]\]" src/main/resources/META-INF/mods.toml` → 1. `modId="bannermod"`. No `"recruits"`, `"workers"`, or `bannerlord` mod-id strings. (The two residual `recruits`/`workers` strings in `mods.toml` are the URL paths `github.com/talhanation/recruits` and `modrinth.com/mod/villager-recruits` — user-facing links, not mod-id declarations.) |
+| --- | --- | --- | --- |
+| 1 | Outer build uses one root source tree | ✓ VERIFIED | `build.gradle:46-64` only references outer `src/{main,test,gametest}/{java,resources}`. Fresh `rg` found no clone source-set paths. |
+| 2 | Active production Java ownership lives under `com.talhanation.bannermod/**` | ✓ VERIFIED | `ls src/main/java/com/talhanation` returns only `bannermod`. |
+| 3 | Unified runtime has one live mod entrypoint | ✓ VERIFIED | `rg -n '@Mod\(' src/main/java` returns only `BannerModMain.java:43`. |
+| 4 | Shared network is wired through canonical BannerMod bootstrap | ✓ VERIFIED | `BannerModMain.java:131-132` assigns `SIMPLE_CHANNEL = BannerModNetworkBootstrap.createSharedChannel()`; `BannerModNetworkBootstrap.java:33-201` registers military then civilian catalogs; `workerPacketOffset()` returns `MILITARY_MESSAGES.length`. |
+| 5 | Unified resources no longer carry stale runtime namespaces | ✓ VERIFIED | `mods.toml:7-24` has one `bannermod` mod block; `acquirable_job_site.json:3-8` uses `bannermod:*`; residual-namespace search returned no matches in `src/main/java`, `src/main/resources`, `build.gradle`, `ROADMAP.md`, or `STATE.md`. |
+| 6 | Outer repo builds standalone from root | ✓ VERIFIED | Fresh `./gradlew compileJava` passed (`BUILD SUCCESSFUL in 48s`). |
+| 7 | Planning docs reflect the realized post-pivot structure | ✓ VERIFIED | `ROADMAP.md:372-405` describes BannerMod-only consolidation truth; `STATE.md:17-21` now states Phase 21 complete, one source root, bannermod runtime, absorbed workers. Remaining `bannerlord` matches in `STATE.md` are only artifact-path names and historical decision ledger entries (`STATE.md:37-42`, `116-163`), not active current-state claims. |
 
-Goal-backward derived truth added during this verification pass:
+**Score:** 7/7 truths verified
 
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 7 | Unified resources contain no residual `recruits:`/`workers:` namespace strings | PARTIAL | `grep -rn '"recruits:\|"workers:' src/main/java/ src/main/resources/` returns 6 hits, all in `src/main/resources/data/minecraft/tags/point_of_interest_type/acquirable_job_site.json` pointing at `recruits:{recruit,shieldman,bowman,crossbowman,horseman,nomad}`. Entities are registered under `bannermod:*` (see `ModEntityTypes` using `BannerModMain.MOD_ID`), so the tag values reference dead IDs. Java source and other resources are clean — previous verification counted "0 hits" because it filtered to `src/main/java` only; the JSON tag was overlooked. See `gaps` in frontmatter. |
-
-**Score:** 5/6 verified against the explicit phase closure criteria (truths 1–6 above). A goal-backward sweep surfaced one partial finding (truth 7) which does not map to a numbered closure criterion but is implicitly required by the "unified resources" goal.
-
-## Required Artifacts
+### Required Artifacts
 
 | Artifact | Expected | Status | Details |
-|----------|----------|--------|---------|
-| `src/main/java/com/talhanation/bannermod/bootstrap/BannerModMain.java` | Unified mod entrypoint with `MOD_ID = "bannermod"` | VERIFIED | `MOD_ID = "bannermod"` at line 35. Referenced from `WorkersRuntime.MOD_ID = BannerModMain.MOD_ID`. |
-| `src/main/java/com/talhanation/bannermod/bootstrap/WorkersRuntime.java` | Reconstructed civilian runtime bootstrap | VERIFIED | Present. Exposes `MOD_ID`, `LEGACY_MOD_ID = "workers"`, and `migrateLegacyId()` used by `WorkersRuntimeLegacyIdMigrationTest`. |
-| `src/main/java/com/talhanation/bannermod/ai/military/RecruitAiLodPolicy.java` | Reconstructed from test contract per Wave 9 SUMMARY | VERIFIED | File exists under the documented path; reconstruction recorded in SUMMARY §key-files. |
-| `src/main/java/com/talhanation/bannermod/network/messages/military/MessageRecruitCount.java` | Reintroduced as no-op pass-through for packet-ID slot ordering | VERIFIED | Present; rewritten per SUMMARY §key-files. |
-| `src/main/resources/META-INF/mods.toml` | Single `[[mods]] modId="bannermod"` block | VERIFIED | Confirmed (Truth 6). |
-| `src/main/resources/META-INF/accesstransformer.cfg` | Includes `AxeItem.STRIPPABLES` public AT | VERIFIED | Referenced in Wave 9 SUMMARY key-decisions; file present. |
-| `src/main/resources/mixins.bannermod.json` | Single mixin config (`package: com.talhanation.bannermod.mixin`) | VERIFIED | Config lists 8 common mixins + `MixinMinecraft` client mixin under `com.talhanation.bannermod.mixin`. |
-| `build.gradle` sourceSets | Outer-only `src/{main,test,gametest}/{java,resources}` | VERIFIED | Lines 46–64. No clone references in srcDirs. |
+| --- | --- | --- | --- |
+| `build.gradle` | Root-only source sets | ✓ VERIFIED | `sourceSets` point only at outer `src/**`; clone paths absent. |
+| `src/main/java/com/talhanation/bannermod/bootstrap/BannerModMain.java` | Unified `@Mod` entrypoint | ✓ VERIFIED | Owns `MOD_ID = "bannermod"`, config registration, event-bus wiring, and shared-channel bootstrap. |
+| `src/main/java/com/talhanation/bannermod/network/BannerModNetworkBootstrap.java` | Canonical shared channel + packet offset contract | ✓ VERIFIED | Real message catalogs and registration loops present; compatibility bind still intentional. |
+| `src/main/resources/META-INF/mods.toml` | Single `bannermod` mod declaration | ✓ VERIFIED | One `[[mods]]` block with `modId="bannermod"`. |
+| `.planning/ROADMAP.md` | Phase 21 reflects realized BannerMod structure | ✓ VERIFIED | Phase section is BannerMod-targeted, 13/13 plans closed, follow-up dirt explicitly scoped outside closure. |
+| `.planning/STATE.md` | Current-state prose matches realized tree | ✓ VERIFIED | Active summary is bannermod-only; historical `bannerlord` strings are archive/history references, not stale live assertions. |
 
-## Key Link Verification
+### Key Link Verification
 
 | From | To | Via | Status | Details |
-|------|----|-----|--------|---------|
-| `build.gradle` sourceSets | outer `src/**` only | `java.srcDirs` / `resources.srcDirs` | WIRED | No `recruits/src` or `workers/src` composition. |
-| POI tag `acquirable_job_site.json` | live recruit entity registrations | entity ID strings | NOT_WIRED | Tag references `recruits:<id>` but live registrations are `bannermod:<id>`. Tag is orphaned from the registrations it used to annotate. |
-| `WorkersRuntime.migrateLegacyId` | `workers:*` → `bannermod:*` rewrite | `migrateLegacyId` method | WIRED | Covered by `WorkersRuntimeLegacyIdMigrationTest` (test tree; compile deferred but contract documented). |
-| `mixins.bannermod.json` | `com.talhanation.bannermod.mixin.*` classes | mixin package declaration | WIRED | Package path matches existing `src/main/java/com/talhanation/bannermod/mixin/**`. |
+| --- | --- | --- | --- | --- |
+| `build.gradle` | outer `src/**` | `sourceSets` | WIRED | Active Gradle build no longer composes `recruits/` or `workers/` sources/resources. |
+| `BannerModMain` | `BannerModNetworkBootstrap` | `createSharedChannel()` | WIRED | Unified entrypoint initializes the shared channel from the canonical bootstrap. |
+| `BannerModMain` | Forge config registry | `registerConfig(..., fileName)` | WIRED | Three explicit config filenames prevent the prior collision and match post-UAT docs. |
+| `ROADMAP.md` / `STATE.md` | realized Phase 21 outcome | current-state prose | WIRED | Both docs now describe Bannermod convergence and clone-retention-as-archive truth. |
 
-## Behavioral Spot-Checks
+### Data-Flow Trace (Level 4)
+
+| Artifact | Data Variable | Source | Produces Real Data | Status |
+| --- | --- | --- | --- | --- |
+| `BannerModMain.java` | `SIMPLE_CHANNEL` | `BannerModNetworkBootstrap.createSharedChannel()` | Yes | ✓ FLOWING |
+| `BannerModNetworkBootstrap.java` | civilian packet offset | `MILITARY_MESSAGES.length` | Yes | ✓ FLOWING |
+| `.planning/STATE.md` | current focus summary | maintained planning state | Yes | ✓ FLOWING |
+
+### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
-|----------|---------|--------|--------|
-| Production compile | `./gradlew compileJava` | `BUILD SUCCESSFUL in 14s`, `:compileJava UP-TO-DATE` | PASS |
-| Single `[[mods]]` entry | `grep -c "\[\[mods\]\]" src/main/resources/META-INF/mods.toml` | `1` | PASS |
-| Zero `bannerlord` FQNs in production | `grep -r "com\.talhanation\.bannerlord" src/main/java build.gradle` | (no output) | PASS |
-| Zero `recruits`/`workers` FQNs in production java | `grep -r "com\.talhanation\.(recruits\|workers\|bannerlord)" src/main/java` | 0 matches | PASS |
-| Residual namespace strings in unified resources | `grep -rn '"recruits:\|"workers:' src/main/resources/` | 6 hits in POI tag | FAIL |
+| --- | --- | --- | --- |
+| Root compile gate | `./gradlew compileJava` | `BUILD SUCCESSFUL in 48s` | ✓ PASS |
+| Single mod entrypoint | `rg -n '@Mod\(' src/main/java` | one hit in `BannerModMain.java` | ✓ PASS |
+| No clone source sets in active build | `rg -n 'recruits/src/main/java|workers/src/main/java|recruits/src/main/resources|workers/src/main/resources' build.gradle` | no output | ✓ PASS |
+| No residual runtime namespace refs in active code/resources/docs sweep | `rg -n 'com\.talhanation\.bannerlord|"recruits:"|"workers:"' src/main/java src/main/resources build.gradle .planning/ROADMAP.md .planning/STATE.md` | no output | ✓ PASS |
 
-## Requirements Coverage
+### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
-|-------------|-------------|-------------|--------|----------|
-| SRCMOVE-01 | 21-02 | Canonical shared seam ownership under `bannermod.shared/**` and `bannermod.config`, with `bannermod.{authority,settlement,logistics}` as deprecated forwarders | SATISFIED | Marked `[x]` in REQUIREMENTS.md; preserved by Wave 9 (no regressions to shared-seam subtrees). |
-| SRCMOVE-02 | 21-03..21-07 | Active recruit military/shared + worker civilian gameplay re-homed onto `bannermod.{entity,ai,pathfinding,persistence,client}/{shared,military,civilian}/**` | SATISFIED | All expected subpackages present under `bannermod.{entity,ai,persistence,client}.{military,civilian}`; `recruits.*`/`workers.*` owners removed from production java. |
-| SRCMOVE-03 | 21-09 | `com.talhanation.recruits/**` reduced to documented compatibility surfaces; no recruit-package file owns live gameplay | SATISFIED | 0 `com.talhanation.recruits` FQNs in production java. Only residue is legacy clone working-tree archives (Option a retention) and deferred test-tree symbols. Marked `requirements-completed: [SRCMOVE-03]` in 21-09 SUMMARY. |
-| SRCMOVE-04 | 21-09 | `com.talhanation.workers/**` reduced to enumerated compat surface; canonical civilian ownership under `bannermod.*.civilian/**` | SATISFIED | Same scan: 0 `com.talhanation.workers` FQNs in production java. Civilian registry/entity/client subtrees live under `bannermod.*.civilian`. `WorkersRuntime` is the sole `workers`-named symbol and lives under `bannermod.bootstrap`. Marked `requirements-completed: [SRCMOVE-04]` in 21-09 SUMMARY. |
+| --- | --- | --- | --- | --- |
+| SRCMOVE-01 | 21-02 | Canonical shared seams under `bannermod.shared/**` with deprecated forwarders at legacy seam paths | ✓ SATISFIED | `shared/authority/BannerModAuthorityRules.java` is canonical; `authority/BannerModAuthorityRules.java` is `@Deprecated` and delegates. |
+| SRCMOVE-02 | 21-03..21-08 | Recruit military/shared and worker civilian gameplay re-homed under canonical `bannermod` packages | ✓ SATISFIED | Production tree under `src/main/java/com/talhanation/` contains only `bannermod/`; compile passes from root. |
+| SRCMOVE-03 | 21-09 | Remaining recruit-package surface reduced to narrow compatibility/archive seams | ✓ SATISFIED | Outer build excludes clone paths; retained clone content is archival only and not part of active source sets. |
+| SRCMOVE-04 | 21-09 | Remaining worker-package surface reduced to narrow compatibility/archive seams with canonical civilian ownership under `bannermod.*.civilian/**` | ✓ SATISFIED | Civilian code lives under `bannermod.*.civilian/**`; root build no longer composes `workers/src/**`. |
+| UAT-21-TEST-8 | 21-11, 21-12 | Post-UAT recruit interaction and hotkey/client-handler fixes | ⚠️ PLAN-LOCAL | Referenced by plan frontmatter but not defined in `.planning/REQUIREMENTS.md`; closure is documented in `21-11-SUMMARY.md` and `21-12-SUMMARY.md`. |
+| UAT-21-TEST-7 | 21-13 | Post-UAT lang/UI localization gap closure | ⚠️ PLAN-LOCAL | Referenced by plan frontmatter but not defined in `.planning/REQUIREMENTS.md`; closure is documented in `21-13-SUMMARY.md`. |
 
-All four SRCMOVE requirements are fulfilled for production source. SRCMOVE-03/04 coverage assumes the POI tag is *not* a "recruit-package file" (it's a resource file); the namespace-string drift there is flagged as an independent truth-7 gap, not a requirements regression.
+No orphaned Phase 21 requirement IDs were found in `REQUIREMENTS.md`; all Phase 21 requirement IDs listed there (`SRCMOVE-01`..`SRCMOVE-04`) are claimed by plan frontmatter.
 
-## Anti-Patterns Found
+### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
-|------|------|---------|----------|--------|
-| `build.gradle` | 40 | `group = 'com.talhanation.recruits'` | Info | Gradle project group coordinate is still `com.talhanation.recruits`. Does not affect runtime or compile-green gate; the published `modId` and Java namespace are fully migrated. Worth noting for a future cleanup slice. |
-| `build.gradle` | 231–232 | `println` messages reference "BannerMod base source tree plus the merged workers runtime slice" | Info | Accurate post-Wave-9 narration; not a gap. |
-| `src/main/resources/data/minecraft/tags/point_of_interest_type/acquirable_job_site.json` | 3–8 | Tag values use `recruits:*` namespace | Warning | See Truth 7 / gaps frontmatter. Functional drift (tag points at dead IDs) rather than a classical stub. |
+| --- | --- | --- | --- | --- |
+| `build.gradle` | 40 | `group = 'com.talhanation.recruits'` legacy coordinate | ℹ️ Info | Packaging coordinate lag only; does not reintroduce clone source trees or block Phase 21 closure. |
+| `.planning/phases/21-source-tree-consolidation-into-bannerlord/*-PLAN.md` | various | `UAT-21-TEST-*` IDs not mirrored in `REQUIREMENTS.md` | ℹ️ Info | Accounting gap in requirements indexing, not a failure of source-tree consolidation. |
 
-No TODO/FIXME/placeholder anti-patterns surfaced in the Wave 9 key-files.
+### Human Verification Required
 
-## Known Deferred Issues
+None.
 
-Per CONTEXT D-22, the outer compile-green gate is scoped to `./gradlew compileJava` only. `./gradlew compileTestJava` surfaces 39 errors covering:
+### Gaps Summary
 
-1. Two `BannerModSettlementBinding` classes coexist (`bannermod.shared.settlement` + `bannermod.settlement`) — D-05 defers package overlap reconciliation to a follow-up phase.
-2. Integration smoke tests reference `WorkersSubsystem`, `WorkersRuntime`, and `Main.orderedMessageTypes()` with imports/packages that still point at the retired clone namespaces (see `src/test/java/com/talhanation/{recruits,workers}/**` residue).
+No closure-blocking gaps remain. The prior verification's `.planning/STATE.md` failure does not hold on re-check: the active current-state section is now aligned with the realized BannerMod-only structure, and the remaining `bannerlord` literals are confined to historical phase names, artifact paths, and decision-ledger context. Those references preserve auditability rather than contradict present-day codebase truth.
 
-Both are documented in `MERGE_NOTES.md` and in `21-09-SUMMARY.md §key-decisions`. They do not affect the runtime artifact and are explicitly out of Phase 21 scope.
-
-## Human Verification Required
-
-None blocking phase closure. Recommended (optional) sanity checks before the next phase:
-
-1. Spawn a recruit via `/summon bannermod:recruit` and observe whether villagers still get stolen into the recruit job site (validates whether the stale POI tag has a runtime behavioural effect or is inert).
-2. Run the mod in a dev client to confirm assets, lang, and model registrations resolve without `minecraft:missing` textures.
-
-## Gaps Summary
-
-Phase 21 has structurally achieved its goal: the outer repo is a single source root with a single canonical namespace (`com.talhanation.bannermod`), `compileJava` is green, `mods.toml` is unified, and the embedded clones no longer contribute to the build. One narrow residue remains from the Wave 9 resource consolidation: `acquirable_job_site.json` still references six entity IDs under the retired `recruits:` namespace. This is a mechanical fix (rewrite the six strings to `bannermod:*` or delete the tag override) and does not block phase closure in the structural sense, but it is a real functional drift against the "unified resources" goal — entities registered under `bannermod:*` will not appear in the `acquirable_job_site` tag until fixed.
-
-Net posture: **structural phase complete; one resource-level namespace fix outstanding.**
+Phase 21's goal is achieved: the active build, active production Java tree, active resources, mod entrypoint, and planning docs all describe and use one physical BannerMod codebase rather than composing legacy source roots.
 
 ---
 
-*Re-verified 2026-04-15T19:35:00Z by gsd-verifier after the Wave 9 self-written VERIFICATION.md. Supersedes the draft authored inline during 21-09.*
+_Verified: 2026-04-15T15:11:49Z_
+_Verifier: the agent (gsd-verifier)_
