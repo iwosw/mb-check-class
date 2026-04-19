@@ -91,7 +91,15 @@ final class RecruitUpkeepService {
     static BannerModSupplyStatus.RecruitSupplyStatus getSupplyStatus(AbstractRecruitEntity recruit, @Nullable Container upkeepContainer) {
         boolean upkeepHasFood = upkeepContainer != null && hasFoodInContainer(recruit, upkeepContainer);
         boolean upkeepHasPayment = upkeepContainer != null && recruit.isPaymentInContainer(upkeepContainer);
-        return BannerModSupplyStatus.recruitSupplyStatus(recruit.hasUpkeep(), needsToGetFood(recruit), recruit.paymentTimer == 0, upkeepHasFood, upkeepHasPayment, recruit.isPaymentInContainer(recruit.getInventory()));
+        return BannerModSupplyStatus.recruitSupplyStatus(
+                recruit.hasUpkeep(),
+                needsToGetFood(recruit),
+                recruit.paymentTimer == 0,
+                upkeepHasFood,
+                upkeepHasPayment,
+                recruit.isPaymentInContainer(recruit.getInventory()),
+                recruit.getHunger()
+        );
     }
 
     static void upkeepReequip(AbstractRecruitEntity recruit, @NotNull Container container) {

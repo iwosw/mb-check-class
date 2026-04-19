@@ -42,9 +42,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.*;
 
 public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity implements ICompanion {
     private static final EntityDataAccessor<Integer> WAYPOINT_INDEX = SynchedEntityData.defineId(AbstractLeaderEntity.class, EntityDataSerializers.INT);
@@ -68,6 +65,9 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
     public NPCArmy army;
     public NPCArmy enemyArmy;
     public IAttackController attackController;
+    private final PatrolRouteRuntime patrolRouteRuntime = new PatrolRouteRuntime(this);
+    private final LeaderCombatRuntime leaderCombatRuntime = new LeaderCombatRuntime(this);
+    private final LeaderUpkeepRuntime leaderUpkeepRuntime = new LeaderUpkeepRuntime(this);
 
     public AbstractLeaderEntity(EntityType<? extends AbstractLeaderEntity> entityType, Level world) {
         super(entityType, world);
@@ -161,7 +161,7 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
         this.waitingTime = nbt.getInt("waiting_time");
         this.waitForRecruitsUpkeepTime = nbt.getInt("waitForRecruitsUpkeepTime");
         this.setInfoMode(nbt.getByte("infoMode"));
-        this.ownerName = nbt.getString("ownerName");
+        this.ownerName = nbt.contains("ownerName") ? nbt.getString("ownerName") : nbt.getString("OwnerName");
         this.setPatrolSpeed(nbt.getByte("patrolSpeed"));
         this.setEnemyAction(nbt.getByte("enemyAction"));
         if (nbt.hasUUID("routeId")) this.setRouteID(nbt.getUUID("routeId"));
@@ -212,11 +212,11 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
         if(checkEnemyTimer > 0) checkEnemyTimer--;
         if(infoCooldown > 0) infoCooldown--;
         if(commandCooldown > 0) commandCooldown--;
-        if(waitForRecruitsUpkeepTime > 0) waitForRecruitsUpkeepTime--;
+        leaderUpkeepRuntime.tickUpkeepTimer();
 
         if(checkEnemyTimer == 0){
             checkEnemyTimer = 200;
-            checkForPotentialEnemies();
+            leaderCombatRuntime.checkForPotentialEnemies();
         }
 
         double distance = 0D;
@@ -227,108 +227,21 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
             }
 
             case PATROLLING -> {
-
-                if(currentWaypoint != null){
-
-                    if(distance <= this.getDistanceToReachWaypoint()){
-
-                        //re-supply at first waypoint
-                        boolean isFirstWaypoint = getWaypointIndex() == 0;
-                        BlockPos pos = this.getUpkeepPos();
-                        if(pos != null && pos.distSqr(this.getOnPos()) < 5000 && isFirstWaypoint && (waitForRecruitsUpkeepTime == 0 || getOtherUpkeepInterruption())){
-
-                            this.handleResupply();
-
-                            this.waitForRecruitsUpkeepTime = this.getResupplyTime(); // resupplying time
-                            this.setPatrolState(State.UPKEEP);
-                            this.retreating = false;
-                            this.retreatingMessage = false;
-                        }
-                        else
-                        {
-                            this.waitingTime = 0;
-
-                            this.setPatrolState(State.WAITING);
-                        }
-                    }
-                    else{
-                        moveToCurrentWaypoint();
-                    }
-                }
-                else if(!WAYPOINTS.isEmpty() && hasIndex()) {
-                    this.currentWaypoint = WAYPOINTS.get(getWaypointIndex());
-                }
-                else
-                    this.setPatrolState(State.IDLE);
-
-                if(this.enemyArmy != null && !retreating){
-                    //this.sendInfoAboutEnemy();
-
-                    if(enemyArmySpotted()){
-                        //this.setRecruitsToFollow();
-                        this.setPatrolState(State.ATTACKING);
-                    }
-                    else{
-                        this.setTarget(null);
-                    }
-                }
+                patrolRouteRuntime.tickPatrolling(distance);
             }
 
             case WAITING -> {
-                if(timerElapsed() && hasIndex()){
-                    this.updateWaypointIndex();
-                    if(hasIndex()){
-                        this.currentWaypoint = WAYPOINTS.get(getWaypointIndex());
-                    }
-                    this.setPatrolState(State.PATROLLING);
-                }
-
-                if(distance > 25D && this.enemyArmy == null){
-                    moveToCurrentWaypoint();
-                }
-
-                if(this.enemyArmy != null && this.enemyArmy.size() > 0){
-                    //this.sendInfoAboutTarget(this.getTarget());
-
-                    if(enemyArmySpotted()){
-                        attackController.setInitPos(enemyArmy.getPosition());
-                        this.setPatrolState(State.ATTACKING);
-
-                    }
-                    else {
-                        this.setTarget(null);
-                    }
-                }
+                patrolRouteRuntime.tickWaiting(distance);
             }
 
             case ATTACKING -> {
-
-                if(this.retreating && WAYPOINTS != null && WAYPOINTS.size() > 0){
-                    this.setPatrolState(State.RETREATING);
+                if (leaderCombatRuntime.tickAttacking()) {
                     return;
                 }
-                if(army == null || enemyArmy == null){
-                    this.setFollowState(0);
-                    this.setPatrolState(prevState);
-                    return;
-                }
-
-                attackController.tick();
             }
 
             case RETREATING -> {
-                if(this.getOwner() != null && !retreatingMessage) {
-                    this.getOwner().sendSystemMessage(RETREATING());
-                    retreatingMessage = true;
-                }
-                this.retreating = true;
-                if(army != null){
-                    RecruitCommanderUtil.setRecruitsClearTargets(army.getAllRecruitUnits());
-                    RecruitCommanderUtil.setRecruitsFollow(army.getAllRecruitUnits(), this.uuid);
-                    RecruitCommanderUtil.setRecruitsShields(army.getAllRecruitUnits(),false);
-                }
-
-                this.setPatrolState(State.PATROLLING);
+                patrolRouteRuntime.tickRetreating();
             }
 
             case UPKEEP -> {
@@ -349,28 +262,7 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
     }
 
     private void checkForPotentialEnemies() {
-        if(!level().isClientSide()){
-            NearbyCombatCandidates scan = scanNearbyCombatCandidates((ServerLevel) level(), 100D);
-            List<LivingEntity> targets = filterCombatCandidates(
-                    scan.candidates(),
-                    target -> shouldAttack(target) && this.hasLineOfSight(target) && !target.isUnderWater(),
-                    false
-            );
-
-            if(targets.isEmpty()) return;
-
-            this.enemyArmy = new NPCArmy((ServerLevel) level(), targets, null);
-            EnemyAction action = EnemyAction.fromIndex(getEnemyAction());
-            if (action == EnemyAction.KEEP_PATROLLING) return; // ignore enemies, keep walking
-            if(state != State.ATTACKING && canAttackWhilePatrolling()) {
-                if (action == EnemyAction.HOLD) {
-                    // Stop moving, let recruits fight in place
-                    this.getNavigation().stop();
-                }
-                this.setPatrolState(State.ATTACKING);
-            }
-        }
-
+        leaderCombatRuntime.checkForPotentialEnemies();
     }
 
     public boolean canAttackWhilePatrolling() {
@@ -387,14 +279,11 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
     }
 
     protected void handleUpkeepState() {
-        if (waitForRecruitsUpkeepTime == 0) {
-            boolean allRecruitsResupplied = this.army.getAllRecruitUnits().stream().allMatch(recruit -> recruit.getUpkeepTimer() >= 0);
+        leaderUpkeepRuntime.handleUpkeepState();
+    }
 
-            if (allRecruitsResupplied) {
-                waitForRecruitsUpkeepTime = this.getAgainResupplyTime();
-                this.setPatrolState(State.PATROLLING);
-            }
-        }
+    LeaderUpkeepRuntime getLeaderUpkeepRuntime() {
+        return leaderUpkeepRuntime;
     }
 
     public boolean enemyArmySpotted() {
@@ -440,21 +329,7 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
     }
 
     protected void moveToCurrentWaypoint() {
-        if(this.tickCount % 20 == 0){
-            this.getNavigation().moveTo(currentWaypoint.getX(), currentWaypoint.getY(), currentWaypoint.getZ(), PatrolSpeed.fromIndex(getPatrolSpeed()).toSpeed());
-            Vec3 forward = this.position().vectorTo(this.currentWaypoint.getCenter());
-
-            if(army != null){
-                FormationUtils.lineFormation(forward.normalize(), army.getAllRecruitUnits(), this.position(), 4, 1.75);
-                RecruitCommanderUtil.setRecruitsPatrolMoveSpeed(army.getAllRecruitUnits(),0.7F, 60);
-            }
-
-            //this.setRecruitsToMove(this.currentWaypoint);
-        }
-
-        if (horizontalCollision || minorHorizontalCollision) {
-            this.getJumpControl().jump();
-        }
+        patrolRouteRuntime.moveToCurrentWaypoint();
     }
 
     public void setPatrolState(State state){
@@ -480,67 +355,8 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
         }
     }
 
-    private boolean hasIndex(){
-        return !WAYPOINTS.isEmpty() && WAYPOINTS.size() > getWaypointIndex();
-    }
-
-    private boolean timerElapsed() {
-        int currentIdx = getWaypointIndex();
-        int waitSec;
-        if (!WAYPOINT_WAIT_SECONDS.isEmpty() && currentIdx < WAYPOINT_WAIT_SECONDS.size()) {
-            waitSec = WAYPOINT_WAIT_SECONDS.get(currentIdx);
-        } else {
-            waitSec = getWaitTimeInMin() * 60;
-        }
-        return ++waitingTime > waitSec * 20;
-    }
-
-    public void decreaseIndex() {
-        int currentIndex = this.getWaypointIndex();
-        int nextIndex = currentIndex - 1;
-        if (nextIndex >= 0) this.setWaypointIndex(nextIndex);
-    }
-
-    public void increaseIndex(){
-        int currentIndex = this.getWaypointIndex();
-        int nextIndex = currentIndex + 1;
-
-        if(nextIndex < WAYPOINTS.size())
-            this.setWaypointIndex(nextIndex);
-    }
-
     public void updateWaypointIndex(){
-        int currentIndex = this.getWaypointIndex();
-        boolean isCycling = this.getCycle();
-        boolean isLastWaypoint = currentIndex == WAYPOINTS.size() - 1;
-        boolean isFirstWaypoint = currentIndex == 0;
-        if(isCycling && !retreating){
-            if(isLastWaypoint){
-                this.setWaypointIndex(0);
-            }
-            else {
-                increaseIndex();
-            }
-        }
-        else{
-            if(returning || retreating){
-                if(isFirstWaypoint){ //is current last waypoint
-                    this.returning = false;
-                    this.retreating = false;
-                }
-                else {
-                    decreaseIndex();
-                }
-            }
-            else{
-                if(isLastWaypoint){
-                    this.returning = true;
-                }
-                else{
-                    increaseIndex();
-                }
-            }
-        }
+        patrolRouteRuntime.updateWaypointIndex();
     }
 
     public String getOwnerName() {
@@ -652,48 +468,17 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
      * Called server-side when patrol is started. Picks the nearest waypoint as
      * the start index.
      */
-    /**
-     * Resolves the correct surface Y for a waypoint position using the server's
-     * heightmap. Keeps the client-supplied XZ but replaces Y with the real
-     * surface block so ship navigation receives an accurate water level.
-     */
-    private BlockPos resolveServerY(BlockPos pos) {
-        net.minecraft.world.level.Level level = getCommandSenderWorld();
-        int surfaceY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,
-                pos.getX(), pos.getZ()) - 1;
-        int y = Math.max(surfaceY, level.getMinBuildHeight());
-        return new BlockPos(pos.getX(), y, pos.getZ());
+    public void loadRouteWaypointsFromData(java.util.List<BlockPos> positions,
+                                           java.util.List<Integer> waitSecs) {
+        patrolRouteRuntime.loadRouteWaypointsFromData(positions, waitSecs);
     }
 
-        public void loadRouteWaypointsFromData(java.util.List<BlockPos> positions,
-                                            java.util.List<Integer> waitSecs) {
-        WAYPOINTS.clear();
-        WAYPOINT_ITEMS.clear();
-        WAYPOINT_WAIT_SECONDS.clear();
+    boolean hasSentRetreatingMessage() {
+        return retreatingMessage;
+    }
 
-        if (positions == null || positions.isEmpty()) return;
-
-        for (int i = 0; i < positions.size(); i++) {
-            BlockPos clientPos = positions.get(i);
-            // Resolve the correct surface Y server-side so ship navigation gets
-            // the real terrain height, not the client-side fallback value.
-            BlockPos pos = resolveServerY(clientPos);
-            WAYPOINTS.push(pos);
-            WAYPOINT_ITEMS.push(getItemStackToRender(pos));
-            WAYPOINT_WAIT_SECONDS.add(waitSecs != null && i < waitSecs.size() ? waitSecs.get(i) : 0);
-        }
-
-        // Pick the nearest waypoint as start
-        int nearestIndex = 0;
-        double nearestDist = Double.MAX_VALUE;
-        for (int i = 0; i < WAYPOINTS.size(); i++) {
-            double d = this.distanceToSqr(WAYPOINTS.get(i).getX(), 0, WAYPOINTS.get(i).getZ());
-            if (d < nearestDist) { nearestDist = d; nearestIndex = i; }
-        }
-        this.setWaypointIndex(nearestIndex);
-        this.returning    = false;
-        this.waitingTime  = 0;
-        this.currentWaypoint = WAYPOINTS.get(nearestIndex);
+    void setRetreatingMessageSent(boolean retreatingMessage) {
+        this.retreatingMessage = retreatingMessage;
     }
 
     @Deprecated
@@ -837,9 +622,7 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
 
     @Override
     public boolean hurt(@NotNull DamageSource dmg, float amt) {
-        if (this.getMaxHealth() * 0.25 > this.getHealth() && state != State.RETREATING) {
-            this.state = State.RETREATING;
-        }
+        leaderCombatRuntime.triggerRetreatIfLowHealth();
         return super.hurt(dmg, amt);
     }
 
@@ -865,11 +648,6 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
         }
     }
 }
-
-
-
-
-
 
 
 

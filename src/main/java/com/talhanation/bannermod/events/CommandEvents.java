@@ -2,17 +2,13 @@ package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.client.military.ClientManager;
-import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.*;
 import com.talhanation.bannermod.inventory.military.CommandMenu;
 import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,7 +21,6 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -216,134 +211,34 @@ public class CommandEvents {
     }
 
     public static boolean handleRecruiting(Player player, RecruitsGroup group, AbstractRecruitEntity recruit, boolean message){
-        String name = recruit.getName().getString() + ": ";
-        int sollPrice = recruit.getCost();
-        Inventory playerInv = player.getInventory();
-        int playerEmeralds = 0;
-
-        String str = RecruitsServerConfig.RecruitCurrency.get();
-        Optional<Holder<Item>> holder = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(str));
-
-        ItemStack currencyItemStack = holder.map(itemHolder -> itemHolder.value().getDefaultInstance()).orElseGet(Items.EMERALD::getDefaultInstance);
-
-        Item currency = currencyItemStack.getItem();//
-
-        //checkPlayerMoney
-        for (int i = 0; i < playerInv.getContainerSize(); i++){
-            ItemStack itemStackInSlot = playerInv.getItem(i);
-            Item itemInSlot = itemStackInSlot.getItem();
-            if (itemInSlot.equals(currency)){
-                playerEmeralds = playerEmeralds + itemStackInSlot.getCount();
-            }
-        }
-
-        boolean playerCanPay = playerEmeralds >= sollPrice;
-
-        if (playerCanPay || player.isCreative()){
-            if(recruit.hire(player, group, message)) {
-                //give player tradeGood
-                //remove playerEmeralds ->add left
-                //
-                playerEmeralds = playerEmeralds - sollPrice;
-
-                //merchantEmeralds = merchantEmeralds + sollPrice;
-
-                //remove playerEmeralds
-                for (int i = 0; i < playerInv.getContainerSize(); i++) {
-                    ItemStack itemStackInSlot = playerInv.getItem(i);
-                    Item itemInSlot = itemStackInSlot.getItem();
-                    if (itemInSlot.equals(currency)) {
-                        playerInv.removeItemNoUpdate(i);
-                    }
-                }
-
-                //add leftEmeralds to playerInventory
-                ItemStack emeraldsLeft = currencyItemStack.copy();
-                emeraldsLeft.setCount(playerEmeralds);
-                playerInv.add(emeraldsLeft);
-
-
-                if(player.getTeam() != null){
-                    if(player.getCommandSenderWorld().isClientSide){
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddRecruitToTeam(player.getTeam().getName(), 1));
-                    }
-                    else {
-                        ServerPlayer serverPlayer = (ServerPlayer) player;
-                        FactionEvents.addNPCToData(serverPlayer.serverLevel(), player.getTeam().getName(), 1);
-                    }
-                }
-
-                return true;
-            }
-        }
-        else
-            player.sendSystemMessage(TEXT_HIRE_COSTS(name, sollPrice, currency));
-
-        return false;
+        return RecruitCommandActionService.handleRecruiting(player, group, recruit, message);
     }
 
     public static void onMountButton(UUID player_uuid, AbstractRecruitEntity recruit, UUID mount_uuid, UUID group) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            if(mount_uuid != null) recruit.shouldMount(true, mount_uuid);
-            else if(recruit.getMountUUID() != null) recruit.shouldMount(true, recruit.getMountUUID());
-            recruit.dismount = 0;
-        }
+        RecruitCommandActionService.onMountButton(player_uuid, recruit, mount_uuid, group);
     }
 
     public static void onDismountButton(UUID player_uuid, AbstractRecruitEntity recruit, UUID group) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            recruit.shouldMount(false, null);
-            if(recruit.isPassenger()){
-                recruit.stopRiding();
-                recruit.dismount = 180;
-            }
-        }
+        RecruitCommandActionService.onDismountButton(player_uuid, recruit, group);
     }
 
     public static void onProtectButton(UUID player_uuid, AbstractRecruitEntity recruit, UUID protect_uuid, UUID group) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            recruit.shouldProtect(true, protect_uuid);
-        }
+        RecruitCommandActionService.onProtectButton(player_uuid, recruit, protect_uuid, group);
     }
 
     public static void onClearTargetButton(UUID player_uuid, AbstractRecruitEntity recruit, UUID group) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            //BannerModMain.LOGGER.debug("event: clear");
-            recruit.setTarget(null);
-            recruit.setLastHurtByPlayer(null);
-            recruit.setLastHurtMob(null);
-            recruit.setLastHurtByMob(null);
-        }
+        RecruitCommandActionService.onClearTargetButton(player_uuid, recruit, group);
     }
 
     public static void onClearUpkeepButton(UUID player_uuid, AbstractRecruitEntity recruit, UUID group) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            //BannerModMain.LOGGER.debug("event: clear");
-            recruit.clearUpkeepEntity();
-            recruit.clearUpkeepPos();
-        }
+        RecruitCommandActionService.onClearUpkeepButton(player_uuid, recruit, group);
     }
     public static void onUpkeepCommand(UUID player_uuid, AbstractRecruitEntity recruit, UUID group, boolean isEntity, UUID entity_uuid, BlockPos blockPos) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            if (isEntity) {
-                //BannerModMain.LOGGER.debug("server: entity_uuid: " + entity_uuid);
-                recruit.setUpkeepUUID(Optional.of(entity_uuid));
-                recruit.clearUpkeepPos();
-            }
-            else {
-                recruit.setUpkeepPos(blockPos);
-                recruit.clearUpkeepEntity();
-            }
-            recruit.forcedUpkeep = true;
-            recruit.setUpkeepTimer(0);
-            onClearTargetButton(player_uuid, recruit, group);
-        }
+        RecruitCommandActionService.onUpkeepCommand(player_uuid, recruit, group, isEntity, entity_uuid, blockPos);
     }
 
     public static void onShieldsCommand(Player player, UUID player_uuid, AbstractRecruitEntity recruit, UUID group, boolean shields) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            recruit.setShouldBlock(shields);
-        }
+        RecruitCommandActionService.onShieldsCommand(player, player_uuid, recruit, group, shields);
     }
 
     public static void onShieldsCommand(ServerPlayer serverPlayer, UUID player_uuid, AbstractRecruitEntity recruit, UUID group, boolean shields) {
@@ -351,27 +246,10 @@ public class CommandEvents {
     }
 
     public static void onRangedFireCommand(ServerPlayer serverPlayer, UUID player_uuid, AbstractRecruitEntity recruit, UUID group, boolean should) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            recruit.setShouldRanged(should);
-
-            if(should){
-                if(recruit instanceof CrossBowmanEntity) recruit.switchMainHandItem(itemStack -> itemStack.getItem() instanceof CrossbowItem);
-                if(recruit instanceof BowmanEntity) recruit.switchMainHandItem(itemStack -> itemStack.getItem() instanceof BowItem);
-            }
-            else{
-                recruit.switchMainHandItem(itemStack -> itemStack.getItem() instanceof SwordItem);
-            }
-        }
+        RecruitCommandActionService.onRangedFireCommand(serverPlayer, player_uuid, recruit, group, should);
     }
 
     public static void onRestCommand(ServerPlayer serverPlayer, UUID player_uuid, AbstractRecruitEntity recruit, UUID group, boolean should) {
-        if (recruit.isEffectedByCommand(player_uuid, group)){
-            onClearTargetButton(player_uuid, recruit, group);
-            recruit.setShouldRest(should);
-        }
-    }
-
-    private static MutableComponent TEXT_HIRE_COSTS(String name, int sollPrice, Item item) {
-        return Component.translatable("chat.recruits.text.hire_costs", name, String.valueOf(sollPrice), item.getDescription().getString());
+        RecruitCommandActionService.onRestCommand(serverPlayer, player_uuid, recruit, group, should);
     }
 }

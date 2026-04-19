@@ -32,6 +32,7 @@ public class StorageArea extends AbstractWorkAreaEntity {
     public static final EntityDataAccessor<String> ROUTE_FILTER = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Integer> ROUTE_REQUESTED_COUNT = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<String> ROUTE_PRIORITY = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
+    public static final EntityDataAccessor<Boolean> PORT_ENTRYPOINT = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<String> ROUTE_BLOCKED_REASON = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> ROUTE_BLOCKED_MESSAGE = SynchedEntityData.defineId(StorageArea.class, EntityDataSerializers.STRING);
     public Map<BlockPos, Container> storageMap = new HashMap<>();
@@ -46,6 +47,7 @@ public class StorageArea extends AbstractWorkAreaEntity {
         this.entityData.define(ROUTE_FILTER, "");
         this.entityData.define(ROUTE_REQUESTED_COUNT, 16);
         this.entityData.define(ROUTE_PRIORITY, BannerModLogisticsPriority.NORMAL.name());
+        this.entityData.define(PORT_ENTRYPOINT, false);
         this.entityData.define(ROUTE_BLOCKED_REASON, "");
         this.entityData.define(ROUTE_BLOCKED_MESSAGE, "");
     }
@@ -58,6 +60,7 @@ public class StorageArea extends AbstractWorkAreaEntity {
         this.entityData.set(ROUTE_FILTER, tag.getString("LogisticsRouteFilter"));
         this.entityData.set(ROUTE_REQUESTED_COUNT, tag.contains("LogisticsRouteRequestedCount") ? Math.max(1, tag.getInt("LogisticsRouteRequestedCount")) : 16);
         this.entityData.set(ROUTE_PRIORITY, tag.contains("LogisticsRoutePriority") ? tag.getString("LogisticsRoutePriority") : BannerModLogisticsPriority.NORMAL.name());
+        this.entityData.set(PORT_ENTRYPOINT, tag.getBoolean("LogisticsPortEntrypoint"));
         this.entityData.set(ROUTE_BLOCKED_REASON, tag.getString("LogisticsRouteBlockedReason"));
         this.entityData.set(ROUTE_BLOCKED_MESSAGE, tag.getString("LogisticsRouteBlockedMessage"));
     }
@@ -70,6 +73,7 @@ public class StorageArea extends AbstractWorkAreaEntity {
         tag.putString("LogisticsRouteFilter", this.getRouteFilterText());
         tag.putInt("LogisticsRouteRequestedCount", this.getRouteRequestedCount());
         tag.putString("LogisticsRoutePriority", this.getRoutePriorityText());
+        tag.putBoolean("LogisticsPortEntrypoint", this.isPortEntrypoint());
         tag.putString("LogisticsRouteBlockedReason", this.getRouteBlockedReasonToken());
         tag.putString("LogisticsRouteBlockedMessage", this.getRouteBlockedMessage());
     }
@@ -139,6 +143,10 @@ public class StorageArea extends AbstractWorkAreaEntity {
         return this.entityData.get(ROUTE_PRIORITY);
     }
 
+    public boolean isPortEntrypoint() {
+        return this.entityData.get(PORT_ENTRYPOINT);
+    }
+
     public String getRouteBlockedReasonToken() {
         return this.entityData.get(ROUTE_BLOCKED_REASON);
     }
@@ -152,6 +160,10 @@ public class StorageArea extends AbstractWorkAreaEntity {
         this.entityData.set(ROUTE_FILTER, state.filterText());
         this.entityData.set(ROUTE_REQUESTED_COUNT, state.requestedCount());
         this.entityData.set(ROUTE_PRIORITY, state.priorityText());
+    }
+
+    public void setPortEntrypoint(boolean portEntrypoint) {
+        this.entityData.set(PORT_ENTRYPOINT, portEntrypoint);
     }
 
     public BannerModLogisticsAuthoringState getLogisticsRouteAuthoringState() {

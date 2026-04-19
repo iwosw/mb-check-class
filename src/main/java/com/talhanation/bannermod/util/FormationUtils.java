@@ -9,12 +9,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 
 public class FormationUtils {
     public static final double spacing = 1.75D;
@@ -41,9 +37,12 @@ public class FormationUtils {
     }
 
     public static void movementFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        float yaw = player.getYRot();
-        Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
-        lineFormation(forward, recruits, targetPos, 3, 2.0D * spacingMultiplier);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildMovementPositions(recruits, targetPos, player.getYRot(), spacingMultiplier),
+                null,
+                false
+        );
     }
 
     public static void lineUpFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos) {
@@ -51,34 +50,21 @@ public class FormationUtils {
     }
 
     public static void lineUpFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        float yaw = player.getYRot();
-        Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
-        int maxInRow = recruits.size() <= 20 ? recruits.size() : (recruits.size() + 1) / 2;
-        lineFormation(forward, recruits, targetPos, maxInRow, 1.75D * spacingMultiplier);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildLineUpPositions(recruits, targetPos, player.getYRot(), spacingMultiplier),
+                null,
+                false
+        );
     }
 
     public static void lineFormation(Vec3 forward, List<AbstractRecruitEntity> recruits, Vec3 targetPos, int maxInRow, double spacing) {
-        Vec3 left = new Vec3(-forward.z, forward.y, forward.x);
-        List<Vec3> possiblePositions = new ArrayList<>();
-
-        spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, spacing);
-
-        double rowDistance = spacing * 1.75;
-
-        for (int i = 0; i < recruits.size(); i++) {
-            int row = i / maxInRow;
-            int recruitsInCurrentRow = Math.min(maxInRow, recruits.size() - row * maxInRow);
-            int positionInRow = i % maxInRow;
-
-            double centerOffset = (recruitsInCurrentRow - 1) / 2.0;
-
-            Vec3 basePos = targetPos.add(forward.scale(-rowDistance * row));
-            Vec3 offset = left.scale((positionInRow - centerOffset) * spacing);
-
-            possiblePositions.add(basePos.add(offset));
-        }
-
-        FormationLayoutPlanner.assignAndApplySlots(recruits, possiblePositions, null, false);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildLinePositions(recruits, forward, targetPos, maxInRow, spacing),
+                null,
+                false
+        );
     }
 
     public static void squareFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos) {
@@ -86,32 +72,16 @@ public class FormationUtils {
     }
 
     public static void squareFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        float yaw = player.getYRot();
-        Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
-        squareFormation(forward, recruits, targetPos, 2.5 * spacingMultiplier);
+        squareFormation(FormationPatternBuilder.forwardFromYaw(player.getYRot()), recruits, targetPos, 2.5 * spacingMultiplier);
     }
 
     public static void squareFormation(Vec3 forward, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacing) {
-        Vec3 left = new Vec3(-forward.z, forward.y, forward.x);
-
-        spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, spacing);
-
-        int numRecruits = recruits.size();
-        int sideLength = (int) Math.ceil(Math.sqrt(numRecruits));
-
-        List<Vec3> possiblePositions = new ArrayList<>();
-
-        for (int i = 0; i < numRecruits; i++) {
-            int row = i / sideLength;
-            int col = i % sideLength;
-
-            Vec3 rowOffset = forward.scale(-row * spacing);
-            Vec3 colOffset = left.scale((col - sideLength / 2F) * spacing);
-
-            possiblePositions.add(targetPos.add(rowOffset).add(colOffset));
-        }
-
-        FormationLayoutPlanner.assignAndApplySlots(recruits, possiblePositions, null, false);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildSquarePositions(recruits, forward, targetPos, spacing),
+                null,
+                false
+        );
     }
 
 
@@ -121,32 +91,12 @@ public class FormationUtils {
     }
 
     public static void triangleFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        float yaw = player.getYRot();
-        Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
-        Vec3 left = new Vec3(-forward.z, forward.y, forward.x);
-
-        double spacing = 2.5 * spacingMultiplier;
-        int numRecruits = recruits.size();
-
-        spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, spacing);
-
-        double rowDistance = spacing * 1.5;
-
-        List<Vec3> possiblePositions = new ArrayList<>();
-
-        int index = 0;
-        int rowCount = 1;
-        while (index < numRecruits) {
-            for (int positionInRow = 0; positionInRow < rowCount && index < numRecruits; positionInRow++, index++) {
-                Vec3 basePos = targetPos.add(forward.scale(-rowDistance * (rowCount - 1)));
-                Vec3 offset = left.scale((positionInRow - (rowCount - 1) / 2F) * spacing);
-
-                possiblePositions.add(basePos.add(offset));
-            }
-            rowCount++;
-        }
-
-        FormationLayoutPlanner.assignAndApplySlots(recruits, possiblePositions, player.getYRot(), true);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildTrianglePositions(recruits, targetPos, player.getYRot(), spacingMultiplier),
+                player.getYRot(),
+                true
+        );
     }
 
     public static void hollowCircleFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos) {
@@ -154,25 +104,12 @@ public class FormationUtils {
     }
 
     public static void hollowCircleFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        double spacing = 2.5 * spacingMultiplier;
-        int numRecruits = recruits.size();
-
-        spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, spacing);
-
-        double radius = spacing * numRecruits / (2 * Math.PI); // Calculate radius based on the number of recruits
-        List<Vec3> possiblePositions = new ArrayList<>();
-
-        for (int i = 0; i < numRecruits; i++) {
-            double angle = (2 * Math.PI / numRecruits) * i; // Angle for each recruit
-
-            // Calculate position for each recruit in the circle
-            double x = targetPos.x + radius * Math.cos(angle);
-            double z = targetPos.z + radius * Math.sin(angle);
-
-            possiblePositions.add(new Vec3(x, targetPos.y, z));
-        }
-
-        FormationLayoutPlanner.assignAndApplySlots(recruits, possiblePositions, player.getYRot(), true);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildHollowCirclePositions(recruits, targetPos, spacingMultiplier),
+                player.getYRot(),
+                true
+        );
     }
 
     public static void circleFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos) {
@@ -180,47 +117,12 @@ public class FormationUtils {
     }
 
     public static void circleFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        double spacing = 2.5 * spacingMultiplier; // Abstand zwischen den Rekruten in jedem Ring
-        int numRecruits = recruits.size();
-
-        spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, spacing);
-
-        // Aufteilen der Rekruten auf drei Ringe
-        int innerRingCount = Math.min(5, numRecruits); // Innerer Ring hat max 5
-        int middleRingCount = Math.min(10, numRecruits - innerRingCount); // Mittlerer Ring hat max 10
-        int outerRingCount = numRecruits - innerRingCount - middleRingCount; // Äußerer Ring bekommt den Rest
-
-        double innerRadius = spacing * innerRingCount / (2 * Math.PI); // Radius des inneren Rings
-        double middleRadius = spacing * middleRingCount / (2 * Math.PI); // Radius des mittleren Rings
-        double outerRadius = spacing * outerRingCount / (2 * Math.PI); // Radius des äußeren Rings
-
-        List<Vec3> possiblePositions = new ArrayList<>();
-
-        // Positionen für den inneren Ring
-        for (int i = 0; i < innerRingCount; i++) {
-            double angle = (2 * Math.PI / innerRingCount) * i;
-            double x = targetPos.x + innerRadius * Math.cos(angle);
-            double z = targetPos.z + innerRadius * Math.sin(angle);
-            possiblePositions.add(new Vec3(x, targetPos.y, z));
-        }
-
-        // Positionen für den mittleren Ring
-        for (int i = 0; i < middleRingCount; i++) {
-            double angle = (2 * Math.PI / middleRingCount) * i;
-            double x = targetPos.x + middleRadius * Math.cos(angle);
-            double z = targetPos.z + middleRadius * Math.sin(angle);
-            possiblePositions.add(new Vec3(x, targetPos.y, z));
-        }
-
-        // Positionen für den äußeren Ring
-        for (int i = 0; i < outerRingCount; i++) {
-            double angle = (2 * Math.PI / outerRingCount) * i;
-            double x = targetPos.x + outerRadius * Math.cos(angle);
-            double z = targetPos.z + outerRadius * Math.sin(angle);
-            possiblePositions.add(new Vec3(x, targetPos.y, z));
-        }
-
-        FormationLayoutPlanner.assignAndApplySlots(recruits, possiblePositions, player.getYRot(), true);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildCirclePositions(recruits, targetPos, spacingMultiplier),
+                player.getYRot(),
+                true
+        );
     }
 
     public static void hollowSquareFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos) {
@@ -228,39 +130,12 @@ public class FormationUtils {
     }
 
     public static void hollowSquareFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        float yaw = player.getYRot();
-        Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
-        Vec3 left = new Vec3(-forward.z, forward.y, forward.x);
-
-        int recruitsPerSide = Math.max(2, recruits.size() / 4); // Ensure at least 2 recruits per side
-        double spacing = 2.5 * spacingMultiplier;
-
-        spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, spacing);
-
-        int totalRecruitsNeeded = recruitsPerSide * 4;
-        if (totalRecruitsNeeded > recruits.size()) {
-            recruitsPerSide = recruits.size() / 4;
-            totalRecruitsNeeded = recruitsPerSide * 4;
-        }
-
-        List<Vec3> possiblePositions = new ArrayList<>();
-
-        for (int row = 0; row < 2; row++) { // Two rows per side
-            double offset = (spacing * recruitsPerSide) / 2.0;
-            for (int i = 0; i < recruitsPerSide; i++) {
-                double positionOffset = i * spacing - offset;
-
-                possiblePositions.add(targetPos.add(forward.scale(-offset - row * spacing)).add(left.scale(positionOffset)));
-
-                possiblePositions.add(targetPos.add(forward.scale(offset + row * spacing)).add(left.scale(positionOffset)));
-
-                possiblePositions.add(targetPos.add(left.scale(-offset - row * spacing)).add(forward.scale(positionOffset)));
-
-                possiblePositions.add(targetPos.add(left.scale(offset + row * spacing)).add(forward.scale(positionOffset)));
-            }
-        }
-
-        FormationLayoutPlanner.assignAndApplySlots(recruits, possiblePositions, player.getYRot(), true);
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildHollowSquarePositions(recruits, targetPos, player.getYRot(), spacingMultiplier),
+                player.getYRot(),
+                true
+        );
     }
 
 
@@ -269,147 +144,12 @@ public class FormationUtils {
     }
 
     public static void vFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        float yaw = player.getYRot();
-        Vec3 forward = new Vec3(-Math.sin(Math.toRadians(yaw)), 0, Math.cos(Math.toRadians(yaw)));
-        Vec3 left = new Vec3(-forward.z, forward.y, forward.x);
-
-        double spacing = 2.5 * spacingMultiplier;
-        int recruitsPerWing = recruits.size() / 2;
-
-        spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, spacing);
-
-        List<Vec3> possiblePositions = new ArrayList<>();
-
-        for (int i = 0; i < recruitsPerWing; i++) {
-            double offset = i * spacing;
-
-
-            Vec3 rightWingPos = targetPos.add(forward.scale(offset)).add(left.scale(offset));
-            possiblePositions.add(rightWingPos);
-
-
-            Vec3 leftWingPos = targetPos.add(forward.scale(offset)).subtract(left.scale(offset));
-            possiblePositions.add(leftWingPos);
-        }
-
-
-        if (recruits.size() % 2 != 0) {
-            possiblePositions.add(targetPos);
-        }
-
-        FormationLayoutPlanner.applySequentialSlots(recruits, possiblePositions, player.getYRot(), true);
-    }
-
-    public record FormationFallbackSlot(int slotIndex, Vec3 position, boolean occupied) {
-    }
-
-    public record FormationFallbackDecision(int fromSlotIndex, int toSlotIndex) {
-    }
-
-    public static Optional<FormationFallbackDecision> chooseNearestFreeFormationSlot(
-            Vec3 recruitPosition,
-            int currentSlotIndex,
-            List<FormationFallbackSlot> slots
-    ) {
-        return slots.stream()
-                .filter(slot -> slot.slotIndex() != currentSlotIndex)
-                .filter(slot -> !slot.occupied())
-                .min(Comparator.comparingDouble(slot -> slot.position().distanceToSqr(recruitPosition)))
-                .map(slot -> new FormationFallbackDecision(currentSlotIndex, slot.slotIndex()));
-    }
-
-    public static boolean tryFallbackToNearestFreeSlot(AbstractRecruitEntity blockedRecruit) {
-        if (!blockedRecruit.isInFormation || blockedRecruit.getFollowState() != 3 || blockedRecruit.getHoldPos() == null || blockedRecruit.formationPos < 0) {
-            return false;
-        }
-
-        List<AbstractRecruitEntity> cohort = getFormationCohort(blockedRecruit);
-        if (cohort.size() < 2) {
-            return false;
-        }
-
-        List<FormationFallbackSlot> slots = new ArrayList<>();
-        for (AbstractRecruitEntity recruit : cohort) {
-            if (recruit.getHoldPos() == null || recruit.formationPos < 0) {
-                continue;
-            }
-            slots.add(new FormationFallbackSlot(
-                    recruit.formationPos,
-                    recruit.getHoldPos(),
-                    isFormationSlotOccupied(recruit.getHoldPos(), cohort, blockedRecruit)
-            ));
-        }
-
-        Optional<FormationFallbackDecision> decision = chooseNearestFreeFormationSlot(
-                blockedRecruit.position(),
-                blockedRecruit.formationPos,
-                slots
+        FormationLayoutPlanner.applySequentialSlots(
+                recruits,
+                FormationPatternBuilder.buildVPositions(recruits, targetPos, player.getYRot(), spacingMultiplier),
+                player.getYRot(),
+                true
         );
-        if (decision.isEmpty()) {
-            return false;
-        }
-
-        AbstractRecruitEntity targetOwner = findRecruitBySlot(cohort, decision.get().toSlotIndex());
-        if (targetOwner == null || targetOwner == blockedRecruit || targetOwner.getHoldPos() == null) {
-            return false;
-        }
-
-        Vec3 originalHoldPos = blockedRecruit.getHoldPos();
-        int originalSlot = blockedRecruit.formationPos;
-
-        blockedRecruit.setHoldPos(targetOwner.getHoldPos());
-        blockedRecruit.formationPos = targetOwner.formationPos;
-        blockedRecruit.setFollowState(3);
-        blockedRecruit.isInFormation = true;
-
-        targetOwner.setHoldPos(originalHoldPos);
-        targetOwner.formationPos = originalSlot;
-        targetOwner.setFollowState(3);
-        targetOwner.isInFormation = true;
-        return true;
-    }
-
-    private static List<AbstractRecruitEntity> getFormationCohort(AbstractRecruitEntity blockedRecruit) {
-        UUID ownerId = blockedRecruit.getOwnerUUID();
-        UUID groupId = blockedRecruit.getGroup();
-        return blockedRecruit.level().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                blockedRecruit.getBoundingBox().inflate(64.0D),
-                candidate -> candidate.isAlive()
-                        && !candidate.isRemoved()
-                        && candidate.isInFormation
-                        && candidate.getHoldPos() != null
-                        && Objects.equals(candidate.getOwnerUUID(), ownerId)
-                        && sameFormationGroup(groupId, candidate.getGroup())
-        );
-    }
-
-    private static boolean sameFormationGroup(UUID groupId, UUID candidateGroupId) {
-        if (groupId == null && candidateGroupId == null) {
-            return true;
-        }
-        return Objects.equals(groupId, candidateGroupId);
-    }
-
-    private static boolean isFormationSlotOccupied(Vec3 slotPos, List<AbstractRecruitEntity> cohort, AbstractRecruitEntity blockedRecruit) {
-        for (AbstractRecruitEntity recruit : cohort) {
-            if (recruit == blockedRecruit) {
-                continue;
-            }
-            if (recruit.distanceToSqr(slotPos) <= 0.75D) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static AbstractRecruitEntity findRecruitBySlot(List<AbstractRecruitEntity> cohort, int slotIndex) {
-        for (AbstractRecruitEntity recruit : cohort) {
-            if (recruit.formationPos == slotIndex) {
-                return recruit;
-            }
-        }
-        return null;
     }
 
     public static Vec3 getCenterOfPositions(List<LivingEntity> recruits, ServerLevel level) {

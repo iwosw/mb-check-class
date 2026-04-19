@@ -1,33 +1,23 @@
 package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 
-import com.talhanation.bannermod.governance.BannerModGovernorService;
-import com.talhanation.bannermod.governance.BannerModGovernorManager;
-import com.talhanation.bannermod.governance.BannerModGovernorAuthority;
 import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
-import com.talhanation.bannermod.governance.BannerModGovernorRecommendation;
-import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
-import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.util.DelayedExecutor;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.ICompanion;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
-import com.talhanation.bannermod.ai.military.horse.HorseRiddenByRecruitGoal;
 import com.talhanation.bannermod.registry.military.ModEntityTypes;
 import com.talhanation.bannermod.inventory.military.PromoteContainer;
-import com.talhanation.bannermod.inventory.military.GovernorContainer;
-import com.talhanation.bannermod.network.messages.military.MessageOpenGovernorScreen;
 import com.talhanation.bannermod.network.messages.military.MessageOpenPromoteScreen;
-import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateGovernorScreen;
 import com.talhanation.bannermod.persistence.military.*;
 import com.talhanation.bannermod.events.RecruitEvent;
 import com.talhanation.bannermod.events.runtime.RecruitCombatRuntime;
+import com.talhanation.bannermod.events.runtime.RecruitWorldLifecycleService;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,8 +26,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.monster.AbstractIllager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -62,7 +50,6 @@ import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
@@ -95,27 +82,7 @@ public class RecruitEvents {
         if (promoteEvent.isCanceled()) return;
 
         if (profession == 6) {
-            if (recruit.getXpLevel() < 7 || recruit.getOwnerUUID() == null) {
-                player.sendSystemMessage(Component.literal("Governor designation denied: recruit is not eligible"));
-                return;
-            }
-            if (name != null && !name.isBlank()) {
-                recruit.setCustomName(Component.literal(name));
-            }
-
-            RecruitsClaim claim = ClaimEvents.recruitsClaimManager == null
-                    ? null
-                    : ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(recruit.blockPosition()));
-            BannerModGovernorService service = new BannerModGovernorService(
-                    BannerModGovernorManager.get(serverLevel)
-            );
-            BannerModGovernorService.OperationResult result = service.assignGovernor(claim, player, recruit);
-            if (result.allowed()) {
-                player.sendSystemMessage(Component.literal(recruit.getName().getString() + " designated as governor"));
-                openGovernorScreen(player, recruit);
-            } else {
-                player.sendSystemMessage(Component.literal("Governor designation denied: " + result.governorDecision().name().toLowerCase()));
-            }
+            RecruitGovernorWorkflow.tryPromoteRecruit(recruit, name, player);
             return;
         }
 
@@ -156,110 +123,27 @@ public class RecruitEvents {
     }
 
     public static void openGovernorScreen(Player player, AbstractRecruitEntity recruit) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            NetworkHooks.openScreen(serverPlayer, new MenuProvider() {
-                @Override
-                public @NotNull Component getDisplayName() {
-                    return Component.literal("Governor");
-                }
-
-                @Override
-                public AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
-                    return new GovernorContainer(i, playerEntity, recruit);
-                }
-            }, packetBuffer -> packetBuffer.writeUUID(recruit.getUUID()));
-            syncGovernorScreen(serverPlayer, recruit);
-        } else {
-            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenGovernorScreen(recruit.getUUID(), true));
-        }
+        RecruitGovernorWorkflow.openGovernorScreen(player, recruit);
     }
 
     public static void syncGovernorScreen(ServerPlayer player, AbstractRecruitEntity recruit) {
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager == null
-                ? null
-                : ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(recruit.blockPosition()));
-        BannerModGovernorService service = new BannerModGovernorService(BannerModGovernorManager.get((ServerLevel) recruit.getCommandSenderWorld()));
-        BannerModSettlementBinding.Binding binding = claim == null
-                ? BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, recruit.blockPosition(), recruit.getTeam() == null ? null : recruit.getTeam().getName())
-                : BannerModSettlementBinding.resolveSettlementStatus(claim, claim.getCenter() == null ? new ChunkPos(recruit.blockPosition()) : claim.getCenter(), claim.getOwnerFactionStringID());
-        var snapshot = claim == null
-                ? null
-                : service.getOrCreateGovernorSnapshot(claim);
-
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateGovernorScreen(
-                recruit.getUUID(),
-                binding.status().name().toLowerCase(),
-                snapshot == null ? 0 : snapshot.citizenCount(),
-                snapshot == null ? 0 : snapshot.taxesDue(),
-                snapshot == null ? 0 : snapshot.taxesCollected(),
-                snapshot == null ? 0L : snapshot.lastHeartbeatTick(),
-                recommendationLabel(snapshot, true),
-                recommendationLabel(snapshot, false),
-                snapshot == null ? BannerModGovernorPolicy.DEFAULT_VALUE : snapshot.garrisonPriority(),
-                snapshot == null ? BannerModGovernorPolicy.DEFAULT_VALUE : snapshot.fortificationPriority(),
-                snapshot == null ? BannerModGovernorPolicy.DEFAULT_VALUE : snapshot.taxPressure(),
-                snapshot == null ? List.of() : snapshot.incidentTokens(),
-                snapshot == null ? List.of() : snapshot.recommendationTokens()
-        ));
+        RecruitGovernorWorkflow.syncGovernorScreen(player, recruit);
     }
 
     public static void updateGovernorPolicy(ServerPlayer player, AbstractRecruitEntity recruit, BannerModGovernorPolicy policy, int value) {
-        if (!(recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel)) {
-            return;
-        }
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager == null
-                ? null
-                : ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(recruit.blockPosition()));
-        BannerModGovernorService service = new BannerModGovernorService(BannerModGovernorManager.get(serverLevel));
-        BannerModGovernorService.OperationResult result = service.updatePolicy(claim, BannerModGovernorAuthority.actor(player), policy, value);
-        if (!result.allowed()) {
-            player.sendSystemMessage(Component.literal("Governor policy update denied: " + result.governorDecision().name().toLowerCase()));
-            return;
-        }
-        syncGovernorScreen(player, recruit);
-    }
-
-    private static String recommendationLabel(BannerModGovernorSnapshot snapshot, boolean garrison) {
-        if (snapshot == null) {
-            return BannerModGovernorRecommendation.HOLD_COURSE.token();
-        }
-        for (String token : snapshot.recommendationTokens()) {
-            if (garrison && BannerModGovernorRecommendation.INCREASE_GARRISON.token().equals(token)) {
-                return token;
-            }
-            if (!garrison && BannerModGovernorRecommendation.STRENGTHEN_FORTIFICATIONS.token().equals(token)) {
-                return token;
-            }
-        }
-        return BannerModGovernorRecommendation.HOLD_COURSE.token();
+        RecruitGovernorWorkflow.updateGovernorPolicy(player, recruit, policy, value);
     }
 
     public static void handleGroupBackwardCompatibility(AbstractRecruitEntity recruit, int oldGroupNumber) {
-        if(recruit.getCommandSenderWorld().isClientSide()) return;
-        if(recruit.getOwner() != null){
-            ServerPlayer serverPlayer = (ServerPlayer) recruit.getOwner();
-            String name = "Group " + oldGroupNumber;
-            RecruitsGroup group = recruitsGroupsManager.getPlayersGroupByName(serverPlayer, name);
-            if(group == null){
-                group = new RecruitsGroup(name, serverPlayer, 0);
-            }
-            recruit.setGroupUUID(group.getUUID());
-            group.addMember(recruit.getUUID());
-            recruitsGroupsManager.addOrUpdateGroup(server.overworld(), serverPlayer, group);
-
-            recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
-        }
+        RecruitWorldLifecycleService.handleLegacyGroup(recruit, oldGroupNumber, server, recruitsGroupsManager);
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         server = event.getServer();
-
-        recruitsPlayerUnitManager = new RecruitsPlayerUnitManager();
-        recruitsPlayerUnitManager.load(server.overworld());
-
-        recruitsGroupsManager = new RecruitsGroupsManager();
-        recruitsGroupsManager.load(server.overworld());
+        RecruitWorldLifecycleService.RecruitManagers managers = RecruitWorldLifecycleService.initializeManagers(server);
+        recruitsPlayerUnitManager = managers.playerUnitManager();
+        recruitsGroupsManager = managers.groupsManager();
     }
 
     @SubscribeEvent
@@ -275,9 +159,7 @@ public class RecruitEvents {
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
-        recruitsPlayerUnitManager.save(server.overworld());
-
-        recruitsGroupsManager.save(server.overworld());
+        RecruitWorldLifecycleService.saveManagers(server, recruitsPlayerUnitManager, recruitsGroupsManager);
 
         // Fix: Async-Executor sauber herunterfahren damit der Server nicht hängt
         com.talhanation.bannermod.ai.pathfinding.AsyncPathProcessor.shutdown();
@@ -285,8 +167,7 @@ public class RecruitEvents {
 
     @SubscribeEvent
     public void onWorldSave(LevelEvent.Save event){
-        recruitsPlayerUnitManager.save(server.overworld());
-        recruitsGroupsManager.save(server.overworld());
+        RecruitWorldLifecycleService.saveManagers(server, recruitsPlayerUnitManager, recruitsGroupsManager);
     }
 
     @SubscribeEvent
@@ -295,66 +176,23 @@ public class RecruitEvents {
 
         if(event.getEntity() instanceof Player player){
             if (player instanceof ServerPlayer serverPlayer) {
-                recruitsPlayerUnitManager.broadCastUnitInfoToPlayer(serverPlayer);
-                recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
+                RecruitWorldLifecycleService.syncPlayerJoin(serverPlayer, recruitsPlayerUnitManager, recruitsGroupsManager);
             }
         }
     }
 
     @SubscribeEvent
     public void onTeleportEvent(EntityTeleportEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player && !(event instanceof EntityTeleportEvent.EnderPearl) && !(event instanceof EntityTeleportEvent.ChorusFruit) && !(event instanceof EntityTeleportEvent.EnderEntity)) {
-            double targetX = event.getTargetX();
-            double targetY = event.getTargetY();
-            double targetZ = event.getTargetZ();
-            UUID player_uuid = player.getUUID();
-
-            List<AbstractRecruitEntity> recruits = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox()
-                            .inflate(64, 32, 64),
-                    recruit -> recruit.isAlive() && recruit.getFollowState() == 1 && recruit.getOwnerUUID().equals(player_uuid)
-            );
-
-            recruits.forEach(recruit -> recruit.teleportTo(targetX, targetY, targetZ));
-        }
+        RecruitWorldLifecycleService.teleportFollowingRecruits(event);
     }
 
     @SubscribeEvent
     public void onServerTick(TickEvent.LevelTickEvent event) {
-        if (!event.level.isClientSide && event.level instanceof ServerLevel serverWorld) {
-            if (RecruitsServerConfig.ShouldRecruitPatrolsSpawn.get()) {
-                RECRUIT_PATROL.computeIfAbsent(serverWorld,
-                        serverLevel -> new RecruitsPatrolSpawn(serverWorld));
-                RecruitsPatrolSpawn spawner = RECRUIT_PATROL.get(serverWorld);
-                spawner.tick();
-            }
-
-            if (RecruitsServerConfig.ShouldPillagerPatrolsSpawn.get()) {
-                PILLAGER_PATROL.computeIfAbsent(serverWorld,
-                        serverLevel -> new PillagerPatrolSpawn(serverWorld));
-                PillagerPatrolSpawn pillagerSpawner = PILLAGER_PATROL.get(serverWorld);
-                pillagerSpawner.tick();
-            }
-
-            // Treaty expiry check (every 20 ticks = 1 second)
-            if (serverWorld.getGameTime() % 20 == 0 && FactionEvents.recruitsTreatyManager != null) {
-                FactionEvents.recruitsTreatyManager.tick(serverWorld);
-            }
-        }
+        RecruitWorldLifecycleService.tickLevel(event, RECRUIT_PATROL, PILLAGER_PATROL);
     }
 
     public static void serverSideRecruitGroup(ServerLevel level){
-        List<AbstractRecruitEntity> recruitList = new ArrayList<>();
-        for(Entity entity : level.getEntities().getAll()){
-            if(entity instanceof AbstractRecruitEntity recruit)
-                recruitList.add(recruit);
-        }
-        for(AbstractRecruitEntity recruit : recruitList){
-            recruit.needsGroupUpdate = true;
-        }
-
-        recruitsGroupsManager.save(level);
+        RecruitWorldLifecycleService.markRecruitsForGroupRefresh(level, recruitsGroupsManager);
     }
 
     private static final Set<Projectile> canceledProjectiles = new HashSet<>();
@@ -416,11 +254,7 @@ public class RecruitEvents {
 
     @SubscribeEvent
     public void onHorseJoinWorld(EntityJoinLevelEvent event) {
-        Entity entity = event.getEntity();
-
-        if (entity instanceof AbstractHorse horse) {
-            horse.goalSelector.addGoal(0, new HorseRiddenByRecruitGoal(horse));
-        }
+        RecruitWorldLifecycleService.ensureHorseGoal(event.getEntity());
     }
 
     public static boolean canAttack(LivingEntity attacker, LivingEntity target) {

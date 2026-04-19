@@ -32,11 +32,32 @@ public class MessageFollowGui implements Message<MessageFollowGui> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
+        List<AbstractRecruitEntity> nearby = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
                 AbstractRecruitEntity.class,
                 serverPlayer.getBoundingBox().inflate(16.0D),
-                (recruit) -> recruit.getUUID().equals(this.uuid)
-        ).forEach((recruit) -> CommandEvents.onMovementCommandGUI(recruit, state));
+                recruit -> recruit.getUUID().equals(this.uuid)
+        );
+
+        CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
+                serverPlayer.getUUID(),
+                this.uuid,
+                nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
+                        recruit.getUUID(),
+                        recruit.getOwnerUUID(),
+                        recruit.getGroup(),
+                        recruit.getTeam() == null ? null : recruit.getTeam().getName(),
+                        recruit.isOwned(),
+                        recruit.isAlive(),
+                        recruit.getListen(),
+                        recruit.distanceToSqr(serverPlayer)
+                )).toList()
+        );
+
+        if (!selection.isSuccess()) {
+            return;
+        }
+
+        nearby.forEach(recruit -> CommandEvents.onMovementCommandGUI(recruit, state));
     }
 
     public MessageFollowGui fromBytes(FriendlyByteBuf buf) {

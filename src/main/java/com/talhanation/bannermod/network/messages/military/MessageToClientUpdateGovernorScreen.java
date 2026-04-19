@@ -22,6 +22,9 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
     private int garrisonPriority;
     private int fortificationPriority;
     private int taxPressure;
+    private int treasuryBalance;
+    private int lastTreasuryNet;
+    private int projectedTreasuryBalance;
     private List<String> incidents;
     private List<String> recommendations;
 
@@ -37,10 +40,13 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
                                                 String garrisonRecommendation,
                                                 String fortificationRecommendation,
                                                 int garrisonPriority,
-                                                int fortificationPriority,
-                                                int taxPressure,
-                                                List<String> incidents,
-                                                List<String> recommendations) {
+                                                 int fortificationPriority,
+                                                 int taxPressure,
+                                                 int treasuryBalance,
+                                                 int lastTreasuryNet,
+                                                 int projectedTreasuryBalance,
+                                                 List<String> incidents,
+                                                 List<String> recommendations) {
         this.recruit = recruit;
         this.settlementStatus = settlementStatus;
         this.citizenCount = citizenCount;
@@ -52,6 +58,9 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
         this.garrisonPriority = garrisonPriority;
         this.fortificationPriority = fortificationPriority;
         this.taxPressure = taxPressure;
+        this.treasuryBalance = treasuryBalance;
+        this.lastTreasuryNet = lastTreasuryNet;
+        this.projectedTreasuryBalance = projectedTreasuryBalance;
         this.incidents = incidents;
         this.recommendations = recommendations;
     }
@@ -65,6 +74,7 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
     public void executeClientSide(NetworkEvent.Context context) {
         GovernorScreen.applyUpdate(recruit, settlementStatus, citizenCount, taxesDue, taxesCollected, lastHeartbeatTick,
                 garrisonRecommendation, fortificationRecommendation, garrisonPriority, fortificationPriority, taxPressure,
+                treasuryBalance, lastTreasuryNet, projectedTreasuryBalance,
                 incidents, recommendations);
     }
 
@@ -81,6 +91,9 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
         this.garrisonPriority = buf.readInt();
         this.fortificationPriority = buf.readInt();
         this.taxPressure = buf.readInt();
+        this.treasuryBalance = buf.readInt();
+        this.lastTreasuryNet = buf.readInt();
+        this.projectedTreasuryBalance = buf.readInt();
         this.incidents = new ArrayList<>(buf.readList(FriendlyByteBuf::readUtf));
         this.recommendations = new ArrayList<>(buf.readList(FriendlyByteBuf::readUtf));
         return this;
@@ -99,6 +112,9 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
         buf.writeInt(this.garrisonPriority);
         buf.writeInt(this.fortificationPriority);
         buf.writeInt(this.taxPressure);
+        buf.writeInt(this.treasuryBalance);
+        buf.writeInt(this.lastTreasuryNet);
+        buf.writeInt(this.projectedTreasuryBalance);
         buf.writeCollection(this.incidents, FriendlyByteBuf::writeUtf);
         buf.writeCollection(this.recommendations, FriendlyByteBuf::writeUtf);
     }

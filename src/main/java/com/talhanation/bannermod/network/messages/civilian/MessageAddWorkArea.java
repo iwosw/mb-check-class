@@ -9,6 +9,7 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.api.distmarker.Dist;
@@ -62,6 +63,9 @@ public class MessageAddWorkArea implements Message<MessageAddWorkArea> {
         }
 
         player.level().addFreshEntity(workArea);
+        if (player.level() instanceof ServerLevel serverLevel) {
+            WorkAreaMessageSupport.refreshSettlementSnapshot(serverLevel, workArea.blockPosition());
+        }
     }
 
     private AbstractWorkAreaEntity createWorkArea(ServerPlayer player) {

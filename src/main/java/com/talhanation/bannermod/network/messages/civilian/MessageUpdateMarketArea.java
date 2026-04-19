@@ -3,6 +3,7 @@ package com.talhanation.bannermod.network.messages.civilian;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -38,6 +39,9 @@ public class MessageUpdateMarketArea implements Message<MessageUpdateMarketArea>
 
         market.setOpen(isOpen);
         market.setMarketName(marketName);
+        if (player.level() instanceof ServerLevel serverLevel) {
+            WorkAreaMessageSupport.refreshSettlementSnapshot(serverLevel, market.blockPosition());
+        }
     }
 
     @Override

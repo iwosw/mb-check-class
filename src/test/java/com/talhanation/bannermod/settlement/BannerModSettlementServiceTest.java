@@ -1,0 +1,422 @@
+package com.talhanation.bannermod.settlement;
+
+import net.minecraft.core.BlockPos;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class BannerModSettlementServiceTest {
+
+    @Test
+    void appliesResidentAssignmentSemanticsAndRollsAssignedWorkersIntoBuildings() {
+        UUID localBuildingUuid = UUID.randomUUID();
+        UUID assignedWorkerUuid = UUID.randomUUID();
+
+        List<BannerModSettlementResidentRecord> residents = BannerModSettlementService.applyResidentAssignmentSemantics(
+                List.of(
+                        new BannerModSettlementResidentRecord(assignedWorkerUuid, BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.FLOATING_LABOR, BannerModSettlementResidentServiceContract.notServiceActor(), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", localBuildingUuid, BannerModSettlementResidentAssignmentState.UNASSIGNED),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE, BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX, BannerModSettlementResidentRuntimeRoleSeed.FLOATING_LABOR, BannerModSettlementResidentServiceContract.notServiceActor(), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", null, BannerModSettlementResidentAssignmentState.UNASSIGNED),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.FLOATING_LABOR, BannerModSettlementResidentServiceContract.notServiceActor(), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", UUID.randomUUID(), BannerModSettlementResidentAssignmentState.UNASSIGNED),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.VILLAGER, BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE, BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX, BannerModSettlementResidentRuntimeRoleSeed.VILLAGE_LIFE, BannerModSettlementResidentServiceContract.notServiceActor(), BannerModSettlementResidentMode.SETTLEMENT_RESIDENT, null, "blueguild", null, BannerModSettlementResidentAssignmentState.NOT_APPLICABLE)
+                ),
+                Set.of(localBuildingUuid)
+        );
+
+        residents = BannerModSettlementService.applyResidentServiceContracts(
+                residents,
+                List.of(new BannerModSettlementBuildingRecord(localBuildingUuid, "bannermod:crop_area", new BlockPos(12, 64, 12), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of()))
+        );
+        residents = BannerModSettlementService.applyResidentJobDefinitions(
+                residents,
+                List.of(new BannerModSettlementBuildingRecord(localBuildingUuid, "bannermod:crop_area", new BlockPos(12, 64, 12), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of()))
+        );
+        residents = BannerModSettlementService.applyResidentJobTargetSelectionSeeds(
+                residents,
+                BannerModSettlementMarketState.empty()
+        );
+
+        List<BannerModSettlementBuildingRecord> buildings = BannerModSettlementService.applyAssignedResidents(
+                List.of(new BannerModSettlementBuildingRecord(localBuildingUuid, "bannermod:crop_area", new BlockPos(12, 64, 12), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of())),
+                residents
+        );
+
+        assertEquals(BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, residents.get(0).assignmentState());
+        assertEquals(BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, residents.get(0).scheduleWindowSeed());
+        assertEquals(BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, residents.get(0).runtimeRoleSeed());
+        assertEquals("projected_local_labor", residents.get(0).roleProfile().profileId());
+        assertEquals("labor", residents.get(0).roleProfile().goalDomainId());
+        assertEquals(BannerModSettlementResidentSchedulePolicySeed.LOCAL_LABOR_DAY, residents.get(0).schedulePolicy().policySeed());
+        assertEquals(BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, residents.get(0).schedulePolicy().scheduleWindowSeed());
+        assertEquals(BannerModSettlementServiceActorState.LOCAL_BUILDING_SERVICE, residents.get(0).serviceContract().actorState());
+        assertEquals(localBuildingUuid, residents.get(0).serviceContract().serviceBuildingUuid());
+        assertEquals("bannermod:crop_area", residents.get(0).serviceContract().serviceBuildingTypeId());
+        assertEquals(BannerModSettlementJobHandlerSeed.LOCAL_BUILDING_LABOR, residents.get(0).jobDefinition().handlerSeed());
+        assertEquals(BannerModSettlementBuildingCategory.FOOD, residents.get(0).jobDefinition().targetBuildingCategory());
+        assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, residents.get(0).jobDefinition().targetBuildingProfileSeed());
+        assertEquals(BannerModSettlementJobTargetSelectionMode.SERVICE_BUILDING, residents.get(0).jobTargetSelectionSeed().selectionMode());
+        assertEquals(BannerModSettlementResidentAssignmentState.UNASSIGNED, residents.get(1).assignmentState());
+        assertEquals(BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX, residents.get(1).scheduleWindowSeed());
+        assertEquals(BannerModSettlementResidentRuntimeRoleSeed.FLOATING_LABOR, residents.get(1).runtimeRoleSeed());
+        assertEquals("projected_floating_labor", residents.get(1).roleProfile().profileId());
+        assertEquals(BannerModSettlementResidentSchedulePolicySeed.FLOATING_LABOR_FLEX, residents.get(1).schedulePolicy().policySeed());
+        assertEquals(BannerModSettlementServiceActorState.FLOATING_SERVICE, residents.get(1).serviceContract().actorState());
+        assertEquals(BannerModSettlementJobHandlerSeed.FLOATING_LABOR_POOL, residents.get(1).jobDefinition().handlerSeed());
+        assertEquals(BannerModSettlementJobTargetSelectionMode.FLOATING_LABOR_POOL, residents.get(1).jobTargetSelectionSeed().selectionMode());
+        assertEquals(BannerModSettlementResidentAssignmentState.ASSIGNED_MISSING_BUILDING, residents.get(2).assignmentState());
+        assertEquals(BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, residents.get(2).scheduleWindowSeed());
+        assertEquals(BannerModSettlementResidentRuntimeRoleSeed.ORPHANED_LABOR_ASSIGNMENT, residents.get(2).runtimeRoleSeed());
+        assertEquals("orphaned_labor_assignment", residents.get(2).roleProfile().profileId());
+        assertEquals(BannerModSettlementResidentSchedulePolicySeed.ORPHANED_LABOR_DAY, residents.get(2).schedulePolicy().policySeed());
+        assertEquals(BannerModSettlementServiceActorState.ORPHANED_SERVICE, residents.get(2).serviceContract().actorState());
+        assertEquals(BannerModSettlementJobHandlerSeed.ORPHANED_LABOR_RECOVERY, residents.get(2).jobDefinition().handlerSeed());
+        assertEquals(residents.get(2).boundWorkAreaUuid(), residents.get(2).jobDefinition().targetBuildingUuid());
+        assertEquals(BannerModSettlementJobTargetSelectionMode.ORPHANED_SERVICE_BUILDING, residents.get(2).jobTargetSelectionSeed().selectionMode());
+        assertEquals(BannerModSettlementResidentAssignmentState.NOT_APPLICABLE, residents.get(3).assignmentState());
+        assertEquals(BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX, residents.get(3).scheduleWindowSeed());
+        assertEquals(BannerModSettlementResidentRuntimeRoleSeed.VILLAGE_LIFE, residents.get(3).runtimeRoleSeed());
+        assertEquals("village_life", residents.get(3).roleProfile().profileId());
+        assertEquals(BannerModSettlementResidentSchedulePolicySeed.VILLAGE_LIFE_FLEX, residents.get(3).schedulePolicy().policySeed());
+        assertEquals(BannerModSettlementServiceActorState.NOT_SERVICE_ACTOR, residents.get(3).serviceContract().actorState());
+        assertEquals(BannerModSettlementJobHandlerSeed.VILLAGE_LIFE, residents.get(3).jobDefinition().handlerSeed());
+        assertEquals(BannerModSettlementJobTargetSelectionMode.NONE, residents.get(3).jobTargetSelectionSeed().selectionMode());
+        assertEquals(1, buildings.get(0).assignedWorkerCount());
+        assertEquals(List.of(assignedWorkerUuid), buildings.get(0).assignedResidentUuids());
+        assertEquals(BannerModSettlementBuildingCategory.FOOD, buildings.get(0).buildingCategory());
+        assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, buildings.get(0).buildingProfileSeed());
+    }
+
+    @Test
+    void summarizesAuthoredStockpileSeedsFromBuildingRecords() {
+        BannerModSettlementStockpileSummary summary = BannerModSettlementService.summarizeStockpiles(List.of(
+                new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:storage_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), true, 2, 54, true, false, List.of("farmers", "merchants")),
+                new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:storage_area", new BlockPos(10, 64, 10), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), true, 1, 27, false, true, List.of("farmers")),
+                new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:crop_area", new BlockPos(20, 64, 20), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 99, 99, true, true, List.of("ignored"))
+        ));
+
+        assertEquals(2, summary.storageBuildingCount());
+        assertEquals(3, summary.containerCount());
+        assertEquals(81, summary.slotCapacity());
+        assertEquals(1, summary.routedStorageCount());
+        assertEquals(1, summary.portEntrypointCount());
+        assertEquals(List.of("farmers", "merchants"), summary.authoredStorageTypeIds());
+    }
+
+    @Test
+    void summarizesMarketStateIntoAggregateSeed() {
+        List<BannerModSettlementMarketRecord> markets = List.of(
+                new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9),
+                new BannerModSettlementMarketRecord(UUID.randomUUID(), "East Gate", false, 18, 4)
+        );
+
+        BannerModSettlementMarketState marketState = BannerModSettlementService.summarizeMarketState(markets);
+
+        assertEquals(2, marketState.marketCount());
+        assertEquals(1, marketState.openMarketCount());
+        assertEquals(45, marketState.totalStorageSlots());
+        assertEquals(13, marketState.freeStorageSlots());
+        assertEquals(0, marketState.sellerDispatchCount());
+        assertEquals(0, marketState.readySellerDispatchCount());
+        assertEquals(markets, marketState.markets());
+        assertEquals(List.of(), marketState.sellerDispatches());
+    }
+
+    @Test
+    void scheduleWindowSeedDefaultsFromScheduleAndRuntimeRole() {
+        assertEquals(
+                BannerModSettlementResidentScheduleWindowSeed.CIVIC_DAY,
+                BannerModSettlementResidentScheduleWindowSeed.defaultFor(
+                        BannerModSettlementResidentScheduleSeed.GOVERNING,
+                        BannerModSettlementResidentRuntimeRoleSeed.GOVERNANCE
+                )
+        );
+        assertEquals(
+                BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY,
+                BannerModSettlementResidentScheduleWindowSeed.defaultFor(
+                        BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK,
+                        BannerModSettlementResidentRuntimeRoleSeed.ORPHANED_LABOR_ASSIGNMENT
+                )
+        );
+        assertEquals(
+                BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX,
+                BannerModSettlementResidentScheduleWindowSeed.defaultFor(
+                        BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE,
+                        BannerModSettlementResidentRuntimeRoleSeed.VILLAGE_LIFE
+                )
+        );
+    }
+
+    @Test
+    void schedulePolicyDefaultsFromResidentSeeds() {
+        BannerModSettlementResidentRoleProfile floatingProfile = BannerModSettlementResidentRoleProfile.defaultFor(
+                BannerModSettlementResidentRole.CONTROLLED_WORKER,
+                BannerModSettlementResidentRuntimeRoleSeed.FLOATING_LABOR,
+                BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER,
+                BannerModSettlementResidentAssignmentState.UNASSIGNED
+        );
+
+        assertEquals(
+                BannerModSettlementResidentSchedulePolicySeed.GOVERNANCE_CIVIC,
+                BannerModSettlementResidentSchedulePolicy.defaultFor(
+                        BannerModSettlementResidentScheduleSeed.GOVERNING,
+                        BannerModSettlementResidentScheduleWindowSeed.CIVIC_DAY,
+                        BannerModSettlementResidentRuntimeRoleSeed.GOVERNANCE,
+                        BannerModSettlementResidentRoleProfile.defaultFor(
+                                BannerModSettlementResidentRole.GOVERNOR_RECRUIT,
+                                BannerModSettlementResidentRuntimeRoleSeed.GOVERNANCE,
+                                BannerModSettlementResidentMode.SETTLEMENT_RESIDENT,
+                                BannerModSettlementResidentAssignmentState.NOT_APPLICABLE
+                        )
+                ).policySeed()
+        );
+        assertEquals(
+                BannerModSettlementResidentSchedulePolicySeed.FLOATING_LABOR_FLEX,
+                BannerModSettlementResidentSchedulePolicy.defaultFor(
+                        BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE,
+                        BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX,
+                        BannerModSettlementResidentRuntimeRoleSeed.FLOATING_LABOR,
+                        floatingProfile
+                ).policySeed()
+        );
+        assertEquals(
+                BannerModSettlementResidentSchedulePolicySeed.ORPHANED_LABOR_DAY,
+                BannerModSettlementResidentSchedulePolicy.defaultFor(
+                        BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK,
+                        BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY,
+                        BannerModSettlementResidentRuntimeRoleSeed.ORPHANED_LABOR_ASSIGNMENT,
+                        BannerModSettlementResidentRoleProfile.defaultFor(
+                                BannerModSettlementResidentRole.CONTROLLED_WORKER,
+                                BannerModSettlementResidentRuntimeRoleSeed.ORPHANED_LABOR_ASSIGNMENT,
+                                BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER,
+                                BannerModSettlementResidentAssignmentState.ASSIGNED_MISSING_BUILDING
+                        )
+                ).policySeed()
+        );
+    }
+
+    @Test
+    void projectsSellerDispatchSeedFromMarketServiceContracts() {
+        UUID openMarketUuid = UUID.randomUUID();
+        UUID closedMarketUuid = UUID.randomUUID();
+        UUID cropAreaUuid = UUID.randomUUID();
+        UUID readySellerUuid = UUID.randomUUID();
+        UUID blockedSellerUuid = UUID.randomUUID();
+
+        BannerModSettlementMarketState marketState = BannerModSettlementService.applySellerDispatchSeed(
+                BannerModSettlementService.summarizeMarketState(List.of(
+                        new BannerModSettlementMarketRecord(openMarketUuid, "Harbor Square", true, 27, 9),
+                        new BannerModSettlementMarketRecord(closedMarketUuid, "East Gate", false, 18, 4)
+                )),
+                List.of(
+                        new BannerModSettlementResidentRecord(readySellerUuid, BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, openMarketUuid, "bannermod:market_area"), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", openMarketUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING),
+                        new BannerModSettlementResidentRecord(blockedSellerUuid, BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, closedMarketUuid, "bannermod:market_area"), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", closedMarketUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, cropAreaUuid, "bannermod:crop_area"), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", cropAreaUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE, BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX, BannerModSettlementResidentRuntimeRoleSeed.FLOATING_LABOR, BannerModSettlementResidentServiceContract.notServiceActor(), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", null, BannerModSettlementResidentAssignmentState.UNASSIGNED)
+                ),
+                List.of(
+                        new BannerModSettlementBuildingRecord(openMarketUuid, "bannermod:market_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(readySellerUuid), false, 0, 0, false, false, List.of()),
+                        new BannerModSettlementBuildingRecord(closedMarketUuid, "bannermod:market_area", new BlockPos(8, 64, 8), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(blockedSellerUuid), false, 0, 0, false, false, List.of()),
+                        new BannerModSettlementBuildingRecord(cropAreaUuid, "bannermod:crop_area", new BlockPos(16, 64, 16), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(UUID.randomUUID()), false, 0, 0, false, false, List.of())
+                )
+        );
+
+        assertEquals(2, marketState.sellerDispatchCount());
+        assertEquals(1, marketState.readySellerDispatchCount());
+        assertEquals(List.of(
+                new BannerModSettlementSellerDispatchRecord(readySellerUuid, openMarketUuid, "Harbor Square", BannerModSettlementSellerDispatchState.READY),
+                new BannerModSettlementSellerDispatchRecord(blockedSellerUuid, closedMarketUuid, "East Gate", BannerModSettlementSellerDispatchState.MARKET_CLOSED)
+        ), marketState.sellerDispatches());
+
+        List<BannerModSettlementResidentRecord> residents = BannerModSettlementService.applyResidentJobTargetSelectionSeeds(
+                List.of(
+                        new BannerModSettlementResidentRecord(readySellerUuid, BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, openMarketUuid, "bannermod:market_area"), new BannerModSettlementResidentJobDefinition(BannerModSettlementJobHandlerSeed.LOCAL_BUILDING_LABOR, openMarketUuid, "bannermod:market_area", BannerModSettlementBuildingCategory.MARKET, BannerModSettlementBuildingProfileSeed.MARKET), BannerModSettlementResidentJobTargetSelectionSeed.none(), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", openMarketUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, BannerModSettlementResidentRoleProfile.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING)),
+                        new BannerModSettlementResidentRecord(blockedSellerUuid, BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, closedMarketUuid, "bannermod:market_area"), new BannerModSettlementResidentJobDefinition(BannerModSettlementJobHandlerSeed.LOCAL_BUILDING_LABOR, closedMarketUuid, "bannermod:market_area", BannerModSettlementBuildingCategory.MARKET, BannerModSettlementBuildingProfileSeed.MARKET), BannerModSettlementResidentJobTargetSelectionSeed.none(), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", closedMarketUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, BannerModSettlementResidentRoleProfile.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING)),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, cropAreaUuid, "bannermod:crop_area"), new BannerModSettlementResidentJobDefinition(BannerModSettlementJobHandlerSeed.LOCAL_BUILDING_LABOR, cropAreaUuid, "bannermod:crop_area", BannerModSettlementBuildingCategory.FOOD, BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION), BannerModSettlementResidentJobTargetSelectionSeed.none(), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", cropAreaUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, BannerModSettlementResidentRoleProfile.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING))
+                ),
+                marketState
+        );
+
+        assertEquals(BannerModSettlementJobTargetSelectionMode.SELLER_MARKET_DISPATCH, residents.get(0).jobTargetSelectionSeed().selectionMode());
+        assertEquals(openMarketUuid, residents.get(0).jobTargetSelectionSeed().targetMarketUuid());
+        assertEquals("Harbor Square", residents.get(0).jobTargetSelectionSeed().targetMarketName());
+        assertEquals(BannerModSettlementJobTargetSelectionMode.SELLER_MARKET_CLOSED, residents.get(1).jobTargetSelectionSeed().selectionMode());
+        assertEquals(closedMarketUuid, residents.get(1).jobTargetSelectionSeed().targetMarketUuid());
+        assertEquals("East Gate", residents.get(1).jobTargetSelectionSeed().targetMarketName());
+        assertEquals(BannerModSettlementJobTargetSelectionMode.SERVICE_BUILDING, residents.get(2).jobTargetSelectionSeed().selectionMode());
+    }
+
+    @Test
+    void summarizesDesiredGoodsFromBuildingProfilesStockpileTypesAndMarkets() {
+        List<BannerModSettlementBuildingRecord> buildings = List.of(
+                new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:crop_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of()),
+                new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:mining_area", new BlockPos(10, 64, 10), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of()),
+                new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:build_area", new BlockPos(20, 64, 20), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of()),
+                new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:market_area", new BlockPos(30, 64, 30), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of())
+        );
+
+        BannerModSettlementDesiredGoodsSeed desiredGoodsSeed = BannerModSettlementService.summarizeDesiredGoods(
+                buildings,
+                new BannerModSettlementStockpileSummary(1, 2, 54, 1, 0, List.of("farmers", "merchants")),
+                new BannerModSettlementMarketState(2, 1, 45, 13, 0, 0, List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9),
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "East Gate", false, 18, 4)
+                ), List.of())
+        );
+
+        assertEquals(List.of(
+                new BannerModSettlementDesiredGoodSeed("food", 1),
+                new BannerModSettlementDesiredGoodSeed("materials", 1),
+                new BannerModSettlementDesiredGoodSeed("construction_materials", 1),
+                new BannerModSettlementDesiredGoodSeed("market_goods", 3),
+                new BannerModSettlementDesiredGoodSeed("storage_type:farmers", 1),
+                new BannerModSettlementDesiredGoodSeed("storage_type:merchants", 1),
+                new BannerModSettlementDesiredGoodSeed("trade_stock", 1)
+        ), desiredGoodsSeed.desiredGoods());
+    }
+
+    @Test
+    void summarizesTradeRouteHandoffSeedFromDispatchDemandAndRouteHints() {
+        BannerModSettlementMarketState marketState = new BannerModSettlementMarketState(
+                2,
+                1,
+                45,
+                13,
+                2,
+                1,
+                List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9),
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "East Gate", false, 18, 4)
+                ),
+                List.of(
+                        new BannerModSettlementSellerDispatchRecord(UUID.randomUUID(), UUID.randomUUID(), "Harbor Square", BannerModSettlementSellerDispatchState.READY),
+                        new BannerModSettlementSellerDispatchRecord(UUID.randomUUID(), UUID.randomUUID(), "East Gate", BannerModSettlementSellerDispatchState.MARKET_CLOSED)
+                )
+        );
+
+        BannerModSettlementDesiredGoodsSeed desiredGoodsSeed = new BannerModSettlementDesiredGoodsSeed(List.of(
+                new BannerModSettlementDesiredGoodSeed("market_goods", 3),
+                new BannerModSettlementDesiredGoodSeed("trade_stock", 1),
+                new BannerModSettlementDesiredGoodSeed("storage_type:merchants", 1)
+        ));
+
+        BannerModSettlementTradeRouteHandoffSeed handoffSeed = BannerModSettlementService.summarizeTradeRouteHandoffSeed(
+                new BannerModSettlementStockpileSummary(2, 3, 81, 1, 1, List.of("farmers", "merchants")),
+                marketState,
+                desiredGoodsSeed
+        );
+
+        assertEquals(2, handoffSeed.sellerDispatchCount());
+        assertEquals(1, handoffSeed.readySellerDispatchCount());
+        assertEquals(1, handoffSeed.routedStorageCount());
+        assertEquals(1, handoffSeed.portEntrypointCount());
+        assertEquals(desiredGoodsSeed.desiredGoods(), handoffSeed.desiredGoods());
+        assertEquals(marketState.sellerDispatches(), handoffSeed.sellerDispatches());
+    }
+
+    @Test
+    void summarizesSupplySignalsFromDesiredGoodsCoverageAndReservationHints() {
+        UUID marketUuid = UUID.randomUUID();
+        UUID cropAreaUuid = UUID.randomUUID();
+        UUID mineUuid = UUID.randomUUID();
+
+        BannerModSettlementSupplySignalState supplySignalState = BannerModSettlementService.summarizeSupplySignals(
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("food", 2),
+                        new BannerModSettlementDesiredGoodSeed("materials", 1),
+                        new BannerModSettlementDesiredGoodSeed("construction_materials", 1),
+                        new BannerModSettlementDesiredGoodSeed("market_goods", 3),
+                        new BannerModSettlementDesiredGoodSeed("storage_type:farmers", 1),
+                        new BannerModSettlementDesiredGoodSeed("trade_stock", 1)
+                )),
+                new BannerModSettlementStockpileSummary(1, 2, 54, 1, 1, List.of("farmers")),
+                new BannerModSettlementMarketState(
+                        1,
+                        1,
+                        27,
+                        9,
+                        2,
+                        1,
+                        List.of(new BannerModSettlementMarketRecord(marketUuid, "Harbor Square", true, 27, 9)),
+                        List.of(
+                                new BannerModSettlementSellerDispatchRecord(UUID.randomUUID(), marketUuid, "Harbor Square", BannerModSettlementSellerDispatchState.READY),
+                                new BannerModSettlementSellerDispatchRecord(UUID.randomUUID(), marketUuid, "Harbor Square", BannerModSettlementSellerDispatchState.MARKET_CLOSED)
+                        )
+                ),
+                List.of(
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, cropAreaUuid, "bannermod:crop_area"), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", cropAreaUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, mineUuid, "bannermod:mining_area"), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", mineUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING),
+                        new BannerModSettlementResidentRecord(UUID.randomUUID(), BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, BannerModSettlementResidentScheduleWindowSeed.LABOR_DAY, BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR, BannerModSettlementResidentServiceContract.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING, marketUuid, "bannermod:market_area"), BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER, UUID.randomUUID(), "blueguild", marketUuid, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING)
+                ),
+                List.of(
+                        new BannerModSettlementBuildingRecord(cropAreaUuid, "bannermod:crop_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(UUID.randomUUID()), false, 0, 0, false, false, List.of()),
+                        new BannerModSettlementBuildingRecord(mineUuid, "bannermod:mining_area", new BlockPos(10, 64, 10), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(UUID.randomUUID()), false, 0, 0, false, false, List.of()),
+                        new BannerModSettlementBuildingRecord(marketUuid, "bannermod:market_area", new BlockPos(20, 64, 20), UUID.randomUUID(), "blueguild", 0, 1, 1, List.of(UUID.randomUUID()), false, 0, 0, false, false, List.of())
+                )
+        );
+
+        assertEquals(6, supplySignalState.signalCount());
+        assertEquals(3, supplySignalState.shortageSignalCount());
+        assertEquals(3, supplySignalState.shortageUnitCount());
+        assertEquals(20, supplySignalState.reservationHintUnitCount());
+        assertEquals(List.of(
+                new BannerModSettlementSupplySignal("food", 2, 1, 1, 4),
+                new BannerModSettlementSupplySignal("materials", 1, 1, 0, 3),
+                new BannerModSettlementSupplySignal("construction_materials", 1, 0, 1, 2),
+                new BannerModSettlementSupplySignal("market_goods", 3, 2, 1, 6),
+                new BannerModSettlementSupplySignal("storage_type:farmers", 1, 1, 0, 2),
+                new BannerModSettlementSupplySignal("trade_stock", 1, 2, 0, 3)
+        ), supplySignalState.signals());
+    }
+
+    @Test
+    void summarizesProjectCandidateFromSettlementSeeds() {
+        BannerModSettlementProjectCandidateSeed storageCandidate = BannerModSettlementService.summarizeProjectCandidate(
+                List.of(
+                        new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:crop_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of()),
+                        new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:market_area", new BlockPos(8, 64, 8), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of())
+                ),
+                BannerModSettlementStockpileSummary.empty(),
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("food", 1),
+                        new BannerModSettlementDesiredGoodSeed("market_goods", 2)
+                )),
+                new BannerModSettlementMarketState(1, 1, 27, 9, 0, 0, List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9)
+                ), List.of()),
+                true,
+                true
+        );
+
+        assertEquals("storage_foundation", storageCandidate.candidateId());
+        assertEquals(BannerModSettlementBuildingProfileSeed.STORAGE, storageCandidate.targetBuildingProfileSeed());
+        assertEquals(5, storageCandidate.priority());
+        assertEquals(true, storageCandidate.governedSettlement());
+        assertEquals(true, storageCandidate.claimedSettlement());
+        assertEquals(List.of("storage_missing", "goods_pressure", "market_access_present"), storageCandidate.driverIds());
+
+        BannerModSettlementProjectCandidateSeed foodCandidate = BannerModSettlementService.summarizeProjectCandidate(
+                List.of(
+                        new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:storage_area", new BlockPos(0, 64, 0), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), true, 2, 54, true, false, List.of("farmers")),
+                        new BannerModSettlementBuildingRecord(UUID.randomUUID(), "bannermod:market_area", new BlockPos(8, 64, 8), UUID.randomUUID(), "blueguild", 0, 1, 0, List.of(), false, 0, 0, false, false, List.of())
+                ),
+                new BannerModSettlementStockpileSummary(1, 2, 54, 1, 0, List.of("farmers")),
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("food", 2),
+                        new BannerModSettlementDesiredGoodSeed("market_goods", 1)
+                )),
+                new BannerModSettlementMarketState(1, 1, 27, 9, 0, 0, List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9)
+                ), List.of()),
+                false,
+                true
+        );
+
+        assertEquals("food_capacity_growth", foodCandidate.candidateId());
+        assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, foodCandidate.targetBuildingProfileSeed());
+        assertEquals(3, foodCandidate.priority());
+        assertEquals(List.of("food_demand", "storage_type:farmers"), foodCandidate.driverIds());
+    }
+}

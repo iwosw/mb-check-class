@@ -42,26 +42,34 @@ class BannerModSupplyStatusTest {
 
     @Test
     void recruitSupplyStatusKeepsMilitaryUpkeepPressureInSharedSupplyVocabulary() {
-        BannerModSupplyStatus.RecruitSupplyStatus ready = BannerModSupplyStatus.recruitSupplyStatus(true, true, true, true, true, false);
-        BannerModSupplyStatus.RecruitSupplyStatus missingFood = BannerModSupplyStatus.recruitSupplyStatus(true, true, false, false, true, false);
-        BannerModSupplyStatus.RecruitSupplyStatus inventoryPaymentFallback = BannerModSupplyStatus.recruitSupplyStatus(true, false, true, false, false, true);
-        BannerModSupplyStatus.RecruitSupplyStatus missingBoth = BannerModSupplyStatus.recruitSupplyStatus(true, true, true, false, false, false);
+        BannerModSupplyStatus.RecruitSupplyStatus ready = BannerModSupplyStatus.recruitSupplyStatus(true, true, true, true, true, false, 100.0F);
+        BannerModSupplyStatus.RecruitSupplyStatus missingFood = BannerModSupplyStatus.recruitSupplyStatus(true, true, false, false, true, false, 12.0F);
+        BannerModSupplyStatus.RecruitSupplyStatus inventoryPaymentFallback = BannerModSupplyStatus.recruitSupplyStatus(true, false, true, false, false, true, 100.0F);
+        BannerModSupplyStatus.RecruitSupplyStatus missingBoth = BannerModSupplyStatus.recruitSupplyStatus(true, true, true, false, false, false, 0.0F);
 
         assertEquals(BannerModSupplyStatus.RecruitSupplyState.READY, ready.state());
         assertFalse(ready.blocked());
+        assertEquals(BannerModSupplyStatus.ArmyUpkeepState.STABLE, ready.accounting().state());
 
         assertEquals(BannerModSupplyStatus.RecruitSupplyState.NEEDS_FOOD, missingFood.state());
         assertTrue(missingFood.blocked());
         assertTrue(missingFood.needsFood());
         assertEquals("recruit_upkeep_missing_food", missingFood.reasonToken());
+        assertEquals(BannerModSupplyStatus.ArmyUpkeepState.STARVING, missingFood.accounting().state());
+        assertEquals(1, missingFood.accounting().starvingLevel());
 
         assertEquals(BannerModSupplyStatus.RecruitSupplyState.READY, inventoryPaymentFallback.state());
         assertFalse(inventoryPaymentFallback.blocked());
+        assertEquals(BannerModSupplyStatus.ArmyUpkeepState.STABLE, inventoryPaymentFallback.accounting().state());
 
         assertEquals(BannerModSupplyStatus.RecruitSupplyState.NEEDS_FOOD_AND_PAYMENT, missingBoth.state());
         assertTrue(missingBoth.blocked());
         assertTrue(missingBoth.needsFood());
         assertTrue(missingBoth.needsPayment());
         assertEquals("recruit_upkeep_missing_food_and_payment", missingBoth.reasonToken());
+        assertEquals(BannerModSupplyStatus.ArmyUpkeepState.UNPAID_AND_STARVING, missingBoth.accounting().state());
+        assertEquals(1, missingBoth.accounting().unpaidLevel());
+        assertEquals(3, missingBoth.accounting().starvingLevel());
+        assertEquals("army_upkeep_unpaid_and_starving", missingBoth.accounting().reasonToken());
     }
 }

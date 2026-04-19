@@ -1,10 +1,15 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
+import com.talhanation.bannermod.events.ClaimEvents;
+import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsAuthoringState;
+import com.talhanation.bannermod.settlement.BannerModSettlementManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementService;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -20,11 +25,12 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
     public String routeFilter;
     public String routeCount;
     public String routePriority;
+    public boolean portEntrypoint;
     public MessageUpdateStorageArea() {
 
     }
 
-    public MessageUpdateStorageArea(UUID uuid, int mask, String name, String routeDestination, String routeFilter, String routeCount, String routePriority) {
+    public MessageUpdateStorageArea(UUID uuid, int mask, String name, String routeDestination, String routeFilter, String routeCount, String routePriority, boolean portEntrypoint) {
         this.uuid = uuid;
         this.mask = mask;
         this.name = name;
@@ -32,6 +38,7 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
         this.routeFilter = routeFilter;
         this.routeCount = routeCount;
         this.routePriority = routePriority;
+        this.portEntrypoint = portEntrypoint;
     }
 
     public Dist getExecutingSide() {
@@ -54,11 +61,22 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
     public void update(StorageArea storageArea, ServerPlayer player){
         storageArea.setStorageTypes(mask);
         storageArea.setCustomName(Component.literal(name));
+        storageArea.setPortEntrypoint(this.portEntrypoint);
         try {
             storageArea.setLogisticsRoute(BannerModLogisticsAuthoringState.parse(this.routeDestination, this.routeFilter, this.routeCount, this.routePriority));
             storageArea.clearRouteBlockedState();
         } catch (IllegalArgumentException exception) {
             player.sendSystemMessage(Component.literal(exception.getMessage()));
+        }
+
+        if (player.level() instanceof ServerLevel serverLevel && ClaimEvents.recruitsClaimManager != null) {
+            BannerModSettlementService.refreshClaimAt(
+                    serverLevel,
+                    ClaimEvents.recruitsClaimManager,
+                    BannerModSettlementManager.get(serverLevel),
+                    BannerModGovernorManager.get(serverLevel),
+                    storageArea.blockPosition()
+            );
         }
     }
     public MessageUpdateStorageArea fromBytes(FriendlyByteBuf buf) {
@@ -69,6 +87,7 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
         this.routeFilter = buf.readUtf();
         this.routeCount = buf.readUtf();
         this.routePriority = buf.readUtf();
+        this.portEntrypoint = buf.readBoolean();
         return this;
     }
 
@@ -80,6 +99,7 @@ public class MessageUpdateStorageArea implements Message<MessageUpdateStorageAre
         buf.writeUtf(routeFilter == null ? "" : routeFilter);
         buf.writeUtf(routeCount == null ? "" : routeCount);
         buf.writeUtf(routePriority == null ? "" : routePriority);
+        buf.writeBoolean(portEntrypoint);
     }
 
 }

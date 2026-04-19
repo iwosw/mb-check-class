@@ -106,7 +106,7 @@ minecraft {
         }
 
         gameTestServer {
-            workingDirectory project.file('run')
+            workingDirectory project.file('run_gametest')
 
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
@@ -222,6 +222,12 @@ tasks.register('verifyGameTestStage') {
     group = 'verification'
     description = 'Runs the game test stage used by check'
     dependsOn tasks.named('runGameTestServer')
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    doFirst {
+        delete project.file('run_gametest/world')
+    }
 }
 
 tasks.register('mergeStatus') {

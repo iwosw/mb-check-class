@@ -87,7 +87,17 @@ public class MarketArea extends AbstractWorkAreaEntity {
             }
         });
         setTotalSlots(containerMap.values().stream().mapToInt(Container::getContainerSize).sum());
-        setFreeSlots(containerMap.values().stream().mapToInt(container -> container.countItem(ItemStack.EMPTY.getItem())).sum());
+        setFreeSlots(containerMap.values().stream().mapToInt(MarketArea::countEmptySlots).sum());
+    }
+
+    private static int countEmptySlots(Container container) {
+        int emptySlots = 0;
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            if (container.getItem(i).isEmpty()) {
+                emptySlots++;
+            }
+        }
+        return emptySlots;
     }
 
     public Container getContainer(BlockPos pos) {

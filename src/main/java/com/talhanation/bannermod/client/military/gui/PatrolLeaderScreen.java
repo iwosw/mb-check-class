@@ -2,12 +2,9 @@ package com.talhanation.bannermod.client.military.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.client.military.PatrolLeaderControlController;
 import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
-import com.talhanation.bannermod.entity.military.AbstractLeaderEntity.EnemyAction;
-import com.talhanation.bannermod.entity.military.AbstractLeaderEntity.InfoMode;
-import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,7 +17,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PatrolLeaderScreen extends RecruitsScreenBase {
@@ -36,22 +32,15 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
     private static final int TEXTURE_W = 195;
     private static final int TEXTURE_H = 160;
     private static final int FONT_COLOR = 4210752;
-    private final Player player;
-    private final AbstractLeaderEntity leaderEntity;
+    private final PatrolLeaderControlController controls;
     private int leftPos;
     private int topPos;
-    private AbstractLeaderEntity.State patrolState;
-    private InfoMode infoMode;
-    private EnemyAction enemyAction;
-    private RecruitsRoute selectedRoute;
-    private RecruitsGroup selectedGroup;
     private ScrollDropDownMenu<RecruitsRoute>  routeDropDown;
     private ScrollDropDownMenu<RecruitsGroup>  groupDropDown;
 
     public PatrolLeaderScreen(AbstractLeaderEntity leaderEntity, Player player) {
         super(Component.literal(""), 197,250);
-        this.player  = player;
-        this.leaderEntity = leaderEntity;
+        this.controls = new PatrolLeaderControlController(leaderEntity, player);
     }
 
     @Override
@@ -60,21 +49,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         this.leftPos = (this.width  - TEXTURE_W) / 2;
         this.topPos  = (this.height - TEXTURE_H) / 2;
 
-        this.patrolState = AbstractLeaderEntity.State.fromIndex(leaderEntity.getPatrollingState());
-        this.infoMode    = InfoMode.fromIndex(leaderEntity.getInfoMode());
-        this.enemyAction = EnemyAction.fromIndex(leaderEntity.getEnemyAction());
-
-        // Restore route from leader
-        if (leaderEntity.getRouteID() != null) {
-            this.selectedRoute = ClientManager.routesMap.get(leaderEntity.getRouteID().toString());
-        }
-
-        // Restore group from leader
-        if (leaderEntity.getGroup() != null) {
-            this.selectedGroup = ClientManager.getGroup(leaderEntity.getGroup());
-        }
-
-        ClientManager.loadRoutes();
+        controls.init();
         buildWidgets();
     }
 
@@ -89,18 +64,15 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         int fullW = TEXTURE_W - 16;
 
         // --- Route dropdown ---
-        List<RecruitsRoute> routeOptions = new ArrayList<>();
-        routeOptions.add(null);
-        routeOptions.addAll(ClientManager.getRoutesList());
+        List<RecruitsRoute> routeOptions = controls.getRouteOptions();
 
         routeDropDown = new ScrollDropDownMenu<>(
-                selectedRoute,
+                controls.getSelectedRoute(),
                 x, y, fullW, btnH,
                 routeOptions,
                 r -> r == null ? "-- No Route --" : r.getName(),
                 r -> {
-                    selectedRoute = r;
-                    sendRouteToServer(r);
+                    controls.selectRoute(r);
                     buildWidgets(); // refresh button states after route selection
                 }
         );
@@ -108,11 +80,12 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         y += btnH + 6;
 
         // --- Start / Stop row ---
+        AbstractLeaderEntity.State patrolState = controls.getPatrolState();
         boolean isPatrolling = patrolState == AbstractLeaderEntity.State.PATROLLING;
         boolean isPaused     = patrolState == AbstractLeaderEntity.State.PAUSED;
-        boolean canStart     = selectedRoute != null
+        boolean canStart     = controls.getSelectedRoute() != null
                 && (patrolState == AbstractLeaderEntity.State.STOPPED
-                ||  patrolState == AbstractLeaderEntity.State.IDLE
+                || patrolState == AbstractLeaderEntity.State.IDLE
                 ||  isPaused);
 
         int btnW = (fullW - 4) / 2;
@@ -123,22 +96,15 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         Component stopTooltip  = isPatrolling ? TT_PAUSE   : TT_STOP;
 
         Button startButton = addRenderableWidget(new ExtendedButton(x, y, btnW, btnH, startLabel, btn -> {
-            patrolState = AbstractLeaderEntity.State.PATROLLING;
-            sendRouteToServer(selectedRoute);
-            BannerModMain.SIMPLE_CHANNEL.sendToServer(
-                    new MessagePatrolLeaderSetPatrolState(leaderEntity.getUUID(), (byte) 1));
+            controls.startOrResumePatrol();
             buildWidgets();
         }));
         startButton.active = canStart;
         startButton.setTooltip(Tooltip.create(
-                !canStart && selectedRoute == null ? Component.literal("No route selected") : startTooltip));
+                !canStart && controls.getSelectedRoute() == null ? Component.literal("No route selected") : startTooltip));
 
         Button stopButton = addRenderableWidget(new ExtendedButton(x + btnW + 4, y, btnW, btnH, stopLabel, btn -> {
-            patrolState = isPatrolling
-                    ? AbstractLeaderEntity.State.PAUSED
-                    : AbstractLeaderEntity.State.STOPPED;
-            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessagePatrolLeaderSetPatrolState(
-                    leaderEntity.getUUID(), (byte) patrolState.getIndex()));
+            controls.stopOrPausePatrol();
             buildWidgets();
         }));
         stopButton.active = patrolState != AbstractLeaderEntity.State.STOPPED
@@ -147,7 +113,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         y += btnH + 8;
 
         // --- Report ---
-        String infoLabel = "Report: " + switch (infoMode) {
+        String infoLabel = "Report: " + switch (controls.getInfoMode()) {
             case ALL     -> "All";
             case HOSTILE -> "Hostiles";
             case ENEMY   -> "Enemies";
@@ -155,56 +121,34 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         };
         addRenderableWidget(new ExtendedButton(x, y, fullW, btnH,
                 Component.literal(infoLabel), btn -> {
-                    infoMode = infoMode.getNext();
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(
-                            new MessagePatrolLeaderSetInfoMode(leaderEntity.getUUID(), infoMode.getIndex()));
+                    controls.cycleInfoMode();
                     buildWidgets();
                 }));
         y += btnH + 4;
 
         // --- On Enemy ---
-        String actionLabel = "On Enemy: " + switch (enemyAction) {
+        String actionLabel = "On Enemy: " + switch (controls.getEnemyAction()) {
             case CHARGE          -> "Charge";
             case HOLD            -> "Hold";
             case KEEP_PATROLLING -> "Keep Patrolling";
         };
         addRenderableWidget(new ExtendedButton(x, y, fullW, btnH,
                 Component.literal(actionLabel), btn -> {
-                    enemyAction = enemyAction.getNext();
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(
-                            new MessagePatrolLeaderSetEnemyAction(leaderEntity.getUUID(), enemyAction.getIndex()));
+                    controls.cycleEnemyAction();
                     buildWidgets();
                 }));
         y += btnH + 8;
 
         // --- Group dropdown ---
-        List<RecruitsGroup> groupOptions = new ArrayList<>();
-        groupOptions.add(null);
-        groupOptions.addAll(ClientManager.groups);
+        List<RecruitsGroup> groupOptions = controls.getGroupOptions();
 
         groupDropDown = new ScrollDropDownMenu<>(
-                selectedGroup,
+                controls.getSelectedGroup(),
                 x, y, fullW, btnH,
                 groupOptions,
                 g -> g == null ? "-- No Group --" : g.getName(),
                 g -> {
-                    RecruitsGroup previous = selectedGroup;
-                    selectedGroup = g;
-
-                    if (g != null) {
-                        // Set group on leader then assign recruits automatically
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(
-                                new MessageSetLeaderGroup(leaderEntity.getUUID(), g.getUUID()));
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(
-                                new MessageAssignGroupToCompanion(player.getUUID(), leaderEntity.getUUID()));
-                        g.leaderUUID = leaderEntity.getUUID();
-                    } else if (previous != null) {
-                        // Deselected — unassign recruits
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(
-                                new MessageRemoveAssignedGroupFromCompanion(player.getUUID(), leaderEntity.getUUID()));
-                        previous.leaderUUID = null;
-                    }
-
+                    controls.selectGroup(g);
                     buildWidgets();
                 }
         );
@@ -224,28 +168,6 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         if (groupDropDown != null) groupDropDown.onMouseMove(mouseX, mouseY);
         super.mouseMoved(mouseX, mouseY);
     }
-
-    private void sendRouteToServer(RecruitsRoute route) {
-        List<net.minecraft.core.BlockPos> positions = new ArrayList<>();
-        List<Integer> waits = new ArrayList<>();
-        if (route != null) {
-            for (RecruitsRoute.Waypoint wp : route.getWaypoints()) {
-                positions.add(wp.getPosition());
-                int sec = 0;
-                if (wp.getAction() != null
-                        && wp.getAction().getType() == RecruitsRoute.WaypointAction.Type.WAIT) {
-                    sec = wp.getAction().getWaitSeconds();
-                }
-                waits.add(sec);
-            }
-        }
-        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessagePatrolLeaderSetRoute(
-                leaderEntity.getUUID(),
-                route != null ? route.getId() : null,
-                positions,
-                waits));
-    }
-
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);

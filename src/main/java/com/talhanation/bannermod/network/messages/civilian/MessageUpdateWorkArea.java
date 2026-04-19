@@ -4,6 +4,8 @@ import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
@@ -55,8 +57,12 @@ public class MessageUpdateWorkArea implements Message<MessageUpdateWorkArea> {
     }
 
     public void updateWorkArea(ServerPlayer player, AbstractWorkAreaEntity workArea){
+        BlockPos originalPos = workArea.blockPosition();
         if (destroy) {
             workArea.remove(Entity.RemovalReason.DISCARDED);
+            if (player.level() instanceof ServerLevel serverLevel) {
+                WorkAreaMessageSupport.refreshSettlementSnapshot(serverLevel, originalPos);
+            }
             return;
         }
 
@@ -75,6 +81,9 @@ public class MessageUpdateWorkArea implements Message<MessageUpdateWorkArea> {
         }
 
         workArea.setTime(workArea.getTime() + DONE_TIME);
+        if (player.level() instanceof ServerLevel serverLevel) {
+            WorkAreaMessageSupport.refreshSettlementTransition(serverLevel, originalPos, workArea.blockPosition());
+        }
     }
     public MessageUpdateWorkArea fromBytes(FriendlyByteBuf buf) {
         this.x = buf.readFloat();

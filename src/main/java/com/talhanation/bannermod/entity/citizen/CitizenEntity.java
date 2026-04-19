@@ -1,0 +1,325 @@
+package com.talhanation.bannermod.entity.citizen;
+
+import com.talhanation.bannermod.citizen.CitizenCore;
+import com.talhanation.bannermod.citizen.CitizenCoreState;
+import com.talhanation.bannermod.citizen.CitizenProfession;
+import com.talhanation.bannermod.citizen.CitizenProfessionController;
+import com.talhanation.bannermod.citizen.CitizenProfessionRegistry;
+import com.talhanation.bannermod.citizen.CitizenProfessionSwitcher;
+import com.talhanation.bannermod.citizen.CitizenRoleContext;
+import com.talhanation.bannermod.citizen.CitizenStateSnapshot;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+
+import javax.annotation.Nullable;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Single registered NPC entity type for the Manor-Lords-style citizen
+ * model: one {@code bannermod:citizen} entity swaps its active
+ * {@link CitizenProfessionController} at runtime instead of spawning a
+ * per-profession subclass.
+ *
+ * <p>This class is intentionally thin. State storage lives in a
+ * composed {@link CitizenCoreState}; profession switching lives in a
+ * composed {@link CitizenProfessionSwitcher}; goal installation is
+ * delegated to whichever profession controller is currently active.
+ * Per-profession behaviour is owned by Cit-03 controller implementations,
+ * not by this class.
+ *
+ * <p>Cit-02 ships only a stub goal set (look-at-player + random stroll)
+ * so the entity is navigable in tests. Real goal sets arrive with the
+ * first concrete {@link CitizenProfessionController} in Cit-03.
+ */
+public class CitizenEntity extends PathfinderMob implements CitizenCore {
+
+    private static final EntityDataAccessor<String> DATA_PROFESSION =
+            SynchedEntityData.defineId(CitizenEntity.class, EntityDataSerializers.STRING);
+
+    private static final CitizenProfessionRegistry DEFAULT_REGISTRY = CitizenProfessionRegistry.defaults();
+
+    private final CitizenCoreState state;
+    private final CitizenProfessionRegistry registry;
+    private CitizenProfessionSwitcher switcher;
+
+    public CitizenEntity(EntityType<? extends CitizenEntity> type, Level level) {
+        this(type, level, DEFAULT_REGISTRY);
+    }
+
+    public CitizenEntity(EntityType<? extends CitizenEntity> type, Level level, CitizenProfessionRegistry registry) {
+        super(type, level);
+        this.registry = registry;
+        this.state = new CitizenCoreState(27);
+        this.switcher = new CitizenProfessionSwitcher(registry, this, CitizenProfession.NONE);
+    }
+
+    public static AttributeSupplier.Builder createAttributes() {
+        return PathfinderMob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 20.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.32D)
+                .add(Attributes.FOLLOW_RANGE, 32.0D)
+                .add(Attributes.ATTACK_DAMAGE, 2.0D);
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(DATA_PROFESSION, CitizenProfession.NONE.name());
+    }
+
+    @Override
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.6D));
+        this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
+    }
+
+    // ------------------------------------------------------------------
+    // Profession surface
+    // ------------------------------------------------------------------
+
+    public CitizenProfession activeProfession() {
+        return this.switcher.activeProfession();
+    }
+
+    public CitizenProfessionController activeController() {
+        return this.switcher.activeController();
+    }
+
+    public int professionSwitchCount() {
+        return this.switcher.switchCount();
+    }
+
+    /**
+     * Change profession at runtime without respawning the entity. Calls
+     * {@code uninstallGoals} on the old controller then {@code installGoals}
+     * on the new one. Returns {@code true} if a switch actually occurred
+     * (false means {@code newProfession} matched the active one).
+     */
+    public boolean switchProfession(CitizenProfession newProfession) {
+        CitizenRoleContext ctx = new CitizenRoleContext(
+                newProfession.coarseRole(),
+                this,
+                this,
+                null,
+                this.state.getBoundWorkAreaUUID()
+        );
+        boolean changed = this.switcher.switchTo(newProfession, ctx);
+        if (changed) {
+            this.entityData.set(DATA_PROFESSION, newProfession.name());
+        }
+        return changed;
+    }
+
+    // ------------------------------------------------------------------
+    // Persistence
+    // ------------------------------------------------------------------
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putString("CitizenProfession", this.activeProfession().name());
+        if (this.state.getOwnerUUID() != null) {
+            tag.putUUID("CitizenOwner", this.state.getOwnerUUID());
+        }
+        if (this.state.getTeamId() != null) {
+            tag.putString("CitizenTeamId", this.state.getTeamId());
+        }
+        tag.putInt("CitizenFollowState", this.state.getFollowState());
+        tag.putBoolean("CitizenOwned", this.state.isOwned());
+        tag.putBoolean("CitizenWorking", this.state.isWorking());
+        if (this.state.getBoundWorkAreaUUID() != null) {
+            tag.putUUID("CitizenBoundWorkArea", this.state.getBoundWorkAreaUUID());
+        }
+        Vec3 hold = this.state.getHoldPos();
+        if (hold != null) {
+            CompoundTag holdTag = new CompoundTag();
+            holdTag.putDouble("X", hold.x);
+            holdTag.putDouble("Y", hold.y);
+            holdTag.putDouble("Z", hold.z);
+            tag.put("CitizenHoldPos", holdTag);
+        }
+        BlockPos move = this.state.getMovePos();
+        if (move != null) {
+            CompoundTag moveTag = new CompoundTag();
+            moveTag.putInt("X", move.getX());
+            moveTag.putInt("Y", move.getY());
+            moveTag.putInt("Z", move.getZ());
+            tag.put("CitizenMovePos", moveTag);
+        }
+        tag.put("CitizenInventory", CitizenStateSnapshot.copyInventory(this.state.getInventory()));
+        CompoundTag flagTag = new CompoundTag();
+        for (RuntimeFlag flag : RuntimeFlag.values()) {
+            flagTag.putBoolean(flag.name(), this.state.getRuntimeFlag(flag));
+        }
+        tag.put("CitizenRuntimeFlags", flagTag);
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        CitizenProfession profession = tag.contains("CitizenProfession", Tag.TAG_STRING)
+                ? CitizenProfession.fromTagName(tag.getString("CitizenProfession"))
+                : CitizenProfession.NONE;
+        this.switcher = new CitizenProfessionSwitcher(this.registry, this, profession);
+        this.entityData.set(DATA_PROFESSION, profession.name());
+
+        this.state.setOwnerUUID(tag.hasUUID("CitizenOwner")
+                ? Optional.of(tag.getUUID("CitizenOwner"))
+                : Optional.empty());
+        this.state.setTeamId(tag.contains("CitizenTeamId", Tag.TAG_STRING) ? tag.getString("CitizenTeamId") : null);
+        this.state.setFollowState(tag.getInt("CitizenFollowState"));
+        this.state.setOwned(tag.getBoolean("CitizenOwned"));
+        this.state.setWorking(tag.getBoolean("CitizenWorking"));
+        this.state.setBoundWorkAreaUUID(tag.hasUUID("CitizenBoundWorkArea") ? tag.getUUID("CitizenBoundWorkArea") : null);
+
+        if (tag.contains("CitizenHoldPos", Tag.TAG_COMPOUND)) {
+            CompoundTag holdTag = tag.getCompound("CitizenHoldPos");
+            this.state.setHoldPos(new Vec3(holdTag.getDouble("X"), holdTag.getDouble("Y"), holdTag.getDouble("Z")));
+        }
+        else {
+            this.state.clearHoldPos();
+        }
+
+        if (tag.contains("CitizenMovePos", Tag.TAG_COMPOUND)) {
+            CompoundTag moveTag = tag.getCompound("CitizenMovePos");
+            this.state.setMovePos(new BlockPos(moveTag.getInt("X"), moveTag.getInt("Y"), moveTag.getInt("Z")));
+        }
+        else {
+            this.state.clearMovePos();
+        }
+
+        if (tag.contains("CitizenInventory", Tag.TAG_COMPOUND)) {
+            CitizenStateSnapshot.restoreInventory(this.state.getInventory(), tag.getCompound("CitizenInventory"));
+        }
+
+        if (tag.contains("CitizenRuntimeFlags", Tag.TAG_COMPOUND)) {
+            CompoundTag flagTag = tag.getCompound("CitizenRuntimeFlags");
+            for (RuntimeFlag flag : RuntimeFlag.values()) {
+                this.state.setRuntimeFlag(flag, flagTag.getBoolean(flag.name()));
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // CitizenCore delegate
+    // ------------------------------------------------------------------
+
+    @Override
+    @Nullable
+    public UUID getOwnerUUID() {
+        return this.state.getOwnerUUID();
+    }
+
+    @Override
+    public void setOwnerUUID(Optional<UUID> ownerUuid) {
+        this.state.setOwnerUUID(ownerUuid);
+    }
+
+    @Override
+    public int getFollowState() {
+        return this.state.getFollowState();
+    }
+
+    @Override
+    public void setFollowState(int s) {
+        this.state.setFollowState(s);
+    }
+
+    @Override
+    public SimpleContainer getInventory() {
+        return this.state.getInventory();
+    }
+
+    @Override
+    @Nullable
+    public String getTeamId() {
+        return this.state.getTeamId();
+    }
+
+    @Override
+    @Nullable
+    public Vec3 getHoldPos() {
+        return this.state.getHoldPos();
+    }
+
+    @Override
+    public void setHoldPos(@Nullable Vec3 holdPos) {
+        this.state.setHoldPos(holdPos);
+    }
+
+    @Override
+    public void clearHoldPos() {
+        this.state.clearHoldPos();
+    }
+
+    @Override
+    @Nullable
+    public BlockPos getMovePos() {
+        return this.state.getMovePos();
+    }
+
+    @Override
+    public void setMovePos(@Nullable BlockPos movePos) {
+        this.state.setMovePos(movePos);
+    }
+
+    @Override
+    public void clearMovePos() {
+        this.state.clearMovePos();
+    }
+
+    @Override
+    public boolean isOwned() {
+        return this.state.isOwned();
+    }
+
+    @Override
+    public void setOwned(boolean owned) {
+        this.state.setOwned(owned);
+    }
+
+    @Override
+    public boolean isWorking() {
+        return this.state.isWorking();
+    }
+
+    @Override
+    @Nullable
+    public UUID getBoundWorkAreaUUID() {
+        return this.state.getBoundWorkAreaUUID();
+    }
+
+    @Override
+    public void setBoundWorkAreaUUID(@Nullable UUID boundWorkAreaUuid) {
+        this.state.setBoundWorkAreaUUID(boundWorkAreaUuid);
+    }
+
+    @Override
+    public boolean getRuntimeFlag(RuntimeFlag flag) {
+        return this.state.getRuntimeFlag(flag);
+    }
+
+    @Override
+    public void setRuntimeFlag(RuntimeFlag flag, boolean value) {
+        this.state.setRuntimeFlag(flag, value);
+    }
+}

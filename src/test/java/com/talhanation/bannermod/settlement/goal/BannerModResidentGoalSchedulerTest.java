@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.settlement.goal;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.settlement.BannerModSettlementMarketState;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentAssignmentState;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentMode;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentRecord;
@@ -8,10 +9,17 @@ import com.talhanation.bannermod.settlement.BannerModSettlementResidentRole;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentRuntimeRoleSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentScheduleSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentServiceContract;
+import com.talhanation.bannermod.settlement.BannerModSettlementSellerDispatchRecord;
+import com.talhanation.bannermod.settlement.BannerModSettlementSellerDispatchState;
+import com.talhanation.bannermod.settlement.BannerModSettlementServiceActorState;
+import com.talhanation.bannermod.settlement.dispatch.BannerModSellerDispatchRuntime;
+import com.talhanation.bannermod.settlement.dispatch.SellerResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.IdleResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.RestResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.SocialiseResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.WorkResidentGoal;
+import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentRuntime;
+import com.talhanation.bannermod.settlement.household.GoHomeResidentGoal;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
@@ -164,6 +172,65 @@ class BannerModResidentGoalSchedulerTest {
     }
 
     @Test
+    void extendedDefaultGoalsPickGoHomeWhenResidentHasHomeBindingAtNight() {
+        BannerModHomeAssignmentRuntime homeRuntime = new BannerModHomeAssignmentRuntime();
+        BannerModSellerDispatchRuntime sellerRuntime = new BannerModSellerDispatchRuntime();
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals(
+                homeRuntime,
+                BannerModSettlementMarketState::empty,
+                sellerRuntime
+        );
+        BannerModSettlementResidentRecord resident = buildLocalWorker();
+        homeRuntime.assign(
+                resident.residentUuid(),
+                UUID.fromString("00000000-0000-0000-0000-0000000000b1"),
+                com.talhanation.bannermod.settlement.household.HomePreference.ASSIGNED,
+                100L
+        );
+
+        scheduler.tick(new ResidentGoalContext(resident, null, DAY_TICK_NIGHT));
+
+        Optional<ResidentTask> task = scheduler.currentTask(resident.residentUuid());
+        assertTrue(task.isPresent());
+        assertEquals(GoHomeResidentGoal.ID, task.get().goalId());
+    }
+
+    @Test
+    void extendedDefaultGoalsPickSellerOverWorkWhenReadyDispatchExists() {
+        BannerModHomeAssignmentRuntime homeRuntime = new BannerModHomeAssignmentRuntime();
+        BannerModSellerDispatchRuntime sellerRuntime = new BannerModSellerDispatchRuntime();
+        BannerModSettlementResidentRecord seller = buildMarketSeller();
+        UUID marketUuid = UUID.fromString("00000000-0000-0000-0000-0000000000c1");
+        BannerModSettlementMarketState marketState = new BannerModSettlementMarketState(
+                1,
+                1,
+                16,
+                8,
+                1,
+                1,
+                List.of(),
+                List.of(new BannerModSettlementSellerDispatchRecord(
+                        seller.residentUuid(),
+                        marketUuid,
+                        "market",
+                        BannerModSettlementSellerDispatchState.READY
+                ))
+        );
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals(
+                homeRuntime,
+                () -> marketState,
+                sellerRuntime
+        );
+
+        scheduler.tick(new ResidentGoalContext(seller, null, DAY_TICK_ACTIVE));
+
+        Optional<ResidentTask> task = scheduler.currentTask(seller.residentUuid());
+        assertTrue(task.isPresent());
+        assertEquals(SellerResidentGoal.ID, task.get().goalId());
+        assertTrue(sellerRuntime.phase(seller.residentUuid()).isPresent());
+    }
+
+    @Test
     void zeroPriorityGoalIsNotSelectedEvenIfCanStartReturnsTrue() {
         ResidentGoal zeroPriority = new FixedDurationTestGoal("test/goal/zero", 0, 5, false);
         BannerModResidentGoalScheduler scheduler = new BannerModResidentGoalScheduler(List.of(zeroPriority));
@@ -208,6 +275,27 @@ class BannerModResidentGoalSchedulerTest {
                 null,
                 null,
                 BannerModSettlementResidentAssignmentState.NOT_APPLICABLE
+        );
+    }
+
+    private static BannerModSettlementResidentRecord buildMarketSeller() {
+        UUID id = UUID.fromString("00000000-0000-0000-0000-000000000003");
+        UUID marketBuilding = UUID.fromString("00000000-0000-0000-0000-0000000000d1");
+        return new BannerModSettlementResidentRecord(
+                id,
+                BannerModSettlementResidentRole.CONTROLLED_WORKER,
+                BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK,
+                BannerModSettlementResidentRuntimeRoleSeed.LOCAL_LABOR,
+                new BannerModSettlementResidentServiceContract(
+                        BannerModSettlementServiceActorState.LOCAL_BUILDING_SERVICE,
+                        marketBuilding,
+                        "market"
+                ),
+                BannerModSettlementResidentMode.PROJECTED_CONTROLLED_WORKER,
+                UUID.fromString("00000000-0000-0000-0000-0000000000ab"),
+                "teamA",
+                marketBuilding,
+                BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING
         );
     }
 

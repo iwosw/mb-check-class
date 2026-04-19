@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
-import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,14 +22,16 @@ public class WaypointEditPopup {
     private static final int BTN_W = 62;
 
     private final WorldMapScreen parent;
+    private final WorldMapRouteMutationController routeController;
 
     private boolean visible = false;
     private RecruitsRoute.Waypoint waypoint;
     private RecruitsRoute.WaypointAction.Type actionType;
     private EditBox waitField;
 
-    public WaypointEditPopup(WorldMapScreen parent) {
+    public WaypointEditPopup(WorldMapScreen parent, WorldMapRouteMutationController routeController) {
         this.parent = parent;
+        this.routeController = routeController;
     }
 
     public boolean isVisible() {
@@ -98,7 +99,7 @@ public class WaypointEditPopup {
             waypoint.setAction(new RecruitsRoute.WaypointAction(actionType, seconds));
         }
 
-        ClientManager.saveRoute(parent.selectedRoute);
+        routeController.saveSelectedRoute();
         close();
     }
 

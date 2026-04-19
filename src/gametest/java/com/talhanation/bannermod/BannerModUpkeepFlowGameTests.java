@@ -77,10 +77,16 @@ public class BannerModUpkeepFlowGameTests {
                 "Expected the recruit upkeep slice to stay blocked until the same-owner upkeep container is resupplied");
         helper.assertTrue("recruit_upkeep_missing_food_and_payment".equals(recruitStatus.reasonToken()),
                 "Expected the recruit upkeep slice to preserve the shared missing-food-and-payment reason token");
+        helper.assertTrue(recruitStatus.accounting().state() == BannerModSupplyStatus.ArmyUpkeepState.UNPAID_AND_STARVING,
+                "Expected the recruit upkeep slice to expose bounded unpaid-and-starving accounting state through BannerModSupplyStatus");
+        helper.assertTrue(recruitStatus.accounting().starvingLevel() == 2,
+                "Expected the recruit upkeep slice to bound starving accounting pressure from low hunger without a per-tick debt counter");
         helper.assertTrue(resuppliedRecruitStatus.state() == BannerModSupplyStatus.RecruitSupplyState.READY,
                 "Expected the same-owner upkeep container resupply to move the recruit into BannerModSupplyStatus.RecruitSupplyState.READY");
         helper.assertFalse(resuppliedRecruitStatus.blocked(),
                 "Expected the recruit upkeep slice to stop blocking readiness after bread and payment are supplied");
+        helper.assertTrue(resuppliedRecruitStatus.accounting().state() == BannerModSupplyStatus.ArmyUpkeepState.STABLE,
+                "Expected the recruit upkeep slice to clear shared accounting pressure once food and payment are supplied");
         helper.succeed();
     }
 }

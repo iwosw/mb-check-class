@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,6 +15,9 @@ public class BannerModLogisticsService {
     private static final Comparator<BannerModLogisticsRoute> ROUTE_ORDER =
             Comparator.comparingInt((BannerModLogisticsRoute route) -> route.priority().sortOrder())
                     .thenComparing(BannerModLogisticsRoute::routeId);
+    private static final Comparator<BannerModSeaTradeEntrypoint> SEA_ENTRYPOINT_ORDER =
+            Comparator.comparingInt((BannerModSeaTradeEntrypoint entrypoint) -> entrypoint.priority().sortOrder())
+                    .thenComparing(BannerModSeaTradeEntrypoint::routeId);
 
     private final Map<UUID, BannerModLogisticsReservation> reservationsById = new HashMap<>();
     private final Map<UUID, UUID> reservationIdsByWorker = new HashMap<>();
@@ -95,6 +99,28 @@ public class BannerModLogisticsService {
         return 1;
     }
 
+    public List<BannerModSeaTradeEntrypoint> listSeaTradeEntrypoints(Collection<BannerModLogisticsRoute> routes,
+                                                                     Predicate<UUID> isPortStorageArea) {
+        return this.listSeaTradeEntrypoints(routes, storageAreaId -> true, isPortStorageArea);
+    }
+
+    public List<BannerModSeaTradeEntrypoint> listSeaTradeEntrypoints(Collection<BannerModLogisticsRoute> routes,
+                                                                     Predicate<UUID> storageAreaAvailable,
+                                                                     Predicate<UUID> isPortStorageArea) {
+        Objects.requireNonNull(routes, "routes");
+        Objects.requireNonNull(storageAreaAvailable, "storageAreaAvailable");
+        Objects.requireNonNull(isPortStorageArea, "isPortStorageArea");
+
+        return routes.stream()
+                .filter(Objects::nonNull)
+                .filter(route -> storageAreaAvailable.test(route.source().storageAreaId()))
+                .filter(route -> storageAreaAvailable.test(route.destination().storageAreaId()))
+                .map(route -> toSeaTradeEntrypoint(route, isPortStorageArea))
+                .flatMap(Optional::stream)
+                .sorted(SEA_ENTRYPOINT_ORDER)
+                .toList();
+    }
+
     private BannerModCourierTask createReservation(UUID workerId,
                                                    BannerModLogisticsRoute route,
                                                    long expiresAtGameTime) {
@@ -120,5 +146,26 @@ public class BannerModLogisticsService {
             }
         }
         return null;
+    }
+
+    private static Optional<BannerModSeaTradeEntrypoint> toSeaTradeEntrypoint(BannerModLogisticsRoute route,
+                                                                               Predicate<UUID> isPortStorageArea) {
+        UUID sourceId = route.source().storageAreaId();
+        UUID destinationId = route.destination().storageAreaId();
+        boolean sourceIsPort = isPortStorageArea.test(sourceId);
+        boolean destinationIsPort = isPortStorageArea.test(destinationId);
+        if (sourceIsPort == destinationIsPort) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new BannerModSeaTradeEntrypoint(
+                route.routeId(),
+                sourceIsPort ? sourceId : destinationId,
+                sourceIsPort ? destinationId : sourceId,
+                sourceIsPort ? BannerModSeaTradeDirection.IMPORT : BannerModSeaTradeDirection.EXPORT,
+                route.filter(),
+                route.requestedCount(),
+                route.priority()
+        ));
     }
 }

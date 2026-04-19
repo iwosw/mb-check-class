@@ -52,6 +52,11 @@ public final class BannerModSettlementProjectRuntime {
         );
     }
 
+    /** Public detached factory for cross-package unit tests. */
+    public static BannerModSettlementProjectRuntime detachedForTests() {
+        return detached();
+    }
+
     public BannerModSettlementProjectScheduler scheduler() {
         return scheduler;
     }

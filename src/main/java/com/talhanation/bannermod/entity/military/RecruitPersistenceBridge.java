@@ -83,7 +83,8 @@ final class RecruitPersistenceBridge {
         recruit.setIsOwned(nbt.getBoolean("isOwned"));
         recruit.setCost(nbt.getInt("Cost"));
         recruit.setMountTimer(nbt.getInt("mountTimer"));
-        recruit.setUpkeepTimer(nbt.getInt("UpkeepTimer"));
+        if (nbt.contains("UpkeepTimer")) recruit.setUpkeepTimer(nbt.getInt("UpkeepTimer"));
+        else recruit.setUpkeepTimer(nbt.getInt("upkeepTimer"));
         recruit.setColor(nbt.getByte("Color"));
         recruit.setMaxFallDistance(nbt.getInt("MaxFallDistance"));
         recruit.formationPos = nbt.getInt("formationPos");

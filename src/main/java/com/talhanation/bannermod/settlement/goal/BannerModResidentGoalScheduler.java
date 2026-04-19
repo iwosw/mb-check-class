@@ -1,11 +1,17 @@
 package com.talhanation.bannermod.settlement.goal;
 
+import com.talhanation.bannermod.settlement.BannerModSettlementMarketState;
+import com.talhanation.bannermod.settlement.dispatch.BannerModSellerDispatchRuntime;
+import com.talhanation.bannermod.settlement.dispatch.SellerResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.DeliverResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.FetchResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.IdleResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.RestResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.SocialiseResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.WorkResidentGoal;
+import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentRuntime;
+import com.talhanation.bannermod.settlement.household.GoHomeResidentGoal;
+import com.talhanation.bannermod.settlement.household.LeaveHomeResidentGoal;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
@@ -15,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Priority-based goal scheduler for settlement residents. Reads the resident's
@@ -50,6 +57,38 @@ public final class BannerModResidentGoalScheduler {
                 new SocialiseResidentGoal(),
                 new DeliverResidentGoal(),
                 new FetchResidentGoal()
+        ));
+    }
+
+    /**
+     * Default scheduler extended with the current Phase 25 household and seller
+     * runtime seams. This keeps those slices additive and composable without
+     * forcing live settlement orchestration to land in the same change.
+     */
+    public static BannerModResidentGoalScheduler withDefaultGoals(
+            BannerModHomeAssignmentRuntime homeAssignmentRuntime,
+            Supplier<BannerModSettlementMarketState> marketStateSupplier,
+            BannerModSellerDispatchRuntime sellerDispatchRuntime
+    ) {
+        if (homeAssignmentRuntime == null) {
+            throw new IllegalArgumentException("homeAssignmentRuntime must not be null");
+        }
+        if (marketStateSupplier == null) {
+            throw new IllegalArgumentException("marketStateSupplier must not be null");
+        }
+        if (sellerDispatchRuntime == null) {
+            throw new IllegalArgumentException("sellerDispatchRuntime must not be null");
+        }
+        return new BannerModResidentGoalScheduler(List.of(
+                new GoHomeResidentGoal(homeAssignmentRuntime),
+                new RestResidentGoal(),
+                new LeaveHomeResidentGoal(homeAssignmentRuntime),
+                new SellerResidentGoal(marketStateSupplier, sellerDispatchRuntime),
+                new WorkResidentGoal(),
+                new SocialiseResidentGoal(),
+                new DeliverResidentGoal(),
+                new FetchResidentGoal(),
+                new IdleResidentGoal()
         ));
     }
 

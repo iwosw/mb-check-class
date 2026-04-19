@@ -17,6 +17,7 @@ class CitizenWorkerBridgeTest {
 
     private static final Path WORKER_SOURCE = Path.of("src/main/java/com/talhanation/bannermod/entity/civilian/AbstractWorkerEntity.java");
     private static final Path BINDING_SOURCE = Path.of("src/main/java/com/talhanation/bannermod/entity/civilian/WorkerBindingResume.java");
+    private static final Path PERSISTENCE_SOURCE = Path.of("src/main/java/com/talhanation/bannermod/entity/civilian/WorkerPersistenceBridge.java");
 
     @Test
     void workerRecoveryAndBindingDataCanFlowThroughTheCitizenBridge() {
@@ -40,11 +41,13 @@ class CitizenWorkerBridgeTest {
     void workerWrapperSourceRoutesBindingAndPersistenceThroughCitizenHelpers() throws Exception {
         String workerSource = Files.readString(WORKER_SOURCE);
         String bindingSource = Files.readString(BINDING_SOURCE);
+        String persistenceSource = Files.readString(PERSISTENCE_SOURCE);
 
-        assertTrue(workerSource.contains("CitizenPersistenceBridge"));
-        assertTrue(workerSource.contains("hydrateCitizenStateFromLegacy"));
-        assertTrue(workerSource.contains("persistCitizenStateToLegacy"));
+        assertTrue(workerSource.contains("WorkerPersistenceBridge"));
         assertTrue(workerSource.contains("getCitizenCore()"));
+        assertTrue(persistenceSource.contains("CitizenPersistenceBridge"));
+        assertTrue(persistenceSource.contains("hydrateCitizenStateFromLegacy"));
+        assertTrue(persistenceSource.contains("persistCitizenStateToLegacy"));
         assertTrue(bindingSource.contains("CitizenCore") || bindingSource.contains("boundWorkArea"));
     }
 

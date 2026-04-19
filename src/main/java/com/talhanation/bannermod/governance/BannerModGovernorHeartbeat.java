@@ -6,15 +6,19 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 public final class BannerModGovernorHeartbeat {
     private static final int TAX_PER_CITIZEN = 2;
@@ -100,8 +104,38 @@ public final class BannerModGovernorHeartbeat {
     }
 
     public static void runGovernedClaimHeartbeat(ServerLevel level, RecruitsClaimManager claimManager, BannerModGovernorManager governorManager) {
+        if (level == null) {
+            return;
+        }
+        runGovernedClaimHeartbeat(level, claimManager, governorManager, BannerModTreasuryManager.get(level));
+    }
+
+    public static void runGovernedClaimHeartbeat(ServerLevel level,
+                                                 RecruitsClaimManager claimManager,
+                                                 BannerModGovernorManager governorManager,
+                                                 @Nullable BannerModTreasuryManager treasuryManager) {
         if (level == null || claimManager == null || governorManager == null) {
             return;
+        }
+
+        Set<java.util.UUID> activeClaimUuids = new HashSet<>();
+        for (RecruitsClaim claim : claimManager.getAllClaims()) {
+            if (claim != null) {
+                activeClaimUuids.add(claim.getUUID());
+            }
+        }
+
+        List<java.util.UUID> staleSnapshots = new ArrayList<>();
+        for (BannerModGovernorSnapshot snapshot : governorManager.getAllSnapshots()) {
+            if (snapshot != null && !activeClaimUuids.contains(snapshot.claimUuid())) {
+                staleSnapshots.add(snapshot.claimUuid());
+            }
+        }
+        for (java.util.UUID claimUuid : staleSnapshots) {
+            governorManager.removeSnapshot(claimUuid);
+            if (treasuryManager != null) {
+                treasuryManager.removeLedger(claimUuid);
+            }
         }
 
         for (BannerModGovernorSnapshot snapshot : governorManager.getAllSnapshots()) {
@@ -110,6 +144,10 @@ public final class BannerModGovernorHeartbeat {
             }
 
             RecruitsClaim claim = resolveClaim(claimManager, snapshot);
+            List<AbstractWorkerEntity> workers = claim == null ? List.of() : entitiesInClaim(level, claim, AbstractWorkerEntity.class);
+            List<AbstractRecruitEntity> recruits = claim == null ? List.of() : entitiesInClaim(level, claim, AbstractRecruitEntity.class);
+            BannerModSupplyStatus.WorkerSupplyStatus workerSupplyStatus = summarizeWorkerSupplyStatus(workers);
+            BannerModSupplyStatus.RecruitSupplyStatus recruitSupplyStatus = summarizeRecruitSupplyStatus(level, recruits);
             BannerModSettlementBinding.Binding binding = claim == null
                     ? BannerModSettlementBinding.resolveSettlementStatus((RecruitsClaim) null, snapshot.anchorChunk(), snapshot.settlementFactionId())
                     : BannerModSettlementBinding.resolveSettlementStatus(claim, resolveAnchorChunk(claim, snapshot), snapshot.settlementFactionId());
@@ -118,14 +156,22 @@ public final class BannerModGovernorHeartbeat {
                     binding.status(),
                     claim != null && claim.isUnderSiege,
                     claim == null ? 0 : countEntitiesInClaim(level, claim, Villager.class),
-                    claim == null ? 0 : countEntitiesInClaim(level, claim, AbstractWorkerEntity.class),
-                    claim == null ? 0 : countEntitiesInClaim(level, claim, AbstractRecruitEntity.class),
-                    new BannerModSupplyStatus.WorkerSupplyStatus(false, null, null),
-                    new BannerModSupplyStatus.RecruitSupplyStatus(BannerModSupplyStatus.RecruitSupplyState.READY, false, false, false, null),
+                    workers.size(),
+                    recruits.size(),
+                    workerSupplyStatus,
+                    recruitSupplyStatus,
                     level.getGameTime(),
                     snapshot.lastHeartbeatTick(),
                     snapshot
             ));
+
+            BannerModTreasuryLedgerSnapshot.FiscalRollup fiscalRollup = recordHeartbeatAccounting(
+                    treasuryManager,
+                    snapshot,
+                    binding,
+                    report,
+                    recruitSupplyStatus
+            );
 
             governorManager.putSnapshot(snapshot.withHeartbeatReport(
                     report.heartbeatTick(),
@@ -135,8 +181,163 @@ public final class BannerModGovernorHeartbeat {
                     report.taxesCollected(),
                     incidentTokens(report.incidents()),
                     recommendationTokens(report.recommendations())
-            ));
+            ).withFiscalRollup(fiscalRollup));
         }
+    }
+
+    private static BannerModSupplyStatus.WorkerSupplyStatus summarizeWorkerSupplyStatus(List<AbstractWorkerEntity> workers) {
+        for (AbstractWorkerEntity worker : workers) {
+            BannerModSupplyStatus.WorkerSupplyStatus supplyStatus = worker.getSupplyStatus();
+            if (supplyStatus != null && supplyStatus.blocked()) {
+                return supplyStatus;
+            }
+        }
+        return new BannerModSupplyStatus.WorkerSupplyStatus(false, null, null);
+    }
+
+    private static BannerModSupplyStatus.RecruitSupplyStatus summarizeRecruitSupplyStatus(ServerLevel level,
+                                                                                           List<AbstractRecruitEntity> recruits) {
+        boolean blocked = false;
+        boolean needsFood = false;
+        boolean needsPayment = false;
+        String reasonToken = null;
+        int unpaidLevel = 0;
+        int starvingLevel = 0;
+        boolean unpaid = false;
+        boolean starving = false;
+        float lowestHunger = 100.0F;
+
+        for (AbstractRecruitEntity recruit : recruits) {
+            BannerModSupplyStatus.RecruitSupplyStatus supplyStatus = recruit.getSupplyStatus(resolveRecruitUpkeepContainer(level, recruit));
+            if (supplyStatus == null) {
+                continue;
+            }
+            blocked |= supplyStatus.blocked();
+            needsFood |= supplyStatus.needsFood();
+            needsPayment |= supplyStatus.needsPayment();
+            if (reasonToken == null && supplyStatus.reasonToken() != null) {
+                reasonToken = supplyStatus.reasonToken();
+            }
+            if (supplyStatus.accounting() != null) {
+                unpaid |= supplyStatus.accounting().unpaid();
+                starving |= supplyStatus.accounting().starving();
+                unpaidLevel += Math.max(0, supplyStatus.accounting().unpaidLevel());
+                starvingLevel = Math.max(starvingLevel, Math.max(0, supplyStatus.accounting().starvingLevel()));
+            }
+            lowestHunger = Math.min(lowestHunger, recruit.getHunger());
+        }
+
+        BannerModSupplyStatus.RecruitSupplyState state = BannerModSupplyStatus.RecruitSupplyState.READY;
+        if (needsFood && needsPayment) {
+            state = BannerModSupplyStatus.RecruitSupplyState.NEEDS_FOOD_AND_PAYMENT;
+        } else if (needsFood) {
+            state = BannerModSupplyStatus.RecruitSupplyState.NEEDS_FOOD;
+        } else if (needsPayment) {
+            state = BannerModSupplyStatus.RecruitSupplyState.NEEDS_PAYMENT;
+        }
+
+        BannerModSupplyStatus.ArmyUpkeepState accountingState = BannerModSupplyStatus.armyUpkeepStatus(unpaid, starving, lowestHunger).state();
+        BannerModSupplyStatus.ArmyUpkeepStatus accounting = new BannerModSupplyStatus.ArmyUpkeepStatus(
+                accountingState,
+                unpaid,
+                starving,
+                unpaidLevel,
+                starvingLevel,
+                BannerModSupplyStatus.armyUpkeepStatus(unpaid, starving, lowestHunger).reasonToken()
+        );
+        return new BannerModSupplyStatus.RecruitSupplyStatus(state, blocked, needsFood, needsPayment, reasonToken, accounting);
+    }
+
+    @Nullable
+    private static Container resolveRecruitUpkeepContainer(ServerLevel level, AbstractRecruitEntity recruit) {
+        if (recruit.getUpkeepPos() != null) {
+            var blockEntity = level.getBlockEntity(recruit.getUpkeepPos());
+            if (blockEntity instanceof Container container) {
+                return container;
+            }
+        }
+        if (recruit.getUpkeepUUID() != null) {
+            Entity entity = level.getEntities((Entity) null, recruit.getBoundingBox().inflate(100.0D), current -> recruit.getUpkeepUUID().equals(current.getUUID()))
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            if (entity instanceof Container container) {
+                return container;
+            }
+            if (entity instanceof AbstractRecruitEntity upkeepRecruit) {
+                return upkeepRecruit.getInventory();
+            }
+        }
+        return null;
+    }
+
+    private static <T extends Entity> List<T> entitiesInClaim(ServerLevel level, RecruitsClaim claim, Class<T> entityClass) {
+        return level.getEntitiesOfClass(entityClass, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+    }
+
+    static void depositTaxes(@Nullable BannerModTreasuryManager treasuryManager,
+                             BannerModGovernorSnapshot snapshot,
+                             BannerModSettlementBinding.Binding binding,
+                             HeartbeatReport report) {
+        if (treasuryManager == null || snapshot == null || binding == null || report == null || report.taxesCollected() <= 0) {
+            return;
+        }
+        treasuryManager.depositTaxes(
+                snapshot.claimUuid(),
+                snapshot.anchorChunk(),
+                binding.claimFactionId(),
+                report.taxesCollected(),
+                report.collectionTick()
+        );
+    }
+
+    static void recordArmyUpkeepDebit(@Nullable BannerModTreasuryManager treasuryManager,
+                                      BannerModGovernorSnapshot snapshot,
+                                      BannerModSettlementBinding.Binding binding,
+                                      HeartbeatReport report,
+                                      @Nullable BannerModSupplyStatus.RecruitSupplyStatus recruitSupplyStatus) {
+        if (treasuryManager == null || snapshot == null || binding == null || report == null || recruitSupplyStatus == null) {
+            return;
+        }
+        BannerModSupplyStatus.ArmyUpkeepStatus accounting = recruitSupplyStatus.accounting();
+        if (accounting == null || !accounting.unpaid()) {
+            return;
+        }
+        treasuryManager.recordArmyUpkeepDebit(
+                snapshot.claimUuid(),
+                snapshot.anchorChunk(),
+                binding.claimFactionId(),
+                accounting.unpaidLevel(),
+                report.heartbeatTick()
+        );
+    }
+
+    @Nullable
+    static BannerModTreasuryLedgerSnapshot.FiscalRollup recordHeartbeatAccounting(@Nullable BannerModTreasuryManager treasuryManager,
+                                                                                  BannerModGovernorSnapshot snapshot,
+                                                                                  BannerModSettlementBinding.Binding binding,
+                                                                                  HeartbeatReport report,
+                                                                                  @Nullable BannerModSupplyStatus.RecruitSupplyStatus recruitSupplyStatus) {
+        if (treasuryManager == null || snapshot == null || binding == null || report == null) {
+            return null;
+        }
+        int requestedArmyUpkeepDebit = resolveRequestedArmyUpkeepDebit(recruitSupplyStatus);
+        BannerModTreasuryLedgerSnapshot updated = treasuryManager.applyHeartbeatAccounting(
+                snapshot.claimUuid(),
+                snapshot.anchorChunk(),
+                binding.claimFactionId(),
+                report.taxesCollected(),
+                requestedArmyUpkeepDebit,
+                report.heartbeatTick()
+        );
+        return updated.projectFiscalRollup(report.taxesCollected(), requestedArmyUpkeepDebit, report.heartbeatTick());
+    }
+
+    private static int resolveRequestedArmyUpkeepDebit(@Nullable BannerModSupplyStatus.RecruitSupplyStatus recruitSupplyStatus) {
+        if (recruitSupplyStatus == null || recruitSupplyStatus.accounting() == null || !recruitSupplyStatus.accounting().unpaid()) {
+            return 0;
+        }
+        return recruitSupplyStatus.accounting().unpaidLevel();
     }
 
     public record HeartbeatInput(BannerModSettlementBinding.Status settlementStatus,

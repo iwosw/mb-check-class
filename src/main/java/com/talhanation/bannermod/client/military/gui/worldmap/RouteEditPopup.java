@@ -1,7 +1,6 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
 import com.talhanation.bannermod.network.messages.military.MessageTransferRoute;
@@ -29,14 +28,16 @@ public class RouteEditPopup {
 
     private final WorldMapScreen parent;
     private final Player player;
+    private final WorldMapRouteMutationController routeController;
 
     private boolean visible = false;
     private RecruitsRoute route;
     private EditBox nameField;
 
-    public RouteEditPopup(WorldMapScreen parent, Player player) {
+    public RouteEditPopup(WorldMapScreen parent, Player player, WorldMapRouteMutationController routeController) {
         this.parent = parent;
         this.player = player;
+        this.routeController = routeController;
     }
 
     public boolean isVisible() {
@@ -73,10 +74,9 @@ public class RouteEditPopup {
 
         String trimmed = nameField.getValue().trim();
         if (!trimmed.equals(route.getName())) {
-            ClientManager.renameRoute(route, trimmed);
+            routeController.renameRoute(route, trimmed);
         }
 
-        parent.refreshRouteUI();
         close();
     }
 
@@ -96,9 +96,8 @@ public class RouteEditPopup {
     }
 
     private void deleteRoute() {
-        ClientManager.deleteRoute(route);
-        parent.selectedRoute = null;
-        parent.refreshRouteUI();
+        routeController.deleteRoute(route);
+        parent.setSelectedRoute(routeController.getSelectedRoute());
         close();
     }
 

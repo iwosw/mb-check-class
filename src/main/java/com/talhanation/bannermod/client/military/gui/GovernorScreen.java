@@ -81,6 +81,10 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         y += 12;
         guiGraphics.drawString(font, Component.literal("Taxes: " + state.taxesCollected + "/" + state.taxesDue), x, y, 4210752, false);
         y += 12;
+        guiGraphics.drawString(font, Component.literal("Treasury: " + state.treasuryBalance + " (net " + state.lastTreasuryNet + ")"), x, y, 4210752, false);
+        y += 12;
+        guiGraphics.drawString(font, Component.literal("Projected: " + state.projectedTreasuryBalance), x, y, 4210752, false);
+        y += 12;
         guiGraphics.drawString(font, Component.literal("Heartbeat: " + state.lastHeartbeatTick), x, y, 4210752, false);
         y += 12;
         guiGraphics.drawString(font, Component.literal("Garrison guidance: " + readableToken(state.garrisonRecommendation)), x, y, 4210752, false);
@@ -120,13 +124,17 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
                                     long lastHeartbeatTick,
                                     String garrisonRecommendation,
                                     String fortificationRecommendation,
-                                    int garrisonPriority,
-                                    int fortificationPriority,
-                                    int taxPressure,
-                                    List<String> incidents,
-                                    List<String> recommendations) {
+                                     int garrisonPriority,
+                                     int fortificationPriority,
+                                     int taxPressure,
+                                     int treasuryBalance,
+                                     int lastTreasuryNet,
+                                     int projectedTreasuryBalance,
+                                     List<String> incidents,
+                                     List<String> recommendations) {
         latestState = new GovernorViewState(recruitId, settlementStatus, citizenCount, taxesDue, taxesCollected, lastHeartbeatTick,
                 garrisonRecommendation, fortificationRecommendation, garrisonPriority, fortificationPriority, taxPressure,
+                treasuryBalance, lastTreasuryNet, projectedTreasuryBalance,
                 new ArrayList<>(incidents), new ArrayList<>(recommendations));
     }
 
@@ -145,12 +153,16 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
                                      int garrisonPriority,
                                      int fortificationPriority,
                                      int taxPressure,
+                                     int treasuryBalance,
+                                     int lastTreasuryNet,
+                                     int projectedTreasuryBalance,
                                      List<String> incidents,
                                      List<String> recommendations) {
         private static GovernorViewState empty() {
             return new GovernorViewState(new UUID(0L, 0L), "unknown", 0, 0, 0, 0L,
                     "hold_course", "hold_course",
                     BannerModGovernorPolicy.DEFAULT_VALUE, BannerModGovernorPolicy.DEFAULT_VALUE, BannerModGovernorPolicy.DEFAULT_VALUE,
+                    0, 0, 0,
                     List.of(), List.of());
         }
     }

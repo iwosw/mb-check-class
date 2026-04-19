@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Normalizing compact Phase 24-25 planning after confirmed governance/settlement bugfix closeouts; treasury heartbeat now uses live supply and upkeep state, governor UI surfaces fiscal rollup, and settlement refresh hooks are broader but still incomplete
+status: Normalizing compact Phase 24-25 planning after confirmed governance/settlement bugfix closeouts and Phase 25 runtime bring-up; settlement seeds are now joined by test-backed goal/growth/project/dispatch/household/job seams, but full live integration is still incomplete
 last_updated: "2026-04-20T04:15:00Z"
 progress:
   total_phases: 28
@@ -14,7 +14,7 @@ progress:
 
 # Project State
 
-- Current focus: compact Phase 24 historical `24-05-PLAN.md` closeout remains verified green inside `.planning/phases/24-logistics-backbone-and-courier-worker/`, while the latest confirmed closeout wave fixed governance/settlement follow-through around live supply-upkeep accounting, governor fiscal-rollup UI surfacing, controlled-worker settlement semantics, and targeted event-driven settlement refresh hooks. Immediate next work is to keep compact Phase 24-25 planning truthful and then resume compact Phase 25 execution in isolated 5-slice batches.
+- Current focus: compact Phase 24 historical `24-05-PLAN.md` closeout remains verified green inside `.planning/phases/24-logistics-backbone-and-courier-worker/`, and compact Phase 25 has now moved past persistence-only seeds into a first runtime bring-up: resident goal scheduling, growth scoring, project queuing, seller dispatch, household assignment, and job-handler registry seams all exist in the main tree with targeted JUnit coverage. Immediate next work is to keep compact Phase 25 planning truthful and then continue wiring those slices into the live settlement loop before opening the next HYW-heavy military seam.
 - Runtime base: the root `src/**` tree under `com.talhanation.bannermod` (Phase 21 completed the in-place merge)
 - Active runtime mod: `bannermod`
 - Workers status: fully absorbed; civilian Java code lives under `bannermod.{entity,ai,client,inventory,items,persistence,registry,settlement}.civilian`; civilian network packets live under `bannermod.network.messages.civilian` at packet-ID offset = MILITARY_MESSAGES.length (104).
@@ -39,7 +39,7 @@ progress:
 - Phase 29 planning artifacts: `.planning/phases/29-1-3-3-2-branch-mining-strip-mining-3-21-26/`
 - Phase 30 consolidated planning artifacts: `.planning/phases/30-worker-birth-and-claim-based-settlement-spawn/`, `.planning/phases/31-1-2-mining-area-branch-mine-3/`
 - Phase 01 planning artifacts: `.planning/phases/01-workspace-bootstrap/`
-- Latest execution summary: `.planning/phases/24-logistics-backbone-and-courier-worker/24-logistics-backbone-and-courier-worker-05-SUMMARY.md` (live server-side `StorageArea` entities now publish sea-trade entrypoints through the shared logistics runtime, stale authored routes are suppressed from that publication path, and later settlement heuristics now consume those live entrypoint sets more honestly where available)
+- Latest execution summary: `.planning/phases/25-treasury-taxes-and-army-upkeep/25-SLICE-STATUS.md` (compact Phase 25 is no longer seed-only; the main tree now contains additive `settlement.goal`, `growth`, `project`, `dispatch`, `household`, and `job` runtime seams backed by targeted JUnit coverage, but live end-to-end settlement orchestration is still incomplete)
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 - Active compact-Phase-25 planning artifacts: `.planning/phases/25-treasury-taxes-and-army-upkeep/` (keep this directory truthful; do not treat it as a future placeholder)
 
@@ -166,6 +166,7 @@ progress:
 - [Compact Phase 24-25 closeout]: Compact settlement refresh now reacts to storage updates and worker work-area binding changes in targeted civil paths instead of relying only on governor-heartbeat refreshes, but broader civil mutation coverage is still incomplete.
 - [Compact Phase 25 closeout]: Controlled workers now persist settlement-local assignment and service semantics more consistently, and settlement heuristics prefer live sea-trade entrypoint sets where available instead of authored route flags alone.
 - [Compact Phase 25 closeout]: Enum-load hardening is only partial today; several settlement persistence enums now use safe fallback parsing, but remaining raw `Enum.valueOf(...)` paths still need follow-up before this can be called complete.
+- [Compact Phase 25 runtime]: Refreshed settlement snapshots now flow through one live `BannerModSettlementOrchestrator` on the governor tick, composing the additive growth/project/home/seller/goal/job runtimes without yet replacing worker entities or persisting runtime state.
 - [Phase 24]: Persist treasury accrual in one narrow claim-keyed SavedData ledger and feed it directly from the existing governor heartbeat instead of introducing a global economy manager, item hauling, or per-tick tax recomputation.
 - [Phase 32]: Replace server-wide global chat with explicit faction and local channels; keep routing server-authoritative and operator-configurable.
 - [Phase 33]: Unify citizen appearance and birth behind one building-capacity-aware settlement growth loop with overpopulation pressure.

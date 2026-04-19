@@ -61,7 +61,8 @@ class BannerModGovernorRulesTest {
         RecruitsClaim claim = claim(chunkPos, "blueguild");
         BannerModGovernorSnapshot original = BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID())
                 .withGovernor(UUID.randomUUID(), UUID.randomUUID())
-                .withHeartbeatReport(200L, 180L, 5, 12, 9, List.of("stable"), List.of("garrison_low"));
+                .withHeartbeatReport(200L, 180L, 5, 12, 9, List.of("stable"), List.of("garrison_low"))
+                .withFiscalRollup(new BannerModTreasuryLedgerSnapshot.FiscalRollup(18, 9, 9, 3, 12, 200L));
 
         BannerModGovernorManager manager = new BannerModGovernorManager();
         manager.putSnapshot(original);
@@ -75,6 +76,9 @@ class BannerModGovernorRulesTest {
         assertEquals(claim.getCenter(), restored.anchorChunk());
         assertEquals(original.governorRecruitUuid(), restored.governorRecruitUuid());
         assertEquals(original.governorOwnerUuid(), restored.governorOwnerUuid());
+        assertEquals(original.treasuryBalance(), restored.treasuryBalance());
+        assertEquals(original.lastTreasuryNet(), restored.lastTreasuryNet());
+        assertEquals(original.projectedTreasuryBalance(), restored.projectedTreasuryBalance());
         assertEquals(original.incidentTokens(), restored.incidentTokens());
         assertNull(reloaded.getSnapshot(UUID.randomUUID()));
     }

@@ -1,11 +1,6 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
-import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
-import com.talhanation.bannermod.client.military.gui.diplomacy.DiplomacyEditScreen;
-import com.talhanation.bannermod.network.messages.military.MessageTeleportPlayer;
-import com.talhanation.bannermod.network.messages.military.MessageUpdateClaim;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -16,16 +11,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public class WorldMapContextMenu {
-
-    private static final Component TEXT_DIPLOMACY          = Component.translatable("gui.recruits.map.diplomacy");
-    private static final Component TEXT_CLAIM_CHUNK        = Component.translatable("gui.recruits.map.claim_chunk");
-    private static final Component TEXT_CLAIM_AREA         = Component.translatable("gui.recruits.map.claim_area");
-    private static final Component TEXT_EDIT_CLAIM         = Component.translatable("gui.recruits.map.edit_claim");
-    private static final Component TEXT_REMOVE_CHUNK       = Component.translatable("gui.recruits.map.remove_chunk");
-    private static final Component TEXT_CENTER_MAP         = Component.translatable("gui.recruits.map.center_map");
-    private static final Component TEXT_REMOVE_CHUNK_ADMIN = Component.translatable("gui.recruits.map.remove_chunk_admin");
-    private static final Component TEXT_DELETE_CLAIM_ADMIN = Component.translatable("gui.recruits.map.delete_claim_admin");
-    private static final Component TEXT_TELEPORT_ADMIN     = Component.translatable("gui.recruits.map.teleport_admin");
 
     private final List<ContextMenuEntry> entries = new ArrayList<>();
     private int x, y;
@@ -45,109 +30,11 @@ public class WorldMapContextMenu {
         itemStackClaimChunk.setCount(ClientManager.configValueChunkCost);
         ItemStack itemStackClaimArea = new ItemStack(currencyItemStack.getItem());
         itemStackClaimArea.setCount(worldMapScreen.getClaimCost(ClientManager.ownFaction));
+        WorldMapClaimMenuActions claimMenuActions = new WorldMapClaimMenuActions(worldMapScreen);
+        WorldMapGeneralMenuActions generalMenuActions = new WorldMapGeneralMenuActions(worldMapScreen);
 
-        addEntry(TEXT_DIPLOMACY.getString(),
-                () -> ClientManager.ownFaction != null
-                        && this.worldMapScreen.selectedClaim != null
-                        && this.worldMapScreen.selectedClaim.getOwnerFaction() != null
-                        && !ClientManager.ownFaction.getStringID().equals(this.worldMapScreen.selectedClaim.getOwnerFactionStringID()),
-                (screen) -> Minecraft.getInstance().setScreen(new DiplomacyEditScreen(screen, screen.selectedClaim.getOwnerFaction()))
-        );
-
-        addEntry(TEXT_CLAIM_CHUNK.getString(),
-                () -> this.worldMapScreen.canClaimChunk(worldMapScreen.selectedChunk)
-                        && (this.worldMapScreen.isPlayerFactionLeader()
-                        || this.worldMapScreen.isPlayerClaimLeader(worldMapScreen.getNeighborClaim(worldMapScreen.selectedChunk))),
-                WorldMapScreen::claimChunk,
-                itemStackClaimChunk,
-                "bufferzone, chunk"
-        );
-
-        addEntry(TEXT_CLAIM_AREA.getString(),
-                () -> this.worldMapScreen.canClaimArea(worldMapScreen.getClaimArea(worldMapScreen.selectedChunk))
-                        && this.worldMapScreen.isPlayerFactionLeader(),
-                WorldMapScreen::claimArea,
-                itemStackClaimArea,
-                "bufferzone, area"
-        );
-
-        addEntry("Add Waypoint",
-                () -> this.worldMapScreen.selectedRoute != null
-                        && this.worldMapScreen.canPlaceWaypointAt(
-                                this.worldMapScreen.snapshotWorldX,
-                                this.worldMapScreen.snapshotWorldZ),
-                WorldMapScreen::addWaypointAtClicked
-        );
-
-        addEntry("Remove Waypoint",
-                () -> this.worldMapScreen.selectedRoute != null
-                        && this.worldMapScreen.isWaypointHoveredAt(snapshotMouseX, snapshotMouseY),
-                (screen) -> screen.removeWaypointAt(snapshotMouseX, snapshotMouseY)
-        );
-
-        addEntry("Edit Waypoint",
-                () -> this.worldMapScreen.selectedRoute != null
-                        && this.worldMapScreen.isWaypointHoveredAt(snapshotMouseX, snapshotMouseY),
-                (screen) -> screen.openWaypointEditPopup(snapshotMouseX, snapshotMouseY)
-        );
-
-        addEntry(TEXT_EDIT_CLAIM.getString(),
-                () -> this.worldMapScreen.selectedClaim != null
-                        && this.worldMapScreen.isPlayerFactionLeader(this.worldMapScreen.selectedClaim.getOwnerFaction())
-                        || this.worldMapScreen.isPlayerClaimLeader(),
-                (screen) -> {
-                    screen.getMinecraft().setScreen(new ClaimEditScreen(screen, screen.selectedClaim, screen.getPlayer()));
-                    screen.selectedClaim = null;
-                }
-        );
-
-        addEntry(TEXT_REMOVE_CHUNK.getString(),
-                () -> this.worldMapScreen.selectedChunk != null && this.worldMapScreen.selectedClaim != null
-                        && worldMapScreen.canRemoveChunk(worldMapScreen.selectedChunk, worldMapScreen.selectedClaim)
-                        && (this.worldMapScreen.isPlayerFactionLeader(worldMapScreen.selectedClaim.getOwnerFaction())
-                        || this.worldMapScreen.isPlayerClaimLeader(worldMapScreen.selectedClaim)),
-                (screen) -> {
-                    if (screen.selectedClaim.containsChunk(screen.selectedChunk)) {
-                        screen.selectedClaim.removeChunk(screen.selectedChunk);
-                        screen.selectedChunk = null;
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
-                    }
-                }
-        );
-
-        addEntry(TEXT_CENTER_MAP.getString(), WorldMapScreen::centerOnPlayer);
-
-        addEntry(TEXT_REMOVE_CHUNK_ADMIN.getString(),
-                () -> this.worldMapScreen.selectedChunk != null && this.worldMapScreen.selectedClaim != null
-                        && this.worldMapScreen.isPlayerAdminAndCreative()
-                        && worldMapScreen.canRemoveChunk(worldMapScreen.selectedChunk, worldMapScreen.selectedClaim)
-                        && !(this.worldMapScreen.isPlayerFactionLeader(worldMapScreen.selectedClaim.getOwnerFaction())
-                        || this.worldMapScreen.isPlayerClaimLeader(worldMapScreen.selectedClaim)),
-                (screen) -> {
-                    if (screen.selectedClaim.containsChunk(screen.selectedChunk)) {
-                        screen.selectedClaim.removeChunk(screen.selectedChunk);
-                        screen.selectedChunk = null;
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
-                    }
-                },
-                "admin"
-        );
-
-        addEntry(TEXT_DELETE_CLAIM_ADMIN.getString(),
-                () -> this.worldMapScreen.isPlayerAdminAndCreative() && this.worldMapScreen.selectedClaim != null,
-                (screen) -> {
-                    screen.selectedClaim.isRemoved = true;
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
-                    screen.selectedClaim = null;
-                },
-                "admin"
-        );
-
-        addEntry(TEXT_TELEPORT_ADMIN.getString(),
-                worldMapScreen::isPlayerAdminAndCreative,
-                (screen) -> BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageTeleportPlayer(screen.getClickedBlockPos())),
-                "admin"
-        );
+        claimMenuActions.addEntries(this, itemStackClaimChunk, itemStackClaimArea);
+        generalMenuActions.addEntries(this);
     }
 
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack itemStack, String tag) {
@@ -174,6 +61,8 @@ public class WorldMapContextMenu {
 
     public void close() { this.visible = false; }
     public boolean isVisible() { return visible; }
+    double getSnapshotMouseX() { return snapshotMouseX; }
+    double getSnapshotMouseY() { return snapshotMouseY; }
 
     private String hoveredEntryTag = null;
     public String getHoveredEntryTag() { return hoveredEntryTag; }

@@ -2,6 +2,9 @@ package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.governance.BannerModGovernorHeartbeat;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
+import com.talhanation.bannermod.settlement.BannerModSettlementService;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.util.ClaimUtil;
@@ -98,6 +101,13 @@ public class ClaimEvents {
         if(governorCounter >= GOVERNOR_TICK_INTERVAL){
             governorCounter = 0;
             BannerModGovernorHeartbeat.runGovernedClaimHeartbeat(level, recruitsClaimManager, BannerModGovernorManager.get(level));
+            BannerModSettlementService.refreshAllClaims(
+                    level,
+                    recruitsClaimManager,
+                    BannerModSettlementManager.get(level),
+                    BannerModGovernorManager.get(level)
+            );
+            BannerModSettlementOrchestrator.tick(level, BannerModSettlementManager.get(level), BannerModGovernorManager.get(level));
         }
     }
 

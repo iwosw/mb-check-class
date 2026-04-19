@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.util.FormationUtils;
+import com.talhanation.bannermod.util.FormationFallbackPlanner;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
 
@@ -59,7 +59,7 @@ public class RecruitHoldPosGoal extends Goal {
                         && this.recruit.isInFormation
                         && this.recruit.getFollowState() == 3
                         && (this.recruit.getNavigation().isStuck() || this.recruit.horizontalCollision || this.recruit.minorHorizontalCollision)
-                        && FormationUtils.tryFallbackToNearestFreeSlot(this.recruit)) {
+                        && FormationFallbackPlanner.tryFallbackToNearestFreeSlot(this.recruit)) {
                     this.formationFallbackCooldown = this.adjustedTickDelay(20);
                     Vec3 fallbackPos = this.recruit.getHoldPos();
                     if (fallbackPos != null) {

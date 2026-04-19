@@ -28,6 +28,7 @@ public class StorageAreaScreen extends WorkAreaScreen {
     private static final Component TEXT_ROUTE_FILTER = Component.literal("Route filter item ids");
     private static final Component TEXT_ROUTE_COUNT = Component.literal("Route count");
     private static final Component TEXT_ROUTE_PRIORITY = Component.literal("Route priority");
+    private static final Component TEXT_PORT_ENTRYPOINT = Component.literal("Port entrypoint");
     private static final Component TEXT_ROUTE_BLOCKED = Component.literal("Blocked state");
     public final StorageArea storageArea;
     private boolean replant;
@@ -40,6 +41,7 @@ public class StorageAreaScreen extends WorkAreaScreen {
     private RecruitsCheckBox merchantsCheckBox;
     private RecruitsCheckBox fishermanCheckBox;
     private RecruitsCheckBox animalFarmerCheckBox;
+    private RecruitsCheckBox portEntrypointCheckBox;
     private boolean miners;
     private boolean lumbers;
     private boolean builders;
@@ -58,6 +60,7 @@ public class StorageAreaScreen extends WorkAreaScreen {
     public String routeFilter;
     public String routeCount;
     public String routePriority;
+    public boolean portEntrypoint;
     public StorageAreaScreen(StorageArea storageArea, Player player) {
         super(storageArea.getCustomName(), storageArea, player);
         this.storageArea = storageArea;
@@ -73,6 +76,7 @@ public class StorageAreaScreen extends WorkAreaScreen {
         this.routeFilter = storageArea.getRouteFilterText();
         this.routeCount = Integer.toString(storageArea.getRouteRequestedCount());
         this.routePriority = storageArea.getRoutePriorityText();
+        this.portEntrypoint = storageArea.isPortEntrypoint();
     }
 
     @Override
@@ -129,6 +133,15 @@ public class StorageAreaScreen extends WorkAreaScreen {
         routePriorityEditBox.setMaxLength(10);
         routePriorityEditBox.setResponder(value -> this.routePriority = value);
         this.addRenderableWidget(routePriorityEditBox);
+
+        this.portEntrypointCheckBox = new RecruitsCheckBox(routeFieldX, routeFieldY + 72, routeFieldWidth, checkBoxHeight, TEXT_PORT_ENTRYPOINT,
+                this.portEntrypoint,
+                (bool) -> {
+                    this.portEntrypoint = bool;
+                    sendMessage();
+                }
+        );
+        addRenderableWidget(portEntrypointCheckBox);
 
         this.minersCheckBox = new RecruitsCheckBox(checkBoxX, 10 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_MINERS,
                 this.miners,
@@ -250,7 +263,8 @@ public class StorageAreaScreen extends WorkAreaScreen {
                 this.routeDestination,
                 this.routeFilter,
                 this.routeCount,
-                this.routePriority
+                this.routePriority,
+                this.portEntrypoint
         ));
     }
 
@@ -263,10 +277,10 @@ public class StorageAreaScreen extends WorkAreaScreen {
         guiGraphics.drawString(font, TEXT_ROUTE_FILTER, labelX, labelY + 24, 4210752, false);
         guiGraphics.drawString(font, TEXT_ROUTE_COUNT, labelX, labelY + 48, 4210752, false);
         guiGraphics.drawString(font, TEXT_ROUTE_PRIORITY, labelX + 80, labelY + 48, 4210752, false);
-        guiGraphics.drawString(font, TEXT_ROUTE_BLOCKED, labelX, labelY + 76, 4210752, false);
-        guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedReasonToken().isBlank() ? "none" : this.storageArea.getRouteBlockedReasonToken()), labelX, labelY + 88, 4210752, false);
+        guiGraphics.drawString(font, TEXT_ROUTE_BLOCKED, labelX, labelY + 100, 4210752, false);
+        guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedReasonToken().isBlank() ? "none" : this.storageArea.getRouteBlockedReasonToken()), labelX, labelY + 112, 4210752, false);
         if (!this.storageArea.getRouteBlockedMessage().isBlank()) {
-            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 100, 4210752, false);
+            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 124, 4210752, false);
         }
     }
 

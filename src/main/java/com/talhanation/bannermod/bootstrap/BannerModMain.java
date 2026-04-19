@@ -85,6 +85,9 @@ public class BannerModMain {
         com.talhanation.bannermod.registry.civilian.ModItems.ITEMS.register(modEventBus);
         com.talhanation.bannermod.registry.civilian.ModEntityTypes.ENTITY_TYPES.register(modEventBus);
 
+        // Register citizen unified entity type (Cit-02 onward)
+        com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes.ENTITY_TYPES.register(modEventBus);
+
         // Creative tabs
         modEventBus.addListener(this::addCreativeTabs);
 

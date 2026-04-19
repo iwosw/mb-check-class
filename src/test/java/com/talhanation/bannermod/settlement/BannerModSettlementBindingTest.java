@@ -2,6 +2,7 @@ package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.Test;
