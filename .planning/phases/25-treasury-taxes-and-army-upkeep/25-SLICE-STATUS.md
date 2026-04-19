@@ -24,14 +24,20 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - Extended `BannerModSettlementGrowthManager` so the live growth queue can consume reservation-aware `tradeRouteHandoffSeed` and `supplySignalState` hints instead of leaving them snapshot-only.
 - Expanded targeted settlement refresh coverage again for remaining settlement-critical civilian mutation paths: work-area owner changes, claim worker spawning/seeding, build-area completion, and mining-area self-removal.
 - Gated resident job execution behind scheduled work tasks inside `BannerModSettlementOrchestrator` and now honor handler `cooldownTicks()` so jobs no longer fire during home/rest paths or every eligible tick.
-- Extended focused settlement JUnit coverage to verify candidate derivation and full snapshot persistence round-trip alongside the already-landed settlement seeds.
+- Introduced a building-centric work-order layer under `src/main/java/com/talhanation/bannermod/settlement/workorder/`: `SettlementWorkOrder` record, `SettlementWorkOrderType` / `SettlementWorkOrderStatus` enums, `SettlementWorkOrderRuntime` per-level registry with claim/release/complete/expire/purge semantics, and a publisher interface plus registry.
+- Added Manor-Lords-style publishers for all primary work-area kinds — `CropAreaWorkOrderPublisher`, `BuildAreaWorkOrderPublisher`, `LumberAreaWorkOrderPublisher`, `MiningAreaWorkOrderPublisher` — so building records now emit concrete block-level work orders each settlement tick.
+- Replaced the stub `HarvestJobHandler` and `BuildJobHandler` implementations with real runtime-claiming handlers keyed to their respective settlement job seeds, so a resident in the work phase now claims a live order from the runtime instead of returning a no-op.
+- Extended `BannerModSettlementOrchestrator` to own a per-level `SettlementWorkOrderRuntime` plus a `SettlementWorkOrderPublisherRegistry.defaults()` population, reclaim abandoned claims every tick, and publish fresh orders on every snapshot tick.
+- Added `SettlementOrderWorkGoal` on `AbstractWorkerEntity` so every worker subclass now preempts its legacy zone goal when a claim is present, navigates to the order's target position, and executes HARVEST_CROP / BREAK_BLOCK / MINE_BLOCK / FELL_TREE actions before reporting completion back to the runtime.
+- Extended focused settlement JUnit coverage to verify candidate derivation and full snapshot persistence round-trip alongside the already-landed settlement seeds, and added `SettlementWorkOrderRuntimeTest` plus `HandlerClaimBehaviorTest` covering publish/claim/release/complete/expiry/purge semantics and handler claim filtering.
 
 ## Not Delivered In This Slice
 
-- No persistent resident-runtime state for scheduler tasks, seller phases, household assignments, or project queues yet; the new runtime seams are still in-memory only.
-- No fully wired resident AI loop yet; current worker gameplay is not replaced by the new scheduler/job/home/seller slices.
+- No persistent resident-runtime state for scheduler tasks, seller phases, household assignments, project queues, or work-order claims yet; the new runtime seams are still in-memory only.
+- The `SettlementOrderWorkGoal` currently executes only break/mine style orders (HARVEST_CROP, BREAK_BLOCK, MINE_BLOCK, FELL_TREE). Placement-style orders (PLANT_CROP, BUILD_BLOCK, REPLANT_TREE, TILL_SOIL, WATER_FIELD) still fall through to the legacy zone-driven profession goals.
 - No real construction execution, building upgrade lifecycle, household economy, inter-settlement trade, or settlement culture/reputation system yet.
 - No broad civil-path integration yet beyond the governor tick seam; `BannerModSettlementService` still seeds the aggregate, and the new runtime packages are not yet orchestrated from every important civil mutation or a dedicated settlement runtime loop.
+- Legacy profession goals (`FarmerWorkGoal`, `BuilderWorkGoal`, `LumberjackWorkGoal`, `MinerWorkGoal`, ...) still exist as compatibility fallback and still own the full zone-scanning / state-machine logic when no settlement-published claim is available.
 
 ## Verification Notes
 
@@ -42,6 +48,7 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - `./gradlew test --tests com.talhanation.bannermod.logistics.BannerModLogisticsServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --tests com.talhanation.bannermod.settlement.BannerModSettlementManagerTest --console=plain` succeeded on 2026-04-19 after adding reservation-aware signalling and broader civil refresh hooks.
 - `./gradlew compileJava --console=plain` succeeded on 2026-04-20 after wiring reservation-aware growth hints, broader refresh hooks, and scheduled job gating.
 - `./gradlew test --tests com.talhanation.bannermod.settlement.growth.BannerModSettlementGrowthManagerTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --console=plain` succeeded on 2026-04-20.
+- `./gradlew compileJava --console=plain` and `./gradlew test --console=plain` (full suite) succeeded on 2026-04-20 after the building-centric work-order layer landed: runtime, publishers, real claim-behavior job handlers, orchestrator publish wiring, and `SettlementOrderWorkGoal` on `AbstractWorkerEntity`.
 
 ## Later Confirmed Closeouts
 

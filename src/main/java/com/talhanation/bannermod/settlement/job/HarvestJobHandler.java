@@ -2,27 +2,51 @@ package com.talhanation.bannermod.settlement.job;
 
 import com.talhanation.bannermod.settlement.BannerModSettlementJobHandlerSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentMode;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentRecord;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrder;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.EnumSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 /**
- * Stub harvest/gathering handler.
+ * Gathering-style work handler bound to {@link BannerModSettlementJobHandlerSeed#FLOATING_LABOR_POOL}.
  *
- * <p>The settlement enum {@link BannerModSettlementJobHandlerSeed} does not currently declare
- * a dedicated {@code HARVEST} value. The closest existing seed is
- * {@link BannerModSettlementJobHandlerSeed#FLOATING_LABOR_POOL}: residents in the floating
- * labor pool are the pool from which gathering/harvesting tasks (farmer, lumberjack, miner,
- * fisherman, animal farmer runtimes in the legacy workers subsystem) are drawn. Binding this
- * handler to that seed lets slice-F start wiring the floating labor pool to a data-driven task
- * catalogue without touching existing worker entities.</p>
+ * <p>On each step the handler:</p>
+ * <ol>
+ *   <li>Checks whether the resident already holds a published work-order claim. If so it
+ *       reports {@link JobExecutionResult#COMPLETED} — the per-tick claim is alive and the
+ *       real block-level action is executed by the bound worker entity via
+ *       {@code SettlementOrderWorkGoal}.</li>
+ *   <li>Otherwise it attempts to claim the highest-priority PENDING order matching the
+ *       supported gathering types for the resident's current settlement claim.</li>
+ *   <li>If no order is available it reports {@link JobExecutionResult#BLOCKED_NO_TARGET}.</li>
+ * </ol>
  *
- * <p>Real target selection and tick execution remain in the legacy hard-coded
- * {@code AbstractWorkerEntity} subclasses; this handler is a placeholder that future slices
- * will replace with a JSON-loaded behaviour recipe (mirroring Millenaire's
- * {@code GatheringGoal_*} pattern, but written from scratch).</p>
+ * <p>The handler is a pure coordination step — it never mutates blocks directly. Completion
+ * of the order is reported by the worker AI through
+ * {@link SettlementWorkOrderRuntime#complete(UUID)}.</p>
  */
 public final class HarvestJobHandler implements JobHandler {
 
     public static final ResourceLocation ID = new ResourceLocation("bannermod", "harvest");
+
+    /** Order types this handler is willing to claim on behalf of its residents. */
+    public static final Set<SettlementWorkOrderType> SUPPORTED_TYPES = EnumSet.of(
+            SettlementWorkOrderType.HARVEST_CROP,
+            SettlementWorkOrderType.PLANT_CROP,
+            SettlementWorkOrderType.TILL_SOIL,
+            SettlementWorkOrderType.WATER_FIELD,
+            SettlementWorkOrderType.FELL_TREE,
+            SettlementWorkOrderType.REPLANT_TREE,
+            SettlementWorkOrderType.MINE_BLOCK,
+            SettlementWorkOrderType.HAUL_RESOURCE,
+            SettlementWorkOrderType.FETCH_INPUT
+    );
 
     @Override
     public ResourceLocation id() {
@@ -44,16 +68,34 @@ public final class HarvestJobHandler implements JobHandler {
 
     @Override
     public JobExecutionResult runOneStep(JobExecutionContext ctx) {
-        // Intentional stub: the real gathering loop is still owned by the legacy worker entities.
-        // Returning COMPLETED lets the scheduler treat each tick as a unit of progress, keeping
-        // the contract observable in tests without changing any runtime behaviour.
-        return JobExecutionResult.COMPLETED;
+        BannerModSettlementResidentRecord resident = ctx.resident();
+        SettlementWorkOrderRuntime runtime = ctx.workOrderRuntime();
+        if (runtime == null || resident.residentUuid() == null) {
+            return JobExecutionResult.COMPLETED;
+        }
+
+        Optional<SettlementWorkOrder> current = runtime.currentClaim(resident.residentUuid());
+        if (current.isPresent()) {
+            return JobExecutionResult.COMPLETED;
+        }
+
+        UUID workplaceUuid = ctx.workplace().orElse(null);
+        if (workplaceUuid == null) {
+            return JobExecutionResult.BLOCKED_NO_TARGET;
+        }
+
+        Optional<SettlementWorkOrder> picked = runtime.claimForBuilding(
+                workplaceUuid,
+                resident.residentUuid(),
+                order -> SUPPORTED_TYPES.contains(order.type()),
+                ctx.gameTime(),
+                SettlementWorkOrderRuntime.DEFAULT_CLAIM_EXPIRY_TICKS
+        );
+        return picked.isPresent() ? JobExecutionResult.COMPLETED : JobExecutionResult.BLOCKED_NO_TARGET;
     }
 
     @Override
     public int cooldownTicks() {
-        // Gathering in Minecraft is coarse (block breaks, crop pulls); a few ticks between steps
-        // is a reasonable default placeholder until slice-F wires real AI timing.
         return 5;
     }
 }

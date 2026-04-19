@@ -2,25 +2,32 @@ package com.talhanation.bannermod.settlement.job;
 
 import com.talhanation.bannermod.settlement.BannerModSettlementJobHandlerSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentMode;
+import com.talhanation.bannermod.settlement.BannerModSettlementResidentRecord;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrder;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.EnumSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 /**
- * Stub build/construction handler.
+ * Construction-style work handler bound to {@link BannerModSettlementJobHandlerSeed#LOCAL_BUILDING_LABOR}.
  *
- * <p>The settlement enum {@link BannerModSettlementJobHandlerSeed} does not declare a
- * dedicated {@code BUILD} value. The closest existing seed is
- * {@link BannerModSettlementJobHandlerSeed#LOCAL_BUILDING_LABOR}: that seed is already used by
- * {@code BannerModSettlementResidentJobDefinition.defaultFor(...)} for controlled workers bound
- * to a local building service contract, which is precisely the population from which a
- * future builder-style handler will pull. Binding this handler there keeps the contract
- * aligned with the existing default-resolution code without modifying it.</p>
- *
- * <p>As with {@link HarvestJobHandler}, the real per-block construction logic still lives in
- * the legacy builder worker entity. This placeholder gives slice-F a stable hook point.</p>
+ * <p>Claim lifecycle mirrors {@link HarvestJobHandler} but the set of accepted order types
+ * is restricted to building-oriented work (break / place blocks).</p>
  */
 public final class BuildJobHandler implements JobHandler {
 
     public static final ResourceLocation ID = new ResourceLocation("bannermod", "build");
+
+    public static final Set<SettlementWorkOrderType> SUPPORTED_TYPES = EnumSet.of(
+            SettlementWorkOrderType.BREAK_BLOCK,
+            SettlementWorkOrderType.BUILD_BLOCK,
+            SettlementWorkOrderType.STOCK_MARKET
+    );
 
     @Override
     public ResourceLocation id() {
@@ -42,14 +49,34 @@ public final class BuildJobHandler implements JobHandler {
 
     @Override
     public JobExecutionResult runOneStep(JobExecutionContext ctx) {
-        // Intentional stub; see HarvestJobHandler for rationale.
-        return JobExecutionResult.COMPLETED;
+        BannerModSettlementResidentRecord resident = ctx.resident();
+        SettlementWorkOrderRuntime runtime = ctx.workOrderRuntime();
+        if (runtime == null || resident.residentUuid() == null) {
+            return JobExecutionResult.COMPLETED;
+        }
+
+        Optional<SettlementWorkOrder> current = runtime.currentClaim(resident.residentUuid());
+        if (current.isPresent()) {
+            return JobExecutionResult.COMPLETED;
+        }
+
+        UUID workplaceUuid = ctx.workplace().orElse(null);
+        if (workplaceUuid == null) {
+            return JobExecutionResult.BLOCKED_NO_TARGET;
+        }
+
+        Optional<SettlementWorkOrder> picked = runtime.claimForBuilding(
+                workplaceUuid,
+                resident.residentUuid(),
+                order -> SUPPORTED_TYPES.contains(order.type()),
+                ctx.gameTime(),
+                SettlementWorkOrderRuntime.DEFAULT_CLAIM_EXPIRY_TICKS
+        );
+        return picked.isPresent() ? JobExecutionResult.COMPLETED : JobExecutionResult.BLOCKED_NO_TARGET;
     }
 
     @Override
     public int cooldownTicks() {
-        // Construction ticks are heavier than gathering ticks; give builders a slightly longer
-        // cadence placeholder so scheduler tuning later has a sensible starting point.
         return 10;
     }
 }

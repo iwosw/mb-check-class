@@ -9,6 +9,7 @@ import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.entity.military.AbstractChunkLoaderEntity;
 import com.talhanation.bannermod.ai.civilian.DepositItemsToStorage;
 import com.talhanation.bannermod.ai.civilian.GetNeededItemsFromStorage;
+import com.talhanation.bannermod.ai.civilian.SettlementOrderWorkGoal;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
 import net.minecraft.core.BlockPos;
@@ -62,6 +63,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        this.goalSelector.addGoal(0, new SettlementOrderWorkGoal(this));
         this.goalSelector.addGoal(0, new DepositItemsToStorage(this));
         this.goalSelector.addGoal(0, new GetNeededItemsFromStorage(this));
 

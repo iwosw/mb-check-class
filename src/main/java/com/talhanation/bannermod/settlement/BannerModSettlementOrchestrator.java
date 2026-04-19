@@ -19,6 +19,9 @@ import com.talhanation.bannermod.settlement.job.JobExecutionContext;
 import com.talhanation.bannermod.settlement.job.JobHandlerRegistry;
 import com.talhanation.bannermod.settlement.project.BannerModBuildAreaProjectBridge;
 import com.talhanation.bannermod.settlement.project.BannerModSettlementProjectRuntime;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublishContext;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisherRegistry;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime;
 import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
@@ -46,6 +49,7 @@ public final class BannerModSettlementOrchestrator {
         }
         LevelRuntimeState state = runtimeState(level);
         long gameTime = level.getGameTime();
+        state.workOrderRuntime.reclaimAbandoned(gameTime);
         for (BannerModSettlementSnapshot snapshot : settlementManager.getAllSnapshots()) {
             if (snapshot == null) {
                 continue;
@@ -53,8 +57,16 @@ public final class BannerModSettlementOrchestrator {
             BannerModGovernorSnapshot governorSnapshot = governorManager == null
                     ? null
                     : governorManager.getSnapshot(snapshot.claimUuid());
-            tickSnapshot(state, snapshot, governorSnapshot, gameTime);
+            tickSnapshot(state, snapshot, governorSnapshot, level, gameTime);
         }
+    }
+
+    /** Accessor for the per-level work-order runtime, used by worker AI goals. */
+    public static SettlementWorkOrderRuntime workOrderRuntime(ServerLevel level) {
+        if (level == null) {
+            return null;
+        }
+        return runtimeState(level).workOrderRuntime;
     }
 
     static LevelRuntimeState detachedStateForTests(JobHandlerRegistry jobHandlerRegistry) {
@@ -64,6 +76,14 @@ public final class BannerModSettlementOrchestrator {
     static void tickSnapshot(LevelRuntimeState state,
                              BannerModSettlementSnapshot snapshot,
                              @Nullable BannerModGovernorSnapshot governorSnapshot,
+                             long gameTime) {
+        tickSnapshot(state, snapshot, governorSnapshot, null, gameTime);
+    }
+
+    static void tickSnapshot(LevelRuntimeState state,
+                             BannerModSettlementSnapshot snapshot,
+                             @Nullable BannerModGovernorSnapshot governorSnapshot,
+                             @Nullable ServerLevel level,
                              long gameTime) {
         if (state == null || snapshot == null) {
             return;
@@ -89,6 +109,7 @@ public final class BannerModSettlementOrchestrator {
         assignHomes(state.homeRuntime, snapshot, gameTime);
         state.marketStateSupplier.set(snapshot.marketState());
         tickSellerDispatches(state.sellerRuntime, snapshot.marketState(), gameTime);
+        publishBuildingWorkOrders(state, snapshot, level, gameTime);
 
         for (BannerModSettlementResidentRecord resident : snapshot.residents()) {
             if (resident == null || resident.residentUuid() == null) {
@@ -103,6 +124,29 @@ public final class BannerModSettlementOrchestrator {
     private static synchronized LevelRuntimeState runtimeState(ServerLevel level) {
         return PER_LEVEL.computeIfAbsent(level,
                 ignored -> LevelRuntimeState.create(BannerModSettlementProjectRuntime.forServer(level), JobHandlerRegistry.defaults()));
+    }
+
+    private static void publishBuildingWorkOrders(LevelRuntimeState state,
+                                                  BannerModSettlementSnapshot snapshot,
+                                                  @Nullable ServerLevel level,
+                                                  long gameTime) {
+        if (state.publisherRegistry.size() == 0) {
+            return;
+        }
+        for (BannerModSettlementBuildingRecord building : snapshot.buildings()) {
+            if (building == null || building.buildingUuid() == null) {
+                continue;
+            }
+            SettlementWorkOrderPublishContext ctx = new SettlementWorkOrderPublishContext(
+                    state.workOrderRuntime,
+                    snapshot.claimUuid(),
+                    building,
+                    snapshot,
+                    level,
+                    gameTime
+            );
+            state.publisherRegistry.publishAll(ctx);
+        }
     }
 
     private static void assignHomes(BannerModHomeAssignmentRuntime homeRuntime,
@@ -188,7 +232,7 @@ public final class BannerModSettlementOrchestrator {
             return;
         }
 
-        JobExecutionContext context = jobContext(resident, goalContext.gameTime());
+        JobExecutionContext context = jobContext(state, resident, goalContext.gameTime());
         state.jobHandlerRegistry.lookup(resident.jobDefinition().handlerSeed())
                 .filter(handler -> handler.canHandle(context))
                 .ifPresent(handler -> {
@@ -199,11 +243,19 @@ public final class BannerModSettlementOrchestrator {
                 });
     }
 
-    private static JobExecutionContext jobContext(BannerModSettlementResidentRecord resident, long gameTime) {
+    private static JobExecutionContext jobContext(LevelRuntimeState state,
+                                                  BannerModSettlementResidentRecord resident,
+                                                  long gameTime) {
         UUID workplaceUuid = resident.jobDefinition() == null || resident.jobDefinition().targetBuildingUuid() == null
                 ? resident.boundWorkAreaUuid()
                 : resident.jobDefinition().targetBuildingUuid();
-        return new JobExecutionContext(resident, gameTime, resident.residentUuid(), workplaceUuid);
+        return new JobExecutionContext(
+                resident,
+                gameTime,
+                resident.residentUuid(),
+                workplaceUuid,
+                state.workOrderRuntime
+        );
     }
 
     static final class LevelRuntimeState {
@@ -214,6 +266,8 @@ public final class BannerModSettlementOrchestrator {
         final BannerModResidentGoalScheduler goalScheduler;
         final JobHandlerRegistry jobHandlerRegistry;
         final Map<UUID, Long> jobCooldownExpiries;
+        final SettlementWorkOrderRuntime workOrderRuntime;
+        final SettlementWorkOrderPublisherRegistry publisherRegistry;
 
         private LevelRuntimeState(BannerModSettlementProjectRuntime projectRuntime,
                                   BannerModHomeAssignmentRuntime homeRuntime,
@@ -221,7 +275,9 @@ public final class BannerModSettlementOrchestrator {
                                   MutableMarketStateSupplier marketStateSupplier,
                                   BannerModResidentGoalScheduler goalScheduler,
                                   JobHandlerRegistry jobHandlerRegistry,
-                                  Map<UUID, Long> jobCooldownExpiries) {
+                                  Map<UUID, Long> jobCooldownExpiries,
+                                  SettlementWorkOrderRuntime workOrderRuntime,
+                                  SettlementWorkOrderPublisherRegistry publisherRegistry) {
             this.projectRuntime = projectRuntime;
             this.homeRuntime = homeRuntime;
             this.sellerRuntime = sellerRuntime;
@@ -229,6 +285,8 @@ public final class BannerModSettlementOrchestrator {
             this.goalScheduler = goalScheduler;
             this.jobHandlerRegistry = jobHandlerRegistry;
             this.jobCooldownExpiries = jobCooldownExpiries;
+            this.workOrderRuntime = workOrderRuntime;
+            this.publisherRegistry = publisherRegistry;
         }
 
         private static LevelRuntimeState create(BannerModSettlementProjectRuntime projectRuntime,
@@ -243,7 +301,9 @@ public final class BannerModSettlementOrchestrator {
                     marketStateSupplier,
                     BannerModResidentGoalScheduler.withDefaultGoals(homeRuntime, marketStateSupplier, sellerRuntime),
                     jobHandlerRegistry == null ? JobHandlerRegistry.defaults() : jobHandlerRegistry,
-                    new HashMap<>()
+                    new HashMap<>(),
+                    new SettlementWorkOrderRuntime(),
+                    SettlementWorkOrderPublisherRegistry.defaults()
             );
         }
     }

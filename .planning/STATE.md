@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Compact Phase 25 runtime wiring is advancing: reservation-aware settlement hints now feed live growth scoring, more settlement-critical civilian mutations refresh snapshots immediately, and resident job execution is gated to scheduled work windows with handler cooldowns; full end-to-end replacement is still incomplete
-last_updated: "2026-04-20T04:15:00Z"
+status: Compact Phase 25 has entered the Manor-Lords-style building-centric migration: a per-level work-order runtime, publishers for crop/build/lumber/mining areas, real claim-behavior job handlers, and a SettlementOrderWorkGoal on every AbstractWorkerEntity now let settlements publish block-level demand that residents execute ahead of the legacy zone loop; placement-style orders and non-profession flows still fall through to legacy goals
+last_updated: "2026-04-20T06:00:00Z"
 progress:
   total_phases: 28
   completed_phases: 23
