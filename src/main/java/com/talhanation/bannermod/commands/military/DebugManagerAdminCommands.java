@@ -1,10 +1,13 @@
 package com.talhanation.bannermod.commands.military;
 
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.talhanation.bannermod.army.command.CommandIntent;
 import com.talhanation.bannermod.army.command.CommandIntentLog;
+import com.talhanation.bannermod.army.command.RecruitSelectionRegistry;
+import com.talhanation.bannermod.army.command.RecruitSelectionService;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.items.military.RecruitsSpawnEgg;
 import net.minecraft.ChatFormatting;
@@ -40,7 +43,53 @@ final class DebugManagerAdminCommands {
                                         .executes(context -> dumpIntents(
                                                 context.getSource(),
                                                 StringArgumentType.getString(context, "Player"),
-                                                IntegerArgumentType.getInteger(context, "Count"))))));
+                                                IntegerArgumentType.getInteger(context, "Count"))))))
+                .then(Commands.literal("select")
+                        .then(Commands.literal("nearby")
+                                .executes(context -> selectNearby(context.getSource(), 32.0D))
+                                .then(Commands.argument("Radius", DoubleArgumentType.doubleArg(1.0D, 200.0D))
+                                        .executes(context -> selectNearby(context.getSource(), DoubleArgumentType.getDouble(context, "Radius")))))
+                        .then(Commands.literal("clear")
+                                .executes(context -> clearSelection(context.getSource())))
+                        .then(Commands.literal("list")
+                                .executes(context -> listSelection(context.getSource()))));
+    }
+
+    private static int selectNearby(CommandSourceStack source, double radius) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Run as a player.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        int count = RecruitSelectionService.selectNearby(player, radius);
+        source.sendSuccess(() -> Component.literal("Selected " + count + " recruits within " + radius + " blocks.")
+                .withStyle(ChatFormatting.GREEN), false);
+        return count;
+    }
+
+    private static int clearSelection(CommandSourceStack source) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Run as a player.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        RecruitSelectionRegistry.instance().clear(player.getUUID());
+        source.sendSuccess(() -> Component.literal("Selection cleared.").withStyle(ChatFormatting.GRAY), false);
+        return 1;
+    }
+
+    private static int listSelection(CommandSourceStack source) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Run as a player.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        int size = RecruitSelectionRegistry.instance().sizeFor(player.getUUID());
+        source.sendSuccess(() -> Component.literal("Selection size: " + size).withStyle(ChatFormatting.AQUA), false);
+        for (UUID recruitUuid : RecruitSelectionRegistry.instance().get(player.getUUID())) {
+            source.sendSuccess(() -> Component.literal("  " + recruitUuid).withStyle(ChatFormatting.DARK_AQUA), false);
+        }
+        return size;
     }
 
     private static int dumpIntents(CommandSourceStack source, String playerName, int count) {

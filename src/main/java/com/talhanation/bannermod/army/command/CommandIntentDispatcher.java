@@ -44,6 +44,7 @@ public final class CommandIntentDispatcher {
             return null;
         }
         List<AbstractRecruitEntity> safeActors = actors == null ? List.of() : actors;
+        safeActors = narrowBySelection(player, safeActors);
         CommandIntentLog.instance().record(player, intent, safeActors.size());
 
         if (player == null || safeActors.isEmpty()) {
@@ -63,6 +64,30 @@ public final class CommandIntentDispatcher {
         CommandIntentQueueRuntime.instance().clearForActors(safeActors);
         applyIntentDirectly(player, intent, safeActors);
         return intent;
+    }
+
+    /**
+     * If the player has a non-empty selection, keep only actors whose UUID is in the
+     * selection set. Otherwise pass the list through untouched. Selection acts as a
+     * filter, not an expander — callers are still responsible for the initial resolve
+     * (e.g. by group UUID and owner match).
+     */
+    static List<AbstractRecruitEntity> narrowBySelection(@Nullable ServerPlayer player,
+                                                         List<AbstractRecruitEntity> actors) {
+        if (player == null || actors == null || actors.isEmpty()) {
+            return actors == null ? List.of() : actors;
+        }
+        java.util.Set<java.util.UUID> selection = RecruitSelectionRegistry.instance().get(player.getUUID());
+        if (selection.isEmpty()) {
+            return actors;
+        }
+        java.util.List<AbstractRecruitEntity> narrowed = new java.util.ArrayList<>(actors.size());
+        for (AbstractRecruitEntity recruit : actors) {
+            if (selection.contains(recruit.getUUID())) {
+                narrowed.add(recruit);
+            }
+        }
+        return narrowed;
     }
 
     static void applyIntentDirectly(ServerPlayer player,
