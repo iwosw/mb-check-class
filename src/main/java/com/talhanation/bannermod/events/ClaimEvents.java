@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.events;
 
+import com.talhanation.bannermod.army.command.CommandIntentQueueRuntime;
 import com.talhanation.bannermod.governance.BannerModGovernorHeartbeat;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
@@ -87,6 +88,10 @@ public class ClaimEvents {
         siegeCounter++;
         detectionCounter++;
         governorCounter++;
+
+        // Command-intent queue advancement runs every tick — the runtime already no-ops
+        // cheaply when no recruit has a queued head.
+        CommandIntentQueueRuntime.instance().tick(server, level.getGameTime());
 
         if(siegeCounter >= SIEGE_TICK_INTERVAL){
             siegeCounter = 0;

@@ -50,6 +50,24 @@ public final class CommandIntentDispatcher {
             return intent;
         }
 
+        long gameTime = player.getCommandSenderWorld().getGameTime();
+
+        if (intent.queueMode()) {
+            // Append to each actor's queue. If the queue was empty, the runtime applies
+            // the intent immediately so there's no perceived delay for the first waypoint.
+            CommandIntentQueueRuntime.instance().appendForActors(player, intent, safeActors, gameTime);
+            return intent;
+        }
+
+        // Non-queued: wipe any pending plan for these actors and apply the intent right now.
+        CommandIntentQueueRuntime.instance().clearForActors(safeActors);
+        applyIntentDirectly(player, intent, safeActors);
+        return intent;
+    }
+
+    static void applyIntentDirectly(ServerPlayer player,
+                                    CommandIntent intent,
+                                    List<AbstractRecruitEntity> safeActors) {
         if (intent instanceof CommandIntent.Movement move) {
             CommandEvents.onMovementCommand(
                     player, safeActors, move.movementState(), move.formation(), move.tight());
@@ -70,6 +88,5 @@ public final class CommandIntentDispatcher {
                         player.getUUID(), recruit, aggro.state(), aggro.groupUuid(), aggro.fromGui());
             }
         }
-        return intent;
     }
 }
