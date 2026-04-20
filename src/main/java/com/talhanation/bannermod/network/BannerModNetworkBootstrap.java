@@ -138,6 +138,7 @@ public class BannerModNetworkBootstrap {
         MessageUpdateGovernorPolicy.class,
         MessageDebugGui.class,
         MessageDebugScreen.class,
+        MessageSelectRecruits.class,
     };
 
     /**

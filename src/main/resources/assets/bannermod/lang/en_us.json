@@ -1404,5 +1404,7 @@
   "bannermod.prefab.tier.great": "Great",
   "bannermod.prefab.tier.majestic": "Majestic",
   "gui.workers.command.text.up": "Up",
-  "gui.workers.command.text.down": "Down"
+  "gui.workers.command.text.down": "Down",
+  "key.bannermod.drag_select": "Drag-select recruits",
+  "key.categories.bannermod": "Bannermod"
 }
