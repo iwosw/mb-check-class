@@ -1,10 +1,13 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -47,7 +50,18 @@ public class MessageMovement implements Message<MessageMovement> {
         if (list.isEmpty()) {
             return;
         }
-        CommandEvents.onMovementCommand(sender, list, state, formation, tight);
+        long gameTime = sender.getCommandSenderWorld().getGameTime();
+        CommandIntent intent = new CommandIntent.Movement(
+                gameTime,
+                CommandIntentPriority.NORMAL,
+                false,
+                state,
+                formation,
+                tight,
+                null
+        );
+        ServerPlayer serverSender = sender instanceof ServerPlayer sp ? sp : null;
+        CommandIntentDispatcher.dispatch(serverSender, intent, list);
     }
 
     private static List<AbstractRecruitEntity> resolveTargets(Player sender, UUID playerUuid, UUID group) {
