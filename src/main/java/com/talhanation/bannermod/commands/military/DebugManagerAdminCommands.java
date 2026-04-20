@@ -1,7 +1,10 @@
 package com.talhanation.bannermod.commands.military;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentLog;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.items.military.RecruitsSpawnEgg;
 import net.minecraft.ChatFormatting;
@@ -18,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 final class DebugManagerAdminCommands {
     private DebugManagerAdminCommands() {
@@ -27,7 +31,82 @@ final class DebugManagerAdminCommands {
         return Commands.literal("debugManager")
                 .then(Commands.literal("spawnFromEgg")
                         .then(Commands.argument("Amount", IntegerArgumentType.integer(0))
-                                .executes(context -> spawnFromEgg(context.getSource(), IntegerArgumentType.getInteger(context, "Amount")))));
+                                .executes(context -> spawnFromEgg(context.getSource(), IntegerArgumentType.getInteger(context, "Amount")))))
+                .then(Commands.literal("intents")
+                        .executes(context -> dumpIntents(context.getSource(), null, 20))
+                        .then(Commands.argument("Count", IntegerArgumentType.integer(1, CommandIntentLog.MAX_ENTRIES_PER_PLAYER))
+                                .executes(context -> dumpIntents(context.getSource(), null, IntegerArgumentType.getInteger(context, "Count")))
+                                .then(Commands.argument("Player", StringArgumentType.word())
+                                        .executes(context -> dumpIntents(
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "Player"),
+                                                IntegerArgumentType.getInteger(context, "Count"))))));
+    }
+
+    private static int dumpIntents(CommandSourceStack source, String playerName, int count) {
+        UUID target;
+        String label;
+        if (playerName == null || playerName.isBlank()) {
+            ServerPlayer selfPlayer = source.getPlayer();
+            if (selfPlayer == null) {
+                source.sendFailure(Component.literal("Run as a player or pass a player name.").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            target = selfPlayer.getUUID();
+            label = selfPlayer.getName().getString();
+        } else {
+            ServerPlayer namedPlayer = source.getServer().getPlayerList().getPlayerByName(playerName);
+            if (namedPlayer == null) {
+                source.sendFailure(Component.literal("No online player: " + playerName).withStyle(ChatFormatting.RED));
+                return 0;
+            }
+            target = namedPlayer.getUUID();
+            label = namedPlayer.getName().getString();
+        }
+
+        List<CommandIntentLog.Entry> entries = CommandIntentLog.instance().recentFor(target);
+        if (entries.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No recent intents for " + label).withStyle(ChatFormatting.GRAY), false);
+            return 1;
+        }
+
+        int limit = Math.min(count, entries.size());
+        source.sendSuccess(() -> Component.literal(String.format("Last %d of %d intents for %s", limit, entries.size(), label))
+                .withStyle(ChatFormatting.GOLD), false);
+        for (int i = 0; i < limit; i++) {
+            CommandIntentLog.Entry entry = entries.get(i);
+            CommandIntent intent = entry.intent();
+            String line = String.format("#%d tick=%d %s p=%d q=%s actors=%d%s",
+                    i,
+                    intent.issuedAtGameTime(),
+                    intent.type().name(),
+                    intent.priority(),
+                    intent.queueMode(),
+                    entry.actorCount(),
+                    intentDetails(intent));
+            source.sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.AQUA), false);
+        }
+        return limit;
+    }
+
+    private static String intentDetails(CommandIntent intent) {
+        if (intent instanceof CommandIntent.Movement move) {
+            return " state=" + move.movementState() + " f=" + move.formation() + (move.tight() ? " tight" : "")
+                    + (move.targetPos() != null ? " -> " + move.targetPos() : "");
+        }
+        if (intent instanceof CommandIntent.Face face) {
+            return " f=" + face.formation() + (face.tight() ? " tight" : "");
+        }
+        if (intent instanceof CommandIntent.Attack attack) {
+            return " group=" + attack.groupUuid();
+        }
+        if (intent instanceof CommandIntent.StrategicFire fire) {
+            return " group=" + fire.groupUuid() + " fire=" + fire.shouldFire();
+        }
+        if (intent instanceof CommandIntent.Aggro aggro) {
+            return " state=" + aggro.state() + " group=" + aggro.groupUuid() + (aggro.fromGui() ? " gui" : "");
+        }
+        return "";
     }
 
     private static int spawnFromEgg(CommandSourceStack source, int amount) {
