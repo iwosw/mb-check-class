@@ -301,20 +301,53 @@ public class BuildArea extends AbstractWorkAreaEntity {
     }
 
 
+    /**
+     * Extra blocks scanned above the declared build volume so tall obstructions (trees,
+     * overhangs) get cleared even when the prefab itself is short.
+     */
+    public static final int SCAN_CLEARANCE_BUFFER_Y = 6;
+
     public void scanBreakArea() {
         stackToBreak.clear();
         Level level = this.getCommandSenderWorld();
+        net.minecraft.world.phys.AABB area = getArea();
 
-        BlockPos.betweenClosedStream(getArea()).forEach(pos -> {
+        BlockPos.betweenClosedStream(area).forEach(pos -> {
             BlockState buildingState = this.getStateFromPos(pos);
             BlockState levelState = level.getBlockState(pos);
 
-            if (buildingState != null && !levelState.isAir()
-                    && !statesMatch(levelState, buildingState)
-                    && !canDirectlyReplace(levelState, buildingState)) {
+            if (levelState.isAir()) {
+                return;
+            }
+            if (buildingState == null) {
+                // Position inside the build volume has no blueprint block assigned but the
+                // world has something there (tree, stray dirt, grass tuft…). Clear it.
+                stackToBreak.push(pos.immutable());
+                return;
+            }
+            if (!statesMatch(levelState, buildingState) && !canDirectlyReplace(levelState, buildingState)) {
                 stackToBreak.push(pos.immutable());
             }
         });
+
+        // Vertical clearance pass: scan N blocks above the declared volume for each footprint
+        // cell and break anything solid so floating tree canopies do not persist.
+        int clearanceMinY = (int) Math.ceil(area.maxY);
+        int clearanceMaxY = clearanceMinY + SCAN_CLEARANCE_BUFFER_Y - 1;
+        int xMin = (int) Math.floor(area.minX);
+        int xMax = (int) Math.ceil(area.maxX) - 1;
+        int zMin = (int) Math.floor(area.minZ);
+        int zMax = (int) Math.ceil(area.maxZ) - 1;
+        for (int x = xMin; x <= xMax; x++) {
+            for (int z = zMin; z <= zMax; z++) {
+                for (int y = clearanceMinY; y <= clearanceMaxY; y++) {
+                    BlockPos cPos = new BlockPos(x, y, z);
+                    if (!level.getBlockState(cPos).isAir()) {
+                        stackToBreak.push(cPos.immutable());
+                    }
+                }
+            }
+        }
     }
 
     public static boolean canDirectlyReplace(BlockState levelState, BlockState buildingState) {

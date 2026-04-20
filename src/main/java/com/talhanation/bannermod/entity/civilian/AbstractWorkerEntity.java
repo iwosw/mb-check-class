@@ -47,6 +47,11 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
     public AbstractWorkerEntity(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
+        // Allow workers to treat water as traversable instead of an impassable wall. Without
+        // this they drown / get stuck in ponds and dock waters when trying to return to land.
+        if (this.getNavigation() != null) {
+            this.getNavigation().setCanFloat(true);
+        }
     }
     public List<NeededItem> neededItems = new ArrayList<>();
     public int farmedItems;

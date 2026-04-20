@@ -1402,5 +1402,7 @@
   "bannermod.prefab.tier.acceptable": "Acceptable",
   "bannermod.prefab.tier.good": "Good",
   "bannermod.prefab.tier.great": "Great",
-  "bannermod.prefab.tier.majestic": "Majestic"
+  "bannermod.prefab.tier.majestic": "Majestic",
+  "gui.workers.command.text.up": "Up",
+  "gui.workers.command.text.down": "Down"
 }

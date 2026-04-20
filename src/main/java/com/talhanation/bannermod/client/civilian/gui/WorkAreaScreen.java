@@ -27,11 +27,15 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
     private static final MutableComponent TEXT_LEFT = Component.translatable("gui.workers.command.text.left");
     private static final MutableComponent TEXT_RIGHT = Component.translatable("gui.workers.command.text.right");
     private static final MutableComponent TEXT_DESTROY = Component.translatable("gui.workers.command.text.destroy");
+    private static final MutableComponent TEXT_UP = Component.translatable("gui.workers.command.text.up");
+    private static final MutableComponent TEXT_DOWN = Component.translatable("gui.workers.command.text.down");
     private EditBox textFieldName;
     private Button moveForward;
     private Button moveBackward;
     private Button moveLeft;
     private Button moveRight;
+    private Button moveUp;
+    private Button moveDown;
     private Button destroy;
     private Button rotateLeft;
     private Button rotateRight;
@@ -140,6 +144,28 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
             btn -> {
                 this.workArea.showBox = true;
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRotateWorkArea(this.workArea.getUUID(), true));
+                this.onAreaMoved();
+            }
+        ));
+
+        // Move Up — nudge the work area one block up (shift = five).
+        moveUp = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2 - buttonWidth, y + buttonHeight / 2 - buttonHeight * 2, buttonWidth, buttonHeight, TEXT_UP,
+            btn -> {
+                this.workArea.showBox = true;
+                int delta = hasShiftDown() ? 5 : 1;
+                Vec3 newPos = new Vec3(workArea.getX(), workArea.getY() + delta, workArea.getZ());
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                this.onAreaMoved();
+            }
+        ));
+
+        // Move Down — nudge the work area one block down (shift = five).
+        moveDown = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2 + buttonWidth, y + buttonHeight / 2 - buttonHeight * 2, buttonWidth, buttonHeight, TEXT_DOWN,
+            btn -> {
+                this.workArea.showBox = true;
+                int delta = hasShiftDown() ? 5 : 1;
+                Vec3 newPos = new Vec3(workArea.getX(), workArea.getY() - delta, workArea.getZ());
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
                 this.onAreaMoved();
             }
         ));
