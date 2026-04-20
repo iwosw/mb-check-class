@@ -1,9 +1,12 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -33,10 +36,20 @@ public class MessageFaceCommand implements Message<MessageFaceCommand> {
     }
 
     public void executeServerSide(NetworkEvent.Context context){
-        List<AbstractRecruitEntity> list = Objects.requireNonNull(context.getSender()).getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, context.getSender().getBoundingBox().inflate(100));
+        ServerPlayer sender = Objects.requireNonNull(context.getSender());
+        List<AbstractRecruitEntity> list = sender.getCommandSenderWorld().getEntitiesOfClass(
+                AbstractRecruitEntity.class, sender.getBoundingBox().inflate(100));
         list.removeIf(recruit -> !recruit.isEffectedByCommand(this.player_uuid, this.group));
 
-        CommandEvents.onFaceCommand(context.getSender(), list, this.formation, this.tight);
+        long gameTime = sender.getCommandSenderWorld().getGameTime();
+        CommandIntent intent = new CommandIntent.Face(
+                gameTime,
+                CommandIntentPriority.NORMAL,
+                false,
+                this.formation,
+                this.tight
+        );
+        CommandIntentDispatcher.dispatch(sender, intent, list);
     }
 
     public MessageFaceCommand fromBytes(FriendlyByteBuf buf) {

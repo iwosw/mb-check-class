@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
@@ -48,7 +50,15 @@ public class MessageAttack implements Message<MessageAttack> {
             return;
         }
 
-        CommandEvents.onAttackCommand(player, player.getUUID(), list, group);
+        long gameTime = player.getCommandSenderWorld().getGameTime();
+        CommandIntent intent = new CommandIntent.Attack(
+                gameTime,
+                CommandIntentPriority.NORMAL,
+                false,
+                group
+        );
+        ServerPlayer serverSender = player instanceof ServerPlayer sp ? sp : null;
+        CommandIntentDispatcher.dispatch(serverSender, intent, list);
     }
 
     private static List<AbstractRecruitEntity> resolveTargets(Player player, UUID playerUuid, UUID group) {

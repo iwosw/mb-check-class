@@ -1,18 +1,19 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class MessageAggro implements Message<MessageAggro> {
 
@@ -41,22 +42,34 @@ public class MessageAggro implements Message<MessageAggro> {
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
 
-        double boundBoxInflateModifier = 16.0D;
-        if(!fromGui) {
-            boundBoxInflateModifier = 100.0D;
-        }
+        double boundBoxInflateModifier = fromGui ? 16.0D : 100.0D;
 
-
-        player.getCommandSenderWorld().getEntitiesOfClass(
+        List<AbstractRecruitEntity> pool = player.getCommandSenderWorld().getEntitiesOfClass(
                 AbstractRecruitEntity.class,
                 player.getBoundingBox().inflate(boundBoxInflateModifier)
-        ).forEach((recruit) -> {
-            if (fromGui && !recruit.getUUID().equals(this.recruit)) {
-                return;
-            }
+        );
 
-            CommandEvents.onAggroCommand(this.player, recruit, this.state, group, fromGui);
-        });
+        List<AbstractRecruitEntity> actors = new ArrayList<>();
+        for (AbstractRecruitEntity recruit : pool) {
+            if (fromGui && !recruit.getUUID().equals(this.recruit)) {
+                continue;
+            }
+            actors.add(recruit);
+        }
+        if (actors.isEmpty()) {
+            return;
+        }
+
+        long gameTime = player.getCommandSenderWorld().getGameTime();
+        CommandIntent intent = new CommandIntent.Aggro(
+                gameTime,
+                CommandIntentPriority.NORMAL,
+                false,
+                this.state,
+                this.group,
+                this.fromGui
+        );
+        CommandIntentDispatcher.dispatch(player, intent, actors);
     }
 
     public MessageAggro fromBytes(FriendlyByteBuf buf) {
