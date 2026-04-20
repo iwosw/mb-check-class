@@ -167,6 +167,8 @@ public class BannerModNetworkBootstrap {
         MessageUpdateMarketArea.class,
         MessageUpdateOwner.class,
         MessageRecoverWorkerControl.class,
+        MessageRequestPlaceBuilding.class,
+        MessageRequestValidateBuilding.class,
     };
 
     private BannerModNetworkBootstrap() {

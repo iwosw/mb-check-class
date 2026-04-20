@@ -21,7 +21,7 @@ class BannerModIntegratedRuntimeSmokeTest {
         // in deferred-items.md for plan 23-06 and is out of scope for this plan's
         // FQN sweep. This test asserts the seam that phase-21 documented as stable.
         assertEquals(BannerModNetworkBootstrap.MILITARY_MESSAGES.length, BannerModNetworkBootstrap.workerPacketOffset());
-        assertEquals(20, BannerModNetworkBootstrap.CIVILIAN_MESSAGES.length);
+        assertEquals(22, BannerModNetworkBootstrap.CIVILIAN_MESSAGES.length);
         assertTrue(BannerModNetworkBootstrap.CIVILIAN_MESSAGES.length > 0);
     }
 }
