@@ -120,6 +120,7 @@ public class BannerModMain {
         // Without these, right-click-to-hire (and every other recruits-side flow) trips an NPE.
         // See 21-UAT.md gap "Right-clicking a recruit opens the Hire GUI without server-side crash".
         MinecraftForge.EVENT_BUS.register(new RecruitEvents());
+        MinecraftForge.EVENT_BUS.register(new com.talhanation.bannermod.events.RecruitShieldEvents());
         MinecraftForge.EVENT_BUS.register(new ClaimEvents());
         MinecraftForge.EVENT_BUS.register(new FactionEvents());
         MinecraftForge.EVENT_BUS.register(new CommandEvents());
