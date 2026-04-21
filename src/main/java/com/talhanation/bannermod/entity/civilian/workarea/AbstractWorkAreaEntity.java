@@ -94,10 +94,41 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     public int time;
+
+    /**
+     * Periodicity at which the work-area falls back to the full {@link Entity#baseTick()} as
+     * a safety net for lifecycle hooks we don't explicitly handle (chunk tracking edge
+     * cases, portal logic if anyone ever stands a work-area in a portal, etc.). Everything
+     * in between runs the cheap path only.
+     */
+    private static final int SAFETY_BASE_TICK_EVERY = 100;
+
+    /**
+     * <p>Performance override — work areas are static, invulnerable, weightless server-side
+     * markers. For the common 500–1000 work-areas-per-world case, running
+     * {@link Entity#baseTick()} every tick (fire/water/lava/walkDist/fluid push/portal
+     * tracking/fall damage/inventory/etc.) costs real MSPT even though none of it can
+     * apply to us.</p>
+     *
+     * <p>Cheap path: bump {@code tickCount}, clear {@code firstTick}, advance our own
+     * {@code time} counter every 20 ticks. Every {@value #SAFETY_BASE_TICK_EVERY} ticks
+     * we still call {@link Entity#baseTick()} as a safety net so chunk-tracking and any
+     * other lifecycle invariant we haven't thought of catches up.</p>
+     *
+     * <p>If this override breaks a rare lifecycle case, lower
+     * {@link #SAFETY_BASE_TICK_EVERY} before disabling the override.</p>
+     */
     @Override
     public void tick() {
-        super.tick();
-        if(tickCount % 20 == 0) time++;
+        if (this.tickCount % SAFETY_BASE_TICK_EVERY == 0) {
+            super.tick();
+        } else {
+            this.tickCount++;
+            this.firstTick = false;
+        }
+        if (this.tickCount % 20 == 0) {
+            this.time++;
+        }
     }
     @Override
     public @NotNull InteractionResult interact(Player player, @NotNull InteractionHand hand) {

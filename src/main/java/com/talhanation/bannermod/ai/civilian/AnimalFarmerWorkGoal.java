@@ -523,7 +523,8 @@ public class AnimalFarmerWorkGoal extends Goal {
     }
 
     public static List<AnimalPenArea> getAvailableWorkAreasByPriority(ServerLevel level, AnimalFarmerEntity animalFarmerEntity, @Nullable AnimalPenArea currentArea) {
-        List<AnimalPenArea> list = level.getEntitiesOfClass(AnimalPenArea.class, animalFarmerEntity.getBoundingBox().inflate(64));
+        List<AnimalPenArea> list = com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex.instance()
+                .queryInRange(animalFarmerEntity, 64, AnimalPenArea.class);
 
         Map<AnimalPenArea, Integer> priorityMap = new HashMap<>();
 

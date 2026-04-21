@@ -565,7 +565,8 @@ public class BuilderWorkGoal extends Goal {
     }
 
     public static List<BuildArea> getAvailableWorkAreasByPriority(ServerLevel level, BuilderEntity builderEntity, @Nullable BuildArea currentArea) {
-        List<BuildArea> list = level.getEntitiesOfClass(BuildArea.class, builderEntity.getBoundingBox().inflate(64));
+        List<BuildArea> list = com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex.instance()
+                .queryInRange(builderEntity, 64, BuildArea.class);
 
         Map<BuildArea, Integer> priorityMap = new HashMap<>();
 

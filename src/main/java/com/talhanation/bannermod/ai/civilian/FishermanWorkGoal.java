@@ -229,7 +229,8 @@ public class FishermanWorkGoal extends Goal {
     }
 
     public static List<FishingArea> getAvailableWorkAreasByPriority(ServerLevel level, FishermanEntity fisherman, @Nullable FishingArea currentArea) {
-        List<FishingArea> list = level.getEntitiesOfClass(FishingArea.class, fisherman.getBoundingBox().inflate(64));
+        List<FishingArea> list = com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex.instance()
+                .queryInRange(fisherman, 64, FishingArea.class);
 
         WorkerBindingResume.prioritizeBoundFirst(list, fisherman.getBoundWorkAreaUUID(), FishingArea::getUUID);
 

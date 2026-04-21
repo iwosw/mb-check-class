@@ -399,7 +399,8 @@ public class LumberjackWorkGoal extends Goal {
     }
 
     public static List<LumberArea> getAvailableWorkAreasByPriority(ServerLevel level, LumberjackEntity lumberjack, @Nullable LumberArea currentArea) {
-        List<LumberArea> list = level.getEntitiesOfClass(LumberArea.class, lumberjack.getBoundingBox().inflate(64));
+        List<LumberArea> list = com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex.instance()
+                .queryInRange(lumberjack, 64, LumberArea.class);
 
         Map<LumberArea, Integer> priorityMap = new HashMap<>();
 

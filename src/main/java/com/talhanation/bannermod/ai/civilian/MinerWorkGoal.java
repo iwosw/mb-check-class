@@ -423,7 +423,8 @@ public class MinerWorkGoal extends Goal {
     }
 
     public static List<MiningArea> getAvailableWorkAreasByPriority(ServerLevel level, MinerEntity minerEntity, @Nullable MiningArea currentArea) {
-        List<MiningArea> list = level.getEntitiesOfClass(MiningArea.class, minerEntity.getBoundingBox().inflate(64));
+        List<MiningArea> list = com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex.instance()
+                .queryInRange(minerEntity, 64, MiningArea.class);
 
         Map<MiningArea, Integer> priorityMap = new HashMap<>();
 

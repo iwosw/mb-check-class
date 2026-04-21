@@ -116,7 +116,8 @@ public abstract class AbstractChestGoal extends Goal {
     }
 
     public void scanAvailableStorageAreas() {
-        List<StorageArea> list = this.worker.getCommandSenderWorld().getEntitiesOfClass(StorageArea.class, this.worker.getBoundingBox().inflate(64));
+        List<StorageArea> list = com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex.instance()
+                .queryInRange(this.worker, 64, StorageArea.class);
 
         list.removeIf(storageArea -> !storageArea.canWorkHere(worker));
 

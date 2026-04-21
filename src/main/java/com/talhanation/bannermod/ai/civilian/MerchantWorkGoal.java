@@ -154,7 +154,8 @@ public class MerchantWorkGoal extends Goal {
 
     @Nullable
     private MarketArea findBestArea(ServerLevel level) {
-        List<MarketArea> areas = level.getEntitiesOfClass(MarketArea.class, merchant.getBoundingBox().inflate(64));
+        List<MarketArea> areas = com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex.instance()
+                .queryInRange(merchant, 64, MarketArea.class);
 
         WorkerBindingResume.prioritizeBoundFirst(areas, merchant.getBoundWorkAreaUUID(), MarketArea::getUUID);
 
