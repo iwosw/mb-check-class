@@ -1,11 +1,19 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.ai.military.UnitTypeMatchup;
+import com.talhanation.bannermod.ai.military.WeaponReach;
 import com.talhanation.bannermod.events.RecruitEvents;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ProjectileWeaponItem;
 import org.jetbrains.annotations.NotNull;
 
 final class RecruitCombatDecisions {
@@ -40,6 +48,16 @@ final class RecruitCombatDecisions {
         }
         int fireAspect = net.minecraft.world.item.enchantment.EnchantmentHelper.getFireAspect(recruit);
         if (fireAspect > 0) entity.setSecondsOnFire(fireAspect * 4);
+        // Stage 4.D: HYW-style unit-type matchup counters — only against other recruits
+        // so PvE / PvP balance against players and monsters is untouched.
+        if (entity instanceof AbstractRecruitEntity defender) {
+            UnitTypeMatchup.UnitClass attackerClass = classifyUnit(recruit);
+            UnitTypeMatchup.UnitClass defenderClass = classifyUnit(defender);
+            double mult = UnitTypeMatchup.damageMultiplier(attackerClass, defenderClass);
+            if (mult != 1.0D) {
+                damage = (float) (damage * mult);
+            }
+        }
         boolean flag = entity.hurt(recruit.damageSources().mobAttack(recruit), damage);
         if (flag) {
             recruit.doEnchantDamageEffects(recruit, entity);
@@ -59,6 +77,24 @@ final class RecruitCombatDecisions {
 
     static boolean isAttackingOwnerOrSelf(AbstractRecruitEntity recruit, LivingEntity target) {
         return target.getLastHurtByMob() != null && (target.getLastHurtByMob().equals(recruit) || target.getLastHurtByMob().equals(recruit.getOwner()));
+    }
+
+    /** Stage 4.D: resolve a recruit's effective unit class from its held gear / mount state. */
+    static UnitTypeMatchup.UnitClass classifyUnit(AbstractRecruitEntity recruit) {
+        boolean mounted = recruit.getVehicle() instanceof LivingEntity;
+        ItemStack mainHand = recruit.getMainHandItem();
+        double extraReach = mainHand.isEmpty() ? 0.0D : WeaponReach.effectiveReachFor(mainHand.getItem());
+        boolean rangedWeapon = !mainHand.isEmpty()
+                && (mainHand.getItem() instanceof BowItem
+                    || mainHand.getItem() instanceof CrossbowItem
+                    || mainHand.getItem() instanceof ProjectileWeaponItem);
+        boolean shieldman = recruit instanceof RecruitShieldmanEntity;
+        int chestDefense = 0;
+        ItemStack chest = recruit.getItemBySlot(EquipmentSlot.CHEST);
+        if (chest != null && chest.getItem() instanceof ArmorItem armor) {
+            chestDefense = armor.getDefense();
+        }
+        return UnitTypeMatchup.classify(mounted, extraReach, rangedWeapon, shieldman, chestDefense);
     }
 
 }

@@ -116,6 +116,12 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
             com.talhanation.bannermod.ai.military.CombatStance.LOOSE;
     /** Last recruit tickCount at which this recruit migrated slots via gap-fill. */
     public int lastFormationGapFillTick = Integer.MIN_VALUE;
+    /** Stage 4.B: last tick at which {@link #cachedCohesion} was recomputed (cache TTL). */
+    public int cachedCohesionTick = Integer.MIN_VALUE;
+    /** Stage 4.B: cached FormationCohesion decision for this recruit. */
+    public boolean cachedCohesion;
+    /** Stage 4.C: true while the recruit is bracing against a cavalry charge. */
+    public boolean isBracing;
     private final CitizenCore citizenCore = RecruitCitizenBridge.createCore(this);
     private CitizenRoleController citizenRoleController = CitizenRoleController.noop(CitizenRole.RECRUIT);
 

@@ -5,8 +5,11 @@ import com.talhanation.bannermod.entity.military.HorsemanEntity;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
 import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
@@ -17,6 +20,9 @@ import net.minecraft.world.item.*;
 import net.minecraftforge.common.ToolActions;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class UseShield extends Goal {
     /** Radius (blocks) used to auto-raise shield under SHIELD_WALL stance. */
@@ -25,6 +31,10 @@ public class UseShield extends Goal {
     private static final double LINE_HOLD_SCAN_RADIUS = 5.0D;
     /** Re-scan interval for hostile proximity (ticks). */
     private static final int HOSTILE_SCAN_INTERVAL_TICKS = 10;
+    /** Stage 4.C: attribute-modifier uuid for the transient brace knockback-resistance boost. */
+    private static final UUID BRACE_KB_RESIST_UUID = UUID.fromString("b7a1c3d2-4e5f-4c9b-8e2a-0b6c4d1f5a21");
+    /** Stage 4.C: extra knockback resistance (ADDITION operand) applied while bracing. */
+    private static final double BRACE_KB_RESIST_BONUS = 0.5D;
 
     public final AsyncPathfinderMob entity;
 
@@ -41,11 +51,13 @@ public class UseShield extends Goal {
 
     public boolean canUse() {
         if (entity instanceof AbstractRecruitEntity recruit){
+            boolean bracing = shouldBraceForCharge(recruit);
+            applyBraceState(recruit, bracing);
             boolean forced = recruit.getShouldBlock();
             boolean stanceAuto = shouldStanceAutoBlock(recruit);
             boolean normal = canRaiseShield() && !recruit.isFollowing() && recruit.canBlock() && !recruit.getShouldMovePos();
 
-            return (forced || stanceAuto || normal) && hasShieldInHand() && !this.entity.swinging;
+            return (bracing || forced || stanceAuto || normal) && hasShieldInHand() && !this.entity.swinging;
         }
         else return canRaiseShield() && hasShieldInHand() && !this.entity.swinging;
     }
@@ -69,6 +81,9 @@ public class UseShield extends Goal {
     public  void stop(){
         this.entity.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.3D);
         entity.stopUsingItem();
+        if (entity instanceof AbstractRecruitEntity recruit) {
+            applyBraceState(recruit, false);
+        }
     }
 
     public void tick() {
@@ -143,6 +158,75 @@ public class UseShield extends Goal {
             }
         }
         return best;
+    }
+
+    /**
+     * Stage 4.C: brace-for-charge decision. Scans for hostile mounted entities
+     * within {@link BraceAgainstChargePolicy#BRACE_RADIUS} and delegates to the
+     * pure policy. Non-LOOSE stances only, and recruit must hold a shield or
+     * reach weapon.
+     */
+    private boolean shouldBraceForCharge(AbstractRecruitEntity recruit) {
+        CombatStance stance = recruit.getCombatStance();
+        if (stance == null || stance == CombatStance.LOOSE) {
+            return false;
+        }
+        boolean hasShield = recruit.canBlock() && hasShieldInHand();
+        boolean hasReach = WeaponReach.effectiveReachFor(recruit.getMainHandItem().getItem()) > 0.0D;
+        if (!hasShield && !hasReach) {
+            return false;
+        }
+
+        List<BraceAgainstChargePolicy.HostileObservation> hostiles = collectMountedHostiles(recruit);
+        return BraceAgainstChargePolicy.shouldBrace(stance, hasShield, hasReach, hostiles);
+    }
+
+    private static List<BraceAgainstChargePolicy.HostileObservation> collectMountedHostiles(AbstractRecruitEntity recruit) {
+        List<BraceAgainstChargePolicy.HostileObservation> out = new ArrayList<>();
+        for (LivingEntity candidate : recruit.level().getEntitiesOfClass(
+                LivingEntity.class,
+                recruit.getBoundingBox().inflate(BraceAgainstChargePolicy.BRACE_RADIUS))) {
+            if (candidate == recruit || !candidate.isAlive()) continue;
+            if (!recruit.targetingConditions.test(recruit, candidate)) continue;
+            Entity vehicle = candidate.getVehicle();
+            boolean mounted = candidate.isPassenger() && vehicle instanceof LivingEntity;
+            if (!mounted) continue;
+            double distSqr = recruit.distanceToSqr(candidate);
+            // Per the spec, velocity check is optional — treat proximity as sufficient.
+            out.add(new BraceAgainstChargePolicy.HostileObservation(distSqr, true, true));
+        }
+        return out;
+    }
+
+    /**
+     * Stage 4.C: toggle the recruit's transient brace state. When turning on,
+     * also halt navigation, raise the shield, and add a knockback-resistance
+     * attribute modifier. When turning off, remove the modifier.
+     */
+    private void applyBraceState(AbstractRecruitEntity recruit, boolean bracing) {
+        if (recruit.isBracing == bracing) {
+            return;
+        }
+        recruit.isBracing = bracing;
+        AttributeInstance kbResist = recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+        if (kbResist != null) {
+            AttributeModifier existing = kbResist.getModifier(BRACE_KB_RESIST_UUID);
+            if (bracing) {
+                if (existing == null) {
+                    kbResist.addTransientModifier(new AttributeModifier(
+                            BRACE_KB_RESIST_UUID,
+                            "bannermod.brace_kb_resist",
+                            BRACE_KB_RESIST_BONUS,
+                            AttributeModifier.Operation.ADDITION));
+                }
+            } else if (existing != null) {
+                kbResist.removeModifier(BRACE_KB_RESIST_UUID);
+            }
+        }
+        if (bracing) {
+            recruit.setShouldBlock(true);
+            recruit.getNavigation().stop();
+        }
     }
 
     public boolean canRaiseShield() {

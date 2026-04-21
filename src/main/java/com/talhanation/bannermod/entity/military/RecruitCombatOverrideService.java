@@ -1,9 +1,16 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.ai.military.BraceAgainstChargePolicy;
 import com.talhanation.bannermod.ai.military.CombatStance;
+import com.talhanation.bannermod.ai.military.FacingHitZone;
+import com.talhanation.bannermod.ai.military.FlankDamage;
+import com.talhanation.bannermod.ai.military.FormationCohesion;
+import com.talhanation.bannermod.ai.military.FormationSlotRegistry;
+import com.talhanation.bannermod.ai.military.FormationTargetSelectionController;
 import com.talhanation.bannermod.ai.military.ShieldBlockGeometry;
 import com.talhanation.bannermod.ai.military.ShieldMitigation;
 import com.talhanation.bannermod.events.RecruitEvents;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -17,6 +24,12 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.raid.Raider;
+import net.minecraft.world.level.Level;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 final class RecruitCombatOverrideService {
 
@@ -26,6 +39,8 @@ final class RecruitCombatOverrideService {
     private static final float SHIELDMAN_BONUS_REMAINING = 0.9f;
     /** Knockback strength applied to attackers whose melee blow is blocked at the front. */
     private static final float BLOCK_KNOCKBACK_STRENGTH = 0.5f;
+    /** Stage 4.B: cohesion-check cache TTL, in ticks. */
+    private static final int COHESION_CACHE_TTL_TICKS = 10;
 
     private RecruitCombatOverrideService() {
     }
@@ -40,6 +55,16 @@ final class RecruitCombatOverrideService {
 
         damage = applyShieldMitigation(recruit, damageSource, damage);
 
+        // Stage 4.A: flank / back vulnerability. Only a direct LivingEntity hit counts —
+        // fall damage, magic, etc. should not benefit (or suffer) from facing.
+        damage = applyFlankMultiplier(recruit, damageSource, damage);
+
+        // Stage 4.C: bracing recruits take ×0.7 against cavalry riders (after flank).
+        damage = applyBraceAgainstCavalryMitigation(recruit, damageSource, damage);
+
+        // Stage 4.B: phalanx cohesion bonus — final multiplier.
+        damage = applyFormationCohesionMitigation(recruit, damage);
+
         if (recruit.isBlocking()) recruit.hurtCurrentlyUsedShield(damage);
 
         if (attacker instanceof LivingEntity living && RecruitEvents.canAttack(recruit, living)) {
@@ -52,6 +77,114 @@ final class RecruitCombatOverrideService {
         }
 
         return damage;
+    }
+
+    /** Stage 4.A: apply a damage multiplier for side / back hits by a living attacker. */
+    private static float applyFlankMultiplier(AbstractRecruitEntity recruit, DamageSource damageSource, float damage) {
+        if (damage <= 0f) {
+            return damage;
+        }
+        Entity direct = damageSource.getDirectEntity();
+        Entity attacker = damageSource.getEntity();
+        if (!(attacker instanceof LivingEntity) && !(direct instanceof LivingEntity)) {
+            return damage;
+        }
+        double[] origin = attackerOrigin(recruit, damageSource);
+        if (origin == null) {
+            return damage;
+        }
+        FacingHitZone zone = FacingHitZone.classify(
+                recruit.yBodyRot,
+                origin[0], origin[1],
+                recruit.getX(), recruit.getZ()
+        );
+        float multiplier = FlankDamage.multiplierFor(zone);
+        if (multiplier == 1.0f) {
+            return damage;
+        }
+        return damage * multiplier;
+    }
+
+    /** Stage 4.C: extra damage reduction vs a charging cavalry rider while bracing. */
+    private static float applyBraceAgainstCavalryMitigation(AbstractRecruitEntity recruit, DamageSource damageSource, float damage) {
+        if (damage <= 0f || !recruit.isBracing) {
+            return damage;
+        }
+        Entity attacker = damageSource.getEntity();
+        if (attacker == null) {
+            return damage;
+        }
+        boolean attackerMounted = attacker.isPassenger() && attacker.getVehicle() instanceof LivingEntity;
+        if (!attackerMounted) {
+            return damage;
+        }
+        return damage * BraceAgainstChargePolicy.BRACE_CAVALRY_REMAINING;
+    }
+
+    /** Stage 4.B: apply phalanx cohesion reduction with a short cache. */
+    private static float applyFormationCohesionMitigation(AbstractRecruitEntity recruit, float damage) {
+        if (damage <= 0f) {
+            return damage;
+        }
+        CombatStance stance = recruit.getCombatStance();
+        if (stance != CombatStance.LINE_HOLD && stance != CombatStance.SHIELD_WALL) {
+            return damage;
+        }
+        boolean cohesive;
+        int now = recruit.tickCount;
+        if (recruit.cachedCohesionTick != Integer.MIN_VALUE
+                && (now - recruit.cachedCohesionTick) < COHESION_CACHE_TTL_TICKS) {
+            cohesive = recruit.cachedCohesion;
+        } else {
+            cohesive = computeCohesion(recruit, stance);
+            recruit.cachedCohesion = cohesive;
+            recruit.cachedCohesionTick = now;
+        }
+        if (!cohesive) {
+            return damage;
+        }
+        return damage * FormationCohesion.COHESION_REMAINING;
+    }
+
+    private static boolean computeCohesion(AbstractRecruitEntity recruit, CombatStance stance) {
+        UUID ownerId = recruit.getOwnerUUID();
+        UUID groupId = recruit.getGroup();
+        if (ownerId == null || groupId == null) {
+            return false;
+        }
+        FormationTargetSelectionController.CohortKey cohort =
+                new FormationTargetSelectionController.CohortKey(ownerId, groupId);
+        Map<Integer, FormationSlotRegistry.SlotEntry> slots = FormationSlotRegistry.slotsOf(cohort);
+        if (slots.isEmpty()) {
+            return false;
+        }
+        Level level = recruit.level();
+        List<FormationCohesion.AllyObservation> allies = new ArrayList<>(slots.size());
+        for (FormationSlotRegistry.SlotEntry entry : slots.values()) {
+            if (entry == null) continue;
+            UUID ownerUuid = entry.ownerId();
+            if (ownerUuid == null || ownerUuid.equals(recruit.getUUID())) {
+                continue;
+            }
+            Entity e = resolveEntityByUuid(level, ownerUuid);
+            if (!(e instanceof AbstractRecruitEntity ally) || !ally.isAlive()) {
+                continue;
+            }
+            allies.add(new FormationCohesion.AllyObservation(
+                    ally.getX() - recruit.getX(),
+                    ally.getZ() - recruit.getZ(),
+                    ally.getCombatStance()
+            ));
+        }
+        return FormationCohesion.isCohesive(allies, stance, FormationCohesion.DEFAULT_MAX_DIST_SQR);
+    }
+
+    private static Entity resolveEntityByUuid(Level level, UUID uuid) {
+        if (level instanceof ServerLevel serverLevel) {
+            return serverLevel.getEntity(uuid);
+        }
+        // Client-side or test: return null; cohesion is a server-only gate anyway.
+        return null;
     }
 
     /**
