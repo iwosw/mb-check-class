@@ -518,9 +518,18 @@ Status: In Progress; opener slices landed a persisted claim-keyed settlement agg
 
 **Goal:** BannerMod's military expansion proceeds as one command-and-warfare phase instead of separate formation, doctrine, morale, siege, and territory subprojects competing for sequence.
 
-Planning artifacts will be created under a new compact Phase 26 when Phase 25 is stable enough to branch the military-side work.
+Planning artifacts live under `.planning/phases/26-army-command-formations-warfare/`.
 
-Status: Planned.
+Status: In progress.
+
+**Landed slices (2026-04-21):**
+- HYW-selection UI opener (`b5e57ac` recruit selection registry; `cd5a19b` drag-box selection UI).
+- Combat AI overhaul (`.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md`, commits `ebe813d`, `2ff128c`, `33f86bf`, `fab08a4`): round-robin target selection with recent-loss LOD boost; `CombatStance` (`LOOSE`/`LINE_HOLD`/`SHIELD_WALL`) with NBT persistence, formation leash, gap-fill on neighbour death, slow body-yaw; directional 120° shield block with stance-tuned mitigation via Forge `ShieldBlockEvent` cancellation; SHIELD_WALL auto-block + facing pivot; per-item weapon reach (spear/pike/sarissa), second-rank poke via `FriendlyLineOfSight`, per-unit attack cadence; flank multiplier (×1.15 side / ×1.5 back), formation cohesion (×0.85), brace-for-cavalry with knockback resistance, and HYW unit-type counter matrix. 12 pure helpers + 129 green tests under `com.talhanation.bannermod.ai.military.*`.
+
+**Next slice (planned):**
+- Player-facing stance commands / packets / UI so `LOOSE`/`LINE_HOLD`/`SHIELD_WALL` is selectable in-game.
+- Extend stance leash into `RecruitRangedBowAttackGoal` and `RecruitRangedCrossbowAttackGoal`.
+- GameTest coverage for the stance→behavior loop once command entrypoints exist.
 
 ## Phase 27: Read Models, UI, And Player Operations
 

@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Compact Phase 25 has entered the Manor-Lords-style building-centric migration: a per-level work-order runtime, publishers for crop/build/lumber/mining areas, real claim-behavior job handlers, and a SettlementOrderWorkGoal on every AbstractWorkerEntity now let settlements publish block-level demand that residents execute ahead of the legacy zone loop; placement-style orders and non-profession flows still fall through to legacy goals
-last_updated: "2026-04-20T06:00:00Z"
+status: Compact Phase 26 combat AI overhaul landed 2026-04-21 — round-robin target spread, 60-tick recent-loss LOD boost, CombatStance (LOOSE/LINE_HOLD/SHIELD_WALL) with NBT persistence, formation-aware leash, gap-fill on neighbour death, slow body-yaw in formation, directional 120° shield block with stance-tuned mitigation via Forge ShieldBlockEvent cancellation, SHIELD_WALL auto-block + slow facing pivot, per-item weapon reach (sarissa/pike/spear), second-rank poke via FriendlyLineOfSight, per-unit attack cadence, flank (×1.15 side / ×1.5 back), formation cohesion (−15%), brace-for-cavalry with knockback resistance, and HYW-parity unit-type counter matrix. Compact Phase 25 work-order runtime remains the prior landed surface; Phase 26 stance commands/UI are the next slice.
+last_updated: "2026-04-21T22:45:00Z"
 progress:
   total_phases: 28
   completed_phases: 23
@@ -14,7 +14,7 @@ progress:
 
 # Project State
 
-- Current focus: compact Phase 24 historical `24-05-PLAN.md` closeout remains verified green inside `.planning/phases/24-logistics-backbone-and-courier-worker/`, and compact Phase 25 has now moved past persistence-only seeds into a live runtime-wiring stage: reservation-aware supply/trade hints can now influence growth scoring, settlement-critical civilian mutations refresh snapshots in more real paths, and resident jobs no longer fire outside scheduled work windows. Immediate next work is to keep compact Phase 25 planning truthful and continue wiring these slices into the live settlement loop before opening the next HYW-heavy military seam.
+- Current focus: compact Phase 26 combat AI overhaul is the newest landed surface (slice status: `.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md`). Target selection, line cohesion, directional shield block, reach weapons, rank-2 poke, per-unit cadence, flank/cohesion/brace, and HYW unit-type counters are all live under `com.talhanation.bannermod.ai.military.*` with 129 pure-helper tests green. Combat stance (`LOOSE`/`LINE_HOLD`/`SHIELD_WALL`) is NBT-persisted but stance selection is programmatic-only today — the next Phase 26 slice owns the player-facing stance command/packet/UI wiring and extending stance leash into the ranged goals. Compact Phase 25 settlement work-order runtime remains the prior landed surface and stays available for follow-up slices.
 - Runtime base: the root `src/**` tree under `com.talhanation.bannermod` (Phase 21 completed the in-place merge)
 - Active runtime mod: `bannermod`
 - Workers status: fully absorbed; civilian Java code lives under `bannermod.{entity,ai,client,inventory,items,persistence,registry,settlement}.civilian`; civilian network packets live under `bannermod.network.messages.civilian` at packet-ID offset = MILITARY_MESSAGES.length (104).
@@ -42,6 +42,7 @@ progress:
 - Latest execution summary: `.planning/phases/25-treasury-taxes-and-army-upkeep/25-SLICE-STATUS.md` (compact Phase 25 is no longer seed-only; the main tree now contains additive `settlement.goal`, `growth`, `project`, `dispatch`, `household`, and `job` runtime seams backed by targeted JUnit coverage, and the latest slice wires reservation-aware growth hints, broader real mutation refreshes, and scheduled job gating into the live settlement loop without introducing new persistence)
 - Latest planning artifacts: `.planning/phases/24-logistics-backbone-and-courier-worker/24-CONTEXT.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-RESEARCH.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-VALIDATION.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-01-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-02-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-03-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-04-PLAN.md`, `.planning/phases/24-logistics-backbone-and-courier-worker/24-05-PLAN.md`
 - Active compact-Phase-25 planning artifacts: `.planning/phases/25-treasury-taxes-and-army-upkeep/` (keep this directory truthful; do not treat it as a future placeholder)
+- Active compact-Phase-26 planning artifacts: `.planning/phases/26-army-command-formations-warfare/` (combat AI overhaul landed 2026-04-21; stance command/UI wiring is the next slice)
 
 ## Phase Number Crosswalk
 
@@ -169,6 +170,12 @@ progress:
 - [Compact Phase 25 runtime]: Refreshed settlement snapshots now flow through one live `BannerModSettlementOrchestrator` on the governor tick, composing the additive growth/project/home/seller/goal/job runtimes without yet replacing worker entities or persisting runtime state.
 - [Compact Phase 25 runtime]: Snapshot-owned settlement trade and supply hints now see live logistics reservations, more civilian work-area update packets refresh their local claim snapshot immediately, merchant market trades trigger a local settlement refresh, and stale live seller dispatches are reconciled against current market seeds.
 - [Compact Phase 25 runtime]: The live growth queue now consumes reservation-aware `tradeRouteHandoffSeed` and `supplySignalState` hints, more remaining settlement-critical civilian mutation paths refresh snapshots immediately, and resident job handlers only run during scheduled work windows while respecting handler cooldowns.
+- [Compact Phase 26 combat AI]: Recruit target selection now round-robins with assignee spread, forces LOD FULL for 60 ticks after a kill, and gates a reactive switch behind a 3-block hysteresis — closes the 15-20s post-kill blind spot and dogpile symptoms.
+- [Compact Phase 26 combat AI]: A `CombatStance` contract (`LOOSE`/`LINE_HOLD`/`SHIELD_WALL`) owns phalanx behaviour as a single NBT-persisted flag; all stage-1..4 logic gates on stance to keep the default `LOOSE` path unchanged for existing save games.
+- [Compact Phase 26 combat AI]: Shield blocking is BannerMod-owned now. Forge `ShieldBlockEvent` is cancelled for recruits; `prepareIncomingDamage` is the single damage-mitigation path with directional 120° front cone plus stance-tuned reduction (LOOSE 45% / LINE_HOLD 55% / SHIELD_WALL 70% absorbed) and a 100-tick stagger cooldown on successful blocks.
+- [Compact Phase 26 combat AI]: Weapon reach is per-item (`WeaponReach`) with registry-id heuristics; spearmen/pikemen in rank 2 attack through allied recruits via `FriendlyLineOfSight` without leaving their formation slot. Real `SpearItem`/`PikeItem` classes are the single extension point when they land.
+- [Compact Phase 26 combat AI]: Flank damage (×1.15 side, ×1.5 back), formation cohesion (×0.85 when ≥2 allies within 2 blocks share stance), brace-for-cavalry (knockback resistance +0.5, ×0.7 cavalry damage remaining), and HYW unit-type counter matrix (Light/Heavy/Ranged/Cavalry/PikeInfantry) now shape combat damage. Unit-type counters apply only vs other recruits so PvE balance is unchanged.
+- [Compact Phase 26 combat AI]: Player-facing stance commands/UI are deliberately deferred; the current landing is programmatic-only and the next slice owns the command/packet wiring plus extending stance leash into the ranged goals.
 - [Phase 24]: Persist treasury accrual in one narrow claim-keyed SavedData ledger and feed it directly from the existing governor heartbeat instead of introducing a global economy manager, item hauling, or per-tick tax recomputation.
 - [Phase 32]: Replace server-wide global chat with explicit faction and local channels; keep routing server-authoritative and operator-configurable.
 - [Phase 33]: Unify citizen appearance and birth behind one building-capacity-aware settlement growth loop with overpopulation pressure.
@@ -293,6 +300,6 @@ progress:
 
 ## Session
 
-- Last updated: 2026-04-19T23:50:00Z
-- Stopped at: claim-keyed treasury heartbeat accounting now also persists governor-readable fiscal rollups and bounded next-cycle projection; focused treasury/governance JUnit execution is unblocked at the source level — `BannerModSettlementService` is a `final` utility class (private no-arg constructor, all behavior behind `public static` entrypoints like `refreshAllClaims`, `refreshClaimAt`, `refreshClaim`, `buildSnapshot`) with no `new BannerModSettlementService(...)` call sites in the active tree, so the "constructor mismatch" note from earlier sessions no longer reflects reality (re-audited 2026-04-19). Compact-Phase-24 validation for this slice remains open on its own merits, not on a compile-debt blocker.
-- Resume file: None
+- Last updated: 2026-04-21T22:45:00Z
+- Stopped at: compact Phase 26 combat AI overhaul landed in five atomic commits (`ebe813d` targeting+stage 1, `2ff128c` stage 2, `33f86bf` stage 3, `fab08a4` stage 4). All 129 tests under `com.talhanation.bannermod.ai.military.*` pass. Combat stance is NBT-persisted but programmatic-only; next slice owns player-facing stance command/packet/UI wiring and extending stance leash into `RecruitRangedBowAttackGoal` / `RecruitRangedCrossbowAttackGoal`.
+- Resume file: `.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md`

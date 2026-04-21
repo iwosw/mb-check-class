@@ -22,9 +22,10 @@ Critical workflow rules:
 - If you update planning artifacts, keep them truthful. Never mark a slice complete unless verification actually supports it.
 
 Immediate objectives, in order:
-1. Update `.planning` to reflect the latest confirmed 24-25 bugfix closeouts if not already done.
-2. Resume compact Phase 25 execution in batches of 5 slices at a time, using subagents in parallel.
-3. Audit historical phases 1-24 against the current codebase and fix any real implementation/planning mismatches you find.
+1. Read `.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md` — it is the active reference for what landed in the combat AI overhaul.
+2. Implement the next Phase 26 slice: player-facing stance commands/packets/UI so `LOOSE`/`LINE_HOLD`/`SHIELD_WALL` is selectable in-game, plus extending the stance leash into `RecruitRangedBowAttackGoal` and `RecruitRangedCrossbowAttackGoal`.
+3. Add GameTest coverage for the stance → combat behavior loop once the command entrypoints exist.
+4. When Phase 26 is stable, resume compact Phase 25 settlement work-order follow-ups or audit historical phases 1-24 against the current codebase — whichever the user prioritises next.
 
 When executing Phase 25 slices:
 - Group 5 independent slices per batch.
@@ -46,10 +47,25 @@ Always preserve these constraints:
 ## Session Snapshot
 
 - Repo: `/home/kaiserroman/bannermod`
-- Current main-tree HEAD commit: `329edf1`
-- HEAD commit message: `refactor(runtime): split legacy systems and wire settlement loop`
-- There is one newer verified but still-uncommitted Phase 25 settlement slice on top of that commit.
-- Existing refactor commits already created earlier in session:
+- Current main-tree HEAD commit: `fab08a4`
+- HEAD commit message: `feat(ai-combat): stage 4 flank/cohesion/brace + HYW unit-type counters`
+- Latest landed surface: **Phase 26 combat AI overhaul (2026-04-21)** — see the dedicated section below.
+- Combat AI commit trail (newest first):
+  - `fab08a4` `feat(ai-combat): stage 4 flank/cohesion/brace + HYW unit-type counters`
+  - `33f86bf` `feat(ai-combat): stage 3 reach weapons + rank-2 poke + per-unit cadence`
+  - `2ff128c` `feat(ai-combat): stage 2 directional shield block + stance auto-block`
+  - `ebe813d` `feat(ai-combat): smarter targeting + stage 1 line cohesion`
+- HYW-selection UI commits (earlier this day, 2026-04-21):
+  - `cd5a19b` `feat(26-hyw): drag-box selection UI (slice 5b)`
+  - `b5e57ac` `feat(26-hyw): recruit selection registry (slice 5a)`
+  - `d80db39` `feat(26-hyw): debug intents chat command (slice 4)`
+  - `b7f6da7` `feat(26-hyw): migrate remaining command packets to dispatcher (slice 3)`
+- Earlier Phase 25 commits still in history:
+  - `f7ce947` `feat(25-next): building-centric work-order migration seam`
+  - `28e189a` `feat(25-next): wire growth hints and scheduled settlement jobs`
+  - `6b8401b` `feat(25-next): enrich live settlement signals and refresh hooks`
+- There are no uncommitted changes in the main tree after `fab08a4`. `AbstractRecruitEntity.java` currently carries Stage 1–4 fields (`lastTargetLossTick`, `combatStance`, `lastFormationGapFillTick`, `cachedCohesionTick`, `cachedCohesion`, `isBracing`) and the `tickHeadTurn` yaw clamp — these are all committed.
+- Existing refactor commits from earlier this session:
   - `cc986b4` `refactor(recruits): split recruit runtime and formation commands`
   - `009df5f` `refactor(events): extract claim faction and villager runtimes`
   - `f459ae6` `refactor(shared): remove legacy forwarders and worker glue`
@@ -549,38 +565,64 @@ Still to do immediately in next session:
 - `./gradlew test --tests com.talhanation.bannermod.logistics.BannerModLogisticsServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementServiceTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --tests com.talhanation.bannermod.settlement.BannerModSettlementManagerTest --console=plain`
   - green on 2026-04-19
 
+### Latest session continuation after `6b8401b`
+
+- The previously uncommitted reservation-aware Phase 25 integration slice was reviewed, re-verified in the main tree, and committed:
+  - `6b8401b` `feat(25-next): enrich live settlement signals and refresh hooks`
+- After that commit, one additional verified but still-uncommitted Phase 25 runtime-wiring slice was implemented in the main tree.
+
+### What the uncommitted post-`6b8401b` slice added
+
+- Added one shared settlement refresh helper so more real civilian mutation paths can trigger snapshot refresh without duplicating claim-manager wiring:
+  - `BannerModSettlementRefreshSupport`
+- Expanded immediate settlement refresh coverage to more settlement-critical mutation paths:
+  - `MessageUpdateOwner`
+  - `WorkerSettlementSpawner.spawnWorker(...)`
+  - `BuilderWorkGoal` build completion
+  - `MiningArea.tick()` self-removal on completion
+- Extended live growth scoring so reservation-aware settlement hints are no longer snapshot-only:
+  - `BannerModSettlementGrowthContext` now carries `tradeRouteHandoffSeed` and `supplySignalState`
+  - `BannerModSettlementGrowthManager` now consumes those hints during project queue scoring
+- Tightened live resident/job runtime behavior:
+  - `BannerModSettlementOrchestrator` now runs job handlers only during scheduled `WorkResidentGoal` windows
+  - handler `cooldownTicks()` are now respected via in-memory orchestrator state
+
+### What was verified in the latest post-`6b8401b` slice
+
+- `./gradlew compileJava --console=plain`
+  - green on 2026-04-20
+- `./gradlew test --tests com.talhanation.bannermod.settlement.growth.BannerModSettlementGrowthManagerTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --console=plain`
+  - green on 2026-04-20
+
 ### Planning files updated again in the latest continuation slice
 
 - `.planning/ROADMAP.md`
-  - now states that Phase 25 also folds live logistics reservations into snapshot-owned trade/supply signalling
+  - now also states that Phase 25 growth scoring consumes reservation-aware hints and that broader real mutation refreshes plus scheduled job gating landed
 - `.planning/STATE.md`
-  - now states that broader civilian packet refresh hooks and merchant-trade refresh are in place
+  - now states that reservation-aware hints feed live growth scoring and that resident jobs are gated to scheduled work windows
 - `.planning/VERIFICATION.md`
-  - now records the reservation-aware focused verification command
+  - now records the focused growth/orchestrator verification command from 2026-04-20
 - `.planning/phases/25-treasury-taxes-and-army-upkeep/25-SLICE-STATUS.md`
-  - now records reservation-aware signalling, broader refresh hooks, and stale seller dispatch reconciliation
+  - now records reservation-aware growth scoring, additional refresh hooks, and scheduled job gating
 
-### Exact currently modified files after `329edf1`
+### Exact currently modified files after `6b8401b`
 
 - `.planning/ROADMAP.md`
 - `.planning/STATE.md`
 - `.planning/VERIFICATION.md`
 - `.planning/phases/25-treasury-taxes-and-army-upkeep/25-SLICE-STATUS.md`
 - `CONTINUE-HERE.md`
-- `src/main/java/com/talhanation/bannermod/entity/civilian/MerchantEntity.java`
-- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateAnimalPenArea.java`
-- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateBuildArea.java`
-- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateCropArea.java`
-- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateLumberArea.java`
-- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateMiningArea.java`
+- `src/main/java/com/talhanation/bannermod/ai/civilian/BuilderWorkGoal.java`
+- `src/main/java/com/talhanation/bannermod/entity/civilian/workarea/MiningArea.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateOwner.java`
+- `src/main/java/com/talhanation/bannermod/network/messages/civilian/WorkAreaMessageSupport.java`
 - `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementOrchestrator.java`
-- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementService.java`
-- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementTradeRouteHandoffSeed.java`
-- `src/main/java/com/talhanation/bannermod/shared/logistics/BannerModLogisticsService.java`
-- `src/test/java/com/talhanation/bannermod/logistics/BannerModLogisticsServiceTest.java`
-- `src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementManagerTest.java`
+- `src/main/java/com/talhanation/bannermod/settlement/civilian/WorkerSettlementSpawner.java`
+- `src/main/java/com/talhanation/bannermod/settlement/growth/BannerModSettlementGrowthContext.java`
+- `src/main/java/com/talhanation/bannermod/settlement/growth/BannerModSettlementGrowthManager.java`
+- `src/main/java/com/talhanation/bannermod/shared/settlement/BannerModSettlementRefreshSupport.java`
 - `src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementOrchestratorTest.java`
-- `src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementServiceTest.java`
+- `src/test/java/com/talhanation/bannermod/settlement/growth/BannerModSettlementGrowthManagerTest.java`
 
 ### HYW transition truth recovered this session
 
@@ -608,25 +650,27 @@ Current planning truth now reflects:
 - controlled-worker mode contradiction fix
 - settlement enum hardening is only partial, not complete
 - settlement heuristics use live sea-trade entrypoint sets more honestly
-- event-driven settlement refresh hooks exist for storage updates and worker binding changes
+- event-driven settlement refresh hooks now also cover work-area owner changes, claim worker spawn/seeding, build completion, and mining-area self-removal
 - Phase 25 now has one live settlement orchestration seam on the governor tick
+- reservation-aware settlement hints now feed live growth scoring
+- resident jobs now only execute during scheduled work windows and respect handler cooldowns
 
 ### Step 2. Resume Phase 25 execution in new batches of 5
 
-Updated next batch after the now-landed orchestration seam:
-1. Phase 25 already ported the low-risk shortage-worktree idea: logistics reservation visibility now feeds snapshot-owned settlement supply/trade hints, so the next step is deeper runtime use of those hints rather than another signal model
-2. continue expanding event-driven settlement refresh to the remaining real civil mutation paths not yet covered by work-area packet hooks or merchant trade refresh
-3. continue resident/job runtime toward non-stub execution using the now-live scheduler seam
-4. decide whether merchant trade catalog intent should be projected into the current `tradeRouteHandoffSeed` without introducing a parallel persistence model
+Updated next batch after the now-landed runtime-wiring slice:
+1. continue resident/job runtime beyond scheduler-gated execution toward meaningful non-stub work output
+2. decide whether merchant trade catalog intent should be projected into the current `tradeRouteHandoffSeed` only after defining one real item-to-good consumer contract
+3. evaluate whether the live growth queue now needs a tighter reservation-shortage heuristic instead of the current broad hint consumption
+4. audit whether any other settlement-critical mutation paths still bypass immediate refresh after the latest hook wave
 5. shift active exploration toward HYW after Phase 25 stabilization
 
-### Step 2.5. Commit the verified post-`329edf1` Phase 25 slice
+### Step 2.5. Commit the verified post-`6b8401b` Phase 25 slice
 
 Before starting new feature work in the next session:
 
 - review the currently modified files listed above
 - confirm `CONTINUE-HERE.md` is included or intentionally excluded from the commit
-- create one new non-amend commit for the reservation-aware Phase 25 integration slice
+- create one new non-amend commit for the latest Phase 25 runtime-wiring slice
 - do **not** include junk/artifacts such as:
   - `run_gametest/`
   - jar files
@@ -635,14 +679,13 @@ Before starting new feature work in the next session:
   - `workers/`
 
 Suggested commit scope:
-- reservation-aware settlement signalling
-- broader civilian refresh hooks
-- merchant trade refresh
-- stale seller dispatch reconciliation
+- reservation-aware growth scoring
+- broader settlement-critical refresh hooks
+- scheduled resident job gating and cooldowns
 - truthful planning/handoff updates
 
 Suggested commit message shape:
-- `feat(25-next): enrich live settlement signals and refresh hooks`
+- `feat(25-next): wire growth hints and scheduled settlement jobs`
 
 Important:
 - Run each potentially overlapping slice in separate worktrees if they touch the same settlement/planning files.
@@ -698,3 +741,436 @@ In the next session:
 3. explicitly review and verify every subagent result in the main session before updating planning,
 4. continue Phase 25 runtime integration from the already-landed Millenaire packages,
 5. then audit historical phases 1-24.
+
+## New Architectural Redirect: Kill Worker Zones, Move To Settlement-Centric Simulation
+
+This was a deliberate product-direction change requested after more frustration with the old worker-area model.
+
+### New explicit direction
+
+- Stop treating manual worker zones as the primary gameplay/control model.
+- Replace zone-driven worker logic with **building-centric settlement simulation** closer to **Manor Lords / Millenaire**.
+- Target model:
+  - `Settlement -> Buildings -> JobSlots -> WorkOrders -> Workers`
+- Desired player experience:
+  - player places buildings, homes, storage, and infrastructure
+  - player configures policy/priorities/radii/limits
+  - villagers/workers take tasks because settlement needs them, not because of a painted invisible rectangle
+
+### Why the old worker-zone model is now considered wrong
+
+The user explicitly rejected the current zone model because it has the usual bad properties:
+
+1. player paints invisible rectangles instead of building a settlement
+2. NPCs work because GUI markers told them to, not because they belong to a workplace inside a village economy
+3. economy feels fake because zones magically imply production
+4. the village feels like scripts attached to markers rather than a living organism
+
+### What the replacement should feel like
+
+Worker control should become **settlement-based AI**, not zone-based AI.
+
+Core ideas to preserve from the request:
+
+- every production building becomes a center that publishes work
+- residents have homes, work affiliations, schedules, inventory/carry limits, and priorities
+- resources move through stores/stockpiles/warehouses instead of spawning from zone logic
+- fields are parcels / plots, not generic worker rectangles
+- forestry and extraction should be building-radius / resource-node / parcel based, not direct “go work in this cuboid” authoring
+- player should mostly manage policy:
+  - specialization
+  - production focus
+  - max radius
+  - seasonal behavior
+  - resource caps / limits
+  - do-not-harvest / decorative protection rules
+
+### Concrete target design requested by user
+
+The user’s requested design direction, summarized faithfully:
+
+#### Settlement structure
+
+- `Village` / settlement-level state owns:
+  - buildings
+  - population
+  - stores / stockpiles
+  - seasonal needs
+  - development / construction priorities
+  - local economy and logistics
+
+#### Buildings
+
+- each building has:
+  - type / specialization
+  - storage needs / inputs / outputs
+  - worker slots / job slots
+  - task generation rules
+  - optional service radius / parcel / linked nodes
+
+#### Work model
+
+- buildings publish `WorkOrders` / contracts such as:
+  - fetch resource
+  - deliver resource
+  - produce item
+  - plant / till / harvest
+  - cut / haul / replant
+  - build / repair
+  - refuel / restock
+
+#### Resident model
+
+- residents/workers should eventually have:
+  - home
+  - workplace affiliation or profession
+  - schedule / day rhythm
+  - inventory / carrying capacity
+  - skill / preference / priority weights
+
+#### Task choice model
+
+- worker picks jobs by weighted scoring, e.g.:
+  - priority
+  - distance
+  - profession fit
+  - congestion
+  - current settlement shortage / urgency
+
+### Specific per-domain replacements requested
+
+#### Farming
+
+- replace generic zones with **field parcels / field plots**
+- field should be a settlement object with:
+  - boundaries
+  - crop
+  - fertility / state / season
+  - owner building / farm affiliation
+  - worker demand
+- expected tasks:
+  - till
+  - sow
+  - weed
+  - harvest
+  - haul to barn / storage
+
+#### Forestry
+
+- replace generic lumber zone with **building service radius** around woodcutter camp / forestry building
+- building should publish tasks:
+  - cut mature tree
+  - haul logs
+  - replant
+- possible future policy:
+  - avoid village-core decorative trees
+  - prefer mature trees
+  - enable / disable replanting
+
+#### Mining / stone / clay / extraction
+
+- do **not** keep cuboid “mine here” as the main mechanic
+- preferred replacements:
+  - resource nodes near a mine/quarry building
+  - or parcel-like quarry/extraction site marker that belongs to settlement infrastructure, not generic worker zoning
+
+#### Logistics / production
+
+- buildings should publish needs and contracts
+- storage / hauling must be first-class work
+- no more “zone exists, therefore magic production happens”
+
+### Strong migration rule from the user
+
+Do **not** try to fix the zone UX further as the long-term answer.
+
+The direction is:
+
+- worker zones become fallback / temporary compatibility only
+- new development should favor settlement/building/task architecture
+- the end state should make zones either optional rare tools or removable entirely
+
+## Current Code Reality Relevant To This Redirect
+
+This was inspected before the redirect was captured.
+
+### Old zone-centric runtime still active
+
+Current worker execution is still heavily tied to `AbstractWorkAreaEntity` and area-specific entities like:
+
+- `CropArea`
+- `LumberArea`
+- `MiningArea`
+- `BuildArea`
+- `StorageArea`
+- `MarketArea`
+- `AnimalPenArea`
+
+Worker AI still consumes these directly in area-centric goal loops such as:
+
+- farmer current crop-area binding
+- lumberjack current lumber-area behavior
+- miner current mining-area behavior
+- builder current build-area behavior
+
+### But compact Phase 25 already created useful replacement seams
+
+The important thing is that the codebase is **not** starting from zero.
+
+Phase 25 already has additive settlement runtime pieces that can become the new authority:
+
+- settlement snapshots
+- building records and building profile seeds
+- resident records
+- resident role profiles
+- resident schedule seeds / policies
+- resident service contracts
+- resident job definitions and target-selection seeds
+- `BannerModSettlementOrchestrator`
+- `BannerModResidentGoalScheduler`
+- `JobHandlerRegistry`
+- `BuildJobHandler`
+- `HarvestJobHandler`
+- household/home-assignment runtime
+- seller-dispatch runtime
+- growth/project runtime
+
+This means the likely migration path is **not** “rewrite everything from scratch.”
+
+It is:
+
+- move authority away from work-area entities
+- let settlement/building/runtime seams publish and resolve jobs
+- leave old work areas as compatibility adapters until no longer needed
+
+## Recommended First Migration Seam
+
+Do **not** try to delete all zones in one move.
+
+The narrowest useful first seam is:
+
+### Building-owned work orders over existing settlement records
+
+Start by introducing one additive concept over the current Phase 25 runtime:
+
+- `BuildingWorkOrder` or `SettlementWorkOrder`
+- `BuildingJobSlot` / `WorkplaceDemand`
+- building-scoped task publication from settlement building records
+
+And then route resident job execution through that instead of direct work-area ownership.
+
+### Why this is the right first seam
+
+Because the code already has:
+
+- building records
+- resident job definitions
+- a scheduler
+- an orchestrator
+- job handlers
+
+What is still missing is the middle layer that says:
+
+- this building currently needs X done
+- here is the target / count / urgency / workplace
+- residents take that order from the settlement runtime
+
+That is the bridge from:
+
+- `Zone -> NPC hardcoded loop`
+
+to:
+
+- `Settlement -> Building -> Published work -> Resident takes task`
+
+## Practical Migration Stages To Preserve
+
+The user explicitly wanted a staged migration, not a giant instant rewrite.
+
+### Stage 1. Kill zones as required authority
+
+- keep work areas only as fallback compatibility
+- introduce settlement/building/runtime authority for work publication
+- stop making new features depend on manual area rectangles
+
+### Stage 2. Move simple professions first
+
+First candidates:
+
+- farmer
+- woodcutter
+- hauler / carrier
+- miner
+
+These should become building-driven before more complex professions.
+
+### Stage 3. Make storage/logistics real
+
+This is mandatory for “living village” feel:
+
+- central/local storage
+- reservation
+- hauling as explicit work
+- delivery / fetch as explicit tasks
+
+### Stage 4. Home and day-rhythm matter
+
+- resident should be tied to home and schedule
+- not just job type
+
+### Stage 5. Replace micromanagement with policy
+
+Player should set:
+
+- building specialization
+- max range
+- production priority
+- seasonal mode
+- limits / caps / bans
+
+not draw worker rectangles as the primary gameplay loop.
+
+## Files / Areas Most Likely To Matter First
+
+These are the highest-value current files for the migration opener:
+
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementOrchestrator.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementService.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementResidentJobDefinition.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementResidentJobTargetSelectionSeed.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementResidentServiceContract.java`
+- `src/main/java/com/talhanation/bannermod/settlement/BannerModSettlementBuildingRecord.java`
+- `src/main/java/com/talhanation/bannermod/settlement/job/JobHandlerRegistry.java`
+- `src/main/java/com/talhanation/bannermod/settlement/job/BuildJobHandler.java`
+- `src/main/java/com/talhanation/bannermod/settlement/job/HarvestJobHandler.java`
+- likely new files under `src/main/java/com/talhanation/bannermod/settlement/job/` or `settlement/building/`
+
+Legacy/fallback worker-area files that will eventually be bypassed rather than expanded:
+
+- `src/main/java/com/talhanation/bannermod/entity/civilian/workarea/**`
+- old worker AI loops under `src/main/java/com/talhanation/bannermod/ai/civilian/**`
+
+## Exact Next Session Recommendation For This Redirect
+
+When resuming this task, do this in order:
+
+1. Do **not** spend the next session polishing zone size UX as the long-term answer.
+2. Use subagents first to inspect current settlement/job/building seams in isolated worktrees if overlap risk appears.
+3. Design and implement the first additive building-centric work publication seam.
+4. Keep worker zones only as compatibility/fallback until one profession is truly running building-first.
+5. Verify with compile + focused settlement/job tests before updating planning.
+
+### Best first implementation slice
+
+Recommended bounded first slice:
+
+- introduce building-owned published work demand inside the settlement runtime
+- let `BannerModSettlementOrchestrator` resolve resident work from building demand rather than only direct area-style bindings
+- start with one low-risk profession path, likely **harvest/farm** or **construction/build**, because the code already has job handlers and project/build seams
+
+### What not to do first
+
+- do not attempt full pathing rewrite first
+- do not attempt full village UI rewrite first
+- do not delete all work-area entities in one patch
+- do not claim the migration is complete after only adding data classes
+
+### Success condition for the first real migration slice
+
+One concrete profession path should be able to say:
+
+- a building / settlement record published the work
+- a resident got a task because of settlement/building demand
+- the path no longer fundamentally depends on a hand-authored worker rectangle as primary authority
+
+That is the real beginning of the Manor Lords / Millenaire shift.
+
+## Session 2026-04-21: Phase 26 Combat AI Overhaul
+
+This session delivered a compact HYW-parity combat AI overhaul across four stages plus a smarter-targeting prelude. All landed on `master`. The authoritative slice status is `.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md` — read that first.
+
+### Why this work landed
+
+User reported four concrete combat problems:
+- A. Target finding was weak.
+- B. Switching between multiple attackers was poor.
+- C. After killing 3 enemies a recruit could ignore the 4th for 15–20 seconds.
+- D. Whole squads dogpiled one enemy instead of spreading.
+
+Plus a product-direction ask: "make formations with shields solid, like in HYW". Audit of HYW and our mod showed **neither** actually implemented real shield-wall semantics. So the work is "HYW parity, then go beyond where HYW stops short". Written down as four stages that ship additively behind a new `CombatStance` contract.
+
+### Landed seams (newest first)
+
+`fab08a4` — Stage 4 flank / cohesion / brace / unit-type counters:
+- `FacingHitZone.classify` returns `FRONT` (120° cone, reuses `ShieldBlockGeometry`), `BACK` (rear 90° arc), else `SIDE`. `FlankDamage.multiplierFor`: FRONT ×1.0, SIDE ×1.15, BACK ×1.5.
+- `FormationCohesion.isCohesive`: true when ≥2 other cohort-mates within 2 blocks share `LINE_HOLD`/`SHIELD_WALL`. Grants ×0.85 remaining damage. Cached 10 ticks via `cachedCohesionTick`/`cachedCohesion` on `AbstractRecruitEntity`.
+- `BraceAgainstChargePolicy.shouldBrace`: stance ≠ LOOSE + shield/reach holder + mounted hostile ≤10 blocks → `setShouldBlock(true)`, stop navigation, set `isBracing`. `UseShield.tick` attaches a transient `KNOCKBACK_RESISTANCE +0.5` modifier while braced. Cavalry damage against braced targets gets ×0.7 remaining.
+- `UnitTypeMatchup.classify` (LIGHT/HEAVY/RANGED/CAVALRY/PIKE_INFANTRY) + `damageMultiplier` ports HYW counters: light vs heavy ×0.8, heavy vs light ×1.2, cavalry vs light/ranged ×1.4, foot vs cavalry ×0.9, pike vs cavalry ×1.5. Applied in `RecruitCombatDecisions.doHurtTarget` only when target is another recruit — PvE balance vs players/monsters is intact.
+
+`33f86bf` — Stage 3 reach weapons + rank-2 poke + per-unit cadence:
+- `WeaponReach.effectiveReachFor` returns per-item extra reach via registry-id heuristics: sarissa/long_spear +2.5, pike/halberd/polearm +2.0, spear +1.0. Fold-in point in `AttackUtil.getAttackReachSqr`. BannerMod does not ship `SpearItem`/`PikeItem` yet — the `Item`-taking overload in `WeaponReach` is the single extension point when those classes land.
+- `FriendlyLineOfSight.canReachThroughAllies` + `RecruitMeleeAttackGoal.hasReachLineOfSight`: reach holders (≥1 block extra) can attack through allied recruits in front of them. Block LOS still gates. Leash still holds rank-2 spearmen in their slot.
+- `AttackCadence.cooldownTicksFor` tunes post-hit cooldown per weapon: spear +2 tick windup, pike ×1.1 + 4 ticks, sarissa ×1.15 + 5 ticks, plain melee unchanged.
+
+`2ff128c` — Stage 2 directional shield block + stance auto-block:
+- `ShieldBlockGeometry.isInFrontCone` computes attacker angle vs `yBodyRot` with a 120° front cone. Flank/back bypass the shield entirely (Stage 4 then applies the flank multiplier).
+- `ShieldMitigation.damageAfterBlock`: LOOSE remaining 0.55 / LINE_HOLD 0.45 / SHIELD_WALL 0.30. `RecruitShieldmanEntity` gets an extra ×0.9 remaining stacked on top. Stagger (`blockCoolDown > 0`) reduces absorption by 40 %.
+- `RecruitCombatOverrideService.prepareIncomingDamage` now: (shield mitigation if front-cone + up) → (flank multiplier) → (brace cavalry ×0.7) → (cohesion ×0.85). Single damage-flow path.
+- `RecruitShieldEvents` cancels Forge `ShieldBlockEvent` for `AbstractRecruitEntity`. **Critical** — without this, vanilla `LivingEntity.hurt` would zero damage AND double-charge shield durability after our mitigation. Our `prepareIncomingDamage` is now the only shield path. Registered in `BannerModMain.setup`.
+- `UseShield.canUse` auto-raises shield for SHIELD_WALL (8-block hostile radius) or LINE_HOLD (5-block). In-formation SHIELD_WALL units also slowly pivot `yBodyRot` toward nearest hostile via `FormationYawPolicy.clampBodyYaw` (6°/tick).
+- Blocked melee hits knock attacker back with 0.5 strength.
+
+`ebe813d` — Targeting + Stage 1 line cohesion (one bundled commit because the two sets interleaved on `AbstractRecruitEntity`):
+- **Targeting part:**
+  - `RecruitCombatTargeting.resolveCombatTargetWithAssigneeSpread` scores candidates `distSqr + assignees × 36` against the new per-cohort `FormationTargetSelectionController` assignee registry (40-tick TTL). Replaces closest-first dogpile.
+  - REUSED-shared path checks the registry for pile-on (≥3 assignees) and falls through to local scan if the shared target is saturated. Compute paths record the assignee after picking.
+  - Reactive `assignReactiveCombatTarget` uses a 3-block hysteresis (`newDistSqr + 9 < currentDistSqr`) with a melee-reach override so hits at equal distance no longer toggle targets.
+  - `AbstractRecruitEntity.lastTargetLossTick` stamped when `setTarget(null)` fires for a dead/removed target. `RecruitAiLodPolicy.Context.recentlyLostTarget` forces FULL tier; `RecruitRuntimeLoop.isBaseTargetSearchTick` drops the base gate to 5 ticks for 60 ticks. Closes symptom C (15–20s blind spot).
+- **Stage 1 part:**
+  - New `CombatStance` enum (LOOSE default / LINE_HOLD / SHIELD_WALL). NBT-persisted via `RecruitPersistenceBridge`.
+  - `CombatLeashPolicy` stance-aware leash: LOOSE 13 blocks (formation) / 20 (free), LINE_HOLD 5, SHIELD_WALL 3. `RecruitMeleeAttackGoal.canContinueToUse` breaks engagement when drifted off stance leash.
+  - `FormationSlotRegistry` tracks per-cohort `(slotIndex → ownerUuid, holdPos, ownerRotDeg)` populated by `FormationLayoutPlanner` (both `assignAndApplySlots` and `applySequentialSlots`).
+  - `FormationGapFillPolicy` + `FormationFallbackPlanner.tryFillForwardGap`: on neighbour death, rear-rank recruits in LINE_HOLD/SHIELD_WALL migrate to the forward-gap slot. 60-tick per-recruit cooldown via `lastFormationGapFillTick`, 20-tick staggered scan via `UUID.hashCode()`.
+  - `FormationYawPolicy.clampBodyYaw` clamps body-yaw to 10°/6° per tick in formation under LINE_HOLD/SHIELD_WALL. Head yaw free.
+
+### File map
+
+New (ai/military): `CombatStance`, `CombatLeashPolicy`, `FormationSlotRegistry`, `FormationGapFillPolicy`, `FormationYawPolicy`, `ShieldBlockGeometry`, `ShieldMitigation`, `WeaponReach`, `FriendlyLineOfSight`, `AttackCadence`, `FacingHitZone`, `FlankDamage`, `FormationCohesion`, `BraceAgainstChargePolicy`, `UnitTypeMatchup`.
+
+New (events): `RecruitShieldEvents`.
+
+Tests added (all pure, framework-free, under `src/test/java/com/talhanation/bannermod/ai/military/`): `CombatLeashPolicyTest`, `FormationGapFillPolicyTest`, `FormationSlotRegistryTest`, `FormationYawPolicyTest`, `ShieldBlockGeometryTest`, `ShieldMitigationTest`, `WeaponReachTest`, `FriendlyLineOfSightTest`, `AttackCadenceTest`, `FacingHitZoneTest`, `FlankDamageTest`, `FormationCohesionTest`, `BraceAgainstChargePolicyTest`, `UnitTypeMatchupTest`.
+
+Modified: `FormationTargetSelectionController`, `RecruitAiLodPolicy`, `RecruitMeleeAttackGoal`, `RecruitHoldPosGoal`, `UseShield`, `AbstractRecruitEntity`, `RecruitCombatOverrideService`, `RecruitCombatTargeting`, `RecruitRuntimeLoop`, `RecruitPersistenceBridge`, `RecruitCombatDecisions`, `AttackUtil`, `FormationLayoutPlanner`, `FormationFallbackPlanner`, `BannerModMain` (just one `EVENT_BUS.register` line for `RecruitShieldEvents`).
+
+### Verification (2026-04-21)
+
+- `./gradlew compileJava --console=plain` — green after every commit.
+- `./gradlew compileTestJava --console=plain` — green.
+- `./gradlew test --tests "com.talhanation.bannermod.ai.military.*" --console=plain` — 16 suites, **129 tests, 0 failures, 0 errors**.
+- `verifyGameTestStage` was NOT re-run this slice. All new logic is server-tick heuristics over existing seams with pure-helper unit coverage. The next stance-command/UI slice should add GameTest coverage when player-facing entrypoints land.
+
+### What is deliberately NOT done yet
+
+- **Player-facing stance commands / packets / UI.** Stance is programmatic-only today — `recruit.setCombatStance(CombatStance.SHIELD_WALL)`. The next Phase 26 slice owns this.
+- **Stance leash for ranged goals.** `RecruitRangedBowAttackGoal` and `RecruitRangedCrossbowAttackGoal` still use `movePos` not `holdPos`, so stance leash does not yet extend there. Same next slice should handle it.
+- **Real `SpearItem`/`PikeItem` classes.** `WeaponReach` uses string heuristics because those classes don't exist. When they land, swap in `instanceof` checks in `WeaponReach.effectiveReachFor(Item)`.
+- **Velocity-aware brace timing.** `BraceAgainstChargePolicy` is proximity-only on mounted hostile.
+- **Morale-driven retreat / rout.** Still environmental flees only.
+- **Shield durability discount during brace.** Not implemented — shield still takes mitigated damage.
+
+### Next-session entry points
+
+For the next developer continuing this track:
+
+1. `.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md` is the authoritative slice status.
+2. For implementing the stance command/UI slice:
+   - Existing packet path: look at `src/main/java/com/talhanation/bannermod/network/messages/military/` for packet patterns. Dispatcher refactor landed earlier this day in `b7f6da7`.
+   - `CombatStance` values are already NBT-persisted via `RecruitPersistenceBridge`. Just need a `MessageSetCombatStance` packet that calls `recruit.setCombatStance(...)` server-side.
+   - UI entrypoint most likely under `src/main/java/com/talhanation/bannermod/client/military/gui/`.
+   - Selection registry from `b5e57ac` lets you apply commands across a group — reuse it.
+3. For extending leash into ranged goals:
+   - `RecruitRangedBowAttackGoal.canUse` checks `canAttackMovePos` which uses `movePos`, not `holdPos`. You need to consult `CombatLeashPolicy.canEngage` against `holdPos` when the recruit `isInFormation`.
+4. For GameTest coverage:
+   - Existing pattern lives under `src/gametest/java/com/talhanation/bannermod/`. Spawn a squad in formation, apply `SHIELD_WALL` stance, inject hostile, assert the line holds (recruits don't leave leash) and shields raise.
+5. Keep the sticky workflow: subagents produce, main session verifies, only then write planning.
