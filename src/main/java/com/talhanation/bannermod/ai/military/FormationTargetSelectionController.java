@@ -11,9 +11,60 @@ import java.util.function.Predicate;
 
 public final class FormationTargetSelectionController {
     private static final long DEFAULT_MAX_ASSIGNMENT_AGE_TICKS = 40L;
+    private static final long DEFAULT_ASSIGNEE_TTL_TICKS = 40L;
+    public static final int DEFAULT_MAX_ASSIGNEES_PER_TARGET = 3;
+
     private static final SelectionState<CohortKey, LivingEntity> RUNTIME_STATE = new SelectionState<>();
+    private static final Map<CohortKey, Map<UUID, AssigneeEntry>> ASSIGNEE_COUNTS = new ConcurrentHashMap<>();
 
     private FormationTargetSelectionController() {
+    }
+
+    public static int assigneeCount(CohortKey cohort, LivingEntity target, long gameTime) {
+        return assigneeCount(cohort, target, gameTime, DEFAULT_ASSIGNEE_TTL_TICKS);
+    }
+
+    public static int assigneeCount(CohortKey cohort, LivingEntity target, long gameTime, long ttlTicks) {
+        if (cohort == null || target == null) {
+            return 0;
+        }
+        Map<UUID, AssigneeEntry> counts = ASSIGNEE_COUNTS.get(cohort);
+        if (counts == null) {
+            return 0;
+        }
+        AssigneeEntry entry = counts.get(target.getUUID());
+        if (entry == null) {
+            return 0;
+        }
+        if (gameTime - entry.lastTick() > ttlTicks) {
+            counts.remove(target.getUUID(), entry);
+            return 0;
+        }
+        return entry.count();
+    }
+
+    public static void recordAssignee(CohortKey cohort, LivingEntity target, long gameTime) {
+        recordAssignee(cohort, target, gameTime, DEFAULT_ASSIGNEE_TTL_TICKS);
+    }
+
+    public static void recordAssignee(CohortKey cohort, LivingEntity target, long gameTime, long ttlTicks) {
+        if (cohort == null || target == null) {
+            return;
+        }
+        Map<UUID, AssigneeEntry> counts = ASSIGNEE_COUNTS.computeIfAbsent(cohort, k -> new ConcurrentHashMap<>());
+        counts.compute(target.getUUID(), (k, existing) -> {
+            if (existing == null || gameTime - existing.lastTick() > ttlTicks) {
+                return new AssigneeEntry(1, gameTime);
+            }
+            return new AssigneeEntry(existing.count() + 1, gameTime);
+        });
+    }
+
+    public static void clearAssigneeCounts() {
+        ASSIGNEE_COUNTS.clear();
+    }
+
+    private record AssigneeEntry(int count, long lastTick) {
     }
 
     public static Decision<LivingEntity> beginRuntimeSelection(RuntimeSelectionRequest request, Predicate<LivingEntity> targetValidator) {
@@ -26,6 +77,7 @@ public final class FormationTargetSelectionController {
 
     public static void resetProfiling() {
         RUNTIME_STATE.reset();
+        ASSIGNEE_COUNTS.clear();
     }
 
     public static ProfilingSnapshot profilingSnapshot() {

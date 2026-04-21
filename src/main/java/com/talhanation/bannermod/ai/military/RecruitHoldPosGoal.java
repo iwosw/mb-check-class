@@ -8,6 +8,11 @@ import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 
 public class RecruitHoldPosGoal extends Goal {
+    /** Step 1.C: minimum gap between gap-fill migrations by the same recruit. */
+    public static final int GAP_FILL_PER_RECRUIT_COOLDOWN_TICKS = 60;
+    /** Step 1.C: tick period between gap-fill scans (staggered per recruit). */
+    public static final int GAP_FILL_SCAN_PERIOD_TICKS = 20;
+
     private final AbstractRecruitEntity recruit;
 
     private int timeToRecalcPath;
@@ -42,6 +47,9 @@ public class RecruitHoldPosGoal extends Goal {
             this.formationFallbackCooldown--;
         }
 
+        // Step 1.C: staggered gap-fill scan when stance is LINE_HOLD / SHIELD_WALL.
+        tryGapFillScan();
+
         Vec3 pos = this.recruit.getHoldPos();
         if (pos != null) {
             double distance = recruit.distanceToSqr(pos);
@@ -67,6 +75,30 @@ public class RecruitHoldPosGoal extends Goal {
                     }
                 }
             } else{
+            }
+        }
+    }
+
+    private void tryGapFillScan() {
+        if (!this.recruit.isInFormation || this.recruit.getFollowState() != 3) {
+            return;
+        }
+        CombatStance stance = this.recruit.getCombatStance();
+        if (!FormationGapFillPolicy.stanceAllowsGapFill(stance)) {
+            return;
+        }
+        int offset = Math.floorMod(this.recruit.getUUID().hashCode(), GAP_FILL_SCAN_PERIOD_TICKS);
+        if ((this.recruit.tickCount + offset) % GAP_FILL_SCAN_PERIOD_TICKS != 0) {
+            return;
+        }
+        if (this.recruit.tickCount - this.recruit.lastFormationGapFillTick < GAP_FILL_PER_RECRUIT_COOLDOWN_TICKS) {
+            return;
+        }
+        if (FormationFallbackPlanner.tryFillForwardGap(this.recruit)) {
+            this.recruit.lastFormationGapFillTick = this.recruit.tickCount;
+            Vec3 newHold = this.recruit.getHoldPos();
+            if (newHold != null) {
+                this.recruit.getNavigation().moveTo(newHold.x(), newHold.y(), newHold.z(), this.recruit.moveSpeed);
             }
         }
     }

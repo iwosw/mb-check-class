@@ -67,7 +67,17 @@ public final class RecruitAiLodPolicy {
                           double liveTargetDistanceSqr,
                           double nearestPlayerDistanceSqr,
                           int tickCount,
-                          int tickOffset) {
+                          int tickOffset,
+                          boolean recentlyLostTarget) {
+        public Context(boolean recentlyDamaged,
+                       boolean hasLiveTarget,
+                       double liveTargetDistanceSqr,
+                       double nearestPlayerDistanceSqr,
+                       int tickCount,
+                       int tickOffset) {
+            this(recentlyDamaged, hasLiveTarget, liveTargetDistanceSqr, nearestPlayerDistanceSqr,
+                    tickCount, tickOffset, false);
+        }
     }
 
     /** Result of evaluating a {@link Context} against a {@link Settings}. */
@@ -106,7 +116,7 @@ public final class RecruitAiLodPolicy {
             boolean liveTargetInRange = context.hasLiveTarget()
                     && context.liveTargetDistanceSqr() <= reducedThresholdSqr;
 
-            if (context.recentlyDamaged() || playerClose) {
+            if (context.recentlyDamaged() || playerClose || context.recentlyLostTarget()) {
                 tier = LodTier.FULL;
                 interval = DEFAULT_FULL_SEARCH_INTERVAL;
             } else if (liveTargetInRange) {

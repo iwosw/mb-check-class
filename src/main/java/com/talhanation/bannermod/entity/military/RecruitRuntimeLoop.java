@@ -17,8 +17,16 @@ import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 
 final class RecruitRuntimeLoop {
+    /** Ticks after a target kill during which LOD is forced to FULL + fast base gate. */
+    private static final int RECENT_TARGET_LOSS_WINDOW_TICKS = 60;
+    /** Accelerated base gate (ticks) used inside the recent-loss window. */
+    private static final int RECENT_TARGET_LOSS_BASE_GATE_TICKS = 5;
+    /** Round-robin threshold: skip an already-contested shared target above this count. */
+    private static final int SHARED_TARGET_PILEON_THRESHOLD = 3;
+
     private static final TargetSearchProfilingCounters TARGET_SEARCH_PROFILING = new TargetSearchProfilingCounters();
 
     private RecruitRuntimeLoop() {
@@ -70,6 +78,7 @@ final class RecruitRuntimeLoop {
         LivingEntity currentTarget = recruit.getTarget();
         if (currentTarget != null && (currentTarget.isDeadOrDying() || currentTarget.isRemoved())) {
             recruit.setTarget(null);
+            recruit.lastTargetLossTick = recruit.tickCount;
         }
 
         if (recruit.rotateTicks > 0 && recruit.getNavigation().isDone()) {
@@ -146,7 +155,19 @@ final class RecruitRuntimeLoop {
     }
 
     private static boolean isBaseTargetSearchTick(AbstractRecruitEntity recruit) {
-        return (recruit.tickCount + recruit.targetSearchTickOffset()) % RecruitAiLodPolicy.DEFAULT_FULL_SEARCH_INTERVAL == 0;
+        int gate = isWithinRecentTargetLossWindow(recruit)
+                ? RECENT_TARGET_LOSS_BASE_GATE_TICKS
+                : RecruitAiLodPolicy.DEFAULT_FULL_SEARCH_INTERVAL;
+        return (recruit.tickCount + recruit.targetSearchTickOffset()) % gate == 0;
+    }
+
+    private static boolean isWithinRecentTargetLossWindow(AbstractRecruitEntity recruit) {
+        int last = recruit.lastTargetLossTick;
+        if (last == Integer.MIN_VALUE) {
+            return false;
+        }
+        int elapsed = recruit.tickCount - last;
+        return elapsed >= 0 && elapsed <= RECENT_TARGET_LOSS_WINDOW_TICKS;
     }
 
     private static RecruitAiLodPolicy.Evaluation evaluateTargetSearchLod(AbstractRecruitEntity recruit) {
@@ -164,7 +185,8 @@ final class RecruitRuntimeLoop {
                 liveTargetDistanceSqr,
                 nearestPlayerDistanceSqr,
                 recruit.tickCount,
-                recruit.targetSearchTickOffset()
+                recruit.targetSearchTickOffset(),
+                isWithinRecentTargetLossWindow(recruit)
         ), settings);
     }
 
@@ -174,47 +196,48 @@ final class RecruitRuntimeLoop {
                 selectionRequest,
                 target -> isValidSharedTarget(recruit, target)
         );
+        FormationTargetSelectionController.CohortKey cohortKey = resolveCohortKey(recruit);
+        long gameTime = recruit.level().getGameTime();
 
         if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.REUSED_SHARED_SELECTION) {
-            if (selectionDecision.target() != null) {
+            LivingEntity shared = selectionDecision.target();
+            if (shared != null && !isSharedTargetOverContested(cohortKey, shared, gameTime)) {
                 TARGET_SEARCH_PROFILING.recordTargetAssigned();
+                RecruitCombatTargeting.applyCombatTarget(recruit, shared);
+                recordAssignee(cohortKey, shared, gameTime);
+                return;
             }
-            RecruitCombatTargeting.applyCombatTarget(recruit, selectionDecision.target());
-            return;
+            if (shared == null) {
+                RecruitCombatTargeting.applyCombatTarget(recruit, null);
+                return;
+            }
+            // Shared target is pile-on saturated: fall through to local round-robin pick.
         }
 
         AbstractRecruitEntity.NearbyCombatCandidates scan = recruit.scanNearbyCombatCandidates(serverLevel, 40D);
         List<LivingEntity> nearby = scan.candidates();
         TARGET_SEARCH_PROFILING.recordAsyncSearch(scan.observedCount());
 
+        ToIntFunction<LivingEntity> scorer = assigneeScorerFor(cohortKey, gameTime);
+
         if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
             List<LivingEntity> candidates = recruit.filterCombatCandidates(nearby, target -> isValidSharedTarget(recruit, target), true);
-            LivingEntity target = FormationTargetSelectionController.completeRuntimeSelection(
-                    selectionRequest,
-                    RecruitCombatTargeting.resolveCombatTargetFromCandidates(recruit, candidates, candidate -> isValidSharedTarget(recruit, candidate))
-            );
-            if (target != null) {
-                TARGET_SEARCH_PROFILING.recordTargetAssigned();
-            }
-            RecruitCombatTargeting.applyCombatTarget(recruit, target);
+            LivingEntity picked = RecruitCombatTargeting.resolveCombatTargetWithAssigneeSpread(
+                    recruit, candidates, candidate -> isValidSharedTarget(recruit, candidate), scorer);
+            LivingEntity target = FormationTargetSelectionController.completeRuntimeSelection(selectionRequest, picked);
+            finalizeTargetAssignment(recruit, target, cohortKey, gameTime);
             return;
         }
 
+        // LOCAL_FALLBACK or saturated-shared fallback.
         Supplier<List<LivingEntity>> findTargetsTask = () -> recruit.filterCombatCandidates(nearby, target -> isValidSharedTarget(recruit, target), true);
         Consumer<List<LivingEntity>> handleTargets = targets -> {
             if (!recruit.isAlive() || recruit.isRemoved()) {
                 return;
             }
-
-            LivingEntity target = RecruitCombatTargeting.resolveCombatTargetFromCandidates(recruit, targets, candidate -> isValidSharedTarget(recruit, candidate));
-            if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
-                target = FormationTargetSelectionController.completeRuntimeSelection(selectionRequest, target);
-            }
-
-            if (target != null) {
-                TARGET_SEARCH_PROFILING.recordTargetAssigned();
-            }
-            RecruitCombatTargeting.applyCombatTarget(recruit, target);
+            LivingEntity target = RecruitCombatTargeting.resolveCombatTargetWithAssigneeSpread(
+                    recruit, targets, candidate -> isValidSharedTarget(recruit, candidate), scorer);
+            finalizeTargetAssignment(recruit, target, cohortKey, gameTime);
         };
 
         AsyncManager.executor.execute(new AsyncTaskWithCallback<>(findTargetsTask, handleTargets, serverLevel));
@@ -226,28 +249,83 @@ final class RecruitRuntimeLoop {
                 selectionRequest,
                 target -> isValidSharedTarget(recruit, target)
         );
+        FormationTargetSelectionController.CohortKey cohortKey = resolveCohortKey(recruit);
+        long gameTime = recruit.level().getGameTime();
 
         if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.REUSED_SHARED_SELECTION) {
-            if (selectionDecision.target() != null) {
+            LivingEntity shared = selectionDecision.target();
+            if (shared != null && !isSharedTargetOverContested(cohortKey, shared, gameTime)) {
                 TARGET_SEARCH_PROFILING.recordTargetAssigned();
+                RecruitCombatTargeting.applyCombatTarget(recruit, shared);
+                recordAssignee(cohortKey, shared, gameTime);
+                return;
             }
-            RecruitCombatTargeting.applyCombatTarget(recruit, selectionDecision.target());
-            return;
+            if (shared == null) {
+                RecruitCombatTargeting.applyCombatTarget(recruit, null);
+                return;
+            }
+            // Shared target is pile-on saturated: fall through to local round-robin pick.
         }
 
         AbstractRecruitEntity.NearbyCombatCandidates scan = recruit.scanNearbyCombatCandidates(serverLevel, 40D);
         TARGET_SEARCH_PROFILING.recordSyncSearch(scan.observedCount());
 
         List<LivingEntity> nearby = recruit.filterCombatCandidates(scan.candidates(), target -> isValidSharedTarget(recruit, target), true);
-        LivingEntity target = RecruitCombatTargeting.resolveCombatTargetFromCandidates(recruit, nearby, candidate -> isValidSharedTarget(recruit, candidate));
+        ToIntFunction<LivingEntity> scorer = assigneeScorerFor(cohortKey, gameTime);
+        LivingEntity target = RecruitCombatTargeting.resolveCombatTargetWithAssigneeSpread(
+                recruit, nearby, candidate -> isValidSharedTarget(recruit, candidate), scorer);
         if (selectionDecision.type() == FormationTargetSelectionController.DecisionType.COMPUTE_SHARED_SELECTION) {
             target = FormationTargetSelectionController.completeRuntimeSelection(selectionRequest, target);
         }
+        finalizeTargetAssignment(recruit, target, cohortKey, gameTime);
+    }
 
+    private static FormationTargetSelectionController.CohortKey resolveCohortKey(AbstractRecruitEntity recruit) {
+        UUID ownerId = recruit.getOwnerUUID();
+        UUID groupId = recruit.getGroup();
+        if (ownerId == null || groupId == null) {
+            return null;
+        }
+        return new FormationTargetSelectionController.CohortKey(ownerId, groupId);
+    }
+
+    private static boolean isSharedTargetOverContested(FormationTargetSelectionController.CohortKey cohortKey,
+                                                       LivingEntity shared,
+                                                       long gameTime) {
+        if (cohortKey == null || shared == null) {
+            return false;
+        }
+        return FormationTargetSelectionController.assigneeCount(cohortKey, shared, gameTime) >= SHARED_TARGET_PILEON_THRESHOLD;
+    }
+
+    private static ToIntFunction<LivingEntity> assigneeScorerFor(FormationTargetSelectionController.CohortKey cohortKey,
+                                                                 long gameTime) {
+        if (cohortKey == null) {
+            return null;
+        }
+        return candidate -> FormationTargetSelectionController.assigneeCount(cohortKey, candidate, gameTime);
+    }
+
+    private static void recordAssignee(FormationTargetSelectionController.CohortKey cohortKey,
+                                       LivingEntity target,
+                                       long gameTime) {
+        if (cohortKey == null || target == null) {
+            return;
+        }
+        FormationTargetSelectionController.recordAssignee(cohortKey, target, gameTime);
+    }
+
+    private static void finalizeTargetAssignment(AbstractRecruitEntity recruit,
+                                                 @Nullable LivingEntity target,
+                                                 FormationTargetSelectionController.CohortKey cohortKey,
+                                                 long gameTime) {
         if (target != null) {
             TARGET_SEARCH_PROFILING.recordTargetAssigned();
         }
         RecruitCombatTargeting.applyCombatTarget(recruit, target);
+        if (target != null) {
+            recordAssignee(cohortKey, target, gameTime);
+        }
     }
 
     private static FormationTargetSelectionController.RuntimeSelectionRequest createFormationSelectionRequest(AbstractRecruitEntity recruit) {

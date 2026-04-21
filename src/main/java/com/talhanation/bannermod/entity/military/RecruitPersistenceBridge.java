@@ -42,6 +42,7 @@ final class RecruitPersistenceBridge {
         nbt.putBoolean("ShouldRanged", recruit.getShouldRanged());
         nbt.putBoolean("isInFormation", recruit.isInFormation);
         nbt.putInt("paymentTimer", recruit.paymentTimer);
+        nbt.putString("CombatStance", recruit.getCombatStance().name());
 
         AbstractRecruitEntity.persistCitizenStateToLegacy(recruit.getCitizenCore(), nbt);
 
@@ -96,6 +97,14 @@ final class RecruitPersistenceBridge {
         }
         else {
             recruit.resetPaymentTimer();
+        }
+
+        if (nbt.contains("CombatStance")) {
+            recruit.setCombatStance(
+                    com.talhanation.bannermod.ai.military.CombatStance.fromName(nbt.getString("CombatStance"))
+            );
+        } else {
+            recruit.setCombatStance(com.talhanation.bannermod.ai.military.CombatStance.LOOSE);
         }
 
         AbstractRecruitEntity.hydrateCitizenStateFromLegacy(recruit.getCitizenCore(), nbt);

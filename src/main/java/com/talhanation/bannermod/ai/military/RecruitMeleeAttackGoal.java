@@ -66,6 +66,10 @@ public class RecruitMeleeAttackGoal extends Goal {
             boolean needsToGetFood = recruit.needsToGetFood();
             boolean getShouldMount = recruit.getShouldMount();
             boolean getShouldMovePos = recruit.getShouldMovePos();
+            // Step 1.B: break engagement if we've drifted off the stance leash while chasing.
+            if (hasDriftedOffFormationLeash()) {
+                return false;
+            }
             return (!(target instanceof Player) || !target.isSpectator() && !((Player) target).isCreative()) && canAttackHoldPos && recruit.getState() != 3 && !needsToGetFood && !getShouldMount && !getShouldMovePos;
         }
     }
@@ -130,10 +134,27 @@ public class RecruitMeleeAttackGoal extends Goal {
         LivingEntity target = this.recruit.getTarget();
         if (target != null && pos != null && recruit.getShouldHoldPos()) {
             double distanceToPos = target.distanceToSqr(pos);
-            double ref = recruit.isInFormation ? 169 : 400;
-
-            return distanceToPos < ref;
+            return CombatLeashPolicy.canEngage(
+                    distanceToPos,
+                    true,
+                    recruit.isInFormation,
+                    recruit.getCombatStance()
+            );
         }
         return true;
+    }
+
+    private boolean hasDriftedOffFormationLeash() {
+        Vec3 pos = recruit.getHoldPos();
+        if (pos == null || !recruit.getShouldHoldPos()) {
+            return false;
+        }
+        double recruitDistSqr = recruit.distanceToSqr(pos);
+        return CombatLeashPolicy.hasDriftedOffLeash(
+                recruitDistSqr,
+                true,
+                recruit.isInFormation,
+                recruit.getCombatStance()
+        );
     }
 }

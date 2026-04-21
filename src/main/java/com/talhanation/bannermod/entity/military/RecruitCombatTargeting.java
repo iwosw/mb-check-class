@@ -9,10 +9,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 
 final class RecruitCombatTargeting {
     private static final int TARGET_STICKINESS_RANK_WINDOW = 3;
     private static final double TARGET_STICKINESS_DISTANCE_BUFFER_SQR = 36.0D;
+    /** Per-extra-assignee scoring penalty (squared-distance equivalent, ~6 blocks² per assignee). */
+    private static final double ASSIGNEE_SCORE_PENALTY_SQR = 36.0D;
+    /** Closer-switch hysteresis: new reactive target must be meaningfully closer than current. */
+    private static final double REACTIVE_SWITCH_DISTANCE_MARGIN_SQR = 9.0D;
 
     private RecruitCombatTargeting() {
     }
@@ -44,6 +49,20 @@ final class RecruitCombatTargeting {
     }
 
     static @Nullable LivingEntity resolveCombatTargetFromCandidates(AbstractRecruitEntity recruit, List<LivingEntity> targets, Predicate<LivingEntity> validityCheck) {
+        return resolveCombatTargetWithAssigneeSpread(recruit, targets, validityCheck, null);
+    }
+
+    /**
+     * Pick a target with round-robin spread. When {@code assigneeScorer} is non-null, each
+     * candidate is scored as {@code distanceSqr + assignees * ASSIGNEE_SCORE_PENALTY_SQR};
+     * the lowest-scoring candidate wins. Tiebreak prefers the current target via stickiness.
+     * Passing {@code null} preserves legacy closest-first behaviour.
+     */
+    static @Nullable LivingEntity resolveCombatTargetWithAssigneeSpread(
+            AbstractRecruitEntity recruit,
+            List<LivingEntity> targets,
+            Predicate<LivingEntity> validityCheck,
+            @Nullable ToIntFunction<LivingEntity> assigneeScorer) {
         List<LivingEntity> liveTargets = targets.stream().filter(validityCheck).toList();
         if (liveTargets.isEmpty()) {
             return null;
@@ -52,7 +71,22 @@ final class RecruitCombatTargeting {
         if (shouldRetainCurrentTarget(recruit, currentTarget, liveTargets, validityCheck)) {
             return currentTarget;
         }
-        return liveTargets.get(0);
+        if (assigneeScorer == null) {
+            return liveTargets.get(0);
+        }
+
+        LivingEntity best = null;
+        double bestScore = Double.POSITIVE_INFINITY;
+        for (LivingEntity candidate : liveTargets) {
+            double distSqr = recruit.distanceToSqr(candidate);
+            int assignees = Math.max(0, assigneeScorer.applyAsInt(candidate));
+            double score = distSqr + (double) assignees * ASSIGNEE_SCORE_PENALTY_SQR;
+            if (score < bestScore) {
+                bestScore = score;
+                best = candidate;
+            }
+        }
+        return best != null ? best : liveTargets.get(0);
     }
 
     static boolean canAssignCombatTarget(AbstractRecruitEntity recruit, @Nullable LivingEntity target) {
@@ -79,7 +113,18 @@ final class RecruitCombatTargeting {
         if (currentTarget == target) {
             return true;
         }
-        if (recruit.distanceToSqr(target) <= recruit.distanceToSqr(currentTarget)) {
+        double currentDistSqr = recruit.distanceToSqr(currentTarget);
+        double newDistSqr = recruit.distanceToSqr(target);
+        // Require the new threat to be meaningfully closer to avoid thrashing between
+        // equidistant attackers each tick; the margin is ~3-block radius.
+        if (newDistSqr + REACTIVE_SWITCH_DISTANCE_MARGIN_SQR < currentDistSqr) {
+            applyCombatTarget(recruit, target);
+            return true;
+        }
+        // Fallback: if the attacker reached us but our current target is out of melee reach,
+        // prefer the attacker we can actually hit back.
+        double meleeReachSqr = 9.0D;
+        if (newDistSqr <= meleeReachSqr && currentDistSqr > meleeReachSqr) {
             applyCombatTarget(recruit, target);
             return true;
         }

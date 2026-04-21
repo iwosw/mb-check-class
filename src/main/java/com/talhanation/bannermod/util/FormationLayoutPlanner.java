@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.util;
 
+import com.talhanation.bannermod.ai.military.FormationSlotRegistry;
+import com.talhanation.bannermod.ai.military.FormationTargetSelectionController;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
 import net.minecraft.core.BlockPos;
@@ -7,6 +9,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 final class FormationLayoutPlanner {
     private FormationLayoutPlanner() {
@@ -50,6 +53,7 @@ final class FormationLayoutPlanner {
             }
             recruit.setFollowState(3);
             recruit.isInFormation = true;
+            registerSlotOwnership(recruit, recruit.formationPos, holdPos);
         }
     }
 
@@ -71,7 +75,24 @@ final class FormationLayoutPlanner {
             recruit.ownerRot = ownerRot;
             recruit.setFollowState(3);
             recruit.isInFormation = true;
+            recruit.formationPos = i;
+            registerSlotOwnership(recruit, i, holdPos);
         }
+    }
+
+    private static void registerSlotOwnership(AbstractRecruitEntity recruit, int slotIndex, Vec3 holdPos) {
+        UUID ownerId = recruit.getOwnerUUID();
+        UUID groupId = recruit.getGroup();
+        if (ownerId == null || groupId == null || slotIndex < 0) {
+            return;
+        }
+        FormationSlotRegistry.assign(
+                new FormationTargetSelectionController.CohortKey(ownerId, groupId),
+                slotIndex,
+                recruit.getUUID(),
+                holdPos,
+                recruit.ownerRot
+        );
     }
 
     private static FormationSlot claimSlot(AbstractRecruitEntity recruit, List<FormationSlot> slots) {
