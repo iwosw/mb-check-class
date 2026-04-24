@@ -1,0 +1,77 @@
+package com.talhanation.bannermod.network.messages.military;
+
+import com.talhanation.bannermod.ai.military.CombatStance;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.events.CommandEvents;
+import de.maxhenkel.corelib.net.Message;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+public class MessageCombatStanceGui implements Message<MessageCombatStanceGui> {
+
+    private UUID recruitUuid;
+    private CombatStance stance;
+
+    public MessageCombatStanceGui() {
+    }
+
+    public MessageCombatStanceGui(UUID recruitUuid, CombatStance stance) {
+        this.recruitUuid = recruitUuid;
+        this.stance = stance;
+    }
+
+    public Dist getExecutingSide() {
+        return Dist.DEDICATED_SERVER;
+    }
+
+    public void executeServerSide(NetworkEvent.Context context) {
+        if (this.stance == null) {
+            return;
+        }
+
+        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+        List<AbstractRecruitEntity> nearby = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
+                AbstractRecruitEntity.class,
+                serverPlayer.getBoundingBox().inflate(16.0D),
+                recruit -> recruit.getUUID().equals(this.recruitUuid)
+        );
+
+        CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
+                serverPlayer.getUUID(),
+                this.recruitUuid,
+                nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
+                        recruit.getUUID(),
+                        recruit.getOwnerUUID(),
+                        recruit.getGroup(),
+                        recruit.getTeam() == null ? null : recruit.getTeam().getName(),
+                        recruit.isOwned(),
+                        recruit.isAlive(),
+                        recruit.getListen(),
+                        recruit.distanceToSqr(serverPlayer)
+                )).toList()
+        );
+
+        if (!selection.isSuccess()) {
+            return;
+        }
+
+        nearby.forEach(recruit -> CommandEvents.onCombatStanceCommand(serverPlayer.getUUID(), recruit, this.stance, null));
+    }
+
+    public MessageCombatStanceGui fromBytes(FriendlyByteBuf buf) {
+        this.recruitUuid = buf.readUUID();
+        this.stance = CombatStance.fromName(buf.readUtf(32));
+        return this;
+    }
+
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeUUID(this.recruitUuid);
+        buf.writeUtf((this.stance == null ? CombatStance.LOOSE : this.stance).name());
+    }
+}

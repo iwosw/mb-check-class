@@ -262,6 +262,9 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
             case 73 -> this.player.sendSystemMessage(TEXT_STRATEGIC_FIRE_OFF(group_string.toString()));
             case 74 -> this.player.sendSystemMessage(TEXT_SHIELDS(group_string.toString()));
             case 75 -> this.player.sendSystemMessage(TEXT_SHIELDS_OFF(group_string.toString()));
+            case 76 -> this.player.sendSystemMessage(TEXT_STANCE_LOOSE(group_string.toString()));
+            case 77 -> this.player.sendSystemMessage(TEXT_STANCE_LINE_HOLD(group_string.toString()));
+            case 78 -> this.player.sendSystemMessage(TEXT_STANCE_SHIELD_WALL(group_string.toString()));
 
             case 88 -> this.player.sendSystemMessage(TEXT_REST(group_string.toString()));
             case 91 -> this.player.sendSystemMessage(TEXT_BACK_TO_MOUNT(group_string.toString()));
@@ -334,6 +337,18 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
 
     private static MutableComponent TEXT_SHIELDS(String group_string) {
         return Component.translatable("chat.recruits.command.shields", group_string);
+    }
+
+    private static MutableComponent TEXT_STANCE_LOOSE(String group_string) {
+        return Component.translatable("chat.recruits.command.stance_loose", group_string);
+    }
+
+    private static MutableComponent TEXT_STANCE_LINE_HOLD(String group_string) {
+        return Component.translatable("chat.recruits.command.stance_line_hold", group_string);
+    }
+
+    private static MutableComponent TEXT_STANCE_SHIELD_WALL(String group_string) {
+        return Component.translatable("chat.recruits.command.stance_shield_wall", group_string);
     }
 
     private static MutableComponent TEXT_STRATEGIC_FIRE(String group_string) {

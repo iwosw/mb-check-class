@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.bootstrap;
 
+import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -21,7 +22,6 @@ public final class WorkersRuntime {
     public static final String LEGACY_MOD_ID = "workers";
     public static final String ACTIVE_ASSET_NAMESPACE = "bannermod";
     private static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-    private static final int ROOT_NETWORK_ID_OFFSET = 104;
     private static SimpleChannel simpleChannel;
 
     private WorkersRuntime() {
@@ -120,7 +120,7 @@ public final class WorkersRuntime {
     }
 
     public static int networkIdOffset() {
-        return ROOT_NETWORK_ID_OFFSET;
+        return BannerModNetworkBootstrap.workerPacketOffset();
     }
 
     private static boolean migrateStringField(CompoundTag tag, String key) {

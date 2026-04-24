@@ -10,7 +10,7 @@
 
 Run from the repository root after Plan 14-01 lands:
 
-1. `./gradlew test --tests com.talhanation.recruits.entities.ai.FormationTargetSelectionControllerTest`
+1. `./gradlew test --tests com.talhanation.bannermod.ai.military.FormationTargetSelectionControllerTest`
 2. `./gradlew compileGameTestJava verifyGameTestStage`
 
 If the unit test command fails, the formation target-selection seam is not ready for evidence collection. If `verifyGameTestStage` fails, preserve the raw logs but treat the run as invalid phase evidence until every required GameTest is green.
@@ -56,7 +56,7 @@ Keep all Phase 11 through Phase 13 fields, then add the Phase 14 counters from `
 - `formationInvalidations`
 - `formationLocalFallbacks`
 
-`RecruitsBattleGameTestSupport.formatProfilingSnapshot(...)` remains the stable log formatter.
+The active root dense-battle profiling harness remains the stable log formatter.
 
 ## Focused Behavior Checks
 

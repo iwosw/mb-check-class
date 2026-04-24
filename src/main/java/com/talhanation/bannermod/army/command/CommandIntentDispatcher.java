@@ -112,6 +112,11 @@ public final class CommandIntentDispatcher {
                 CommandEvents.onAggroCommand(
                         player.getUUID(), recruit, aggro.state(), aggro.groupUuid(), aggro.fromGui());
             }
+        } else if (intent instanceof CommandIntent.CombatStanceChange stanceChange) {
+            for (AbstractRecruitEntity recruit : safeActors) {
+                CommandEvents.onCombatStanceCommand(
+                        player.getUUID(), recruit, stanceChange.stance(), stanceChange.groupUuid());
+            }
         }
     }
 }

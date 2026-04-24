@@ -6,6 +6,7 @@ import com.talhanation.bannermod.settlement.BannerModSettlementBuildingRecord;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrder;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublishContext;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisher;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisherRegistry;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -27,9 +28,7 @@ public final class LumberAreaWorkOrderPublisher implements SettlementWorkOrderPu
 
     @Override
     public boolean matches(BannerModSettlementBuildingRecord building) {
-        return building != null
-                && building.buildingTypeId() != null
-                && building.buildingTypeId().equals("lumber_area");
+        return SettlementWorkOrderPublisherRegistry.matchesBuildingType(building, "lumber_area");
     }
 
     @Override

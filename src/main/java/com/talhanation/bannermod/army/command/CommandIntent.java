@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.army.command;
 
+import com.talhanation.bannermod.ai.military.CombatStance;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
@@ -102,5 +103,16 @@ public sealed interface CommandIntent {
             boolean fromGui
     ) implements CommandIntent {
         @Override public CommandIntentType type() { return CommandIntentType.AGGRO; }
+    }
+
+    /** Combat stance change for a recruit group. Mirrors {@code onCombatStanceCommand}. */
+    record CombatStanceChange(
+            long issuedAtGameTime,
+            int priority,
+            boolean queueMode,
+            CombatStance stance,
+            UUID groupUuid
+    ) implements CommandIntent {
+        @Override public CommandIntentType type() { return CommandIntentType.COMBAT_STANCE; }
     }
 }

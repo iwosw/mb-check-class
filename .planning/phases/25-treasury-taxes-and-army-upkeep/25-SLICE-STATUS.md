@@ -34,6 +34,7 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - Added the player-facing wand: `BuildingPlacementWandItem` + `PlaceBuildingScreen` GUI. Right-click opens the prefab selector; right-click on a block submits a placement. Shift+right-click toggles to a VALIDATE mode where the player taps two corners + a center of a self-built structure.
 - Added auto-staffing: `PrefabAutoStaffingRuntime` hooks into `BuildArea.tick()` completion and spawns the right worker/recruit for the prefab's profession, transfers owner UUID + team, and binds the worker to the freshly spawned work-area.
 - Added player-built validation pipeline: `BuildingValidator`, `BuildingInspectionView`, `ArchitectureScorer` (0..100 heuristic: material diversity, decoration, coverage, vertical variance, symmetry, fill balance, cheap-block penalty), `ArchitectureTier` (HOVEL..MAJESTIC), `BuildingValidatorRegistry` with `DefaultBuildingValidator` fallback, and 10 per-prefab validators with real pass/fail rules. `BuildingValidationService` routes the wand's corner+center taps into a bounding box, runs the validator, emits chat feedback (BLOCKER/MAJOR/MINOR/INFO), and grants emerald rewards via `ValidationRewardService` scaled by architecture tier.
+- Normalized settlement work-order publisher type matching so live building snapshots using namespaced ids like `bannermod:crop_area` or `bannermod:build_area` now match the crop/build/lumber/mining publishers instead of silently missing the publish seam.
 
 ## Not Delivered In This Slice
 
@@ -53,6 +54,7 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - `./gradlew compileJava --console=plain` succeeded on 2026-04-20 after wiring reservation-aware growth hints, broader refresh hooks, and scheduled job gating.
 - `./gradlew test --tests com.talhanation.bannermod.settlement.growth.BannerModSettlementGrowthManagerTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --console=plain` succeeded on 2026-04-20.
 - `./gradlew compileJava --console=plain` and `./gradlew test --console=plain` (full suite) succeeded on 2026-04-20 after the building-centric work-order layer landed: runtime, publishers, real claim-behavior job handlers, orchestrator publish wiring, and `SettlementOrderWorkGoal` on `AbstractWorkerEntity`.
+- `./gradlew compileJava test --tests com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisherRegistryTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --console=plain` succeeded on 2026-04-24 after fixing namespaced building-type matching for the live work-order publishers.
 
 ## Later Confirmed Closeouts
 
@@ -66,3 +68,4 @@ In progress. The seed layer is landed and several first-pass runtime packages no
 - Phase 25 has moved past seed-only persistence work into runtime bring-up.
 - The current runtime bring-up is real and test-backed, but still intentionally additive and partial.
 - Millenaire-like settlement simulation is being built in slices on top of the existing BannerMod aggregate; it is not finished, but it is actively in flight in the main tree.
+- The live work-order publish seam no longer depends on bare un-namespaced building ids; namespaced building records from `BannerModSettlementService.collectBuildings(...)` now route into the matching publishers correctly.

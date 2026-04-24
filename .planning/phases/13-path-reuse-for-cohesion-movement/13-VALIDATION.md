@@ -10,7 +10,7 @@
 
 Run from the repository root after Plan 13-01 lands:
 
-1. `./gradlew test --tests com.talhanation.recruits.pathfinding.GlobalPathfindingControllerTest`
+1. `./gradlew test --tests com.talhanation.bannermod.ai.pathfinding.GlobalPathfindingControllerTest`
 2. `./gradlew compileGameTestJava verifyGameTestStage`
 
 If the unit test step fails, the reuse seam is not ready for evidence collection. If `verifyGameTestStage` fails, keep the raw logs but treat the run as invalid evidence even if some profiling lines were emitted.
@@ -59,7 +59,7 @@ Keep all Phase 11 and Phase 12 snapshot fields, then add the Phase 13 reuse metr
 - `controllerReuseDropsIncompatible`
 - `controllerReuseDropsStale`
 
-`RecruitsBattleGameTestSupport.formatProfilingSnapshot(...)` remains the canonical stable log format.
+The active root dense-battle profiling harness remains the canonical stable log format.
 
 ## Evidence Interpretation
 

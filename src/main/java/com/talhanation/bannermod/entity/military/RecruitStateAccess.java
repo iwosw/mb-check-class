@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.ai.military.CombatStance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -41,6 +42,7 @@ final class RecruitStateAccess {
     private static final EntityDataAccessor<Byte> BIOME = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Boolean> SHOULD_REST = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SHOULD_RANGED = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> COMBAT_STANCE = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
 
     private RecruitStateAccess() {
     }
@@ -81,6 +83,7 @@ final class RecruitStateAccess {
         recruit.defineStateData(BIOME, (byte) 0);
         recruit.defineStateData(SHOULD_REST, false);
         recruit.defineStateData(SHOULD_RANGED, true);
+        recruit.defineStateData(COMBAT_STANCE, CombatStance.LOOSE.ordinal());
     }
 
     static int getVariant(AbstractRecruitEntity recruit) { return recruit.getStateData(VARIANT); }
@@ -135,6 +138,17 @@ final class RecruitStateAccess {
     static void setShouldRest(AbstractRecruitEntity recruit, boolean shouldRest) { recruit.setStateData(SHOULD_REST, shouldRest); }
     static boolean getShouldRanged(AbstractRecruitEntity recruit) { return recruit.getStateData(SHOULD_RANGED); }
     static void setShouldRanged(AbstractRecruitEntity recruit, boolean shouldRanged) { recruit.setStateData(SHOULD_RANGED, shouldRanged); }
+    static CombatStance getCombatStance(AbstractRecruitEntity recruit) {
+        int ordinal = recruit.getStateData(COMBAT_STANCE);
+        CombatStance[] stances = CombatStance.values();
+        if (ordinal < 0 || ordinal >= stances.length) {
+            return CombatStance.LOOSE;
+        }
+        return stances[ordinal];
+    }
+    static void setCombatStance(AbstractRecruitEntity recruit, CombatStance stance) {
+        recruit.setStateData(COMBAT_STANCE, (stance == null ? CombatStance.LOOSE : stance).ordinal());
+    }
     static int getState(AbstractRecruitEntity recruit) { return recruit.getStateData(STATE); }
     static Optional<UUID> getGroupUUID(AbstractRecruitEntity recruit) { return recruit.getStateData(GROUP); }
     static void setGroupUUID(AbstractRecruitEntity recruit, UUID uuid) { recruit.setStateData(GROUP, uuid == null ? Optional.empty() : Optional.of(uuid)); }

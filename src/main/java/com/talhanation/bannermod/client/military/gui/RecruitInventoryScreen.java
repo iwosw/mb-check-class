@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.talhanation.bannermod.ai.military.CombatStance;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.client.military.ClientManager;
@@ -76,6 +77,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TEXT_CLEAR_TARGET = Component.translatable("gui.recruits.inv.text.clearTargets");
     private static final MutableComponent TEXT_MOUNT = Component.translatable("gui.recruits.command.text.mount");
     private static final MutableComponent TEXT_CLEAR_UPKEEP = Component.translatable("gui.recruits.inv.text.clearUpkeep");
+    private static final MutableComponent TOOLTIP_STANCE = Component.translatable("gui.recruits.inv.tooltip.combat_stance");
 
     private static final MutableComponent TEXT_PROMOTE = Component.translatable("gui.recruits.inv.text.promote");
     private static final MutableComponent TEXT_SPECIAL = Component.translatable("gui.recruits.inv.text.special");
@@ -94,6 +96,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private Button rightListenButton;
     private Button leftListenButton;
     private Button moreButton;
+    private Button stanceButton;
     private ScrollDropDownMenu<RecruitsGroup> groupSelectionDropDownMenu;
     public RecruitInventoryScreen(RecruitInventoryMenu recruitContainer, Inventory playerInventory, Component title) {
         super(RESOURCE_LOCATION, recruitContainer, playerInventory, Component.literal(""));
@@ -281,6 +284,16 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         this.clearUpkeep.setTooltip(Tooltip.create(TOOLTIP_CLEAR_UPKEEP));
         this.clearUpkeep.active = this.recruit.hasUpkeep();
 
+        this.stanceButton = addRenderableWidget(new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 7, 80, 20, Component.empty(),
+                button -> {
+                    CombatStance nextStance = nextCombatStance(this.recruit.getCombatStance());
+                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCombatStanceGui(recruit.getUUID(), nextStance));
+                }
+        ));
+        this.stanceButton.setTooltip(Tooltip.create(TOOLTIP_STANCE));
+        this.stanceButton.active = !(recruit instanceof VillagerNobleEntity);
+        updateCombatStanceButton();
+
         //LISTEN
          leftListenButton =  new ExtendedButton(leftPos + 77, topPos + 100, 12, 12, Component.literal("<"), button -> {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageListen(!recruit.getListen(), recruit.getUUID()));
@@ -351,6 +364,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     @Override
     protected void containerTick() {
         super.containerTick();
+        updateCombatStanceButton();
         if(ClientManager.groups != null && !ClientManager.groups.isEmpty() && !buttonsSet){
             this.currentGroup = ClientManager.getGroup(recruit.getGroup());
 
@@ -533,5 +547,27 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         int j = (this.height - this.imageHeight) / 2;
 
         InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 50, j + 82, 30, (float)(i + 50) - mouseX, (float)(j + 75 - 50) - mouseY, this.recruit);
+    }
+
+    private void updateCombatStanceButton() {
+        if (this.stanceButton == null) {
+            return;
+        }
+        CombatStance stance = this.recruit.getCombatStance();
+        this.stanceButton.setMessage(stanceLabel(stance));
+    }
+
+    private static CombatStance nextCombatStance(CombatStance stance) {
+        CombatStance[] stances = CombatStance.values();
+        int index = stance == null ? 0 : stance.ordinal();
+        return stances[(index + 1) % stances.length];
+    }
+
+    private static Component stanceLabel(CombatStance stance) {
+        return switch (stance == null ? CombatStance.LOOSE : stance) {
+            case LINE_HOLD -> Component.translatable("gui.recruits.command.text.stance_line_hold");
+            case SHIELD_WALL -> Component.translatable("gui.recruits.command.text.stance_shield_wall");
+            case LOOSE -> Component.translatable("gui.recruits.command.text.stance_loose");
+        };
     }
 }

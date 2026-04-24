@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.military.gui.commandscreen;
 
+import com.talhanation.bannermod.ai.military.CombatStance;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.CommandScreen;
 import com.talhanation.bannermod.client.military.gui.group.RecruitsCommandButton;
@@ -26,6 +27,9 @@ public class CombatCategory implements ICommandCategory {
     private static final MutableComponent TOOLTIP_CLEAR_TARGET = Component.translatable("gui.recruits.command.tooltip.clearTargets");
     private static final MutableComponent TOOLTIP_HOLD_FIRE = Component.translatable("gui.recruits.command.tooltip.hold_fire");
     private static final MutableComponent TOOLTIP_FIRE_AT_WILL = Component.translatable("gui.recruits.command.tooltip.fire_at_will");
+    private static final MutableComponent TOOLTIP_STANCE_LOOSE = Component.translatable("gui.recruits.command.tooltip.stance_loose");
+    private static final MutableComponent TOOLTIP_STANCE_LINE_HOLD = Component.translatable("gui.recruits.command.tooltip.stance_line_hold");
+    private static final MutableComponent TOOLTIP_STANCE_SHIELD_WALL = Component.translatable("gui.recruits.command.tooltip.stance_shield_wall");
     private static final MutableComponent TEXT_SHIELDS_UP = Component.translatable("gui.recruits.command.text.shields_up");
     private static final MutableComponent TEXT_SHIELDS_DOWN = Component.translatable("gui.recruits.command.text.shields_down");
     private static final MutableComponent TEXT_PASSIVE = Component.translatable("gui.recruits.command.text.passive");
@@ -37,6 +41,9 @@ public class CombatCategory implements ICommandCategory {
     private static final MutableComponent TEXT_FIRE_AT_WILL = Component.translatable("gui.recruits.command.text.fire_at_will");
     private static final MutableComponent TEXT_HOLD_FIRE = Component.translatable("gui.recruits.command.text.hold_fire");
     private static final MutableComponent TEXT_CLEAR_TARGET = Component.translatable("gui.recruits.command.text.clearTargets");
+    private static final MutableComponent TEXT_STANCE_LOOSE = Component.translatable("gui.recruits.command.text.stance_loose");
+    private static final MutableComponent TEXT_STANCE_LINE_HOLD = Component.translatable("gui.recruits.command.text.stance_line_hold");
+    private static final MutableComponent TEXT_STANCE_SHIELD_WALL = Component.translatable("gui.recruits.command.text.stance_shield_wall");
     private static final MutableComponent TOOLTIP_COMBAT = Component.translatable("gui.recruits.command.tooltip.combat");
 
     private static final MutableComponent TEXT_ATTACK = Component.translatable("gui.recruits.command.text.attack");
@@ -186,6 +193,24 @@ public class CombatCategory implements ICommandCategory {
         clearTargetsButton.active = isOneGroupActive;
         screen.addRenderableWidget(clearTargetsButton);
 
+        RecruitsCommandButton looseStanceButton = new RecruitsCommandButton(x - 100, y + 95, TEXT_STANCE_LOOSE,
+                button -> sendStance(screen, groups, player, CombatStance.LOOSE, 76));
+        looseStanceButton.setTooltip(Tooltip.create(TOOLTIP_STANCE_LOOSE));
+        looseStanceButton.active = isOneGroupActive;
+        screen.addRenderableWidget(looseStanceButton);
+
+        RecruitsCommandButton lineHoldButton = new RecruitsCommandButton(x, y + 95, TEXT_STANCE_LINE_HOLD,
+                button -> sendStance(screen, groups, player, CombatStance.LINE_HOLD, 77));
+        lineHoldButton.setTooltip(Tooltip.create(TOOLTIP_STANCE_LINE_HOLD));
+        lineHoldButton.active = isOneGroupActive;
+        screen.addRenderableWidget(lineHoldButton);
+
+        RecruitsCommandButton shieldWallButton = new RecruitsCommandButton(x + 100, y + 95, TEXT_STANCE_SHIELD_WALL,
+                button -> sendStance(screen, groups, player, CombatStance.SHIELD_WALL, 78));
+        shieldWallButton.setTooltip(Tooltip.create(TOOLTIP_STANCE_SHIELD_WALL));
+        shieldWallButton.active = isOneGroupActive;
+        screen.addRenderableWidget(shieldWallButton);
+
         //PASSIVE
         RecruitsCommandButton passiveButton = new RecruitsCommandButton(x - 100, y - 38, TEXT_PASSIVE,
                 button -> {
@@ -250,5 +275,20 @@ public class CombatCategory implements ICommandCategory {
         aggressiveButton.active = isOneGroupActive;
         screen.addRenderableWidget(aggressiveButton);
     }
-}
 
+    private static void sendStance(CommandScreen screen,
+                                   List<RecruitsGroup> groups,
+                                   Player player,
+                                   CombatStance stance,
+                                   int chatState) {
+        if (groups.isEmpty()) {
+            return;
+        }
+        for (RecruitsGroup group : groups) {
+            if (!group.isDisabled()) {
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCombatStance(player.getUUID(), group.getUUID(), stance));
+            }
+        }
+        screen.sendCommandInChat(chatState);
+    }
+}

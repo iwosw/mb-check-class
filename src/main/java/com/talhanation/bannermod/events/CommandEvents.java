@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 
+import com.talhanation.bannermod.ai.military.CombatStance;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.entity.military.*;
 import com.talhanation.bannermod.inventory.military.CommandMenu;
@@ -90,6 +91,19 @@ public class CommandEvents {
             }
         }
     }
+
+    public static void onCombatStanceCommand(UUID playerUuid,
+                                             AbstractRecruitEntity recruit,
+                                             CombatStance stance,
+                                             UUID group) {
+        if (stance == null) {
+            return;
+        }
+        if (recruit.isEffectedByCommand(playerUuid, group) && recruit.getCombatStance() != stance) {
+            recruit.setCombatStance(stance);
+        }
+    }
+
     public static void onAttackCommand(Player player, UUID player_uuid, List<AbstractRecruitEntity> list, UUID group) {
         HitResult hitResult = player.pick(100, 1F, false);
         BlockPos blockpos = null;

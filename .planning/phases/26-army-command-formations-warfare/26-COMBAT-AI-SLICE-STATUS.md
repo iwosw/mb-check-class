@@ -8,6 +8,20 @@ Phase 26 owns the military-side command, formation, morale, siege, and territory
 
 **Landed on 2026-04-21.** Five atomic commits, all 129 tests in `com.talhanation.bannermod.ai.military.*` green. 12 new pure policy helpers, NBT-persisted combat stance, directional shield mitigation through Forge `ShieldBlockEvent`, second-rank poke through friendly LOS, per-unit attack cadence, and a full flank/cohesion/brace/counter-matrix layer.
 
+## Follow-up Landed 2026-04-22
+
+- Player-facing stance selection is now wired into the command screen through `MessageCombatStance`, reusing the selection-aware group command path so `LOOSE`, `LINE_HOLD`, and `SHIELD_WALL` are selectable in-game for the active groups.
+- `CommandIntent` gained a `CombatStanceChange` variant and `CommandEvents.onCombatStanceCommand(...)`, keeping the stance change server-authoritative instead of baking it into GUI-only state mutation.
+- `RecruitRangedBowAttackGoal` and `RecruitRangedCrossbowAttackGoal` now gate target-based auto-engagement through `CombatLeashPolicy` against `holdPos` when the recruit is holding formation, so the stance leash applies to ranged units too.
+- New GameTest coverage in `BannerModCombatStanceCommandGameTests` proves both the group-authority targeting of the stance packet and the stance-to-ranged-leash behavior loop. `verifyGameTestStage` is now green with 39 required tests.
+
+## Follow-up Landed 2026-04-24
+
+- `CombatStance` is now synced through `SynchedEntityData` instead of being server-only runtime state, so client UI surfaces can read the live stance reliably.
+- Added `MessageCombatStanceGui` for single-recruit stance changes in the recruit inventory path, reusing `CommandTargeting.forSingleRecruit(...)` rather than falling back to loose direct mutation.
+- `RecruitInventoryScreen` now exposes a compact per-recruit stance cycle button, so the player can inspect and change `LOOSE` / `LINE_HOLD` / `SHIELD_WALL` without using the group command screen.
+- `BannerModNetworkBootstrap.workerPacketOffset()` is now effectively `MILITARY_MESSAGES.length == 106` because the per-recruit stance packet extends the military catalog by one more message.
+
 ## Delivered
 
 ### Part A — Smarter target selection (commit `ebe813d`, part A)
@@ -49,11 +63,15 @@ Phase 26 owns the military-side command, formation, morale, siege, and territory
 
 ## Intentionally Deferred
 
-- **Player-facing stance commands / packets / UI.** Stance is programmatic-only today. Setting `SHIELD_WALL` requires calling `recruit.setCombatStance(CombatStance.SHIELD_WALL)`. A follow-up slice will add command and GUI wiring.
-- **Ranged goals leash** (`RecruitRangedBowAttackGoal`, `RecruitRangedCrossbowAttackGoal`). They use `movePos` not `holdPos`, so the stance leash does not extend into ranged auto-engagement. Separate slice.
 - **Spear/pike item classes.** BannerMod does not ship `SpearItem`/`PikeItem` yet; `WeaponReach` uses string heuristics. When real classes land, `WeaponReach.effectiveReachFor(Item)` is the single extension point for `instanceof` checks.
 - **Velocity-aware charge detection in `BraceAgainstChargePolicy`.** Current implementation is proximity-only on mounted hostile — enough to trigger bracing; no predictive timing.
 - **Morale-driven retreat.** Still environmental (`FleeTNT`/`FleeFire`/`FleeTarget`). No panic-threshold or formation-wide rout.
+
+## Verification Update (2026-04-24)
+
+- Re-ran `./gradlew compileJava compileTestJava compileGameTestJava --console=plain` — BUILD SUCCESSFUL.
+- Re-ran `./gradlew verifyGameTestStage --console=plain` — BUILD SUCCESSFUL with all 39 required tests passing.
+- Current Phase 26 stance-control follow-up is locally green across compile plus full root GameTest validation.
 
 ## Files Added / Modified
 

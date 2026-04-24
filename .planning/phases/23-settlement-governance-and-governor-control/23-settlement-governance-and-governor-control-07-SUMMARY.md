@@ -32,25 +32,21 @@ Added a `recruitsLookLikeVillagers()` helper in both `AbstractRecruitEntity` and
 
 ## Gate result
 
-`./gradlew compileJava compileGameTestJava verifyGameTestStage --console=plain`:
+Historical note: this summary captured the first point where the dedicated governor GameTests themselves executed and passed, even though the full root GameTest suite still had unrelated failures at that time.
 
-- `compileJava`: GREEN
-- `compileGameTestJava`: GREEN
-- `runGameTestServer`: 36 tests ran, 33 passed, 3 failed (non-governor)
-- `BannerModGovernorControlGameTests` — all 3 @GameTest methods **passed** (GOV-04 closed)
+Current repo truth has moved on further:
 
-The 3 failures are pre-existing non-governor tests:
-- `claimlossdegradessettlementwithouttransferringownership`
-- `factionmismatchdegradessettlementwithoutsilentrebinding`
-- `sameteamcooperationallowscommandsandauthoringbutstilldeniesoutsiders`
+- the active root GameTest gate is now green again
+- `verifyGameTestStage` currently passes with 39 required tests in the active tree
+- the old non-governor failures listed below are no longer the current blocking story for Phase 23
 
-Exit code 3 (non-zero due to 3 failing tests). GOV-04 runtime evidence is confirmed — governor tests execute and pass.
+So this summary remains useful as historical execution evidence for the config-guard fix, but should not be read as the current phase-level verification state. `23-VERIFICATION.md` is the current source of truth.
 
 ## Remaining debt
 
 - 2 root `test` failures (`CitizenRecruitBridgeTest`, `CitizenWorkerBridgeTest`) — legacy archive path references, logged in `deferred-items.md`
 - 3 gametest failures above — faction/claim degradation logic, separate from governor control
-- `WorkersRuntime.ROOT_NETWORK_ID_OFFSET` stale constant (104 vs 107) — logged in `deferred-items.md`
+- `WorkersRuntime` network offset drift was logged here historically, but that seam has since been corrected to follow the shared bootstrap offset dynamically.
 
 ## Deviations
 None. Plan 23-07 was scoped exactly to the config guard fix.

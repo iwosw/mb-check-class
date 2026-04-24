@@ -248,6 +248,13 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
         LivingEntity target = this.crossBowman.getTarget();
         BlockPos pos = crossBowman.getMovePos();
 
+        if (target != null && this.crossBowman.getShouldHoldPos() && this.crossBowman.getHoldPos() != null) {
+            double targetDistSqrToHoldPos = this.crossBowman.getHoldPos().distanceToSqr(target.position());
+            if (!CombatLeashPolicy.canEngage(targetDistSqrToHoldPos, true, this.crossBowman.isInFormation, this.crossBowman.getCombatStance())) {
+                return false;
+            }
+        }
+
         if (target != null && pos != null && crossBowman.getShouldMovePos()) {
             boolean targetIsFar = target.distanceTo(this.crossBowman) >= 32D;
             boolean posIsClose = pos.distSqr(this.crossBowman.getOnPos()) <= 15.0D;

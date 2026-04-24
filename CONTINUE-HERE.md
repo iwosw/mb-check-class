@@ -742,6 +742,185 @@ In the next session:
 4. continue Phase 25 runtime integration from the already-landed Millenaire packages,
 5. then audit historical phases 1-24.
 
+## Session 2026-04-22: Phase 26 Stance Commands + Ranged Leash
+
+This session landed the player-facing follow-up to the 2026-04-21 combat AI overhaul.
+
+### What landed
+
+- Added one new server-authoritative stance packet:
+  - `src/main/java/com/talhanation/bannermod/network/messages/military/MessageCombatStance.java`
+- Extended the command intent seam with explicit stance routing:
+  - `src/main/java/com/talhanation/bannermod/army/command/CommandIntent.java`
+  - `src/main/java/com/talhanation/bannermod/army/command/CommandIntentType.java`
+  - `src/main/java/com/talhanation/bannermod/army/command/CommandIntentDispatcher.java`
+  - `src/main/java/com/talhanation/bannermod/events/CommandEvents.java`
+- Exposed `LOOSE` / `LINE_HOLD` / `SHIELD_WALL` in the command screen combat tab:
+  - `src/main/java/com/talhanation/bannermod/client/military/gui/commandscreen/CombatCategory.java`
+  - `src/main/java/com/talhanation/bannermod/client/military/gui/CommandScreen.java`
+  - `src/main/resources/assets/bannermod/lang/en_us.json`
+- Extended stance leash semantics into ranged goals:
+  - `src/main/java/com/talhanation/bannermod/ai/military/RecruitRangedBowAttackGoal.java`
+  - `src/main/java/com/talhanation/bannermod/ai/military/RecruitRangedCrossbowAttackGoal.java`
+- Registered the new military packet in the root shared channel:
+  - `src/main/java/com/talhanation/bannermod/network/BannerModNetworkBootstrap.java`
+
+### Verification that is now true
+
+- `./gradlew compileJava compileTestJava compileGameTestJava --console=plain`
+  - green on 2026-04-22
+- `./gradlew test --tests com.talhanation.bannermod.army.command.CommandIntentShapeTest --console=plain`
+  - green on 2026-04-22
+- `./gradlew verifyGameTestStage --console=plain`
+  - green on 2026-04-22
+  - now **39 required tests**
+
+### Verification rerun on 2026-04-23
+
+- `./gradlew compileJava compileTestJava compileGameTestJava --console=plain`
+  - green on 2026-04-23
+- `./gradlew test --tests com.talhanation.bannermod.army.command.CommandIntentShapeTest --console=plain`
+  - green on 2026-04-23
+- `./gradlew verifyGameTestStage --console=plain`
+  - currently **not green** on 2026-04-23
+  - failed on unrelated required GameTest `friendlyclaimbirthcreatesownedsettlementworker`
+  - likely path: `BannerModWorkerBirthAndSettlementSpawnGameTests` / worker-birth settlement runtime, not the new Phase 26 stance packet/UI/ranged-leash seam
+
+### New GameTest coverage added
+
+- `src/gametest/java/com/talhanation/bannermod/BannerModCombatStanceCommandGameTests.java`
+- Coverage proves:
+  - the stance command only affects the requested owned group in radius
+  - `SHIELD_WALL` stance now blocks ranged auto-engagement beyond the tight hold-position leash
+
+### Planning files updated this session
+
+- `.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md`
+- `.planning/STATE.md`
+- `.planning/VERIFICATION.md`
+
+### Important current repo truth
+
+- This work is implemented and verified but **not committed yet**.
+- Current modified tracked files are the Phase 26 stance-command slice plus truthful planning updates.
+- Untracked archive/reference/artifact content still exists in the tree and should not be swept into a commit:
+  - `.analysis/**`
+  - `recruits/`
+  - `workers/`
+  - `run_gametest/`
+  - local jar artifacts and misc handoff docs
+- `BannerModNetworkBootstrap.workerPacketOffset()` is now effectively `MILITARY_MESSAGES.length == 106` because `MessageCombatStance` plus `MessageCombatStanceGui` were appended to the military message list.
+
+### Next recommended step after this handoff
+
+If resuming immediately from here:
+
+1. Review and commit the verified Phase 26 stance-control slices.
+2. Then continue with the next unresolved military/player-facing follow-up if desired:
+   - per-recruit stance UI in `RecruitInventoryScreen` is now landed too
+   - next likely follow-up is a richer stance readout or broader Phase 25 / historical phase audit work, depending on user priority
+3. Do not claim there is still no stance packet/UI wiring; that is now outdated.
+
+## Session 2026-04-24: Phase 26 Per-Recruit Stance UI Follow-up
+
+This session extended the already-landed stance-command slice with a direct per-recruit control surface.
+
+### What landed
+
+- Added one new server-authoritative single-recruit stance packet:
+  - `src/main/java/com/talhanation/bannermod/network/messages/military/MessageCombatStanceGui.java`
+- Synced `CombatStance` through recruit entity data so client UI surfaces can read the live value reliably:
+  - `src/main/java/com/talhanation/bannermod/entity/military/AbstractRecruitEntity.java`
+  - `src/main/java/com/talhanation/bannermod/entity/military/RecruitStateAccess.java`
+- Exposed per-recruit stance cycling in the recruit inventory screen:
+  - `src/main/java/com/talhanation/bannermod/client/military/gui/RecruitInventoryScreen.java`
+- Registered the new packet in the shared military channel:
+  - `src/main/java/com/talhanation/bannermod/network/BannerModNetworkBootstrap.java`
+- Added the inventory tooltip copy:
+  - `src/main/resources/assets/bannermod/lang/en_us.json`
+
+### Verification that is now true
+
+- `./gradlew compileJava compileTestJava compileGameTestJava --console=plain`
+  - green on 2026-04-24
+- `./gradlew verifyGameTestStage --console=plain`
+  - green on 2026-04-24
+  - still **39 required tests**
+
+### Planning files updated this session
+
+- `.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md`
+- `.planning/STATE.md`
+- `.planning/VERIFICATION.md`
+
+### Important current repo truth
+
+- The Phase 26 stance-control work now covers both:
+  - command-screen group stance selection
+  - recruit-inventory single-unit stance selection
+- `CombatStance` is no longer only NBT-persisted runtime state; it is also client-synced.
+- `BannerModNetworkBootstrap.workerPacketOffset()` is now `MILITARY_MESSAGES.length == 106`.
+- This work is implemented and verified but **not committed yet**.
+
+### Next recommended step after this handoff
+
+1. Review and commit the verified Phase 26 stance-control slices.
+2. Then either:
+   - move back to the user-prioritized Phase 25 settlement/building migration work
+   - or start the requested historical phase audit/fix pass over phases 1-24
+3. Do not reopen stance packet/UI plumbing as missing work unless a concrete bug is found.
+
+## Session 2026-04-24: Historical Phase Audit + Phase 25 Publisher Match Fix
+
+This continuation did two small but real cleanup passes after the Phase 26 stance work.
+
+### Historical-phase truth maintenance
+
+- Updated stale validation docs for:
+  - `.planning/phases/12-global-pathfinding-control/12-VALIDATION.md`
+  - `.planning/phases/13-path-reuse-for-cohesion-movement/13-VALIDATION.md`
+  - `.planning/phases/14-formation-level-target-selection-rewrite/14-VALIDATION.md`
+- Those docs now reference the active root test classes instead of dead `com.talhanation.recruits.*` package paths.
+- Updated Phase 23 verification/history docs so they no longer claim the old compile/gametest blocker is still current:
+  - `.planning/phases/23-settlement-governance-and-governor-control/23-VERIFICATION.md`
+  - `.planning/phases/23-settlement-governance-and-governor-control/23-settlement-governance-and-governor-control-07-SUMMARY.md`
+
+### Live code fix from the audit
+
+- Fixed one real historical seam mismatch in the merged runtime:
+  - `src/main/java/com/talhanation/bannermod/bootstrap/WorkersRuntime.java`
+  - `WorkersRuntime.networkIdOffset()` now follows `BannerModNetworkBootstrap.workerPacketOffset()` instead of a stale hardcoded value.
+- Updated the two smoke tests that pin this seam:
+  - `src/test/java/com/talhanation/workers/WorkersRuntimeSmokeTest.java`
+  - `src/test/java/com/talhanation/bannermod/BannerModIntegratedRuntimeSmokeTest.java`
+
+### Phase 25 continuation landed in this same pass
+
+- Fixed the live settlement work-order publisher match seam:
+  - `src/main/java/com/talhanation/bannermod/settlement/workorder/SettlementWorkOrderPublisherRegistry.java`
+  - `src/main/java/com/talhanation/bannermod/settlement/workorder/publisher/CropAreaWorkOrderPublisher.java`
+  - `src/main/java/com/talhanation/bannermod/settlement/workorder/publisher/BuildAreaWorkOrderPublisher.java`
+  - `src/main/java/com/talhanation/bannermod/settlement/workorder/publisher/LumberAreaWorkOrderPublisher.java`
+  - `src/main/java/com/talhanation/bannermod/settlement/workorder/publisher/MiningAreaWorkOrderPublisher.java`
+- Root cause:
+  - settlement snapshots store building ids as namespaced values like `bannermod:crop_area`
+  - publishers were matching only bare ids like `crop_area`
+  - this likely prevented live building records from publishing work orders at all
+- Added focused regression coverage:
+  - `src/test/java/com/talhanation/bannermod/settlement/workorder/SettlementWorkOrderPublisherRegistryTest.java`
+
+### Verification that is now true
+
+- `./gradlew compileJava test --tests com.talhanation.workers.WorkersRuntimeSmokeTest --tests com.talhanation.bannermod.BannerModIntegratedRuntimeSmokeTest --console=plain`
+  - green on 2026-04-24
+- `./gradlew compileJava test --tests com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisherRegistryTest --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest --console=plain`
+  - green on 2026-04-24
+
+### Important current repo truth
+
+- The tree still contains the earlier uncommitted Phase 26 stance-control work plus these new 2026-04-24 doc/runtime fixes.
+- Nothing here is committed yet.
+
 ## New Architectural Redirect: Kill Worker Zones, Move To Settlement-Centric Simulation
 
 This was a deliberate product-direction change requested after more frustration with the old worker-area model.

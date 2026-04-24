@@ -20,14 +20,14 @@ import com.talhanation.bannermod.network.messages.civilian.*;
  * in recruits.Main.setup() and workers.WorkersMain.setup() respectively, so packet IDs
  * remain stable across saves and client/server pairs.
  *
- * workerPacketOffset() == MILITARY_MESSAGES.length == 104.
+ * workerPacketOffset() == MILITARY_MESSAGES.length == 106.
  */
 public class BannerModNetworkBootstrap {
 
     /**
      * Military message catalog (verbatim order from recruits.Main legacy setup).
      * Registered at channel indices [0..MILITARY_MESSAGES.length).
-     * Count: 104.
+     * Count: 106.
      */
     @SuppressWarnings({"rawtypes"})
     public static final Class[] MILITARY_MESSAGES = {
@@ -139,12 +139,14 @@ public class BannerModNetworkBootstrap {
         MessageDebugGui.class,
         MessageDebugScreen.class,
         MessageSelectRecruits.class,
+        MessageCombatStance.class,
+        MessageCombatStanceGui.class,
     };
 
     /**
      * Civilian message catalog (verbatim order from workers.WorkersMain legacy setup).
      * Registered at channel indices [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length).
-     * Count: 20. workerPacketOffset == MILITARY_MESSAGES.length == 104.
+     * Count: 20. workerPacketOffset == MILITARY_MESSAGES.length == 106.
      */
     @SuppressWarnings({"rawtypes"})
     public static final Class[] CIVILIAN_MESSAGES = {
@@ -177,8 +179,8 @@ public class BannerModNetworkBootstrap {
 
     /**
      * Returns the offset at which civilian (worker) packets begin in the shared channel.
-     * Equal to MILITARY_MESSAGES.length (104).
-     * Matches the legacy WorkersRuntime.ROOT_NETWORK_ID_OFFSET = 104.
+     * Equal to MILITARY_MESSAGES.length (106).
+     * Matches the merged runtime's current worker packet offset.
      */
     public static int workerPacketOffset() {
         return MILITARY_MESSAGES.length;
@@ -188,8 +190,8 @@ public class BannerModNetworkBootstrap {
      * Creates and returns the single shared SimpleChannel with all military and civilian
      * packets registered. Must be called once during FMLCommonSetupEvent.
      *
-     * Military packets: indices [0..104)
-     * Civilian packets: indices [104..124)
+     * Military packets: indices [0..106)
+     * Civilian packets: indices [106..126)
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static SimpleChannel createSharedChannel() {

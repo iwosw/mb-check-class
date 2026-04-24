@@ -9,13 +9,13 @@
 ## Before/After Sources
 
 - **Before:** Phase 11 evidence and procedure in `11-PROFILING-BASELINE.md` and `11-VALIDATION.md`
-- **After:** Phase 12 runs using the same scenarios plus the new controller counters emitted by `RecruitsBattleGameTestSupport.captureProfilingSnapshot(...)`
+- **After:** Phase 12 runs using the same scenarios plus the new controller counters emitted by the active dense-battle profiling harness in the root `src/gametest/java/com/talhanation/bannermod/` tree.
 
 ## Required Commands
 
 Run from the repository root:
 
-1. `./gradlew compileJava test --tests com.talhanation.recruits.pathfinding.GlobalPathfindingControllerTest`
+1. `./gradlew compileJava test --tests com.talhanation.bannermod.ai.pathfinding.GlobalPathfindingControllerTest`
 2. `./gradlew compileGameTestJava verifyGameTestStage`
 
 If the unit test step fails, Phase 12 is not ready for GameTest comparison. If `verifyGameTestStage` fails, keep the raw logs and treat the capture as invalid for comparison.
@@ -59,7 +59,7 @@ Every Phase 12 evidence bundle must include the existing Phase 11 counters plus 
 - `controllerAsyncDisabled`
 - `controllerTargetPositions`
 
-The stable log line emitted through `RecruitsBattleGameTestSupport.formatProfilingSnapshot(...)` is the canonical built-in snapshot format.
+The stable log line emitted through the active root dense-battle profiling harness is the canonical built-in snapshot format.
 
 ## Evidence Layout
 

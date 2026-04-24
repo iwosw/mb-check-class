@@ -1,6 +1,7 @@
 package com.talhanation.workers;
 
 import com.talhanation.bannermod.bootstrap.WorkersRuntime;
+import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,6 @@ class WorkersRuntimeSmokeTest {
 
     @Test
     void keepWorkersPacketsOnDedicatedMergedOffset() {
-        assertEquals(104, WorkersRuntime.networkIdOffset());
+        assertEquals(BannerModNetworkBootstrap.workerPacketOffset(), WorkersRuntime.networkIdOffset());
     }
 }

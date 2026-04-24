@@ -9,5 +9,6 @@ public enum CommandIntentType {
     FACE,
     ATTACK,
     STRATEGIC_FIRE,
-    AGGRO
+    AGGRO,
+    COMBAT_STANCE
 }

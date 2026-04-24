@@ -157,6 +157,13 @@ public class RecruitRangedBowAttackGoal<T extends BowmanEntity> extends Goal {
         LivingEntity target = this.recruit.getTarget();
         BlockPos pos = this.recruit.getMovePos();
 
+        if (target != null && this.recruit.getShouldHoldPos() && this.recruit.getHoldPos() != null) {
+            double targetDistSqrToHoldPos = this.recruit.getHoldPos().distanceToSqr(target.position());
+            if (!CombatLeashPolicy.canEngage(targetDistSqrToHoldPos, true, this.recruit.isInFormation, this.recruit.getCombatStance())) {
+                return false;
+            }
+        }
+
         if (target != null && pos != null && this.recruit.getShouldMovePos()) {
             boolean targetIsFar = target.distanceToSqr(this.recruit) >= 320;
             boolean posIsClose = pos.distSqr(this.recruit.getOnPos()) <= 150;

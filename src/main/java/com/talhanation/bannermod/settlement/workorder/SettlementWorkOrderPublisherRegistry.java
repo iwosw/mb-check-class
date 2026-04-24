@@ -5,6 +5,7 @@ import com.talhanation.bannermod.settlement.workorder.publisher.BuildAreaWorkOrd
 import com.talhanation.bannermod.settlement.workorder.publisher.CropAreaWorkOrderPublisher;
 import com.talhanation.bannermod.settlement.workorder.publisher.LumberAreaWorkOrderPublisher;
 import com.talhanation.bannermod.settlement.workorder.publisher.MiningAreaWorkOrderPublisher;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +42,17 @@ public final class SettlementWorkOrderPublisherRegistry {
 
     public int size() {
         return publishers.size();
+    }
+
+    public static boolean matchesBuildingType(BannerModSettlementBuildingRecord building, String bareTypeId) {
+        if (building == null || building.buildingTypeId() == null || bareTypeId == null || bareTypeId.isBlank()) {
+            return false;
+        }
+        if (bareTypeId.equals(building.buildingTypeId())) {
+            return true;
+        }
+        ResourceLocation typeId = ResourceLocation.tryParse(building.buildingTypeId());
+        return typeId != null && bareTypeId.equals(typeId.getPath());
     }
 
     public void clear() {

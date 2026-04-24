@@ -6,6 +6,7 @@ import com.talhanation.bannermod.settlement.BannerModSettlementBuildingRecord;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrder;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublishContext;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisher;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisherRegistry;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -28,9 +29,7 @@ public final class BuildAreaWorkOrderPublisher implements SettlementWorkOrderPub
 
     @Override
     public boolean matches(BannerModSettlementBuildingRecord building) {
-        return building != null
-                && building.buildingTypeId() != null
-                && building.buildingTypeId().equals("build_area");
+        return SettlementWorkOrderPublisherRegistry.matchesBuildingType(building, "build_area");
     }
 
     @Override

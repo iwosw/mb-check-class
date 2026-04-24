@@ -111,9 +111,6 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
     public TargetingConditions targetingConditions;
     /** Last recruit tickCount at which a live combat target was cleared (dead/removed). */
     public int lastTargetLossTick = Integer.MIN_VALUE;
-    /** Stage 1 combat stance. Defaults to LOOSE so saves/sessions don't change behaviour. */
-    private com.talhanation.bannermod.ai.military.CombatStance combatStance =
-            com.talhanation.bannermod.ai.military.CombatStance.LOOSE;
     /** Last recruit tickCount at which this recruit migrated slots via gap-fill. */
     public int lastFormationGapFillTick = Integer.MIN_VALUE;
     /** Stage 4.B: last tick at which {@link #cachedCohesion} was recomputed (cache TTL). */
@@ -190,7 +187,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
         float beforeBody = this.yBodyRot;
         float delta = super.tickHeadTurn(yRot, animStep);
         if (this.isInFormation) {
-            float limit = com.talhanation.bannermod.ai.military.FormationYawPolicy.perTickBodyYawLimitDegrees(this.combatStance);
+            float limit = com.talhanation.bannermod.ai.military.FormationYawPolicy.perTickBodyYawLimitDegrees(this.getCombatStance());
             if (!Float.isNaN(limit)) {
                 this.yBodyRot = com.talhanation.bannermod.ai.military.FormationYawPolicy.clampBodyYaw(beforeBody, this.yBodyRot, limit);
             }
@@ -200,12 +197,12 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
 
     /** Step 1.A: current combat stance. Defaults to LOOSE. */
     public com.talhanation.bannermod.ai.military.CombatStance getCombatStance() {
-        return this.combatStance;
+        return RecruitStateAccess.getCombatStance(this);
     }
 
     /** Step 1.A: set current combat stance. Null is coerced to LOOSE. */
     public void setCombatStance(com.talhanation.bannermod.ai.military.CombatStance stance) {
-        this.combatStance = stance == null ? com.talhanation.bannermod.ai.military.CombatStance.LOOSE : stance;
+        RecruitStateAccess.setCombatStance(this, stance);
     }
 
     // @Override

@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.army.command;
 
+import com.talhanation.bannermod.ai.military.CombatStance;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -42,6 +43,13 @@ class CommandIntentShapeTest {
         CommandIntent intent = new CommandIntent.Aggro(
                 40L, CommandIntentPriority.NORMAL, false, 2, UUID.randomUUID(), true);
         assertEquals(CommandIntentType.AGGRO, intent.type());
+    }
+
+    @Test
+    void combatStanceReportsCorrectType() {
+        CommandIntent intent = new CommandIntent.CombatStanceChange(
+                50L, CommandIntentPriority.NORMAL, false, CombatStance.SHIELD_WALL, UUID.randomUUID());
+        assertEquals(CommandIntentType.COMBAT_STANCE, intent.type());
     }
 
     @Test
