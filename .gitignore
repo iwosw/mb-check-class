@@ -3,8 +3,11 @@ build/
 run/
 logs/
 bin/
-
+.analysis/
 .classpath
 .factorypath
 .project
 .settings/
+run_gametest/
+recruits/
+workers/
