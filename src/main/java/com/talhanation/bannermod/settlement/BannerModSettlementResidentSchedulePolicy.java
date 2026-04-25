@@ -25,7 +25,7 @@ public record BannerModSettlementResidentSchedulePolicy(
                 ? BannerModSettlementResidentSchedulePolicySeed.fromTagName(tag.getString("PolicySeed"))
                 : BannerModSettlementResidentSchedulePolicySeed.VILLAGE_LIFE_FLEX;
         BannerModSettlementResidentScheduleSeed scheduleSeed = tag.contains("ScheduleSeed", Tag.TAG_STRING)
-                ? BannerModSettlementResidentScheduleSeed.valueOf(tag.getString("ScheduleSeed"))
+                ? scheduleSeedFromTagName(tag.getString("ScheduleSeed"))
                 : BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE;
         BannerModSettlementResidentScheduleWindowSeed scheduleWindowSeed = tag.contains("ScheduleWindowSeed", Tag.TAG_STRING)
                 ? BannerModSettlementResidentScheduleWindowSeed.fromTagName(tag.getString("ScheduleWindowSeed"))
@@ -71,5 +71,13 @@ public record BannerModSettlementResidentSchedulePolicy(
                     ? BannerModSettlementResidentSchedulePolicySeed.GOVERNANCE_CIVIC
                     : BannerModSettlementResidentSchedulePolicySeed.VILLAGE_LIFE_FLEX;
         };
+    }
+
+    private static BannerModSettlementResidentScheduleSeed scheduleSeedFromTagName(String name) {
+        try {
+            return BannerModSettlementResidentScheduleSeed.valueOf(name);
+        } catch (IllegalArgumentException exception) {
+            return BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE;
+        }
     }
 }

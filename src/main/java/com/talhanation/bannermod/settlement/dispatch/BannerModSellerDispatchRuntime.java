@@ -1,7 +1,12 @@
 package com.talhanation.bannermod.settlement.dispatch;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -23,9 +28,6 @@ import java.util.UUID;
  * matches insertion order — callers (e.g. {@link BannerModSellerDispatchAdvisor})
  * rely on that stability.
  *
- * <p>TODO persistence — this runtime is intentionally ephemeral. On world save
- * we lose in-flight phases; a future slice can serialise {@link SellerPhaseRecord}
- * alongside the existing {@code BannerModSettlementSellerDispatchRecord} seed.
  */
 public final class BannerModSellerDispatchRuntime {
 
@@ -55,6 +57,13 @@ public final class BannerModSellerDispatchRuntime {
     );
 
     private final Map<UUID, SellerPhaseRecord> phases = new LinkedHashMap<>();
+    private Runnable dirtyListener = () -> {
+    };
+
+    public void setDirtyListener(Runnable dirtyListener) {
+        this.dirtyListener = dirtyListener == null ? () -> {
+        } : dirtyListener;
+    }
 
     /**
      * Begin a new dispatch for {@code sellerResidentUuid} at the market identified
@@ -79,6 +88,7 @@ public final class BannerModSellerDispatchRuntime {
                 sellerResidentUuid,
                 new SellerPhaseRecord(sellerResidentUuid, marketRecordUuid, SellerPhase.MOVING_TO_STALL, gameTime, 0)
         );
+        markDirty();
     }
 
     /**
@@ -94,7 +104,12 @@ public final class BannerModSellerDispatchRuntime {
         if (current == null) {
             return;
         }
-        this.phases.put(sellerResidentUuid, current.transitionedTo(nextPhase, gameTime));
+        SellerPhaseRecord next = current.transitionedTo(nextPhase, gameTime);
+        if (next.equals(current)) {
+            return;
+        }
+        this.phases.put(sellerResidentUuid, next);
+        markDirty();
     }
 
     /**
@@ -114,7 +129,11 @@ public final class BannerModSellerDispatchRuntime {
             return Optional.empty();
         }
         SellerPhaseRecord next = computeNext(current, gameTime);
+        if (next.equals(current)) {
+            return Optional.of(current);
+        }
         this.phases.put(sellerResidentUuid, next);
+        markDirty();
         return Optional.of(next);
     }
 
@@ -127,12 +146,17 @@ public final class BannerModSellerDispatchRuntime {
         if (marketRecordUuid == null) {
             return;
         }
+        boolean changed = false;
         for (Map.Entry<UUID, SellerPhaseRecord> entry : this.phases.entrySet()) {
             SellerPhaseRecord record = entry.getValue();
             if (marketRecordUuid.equals(record.marketRecordUuid())
                     && record.phase() != SellerPhase.MARKET_CLOSED) {
                 entry.setValue(record.transitionedTo(SellerPhase.MARKET_CLOSED, gameTime));
+                changed = true;
             }
+        }
+        if (changed) {
+            markDirty();
         }
     }
 
@@ -173,9 +197,47 @@ public final class BannerModSellerDispatchRuntime {
         return Collections.unmodifiableList(out);
     }
 
+    public CompoundTag toTag() {
+        CompoundTag tag = new CompoundTag();
+        ListTag dispatches = new ListTag();
+        for (SellerPhaseRecord record : activeDispatches()) {
+            dispatches.add(record.toTag());
+        }
+        tag.put("Dispatches", dispatches);
+        return tag;
+    }
+
+    public static BannerModSellerDispatchRuntime fromTag(CompoundTag tag) {
+        BannerModSellerDispatchRuntime runtime = new BannerModSellerDispatchRuntime();
+        List<SellerPhaseRecord> dispatches = new ArrayList<>();
+        for (Tag entry : tag.getList("Dispatches", Tag.TAG_COMPOUND)) {
+            dispatches.add(SellerPhaseRecord.fromTag((CompoundTag) entry));
+        }
+        runtime.restoreSnapshot(dispatches);
+        return runtime;
+    }
+
+    public void restoreSnapshot(Collection<SellerPhaseRecord> dispatches) {
+        List<SellerPhaseRecord> before = activeDispatches();
+        this.phases.clear();
+        if (dispatches != null) {
+            for (SellerPhaseRecord dispatch : dispatches) {
+                if (dispatch != null) {
+                    this.phases.put(dispatch.sellerResidentUuid(), dispatch);
+                }
+            }
+        }
+        if (!before.equals(activeDispatches())) {
+            markDirty();
+        }
+    }
+
     /** Drop all in-memory dispatch state. Intended for test isolation. */
     public void reset() {
-        this.phases.clear();
+        if (!this.phases.isEmpty()) {
+            this.phases.clear();
+            markDirty();
+        }
     }
 
     // ------------------------------------------------------------------
@@ -210,10 +272,13 @@ public final class BannerModSellerDispatchRuntime {
                 return bumped;
             }
             default -> {
-                // Terminal or inert phases: tick counter still advances for
-                // observability but the phase itself is frozen.
-                return bumped;
+                // Terminal or inert phases are parked until a new dispatch starts.
+                return current;
             }
         }
+    }
+
+    private void markDirty() {
+        this.dirtyListener.run();
     }
 }

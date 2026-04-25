@@ -5,6 +5,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -29,11 +30,11 @@ public class MessageClearTargetGui implements Message<MessageClearTargetGui> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                (recruit) -> recruit.getUUID().equals(this.recruit)
-        ).forEach((recruit) -> CommandEvents.onClearTargetButton(this.player, recruit, null));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit
+                && player.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+            CommandEvents.onClearTargetButton(this.player, recruit, null);
+        }
     }
 
     public MessageClearTargetGui fromBytes(FriendlyByteBuf buf) {
@@ -47,4 +48,3 @@ public class MessageClearTargetGui implements Message<MessageClearTargetGui> {
         buf.writeUUID(this.recruit);
     }
 }
-

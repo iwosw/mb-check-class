@@ -29,6 +29,7 @@ public class MessageToClientUpdateTreaties implements Message<MessageToClientUpd
     @Override
     public void executeClientSide(NetworkEvent.Context context) {
         ClientManager.treaties = RecruitsTreatyManager.mapFromNbt(nbt);
+        ClientManager.markDiplomacyChanged();
     }
 
     @Override

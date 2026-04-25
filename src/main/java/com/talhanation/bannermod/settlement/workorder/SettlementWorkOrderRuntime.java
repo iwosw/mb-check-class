@@ -1,12 +1,17 @@
 package com.talhanation.bannermod.settlement.workorder;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
 import javax.annotation.Nullable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,11 +36,20 @@ public final class SettlementWorkOrderRuntime {
 
     /** Default claim expiry window (ticks) when callers pass 0. Roughly 40 seconds. */
     public static final long DEFAULT_CLAIM_EXPIRY_TICKS = 20L * 40L;
+    public static final int MAX_RECENT_COMPLETION_RECEIPTS = 128;
 
     private final Map<UUID, SettlementWorkOrder> ordersByUuid = new LinkedHashMap<>();
     private final Map<UUID, List<UUID>> byBuilding = new HashMap<>();
     private final Map<UUID, List<UUID>> byClaim = new HashMap<>();
     private final Map<UUID, UUID> orderByResident = new HashMap<>();
+    private final Deque<SettlementWorkOrderExecutionReceipt> recentCompletions = new ArrayDeque<>();
+    private Runnable dirtyListener = () -> {
+    };
+
+    public void setDirtyListener(Runnable dirtyListener) {
+        this.dirtyListener = dirtyListener == null ? () -> {
+        } : dirtyListener;
+    }
 
     /** Publish a new pending order. Rejects duplicates matching (building, type, targetPos). */
     public Optional<SettlementWorkOrder> publish(SettlementWorkOrder order) {
@@ -47,6 +61,7 @@ public final class SettlementWorkOrderRuntime {
             return Optional.empty();
         }
         insertInternal(order);
+        markDirty();
         return Optional.of(order);
     }
 
@@ -110,6 +125,7 @@ public final class SettlementWorkOrderRuntime {
         SettlementWorkOrder claimed = picked.withStatus(SettlementWorkOrderStatus.CLAIMED, residentUuid, expiry);
         replaceInternal(claimed);
         orderByResident.put(residentUuid, claimed.orderUuid());
+        markDirty();
         return Optional.of(claimed);
     }
 
@@ -156,6 +172,7 @@ public final class SettlementWorkOrderRuntime {
         SettlementWorkOrder claimed = picked.withStatus(SettlementWorkOrderStatus.CLAIMED, residentUuid, expiry);
         replaceInternal(claimed);
         orderByResident.put(residentUuid, claimed.orderUuid());
+        markDirty();
         return Optional.of(claimed);
     }
 
@@ -171,18 +188,26 @@ public final class SettlementWorkOrderRuntime {
         if (existing.claimedByResidentUuid() != null) {
             orderByResident.remove(existing.claimedByResidentUuid());
         }
+        markDirty();
         return Optional.of(released);
     }
 
     /** Mark an order as completed and remove it from the runtime. */
     public Optional<SettlementWorkOrder> complete(UUID orderUuid) {
+        return complete(orderUuid, 0L);
+    }
+
+    /** Mark an order as completed, record a bounded execution receipt, and remove it. */
+    public Optional<SettlementWorkOrder> complete(UUID orderUuid, long gameTime) {
         SettlementWorkOrder existing = ordersByUuid.get(orderUuid);
         if (existing == null) {
             return Optional.empty();
         }
         SettlementWorkOrder completed = existing.withStatus(
                 SettlementWorkOrderStatus.COMPLETED, existing.claimedByResidentUuid(), 0L);
+        recordCompletion(completed, gameTime);
         removeInternal(completed);
+        markDirty();
         return Optional.of(completed);
     }
 
@@ -195,6 +220,7 @@ public final class SettlementWorkOrderRuntime {
         SettlementWorkOrder cancelled = existing.withStatus(
                 SettlementWorkOrderStatus.CANCELLED, null, 0L);
         removeInternal(cancelled);
+        markDirty();
         return Optional.of(cancelled);
     }
 
@@ -217,25 +243,35 @@ public final class SettlementWorkOrderRuntime {
     /** Remove every order belonging to a settlement claim (e.g. claim disbanded). */
     public int purgeClaim(UUID claimUuid) {
         List<UUID> toRemove = new ArrayList<>(byClaim.getOrDefault(claimUuid, List.of()));
+        int removed = 0;
         for (UUID uuid : toRemove) {
             SettlementWorkOrder existing = ordersByUuid.get(uuid);
             if (existing != null) {
                 removeInternal(existing);
+                removed++;
             }
         }
-        return toRemove.size();
+        if (removed > 0) {
+            markDirty();
+        }
+        return removed;
     }
 
     /** Remove every order belonging to a specific building. */
     public int purgeBuilding(UUID buildingUuid) {
         List<UUID> toRemove = new ArrayList<>(byBuilding.getOrDefault(buildingUuid, List.of()));
+        int removed = 0;
         for (UUID uuid : toRemove) {
             SettlementWorkOrder existing = ordersByUuid.get(uuid);
             if (existing != null) {
                 removeInternal(existing);
+                removed++;
             }
         }
-        return toRemove.size();
+        if (removed > 0) {
+            markDirty();
+        }
+        return removed;
     }
 
     public Optional<SettlementWorkOrder> find(UUID orderUuid) {
@@ -274,6 +310,65 @@ public final class SettlementWorkOrderRuntime {
 
     public Collection<SettlementWorkOrder> all() {
         return Collections.unmodifiableCollection(ordersByUuid.values());
+    }
+
+    /** Stable defensive copy of every tracked order, suitable for diagnostics or future persistence. */
+    public List<SettlementWorkOrder> snapshot() {
+        return Collections.unmodifiableList(new ArrayList<>(ordersByUuid.values()));
+    }
+
+    /** Recent completed work, newest last. In-memory diagnostic/output seam only. */
+    public List<SettlementWorkOrderExecutionReceipt> recentCompletions() {
+        return Collections.unmodifiableList(new ArrayList<>(recentCompletions));
+    }
+
+    public CompoundTag toTag() {
+        CompoundTag tag = new CompoundTag();
+        ListTag orders = new ListTag();
+        for (SettlementWorkOrder order : snapshot()) {
+            orders.add(order.toTag());
+        }
+        tag.put("Orders", orders);
+        return tag;
+    }
+
+    public static SettlementWorkOrderRuntime fromTag(CompoundTag tag) {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        List<SettlementWorkOrder> orders = new ArrayList<>();
+        for (Tag entry : tag.getList("Orders", Tag.TAG_COMPOUND)) {
+            orders.add(SettlementWorkOrder.fromTag((CompoundTag) entry));
+        }
+        runtime.restoreSnapshot(orders);
+        return runtime;
+    }
+
+    /**
+     * Replaces runtime contents from canonical order records and rebuilds all secondary indexes.
+     *
+     * <p>This intentionally does not publish through duplicate checks: restore/rebuild callers need
+     * the saved or observed records to remain authoritative, including active CLAIMED orders.</p>
+     */
+    public void restoreSnapshot(Collection<SettlementWorkOrder> orders) {
+        List<SettlementWorkOrder> before = new ArrayList<>(ordersByUuid.values());
+        ordersByUuid.clear();
+        byBuilding.clear();
+        byClaim.clear();
+        orderByResident.clear();
+        recentCompletions.clear();
+        if (orders != null) {
+            for (SettlementWorkOrder order : orders) {
+                if (order == null) {
+                    continue;
+                }
+                insertInternal(order);
+                if (order.status() == SettlementWorkOrderStatus.CLAIMED && order.claimedByResidentUuid() != null) {
+                    orderByResident.put(order.claimedByResidentUuid(), order.orderUuid());
+                }
+            }
+        }
+        if (!before.equals(new ArrayList<>(ordersByUuid.values()))) {
+            markDirty();
+        }
     }
 
     public int size() {
@@ -343,5 +438,16 @@ public final class SettlementWorkOrderRuntime {
                 orderByResident.remove(order.claimedByResidentUuid());
             }
         }
+    }
+
+    private void recordCompletion(SettlementWorkOrder order, long gameTime) {
+        recentCompletions.addLast(SettlementWorkOrderExecutionReceipt.from(order, gameTime));
+        while (recentCompletions.size() > MAX_RECENT_COMPLETION_RECEIPTS) {
+            recentCompletions.removeFirst();
+        }
+    }
+
+    private void markDirty() {
+        dirtyListener.run();
     }
 }

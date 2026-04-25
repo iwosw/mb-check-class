@@ -15,7 +15,6 @@ import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -27,11 +26,15 @@ import java.util.EnumSet;
 import java.util.List;
 
 public class RecruitMeleeAttackGoal extends Goal {
+    private static final int REACH_LOS_PROBE_INTERVAL_TICKS = 2;
+
     protected final AbstractRecruitEntity recruit;
     private final double speedModifier;
-    private Path path;
     private int pathingCooldown;
     private final double range;
+    private int cachedReachLosTargetId = -1;
+    private int nextReachLosProbeTick = Integer.MIN_VALUE;
+    private boolean cachedReachLosResult;
 
     public RecruitMeleeAttackGoal(AbstractRecruitEntity recruit, double speedModifier, double range) {
         this.recruit = recruit;
@@ -51,14 +54,7 @@ public class RecruitMeleeAttackGoal extends Goal {
         boolean isClose = target.distanceToSqr(this.recruit) <= range * range;
         boolean canSee = hasReachLineOfSight(target);
         if (isClose && canSee && canAttackHoldPos() && recruit.getState() != 3 && !recruit.needsToGetFood() && !recruit.getShouldMount() && !recruit.getShouldMovePos()) {
-            double distance = this.recruit.distanceToSqr(target.getX(), target.getY(), target.getZ());
-            this.path = this.recruit.getNavigation().createPath(target, 0);
-            if (this.path != null) {
-                return true;
-            } else {
-                double reach = AttackUtil.getAttackReachSqr(recruit);
-                return (reach >= distance) && canAttackHoldPos();
-            }
+            return true;
         }
 
         return false;
@@ -87,7 +83,9 @@ public class RecruitMeleeAttackGoal extends Goal {
         this.recruit.setAggressive(true);
         this.pathingCooldown = 0;
 
-        this.recruit.switchMainHandItem(itemStack -> itemStack.getItem() instanceof SwordItem || itemStack.getItem() instanceof AxeItem);
+        this.recruit.switchMainHandItem(itemStack -> itemStack.getItem() instanceof SwordItem
+                || itemStack.getItem() instanceof AxeItem
+                || WeaponReach.effectiveReachFor(itemStack.getItem()) > 0.0D);
     }
 
     public void stop() {
@@ -121,10 +119,15 @@ public class RecruitMeleeAttackGoal extends Goal {
             boolean canSee = hasReachLineOfSight(target);
             boolean isNotFollowing = !recruit.isFollowing();
             boolean coolDownElapsed = this.pathingCooldown <= 0;
+            boolean holdFormation = shouldHoldFormationPosition();
 
             if (distanceToTarget <= reach && canSee) {
                 if (isNotFollowing) this.recruit.getNavigation().stop();
                 AttackUtil.performAttack(this.recruit, target);
+            } else if (holdFormation) {
+                // Hold-position formation order: engage only once target enters weapon
+                // reach, never chase beyond assigned slot.
+                this.recruit.getNavigation().stop();
             } else if (canSee && isNotFollowing && coolDownElapsed) {
                 this.pathingCooldown = 4 + this.recruit.getRandom().nextInt(4);
 
@@ -136,6 +139,12 @@ public class RecruitMeleeAttackGoal extends Goal {
                 this.recruit.getNavigation().moveTo(target, this.speedModifier);
             }
         }
+    }
+
+    private boolean shouldHoldFormationPosition() {
+        return recruit.isInFormation
+                && recruit.getShouldHoldPos()
+                && recruit.getFollowState() == 3;
     }
 
     private boolean canAttackHoldPos() {
@@ -187,10 +196,18 @@ public class RecruitMeleeAttackGoal extends Goal {
         if (extraReach < 1.0D) {
             return false;
         }
-        return FriendlyLineOfSight.canReachThroughAllies(
+        int targetId = target.getId();
+        int tick = this.recruit.tickCount;
+        if (targetId == this.cachedReachLosTargetId && tick < this.nextReachLosProbeTick) {
+            return this.cachedReachLosResult;
+        }
+        this.cachedReachLosTargetId = targetId;
+        this.nextReachLosProbeTick = tick + REACH_LOS_PROBE_INTERVAL_TICKS;
+        this.cachedReachLosResult = FriendlyLineOfSight.canReachThroughAllies(
                 () -> probeWorld(target),
                 this::isAllyEntity
         );
+        return this.cachedReachLosResult;
     }
 
     private FriendlyLineOfSight.SightProbe<Entity> probeWorld(LivingEntity target) {

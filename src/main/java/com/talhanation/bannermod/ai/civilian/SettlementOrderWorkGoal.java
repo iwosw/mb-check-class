@@ -1,15 +1,31 @@
 package com.talhanation.bannermod.ai.civilian;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
 import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrder;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.HoeItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.level.block.SaplingBlock;
+import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.common.PlantType;
 
 import java.util.EnumSet;
 import java.util.Optional;
@@ -18,10 +34,8 @@ import java.util.Optional;
  * Worker goal that consumes {@link SettlementWorkOrder} claims from the per-level
  * {@link SettlementWorkOrderRuntime} and executes them in-world.
  *
- * <p>Only a subset of order types are executed here — the ones whose action is simple and
- * broadly applicable across worker kinds (break a block, mine a block). Placement-style
- * orders (plant, build, replant) are left to the legacy profession goals for now; this goal
- * releases them back so the zone-driven path can pick them up.</p>
+ * <p>Only simple, broadly applicable block actions are executed here. Construction placement
+ * resolves its target state from the owning {@link BuildArea}; orders never guess a block-state.</p>
  *
  * <p>Priority: this goal is registered alongside the legacy {@code *WorkGoal} at priority 0.
  * Its {@link #canUse()} is only true while the runtime holds a claim for the worker, so it
@@ -117,7 +131,7 @@ public final class SettlementOrderWorkGoal extends Goal {
 
         BlockPos target = activeOrder.targetPos();
         if (target == null) {
-            runtime.complete(activeOrder.orderUuid());
+            completeActiveOrder(runtime, level);
             this.activeOrder = null;
             return;
         }
@@ -151,12 +165,12 @@ public final class SettlementOrderWorkGoal extends Goal {
         SettlementWorkOrderType type = activeOrder.type();
         switch (type) {
             case HARVEST_CROP,
-                 BREAK_BLOCK,
-                 MINE_BLOCK,
-                 FELL_TREE -> {
+                  BREAK_BLOCK,
+                  MINE_BLOCK,
+                  FELL_TREE -> {
                 BlockState state = level.getBlockState(target);
                 if (state.isAir() || AbstractWorkerEntity.isPosBroken(target, level, true)) {
-                    runtime.complete(activeOrder.orderUuid());
+                    completeActiveOrder(runtime, level);
                     this.activeOrder = null;
                     return;
                 }
@@ -166,6 +180,10 @@ public final class SettlementOrderWorkGoal extends Goal {
                 worker.mineBlock(target);
                 worker.swing(InteractionHand.MAIN_HAND);
             }
+            case TILL_SOIL -> executeTillSoil(level, target, runtime);
+            case PLANT_CROP -> executePlantCrop(level, target, runtime);
+            case REPLANT_TREE -> executeReplantTree(level, target, runtime);
+            case BUILD_BLOCK -> executeBuildBlock(level, target, runtime);
             default -> {
                 // Placement-style or specialist types are left to legacy profession goals.
                 runtime.release(activeOrder.orderUuid());
@@ -179,9 +197,152 @@ public final class SettlementOrderWorkGoal extends Goal {
             return false;
         }
         return switch (order.type()) {
-            case HARVEST_CROP, BREAK_BLOCK, MINE_BLOCK, FELL_TREE -> true;
+            case HARVEST_CROP, BREAK_BLOCK, MINE_BLOCK, FELL_TREE, TILL_SOIL, PLANT_CROP, REPLANT_TREE, BUILD_BLOCK -> true;
             default -> false;
         };
+    }
+
+    private void executeBuildBlock(ServerLevel level, BlockPos target, SettlementWorkOrderRuntime runtime) {
+        Entity buildingEntity = level.getEntity(activeOrder.buildingUuid());
+        if (!(buildingEntity instanceof BuildArea buildArea) || !buildArea.isAlive()) {
+            runtime.release(activeOrder.orderUuid());
+            this.activeOrder = null;
+            return;
+        }
+
+        BlockState buildingState = buildArea.getStateFromPos(target);
+        if (buildingState == null) {
+            completeActiveOrder(runtime, level);
+            this.activeOrder = null;
+            return;
+        }
+
+        BlockState levelState = level.getBlockState(target);
+        if (buildArea.statesMatch(levelState, buildingState)) {
+            buildArea.removeBuildBlockToPlace(target);
+            buildArea.removeMultiBlockToPlace(target);
+            completeActiveOrder(runtime, level);
+            this.activeOrder = null;
+            return;
+        }
+        if (!levelState.isAir() && !BuildArea.canDirectlyReplace(levelState, buildingState)) {
+            runtime.release(activeOrder.orderUuid());
+            this.activeOrder = null;
+            return;
+        }
+
+        BuildBlockParse blockParse = BuildBlockParse.parseBlock(buildingState.getBlock());
+        ItemStack buildingItem = worker.getMatchingItem(itemStack -> itemStack.is(blockParse.getItem()));
+        if (buildingItem == null) {
+            runtime.release(activeOrder.orderUuid());
+            this.activeOrder = null;
+            return;
+        }
+        if (!worker.getMainHandItem().is(buildingItem.getItem())) {
+            worker.switchMainHandItem(itemStack -> itemStack.is(buildingItem.getItem()));
+        }
+        if (blockParse.wasParsed() && buildingItem.getItem() instanceof BlockItem blockItem) {
+            buildingState = blockItem.getBlock().defaultBlockState();
+        }
+
+        BlockState secondaryState = buildArea.findPairedMultiBlockState(target);
+        BlockPos secondaryPos = buildArea.findPairedMultiBlockPos(target);
+        if (secondaryState != null && secondaryPos != null) {
+            level.setBlock(target, buildingState, Block.UPDATE_CLIENTS);
+            level.setBlock(secondaryPos, secondaryState, Block.UPDATE_ALL);
+            level.blockUpdated(target, buildingState.getBlock());
+            buildArea.removeMultiBlockToPlace(secondaryPos);
+        } else {
+            level.setBlockAndUpdate(target, buildingState);
+            buildArea.removeMultiBlockToPlace(target);
+        }
+
+        level.playSound(null, target.getX(), target.getY(), target.getZ(), buildingState.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        worker.swing(InteractionHand.MAIN_HAND);
+        buildingItem.shrink(1);
+        buildArea.removeBuildBlockToPlace(target);
+        completeActiveOrder(runtime, level);
+        this.activeOrder = null;
+    }
+
+    private void executeTillSoil(ServerLevel level, BlockPos target, SettlementWorkOrderRuntime runtime) {
+        BlockState state = level.getBlockState(target);
+        if (state.getBlock() instanceof FarmBlock) {
+            completeActiveOrder(runtime, level);
+            this.activeOrder = null;
+            return;
+        }
+        if (!(worker.getMainHandItem().getItem() instanceof HoeItem)) {
+            runtime.release(activeOrder.orderUuid());
+            this.activeOrder = null;
+            return;
+        }
+        level.setBlock(target, Blocks.FARMLAND.defaultBlockState(), 3);
+        level.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.HOE_TILL, SoundSource.BLOCKS, 1.0F, 1.0F);
+        worker.damageMainHandItem();
+        worker.swing(InteractionHand.MAIN_HAND);
+        completeActiveOrder(runtime, level);
+        this.activeOrder = null;
+    }
+
+    private void executePlantCrop(ServerLevel level, BlockPos target, SettlementWorkOrderRuntime runtime) {
+        BlockState state = level.getBlockState(target);
+        if (state.getBlock() instanceof CropBlock || state.getBlock() instanceof StemBlock) {
+            completeActiveOrder(runtime, level);
+            this.activeOrder = null;
+            return;
+        }
+        ItemStack seedStack = worker.getMatchingItem(this::isCropSeed);
+        if (seedStack == null) {
+            runtime.release(activeOrder.orderUuid());
+            this.activeOrder = null;
+            return;
+        }
+        if (seedStack.getItem() instanceof BlockItem blockItem) {
+            level.setBlockAndUpdate(target, blockItem.getBlock().defaultBlockState());
+        } else if (seedStack.getItem() instanceof IPlantable plantable && plantable.getPlantType(level, target) == PlantType.CROP) {
+            level.setBlock(target, plantable.getPlant(level, target), 3);
+        } else {
+            runtime.release(activeOrder.orderUuid());
+            this.activeOrder = null;
+            return;
+        }
+        level.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.CROP_PLANTED, SoundSource.BLOCKS, 1.0F, 1.0F);
+        seedStack.shrink(1);
+        worker.swing(InteractionHand.MAIN_HAND);
+        completeActiveOrder(runtime, level);
+        this.activeOrder = null;
+    }
+
+    private void executeReplantTree(ServerLevel level, BlockPos target, SettlementWorkOrderRuntime runtime) {
+        if (!level.getBlockState(target).isAir()) {
+            completeActiveOrder(runtime, level);
+            this.activeOrder = null;
+            return;
+        }
+        ItemStack saplingStack = worker.getMatchingItem(itemStack -> itemStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof SaplingBlock);
+        if (saplingStack == null || !(saplingStack.getItem() instanceof BlockItem blockItem)) {
+            runtime.release(activeOrder.orderUuid());
+            this.activeOrder = null;
+            return;
+        }
+        level.setBlockAndUpdate(target, blockItem.getBlock().defaultBlockState());
+        level.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.CROP_PLANTED, SoundSource.BLOCKS, 1.0F, 1.0F);
+        saplingStack.shrink(1);
+        worker.swing(InteractionHand.MAIN_HAND);
+        completeActiveOrder(runtime, level);
+        this.activeOrder = null;
+    }
+
+    private void completeActiveOrder(SettlementWorkOrderRuntime runtime, ServerLevel level) {
+        runtime.complete(activeOrder.orderUuid(), level.getGameTime());
+    }
+
+    private boolean isCropSeed(ItemStack itemStack) {
+        if (itemStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock().defaultBlockState().getBlock() instanceof CropBlock) {
+            return true;
+        }
+        return itemStack.getItem() instanceof IPlantable plantable && plantable.getPlantType(worker.getCommandSenderWorld(), worker.blockPosition()) == PlantType.CROP;
     }
 
     @Override

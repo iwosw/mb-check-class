@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.level.ChunkPos;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,21 +18,28 @@ import java.util.Set;
 public class ClaimRenderer {
 
     public static void renderClaimsOverlay(GuiGraphics guiGraphics, RecruitsClaim selectedClaim, double offsetX, double offsetZ, double scale) {
-        if (ClientManager.recruitsClaims.isEmpty()) return;
+        Minecraft minecraft = Minecraft.getInstance();
+        renderClaimsOverlay(guiGraphics, selectedClaim, offsetX, offsetZ, scale,
+                minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight());
+    }
 
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
+    public static void renderClaimsOverlay(GuiGraphics guiGraphics, RecruitsClaim selectedClaim, double offsetX, double offsetZ, double scale, int viewportWidth, int viewportHeight) {
+        if (ClientManager.recruitsClaims.isEmpty()) return;
+        List<RecruitsClaim> visibleClaims = getVisibleClaims(offsetX, offsetZ, scale, viewportWidth, viewportHeight);
+
+        for (RecruitsClaim claim : visibleClaims) {
             renderClaimFill(guiGraphics, claim, offsetX, offsetZ, scale);
         }
 
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
+        for (RecruitsClaim claim : visibleClaims) {
             renderClaimPassiveOutline(guiGraphics, claim, offsetX, offsetZ, scale);
         }
 
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
+        for (RecruitsClaim claim : visibleClaims) {
             renderClaimName(guiGraphics, claim, offsetX, offsetZ, scale);
         }
 
-        if (selectedClaim != null) {
+        if (selectedClaim != null && isClaimInViewport(selectedClaim, offsetX, offsetZ, scale, viewportWidth, viewportHeight)) {
             renderClaimSelectedOutline(guiGraphics, selectedClaim, offsetX, offsetZ, scale);
         }
     }
@@ -41,16 +49,54 @@ public class ClaimRenderer {
      * Outlines and selected outline are kept intact; only the fill becomes invisible.
      */
     public static void renderClaimsOverlayTransparent(GuiGraphics guiGraphics, RecruitsClaim selectedClaim, double offsetX, double offsetZ, double scale) {
+        Minecraft minecraft = Minecraft.getInstance();
+        renderClaimsOverlayTransparent(guiGraphics, selectedClaim, offsetX, offsetZ, scale,
+                minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight());
+    }
+
+    public static void renderClaimsOverlayTransparent(GuiGraphics guiGraphics, RecruitsClaim selectedClaim, double offsetX, double offsetZ, double scale, int viewportWidth, int viewportHeight) {
         if (ClientManager.recruitsClaims.isEmpty()) return;
+        List<RecruitsClaim> visibleClaims = getVisibleClaims(offsetX, offsetZ, scale, viewportWidth, viewportHeight);
 
         // Skip fill — only draw outlines and selection so the claim boundaries stay visible
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
+        for (RecruitsClaim claim : visibleClaims) {
             renderClaimPassiveOutline(guiGraphics, claim, offsetX, offsetZ, scale);
         }
 
-        if (selectedClaim != null) {
+        if (selectedClaim != null && isClaimInViewport(selectedClaim, offsetX, offsetZ, scale, viewportWidth, viewportHeight)) {
             renderClaimSelectedOutline(guiGraphics, selectedClaim, offsetX, offsetZ, scale);
         }
+    }
+
+    private static List<RecruitsClaim> getVisibleClaims(double offsetX, double offsetZ, double scale, int viewportWidth, int viewportHeight) {
+        List<RecruitsClaim> visibleClaims = new ArrayList<>();
+        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
+            if (isClaimInViewport(claim, offsetX, offsetZ, scale, viewportWidth, viewportHeight)) {
+                visibleClaims.add(claim);
+            }
+        }
+        return visibleClaims;
+    }
+
+    private static boolean isClaimInViewport(RecruitsClaim claim, double offsetX, double offsetZ, double scale, int viewportWidth, int viewportHeight) {
+        if (claim.getClaimedChunks().isEmpty()) return false;
+
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int minZ = Integer.MAX_VALUE;
+        int maxZ = Integer.MIN_VALUE;
+        for (ChunkPos pos : claim.getClaimedChunks()) {
+            minX = Math.min(minX, pos.x);
+            maxX = Math.max(maxX, pos.x);
+            minZ = Math.min(minZ, pos.z);
+            maxZ = Math.max(maxZ, pos.z);
+        }
+
+        int x1 = (int)Math.floor(offsetX + minX * 16.0 * scale);
+        int z1 = (int)Math.floor(offsetZ + minZ * 16.0 * scale);
+        int x2 = (int)Math.floor(offsetX + (maxX + 1) * 16.0 * scale);
+        int z2 = (int)Math.floor(offsetZ + (maxZ + 1) * 16.0 * scale);
+        return x2 >= 0 && z2 >= 0 && x1 <= viewportWidth && z1 <= viewportHeight;
     }
 
     private static final int FOG_FILL_COLOR    = 0x30303030;
@@ -248,13 +294,7 @@ public class ClaimRenderer {
         int chunkZ = (int)Math.floor(worldZ / 16);
         ChunkPos mouseChunk = new ChunkPos(chunkX, chunkZ);
 
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-            if (claim.containsChunk(mouseChunk)) {
-                return claim;
-            }
-        }
-
-        return null;
+        return ClientManager.getClaimAtChunk(mouseChunk);
     }
 
     public static void renderBufferZone(GuiGraphics guiGraphics, double offsetX, double offsetZ, double scale) {

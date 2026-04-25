@@ -25,6 +25,9 @@ public class FleeTNT extends Goal {
 
     @Override
     public void tick() {
+        if (cooldown-- > 0) return;
+        cooldown = 3 + entity.getRandom().nextInt(3);
+
         List<PrimedTnt> tntEntities = entity.getCommandSenderWorld().getEntitiesOfClass(
                 PrimedTnt.class,
                 entity.getBoundingBox().inflate(10D)

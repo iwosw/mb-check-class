@@ -10,6 +10,7 @@ import com.talhanation.bannermod.army.command.RecruitSelectionRegistry;
 import com.talhanation.bannermod.army.command.RecruitSelectionService;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.items.military.RecruitsSpawnEgg;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -24,9 +25,19 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 final class DebugManagerAdminCommands {
+    private static final String[] PROFILING_SUMMARY_PREFIXES = {
+            "pathfinding",
+            "recruit.index",
+            "worker.index",
+            "work_area.index",
+            "settlement.heartbeat",
+            "network"
+    };
+
     private DebugManagerAdminCommands() {
     }
 
@@ -44,6 +55,10 @@ final class DebugManagerAdminCommands {
                                                 context.getSource(),
                                                 StringArgumentType.getString(context, "Player"),
                                                 IntegerArgumentType.getInteger(context, "Count"))))))
+                .then(Commands.literal("profiling")
+                        .executes(context -> dumpProfilingCounters(context.getSource()))
+                        .then(Commands.literal("reset")
+                                .executes(context -> resetProfilingCounters(context.getSource()))))
                 .then(Commands.literal("select")
                         .then(Commands.literal("nearby")
                                 .executes(context -> selectNearby(context.getSource(), 32.0D))
@@ -53,6 +68,41 @@ final class DebugManagerAdminCommands {
                                 .executes(context -> clearSelection(context.getSource())))
                         .then(Commands.literal("list")
                                 .executes(context -> listSelection(context.getSource()))));
+    }
+
+    private static int dumpProfilingCounters(CommandSourceStack source) {
+        Map<String, Long> snapshot = RuntimeProfilingCounters.snapshot();
+        if (snapshot.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No runtime profiling counters recorded.").withStyle(ChatFormatting.GRAY), false);
+            return 1;
+        }
+        source.sendSuccess(() -> Component.literal("Runtime profiling counters:").withStyle(ChatFormatting.GOLD), false);
+        sendProfilingSummary(source, snapshot);
+        for (Map.Entry<String, Long> entry : snapshot.entrySet()) {
+            source.sendSuccess(() -> Component.literal(entry.getKey() + "=" + entry.getValue()).withStyle(ChatFormatting.AQUA), false);
+        }
+        return snapshot.size();
+    }
+
+    private static void sendProfilingSummary(CommandSourceStack source, Map<String, Long> snapshot) {
+        source.sendSuccess(() -> Component.literal("Summary by prefix:").withStyle(ChatFormatting.YELLOW), false);
+        for (String prefix : PROFILING_SUMMARY_PREFIXES) {
+            long total = 0L;
+            for (Map.Entry<String, Long> entry : snapshot.entrySet()) {
+                String key = entry.getKey();
+                if (key.equals(prefix) || key.startsWith(prefix + ".")) {
+                    total += entry.getValue();
+                }
+            }
+            long prefixTotal = total;
+            source.sendSuccess(() -> Component.literal(prefix + "=" + prefixTotal).withStyle(ChatFormatting.DARK_AQUA), false);
+        }
+    }
+
+    private static int resetProfilingCounters(CommandSourceStack source) {
+        int clearedCounters = RuntimeProfilingCounters.reset();
+        source.sendSuccess(() -> Component.literal("Runtime profiling counters reset; cleared " + clearedCounters + " counters.").withStyle(ChatFormatting.GRAY), false);
+        return 1;
     }
 
     private static int selectNearby(CommandSourceStack source, double radius) {

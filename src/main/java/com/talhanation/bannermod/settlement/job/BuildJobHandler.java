@@ -25,8 +25,7 @@ public final class BuildJobHandler implements JobHandler {
 
     public static final Set<SettlementWorkOrderType> SUPPORTED_TYPES = EnumSet.of(
             SettlementWorkOrderType.BREAK_BLOCK,
-            SettlementWorkOrderType.BUILD_BLOCK,
-            SettlementWorkOrderType.STOCK_MARKET
+            SettlementWorkOrderType.BUILD_BLOCK
     );
 
     @Override

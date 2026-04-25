@@ -12,6 +12,10 @@ public enum BannerModSettlementBuildingCategory {
         if (name == null || name.isBlank()) {
             return GENERAL;
         }
-        return BannerModSettlementBuildingCategory.valueOf(name);
+        try {
+            return BannerModSettlementBuildingCategory.valueOf(name);
+        } catch (IllegalArgumentException exception) {
+            return GENERAL;
+        }
     }
 }

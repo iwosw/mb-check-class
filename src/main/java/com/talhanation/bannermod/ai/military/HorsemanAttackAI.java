@@ -32,6 +32,7 @@ public class HorsemanAttackAI extends Goal {
     private int vecRotation = 0;
     private byte timeOut = 0;
     private BlockPos prevPos;
+    private int knockbackCooldown;
 
     public HorsemanAttackAI(HorsemanEntity recruit) {
         this.horseman = recruit;
@@ -139,6 +140,9 @@ public class HorsemanAttackAI extends Goal {
     }
 
     private void knockback() {
+        if (knockbackCooldown-- > 0) return;
+        knockbackCooldown = 4 + horseman.getRandom().nextInt(3);
+
         horseman.getCommandSenderWorld().getEntitiesOfClass(
                 LivingEntity.class,
                 horseman.getBoundingBox().inflate(8D),

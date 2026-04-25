@@ -4,9 +4,12 @@ import com.talhanation.bannermod.army.command.CommandIntent;
 import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
 import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -35,10 +38,22 @@ public class MessageStrategicFire implements Message<MessageStrategicFire> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> actors = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                serverPlayer.getBoundingBox().inflate(100)
+        AABB commandBox = serverPlayer.getBoundingBox().inflate(100);
+        List<AbstractRecruitEntity> actors = RecruitIndex.instance().groupInRange(
+                serverPlayer.getCommandSenderWorld(),
+                this.group,
+                serverPlayer.position(),
+                200.0D
         );
+        if (actors == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            actors = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    commandBox
+            );
+        } else {
+            actors.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
+        }
         if (actors.isEmpty()) {
             return;
         }

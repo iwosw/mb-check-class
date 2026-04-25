@@ -13,9 +13,13 @@ import java.util.EnumSet;
 import java.util.List;
 
 public class RecruitDefendVillageFromPlayerGoal extends TargetGoal {
+    private static final int SCAN_INTERVAL_TICKS = 10;
+    private static final int SCAN_INTERVAL_JITTER_TICKS = 10;
+
     private final AbstractRecruitEntity recruit;
     @Nullable
     private LivingEntity potentialTarget;
+    private long nextScanTick;
     private final TargetingConditions attackTargeting = TargetingConditions.forCombat().range(64.0D).ignoreLineOfSight();
 
     public RecruitDefendVillageFromPlayerGoal(AbstractRecruitEntity p_26029_) {
@@ -24,6 +28,14 @@ public class RecruitDefendVillageFromPlayerGoal extends TargetGoal {
         this.setFlags(EnumSet.of(Flag.TARGET));
     }
     public boolean canUse() {
+        long gameTime = this.recruit.getCommandSenderWorld().getGameTime();
+        if (gameTime < this.nextScanTick) {
+            return false;
+        }
+
+        this.nextScanTick = gameTime + SCAN_INTERVAL_TICKS + this.recruit.getRandom().nextInt(SCAN_INTERVAL_JITTER_TICKS + 1);
+        this.potentialTarget = null;
+
         AABB aabb = this.recruit.getBoundingBox().inflate(30.0D, 8.0D, 30.0D);
         List<Villager> list = this.recruit.getCommandSenderWorld().getEntitiesOfClass(Villager.class, aabb, (livingEntity) -> !this.attackTargeting.test(this.recruit, livingEntity));
 

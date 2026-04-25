@@ -9,11 +9,11 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.scores.Team;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -40,22 +40,15 @@ public class MessageAnswerTreaty implements Message<MessageAnswerTreaty> {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         ServerLevel level = (ServerLevel) player.getCommandSenderWorld();
 
-        List<MessengerEntity> list = level.getEntitiesOfClass(
-                MessengerEntity.class,
-                player.getBoundingBox().inflate(16D)
-        );
-
-        for (MessengerEntity messenger : list) {
-            if (messenger.getUUID().equals(this.recruit)) {
-                if (accepted) {
-                    handleTreatyAccepted(messenger, player, level);
-                }
-                messenger.treatyNotAccepted = !accepted;
-                messenger.teleportWaitTimer = 100;
-                player.sendSystemMessage(messenger.MESSENGER_INFO_ON_MY_WAY());
-                messenger.setMessengerState(MessengerEntity.MessengerState.TELEPORT_BACK);
-                break;
+        Entity entity = level.getEntity(this.recruit);
+        if (entity instanceof MessengerEntity messenger && messenger.distanceToSqr(player) <= 16D * 16D) {
+            if (accepted) {
+                handleTreatyAccepted(messenger, player, level);
             }
+            messenger.treatyNotAccepted = !accepted;
+            messenger.teleportWaitTimer = 100;
+            player.sendSystemMessage(messenger.MESSENGER_INFO_ON_MY_WAY());
+            messenger.setMessengerState(MessengerEntity.MessengerState.TELEPORT_BACK);
         }
     }
 

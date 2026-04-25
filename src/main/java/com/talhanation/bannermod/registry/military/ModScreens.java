@@ -6,7 +6,9 @@ import com.talhanation.bannermod.client.military.gui.faction.*;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.AssassinLeaderEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.inventory.military.*;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
@@ -23,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -242,32 +245,31 @@ public class ModScreens {
     @Nullable
     public static AbstractRecruitEntity getRecruitByUUID(Player player, UUID uuid) {
         double distance = 10D;
-        return player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    new AABB(
-                            player.getX() - distance,
-                            player.getY() - distance,
-                            player.getZ() - distance,
-                            player.getX() + distance,
-                            player.getY() + distance,
-                            player.getZ() + distance),
-                    entity -> entity.getUUID().equals(uuid)
-            ).stream().findAny().orElse(null);
+        AABB lookupBox = recruitLookupBox(player, distance);
+        List<AbstractRecruitEntity> indexed = RecruitIndex.instance().allInBox(player.getCommandSenderWorld(), lookupBox, false);
+        if (indexed != null) {
+            return indexed.stream().filter(entity -> entity.getUUID().equals(uuid)).findAny().orElse(null);
+        }
+        RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+        return player.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, lookupBox, entity -> entity.getUUID().equals(uuid))
+                .stream().findAny().orElse(null);
     }
 
     @Nullable
     public static AssassinLeaderEntity getAssassinByUUID(Player player, UUID uuid) {
         double distance = 10D;
-        return player.getCommandSenderWorld().getEntitiesOfClass(
-                    AssassinLeaderEntity.class,
-                    new AABB(
-                            player.getX() - distance,
-                            player.getY() - distance,
-                            player.getZ() - distance,
-                            player.getX() + distance,
-                            player.getY() + distance,
-                            player.getZ() + distance),
-                    entity -> entity.getUUID().equals(uuid)
-            ).stream().findAny().orElse(null);
+        AABB lookupBox = recruitLookupBox(player, distance);
+        return player.getCommandSenderWorld().getEntitiesOfClass(AssassinLeaderEntity.class, lookupBox, entity -> entity.getUUID().equals(uuid))
+                .stream().findAny().orElse(null);
+    }
+
+    private static AABB recruitLookupBox(Player player, double distance) {
+        return new AABB(
+                player.getX() - distance,
+                player.getY() - distance,
+                player.getZ() - distance,
+                player.getX() + distance,
+                player.getY() + distance,
+                player.getZ() + distance);
     }
 }

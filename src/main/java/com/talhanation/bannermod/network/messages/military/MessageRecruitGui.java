@@ -39,11 +39,12 @@ public class MessageRecruitGui implements Message<MessageRecruitGui> {
             return;
         }
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                v -> v.getUUID().equals(this.recruit) && v.isAlive()
-        ).forEach(recruit -> recruit.openGUI(player));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit
+                && recruit.isAlive()
+                && player.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+            recruit.openGUI(player);
+        }
     }
 
     @Override

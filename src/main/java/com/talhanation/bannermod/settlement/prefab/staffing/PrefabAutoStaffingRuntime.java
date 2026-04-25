@@ -3,6 +3,7 @@ package com.talhanation.bannermod.settlement.prefab.staffing;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
@@ -14,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.scores.PlayerTeam;
 
 import javax.annotation.Nullable;
@@ -123,9 +125,15 @@ public final class PrefabAutoStaffingRuntime {
 
     @Nullable
     private static AbstractWorkAreaEntity findEmbeddedWorkArea(ServerLevel level, BuildArea buildArea) {
-        List<AbstractWorkAreaEntity> candidates = level.getEntitiesOfClass(
-                AbstractWorkAreaEntity.class,
-                buildArea.getBoundingBox().inflate(4)
+        AABB queryBox = buildArea.getBoundingBox().inflate(4);
+        double queryRadius = Math.sqrt(queryBox.getXsize() * queryBox.getXsize()
+                + queryBox.getYsize() * queryBox.getYsize()
+                + queryBox.getZsize() * queryBox.getZsize()) / 2.0D;
+        List<AbstractWorkAreaEntity> candidates = WorkAreaIndex.instance().queryInRange(
+                level,
+                queryBox.getCenter(),
+                queryRadius,
+                AbstractWorkAreaEntity.class
         );
         AbstractWorkAreaEntity nearest = null;
         double nearestDistSq = Double.MAX_VALUE;

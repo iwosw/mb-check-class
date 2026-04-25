@@ -4,6 +4,8 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.ScoutEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -33,10 +35,13 @@ public class MessageScoutTask implements Message<MessageScoutTask> {
     }
 
     public static void dispatchToServer(Player player, UUID recruitId, int state) {
-        List<ScoutEntity> list = player.getCommandSenderWorld().getEntitiesOfClass(
-                ScoutEntity.class,
-                player.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
-        );
+        if (!(player.getCommandSenderWorld() instanceof ServerLevel level)) return;
+        Entity entity = level.getEntity(recruitId);
+        ScoutEntity targetScout = entity instanceof ScoutEntity scout
+                && scout.distanceToSqr(player) <= CommandTargeting.GROUP_COMMAND_RADIUS * CommandTargeting.GROUP_COMMAND_RADIUS
+                ? scout
+                : null;
+        List<ScoutEntity> list = targetScout == null ? List.of() : List.of(targetScout);
         CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
                 player.getUUID(),
                 recruitId,
@@ -58,12 +63,7 @@ public class MessageScoutTask implements Message<MessageScoutTask> {
             return;
         }
 
-        for (ScoutEntity scoutEntity : list) {
-            if (scoutEntity.getUUID().equals(recruitId)) {
-                scoutEntity.startTask(ScoutEntity.State.fromIndex(state));
-                return;
-            }
-        }
+        targetScout.startTask(ScoutEntity.State.fromIndex(state));
     }
 
     static ValidationResult validateSelection(CommandTargeting.SingleRecruitSelection selection, int state) {

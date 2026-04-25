@@ -3,6 +3,8 @@ package com.talhanation.bannermod.persistence.civilian;
 import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -59,7 +61,17 @@ public class StructureManager {
         }
 
         ListTag entityList = new ListTag();
-        List<AbstractWorkAreaEntity> workAreas = level.getEntitiesOfClass(AbstractWorkAreaEntity.class, buildArea.getArea());
+        net.minecraft.world.phys.AABB buildBox = buildArea.getArea();
+        double queryRadius = Math.sqrt(buildBox.getXsize() * buildBox.getXsize()
+                + buildBox.getYsize() * buildBox.getYsize()
+                + buildBox.getZsize() * buildBox.getZsize()) / 2.0D;
+        List<AbstractWorkAreaEntity> workAreas = WorkAreaIndex.instance().queryInRange(
+                level,
+                buildBox.getCenter(),
+                queryRadius,
+                AbstractWorkAreaEntity.class
+        );
+        RuntimeProfilingCounters.add("structure_scan.work_areas_seen", workAreas.size());
         for (AbstractWorkAreaEntity wa : workAreas) {
             ResourceLocation typeKey = ForgeRegistries.ENTITY_TYPES.getKey(wa.getType());
             if (typeKey == null || wa instanceof BuildArea) continue;

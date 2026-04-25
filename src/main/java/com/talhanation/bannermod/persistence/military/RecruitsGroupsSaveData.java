@@ -84,6 +84,7 @@ public class RecruitsGroupsSaveData extends SavedData {
 
     public void setAllGroups(List<RecruitsGroup> groups) {
         this.groups = groups;
+        this.setDirty();
     }
 
     public Map<UUID, UUID> getRedirects() {
@@ -95,12 +96,19 @@ public class RecruitsGroupsSaveData extends SavedData {
     }
 
     public void setRedirects(Map<UUID, UUID> map){
+        if (this.redirects.equals(map)) {
+            return;
+        }
         this.redirects = map;
+        this.setDirty();
     }
 
     public void setRecruitRedirects(Map<UUID, UUID> map){
+        if (this.recruitRedirects.equals(map)) {
+            return;
+        }
         this.recruitRedirects = map;
+        this.setDirty();
     }
 }
-
 

@@ -43,6 +43,10 @@ public class RecruitPlayerUnitSaveData extends SavedData {
     }
 
     public void setRecruitCount(UUID playerUUID, int count) {
+        Integer currentCount = recruitCountMap.get(playerUUID);
+        if (currentCount != null && currentCount == count) {
+            return;
+        }
         recruitCountMap.put(playerUUID, count);
         this.setDirty();
     }

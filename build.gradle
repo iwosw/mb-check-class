@@ -147,6 +147,10 @@ repositories {
     maven {
         url 'https://www.cursemaven.com'
     }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+    }
 }
 
 dependencies {
@@ -169,6 +173,9 @@ dependencies {
     implementation fg.deobf('curse.maven:ewewukeks-musket-mod-354562:5779561')
     implementation fg.deobf('curse.maven:worldedit-225608:4586218')
     implementation fg.deobf('curse.maven:small-ships-450659:5566900')
+    compileOnly fg.deobf('maven.modrinth:better-combat:1.9.0+1.20.1-forge')
+    runtimeOnly fg.deobf('maven.modrinth:better-combat:1.9.0+1.20.1-forge')
+    runtimeOnly fg.deobf('maven.modrinth:playeranimator:1.0.2-rc1+1.20-forge')
 
     implementation fg.deobf('curse.maven:lets-do-herbal-brews-951221:6458889')
     implementation fg.deobf('curse.maven:supplementaries-412082:6615104')
@@ -177,11 +184,8 @@ dependencies {
     implementation fg.deobf('curse.maven:farmers-delight-398521:6597298')
 }
 
-jar {
-    from("$buildDir/tmp/compileJava") {
-        include 'mixins.bannermod.refmap.json'
-    }
-}
+// Refmap is produced by the mixin annotation processor into the normal Java output; do not
+// also copy it from tmp/compileJava or Gradle 8 fails with duplicate archive entries.
 
 jar.finalizedBy('reobfJar')
 
@@ -193,9 +197,6 @@ shadowJar {
     project.configurations.shadow.setTransitive(true)
     configurations = [project.configurations.shadow]
     relocate 'de.maxhenkel.corelib', 'de.maxhenkel.bannermod.corelib'
-    from("$buildDir/tmp/compileJava") {
-        include 'mixins.bannermod.refmap.json'
-    }
 }
 
 reobf {

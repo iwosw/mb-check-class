@@ -14,6 +14,13 @@ public class DiplomacyTeamList extends ListScreenListBase<DiplomacyTeamEntry> {
     protected final List<DiplomacyTeamEntry> entries;
     protected String filter;
     public DiplomacyFilter diplomacyFilter;
+    private int lastFactionsVersion = -1;
+    private int lastDiplomacyVersion = -1;
+    private DiplomacyFilter lastEntryDiplomacyFilter = null;
+    private int entriesVersion = 0;
+    private int lastFilteredEntriesVersion = -1;
+    private String lastFilteredFilter = null;
+    private final List<DiplomacyTeamEntry> cachedFilteredEntries = new ArrayList<>();
 
     public DiplomacyTeamList(int width, int height, int x, int y, int size, DiplomacyTeamListScreen screen) {
         super(width, height, x, y, size);
@@ -28,13 +35,24 @@ public class DiplomacyTeamList extends ListScreenListBase<DiplomacyTeamEntry> {
     }
 
     public void tick() {
-        if (ClientManager.factions != null && ClientManager.diplomacyMap != null) {
+        if (ClientManager.factions != null && ClientManager.diplomacyMap != null
+                && (lastFactionsVersion != ClientManager.factionsVersion || lastDiplomacyVersion != ClientManager.diplomacyVersion)) {
             updateEntryList();
         }
     }
 
     public void updateEntryList() {
+        if (entriesVersion > 0 && lastFactionsVersion == ClientManager.factionsVersion && lastDiplomacyVersion == ClientManager.diplomacyVersion
+                && lastEntryDiplomacyFilter == diplomacyFilter) {
+            updateFilter();
+            return;
+        }
+
         entries.clear();
+        lastFactionsVersion = ClientManager.factionsVersion;
+        lastDiplomacyVersion = ClientManager.diplomacyVersion;
+        lastEntryDiplomacyFilter = diplomacyFilter;
+        entriesVersion++;
 
         for (RecruitsFaction team : ClientManager.factions) {
             if (ClientManager.ownFaction != null && !team.getStringID().equals(ClientManager.ownFaction.getStringID())) {
@@ -67,7 +85,11 @@ public class DiplomacyTeamList extends ListScreenListBase<DiplomacyTeamEntry> {
     }
 
     public void updateFilter() {
-        clearEntries();
+        if (lastFilteredEntriesVersion == entriesVersion && filter.equals(lastFilteredFilter)) {
+            replaceEntries(cachedFilteredEntries);
+            return;
+        }
+
         List<DiplomacyTeamEntry> filteredEntries = new ArrayList<>(entries);
         if (!filter.isEmpty()) {
             filteredEntries.removeIf(teamEntry -> {
@@ -86,7 +108,11 @@ public class DiplomacyTeamList extends ListScreenListBase<DiplomacyTeamEntry> {
             return volumeEntryToString(e1).compareToIgnoreCase(volumeEntryToString(e2));
         });
 
-        replaceEntries(filteredEntries);
+        cachedFilteredEntries.clear();
+        cachedFilteredEntries.addAll(filteredEntries);
+        lastFilteredEntriesVersion = entriesVersion;
+        lastFilteredFilter = filter;
+        replaceEntries(cachedFilteredEntries);
     }
 
     private String volumeEntryToString(DiplomacyTeamEntry entry) {
@@ -94,6 +120,7 @@ public class DiplomacyTeamList extends ListScreenListBase<DiplomacyTeamEntry> {
     }
 
     public void setFilter(String filter) {
+        if (this.filter.equals(filter)) return;
         this.filter = filter;
         updateFilter();
     }

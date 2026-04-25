@@ -43,6 +43,10 @@ final class RecruitStateAccess {
     private static final EntityDataAccessor<Boolean> SHOULD_REST = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SHOULD_RANGED = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> COMBAT_STANCE = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> BETTER_COMBAT_ATTACK_TICKS = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> BETTER_COMBAT_ATTACK_DURATION = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> BETTER_COMBAT_ATTACK_UPSWING = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> BETTER_COMBAT_ATTACK_SHAPE = SynchedEntityData.defineId(AbstractRecruitEntity.class, EntityDataSerializers.INT);
 
     private RecruitStateAccess() {
     }
@@ -84,6 +88,10 @@ final class RecruitStateAccess {
         recruit.defineStateData(SHOULD_REST, false);
         recruit.defineStateData(SHOULD_RANGED, true);
         recruit.defineStateData(COMBAT_STANCE, CombatStance.LOOSE.ordinal());
+        recruit.defineStateData(BETTER_COMBAT_ATTACK_TICKS, 0);
+        recruit.defineStateData(BETTER_COMBAT_ATTACK_DURATION, 0);
+        recruit.defineStateData(BETTER_COMBAT_ATTACK_UPSWING, 0);
+        recruit.defineStateData(BETTER_COMBAT_ATTACK_SHAPE, 0);
     }
 
     static int getVariant(AbstractRecruitEntity recruit) { return recruit.getStateData(VARIANT); }
@@ -148,6 +156,16 @@ final class RecruitStateAccess {
     }
     static void setCombatStance(AbstractRecruitEntity recruit, CombatStance stance) {
         recruit.setStateData(COMBAT_STANCE, (stance == null ? CombatStance.LOOSE : stance).ordinal());
+    }
+    static int getBetterCombatAttackTicks(AbstractRecruitEntity recruit) { return recruit.getStateData(BETTER_COMBAT_ATTACK_TICKS); }
+    static int getBetterCombatAttackDuration(AbstractRecruitEntity recruit) { return recruit.getStateData(BETTER_COMBAT_ATTACK_DURATION); }
+    static int getBetterCombatAttackUpswing(AbstractRecruitEntity recruit) { return recruit.getStateData(BETTER_COMBAT_ATTACK_UPSWING); }
+    static int getBetterCombatAttackShape(AbstractRecruitEntity recruit) { return recruit.getStateData(BETTER_COMBAT_ATTACK_SHAPE); }
+    static void setBetterCombatAttackPresentation(AbstractRecruitEntity recruit, int ticks, int duration, int upswing, int shape) {
+        recruit.setStateData(BETTER_COMBAT_ATTACK_TICKS, Math.max(0, ticks));
+        recruit.setStateData(BETTER_COMBAT_ATTACK_DURATION, Math.max(0, duration));
+        recruit.setStateData(BETTER_COMBAT_ATTACK_UPSWING, Math.max(0, upswing));
+        recruit.setStateData(BETTER_COMBAT_ATTACK_SHAPE, Math.max(0, shape));
     }
     static int getState(AbstractRecruitEntity recruit) { return recruit.getStateData(STATE); }
     static Optional<UUID> getGroupUUID(AbstractRecruitEntity recruit) { return recruit.getStateData(GROUP); }

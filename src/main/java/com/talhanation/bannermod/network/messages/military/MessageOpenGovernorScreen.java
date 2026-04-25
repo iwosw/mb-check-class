@@ -5,6 +5,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -31,17 +32,16 @@ public class MessageOpenGovernorScreen implements Message<MessageOpenGovernorScr
     @Override
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                recruitEntity -> recruitEntity.getUUID().equals(this.recruit) && recruitEntity.isAlive()
-        ).forEach(recruitEntity -> {
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruitEntity
+                && recruitEntity.isAlive()
+                && player.getBoundingBox().inflate(16.0D).intersects(recruitEntity.getBoundingBox())) {
             if (this.openMenu) {
                 RecruitEvents.openGovernorScreen(player, recruitEntity);
             } else {
                 RecruitEvents.syncGovernorScreen(player, recruitEntity);
             }
-        });
+        }
     }
 
     @Override

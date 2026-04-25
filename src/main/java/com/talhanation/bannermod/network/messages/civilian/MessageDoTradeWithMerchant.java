@@ -4,6 +4,7 @@ import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -28,13 +29,12 @@ public class MessageDoTradeWithMerchant implements Message<MessageDoTradeWithMer
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
-        player.getCommandSenderWorld().getEntitiesOfClass(MerchantEntity.class, player.getBoundingBox()
-                        .inflate(32.0D), v -> v
-                        .getUUID()
-                        .equals(this.merchantUuid))
-                .stream()
-                .findAny()
-                .ifPresent(merchant -> merchant.doTrade(trade, player));
+        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+        if (entity instanceof MerchantEntity merchant
+                && merchant.isAlive()
+                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+            merchant.doTrade(trade, player);
+        }
 
     }
 

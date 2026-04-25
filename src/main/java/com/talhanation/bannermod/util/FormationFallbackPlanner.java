@@ -18,6 +18,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class FormationFallbackPlanner {
+    private static final double OCCUPIED_DISTANCE_SQR = 0.75D;
+
     private FormationFallbackPlanner() {
     }
 
@@ -123,6 +125,7 @@ public final class FormationFallbackPlanner {
             return false;
         }
 
+        Map<CellKey, List<AbstractRecruitEntity>> occupantsByCell = occupantsByCell(cohort, blockedRecruit);
         List<FormationFallbackSlot> slots = new ArrayList<>();
         for (AbstractRecruitEntity recruit : cohort) {
             if (recruit.getHoldPos() == null || recruit.formationPos < 0) {
@@ -131,7 +134,7 @@ public final class FormationFallbackPlanner {
             slots.add(new FormationFallbackSlot(
                     recruit.formationPos,
                     recruit.getHoldPos(),
-                    isFormationSlotOccupied(recruit.getHoldPos(), cohort, blockedRecruit)
+                    isFormationSlotOccupied(recruit.getHoldPos(), occupantsByCell)
             ));
         }
 
@@ -198,13 +201,31 @@ public final class FormationFallbackPlanner {
         return Objects.equals(groupId, candidateGroupId);
     }
 
-    private static boolean isFormationSlotOccupied(Vec3 slotPos, List<AbstractRecruitEntity> cohort, AbstractRecruitEntity blockedRecruit) {
+    private static Map<CellKey, List<AbstractRecruitEntity>> occupantsByCell(List<AbstractRecruitEntity> cohort, AbstractRecruitEntity blockedRecruit) {
+        Map<CellKey, List<AbstractRecruitEntity>> occupantsByCell = new java.util.HashMap<>();
         for (AbstractRecruitEntity recruit : cohort) {
-            if (recruit == blockedRecruit) {
-                continue;
+            if (recruit != blockedRecruit) {
+                occupantsByCell.computeIfAbsent(CellKey.of(recruit.position()), ignored -> new ArrayList<>()).add(recruit);
             }
-            if (recruit.distanceToSqr(slotPos) <= 0.75D) {
-                return true;
+        }
+        return occupantsByCell;
+    }
+
+    private static boolean isFormationSlotOccupied(Vec3 slotPos, Map<CellKey, List<AbstractRecruitEntity>> occupantsByCell) {
+        CellKey slotCell = CellKey.of(slotPos);
+        for (int x = slotCell.x() - CellKey.SEARCH_RADIUS_CELLS; x <= slotCell.x() + CellKey.SEARCH_RADIUS_CELLS; x++) {
+            for (int y = slotCell.y() - CellKey.SEARCH_RADIUS_CELLS; y <= slotCell.y() + CellKey.SEARCH_RADIUS_CELLS; y++) {
+                for (int z = slotCell.z() - CellKey.SEARCH_RADIUS_CELLS; z <= slotCell.z() + CellKey.SEARCH_RADIUS_CELLS; z++) {
+                    List<AbstractRecruitEntity> occupants = occupantsByCell.get(new CellKey(x, y, z));
+                    if (occupants == null) {
+                        continue;
+                    }
+                    for (AbstractRecruitEntity recruit : occupants) {
+                        if (recruit.distanceToSqr(slotPos) <= OCCUPIED_DISTANCE_SQR) {
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;
@@ -220,6 +241,19 @@ public final class FormationFallbackPlanner {
     }
 
     private record FormationFallbackSlot(int slotIndex, Vec3 position, boolean occupied) {
+    }
+
+    private record CellKey(int x, int y, int z) {
+        private static final double CELL_SIZE = 0.75D;
+        private static final int SEARCH_RADIUS_CELLS = 2;
+
+        static CellKey of(Vec3 position) {
+            return new CellKey(
+                    (int) Math.floor(position.x / CELL_SIZE),
+                    (int) Math.floor(position.y / CELL_SIZE),
+                    (int) Math.floor(position.z / CELL_SIZE)
+            );
+        }
     }
 
     private record FormationFallbackDecision(int fromSlotIndex, int toSlotIndex) {

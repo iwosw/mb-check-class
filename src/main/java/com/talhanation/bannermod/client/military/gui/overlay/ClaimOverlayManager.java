@@ -5,6 +5,7 @@ import com.talhanation.bannermod.client.military.api.ClientClaimEvent;
 import com.talhanation.bannermod.client.military.api.ClientOverlayEvent;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
@@ -21,6 +22,7 @@ public class ClaimOverlayManager {
     private long claimEntryTime = 0;
     private int tickCounter = 0;
     private ChunkPos lastPlayerChunk = null;
+    private int lastClaimsVersion = -1;
     private String lastKnownClaimName = "";
     private String lastKnownFactionName = "";
     private int lastKnownHealth = -1;
@@ -105,27 +107,19 @@ public class ClaimOverlayManager {
     private void updateCurrentClaim(BlockPos playerPos) {
         ChunkPos currentChunk = new ChunkPos(playerPos);
 
-        if (currentChunk.equals(lastPlayerChunk)) {
-            ClientManager.currentClaim = null;
-            for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-                if (claim.containsChunk(currentChunk)) {
-                    ClientManager.currentClaim = claim;
-                    break;
-                }
-            }
+        if (currentChunk.equals(lastPlayerChunk) && lastClaimsVersion == ClientManager.recruitsClaimsVersion) {
             return;
         }
 
         lastPlayerChunk = currentChunk;
+        lastClaimsVersion = ClientManager.recruitsClaimsVersion;
         RecruitsClaim previousClaim = ClientManager.currentClaim;
 
-        ClientManager.currentClaim = null;
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-            if (claim.containsChunk(currentChunk)) {
-                ClientManager.currentClaim = claim;
-                break;
-            }
+        if (ClientManager.recruitsClaimsByChunk.isEmpty()) {
+            RuntimeProfilingCounters.increment("claim_overlay.claim_scans");
+            RuntimeProfilingCounters.add("claim_overlay.claims_seen", ClientManager.recruitsClaims.size());
         }
+        ClientManager.currentClaim = ClientManager.getClaimAtChunk(currentChunk);
 
         handleClaimTransition(previousClaim, ClientManager.currentClaim);
     }
@@ -271,10 +265,12 @@ public class ClaimOverlayManager {
 
     private void reset() {
         ClientManager.recruitsClaims.clear();
+        ClientManager.markClaimsChanged();
         ClientManager.activeSiegeClaims.clear();
         ClientManager.currentClaim = null;
         currentState = OverlayState.HIDDEN;
         lastPlayerChunk = null;
+        lastClaimsVersion = -1;
         tickCounter = 0;
         updateCachedData(null);
         renderer.clearCache();

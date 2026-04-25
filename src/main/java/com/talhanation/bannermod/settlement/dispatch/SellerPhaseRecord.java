@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.settlement.dispatch;
 
+import net.minecraft.nbt.CompoundTag;
+
 import java.util.UUID;
 
 /**
@@ -55,5 +57,33 @@ public record SellerPhaseRecord(
                 gameTime,
                 0
         );
+    }
+
+    public CompoundTag toTag() {
+        CompoundTag tag = new CompoundTag();
+        tag.putUUID("SellerResidentUuid", this.sellerResidentUuid);
+        tag.putUUID("MarketRecordUuid", this.marketRecordUuid);
+        tag.putString("Phase", this.phase.name());
+        tag.putLong("PhaseStartGameTime", this.phaseStartGameTime);
+        tag.putInt("PhaseTickCount", this.phaseTickCount);
+        return tag;
+    }
+
+    public static SellerPhaseRecord fromTag(CompoundTag tag) {
+        return new SellerPhaseRecord(
+                tag.getUUID("SellerResidentUuid"),
+                tag.getUUID("MarketRecordUuid"),
+                phaseFromTagName(tag.getString("Phase")),
+                tag.getLong("PhaseStartGameTime"),
+                tag.getInt("PhaseTickCount")
+        );
+    }
+
+    private static SellerPhase phaseFromTagName(String name) {
+        try {
+            return SellerPhase.valueOf(name);
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            return SellerPhase.READY;
+        }
     }
 }

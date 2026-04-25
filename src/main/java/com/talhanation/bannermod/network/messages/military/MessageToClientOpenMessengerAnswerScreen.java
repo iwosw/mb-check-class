@@ -7,19 +7,16 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.UUID;
-
 public class MessageToClientOpenMessengerAnswerScreen implements Message<MessageToClientOpenMessengerAnswerScreen> {
 
     public String message;
     public CompoundTag nbt;
-    public UUID recruitUUID;
+    public int entityId;
 
     public MessageToClientOpenMessengerAnswerScreen() {
     }
@@ -27,7 +24,7 @@ public class MessageToClientOpenMessengerAnswerScreen implements Message<Message
     public MessageToClientOpenMessengerAnswerScreen(MessengerEntity messenger, String message, RecruitsPlayerInfo playerInfo) {
         this.message = message;
         this.nbt = playerInfo.toNBT();
-        this.recruitUUID = messenger.getUUID();
+        this.entityId = messenger.getId();
     }
 
     @Override
@@ -39,21 +36,19 @@ public class MessageToClientOpenMessengerAnswerScreen implements Message<Message
     @OnlyIn(Dist.CLIENT)
     public void executeClientSide(NetworkEvent.Context context) {
         Player player = Minecraft.getInstance().player;
-        player.getCommandSenderWorld().getEntitiesOfClass(MessengerEntity.class, player.getBoundingBox()
-                        .inflate(16.0D), v -> v
-                        .getUUID()
-                        .equals(this.recruitUUID))
-                .stream()
-                .filter(Entity::isAlive)
-                .findAny()
-                .ifPresent(recruit -> Minecraft.getInstance().setScreen(new MessengerAnswerScreen(recruit, player, message, RecruitsPlayerInfo.getFromNBT(nbt))));
+        if (player != null
+                && player.level().getEntity(this.entityId) instanceof MessengerEntity messenger
+                && messenger.isAlive()
+                && player.getBoundingBox().inflate(16.0D).intersects(messenger.getBoundingBox())) {
+            Minecraft.getInstance().setScreen(new MessengerAnswerScreen(messenger, player, message, RecruitsPlayerInfo.getFromNBT(nbt)));
+        }
     }
 
     @Override
     public MessageToClientOpenMessengerAnswerScreen fromBytes(FriendlyByteBuf buf) {
         this.message = buf.readUtf();
         this.nbt = buf.readNbt();
-        this.recruitUUID = buf.readUUID();
+        this.entityId = buf.readInt();
         return this;
     }
 
@@ -61,6 +56,6 @@ public class MessageToClientOpenMessengerAnswerScreen implements Message<Message
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeUtf(message);
         buf.writeNbt(nbt);
-        buf.writeUUID(recruitUUID);
+        buf.writeInt(entityId);
     }
 }

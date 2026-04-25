@@ -2,6 +2,7 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -39,7 +40,9 @@ public class MessageToClientUpdateFactions implements Message<MessageToClientUpd
 
     @Override
     public void executeClientSide(NetworkEvent.Context context) {
+        RuntimeProfilingCounters.recordNbtPacket("network.full_sync.factions", nbt);
         ClientManager.factions = RecruitsFaction.getListFromNBT(nbt);
+        ClientManager.markFactionsChanged();
         ClientManager.isFactionEditingAllowed = editing;
         ClientManager.isFactionManagingAllowed = managing;
         ClientManager.currency = currency;

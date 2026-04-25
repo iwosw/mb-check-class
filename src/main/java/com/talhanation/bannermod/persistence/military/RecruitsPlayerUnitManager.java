@@ -47,6 +47,8 @@ public class RecruitsPlayerUnitManager {
     }
 
     void setRecruitCount(UUID playerUUID, int count, RecruitPlayerUnitSaveData data) {
+        if (getRecruitCount(playerUUID) == count) return;
+
         recruitCountMap.put(playerUUID, count);
         if (data != null) {
             data.setRecruitCount(playerUUID, count);

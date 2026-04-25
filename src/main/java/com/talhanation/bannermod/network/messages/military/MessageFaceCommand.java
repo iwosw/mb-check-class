@@ -4,9 +4,12 @@ import com.talhanation.bannermod.army.command.CommandIntent;
 import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
 import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -37,8 +40,20 @@ public class MessageFaceCommand implements Message<MessageFaceCommand> {
 
     public void executeServerSide(NetworkEvent.Context context){
         ServerPlayer sender = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> list = sender.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class, sender.getBoundingBox().inflate(100));
+        AABB commandBox = sender.getBoundingBox().inflate(100);
+        List<AbstractRecruitEntity> list = RecruitIndex.instance().groupInRange(
+                sender.getCommandSenderWorld(),
+                this.group,
+                sender.position(),
+                200.0D
+        );
+        if (list == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            list = sender.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class, commandBox);
+        } else {
+            list.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
+        }
         list.removeIf(recruit -> !recruit.isEffectedByCommand(this.player_uuid, this.group));
 
         long gameTime = sender.getCommandSenderWorld().getGameTime();

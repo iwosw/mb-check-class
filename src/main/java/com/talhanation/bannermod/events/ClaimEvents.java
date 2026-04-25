@@ -3,12 +3,15 @@ package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.army.command.CommandIntentQueueRuntime;
 import com.talhanation.bannermod.governance.BannerModGovernorHeartbeat;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
+import com.talhanation.bannermod.governance.BannerModTreasuryManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
 import com.talhanation.bannermod.settlement.BannerModSettlementService;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.ClaimUtil;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.persistence.military.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -47,7 +50,25 @@ public class ClaimEvents {
 
     private static final int GOVERNOR_TICK_INTERVAL = 200;
 
+    private static final int GOVERNOR_HEARTBEAT_BATCH_SIZE = 4;
+
+    private static final int SETTLEMENT_REFRESH_BATCH_SIZE = 4;
+
+    private static final int SETTLEMENT_ORCHESTRATOR_BATCH_SIZE = 4;
+
+    private static final int GOVERNOR_STAGE_IDLE = 0;
+
+    private static final int GOVERNOR_STAGE_HEARTBEAT = 1;
+
+    private static final int GOVERNOR_STAGE_REFRESH = 2;
+
+    private static final int GOVERNOR_STAGE_ORCHESTRATOR = 3;
+
     public static int governorCounter;
+
+    private static int governorMaintenanceStage;
+
+    private static int governorMaintenanceCursor;
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
@@ -56,6 +77,9 @@ public class ClaimEvents {
 
         recruitsClaimManager = new RecruitsClaimManager();
         recruitsClaimManager.load(level);
+        governorCounter = 0;
+        governorMaintenanceStage = GOVERNOR_STAGE_IDLE;
+        governorMaintenanceCursor = 0;
     }
 
     @SubscribeEvent
@@ -103,17 +127,80 @@ public class ClaimEvents {
             siegeRuntime().tickDetection(level);
         }
 
-        if(governorCounter >= GOVERNOR_TICK_INTERVAL){
+        if(governorMaintenanceStage == GOVERNOR_STAGE_IDLE && governorCounter >= GOVERNOR_TICK_INTERVAL){
             governorCounter = 0;
-            BannerModGovernorHeartbeat.runGovernedClaimHeartbeat(level, recruitsClaimManager, BannerModGovernorManager.get(level));
-            BannerModSettlementService.refreshAllClaims(
+            governorMaintenanceStage = GOVERNOR_STAGE_HEARTBEAT;
+            governorMaintenanceCursor = 0;
+        }
+
+        if(governorMaintenanceStage != GOVERNOR_STAGE_IDLE){
+            tickGovernorMaintenance(level);
+        }
+    }
+
+    private void tickGovernorMaintenance(ServerLevel level) {
+        BannerModGovernorManager governorManager = BannerModGovernorManager.get(level);
+        BannerModSettlementManager settlementManager = BannerModSettlementManager.get(level);
+
+        if (governorMaintenanceStage == GOVERNOR_STAGE_HEARTBEAT) {
+            long startNanos = System.nanoTime();
+            BannerModGovernorHeartbeat.BatchResult result = BannerModGovernorHeartbeat.runGovernedClaimHeartbeatBatch(
                     level,
                     recruitsClaimManager,
-                    BannerModSettlementManager.get(level),
-                    BannerModGovernorManager.get(level)
+                    governorManager,
+                    BannerModTreasuryManager.get(level),
+                    governorMaintenanceCursor,
+                    GOVERNOR_HEARTBEAT_BATCH_SIZE
             );
-            BannerModSettlementOrchestrator.tick(level, BannerModSettlementManager.get(level), BannerModGovernorManager.get(level));
+            recordGovernorMaintenanceBatch("claim_events.settlement_heartbeat.governor_batch", result, startNanos);
+            advanceGovernorMaintenance(result.nextIndex(), result.completed(), GOVERNOR_STAGE_REFRESH);
+            return;
         }
+
+        if (governorMaintenanceStage == GOVERNOR_STAGE_REFRESH) {
+            long startNanos = System.nanoTime();
+            BannerModSettlementService.BatchResult result = BannerModSettlementService.refreshClaimsBatch(
+                    level,
+                    recruitsClaimManager,
+                    settlementManager,
+                    governorManager,
+                    governorMaintenanceCursor,
+                    SETTLEMENT_REFRESH_BATCH_SIZE
+            );
+            recordGovernorMaintenanceBatch("claim_events.settlement_heartbeat.refresh_batch", result.startIndex(), result.nextIndex(), result.totalItems(), result.completed(), startNanos);
+            advanceGovernorMaintenance(result.nextIndex(), result.completed(), GOVERNOR_STAGE_ORCHESTRATOR);
+            return;
+        }
+
+        if (governorMaintenanceStage == GOVERNOR_STAGE_ORCHESTRATOR) {
+            long startNanos = System.nanoTime();
+            BannerModSettlementOrchestrator.BatchResult result = BannerModSettlementOrchestrator.tickBatch(
+                    level,
+                    settlementManager,
+                    governorManager,
+                    governorMaintenanceCursor,
+                    SETTLEMENT_ORCHESTRATOR_BATCH_SIZE
+            );
+            recordGovernorMaintenanceBatch("claim_events.settlement_heartbeat.orchestrator_batch", result.startIndex(), result.nextIndex(), result.totalItems(), result.completed(), startNanos);
+            advanceGovernorMaintenance(result.nextIndex(), result.completed(), GOVERNOR_STAGE_IDLE);
+        }
+    }
+
+    private static void recordGovernorMaintenanceBatch(String keyPrefix, BannerModGovernorHeartbeat.BatchResult result, long startNanos) {
+        recordGovernorMaintenanceBatch(keyPrefix, result.startIndex(), result.nextIndex(), result.totalItems(), result.completed(), startNanos);
+    }
+
+    private static void recordGovernorMaintenanceBatch(String keyPrefix, int startIndex, int nextIndex, int totalItems, boolean completed, long startNanos) {
+        RuntimeProfilingCounters.recordBatch(keyPrefix, Math.max(0, nextIndex - startIndex), totalItems, System.nanoTime() - startNanos, completed);
+    }
+
+    private static void advanceGovernorMaintenance(int nextIndex, boolean complete, int nextStage) {
+        if (complete) {
+            governorMaintenanceStage = nextStage;
+            governorMaintenanceCursor = 0;
+            return;
+        }
+        governorMaintenanceCursor = nextIndex;
     }
 
 
@@ -122,8 +209,12 @@ public class ClaimEvents {
     }
 
     public static List<AbstractRecruitEntity> getRecruitsOfTeamInRange(Level level, Player attackingPlayer, double radius, String teamId) {
-
-        return level.getEntitiesOfClass(AbstractRecruitEntity.class, attackingPlayer.getBoundingBox().inflate(radius)).stream()
+        List<AbstractRecruitEntity> recruits = RecruitIndex.instance().allInBox(level, attackingPlayer.getBoundingBox().inflate(radius), true);
+        if (recruits == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            recruits = level.getEntitiesOfClass(AbstractRecruitEntity.class, attackingPlayer.getBoundingBox().inflate(radius));
+        }
+        return recruits.stream()
                 .filter(recruit -> recruit.isAlive() && recruit.getTeam() != null && teamId.equals(recruit.getTeam().getName()))
                 .toList();
     }

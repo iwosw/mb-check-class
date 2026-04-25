@@ -24,6 +24,9 @@ import java.util.*;
 
 public class AnimalFarmerWorkGoal extends Goal {
 
+    private static final int AREA_SEARCH_COOLDOWN_TICKS = 20;
+    private static final int PATH_REQUEST_COOLDOWN_TICKS = 20;
+
     public AnimalFarmerEntity animalFarmerEntity;
     public State state;
     public boolean errorMessageDone;
@@ -35,6 +38,10 @@ public class AnimalFarmerWorkGoal extends Goal {
     public List<NeededItem> neededItems = new ArrayList<>();
     public int time;
     public boolean isHolding;
+    private int lastAreaSearchTick = -AREA_SEARCH_COOLDOWN_TICKS;
+    private int lastPathRequestTick = -PATH_REQUEST_COOLDOWN_TICKS;
+    @Nullable
+    private Vec3 lastPathRequestPos;
 
     public AnimalFarmerWorkGoal(AnimalFarmerEntity animalFarmerEntity) {
         this.animalFarmerEntity = animalFarmerEntity;
@@ -83,6 +90,9 @@ public class AnimalFarmerWorkGoal extends Goal {
                 }
 
                 discardInvalidCurrentPen();
+
+                if(animalFarmerEntity.tickCount - lastAreaSearchTick < AREA_SEARCH_COOLDOWN_TICKS) return;
+                lastAreaSearchTick = animalFarmerEntity.tickCount;
 
                 List<AnimalPenArea> areas = getAvailableWorkAreasByPriority((ServerLevel) animalFarmerEntity.getCommandSenderWorld(), animalFarmerEntity, animalFarmerEntity.currentAnimalPen);
 
@@ -564,15 +574,27 @@ public class AnimalFarmerWorkGoal extends Goal {
         else{
             double distance = animalFarmerEntity.getHorizontalDistanceTo(pos);
             if(distance < threshold){
+                lastPathRequestPos = null;
                 return false;
             }
             else{
-                animalFarmerEntity.getNavigation().moveTo(pos.x(), pos.y(), pos.z(), 0.8F);
+                if(shouldRequestPath(pos)){
+                    animalFarmerEntity.getNavigation().moveTo(pos.x(), pos.y(), pos.z(), 0.8F);
+                }
                 animalFarmerEntity.setFollowState(6); //Working
                 animalFarmerEntity.getLookControl().setLookAt(pos);
             }
             return true;
         }
+    }
+
+    private boolean shouldRequestPath(Vec3 pos) {
+        if(!pos.equals(lastPathRequestPos) || animalFarmerEntity.tickCount - lastPathRequestTick >= PATH_REQUEST_COOLDOWN_TICKS){
+            lastPathRequestPos = pos;
+            lastPathRequestTick = animalFarmerEntity.tickCount;
+            return true;
+        }
+        return false;
     }
 
     public enum State{

@@ -3,9 +3,12 @@ package com.talhanation.bannermod.governance;
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.WorkerIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
@@ -14,10 +17,12 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 public final class BannerModGovernorHeartbeat {
@@ -114,38 +119,59 @@ public final class BannerModGovernorHeartbeat {
                                                  RecruitsClaimManager claimManager,
                                                  BannerModGovernorManager governorManager,
                                                  @Nullable BannerModTreasuryManager treasuryManager) {
-        if (level == null || claimManager == null || governorManager == null) {
-            return;
-        }
+        runGovernedClaimHeartbeatBatch(level, claimManager, governorManager, treasuryManager, 0, Integer.MAX_VALUE);
+    }
 
-        Set<java.util.UUID> activeClaimUuids = new HashSet<>();
+    public static BatchResult runGovernedClaimHeartbeatBatch(ServerLevel level,
+                                                             RecruitsClaimManager claimManager,
+                                                             BannerModGovernorManager governorManager,
+                                                             @Nullable BannerModTreasuryManager treasuryManager,
+                                                             int startIndex,
+                                                             int maxSnapshots) {
+        if (level == null || claimManager == null || governorManager == null) {
+            return BatchResult.completedResult();
+        }
+        long startNanos = System.nanoTime();
+
+        Set<UUID> activeClaimUuids = new HashSet<>();
         for (RecruitsClaim claim : claimManager.getAllClaims()) {
             if (claim != null) {
                 activeClaimUuids.add(claim.getUUID());
             }
         }
 
-        List<java.util.UUID> staleSnapshots = new ArrayList<>();
+        List<UUID> staleSnapshots = new ArrayList<>();
         for (BannerModGovernorSnapshot snapshot : governorManager.getAllSnapshots()) {
             if (snapshot != null && !activeClaimUuids.contains(snapshot.claimUuid())) {
                 staleSnapshots.add(snapshot.claimUuid());
             }
         }
-        for (java.util.UUID claimUuid : staleSnapshots) {
+        for (UUID claimUuid : staleSnapshots) {
             governorManager.removeSnapshot(claimUuid);
             if (treasuryManager != null) {
                 treasuryManager.removeLedger(claimUuid);
             }
         }
 
-        for (BannerModGovernorSnapshot snapshot : governorManager.getAllSnapshots()) {
+        List<BannerModGovernorSnapshot> snapshots = new ArrayList<>(governorManager.getAllSnapshots());
+        snapshots.removeIf(snapshot -> snapshot == null || !snapshot.hasGovernor());
+        snapshots.sort(Comparator.comparing(BannerModGovernorSnapshot::claimUuid));
+        int total = snapshots.size();
+        if (total == 0 || maxSnapshots <= 0) {
+            return recordBatchResult("settlement.heartbeat.governor_batch", new BatchResult(0, total == 0 ? 0 : Math.max(0, Math.min(startIndex, total)), total, total == 0), startNanos);
+        }
+
+        int clampedStart = Math.max(0, Math.min(startIndex, total));
+        int endIndex = Math.min(total, clampedStart + maxSnapshots);
+        for (int i = clampedStart; i < endIndex; i++) {
+            BannerModGovernorSnapshot snapshot = snapshots.get(i);
             if (snapshot == null || !snapshot.hasGovernor()) {
                 continue;
             }
 
             RecruitsClaim claim = resolveClaim(claimManager, snapshot);
-            List<AbstractWorkerEntity> workers = claim == null ? List.of() : entitiesInClaim(level, claim, AbstractWorkerEntity.class);
-            List<AbstractRecruitEntity> recruits = claim == null ? List.of() : entitiesInClaim(level, claim, AbstractRecruitEntity.class);
+            List<AbstractWorkerEntity> workers = claim == null ? List.of() : workersInClaim(level, claim);
+            List<AbstractRecruitEntity> recruits = claim == null ? List.of() : recruitsInClaim(level, claim);
             BannerModSupplyStatus.WorkerSupplyStatus workerSupplyStatus = summarizeWorkerSupplyStatus(workers);
             BannerModSupplyStatus.RecruitSupplyStatus recruitSupplyStatus = summarizeRecruitSupplyStatus(level, recruits);
             BannerModSettlementBinding.Binding binding = claim == null
@@ -183,6 +209,13 @@ public final class BannerModGovernorHeartbeat {
                     recommendationTokens(report.recommendations())
             ).withFiscalRollup(fiscalRollup));
         }
+
+        return recordBatchResult("settlement.heartbeat.governor_batch", new BatchResult(clampedStart, endIndex, total, endIndex >= total), startNanos);
+    }
+
+    private static BatchResult recordBatchResult(String keyPrefix, BatchResult result, long startNanos) {
+        RuntimeProfilingCounters.recordBatch(keyPrefix, Math.max(0, result.nextIndex() - result.startIndex()), result.totalItems(), System.nanoTime() - startNanos, result.completed());
+        return result;
     }
 
     private static BannerModSupplyStatus.WorkerSupplyStatus summarizeWorkerSupplyStatus(List<AbstractWorkerEntity> workers) {
@@ -257,10 +290,7 @@ public final class BannerModGovernorHeartbeat {
             }
         }
         if (recruit.getUpkeepUUID() != null) {
-            Entity entity = level.getEntities((Entity) null, recruit.getBoundingBox().inflate(100.0D), current -> recruit.getUpkeepUUID().equals(current.getUUID()))
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
+            Entity entity = level.getEntity(recruit.getUpkeepUUID());
             if (entity instanceof Container container) {
                 return container;
             }
@@ -273,6 +303,24 @@ public final class BannerModGovernorHeartbeat {
 
     private static <T extends Entity> List<T> entitiesInClaim(ServerLevel level, RecruitsClaim claim, Class<T> entityClass) {
         return level.getEntitiesOfClass(entityClass, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+    }
+
+    private static List<AbstractWorkerEntity> workersInClaim(ServerLevel level, RecruitsClaim claim) {
+        return WorkerIndex.instance()
+                .queryInClaim(level, claim)
+                .orElseGet(() -> {
+                    RuntimeProfilingCounters.increment("worker.index.fallback_scans");
+                    return entitiesInClaim(level, claim, AbstractWorkerEntity.class);
+                });
+    }
+
+    private static List<AbstractRecruitEntity> recruitsInClaim(ServerLevel level, RecruitsClaim claim) {
+        return RecruitIndex.instance()
+                .queryInClaim(level, claim)
+                .orElseGet(() -> {
+                    RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                    return entitiesInClaim(level, claim, AbstractRecruitEntity.class);
+                });
     }
 
     static void depositTaxes(@Nullable BannerModTreasuryManager treasuryManager,
@@ -358,7 +406,16 @@ public final class BannerModGovernorHeartbeat {
                                   List<BannerModGovernorIncident> incidents,
                                   List<BannerModGovernorRecommendation> recommendations,
                                   long heartbeatTick,
-                                  long collectionTick) {
+                                   long collectionTick) {
+    }
+
+    public record BatchResult(int startIndex,
+                              int nextIndex,
+                              int totalItems,
+                              boolean completed) {
+        private static BatchResult completedResult() {
+            return new BatchResult(0, 0, 0, true);
+        }
     }
 
     private static RecruitsClaim resolveClaim(RecruitsClaimManager claimManager, BannerModGovernorSnapshot snapshot) {

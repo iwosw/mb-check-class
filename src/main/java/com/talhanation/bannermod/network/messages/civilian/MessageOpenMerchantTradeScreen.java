@@ -5,6 +5,7 @@ import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -29,13 +30,12 @@ public class MessageOpenMerchantTradeScreen implements Message<MessageOpenMercha
     @Override
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = context.getSender();
-        player.getCommandSenderWorld().getEntitiesOfClass(MerchantEntity.class, player.getBoundingBox()
-                        .inflate(32.0D), v -> v
-                        .getUUID()
-                        .equals(this.merchantUuid))
-                .stream()
-                .findAny()
-                .ifPresent(merchant -> merchant.openTradeGUI(player));
+        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+        if (entity instanceof MerchantEntity merchant
+                && merchant.isAlive()
+                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+            merchant.openTradeGUI(player);
+        }
     }
     @Override
     public MessageOpenMerchantTradeScreen fromBytes(FriendlyByteBuf buf) {
@@ -49,4 +49,3 @@ public class MessageOpenMerchantTradeScreen implements Message<MessageOpenMercha
         buf.writeUUID(this.merchantUuid);
     }
 }
-

@@ -2,10 +2,12 @@ package com.talhanation.bannermod.events.runtime;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.network.messages.military.MessageToClientSetToast;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -100,7 +102,17 @@ public final class FactionRecruitTeamService {
 
     public static List<AbstractRecruitEntity> getRecruitsOfPlayer(UUID playerUuid, ServerLevel level) {
         List<AbstractRecruitEntity> list = new ArrayList<>();
+        List<AbstractRecruitEntity> indexed = RecruitIndex.instance().all(level, false);
+        if (indexed != null) {
+            for (AbstractRecruitEntity recruit : indexed) {
+                if (recruit.getOwner() != null && recruit.getOwnerUUID().equals(playerUuid)) {
+                    list.add(recruit);
+                }
+            }
+            return list;
+        }
 
+        RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
         for (Entity entity : level.getEntities().getAll()) {
             if (entity instanceof AbstractRecruitEntity recruit && recruit.getOwner() != null && recruit.getOwnerUUID().equals(playerUuid)) {
                 list.add(recruit);

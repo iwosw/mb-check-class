@@ -119,6 +119,8 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
     public boolean cachedCohesion;
     /** Stage 4.C: true while the recruit is bracing against a cavalry charge. */
     public boolean isBracing;
+    /** Last tick this recruit fanned out a protect-target reaction after being hit. */
+    public int lastProtectTargetPropagationTick = Integer.MIN_VALUE;
     private final CitizenCore citizenCore = RecruitCitizenBridge.createCore(this);
     private CitizenRoleController citizenRoleController = CitizenRoleController.noop(CitizenRole.RECRUIT);
 
@@ -192,7 +194,59 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
                 this.yBodyRot = com.talhanation.bannermod.ai.military.FormationYawPolicy.clampBodyYaw(beforeBody, this.yBodyRot, limit);
             }
         }
+        if (shouldLockFormationFacing()) {
+            float limit = com.talhanation.bannermod.ai.military.FormationYawPolicy.perTickBodyYawLimitDegrees(this.getCombatStance());
+            if (Float.isNaN(limit)) {
+                limit = com.talhanation.bannermod.ai.military.FormationYawPolicy.LINE_HOLD_YAW_DELTA_LIMIT_DEG;
+            }
+            float lockedBody = com.talhanation.bannermod.ai.military.FormationYawPolicy.clampBodyYaw(this.yBodyRot, this.ownerRot, limit);
+            this.yBodyRot = lockedBody;
+            this.yHeadRot = lockedBody;
+            this.setYRot(lockedBody);
+            // Keep head pitch neutral while holding formation without a combat target.
+            this.setXRot(0.0F);
+            this.xRotO = 0.0F;
+        }
         return delta;
+    }
+
+    private boolean shouldLockFormationFacing() {
+        if (!this.isInFormation || !this.getShouldHoldPos()) {
+            return false;
+        }
+        if (this.getCombatStance() == com.talhanation.bannermod.ai.military.CombatStance.LOOSE) {
+            return false;
+        }
+        LivingEntity target = this.getTarget();
+        return target == null || !target.isAlive() || target.isRemoved();
+    }
+
+    private boolean canObserveWhileInFormation(@Nullable Entity observed) {
+        if (observed == null) {
+            return false;
+        }
+        if (shouldSuppressIdleLook()) {
+            return false;
+        }
+        if (!shouldLockFormationFacing()) {
+            return true;
+        }
+        if (Math.abs(observed.getEyeY() - this.getEyeY()) > 2.0D) {
+            return false;
+        }
+        return com.talhanation.bannermod.ai.military.ShieldBlockGeometry.isInFrontCone(
+                this.ownerRot,
+                this.getX(), this.getZ(),
+                observed.getX(), observed.getZ(),
+                50.0F
+        );
+    }
+
+    private boolean shouldSuppressIdleLook() {
+        int followState = this.getFollowState();
+        // Hold-position modes (2/3) should not run ambient look-at-player behavior.
+        // This keeps the unit from breaking visual discipline by tracking nearby players.
+        return this.getShouldHoldPos() || this.isInFormation || followState == 2 || followState == 3;
     }
 
     /** Step 1.A: current combat stance. Defaults to LOOSE. */
@@ -203,6 +257,26 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
     /** Step 1.A: set current combat stance. Null is coerced to LOOSE. */
     public void setCombatStance(com.talhanation.bannermod.ai.military.CombatStance stance) {
         RecruitStateAccess.setCombatStance(this, stance);
+    }
+
+    public int getBetterCombatAttackTicks() {
+        return RecruitStateAccess.getBetterCombatAttackTicks(this);
+    }
+
+    public int getBetterCombatAttackDuration() {
+        return RecruitStateAccess.getBetterCombatAttackDuration(this);
+    }
+
+    public int getBetterCombatAttackUpswing() {
+        return RecruitStateAccess.getBetterCombatAttackUpswing(this);
+    }
+
+    public int getBetterCombatAttackShape() {
+        return RecruitStateAccess.getBetterCombatAttackShape(this);
+    }
+
+    public void setBetterCombatAttackPresentation(int ticks, int duration, int upswing, int shape) {
+        RecruitStateAccess.setBetterCombatAttackPresentation(this, ticks, duration, upswing, shape);
     }
 
     // @Override
@@ -330,8 +404,28 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
         //this.goalSelector.addGoal(7, new RecruitDodgeGoal(this));
         this.goalSelector.addGoal(4, new RestGoal(this));
         this.goalSelector.addGoal(10, new RecruitWanderGoal(this));
-        this.goalSelector.addGoal(11, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(12, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(11, new LookAtPlayerGoal(this, Player.class, 8.0F) {
+            @Override
+            public boolean canUse() {
+                return !shouldSuppressIdleLook() && super.canUse() && canObserveWhileInFormation(this.lookAt);
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return !shouldSuppressIdleLook() && super.canContinueToUse() && canObserveWhileInFormation(this.lookAt);
+            }
+        });
+        this.goalSelector.addGoal(12, new RandomLookAroundGoal(this) {
+            @Override
+            public boolean canUse() {
+                return !shouldSuppressIdleLook() && !shouldLockFormationFacing() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return !shouldSuppressIdleLook() && !shouldLockFormationFacing() && super.canContinueToUse();
+            }
+        });
         //this.goalSelector.addGoal(13, new RecruitPickupWantedItemGoal(this));
 
         this.targetSelector.addGoal(1, new RecruitProtectHurtByTargetGoal(this));
@@ -445,12 +539,14 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
 
     @Nullable
     public LivingEntity getProtectingMob(){
-        List<LivingEntity> list = this.getCommandSenderWorld().getEntitiesOfClass(
-                LivingEntity.class,
-                this.getBoundingBox().inflate(64D),
-                (living) -> this.getProtectUUID() != null && living.getUUID().equals(this.getProtectUUID()) && living.isAlive()
-        );
-        return list.isEmpty() ? null : list.get(0);
+        UUID protectUuid = this.getProtectUUID();
+        if (protectUuid == null || !(this.getCommandSenderWorld() instanceof ServerLevel level)) return null;
+
+        Entity entity = level.getEntity(protectUuid);
+        if (entity instanceof LivingEntity living && living.isAlive() && living.distanceToSqr(this) <= 64D * 64D) {
+            return living;
+        }
+        return null;
     }
 
     public int getColor() {
@@ -589,6 +685,10 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
 
     public boolean doHurtTarget(@NotNull Entity entity) {
         return RecruitCombatDecisions.doHurtTarget(this, entity);
+    }
+
+    public boolean doHurtTarget(@NotNull Entity entity, double damageMultiplier) {
+        return RecruitCombatDecisions.doHurtTarget(this, entity, damageMultiplier);
     }
 
     /*
@@ -882,8 +982,11 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
         DESPAWN;
 
         public static NoPaymentAction fromString(String name) {
+            if (name == null || name.isBlank()) {
+                return MORALE_LOSS;
+            }
             try {
-                return NoPaymentAction.valueOf(name.toUpperCase());
+                return NoPaymentAction.valueOf(name.trim().toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException e) {
                 return MORALE_LOSS;
             }

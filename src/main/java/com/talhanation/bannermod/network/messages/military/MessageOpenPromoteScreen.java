@@ -39,11 +39,10 @@ public class MessageOpenPromoteScreen implements Message<MessageOpenPromoteScree
             return;
         }
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                v -> v.getUUID().equals(this.recruit) && v.isAlive()
-        ).forEach((recruit) -> RecruitEvents.openPromoteScreen(player, recruit));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit && recruit.isAlive() && recruit.distanceToSqr(player) <= 16.0D * 16.0D) {
+            RecruitEvents.openPromoteScreen(player, recruit);
+        }
     }
 
     @Override

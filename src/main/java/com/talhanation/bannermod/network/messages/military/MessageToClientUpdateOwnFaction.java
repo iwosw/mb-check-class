@@ -32,9 +32,11 @@ public class MessageToClientUpdateOwnFaction implements Message<MessageToClientU
     public void executeClientSide(NetworkEvent.Context context) {
         if(nbt.isEmpty()){
             ClientManager.ownFaction = null;
+            ClientManager.markFactionsChanged();
             return;
         }
         ClientManager.ownFaction = RecruitsFaction.fromNBT(nbt);
+        ClientManager.markFactionsChanged();
     }
 
     @Override

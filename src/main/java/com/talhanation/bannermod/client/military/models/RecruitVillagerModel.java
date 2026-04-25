@@ -44,6 +44,7 @@ public class RecruitVillagerModel extends HumanoidModel<AbstractRecruitEntity> {
     @Override
     public void setupAnim(AbstractRecruitEntity p_102866_, float p_102867_, float p_102868_, float p_102869_, float p_102870_, float p_102871_) {
         super.setupAnim(p_102866_, p_102867_, p_102868_, p_102869_, p_102870_, p_102871_);
+        BetterCombatRecruitPose.apply(this, p_102866_);
     }
 
     public ModelPart getRandomModelPart(Random p_103407_) {

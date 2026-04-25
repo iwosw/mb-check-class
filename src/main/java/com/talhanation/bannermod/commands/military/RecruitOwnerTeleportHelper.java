@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.commands.military;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -32,6 +34,13 @@ final class RecruitOwnerTeleportHelper {
     }
 
     private static List<AbstractRecruitEntity> getOwnedRecruits(ServerLevel level) {
+        List<AbstractRecruitEntity> indexed = RecruitIndex.instance().all(level, false);
+        if (indexed != null) {
+            return indexed.stream()
+                    .filter(AbstractRecruitEntity::isOwned)
+                    .toList();
+        }
+        RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
         List<Entity> allEntities = new ArrayList<>();
         level.getEntities().getAll().iterator().forEachRemaining(allEntities::add);
         return allEntities.stream()

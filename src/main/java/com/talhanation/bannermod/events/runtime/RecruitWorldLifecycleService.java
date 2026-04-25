@@ -3,12 +3,14 @@ package com.talhanation.bannermod.events.runtime;
 import com.talhanation.bannermod.ai.military.horse.HorseRiddenByRecruitGoal;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.persistence.military.PillagerPatrolSpawn;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsGroupsManager;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerUnitManager;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -92,10 +94,14 @@ public final class RecruitWorldLifecycleService {
     }
 
     public static void markRecruitsForGroupRefresh(ServerLevel level, RecruitsGroupsManager groupsManager) {
-        List<AbstractRecruitEntity> recruitList = new ArrayList<>();
-        for (Entity entity : level.getEntities().getAll()) {
-            if (entity instanceof AbstractRecruitEntity recruit) {
-                recruitList.add(recruit);
+        List<AbstractRecruitEntity> recruitList = RecruitIndex.instance().all(level, false);
+        if (recruitList == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            recruitList = new ArrayList<>();
+            for (Entity entity : level.getEntities().getAll()) {
+                if (entity instanceof AbstractRecruitEntity recruit) {
+                    recruitList.add(recruit);
+                }
             }
         }
         for (AbstractRecruitEntity recruit : recruitList) {

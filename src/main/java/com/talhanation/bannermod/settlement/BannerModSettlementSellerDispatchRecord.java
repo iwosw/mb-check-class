@@ -29,8 +29,16 @@ public record BannerModSettlementSellerDispatchRecord(
                 tag.getUUID("MarketUuid"),
                 tag.contains("MarketName", Tag.TAG_STRING) ? tag.getString("MarketName") : null,
                 tag.contains("DispatchState", Tag.TAG_STRING)
-                        ? BannerModSettlementSellerDispatchState.valueOf(tag.getString("DispatchState"))
+                        ? dispatchStateFromTagName(tag.getString("DispatchState"))
                         : BannerModSettlementSellerDispatchState.READY
         );
+    }
+
+    private static BannerModSettlementSellerDispatchState dispatchStateFromTagName(String name) {
+        try {
+            return BannerModSettlementSellerDispatchState.valueOf(name);
+        } catch (IllegalArgumentException exception) {
+            return BannerModSettlementSellerDispatchState.READY;
+        }
     }
 }

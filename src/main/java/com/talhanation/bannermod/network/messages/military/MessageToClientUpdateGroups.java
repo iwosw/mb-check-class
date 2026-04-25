@@ -32,13 +32,14 @@ public class MessageToClientUpdateGroups implements Message<MessageToClientUpdat
     @Override
     public void executeClientSide(NetworkEvent.Context context) {
         List<RecruitsGroup> updated = RecruitsGroup.listFromNbt(this.nbt);
+        boolean changed = false;
 
         Map<UUID, RecruitsGroup> updatedMap = new HashMap<>();
         for (RecruitsGroup group : updated) {
             updatedMap.put(group.getUUID(), group);
         }
 
-        ClientManager.groups.removeIf(
+        changed |= ClientManager.groups.removeIf(
                 clientGroup -> !updatedMap.containsKey(clientGroup.getUUID())
         );
         
@@ -55,7 +56,15 @@ public class MessageToClientUpdateGroups implements Message<MessageToClientUpdat
 
             if (existing == null) {
                 ClientManager.groups.add(updatedGroup);
+                changed = true;
             } else {
+                if (!java.util.Objects.equals(existing.leaderUUID, updatedGroup.leaderUUID)
+                        || !java.util.Objects.equals(existing.members, updatedGroup.members)
+                        || existing.getSize() != updatedGroup.getSize()
+                        || !java.util.Objects.equals(existing.getName(), updatedGroup.getName())
+                        || existing.getCount() != updatedGroup.getCount()) {
+                    changed = true;
+                }
                 existing.leaderUUID = updatedGroup.leaderUUID;
                 existing.members    = updatedGroup.members;
                 existing.setSize(updatedGroup.getSize());
@@ -63,6 +72,7 @@ public class MessageToClientUpdateGroups implements Message<MessageToClientUpdat
                 existing.setCount(updatedGroup.getCount());
             }
         }
+        if (changed) ClientManager.markGroupsChanged();
     }
 
     @Override

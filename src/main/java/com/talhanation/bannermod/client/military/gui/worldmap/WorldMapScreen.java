@@ -50,6 +50,7 @@ public class WorldMapScreen extends Screen {
     public static double scale = DEFAULT_SCALE;
     public double lastMouseX, lastMouseY;
     private boolean isDragging = false;
+    private long navigatingMapUntil = 0L;
     private ChunkPos hoveredChunk = null;
     ChunkPos selectedChunk = null;
     private int clickedBlockX = 0, clickedBlockZ = 0;
@@ -108,6 +109,14 @@ public class WorldMapScreen extends Screen {
         return scale;
     }
 
+    public boolean isNavigatingMap() {
+        return isDragging || System.currentTimeMillis() < navigatingMapUntil;
+    }
+
+    private void markMapNavigation() {
+        navigatingMapUntil = System.currentTimeMillis() + 300L;
+    }
+
     public void setSelectedChunk(ChunkPos chunk) {
         this.selectedChunk = chunk;
     }
@@ -159,9 +168,9 @@ public class WorldMapScreen extends Screen {
 
         renderMapTiles(guiGraphics);
         if (routeInteractionLayer.isClaimTransparencyEnabled() && routeInteractionLayer.hasSelectedRoute()) {
-            ClaimRenderer.renderClaimsOverlayTransparent(guiGraphics, this.selectedClaim, this.offsetX, this.offsetZ, scale);
+            ClaimRenderer.renderClaimsOverlayTransparent(guiGraphics, this.selectedClaim, this.offsetX, this.offsetZ, scale, width, height);
         } else {
-            ClaimRenderer.renderClaimsOverlay(guiGraphics, this.selectedClaim, this.offsetX, this.offsetZ, scale);
+            ClaimRenderer.renderClaimsOverlay(guiGraphics, this.selectedClaim, this.offsetX, this.offsetZ, scale, width, height);
         }
 
         if (contextMenu.isVisible()) {
@@ -462,6 +471,7 @@ public class WorldMapScreen extends Screen {
             offsetZ += mouseY - lastMouseY;
             lastMouseX = mouseX;
             lastMouseY = mouseY;
+            markMapNavigation();
             if (claimInfoMenu.isVisible()) claimInfoMenu.close();
             return true;
         }
@@ -483,6 +493,7 @@ public class WorldMapScreen extends Screen {
         scale = newScale;
         offsetX = mouseX - mouseWorldX * scale;
         offsetZ = mouseY - mouseWorldZ * scale;
+        markMapNavigation();
         return true;
     }
 
@@ -532,6 +543,13 @@ public class WorldMapScreen extends Screen {
                 case GLFW.GLFW_KEY_MINUS -> mouseScrolled(width / 2.0, height / 2.0, -1);
                 case GLFW.GLFW_KEY_C -> centerOnPlayer();
                 case GLFW.GLFW_KEY_R -> resetZoom();
+            }
+            if (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_W
+                    || keyCode == GLFW.GLFW_KEY_DOWN || keyCode == GLFW.GLFW_KEY_S
+                    || keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_A
+                    || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_D
+                    || keyCode == GLFW.GLFW_KEY_C || keyCode == GLFW.GLFW_KEY_R) {
+                markMapNavigation();
             }
         }
         return true;

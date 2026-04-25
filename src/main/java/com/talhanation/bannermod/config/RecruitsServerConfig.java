@@ -72,6 +72,7 @@ public class RecruitsServerConfig {
     public static ForgeConfigSpec.IntValue PathfindingMaxDeferredTicks;
     public static ForgeConfigSpec.BooleanValue UseAsyncTargetFinding;
     public static ForgeConfigSpec.IntValue AsyncTargetFindingThreadsCount;
+    public static ForgeConfigSpec.DoubleValue FormationCloseFocusDistance;
     public static ForgeConfigSpec.IntValue MaxPlayersInFaction;
     public static ForgeConfigSpec.IntValue MaxNPCsInFaction;
     public static ForgeConfigSpec.BooleanValue ShouldFactionEditingBeAllowed;
@@ -789,6 +790,15 @@ public class RecruitsServerConfig {
                         \tdefault: 1""")
                 .worldRestart()
                 .defineInRange("AsyncTargetFindingThreadsCount", 1, 1, Runtime.getRuntime().availableProcessors());
+
+        FormationCloseFocusDistance = BUILDER.comment("""
+                        FormationCloseFocusDistance
+                        \t(takes effect after restart)
+                        \tIf a formation has only one valid target and it is within this distance (blocks),
+                        \trecruits can focus the same target instead of spreading due to round-robin.
+                        \tdefault: 4.0""")
+                .worldRestart()
+                .defineInRange("FormationCloseFocusDistance", 4.0D, 0.0D, 32.0D);
 
         BUILDER.pop();
         BUILDER.pop();

@@ -9,7 +9,9 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -133,12 +135,12 @@ public final class DragSelectionHandler {
             return;
         }
 
-        List<AbstractRecruitEntity> candidates = mc.level.getEntitiesOfClass(
-                AbstractRecruitEntity.class, player.getBoundingBox().inflate(CANDIDATE_RADIUS));
+        AABB candidateBounds = player.getBoundingBox().inflate(CANDIDATE_RADIUS);
         List<UUID> selected = new ArrayList<>();
-        for (AbstractRecruitEntity recruit : candidates) {
-            if (!recruit.isAlive()) continue;
-            if (!ownedByUs(recruit, player)) continue;
+        for (Entity entity : mc.level.entitiesForRendering()) {
+            if (!(entity instanceof AbstractRecruitEntity recruit)) continue;
+            if (!candidateBounds.intersects(recruit.getBoundingBox())) continue;
+            if (!recruit.isAlive() || !ownedByUs(recruit, player)) continue;
             WorldToScreenProjector.Projection projection = WorldToScreenProjector.project(recruit.getBoundingBox().getCenter());
             if (projection == null || !projection.visible()) continue;
             double sx = projection.screenX();

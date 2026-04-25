@@ -6,6 +6,7 @@ import com.talhanation.bannermod.entity.military.ICompanion;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -39,11 +40,12 @@ public class MessageOpenSpecialScreen implements Message<MessageOpenSpecialScree
             return;
         }
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                v -> v.getUUID().equals(this.recruit) && v.isAlive()
-        ).forEach((recruit) -> tryToOpenSpecialGUI(recruit, player));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit
+                && recruit.isAlive()
+                && player.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+            tryToOpenSpecialGUI(recruit, player);
+        }
     }
 
     private void tryToOpenSpecialGUI(AbstractRecruitEntity recruit, ServerPlayer player) {

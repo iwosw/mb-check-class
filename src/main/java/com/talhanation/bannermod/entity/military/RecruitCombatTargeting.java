@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.config.RecruitsServerConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
@@ -16,6 +17,11 @@ final class RecruitCombatTargeting {
     private static final double TARGET_STICKINESS_DISTANCE_BUFFER_SQR = 36.0D;
     /** Per-extra-assignee scoring penalty (squared-distance equivalent, ~6 blocks² per assignee). */
     private static final double ASSIGNEE_SCORE_PENALTY_SQR = 36.0D;
+    /**
+     * If a formation has exactly one live target and it is this close, allow
+     * local focus fire (multiple recruits can hit the same threat).
+     */
+    private static final double FORMATION_CLOSE_FOCUS_DISTANCE_SQR_FALLBACK = 16.0D;
     /** Closer-switch hysteresis: new reactive target must be meaningfully closer than current. */
     private static final double REACTIVE_SWITCH_DISTANCE_MARGIN_SQR = 9.0D;
 
@@ -77,10 +83,17 @@ final class RecruitCombatTargeting {
 
         LivingEntity best = null;
         double bestScore = Double.POSITIVE_INFINITY;
+        boolean allowCloseFocus =
+                recruit.isInFormation
+                        && liveTargets.size() == 1;
         for (LivingEntity candidate : liveTargets) {
             double distSqr = recruit.distanceToSqr(candidate);
             int assignees = Math.max(0, assigneeScorer.applyAsInt(candidate));
-            double score = distSqr + (double) assignees * ASSIGNEE_SCORE_PENALTY_SQR;
+            double assigneePenalty = (double) assignees * ASSIGNEE_SCORE_PENALTY_SQR;
+            if (allowCloseFocus && distSqr <= formationCloseFocusDistanceSqr()) {
+                assigneePenalty = 0.0D;
+            }
+            double score = distSqr + assigneePenalty;
             if (score < bestScore) {
                 bestScore = score;
                 best = candidate;
@@ -152,5 +165,17 @@ final class RecruitCombatTargeting {
         double currentDistanceSqr = recruit.distanceToSqr(currentTarget);
         double bestDistanceSqr = recruit.distanceToSqr(candidates.get(0));
         return currentDistanceSqr <= bestDistanceSqr + TARGET_STICKINESS_DISTANCE_BUFFER_SQR;
+    }
+
+    private static double formationCloseFocusDistanceSqr() {
+        try {
+            double configured = RecruitsServerConfig.FormationCloseFocusDistance.get();
+            if (configured < 0.0D) {
+                return FORMATION_CLOSE_FOCUS_DISTANCE_SQR_FALLBACK;
+            }
+            return configured * configured;
+        } catch (IllegalStateException e) {
+            return FORMATION_CLOSE_FOCUS_DISTANCE_SQR_FALLBACK;
+        }
     }
 }

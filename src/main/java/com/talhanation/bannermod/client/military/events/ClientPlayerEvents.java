@@ -13,18 +13,18 @@ public class ClientPlayerEvents {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
-        if (!(Minecraft.getInstance().screen instanceof WorldMapScreen)) return;
+        if (!(Minecraft.getInstance().screen instanceof WorldMapScreen screen)) return;
         if (!RecruitsClientConfig.UpdateMapTiles.get()) return;
 
-        updateMapTiles();
+        updateMapTiles(!screen.isNavigatingMap());
     }
 
-    private void updateMapTiles() {
+    private void updateMapTiles(boolean updateNeighbors) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
         if (mc.level.dimension() != Level.OVERWORLD) return;
 
-        ChunkTileManager.getInstance().updateCurrentTile();
+        ChunkTileManager.getInstance().updateCurrentTile(updateNeighbors);
     }
 
     @SubscribeEvent

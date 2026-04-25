@@ -5,6 +5,7 @@ import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 public final class WorkerSettlementSpawnRules {
@@ -132,7 +133,7 @@ public final class WorkerSettlementSpawnRules {
         public RuleConfig {
             minimumVillagers = Math.max(0, minimumVillagers);
             workerCap = Math.max(1, workerCap);
-            allowedProfessions = allowedProfessions == null ? List.of() : List.copyOf(allowedProfessions);
+            allowedProfessions = allowedProfessions == null ? List.of() : allowedProfessions.stream().filter(Objects::nonNull).distinct().toList();
         }
 
         public RuleConfig withEnabled(boolean enabled) {
@@ -148,7 +149,7 @@ public final class WorkerSettlementSpawnRules {
         public ClaimGrowthConfig {
             baseCooldownTicks = Math.max(0L, baseCooldownTicks);
             workerCap = Math.max(1, workerCap);
-            allowedProfessions = allowedProfessions == null ? List.of() : List.copyOf(allowedProfessions);
+            allowedProfessions = allowedProfessions == null ? List.of() : allowedProfessions.stream().filter(Objects::nonNull).distinct().toList();
         }
 
         public long requiredCooldownTicks(int currentWorkerCount) {

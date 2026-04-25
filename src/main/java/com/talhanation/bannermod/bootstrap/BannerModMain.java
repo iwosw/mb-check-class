@@ -187,6 +187,18 @@ public class BannerModMain {
             event.accept(com.talhanation.bannermod.registry.civilian.ModItems.BUILDER_SPAWN_EGG.get());
             event.accept(com.talhanation.bannermod.registry.civilian.ModItems.FISHERMAN_SPAWN_EGG.get());
             event.accept(com.talhanation.bannermod.registry.civilian.ModItems.ANIMAL_FARMER_SPAWN_EGG.get());
+            // Military spawn eggs
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.RECRUIT_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.BOWMAN_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.CROSSBOWMAN_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.RECRUIT_SHIELD_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.HORSEMAN_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.NOMAD_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.VILLAGER_NOBLE_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.MESSENGER_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.SCOUT_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.PATROL_LEADER_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.military.ModItems.CAPTAIN_SPAWN_EGG.get());
         }
     }
 }

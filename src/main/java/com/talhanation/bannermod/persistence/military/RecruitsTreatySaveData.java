@@ -37,6 +37,9 @@ public class RecruitsTreatySaveData extends SavedData {
     }
 
     public void setTreaties(Map<String, Long> treaties) {
+        if (this.treaties.equals(treaties)) {
+            return;
+        }
         this.treaties = new HashMap<>(treaties);
         this.setDirty();
     }

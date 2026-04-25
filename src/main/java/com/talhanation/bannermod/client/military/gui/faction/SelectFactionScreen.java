@@ -101,7 +101,6 @@ public class SelectFactionScreen extends ListScreenBase implements IFactionSelec
                     buttonAction.accept(selected);
 
                     this.factionList.setFocused(null);
-                    this.factionList.updateEntryList();
                     this.selected = null;
                     this.init();
                 });

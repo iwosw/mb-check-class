@@ -5,7 +5,9 @@ import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -58,10 +60,13 @@ public class MessagePatrolLeaderSetRoute implements Message<MessagePatrolLeaderS
     }
 
     public static void dispatchToServer(Player player, UUID recruitId, @Nullable UUID routeId, List<BlockPos> waypoints, List<Integer> waitSeconds) {
-        List<AbstractLeaderEntity> leaders = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractLeaderEntity.class,
-                player.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
-        );
+        if (!(player.getCommandSenderWorld() instanceof ServerLevel level)) return;
+        Entity entity = level.getEntity(recruitId);
+        AbstractLeaderEntity targetLeader = entity instanceof AbstractLeaderEntity leader
+                && leader.distanceToSqr(player) <= CommandTargeting.GROUP_COMMAND_RADIUS * CommandTargeting.GROUP_COMMAND_RADIUS
+                ? leader
+                : null;
+        List<AbstractLeaderEntity> leaders = targetLeader == null ? List.of() : List.of(targetLeader);
         CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
                 player.getUUID(),
                 recruitId,
@@ -83,15 +88,13 @@ public class MessagePatrolLeaderSetRoute implements Message<MessagePatrolLeaderS
             return;
         }
 
-        leaders.stream().filter(leader -> leader.getUUID().equals(recruitId)).findFirst().ifPresent(leader -> {
-            if (routeId != null) {
-                leader.setRouteID(routeId);
-            }
-            else {
-                leader.clearRouteID();
-            }
-            leader.loadRouteWaypointsFromData(waypoints, waitSeconds);
-        });
+        if (routeId != null) {
+            targetLeader.setRouteID(routeId);
+        }
+        else {
+            targetLeader.clearRouteID();
+        }
+        targetLeader.loadRouteWaypointsFromData(waypoints, waitSeconds);
     }
 
     static ValidationResult validateSelection(CommandTargeting.SingleRecruitSelection selection, @Nullable UUID routeId, List<BlockPos> waypoints, List<Integer> waitSeconds) {

@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -43,11 +44,12 @@ public class MessagePatrolLeaderAddWayPoint implements Message<MessagePatrolLead
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractLeaderEntity.class,
-                player.getBoundingBox().inflate(100.0D),
-                v -> v.getUUID().equals(this.worker) && v.isAlive()
-        ).forEach((merchant) -> this.addWayPoint(new BlockPos(x, y, z), player, merchant));
+        Entity entity = player.serverLevel().getEntity(this.worker);
+        if (entity instanceof AbstractLeaderEntity leader
+                && leader.isAlive()
+                && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
+            this.addWayPoint(new BlockPos(x, y, z), player, leader);
+        }
     }
 
     private void addWayPoint(BlockPos pos, Player player, AbstractLeaderEntity leaderEntity) {

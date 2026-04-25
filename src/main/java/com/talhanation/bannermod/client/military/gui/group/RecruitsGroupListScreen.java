@@ -59,6 +59,7 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
     protected void init() {
         super.init();
         clearWidgets();
+        ClientManager.updateGroups(true);
 
         gapTop = (int) (this.height * 0.1);
         gapBottom = (int) (this.height * 0.1);
@@ -114,6 +115,7 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
             if (selected != null) {
 
                 ClientManager.groups.removeIf(predicate -> selected.getUUID().equals(predicate.getUUID()));
+                ClientManager.markGroupsChanged();
 
                 selected.removed = true;
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageApplyNoGroup(player.getUUID(), selected.getUUID()));

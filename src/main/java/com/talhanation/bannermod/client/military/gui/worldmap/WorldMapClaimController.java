@@ -51,6 +51,7 @@ final class WorldMapClaimController {
         newClaim.setPlayer(new RecruitsPlayerInfo(player.getUUID(), player.getName().getString(), ownFaction));
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoPayment(player.getUUID(), cost));
         ClientManager.recruitsClaims.add(newClaim);
+        ClientManager.markClaimsChanged();
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(newClaim));
     }
 
@@ -68,6 +69,7 @@ final class WorldMapClaimController {
             if (claim.equals(neighborClaim)) {
                 neighborClaim.addChunk(screen.selectedChunk);
                 recalculateCenter(neighborClaim);
+                ClientManager.markClaimsChanged();
                 break;
             }
         }
@@ -84,9 +86,8 @@ final class WorldMapClaimController {
                 new ChunkPos(chunk.x, chunk.z + 1), new ChunkPos(chunk.x, chunk.z - 1)
         };
         for (ChunkPos neighbor : neighbors) {
-            for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-                if (claim.containsChunk(neighbor)) return claim;
-            }
+            RecruitsClaim claim = ClientManager.getClaimAtChunk(neighbor);
+            if (claim != null) return claim;
         }
         return null;
     }
@@ -158,9 +159,7 @@ final class WorldMapClaimController {
     boolean canClaimChunk(ChunkPos pos) {
         if (!ClientManager.configValueIsClaimingAllowed || pos == null || ClientManager.ownFaction == null) return false;
         if (isPlayerTooFar(pos)) return false;
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-            if (claim.containsChunk(pos)) return false;
-        }
+        if (ClientManager.getClaimAtChunk(pos) != null) return false;
         RecruitsClaim neighbor = getNeighborClaim(pos);
         if (neighbor == null || neighbor.getClaimedChunks().size() >= RecruitsClaim.MAX_SIZE) return false;
         return !isInBufferZone(pos, ClientManager.ownFaction);
@@ -173,9 +172,7 @@ final class WorldMapClaimController {
         if (isPlayerTooFar(screen.selectedChunk)) return false;
 
         for (ChunkPos chunk : areaChunks) {
-            for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-                if (claim.containsChunk(chunk)) return false;
-            }
+            if (ClientManager.getClaimAtChunk(chunk) != null) return false;
             if (isInBufferZone(chunk, ClientManager.ownFaction)) return false;
         }
         return true;
@@ -195,9 +192,7 @@ final class WorldMapClaimController {
     }
 
     boolean canClaimChunkRaw(ChunkPos pos) {
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-            if (claim.containsChunk(pos)) return false;
-        }
+        if (ClientManager.getClaimAtChunk(pos) != null) return false;
         RecruitsClaim neighbor = getNeighborClaim(pos);
         if (neighbor == null) return false;
         return !isInBufferZone(pos, ClientManager.ownFaction);

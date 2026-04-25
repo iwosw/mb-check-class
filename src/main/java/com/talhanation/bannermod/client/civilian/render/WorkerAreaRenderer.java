@@ -1,57 +1,50 @@
 package com.talhanation.bannermod.client.civilian.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
-import com.talhanation.bannermod.client.military.events.ClientEvent;
-import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.persistence.civilian.ScannedBlock;
 import com.talhanation.bannermod.persistence.civilian.StructureManager;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.UUID;
 
 @OnlyIn(Dist.CLIENT)
 public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
-    private final ItemRenderer itemRenderer;
+    private static final double STRUCTURE_PREVIEW_MAX_DISTANCE_SQR = 64.0D * 64.0D;
+
+    private UUID cachedPreviewArea;
+    private CompoundTag cachedPreviewNbt;
+    private List<ScannedBlock> cachedPreviewStructure = List.of();
     public WorkerAreaRenderer(EntityRendererProvider.Context mgr) {
         super(mgr);
-        this.itemRenderer = mgr.getItemRenderer();
-        this.shadowRadius = 0.15F;
-        this.shadowStrength = 0.75F;
+        this.shadowRadius = 0.0F;
+        this.shadowStrength = 0.0F;
     }
     @Override
     public ResourceLocation getTextureLocation(AbstractWorkAreaEntity p_115034_) {
@@ -63,67 +56,28 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
         Player player = Minecraft.getInstance().player;
         if(player == null) return;
 
-        super.render(abstractWorkAreaEntity, entityYaw, partialTicks, poseStack, bufferSource, packedLight);
-
-        poseStack.pushPose();
-
-        float rotation = (abstractWorkAreaEntity.tickCount + partialTicks) * 3.0F;
-
-        ItemStack itemstack = abstractWorkAreaEntity.getRenderItem().getDefaultInstance();
-
-        poseStack.translate(0, 0.5, 0);
-        poseStack.scale(2.30f, 2.30f, 2.30f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
-
-        BakedModel bakedmodel = this.itemRenderer.getModel(itemstack, abstractWorkAreaEntity.level(), null, abstractWorkAreaEntity.getId());
-        this.itemRenderer.render(itemstack, ItemDisplayContext.GROUND, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, bakedmodel);
-
-        poseStack.popPose();
-
-        Entity looking = ClientEvent.getEntityByLooking();
-
         if(!abstractWorkAreaEntity.canPlayerSee(player)) return;
 
-        if(!abstractWorkAreaEntity.showBox && (looking == null || !looking.equals(abstractWorkAreaEntity))) return;
-
         if(abstractWorkAreaEntity instanceof BuildArea buildArea){
-            renderStructurePreview(poseStack, buildArea);
-        }
-
-        double x = Mth.lerp(partialTicks, abstractWorkAreaEntity.xOld, abstractWorkAreaEntity.getX());
-        double y = Mth.lerp(partialTicks, abstractWorkAreaEntity.yOld, abstractWorkAreaEntity.getY());
-        double z = Mth.lerp(partialTicks, abstractWorkAreaEntity.zOld, abstractWorkAreaEntity.getZ());
-
-        AABB area  = abstractWorkAreaEntity.getArea();
-        AABB worldBox = new AABB(area.minX, area.minY, area.minZ,
-                area.maxX + 1, area.maxY, area.maxZ + 1);
-        AABB relativeBox = worldBox.move(-x, -y, -z);
-
-        for (AbstractWorkAreaEntity neighbor : AbstractWorkAreaEntity.getNearbyAreas(abstractWorkAreaEntity.level(), abstractWorkAreaEntity.getOnPos(), 20)) {
-            if (neighbor.getTeamStringID().equals(abstractWorkAreaEntity.getTeamStringID()) && neighbor.getPlayerUUID().equals(abstractWorkAreaEntity.getPlayerUUID())) {
-                AABB area1  = neighbor.getArea();
-                AABB worldBox1 = new AABB(area1.minX, area1.minY, area1.minZ,
-                        area1.maxX + 1, area1.maxY, area1.maxZ + 1);
-                AABB relativeBox1 = worldBox1.move(-x, -y, -z);
-
-
-                poseStack.pushPose();
-                LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(RenderType.lines()), relativeBox1, 0.5F, 1.0F, 0.5F, 0.7F);
-                poseStack.popPose();
+            if (player.distanceToSqr(buildArea) <= STRUCTURE_PREVIEW_MAX_DISTANCE_SQR) {
+                renderStructurePreview(poseStack, buildArea);
+            } else {
+                RuntimeProfilingCounters.increment("build_preview.skipped.distance");
             }
         }
-
-        poseStack.pushPose();
-        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.lines());
-        LevelRenderer.renderLineBox(poseStack, vertexConsumer, relativeBox, 1.0F, 1.0F, 1.0F, 1.0F);
-        poseStack.popPose();
     }
 
     private void renderStructurePreview(PoseStack poseStack, BuildArea buildArea) {
         CompoundTag nbt = buildArea.getStructureNBT();
-        if (nbt == null || nbt.isEmpty()) return;
-        List<ScannedBlock> structure = StructureManager.parseStructureFromNBT(nbt);
-        if (structure.isEmpty()) return;
+        if (nbt == null || nbt.isEmpty()) {
+            RuntimeProfilingCounters.increment("build_preview.skipped.empty_nbt");
+            return;
+        }
+        List<ScannedBlock> structure = getCachedPreviewStructure(buildArea, nbt);
+        if (structure.isEmpty()) {
+            RuntimeProfilingCounters.increment("build_preview.skipped.empty_structure");
+            return;
+        }
 
         int width = nbt.getInt("width");
         Direction scanFacing = Direction.byName(nbt.getString("facing"));
@@ -139,6 +93,7 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
         poseStack.pushPose();
 
         for (ScannedBlock scannedBlock : structure) {
+            RuntimeProfilingCounters.increment("build_preview.blocks_considered");
             BlockPos relPos = scannedBlock.relativePos();
             int relX = relPos.getX();
             int relY = relPos.getY();
@@ -194,6 +149,19 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
 
         bufferSource.endBatch();
         poseStack.popPose();
+    }
+
+    private List<ScannedBlock> getCachedPreviewStructure(BuildArea buildArea, CompoundTag nbt) {
+        if (buildArea.getUUID().equals(cachedPreviewArea) && nbt == cachedPreviewNbt) {
+            return cachedPreviewStructure;
+        }
+
+        cachedPreviewArea = buildArea.getUUID();
+        cachedPreviewNbt = nbt;
+        cachedPreviewStructure = StructureManager.parseStructureFromNBT(nbt);
+        RuntimeProfilingCounters.increment("build_preview.parse_cache_misses");
+        RuntimeProfilingCounters.add("build_preview.blocks_parsed", cachedPreviewStructure.size());
+        return cachedPreviewStructure;
     }
 
 }

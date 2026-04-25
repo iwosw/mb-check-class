@@ -28,6 +28,9 @@ import java.util.*;
 
 public class MinerWorkGoal extends Goal {
 
+    private static final int AREA_SEARCH_COOLDOWN_TICKS = 20;
+    private static final int PATH_REQUEST_COOLDOWN_TICKS = 20;
+
     public MinerEntity minerEntity;
     public State state;
     public String errorMessage;
@@ -36,6 +39,10 @@ public class MinerWorkGoal extends Goal {
     public Stack<BlockPos> stackToBreak;
     public Stack<BlockPos> stackToPlace;
     private boolean needToSeeBlock;
+    private int lastAreaSearchTick = -AREA_SEARCH_COOLDOWN_TICKS;
+    private int lastPathRequestTick = -PATH_REQUEST_COOLDOWN_TICKS;
+    @Nullable
+    private BlockPos lastPathRequestPos;
 
     public MinerWorkGoal(MinerEntity minerEntity) {
         this.minerEntity = minerEntity;
@@ -93,6 +100,9 @@ public class MinerWorkGoal extends Goal {
         switch(state){
             case SELECT_WORK_AREA ->{
                 if(minerEntity.currentMiningArea != null) setState(State.MOVE_TO_WORK_AREA);
+
+                if(minerEntity.tickCount - lastAreaSearchTick < AREA_SEARCH_COOLDOWN_TICKS) return;
+                lastAreaSearchTick = minerEntity.tickCount;
 
                 List<MiningArea> areas = getAvailableWorkAreasByPriority((ServerLevel) minerEntity.getCommandSenderWorld(), minerEntity, minerEntity.currentMiningArea);
 
@@ -473,16 +483,28 @@ public class MinerWorkGoal extends Goal {
             double distance = minerEntity.getHorizontalDistanceTo(pos.getCenter());
             if(distance < threshold){
                 minerEntity.getNavigation().stop();
+                lastPathRequestPos = null;
                 return false;
             }
             else{
 
                 minerEntity.setFollowState(6); //Working
-                minerEntity.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                if(shouldRequestPath(pos)){
+                    minerEntity.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                }
                 minerEntity.getLookControl().setLookAt(pos.getCenter());
             }
             return true;
         }
+    }
+
+    private boolean shouldRequestPath(BlockPos pos) {
+        if(!pos.equals(lastPathRequestPos) || minerEntity.tickCount - lastPathRequestTick >= PATH_REQUEST_COOLDOWN_TICKS){
+            lastPathRequestPos = pos;
+            lastPathRequestTick = minerEntity.tickCount;
+            return true;
+        }
+        return false;
     }
 
     public enum State{

@@ -7,6 +7,8 @@ import com.talhanation.bannermod.client.military.models.RecruitVillagerModel;
 import com.talhanation.bannermod.client.military.render.layer.RecruitVillagerBiomeLayer;
 import com.talhanation.bannermod.client.military.render.layer.RecruitVillagerCompanionLayer;
 import com.talhanation.bannermod.client.military.render.layer.RecruitVillagerTeamColorLayer;
+import com.talhanation.bannermod.client.military.render.layer.RecruitLodArmorLayer;
+import com.talhanation.bannermod.client.military.render.layer.RecruitLodItemInHandLayer;
 import com.talhanation.bannermod.client.military.render.layer.VillagerRecruitCustomHeadLayer;
 import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.entity.military.AbstractInventoryEntity;
@@ -35,13 +37,18 @@ public class RecruitVillagerRenderer extends MobRenderer<AbstractRecruitEntity, 
     public ResourceLocation getTextureLocation(AbstractRecruitEntity recruit) {
         return TEXTURE[0];
     }
+
+    public static ResourceLocation crowdTexture(AbstractRecruitEntity recruit) {
+        return TEXTURE[0];
+    }
+
     public RecruitVillagerRenderer(EntityRendererProvider.Context context) {
         super(context, new RecruitVillagerModel(context.bakeLayer(ClientEvent.RECRUIT)), 0.5F);
-        this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel(context.bakeLayer(ClientEvent.RECRUIT_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(ClientEvent.RECRUIT_OUTER_ARMOR)), context.getModelManager()));
+        this.addLayer(new RecruitLodArmorLayer(this, new HumanoidModel<>(context.bakeLayer(ClientEvent.RECRUIT_INNER_ARMOR)), new HumanoidModel<>(context.bakeLayer(ClientEvent.RECRUIT_OUTER_ARMOR)), context.getModelManager()));
         this.addLayer(new RecruitVillagerTeamColorLayer(this));
         this.addLayer(new RecruitVillagerBiomeLayer(this));
         this.addLayer(new RecruitVillagerCompanionLayer(this));
-        this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
+        this.addLayer(new RecruitLodItemInHandLayer<>(this, context.getItemInHandRenderer()));
         this.addLayer(new VillagerRecruitCustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
     }
 
@@ -49,6 +56,11 @@ public class RecruitVillagerRenderer extends MobRenderer<AbstractRecruitEntity, 
     public void render(AbstractRecruitEntity entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
         this.setModelVisibilities(entityIn);
         super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
+    }
+
+    @Override
+    protected boolean shouldShowName(AbstractRecruitEntity recruit) {
+        return RecruitRenderLod.shouldRenderName(recruit) && super.shouldShowName(recruit);
     }
 
     //PlayerRenderer

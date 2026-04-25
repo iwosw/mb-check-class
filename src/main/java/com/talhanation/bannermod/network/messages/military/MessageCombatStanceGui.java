@@ -6,6 +6,7 @@ import com.talhanation.bannermod.events.CommandEvents;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -36,16 +37,16 @@ public class MessageCombatStanceGui implements Message<MessageCombatStanceGui> {
         }
 
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> nearby = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                serverPlayer.getBoundingBox().inflate(16.0D),
-                recruit -> recruit.getUUID().equals(this.recruitUuid)
-        );
+        Entity entity = serverPlayer.serverLevel().getEntity(this.recruitUuid);
+        if (!(entity instanceof AbstractRecruitEntity recruit)
+                || !serverPlayer.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+            return;
+        }
 
         CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
                 serverPlayer.getUUID(),
                 this.recruitUuid,
-                nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
+                List.of(new CommandTargeting.RecruitSnapshot(
                         recruit.getUUID(),
                         recruit.getOwnerUUID(),
                         recruit.getGroup(),
@@ -54,14 +55,14 @@ public class MessageCombatStanceGui implements Message<MessageCombatStanceGui> {
                         recruit.isAlive(),
                         recruit.getListen(),
                         recruit.distanceToSqr(serverPlayer)
-                )).toList()
+                ))
         );
 
         if (!selection.isSuccess()) {
             return;
         }
 
-        nearby.forEach(recruit -> CommandEvents.onCombatStanceCommand(serverPlayer.getUUID(), recruit, this.stance, null));
+        CommandEvents.onCombatStanceCommand(serverPlayer.getUUID(), recruit, this.stance, null);
     }
 
     public MessageCombatStanceGui fromBytes(FriendlyByteBuf buf) {

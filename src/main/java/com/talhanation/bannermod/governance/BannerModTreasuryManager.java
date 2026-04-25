@@ -50,15 +50,23 @@ public class BannerModTreasuryManager extends SavedData {
     }
 
     public BannerModTreasuryLedgerSnapshot getOrCreateLedger(UUID claimUuid, BannerModTreasuryLedgerSnapshot fallback) {
-        return this.ledgers.computeIfAbsent(claimUuid, ignored -> fallback);
+        BannerModTreasuryLedgerSnapshot ledger = this.ledgers.get(claimUuid);
+        if (ledger != null) {
+            return ledger;
+        }
+        this.ledgers.put(claimUuid, fallback);
+        this.setDirty();
+        return fallback;
     }
 
     public void putLedger(BannerModTreasuryLedgerSnapshot ledger) {
         if (ledger == null) {
             return;
         }
-        this.ledgers.put(ledger.claimUuid(), ledger);
-        this.setDirty();
+        BannerModTreasuryLedgerSnapshot previous = this.ledgers.put(ledger.claimUuid(), ledger);
+        if (!ledger.equals(previous)) {
+            this.setDirty();
+        }
     }
 
     public BannerModTreasuryLedgerSnapshot depositTaxes(UUID claimUuid,

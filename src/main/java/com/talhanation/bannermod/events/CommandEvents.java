@@ -99,8 +99,15 @@ public class CommandEvents {
         if (stance == null) {
             return;
         }
-        if (recruit.isEffectedByCommand(playerUuid, group) && recruit.getCombatStance() != stance) {
-            recruit.setCombatStance(stance);
+        if (recruit.isEffectedByCommand(playerUuid, group)) {
+            if (recruit.getCombatStance() != stance) {
+                recruit.setCombatStance(stance);
+            }
+            // SHIELD_WALL is a visible command: keep shields raised by default so
+            // the stance does not look like it was ignored.
+            if (stance == CombatStance.SHIELD_WALL) {
+                recruit.setShouldBlock(true);
+            }
         }
     }
 

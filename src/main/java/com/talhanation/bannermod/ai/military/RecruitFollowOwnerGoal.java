@@ -71,8 +71,6 @@ public class RecruitFollowOwnerGoal extends Goal {
     public void tick() {
         if (--this.timeToRecalcPath <= 0) {
             this.timeToRecalcPath = this.recruit.getVehicle() != null ? this.adjustedTickDelay(5) : this.adjustedTickDelay(10);
-
-            this.recruit.getLookControl().setLookAt(this.owner, 10.0F, (float)this.recruit.getMaxHeadXRot());
             this.recruit.getNavigation().moveTo(this.owner, this.speedModifier);
 
             if(this.recruit instanceof CaptainEntity captain && captain.getVehicle() instanceof Boat){

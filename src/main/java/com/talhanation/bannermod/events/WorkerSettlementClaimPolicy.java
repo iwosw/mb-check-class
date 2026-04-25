@@ -1,10 +1,12 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.WorkerIndex;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -72,6 +74,22 @@ final class WorkerSettlementClaimPolicy {
     }
 
     static <T extends Entity> int countEntitiesInClaim(ServerLevel level, RecruitsClaim claim, Class<T> entityType) {
+        if (entityType == AbstractWorkerEntity.class) {
+            return WorkerIndex.instance()
+                    .queryInClaim(level, claim)
+                    .map(workers -> (int) workers.stream().filter(worker -> workerMatchesClaimOwner(worker, claim)).count())
+                    .orElseGet(() -> {
+                        RuntimeProfilingCounters.increment("worker.index.fallback_scans");
+                        return countEntitiesInClaimByScan(level, claim, entityType);
+                    });
+        }
+        return countEntitiesInClaimByScan(level, claim, entityType);
+    }
+
+    private static <T extends Entity> int countEntitiesInClaimByScan(ServerLevel level, RecruitsClaim claim, Class<T> entityType) {
+        if (level == null || claim == null || entityType == null || claim.getClaimedChunks().isEmpty()) {
+            return 0;
+        }
         AABB claimBounds = getClaimBounds(level, claim);
         UUID leaderId = claim.getOwnerFaction() == null ? null : claim.getOwnerFaction().getTeamLeaderUUID();
         String factionId = claim.getOwnerFaction() == null ? null : claim.getOwnerFactionStringID();
@@ -83,10 +101,20 @@ final class WorkerSettlementClaimPolicy {
                 return true;
             }
 
-            boolean ownerMatch = leaderId != null && leaderId.equals(worker.getOwnerUUID());
-            boolean teamMatch = factionId != null && worker.getTeam() != null && factionId.equals(worker.getTeam().getName());
-            return ownerMatch || teamMatch;
+            return workerMatchesClaimOwner(worker, leaderId, factionId);
         }).size();
+    }
+
+    private static boolean workerMatchesClaimOwner(AbstractWorkerEntity worker, RecruitsClaim claim) {
+        UUID leaderId = claim.getOwnerFaction() == null ? null : claim.getOwnerFaction().getTeamLeaderUUID();
+        String factionId = claim.getOwnerFaction() == null ? null : claim.getOwnerFactionStringID();
+        return workerMatchesClaimOwner(worker, leaderId, factionId);
+    }
+
+    private static boolean workerMatchesClaimOwner(AbstractWorkerEntity worker, UUID leaderId, String factionId) {
+        boolean ownerMatch = leaderId != null && leaderId.equals(worker.getOwnerUUID());
+        boolean teamMatch = factionId != null && worker.getTeam() != null && factionId.equals(worker.getTeam().getName());
+        return ownerMatch || teamMatch;
     }
 
     private static long resolveClaimGrowthElapsedTicks(RecruitsClaim claim, long gameTime, Map<UUID, Long> claimWorkerGrowthSpawnTimes) {
@@ -128,10 +156,11 @@ final class WorkerSettlementClaimPolicy {
     }
 
     private static AABB getClaimBounds(ServerLevel level, RecruitsClaim claim) {
-        int minChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).min().orElse(claim.getCenter().x);
-        int maxChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).max().orElse(claim.getCenter().x);
-        int minChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).min().orElse(claim.getCenter().z);
-        int maxChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).max().orElse(claim.getCenter().z);
+        ChunkPos anchorChunk = resolveClaimAnchorChunk(claim);
+        int minChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).min().orElse(anchorChunk.x);
+        int maxChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).max().orElse(anchorChunk.x);
+        int minChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).min().orElse(anchorChunk.z);
+        int maxChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).max().orElse(anchorChunk.z);
         return new AABB(
                 minChunkX * 16.0D,
                 level.getMinBuildHeight(),

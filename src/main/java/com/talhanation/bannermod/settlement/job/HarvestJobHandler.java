@@ -40,12 +40,9 @@ public final class HarvestJobHandler implements JobHandler {
             SettlementWorkOrderType.HARVEST_CROP,
             SettlementWorkOrderType.PLANT_CROP,
             SettlementWorkOrderType.TILL_SOIL,
-            SettlementWorkOrderType.WATER_FIELD,
             SettlementWorkOrderType.FELL_TREE,
             SettlementWorkOrderType.REPLANT_TREE,
-            SettlementWorkOrderType.MINE_BLOCK,
-            SettlementWorkOrderType.HAUL_RESOURCE,
-            SettlementWorkOrderType.FETCH_INPUT
+            SettlementWorkOrderType.MINE_BLOCK
     );
 
     @Override

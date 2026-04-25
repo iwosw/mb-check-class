@@ -35,6 +35,7 @@ public class HorsemanEntity extends RecruitShieldmanEntity {
     private static final EntityDataAccessor<Boolean> HAD_HORSE = SynchedEntityData.defineId(HorsemanEntity.class, EntityDataSerializers.BOOLEAN);
 
     public boolean isPatrol = false;
+    private int lootScanCooldown;
 
     public HorsemanEntity(EntityType<? extends AbstractRecruitEntity> entityType, Level world) {
         super(entityType, world);
@@ -124,9 +125,13 @@ public class HorsemanEntity extends RecruitShieldmanEntity {
         super.aiStep();
         this.getCommandSenderWorld().getProfiler().push("looting");
         if (!this.getCommandSenderWorld().isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.getCommandSenderWorld(), this)) {
-            for(ItemEntity itementity : this.getCommandSenderWorld().getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D))) {
-                if (!itementity.isRemoved() && !itementity.getItem().isEmpty() && !itementity.hasPickUpDelay() && this.wantsToPickUp(itementity.getItem())) {
-                    this.pickUpItem(itementity);
+            if (lootScanCooldown-- <= 0) {
+                lootScanCooldown = 4 + this.getRandom().nextInt(4);
+
+                for(ItemEntity itementity : this.getCommandSenderWorld().getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D))) {
+                    if (!itementity.isRemoved() && !itementity.getItem().isEmpty() && !itementity.hasPickUpDelay() && this.wantsToPickUp(itementity.getItem())) {
+                        this.pickUpItem(itementity);
+                    }
                 }
             }
         }

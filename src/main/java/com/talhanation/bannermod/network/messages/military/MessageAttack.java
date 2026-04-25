@@ -5,6 +5,8 @@ import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
 import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -67,10 +69,19 @@ public class MessageAttack implements Message<MessageAttack> {
             return List.of();
         }
 
-        List<AbstractRecruitEntity> nearby = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
+        List<AbstractRecruitEntity> nearby = RecruitIndex.instance().groupInRange(
+                player.getCommandSenderWorld(),
+                group,
+                player.position(),
+                CommandTargeting.GROUP_COMMAND_RADIUS
         );
+        if (nearby == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            nearby = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
+            );
+        }
         CommandTargeting.GroupCommandSelection selection = CommandTargeting.forGroupCommand(
                 player.getUUID(),
                 player.getTeam() == null ? null : player.getTeam().getName(),

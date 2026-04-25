@@ -3,9 +3,11 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -48,10 +50,19 @@ public class MessageAssignGroupToPlayer implements Message<MessageAssignGroupToP
         RecruitsPlayerInfo newOwner = RecruitsPlayerInfo.getFromNBT(tag);
         group.setPlayer(newOwner);
 
-        List<AbstractRecruitEntity> list = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(100D)
+        List<AbstractRecruitEntity> list = RecruitIndex.instance().groupMembersInRange(
+                player.getCommandSenderWorld(),
+                groupUUID,
+                player.position(),
+                100.0D
         );
+        if (list == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            list = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(100D)
+            );
+        }
 
         for(AbstractRecruitEntity recruit : list){
             if(recruit.getGroup() != null && recruit.getGroup().equals(groupUUID)){

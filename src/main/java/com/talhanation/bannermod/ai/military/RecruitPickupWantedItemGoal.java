@@ -18,6 +18,7 @@ public class RecruitPickupWantedItemGoal extends Goal {
     public List<ItemEntity> itemEntityList = new ArrayList<>();
     public ItemEntity itemEntity;
     private byte timer;
+    private int searchCooldown;
 
     public RecruitPickupWantedItemGoal(AbstractRecruitEntity recruit) {
         this.recruit = recruit;
@@ -32,12 +33,15 @@ public class RecruitPickupWantedItemGoal extends Goal {
     public void start() {
         super.start();
         timer = 0;
+        searchCooldown = recruit.getRandom().nextInt(5);
         state = SEARCH;
     }
 
     @Override
     public void stop() {
         super.stop();
+        itemEntityList.clear();
+        itemEntity = null;
         recruit.setCanPickUpLoot(false);
     }
 
@@ -45,15 +49,19 @@ public class RecruitPickupWantedItemGoal extends Goal {
     public void tick() {
         switch (state) {
             case SEARCH -> {
+                if (searchCooldown-- > 0) return;
+                searchCooldown = 10 + recruit.getRandom().nextInt(6);
+                itemEntityList.clear();
+
                 recruit.getCommandSenderWorld().getEntitiesOfClass(
                         ItemEntity.class,
                         recruit.getBoundingBox().inflate(16.0D, 3.0D, 16.0D),
                         (item) -> recruit.getAllowedItems().test(item) &&
-                                recruit.distanceTo(itemEntity) < 25 &&
-                                ((itemEntity.getItem().isEdible() && recruit.getHunger() < 30) ||
-                                        (recruit.wantsToPickUp(itemEntity.getItem())))
+                                recruit.distanceTo(item) < 25 &&
+                                ((item.getItem().isEdible() && recruit.getHunger() < 30) ||
+                                        (recruit.wantsToPickUp(item.getItem())))
                 ).forEach((item) -> {
-                    this.itemEntityList.add(itemEntity);
+                    this.itemEntityList.add(item);
                 });
 
                 if (itemEntityList.isEmpty()) {

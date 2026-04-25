@@ -77,7 +77,7 @@ final class RecruitInteractionService {
         }
 
         if (recruit.isOwned() && recruit.getTeam() != null && !player.getUUID().equals(recruit.getOwnerUUID()) && FactionEvents.recruitsFactionManager.getFactionByStringID(recruit.getTeam().getName()).getTeamLeaderUUID().equals(player.getUUID())) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenTakeOverScreen(recruit.getUUID()));
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenTakeOverScreen(recruit.getId(), recruit.getUUID()));
             return InteractionResult.SUCCESS;
         }
 

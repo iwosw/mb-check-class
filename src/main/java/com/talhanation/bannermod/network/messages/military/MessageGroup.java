@@ -4,8 +4,8 @@ import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.net.Message;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -32,11 +32,10 @@ public class MessageGroup implements Message<MessageGroup> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(100),
-                (recruit) -> recruit.getUUID().equals(this.recruitUUID)
-        ).forEach((recruit) -> this.setGroup(recruit, player, groupUUID));
+        Entity entity = player.serverLevel().getEntity(this.recruitUUID);
+        if (entity instanceof AbstractRecruitEntity recruit && player.getBoundingBox().inflate(100).intersects(recruit.getBoundingBox())) {
+            this.setGroup(recruit, player, groupUUID);
+        }
     }
 
     public void setGroup(AbstractRecruitEntity recruit, ServerPlayer player , UUID groupUUID){

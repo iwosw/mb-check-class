@@ -4,10 +4,10 @@ import com.talhanation.bannermod.entity.military.MessengerEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -25,21 +25,14 @@ public class MessageAnswerMessenger implements Message<MessageAnswerMessenger> {
     }
 
     public void executeServerSide(NetworkEvent.Context context){
-        ServerPlayer player = context.getSender();
-        List<MessengerEntity> list = Objects.requireNonNull(context.getSender()).getCommandSenderWorld().getEntitiesOfClass(
-                MessengerEntity.class,
-                context.getSender().getBoundingBox().inflate(16D)
-        );
-        for (MessengerEntity messenger : list){
+        ServerPlayer player = Objects.requireNonNull(context.getSender());
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof MessengerEntity messenger && messenger.distanceToSqr(player) <= 16D * 16D) {
+            messenger.teleportWaitTimer = 100;
+            player.sendSystemMessage(messenger.MESSENGER_INFO_ON_MY_WAY());
+            messenger.giveDeliverItem(player);
 
-            if (messenger.getUUID().equals(this.recruit)){
-
-                messenger.teleportWaitTimer = 100;
-                context.getSender().sendSystemMessage(messenger.MESSENGER_INFO_ON_MY_WAY());
-                messenger.giveDeliverItem(player);
-
-                messenger.setMessengerState(MessengerEntity.MessengerState.TELEPORT_BACK);
-            }
+            messenger.setMessengerState(MessengerEntity.MessengerState.TELEPORT_BACK);
         }
 
     }

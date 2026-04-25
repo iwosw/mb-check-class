@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -89,7 +90,10 @@ public final class WorkAreaIndex {
         if (!(level instanceof ServerLevel serverLevel)) {
             // On the client we don't maintain the index, so fall back to the broad scan.
             AABB aabb = new AABB(center, center).inflate(radius);
-            return level.getEntitiesOfClass(type, aabb);
+            List<T> fallback = level.getEntitiesOfClass(type, aabb);
+            RuntimeProfilingCounters.increment("work_area.index.fallback_scans");
+            RuntimeProfilingCounters.add("work_area.index.fallback_results", fallback.size());
+            return fallback;
         }
         ResourceKey<Level> key = level.dimension();
         Map<ChunkPos, Set<UUID>> chunks = byLevel.get(key);
@@ -120,10 +124,34 @@ public final class WorkAreaIndex {
 
     /** Convenience overload — uses an entity's position as the query center. */
     public <T extends AbstractWorkAreaEntity> List<T> queryInRange(Entity near,
-                                                                   double radius,
-                                                                   Class<T> type) {
+                                                                    double radius,
+                                                                    Class<T> type) {
         if (near == null) return List.of();
         return queryInRange(near.level(), near.position(), radius, type);
+    }
+
+    /** Query live work areas in exact chunk buckets, without applying a distance filter. */
+    public <T extends AbstractWorkAreaEntity> List<T> queryInChunks(ServerLevel level,
+                                                                    Iterable<ChunkPos> chunkPositions,
+                                                                    Class<T> type) {
+        if (level == null || chunkPositions == null || type == null) return List.of();
+        Map<ChunkPos, Set<UUID>> chunks = byLevel.get(level.dimension());
+        if (chunks == null || chunks.isEmpty()) {
+            return List.of();
+        }
+
+        List<T> results = new ArrayList<>();
+        for (ChunkPos chunkPosition : chunkPositions) {
+            Set<UUID> uuids = chunks.get(chunkPosition);
+            if (uuids == null) continue;
+            for (UUID uuid : uuids) {
+                Entity entity = level.getEntity(uuid);
+                if (!type.isInstance(entity)) continue;
+                if (!entity.isAlive()) continue;
+                results.add(type.cast(entity));
+            }
+        }
+        return results;
     }
 
     /** Total entries tracked in a given level (diagnostics only). */

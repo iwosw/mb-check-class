@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.ai.military;
 
+import java.util.Locale;
+
 /**
  * Stage 1 combat stance for squads/recruits.
  *
@@ -19,11 +21,11 @@ public enum CombatStance {
     SHIELD_WALL;
 
     public static CombatStance fromName(String name) {
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.isBlank()) {
             return LOOSE;
         }
         try {
-            return CombatStance.valueOf(name);
+            return CombatStance.valueOf(name.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ignored) {
             return LOOSE;
         }

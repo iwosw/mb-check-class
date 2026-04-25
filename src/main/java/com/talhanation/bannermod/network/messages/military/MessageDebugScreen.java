@@ -40,11 +40,12 @@ public class MessageDebugScreen implements Message<MessageDebugScreen> {
             return;
         }
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                v -> v.getUUID().equals(this.recruit) && v.isAlive()
-        ).forEach((recruit) -> recruit.openDebugScreen(player));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit
+                && recruit.isAlive()
+                && player.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+            recruit.openDebugScreen(player);
+        }
     }
 
     @Override

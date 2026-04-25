@@ -26,6 +26,9 @@ import java.util.*;
 
 public class LumberjackWorkGoal extends Goal {
 
+    private static final int AREA_SEARCH_COOLDOWN_TICKS = 20;
+    private static final int PATH_REQUEST_COOLDOWN_TICKS = 20;
+
     public LumberjackEntity lumberjack;
     public State state;
     public String errorMessage;
@@ -34,6 +37,10 @@ public class LumberjackWorkGoal extends Goal {
     public Stack<Tree> stackOfTrees;
     public Stack<BlockPos> stackToPlant;
     public Tree currentTree;
+    private int lastAreaSearchTick = -AREA_SEARCH_COOLDOWN_TICKS;
+    private int lastPathRequestTick = -PATH_REQUEST_COOLDOWN_TICKS;
+    @Nullable
+    private BlockPos lastPathRequestPos;
 
     public LumberjackWorkGoal(LumberjackEntity lumberjack) {
         this.lumberjack = lumberjack;
@@ -73,6 +80,9 @@ public class LumberjackWorkGoal extends Goal {
         switch(state){
             case SELECT_WORK_AREA ->{
                 if(lumberjack.currentLumberArea != null) setState(State.MOVE_TO_WORK_AREA);
+
+                if(lumberjack.tickCount - lastAreaSearchTick < AREA_SEARCH_COOLDOWN_TICKS) return;
+                lastAreaSearchTick = lumberjack.tickCount;
 
                 List<LumberArea> areas = getAvailableWorkAreasByPriority((ServerLevel) lumberjack.getCommandSenderWorld(), lumberjack, lumberjack.currentLumberArea);
 
@@ -445,15 +455,27 @@ public class LumberjackWorkGoal extends Goal {
         else{
             double distance = lumberjack.getHorizontalDistanceTo(pos.getCenter());
             if(distance < threshold){
+                lastPathRequestPos = null;
                 return false;
             }
             else{
-                lumberjack.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                if(shouldRequestPath(pos)){
+                    lumberjack.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                }
                 lumberjack.setFollowState(6); //Working
                 lumberjack.getLookControl().setLookAt(pos.getCenter());
             }
             return true;
         }
+    }
+
+    private boolean shouldRequestPath(BlockPos pos) {
+        if(!pos.equals(lastPathRequestPos) || lumberjack.tickCount - lastPathRequestTick >= PATH_REQUEST_COOLDOWN_TICKS){
+            lastPathRequestPos = pos;
+            lastPathRequestTick = lumberjack.tickCount;
+            return true;
+        }
+        return false;
     }
 
     public enum State{

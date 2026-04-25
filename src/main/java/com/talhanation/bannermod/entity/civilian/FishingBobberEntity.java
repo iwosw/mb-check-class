@@ -29,10 +29,16 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class FishingBobberEntity extends Projectile {
+    private static final int OWNER_LOOKUP_COOLDOWN_TICKS = 20;
+    private static final int WATER_DEPTH_SCAN_COOLDOWN_TICKS = 20;
+
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(FishingBobberEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     public int life;
     @Nullable
     private FishermanEntity owner;
+    private int nextOwnerLookupTick;
+    private int cachedWaterDepth;
+    private int nextWaterDepthScanTick;
 
     public boolean hooked;
 
@@ -151,7 +157,8 @@ public class FishingBobberEntity extends Projectile {
     }
 
     public FishermanEntity getOwner() {
-        if (this.owner == null && this.getOwnerUUID() != null) {
+        if (this.owner == null && this.getOwnerUUID() != null && this.tickCount >= this.nextOwnerLookupTick) {
+            this.nextOwnerLookupTick = this.tickCount + OWNER_LOOKUP_COOLDOWN_TICKS;
             Optional<FishermanEntity> owner = this.getCommandSenderWorld().getEntitiesOfClass(FishermanEntity.class, this.getBoundingBox().inflate(16))
                     .stream()
                     .filter(fisherman -> fisherman.getUUID().equals(this.getOwnerUUID()))
@@ -164,8 +171,16 @@ public class FishingBobberEntity extends Projectile {
 
     public int getWaterDepth() {
         if (!isInWater()) {
+            this.cachedWaterDepth = 0;
+            this.nextWaterDepthScanTick = 0;
             return 0;
         }
+
+        if (this.tickCount < this.nextWaterDepthScanTick) {
+            return this.cachedWaterDepth;
+        }
+
+        this.nextWaterDepthScanTick = this.tickCount + WATER_DEPTH_SCAN_COOLDOWN_TICKS;
 
         BlockPos pos = this.blockPosition();
         int depth = 0;
@@ -175,7 +190,8 @@ public class FishingBobberEntity extends Projectile {
             if (depth > 64) break;
         }
 
-        return depth + 1;
+        this.cachedWaterDepth = depth + 1;
+        return this.cachedWaterDepth;
     }
 
     public void setOwnerUUID(UUID owner) {

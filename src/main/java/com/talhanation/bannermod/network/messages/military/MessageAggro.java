@@ -4,9 +4,12 @@ import com.talhanation.bannermod.army.command.CommandIntent;
 import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
 import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -43,11 +46,23 @@ public class MessageAggro implements Message<MessageAggro> {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
 
         double boundBoxInflateModifier = fromGui ? 16.0D : 100.0D;
+        AABB commandBox = player.getBoundingBox().inflate(boundBoxInflateModifier);
 
-        List<AbstractRecruitEntity> pool = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(boundBoxInflateModifier)
+        List<AbstractRecruitEntity> pool = RecruitIndex.instance().groupInRange(
+                player.getCommandSenderWorld(),
+                this.group,
+                player.position(),
+                boundBoxInflateModifier * 2.0D
         );
+        if (pool == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            pool = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    commandBox
+            );
+        } else {
+            pool.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
+        }
 
         List<AbstractRecruitEntity> actors = new ArrayList<>();
         for (AbstractRecruitEntity recruit : pool) {

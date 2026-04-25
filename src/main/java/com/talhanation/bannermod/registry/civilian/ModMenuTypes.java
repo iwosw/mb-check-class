@@ -23,6 +23,7 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -81,9 +82,16 @@ public class ModMenuTypes {
     @Nullable
     private static AbstractWorkerEntity getRecruitByUUID(Player player, UUID uuid) {
         double distance = 10D;
-        return player.getCommandSenderWorld().getEntitiesOfClass(AbstractWorkerEntity.class,
-                new AABB(player.getX() - distance, player.getY() - distance, player.getZ() - distance,
-                        player.getX() + distance, player.getY() + distance, player.getZ() + distance),
+        AABB lookupBounds = new AABB(player.getX() - distance, player.getY() - distance, player.getZ() - distance,
+                player.getX() + distance, player.getY() + distance, player.getZ() + distance);
+        if (player.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            if (serverLevel.getEntity(uuid) instanceof AbstractWorkerEntity worker
+                    && lookupBounds.intersects(worker.getBoundingBox())) {
+                return worker;
+            }
+            return null;
+        }
+        return player.getCommandSenderWorld().getEntitiesOfClass(AbstractWorkerEntity.class, lookupBounds,
                 entity -> entity.getUUID().equals(uuid)).stream().findAny().orElse(null);
     }
 }

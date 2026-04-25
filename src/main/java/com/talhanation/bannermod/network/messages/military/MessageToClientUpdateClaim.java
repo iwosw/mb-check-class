@@ -3,6 +3,7 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.api.ClientClaimEvent;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -29,6 +30,7 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
     @Override
     @OnlyIn(Dist.CLIENT)
     public void executeClientSide(NetworkEvent.Context context) {
+        RuntimeProfilingCounters.recordNbtPacket("network.single_sync.claim", claimNBT);
         this.updateOrAddClaimFromNBT(claimNBT);
     }
     @OnlyIn(Dist.CLIENT)
@@ -48,6 +50,7 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
                     ClientManager.currentClaim = newClaim;
                 }
 
+                ClientManager.markClaimsChanged();
                 ClientManager.updateActiveSiege(newClaim);
 
                 MinecraftForge.EVENT_BUS.post(new ClientClaimEvent.DataUpdated(newClaim, isCurrentClaim));
@@ -56,6 +59,7 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
         }
 
         ClientManager.recruitsClaims.add(newClaim);
+        ClientManager.markClaimsChanged();
         ClientManager.updateActiveSiege(newClaim);
         MinecraftForge.EVENT_BUS.post(
                 new ClientClaimEvent.DataUpdated(newClaim, false));

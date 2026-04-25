@@ -1,9 +1,11 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.WorkerIndex;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
@@ -12,6 +14,7 @@ import com.talhanation.bannermod.shared.logistics.BannerModLogisticsReservation;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeEntrypoint;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
@@ -22,6 +25,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,19 +43,60 @@ public final class BannerModSettlementService {
                                         RecruitsClaimManager claimManager,
                                         BannerModSettlementManager settlementManager,
                                         BannerModGovernorManager governorManager) {
+        refreshClaimsBatch(level, claimManager, settlementManager, governorManager, 0, Integer.MAX_VALUE);
+    }
+
+    public static BatchResult refreshClaimsBatch(ServerLevel level,
+                                                 RecruitsClaimManager claimManager,
+                                                 BannerModSettlementManager settlementManager,
+                                                 BannerModGovernorManager governorManager,
+                                                 int startIndex,
+                                                 int maxClaims) {
         if (level == null || claimManager == null || settlementManager == null) {
-            return;
+            return BatchResult.completedResult();
+        }
+        long startNanos = System.nanoTime();
+
+        List<RecruitsClaim> claims = new ArrayList<>(claimManager.getAllClaims());
+        claims.removeIf(claim -> claim == null || claim.getUUID() == null);
+        claims.sort(Comparator.comparing(RecruitsClaim::getUUID));
+        int total = claims.size();
+        if (total == 0 || maxClaims <= 0) {
+            if (total == 0) {
+                settlementManager.pruneMissingClaims(Set.of());
+            }
+            return recordBatchResult("settlement.heartbeat.refresh_batch", new BatchResult(0, total == 0 ? 0 : Math.max(0, Math.min(startIndex, total)), total, total == 0), startNanos);
         }
 
-        Set<UUID> activeClaimUuids = new LinkedHashSet<>();
-        for (RecruitsClaim claim : claimManager.getAllClaims()) {
-            if (claim == null) {
-                continue;
-            }
-            activeClaimUuids.add(claim.getUUID());
-            settlementManager.putSnapshot(buildSnapshot(level, claim, governorManager));
+        int clampedStart = Math.max(0, Math.min(startIndex, total));
+        int endIndex = Math.min(total, clampedStart + maxClaims);
+        for (int i = clampedStart; i < endIndex; i++) {
+            settlementManager.putSnapshot(buildSnapshot(level, claims.get(i), governorManager));
         }
-        settlementManager.pruneMissingClaims(activeClaimUuids);
+
+        if (endIndex >= total) {
+            Set<UUID> activeClaimUuids = new LinkedHashSet<>();
+            for (RecruitsClaim claim : claims) {
+                activeClaimUuids.add(claim.getUUID());
+            }
+            settlementManager.pruneMissingClaims(activeClaimUuids);
+        }
+
+        return recordBatchResult("settlement.heartbeat.refresh_batch", new BatchResult(clampedStart, endIndex, total, endIndex >= total), startNanos);
+    }
+
+    private static BatchResult recordBatchResult(String keyPrefix, BatchResult result, long startNanos) {
+        RuntimeProfilingCounters.recordBatch(keyPrefix, Math.max(0, result.nextIndex() - result.startIndex()), result.totalItems(), System.nanoTime() - startNanos, result.completed());
+        return result;
+    }
+
+    public record BatchResult(int startIndex,
+                              int nextIndex,
+                              int totalItems,
+                              boolean completed) {
+        private static BatchResult completedResult() {
+            return new BatchResult(0, 0, 0, true);
+        }
     }
 
     public static void refreshClaimAt(ServerLevel level,
@@ -193,7 +238,7 @@ public final class BannerModSettlementService {
                     BannerModSettlementResidentAssignmentState.NOT_APPLICABLE
             ));
         }
-        for (AbstractWorkerEntity worker : level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()))) {
+        for (AbstractWorkerEntity worker : workersInClaim(level, claim)) {
             BannerModSettlementResidentScheduleSeed scheduleSeed = BannerModSettlementResidentScheduleSeed.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, worker.getBoundWorkAreaUUID());
             BannerModSettlementResidentMode residentMode = BannerModSettlementResidentMode.defaultFor(BannerModSettlementResidentRole.CONTROLLED_WORKER, worker.getOwnerUUID());
             BannerModSettlementResidentAssignmentState assignmentState = worker.getBoundWorkAreaUUID() == null
@@ -247,6 +292,15 @@ public final class BannerModSettlementService {
             ));
         }
         return new ArrayList<>(residents.values());
+    }
+
+    private static List<AbstractWorkerEntity> workersInClaim(ServerLevel level, RecruitsClaim claim) {
+        return WorkerIndex.instance()
+                .queryInClaim(level, claim)
+                .orElseGet(() -> {
+                    RuntimeProfilingCounters.increment("worker.index.fallback_scans");
+                    return level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+                });
     }
 
     static List<BannerModSettlementResidentRecord> applyResidentAssignmentSemantics(List<BannerModSettlementResidentRecord> residents,
@@ -430,7 +484,7 @@ public final class BannerModSettlementService {
     private static List<BannerModSettlementBuildingRecord> collectBuildings(ServerLevel level,
                                                                             RecruitsClaim claim) {
         List<BannerModSettlementBuildingRecord> buildings = new ArrayList<>();
-        for (AbstractWorkAreaEntity workArea : level.getEntitiesOfClass(AbstractWorkAreaEntity.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()))) {
+        for (AbstractWorkAreaEntity workArea : collectWorkAreas(level, claim, AbstractWorkAreaEntity.class)) {
             StockpileSeed stockpileSeed = resolveStockpileSeed(workArea);
             BannerModSettlementBuildingProfileSeed profileSeed = BannerModSettlementBuildingProfileSeed.fromWorkArea(workArea);
             buildings.add(new BannerModSettlementBuildingRecord(
@@ -651,8 +705,7 @@ public final class BannerModSettlementService {
         for (BannerModSettlementDesiredGoodSeed desiredGood : desiredGoodsSeed.desiredGoods()) {
             int coverageUnits = resolveSupplyCoverageUnits(desiredGood.desiredGoodId(), stockpileSummary, marketState, serviceCoverageByGood);
             int shortageUnits = Math.max(0, desiredGood.driverCount() - coverageUnits);
-            int reservationHintUnits = resolveReservationHintUnits(desiredGood.desiredGoodId(), desiredGood.driverCount(), stockpileSummary, marketState, serviceCoverageByGood)
-                    + reservationSignalSeed.reservationHintUnitsByGood().getOrDefault(desiredGood.desiredGoodId(), 0);
+            int reservationHintUnits = reservationSignalSeed.reservationHintUnitsByGood().getOrDefault(desiredGood.desiredGoodId(), 0);
             if (shortageUnits > 0) {
                 shortageSignalCount++;
                 shortageUnitCount += shortageUnits;
@@ -849,7 +902,7 @@ public final class BannerModSettlementService {
     private static BannerModSettlementMarketState collectMarketState(ServerLevel level,
                                                                      RecruitsClaim claim) {
         List<BannerModSettlementMarketRecord> markets = new ArrayList<>();
-        for (MarketArea marketArea : level.getEntitiesOfClass(MarketArea.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()))) {
+        for (MarketArea marketArea : collectWorkAreas(level, claim, MarketArea.class)) {
             marketArea.scanContainers();
             markets.add(new BannerModSettlementMarketRecord(
                     marketArea.getUUID(),
@@ -863,8 +916,21 @@ public final class BannerModSettlementService {
     }
 
     private static List<StorageArea> collectStorageAreas(ServerLevel level,
-                                                         RecruitsClaim claim) {
-        return level.getEntitiesOfClass(StorageArea.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+                                                          RecruitsClaim claim) {
+        return collectWorkAreas(level, claim, StorageArea.class);
+    }
+
+    private static <T extends AbstractWorkAreaEntity> List<T> collectWorkAreas(ServerLevel level,
+                                                                               RecruitsClaim claim,
+                                                                               Class<T> type) {
+        WorkAreaIndex index = WorkAreaIndex.instance();
+        if (index.sizeFor(level.dimension()) > 0) {
+            return index.queryInChunks(level, claim.getClaimedChunks(), type).stream()
+                    .filter(entity -> claim.containsChunk(entity.chunkPosition()))
+                    .toList();
+        }
+        RuntimeProfilingCounters.increment("work_area.index.fallback_scans");
+        return level.getEntitiesOfClass(type, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
     }
 
     private static List<BannerModSeaTradeEntrypoint> collectLiveSeaTradeEntrypoints(List<StorageArea> storageAreas) {
@@ -928,25 +994,6 @@ public final class BannerModSettlementService {
             case "market_goods" -> coverageUnits + marketState.readySellerDispatchCount();
             case "trade_stock" -> coverageUnits + marketState.openMarketCount() + stockpileSummary.portEntrypointCount();
             default -> coverageUnits;
-        };
-    }
-
-    private static int resolveReservationHintUnits(String goodId,
-                                                   int desiredUnits,
-                                                   BannerModSettlementStockpileSummary stockpileSummary,
-                                                   BannerModSettlementMarketState marketState,
-                                                   Map<String, Integer> serviceCoverageByGood) {
-        int reservationHintUnits = Math.max(0, desiredUnits) + serviceCoverageByGood.getOrDefault(goodId, 0);
-        if (goodId == null || goodId.isBlank()) {
-            return reservationHintUnits;
-        }
-        if (goodId.startsWith("storage_type:")) {
-            return reservationHintUnits + stockpileSummary.routedStorageCount();
-        }
-        return switch (goodId) {
-            case "market_goods" -> reservationHintUnits + marketState.sellerDispatchCount();
-            case "trade_stock" -> reservationHintUnits + marketState.openMarketCount() + stockpileSummary.portEntrypointCount();
-            default -> reservationHintUnits + stockpileSummary.routedStorageCount();
         };
     }
 

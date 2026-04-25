@@ -6,10 +6,10 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -43,25 +43,21 @@ public class MessageSendMessenger implements Message<MessageSendMessenger> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                MessengerEntity.class,
-                player.getBoundingBox().inflate(16D),
-                (messenger) -> messenger.getUUID().equals(this.recruit)
-        ).forEach((messenger) -> {
-            if (messenger.getUUID().equals(this.recruit)){
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof MessengerEntity messenger
+                && player.getBoundingBox().inflate(16D).intersects(messenger.getBoundingBox())) {
 
-                messenger.setMessage(this.message);
+            messenger.setMessage(this.message);
 
-                if(!this.nbt.isEmpty()){
-                    messenger.setTargetPlayerInfo(RecruitsPlayerInfo.getFromNBT(this.nbt));
-                }
-
-                if(start){
-                    messenger.setIsTreatyMessenger(false);
-                    messenger.start();
-                }
+            if(!this.nbt.isEmpty()){
+                messenger.setTargetPlayerInfo(RecruitsPlayerInfo.getFromNBT(this.nbt));
             }
-        });
+
+            if(start){
+                messenger.setIsTreatyMessenger(false);
+                messenger.start();
+            }
+        }
     }
 
     public MessageSendMessenger fromBytes(FriendlyByteBuf buf) {

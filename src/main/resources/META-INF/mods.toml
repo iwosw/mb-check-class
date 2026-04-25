@@ -23,3 +23,10 @@ authors="talhanation, kaiserroman"
 description='''
 BannerMod is the merged runtime for Villager Recruits squad gameplay plus the absorbed Workers subsystem, combining recruit command, claims, siege support, and worker automation in one active mod.
 '''
+
+[[dependencies.bannermod]]
+modId="bettercombat"
+mandatory=false
+versionRange="[1.9.0,)"
+ordering="AFTER"
+side="BOTH"

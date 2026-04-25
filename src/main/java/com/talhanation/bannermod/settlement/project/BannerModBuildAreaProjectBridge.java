@@ -68,12 +68,11 @@ public final class BannerModBuildAreaProjectBridge {
     }
 
     /**
-     * Pop the next {@link PendingProject} for {@code claimUuid}, try to resolve a BuildArea
+     * Inspect the next {@link PendingProject} for {@code claimUuid}, try to resolve a BuildArea
      * for it, and return a fresh {@link ProjectAssignment} bound to that BuildArea.
      *
-     * <p>If the resolver cannot bind a BuildArea the project is pushed back onto the front
-     * of the scheduler queue and {@link Optional#empty()} is returned so the caller can
-     * retry next tick.
+     * <p>If the resolver cannot bind a BuildArea the queue is left unchanged and
+     * {@link Optional#empty()} is returned so the caller can retry next tick.
      */
     public Optional<ProjectAssignment> attemptAssignment(
             BannerModSettlementProjectScheduler scheduler,
@@ -84,7 +83,7 @@ public final class BannerModBuildAreaProjectBridge {
         if (scheduler == null || claimUuid == null || resolver == null) {
             return Optional.empty();
         }
-        Optional<PendingProject> head = scheduler.pollNext(claimUuid);
+        Optional<PendingProject> head = scheduler.peek(claimUuid);
         if (head.isEmpty()) {
             return Optional.empty();
         }
@@ -93,14 +92,13 @@ public final class BannerModBuildAreaProjectBridge {
         try {
             binding = resolver.resolveCandidate(claimUuid, project);
         } catch (RuntimeException resolverError) {
-            // Resolver failures must not drop the project. Re-queue and bubble nothing.
-            scheduler.requeueFront(claimUuid, project);
+            // Resolver failures must not drop the project.
             throw resolverError;
         }
         if (binding.isEmpty()) {
-            scheduler.requeueFront(claimUuid, project);
             return Optional.empty();
         }
+        scheduler.pollNext(claimUuid);
         BuildAreaBinding resolved = binding.get();
         AssignmentPhase phase = resolved.hasTemplateLoaded()
                 ? AssignmentPhase.SEARCHING_BUILDER

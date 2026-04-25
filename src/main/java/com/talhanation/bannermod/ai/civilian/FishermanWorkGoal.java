@@ -27,6 +27,8 @@ import java.util.*;
 
 public class FishermanWorkGoal extends Goal {
 
+    private static final int PATH_REQUEST_COOLDOWN_TICKS = 20;
+
     public FishermanEntity fisherman;
     public FishingBobberEntity fishingBobber;
     public State state;
@@ -35,6 +37,9 @@ public class FishermanWorkGoal extends Goal {
     public BlockPos blockPos;
     private int catchTime = 0;
     private int throwTime;
+    private int lastPathRequestTick = -PATH_REQUEST_COOLDOWN_TICKS;
+    @Nullable
+    private BlockPos lastPathRequestPos;
     public FishermanWorkGoal(FishermanEntity fisherman) {
         this.fisherman = fisherman;
         setFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
@@ -246,15 +251,27 @@ public class FishermanWorkGoal extends Goal {
             double distance = fisherman.getHorizontalDistanceTo(pos.getCenter());
             if(distance < threshold){
                 fisherman.getNavigation().stop();
+                lastPathRequestPos = null;
                 return false;
             }
             else{
-                fisherman.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                if(shouldRequestPath(pos)){
+                    fisherman.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                }
                 fisherman.setFollowState(6); //Working
                 fisherman.getLookControl().setLookAt(pos.getCenter());
             }
             return true;
         }
+    }
+
+    private boolean shouldRequestPath(BlockPos pos) {
+        if(!pos.equals(lastPathRequestPos) || fisherman.tickCount - lastPathRequestTick >= PATH_REQUEST_COOLDOWN_TICKS){
+            lastPathRequestPos = pos;
+            lastPathRequestTick = fisherman.tickCount;
+            return true;
+        }
+        return false;
     }
 
     public void spawnFishingLoot() {

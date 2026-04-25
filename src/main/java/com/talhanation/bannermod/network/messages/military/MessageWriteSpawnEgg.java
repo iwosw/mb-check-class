@@ -9,6 +9,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.scores.Team;
@@ -36,25 +37,32 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, context.getSender().getBoundingBox().inflate(64.0D),
-                (recruit) -> recruit.getUUID().equals(this.recruit)
-        ).forEach((recruitEntity) -> {
-            EntityType<?> type = recruitEntity.getType();
-            ItemStack itemStack = this.getItemStack(type);
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruitEntity && recruitEntity.distanceToSqr(player) <= 64.0D * 64.0D) {
+            writeSpawnEggToHand(player, recruitEntity, InteractionHand.MAIN_HAND);
+        }
+    }
 
-            CompoundTag entityTag = new CompoundTag();
-            entityTag = this.fillRecruitsInfo(entityTag, recruitEntity);
+    public static boolean writeSpawnEggToHand(ServerPlayer player, AbstractRecruitEntity recruitEntity, InteractionHand hand) {
+        if (player == null || recruitEntity == null || hand == null) {
+            return false;
+        }
+        if (!player.getItemInHand(hand).isEmpty()) {
+            return false;
+        }
 
+        MessageWriteSpawnEgg writer = new MessageWriteSpawnEgg();
+        ItemStack itemStack = writer.getItemStack(recruitEntity.getType());
+        if (itemStack.isEmpty()) {
+            return false;
+        }
 
-
-            CompoundTag itemTag = new CompoundTag();
-            itemTag.put("EntityTag", entityTag);
-
-            if (itemStack != null && !itemStack.isEmpty() && player.getMainHandItem().isEmpty()) {
-                itemStack.setTag(itemTag);
-                player.setItemInHand(InteractionHand.MAIN_HAND, itemStack);
-            }
-        });
+        CompoundTag entityTag = writer.fillRecruitsInfo(new CompoundTag(), recruitEntity);
+        CompoundTag itemTag = new CompoundTag();
+        itemTag.put("EntityTag", entityTag);
+        itemStack.setTag(itemTag);
+        player.setItemInHand(hand, itemStack);
+        return true;
     }
 
     public CompoundTag fillRecruitsInfo(CompoundTag entityTag, AbstractRecruitEntity recruitEntity) {
@@ -166,18 +174,28 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
 
     public ItemStack getItemStack(EntityType<?> type){
         ItemStack itemStack = ItemStack.EMPTY;
-        if (type.getDescriptionId().equals("entity.recruits.recruit")) {
+        if (type == ModItems.RECRUIT_SPAWN_EGG.get().getType(null)) {
             itemStack = new ItemStack(ModItems.RECRUIT_SPAWN_EGG.get());
-        } else if (type.getDescriptionId().equals("entity.recruits.recruit_shieldman")) {
+        } else if (type == ModItems.RECRUIT_SHIELD_SPAWN_EGG.get().getType(null)) {
             itemStack = new ItemStack(ModItems.RECRUIT_SHIELD_SPAWN_EGG.get());
-        } else if (type.getDescriptionId().equals("entity.recruits.bowman")) {
+        } else if (type == ModItems.BOWMAN_SPAWN_EGG.get().getType(null)) {
             itemStack = new ItemStack(ModItems.BOWMAN_SPAWN_EGG.get());
-        } else if (type.getDescriptionId().equals("entity.recruits.crossbowman")) {
+        } else if (type == ModItems.CROSSBOWMAN_SPAWN_EGG.get().getType(null)) {
             itemStack = new ItemStack(ModItems.CROSSBOWMAN_SPAWN_EGG.get());
-        } else if (type.getDescriptionId().equals("entity.recruits.horseman")) {
+        } else if (type == ModItems.HORSEMAN_SPAWN_EGG.get().getType(null)) {
             itemStack = new ItemStack(ModItems.HORSEMAN_SPAWN_EGG.get());
-        } else if (type.getDescriptionId().equals("entity.recruits.nomad")) {
+        } else if (type == ModItems.NOMAD_SPAWN_EGG.get().getType(null)) {
             itemStack = new ItemStack(ModItems.NOMAD_SPAWN_EGG.get());
+        } else if (type == ModItems.VILLAGER_NOBLE_SPAWN_EGG.get().getType(null)) {
+            itemStack = new ItemStack(ModItems.VILLAGER_NOBLE_SPAWN_EGG.get());
+        } else if (type == ModItems.MESSENGER_SPAWN_EGG.get().getType(null)) {
+            itemStack = new ItemStack(ModItems.MESSENGER_SPAWN_EGG.get());
+        } else if (type == ModItems.SCOUT_SPAWN_EGG.get().getType(null)) {
+            itemStack = new ItemStack(ModItems.SCOUT_SPAWN_EGG.get());
+        } else if (type == ModItems.PATROL_LEADER_SPAWN_EGG.get().getType(null)) {
+            itemStack = new ItemStack(ModItems.PATROL_LEADER_SPAWN_EGG.get());
+        } else if (type == ModItems.CAPTAIN_SPAWN_EGG.get().getType(null)) {
+            itemStack = new ItemStack(ModItems.CAPTAIN_SPAWN_EGG.get());
         }
 
         return itemStack;

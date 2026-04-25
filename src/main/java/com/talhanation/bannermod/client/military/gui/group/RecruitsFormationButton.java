@@ -43,6 +43,7 @@ public class RecruitsFormationButton extends ActivateableButton {
             case 6 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/vform.png");
             case 7 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/circle.png");
             case 8 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/movement.png");
+            case 9 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/square.png");
         }
         return location;
     }

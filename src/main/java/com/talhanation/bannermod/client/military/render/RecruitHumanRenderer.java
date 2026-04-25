@@ -2,9 +2,13 @@ package com.talhanation.bannermod.client.military.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.events.ClientEvent;
+import com.talhanation.bannermod.client.military.models.RecruitHumanModel;
 import com.talhanation.bannermod.client.military.render.layer.RecruitHumanBiomeLayer;
 import com.talhanation.bannermod.client.military.render.layer.RecruitHumanCompanionLayer;
 import com.talhanation.bannermod.client.military.render.layer.RecruitHumanTeamColorLayer;
+import com.talhanation.bannermod.client.military.render.layer.RecruitLodArmorLayer;
+import com.talhanation.bannermod.client.military.render.layer.RecruitLodCustomHeadLayer;
+import com.talhanation.bannermod.client.military.render.layer.RecruitLodItemInHandLayer;
 import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
@@ -52,15 +56,20 @@ public class RecruitHumanRenderer extends MobRenderer<AbstractRecruitEntity, Hum
     public ResourceLocation getTextureLocation(AbstractRecruitEntity recruit) {
         return TEXTURE[recruit.getVariant()];
     }
+
+    public static ResourceLocation crowdTexture(AbstractRecruitEntity recruit) {
+        return TEXTURE[recruit.getVariant()];
+    }
+
     public RecruitHumanRenderer(EntityRendererProvider.Context mgr) {
-        super(mgr, new HumanoidModel<>((mgr.bakeLayer(ModelLayers.PLAYER))), 0.5F);
-        this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel(mgr.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(mgr.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), mgr.getModelManager()));
+        super(mgr, new RecruitHumanModel(mgr.bakeLayer(ModelLayers.PLAYER)), 0.5F);
+        this.addLayer(new RecruitLodArmorLayer(this, new HumanoidModel<>(mgr.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel<>(mgr.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), mgr.getModelManager()));
         this.addLayer(new RecruitHumanTeamColorLayer(this));
         this.addLayer(new RecruitHumanBiomeLayer(this));
         this.addLayer(new RecruitHumanCompanionLayer(this));
         //this.addLayer(new ArrowLayer<>(mgr, this));
-        this.addLayer(new ItemInHandLayer<>(this, mgr.getItemInHandRenderer()));
-        this.addLayer(new CustomHeadLayer<>(this, mgr.getModelSet(), mgr.getItemInHandRenderer()));
+        this.addLayer(new RecruitLodItemInHandLayer<>(this, mgr.getItemInHandRenderer()));
+        this.addLayer(new RecruitLodCustomHeadLayer<>(this, mgr.getModelSet(), mgr.getItemInHandRenderer()));
 
     }
 
@@ -68,6 +77,11 @@ public class RecruitHumanRenderer extends MobRenderer<AbstractRecruitEntity, Hum
     public void render(AbstractRecruitEntity recruit, float p_117789_, float p_117790_, PoseStack p_117791_, MultiBufferSource p_117792_, int p_117793_) {
         this.setModelProperties(recruit);
         super.render(recruit, p_117789_, p_117790_, p_117791_, p_117792_, p_117793_);
+    }
+
+    @Override
+    protected boolean shouldShowName(AbstractRecruitEntity recruit) {
+        return RecruitRenderLod.shouldRenderName(recruit) && super.shouldShowName(recruit);
     }
 
     private void setModelProperties(AbstractRecruitEntity recruit) {

@@ -42,6 +42,9 @@ import java.util.stream.Collectors;
 
 public class BuilderWorkGoal extends Goal {
 
+    private static final int AREA_SEARCH_COOLDOWN_TICKS = 20;
+    private static final int PATH_REQUEST_COOLDOWN_TICKS = 20;
+
     public BuilderEntity builderEntity;
     public State state;
     public String errorMessage;
@@ -50,6 +53,10 @@ public class BuilderWorkGoal extends Goal {
     public Stack<BlockPos> stackToBreak;
     public Stack<BlockPos> stackToPlace;
     public int minBuildHeight;
+    private int lastAreaSearchTick = -AREA_SEARCH_COOLDOWN_TICKS;
+    private int lastPathRequestTick = -PATH_REQUEST_COOLDOWN_TICKS;
+    @Nullable
+    private BlockPos lastPathRequestPos;
 
     public BuilderWorkGoal(BuilderEntity builderEntity) {
         this.builderEntity = builderEntity;
@@ -100,6 +107,9 @@ public class BuilderWorkGoal extends Goal {
         switch(state){
             case SELECT_WORK_AREA ->{
                 if(builderEntity.currentBuildArea != null) setState(State.MOVE_TO_WORK_AREA);
+
+                if(builderEntity.tickCount - lastAreaSearchTick < AREA_SEARCH_COOLDOWN_TICKS) return;
+                lastAreaSearchTick = builderEntity.tickCount;
 
                 List<BuildArea> areas = getAvailableWorkAreasByPriority((ServerLevel) builderEntity.getCommandSenderWorld(), builderEntity, builderEntity.currentBuildArea);
 
@@ -615,16 +625,28 @@ public class BuilderWorkGoal extends Goal {
             double distance = builderEntity.getHorizontalDistanceTo(pos.getCenter());
             if(distance < threshold){
                 builderEntity.getNavigation().stop();
+                lastPathRequestPos = null;
                 return false;
             }
             else{
 
                 builderEntity.setFollowState(6); //Working
-                builderEntity.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                if(shouldRequestPath(pos)){
+                    builderEntity.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                }
                 builderEntity.getLookControl().setLookAt(pos.getCenter());
             }
             return true;
         }
+    }
+
+    private boolean shouldRequestPath(BlockPos pos) {
+        if(!pos.equals(lastPathRequestPos) || builderEntity.tickCount - lastPathRequestTick >= PATH_REQUEST_COOLDOWN_TICKS){
+            lastPathRequestPos = pos;
+            lastPathRequestTick = builderEntity.tickCount;
+            return true;
+        }
+        return false;
     }
 
     public enum State{

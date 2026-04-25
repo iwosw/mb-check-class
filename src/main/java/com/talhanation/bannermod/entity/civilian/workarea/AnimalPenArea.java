@@ -26,6 +26,8 @@ import java.util.Stack;
 
 public class AnimalPenArea extends AbstractWorkAreaEntity {
 
+    private static final int ANIMAL_SCAN_COOLDOWN_TICKS = 20;
+
     public static final EntityDataAccessor<Integer> ANIMAL_TYPE = SynchedEntityData.defineId(AnimalPenArea.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Boolean> SLAUGHTER = SynchedEntityData.defineId(AnimalPenArea.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> BREED = SynchedEntityData.defineId(AnimalPenArea.class, EntityDataSerializers.BOOLEAN);
@@ -36,6 +38,9 @@ public class AnimalPenArea extends AbstractWorkAreaEntity {
     public Stack<Animal> animalsForSpecialTask = new Stack<>();
     public Stack<Animal> animalsToSlaughter = new Stack<>();
     private int breedTime;
+    private int nextBreedScanTick;
+    private int nextSpecialScanTick;
+    private int nextSlaughterScanTick;
 
 
     public AnimalPenArea(EntityType<?> type, Level level) {
@@ -117,6 +122,9 @@ public class AnimalPenArea extends AbstractWorkAreaEntity {
 
     public void setAnimalType(AnimalTypes type){
         this.entityData.set(ANIMAL_TYPE, type.getIndex());
+        this.nextBreedScanTick = 0;
+        this.nextSpecialScanTick = 0;
+        this.nextSlaughterScanTick = 0;
     }
 
     public void setSpecial(boolean bool){
@@ -157,6 +165,9 @@ public class AnimalPenArea extends AbstractWorkAreaEntity {
     }
 
     public void scanAnimalSlaughter(){
+        if(this.tickCount < nextSlaughterScanTick) return;
+        nextSlaughterScanTick = this.tickCount + ANIMAL_SCAN_COOLDOWN_TICKS;
+
         if(area == null) area = this.getArea();
 
         animalsToSlaughter.clear();
@@ -170,6 +181,9 @@ public class AnimalPenArea extends AbstractWorkAreaEntity {
     }
 
     public void scanAnimalSpecial(){
+        if(this.tickCount < nextSpecialScanTick) return;
+        nextSpecialScanTick = this.tickCount + ANIMAL_SCAN_COOLDOWN_TICKS;
+
         if(area == null) area = this.getArea();
 
         animalsForSpecialTask.clear();
@@ -206,6 +220,9 @@ public class AnimalPenArea extends AbstractWorkAreaEntity {
     }
 
     public void scanAnimalBreed(){
+        if(this.tickCount < nextBreedScanTick) return;
+        nextBreedScanTick = this.tickCount + ANIMAL_SCAN_COOLDOWN_TICKS;
+
         if(area == null) area = this.getArea();
 
         animalsToBreed.clear();

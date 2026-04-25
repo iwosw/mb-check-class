@@ -1,7 +1,10 @@
 package com.talhanation.bannermod.army.command;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -18,10 +21,7 @@ public final class RecruitSelectionService {
     /** Select every owned, alive, listening recruit within {@code radius} of the player. */
     public static int selectNearby(ServerPlayer player, double radius) {
         if (player == null) return 0;
-        List<AbstractRecruitEntity> nearby = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(radius)
-        );
+        List<AbstractRecruitEntity> nearby = nearbyRecruits(player, radius, true);
         Set<UUID> selection = new LinkedHashSet<>();
         for (AbstractRecruitEntity recruit : nearby) {
             if (!recruit.isAlive()) continue;
@@ -38,10 +38,7 @@ public final class RecruitSelectionService {
     /** Select every owned recruit belonging to a specific group within {@code radius}. */
     public static int selectGroup(ServerPlayer player, UUID groupUuid, double radius) {
         if (player == null || groupUuid == null) return 0;
-        List<AbstractRecruitEntity> nearby = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(radius)
-        );
+        List<AbstractRecruitEntity> nearby = nearbyRecruits(player, radius, true);
         Set<UUID> selection = new LinkedHashSet<>();
         for (AbstractRecruitEntity recruit : nearby) {
             if (!recruit.isAlive()) continue;
@@ -61,10 +58,7 @@ public final class RecruitSelectionService {
             RecruitSelectionRegistry.instance().clear(player == null ? null : player.getUUID());
             return 0;
         }
-        List<AbstractRecruitEntity> nearby = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(radius)
-        );
+        List<AbstractRecruitEntity> nearby = nearbyRecruits(player, radius, true);
         Set<UUID> selection = new LinkedHashSet<>();
         for (AbstractRecruitEntity recruit : nearby) {
             if (!candidateUuids.contains(recruit.getUUID())) continue;
@@ -75,5 +69,15 @@ public final class RecruitSelectionService {
         }
         RecruitSelectionRegistry.instance().set(player.getUUID(), selection);
         return selection.size();
+    }
+
+    private static List<AbstractRecruitEntity> nearbyRecruits(ServerPlayer player, double radius, boolean aliveOnly) {
+        AABB box = player.getBoundingBox().inflate(radius);
+        List<AbstractRecruitEntity> indexed = RecruitIndex.instance().allInBox(player.getCommandSenderWorld(), box, aliveOnly);
+        if (indexed != null) {
+            return indexed;
+        }
+        RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+        return player.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, box);
     }
 }

@@ -7,6 +7,7 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -36,18 +37,15 @@ public class MessageOpenMerchantEditTradeScreen implements Message<MessageOpenMe
             return;
         }
         ServerPlayer player = context.getSender();
-        player.getCommandSenderWorld().getEntitiesOfClass(MerchantEntity.class, player.getBoundingBox()
-                        .inflate(32.0D), v -> v
-                .getUUID()
-                        .equals(this.merchantUuid))
-                .stream()
-                .findAny()
-                .ifPresent(merchant -> {
-                    if (!MerchantAccessControl.canManage(merchant.getOwnerUUID(), player.getUUID(), player.hasPermissions(2))) {
-                        return;
-                    }
-                    merchant.openAddEditTradeGUI(player, WorkersMerchantTrade.fromNbt(nbt));
-                });
+        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+        if (entity instanceof MerchantEntity merchant
+                && merchant.isAlive()
+                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+            if (!MerchantAccessControl.canManage(merchant.getOwnerUUID(), player.getUUID(), player.hasPermissions(2))) {
+                return;
+            }
+            merchant.openAddEditTradeGUI(player, WorkersMerchantTrade.fromNbt(nbt));
+        }
     }
     @Override
     public MessageOpenMerchantEditTradeScreen fromBytes(FriendlyByteBuf buf) {

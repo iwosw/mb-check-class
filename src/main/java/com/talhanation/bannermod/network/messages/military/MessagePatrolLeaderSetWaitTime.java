@@ -4,10 +4,10 @@ import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,11 +30,11 @@ public class MessagePatrolLeaderSetWaitTime implements Message<MessagePatrolLead
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractLeaderEntity.class,
-                player.getBoundingBox().inflate(100.0D),
-                (leader) -> leader.getUUID().equals(this.recruit)
-        ).forEach((leader) -> leader.setWaitTimeInMin(this.time));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractLeaderEntity leader
+                && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
+            leader.setWaitTimeInMin(this.time);
+        }
     }
 
     public MessagePatrolLeaderSetWaitTime fromBytes(FriendlyByteBuf buf) {

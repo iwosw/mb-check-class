@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.WeakHashMap;
 
 /**
  * Minimal facade that binds one {@link BannerModSettlementProjectScheduler} and
@@ -17,20 +16,18 @@ import java.util.WeakHashMap;
  *
  * <p>Settlement-service code (arriving in slice D) feeds freshly scored
  * {@link PendingProject growth queues} in and receives {@link ProjectAssignment}s
- * back. Nothing is persisted; everything lives only for the lifetime of the server
- * process. A real resolver is not bundled here — callers supply one, falling back
- * to {@link BannerModBuildAreaProjectBridge.NoopBuildAreaResolver} when the
- * production resolver is not yet available.
+ * back. Queue state is persisted through {@link BannerModSettlementProjectSavedData}.
+ * A real resolver is not bundled here — callers supply one, falling back to
+ * {@link BannerModBuildAreaProjectBridge.NoopBuildAreaResolver} when the production
+ * resolver is not yet available.
  */
 public final class BannerModSettlementProjectRuntime {
-
-    private static final WeakHashMap<ServerLevel, BannerModSettlementProjectRuntime> PER_LEVEL = new WeakHashMap<>();
 
     private final BannerModSettlementProjectScheduler scheduler;
     private final BannerModBuildAreaProjectBridge bridge;
 
-    private BannerModSettlementProjectRuntime(BannerModSettlementProjectScheduler scheduler,
-                                              BannerModBuildAreaProjectBridge bridge) {
+    BannerModSettlementProjectRuntime(BannerModSettlementProjectScheduler scheduler,
+                                      BannerModBuildAreaProjectBridge bridge) {
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
         this.bridge = Objects.requireNonNull(bridge, "bridge");
     }
@@ -38,10 +35,7 @@ public final class BannerModSettlementProjectRuntime {
     /** Lazy per-level singleton for production use. */
     public static synchronized BannerModSettlementProjectRuntime forServer(ServerLevel level) {
         Objects.requireNonNull(level, "level");
-        return PER_LEVEL.computeIfAbsent(level, lvl -> new BannerModSettlementProjectRuntime(
-                BannerModSettlementProjectScheduler.forServer(lvl),
-                new BannerModBuildAreaProjectBridge()
-        ));
+        return BannerModSettlementProjectSavedData.get(level).runtime();
     }
 
     /** Package-private factory for tests and detached callers. */

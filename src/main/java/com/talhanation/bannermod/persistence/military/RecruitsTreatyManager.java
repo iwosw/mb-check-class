@@ -25,8 +25,9 @@ public class RecruitsTreatyManager {
 
     public void save(ServerLevel level) {
         RecruitsTreatySaveData data = RecruitsTreatySaveData.get(level);
-        data.setTreaties(treaties);
-        data.setDirty();
+        if (!data.getTreaties().equals(treaties)) {
+            data.setTreaties(treaties);
+        }
         broadcastTreatiesToAll(level);
     }
 

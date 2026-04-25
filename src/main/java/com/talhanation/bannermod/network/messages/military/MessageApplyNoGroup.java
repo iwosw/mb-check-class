@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -34,9 +36,15 @@ public class MessageApplyNoGroup implements Message<MessageApplyNoGroup> {
 
         ServerLevel serverLevel = (ServerLevel) player.getCommandSenderWorld();
 
-        for(Entity entity : serverLevel.getEntities().getAll()){
-            if(entity instanceof AbstractRecruitEntity recruit && recruit.getGroup() != null && recruit.getGroup().equals(groupID))
-                recruitList.add(recruit);
+        List<AbstractRecruitEntity> indexed = RecruitIndex.instance().groupMembers(serverLevel, groupID);
+        if (indexed != null) {
+            recruitList.addAll(indexed);
+        } else {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            for(Entity entity : serverLevel.getEntities().getAll()){
+                if(entity instanceof AbstractRecruitEntity recruit && recruit.getGroup() != null && recruit.getGroup().equals(groupID))
+                    recruitList.add(recruit);
+            }
         }
 
         for(AbstractRecruitEntity recruit : recruitList){

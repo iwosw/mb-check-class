@@ -2,13 +2,16 @@ package com.talhanation.bannermod.events.runtime;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.entity.military.RecruitEntity;
 import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.IronGolem;
 
+import java.util.List;
 import java.util.Random;
 
 public final class VillageGuardSpawnService {
@@ -17,7 +20,11 @@ public final class VillageGuardSpawnService {
 
     public static void handleIronGolemOverride(IronGolem ironGolemEntity, Random random) {
         if (!ironGolemEntity.isPlayerCreated() && RecruitsServerConfig.OverrideIronGolemSpawn.get()) {
-            var nearby = ironGolemEntity.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, ironGolemEntity.getBoundingBox().inflate(32));
+            List<AbstractRecruitEntity> nearby = RecruitIndex.instance().allInBox(ironGolemEntity.getCommandSenderWorld(), ironGolemEntity.getBoundingBox().inflate(32), false);
+            if (nearby == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                nearby = ironGolemEntity.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, ironGolemEntity.getBoundingBox().inflate(32));
+            }
             nearby.removeIf(recruit -> recruit instanceof VillagerNobleEntity);
             if (nearby.size() > 1) {
                 ironGolemEntity.remove(Entity.RemovalReason.KILLED);

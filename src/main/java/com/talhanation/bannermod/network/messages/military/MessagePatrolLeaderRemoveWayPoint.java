@@ -6,6 +6,7 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -30,11 +31,12 @@ public class MessagePatrolLeaderRemoveWayPoint implements Message<MessagePatrolL
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractLeaderEntity.class,
-                player.getBoundingBox().inflate(100.0D),
-                v -> v.getUUID().equals(this.worker) && v.isAlive()
-        ).forEach((merchant) -> this.removeLastWayPoint(player, merchant));
+        Entity entity = player.serverLevel().getEntity(this.worker);
+        if (entity instanceof AbstractLeaderEntity leader
+                && leader.isAlive()
+                && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
+            this.removeLastWayPoint(player, leader);
+        }
     }
 
     private void removeLastWayPoint(ServerPlayer player, AbstractLeaderEntity leaderEntity) {

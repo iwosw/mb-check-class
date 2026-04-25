@@ -3,6 +3,8 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,18 +37,25 @@ public class MessageMountEntity implements Message<MessageMountEntity> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        List<Entity> entityList = player.getCommandSenderWorld().getEntitiesOfClass(
-                Entity.class,
-                player.getBoundingBox().inflate(100),
-                (mount) -> mount.getUUID().equals(target) && RecruitsServerConfig.MountWhiteList.get().contains(mount.getEncodeId())
-        );
-        if (entityList.isEmpty()) return;
+        Entity mount = player.serverLevel().getEntity(target);
+        if (mount == null
+                || mount.distanceToSqr(player) > 100.0D * 100.0D
+                || !RecruitsServerConfig.MountWhiteList.get().contains(mount.getEncodeId())) {
+            return;
+        }
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(100),
-                (recruit) -> recruit.isEffectedByCommand(uuid, group)
-        ).forEach((recruit) -> CommandEvents.onMountButton(uuid, recruit, target, group));
+        List<AbstractRecruitEntity> recruits = this.group == null
+                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
+                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
+        if (recruits == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(100),
+                    (recruit) -> recruit.isEffectedByCommand(uuid, group)
+            );
+        }
+        recruits.forEach((recruit) -> CommandEvents.onMountButton(uuid, recruit, target, group));
     }
 
     public MessageMountEntity fromBytes(FriendlyByteBuf buf) {

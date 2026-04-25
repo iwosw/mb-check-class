@@ -55,7 +55,11 @@ public class RecruitsDiplomacySaveData extends SavedData {
 
     public void setRelation(String team, String otherTeam, byte relationByte) {
         DiplomacyStatus relation = DiplomacyStatus.fromByte(relationByte);
-        diplomacyMap.computeIfAbsent(team, k -> new HashMap<>()).put(otherTeam, relation);
+        Map<String, DiplomacyStatus> relations = diplomacyMap.computeIfAbsent(team, k -> new HashMap<>());
+        if (relations.get(otherTeam) == relation) {
+            return;
+        }
+        relations.put(otherTeam, relation);
         this.setDirty();
     }
 

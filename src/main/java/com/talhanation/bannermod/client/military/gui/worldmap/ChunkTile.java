@@ -59,38 +59,23 @@ public class ChunkTile {
         NativeImage chunkImg = chunkImage.getNativeImage();
         int startX = chunkXInTile * PIXELS_PER_CHUNK;
         int startZ = chunkZInTile * PIXELS_PER_CHUNK;
+        boolean changed = false;
 
         for (int x = 0; x < PIXELS_PER_CHUNK; x++) {
             for (int z = 0; z < PIXELS_PER_CHUNK; z++) {
-                this.image.setPixelRGBA(startX + x, startZ + z, chunkImg.getPixelRGBA(x, z));
+                int tileX = startX + x;
+                int tileZ = startZ + z;
+                int pixel = chunkImg.getPixelRGBA(x, z);
+                if (this.image.getPixelRGBA(tileX, tileZ) != pixel) {
+                    this.image.setPixelRGBA(tileX, tileZ, pixel);
+                    changed = true;
+                }
             }
         }
 
+        if (!changed) return;
         this.texture.upload();
         this.needsUpdate = true;
-    }
-
-    public void mergeWithExistingTile(File existingTileFile) {
-        if (!existingTileFile.exists() || this.image == null) return;
-
-        try {
-            byte[] existingData = java.nio.file.Files.readAllBytes(existingTileFile.toPath());
-            NativeImage existingImage = NativeImage.read(existingData);
-
-            if (existingImage.getWidth() == TILE_PIXEL_SIZE &&
-                    existingImage.getHeight() == TILE_PIXEL_SIZE) {
-                for (int i = 0; i < TILE_PIXEL_SIZE * TILE_PIXEL_SIZE; i++) {
-                    int x = i % TILE_PIXEL_SIZE;
-                    int y = i / TILE_PIXEL_SIZE;
-                    int currentPixel = this.image.getPixelRGBA(x, y);
-                    if (((currentPixel >> 24) & 0xFF) == 0) {
-                        this.image.setPixelRGBA(x, y, existingImage.getPixelRGBA(x, y));
-                    }
-                }
-                this.needsUpdate = true;
-            }
-            existingImage.close();
-        } catch (IOException ignored) {}
     }
 
     public void saveToFile(File tileFile) {
@@ -120,6 +105,7 @@ public class ChunkTile {
     public ResourceLocation getTextureId() { return textureId; }
     public void markAccessed() { }
     public void markNeedsUpdate() { this.needsUpdate = true; }
+    public boolean needsSave() { return this.needsUpdate; }
 
     public static int chunkToTileCoord(int chunkCoord) {
         return Math.floorDiv(chunkCoord, TILE_SIZE);

@@ -216,7 +216,7 @@ public record BannerModSettlementResidentRecord(
         String teamId = tag.contains("TeamId", Tag.TAG_STRING) ? tag.getString("TeamId") : null;
         UUID boundWorkAreaUuid = tag.hasUUID("BoundWorkAreaUuid") ? tag.getUUID("BoundWorkAreaUuid") : null;
         BannerModSettlementResidentScheduleSeed scheduleSeed = tag.contains("ScheduleSeed", Tag.TAG_STRING)
-                ? BannerModSettlementResidentScheduleSeed.valueOf(tag.getString("ScheduleSeed"))
+                ? scheduleSeedFromTagName(tag.getString("ScheduleSeed"), role, boundWorkAreaUuid)
                 : BannerModSettlementResidentScheduleSeed.defaultFor(role, boundWorkAreaUuid);
         BannerModSettlementResidentMode residentMode = tag.contains("ResidentMode", Tag.TAG_STRING)
                 ? BannerModSettlementResidentMode.fromTagName(tag.getString("ResidentMode"))
@@ -272,5 +272,15 @@ public record BannerModSettlementResidentRecord(
         return boundWorkAreaUuid == null
                 ? BannerModSettlementResidentAssignmentState.UNASSIGNED
                 : BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING;
+    }
+
+    private static BannerModSettlementResidentScheduleSeed scheduleSeedFromTagName(String name,
+                                                                                   BannerModSettlementResidentRole role,
+                                                                                   @Nullable UUID boundWorkAreaUuid) {
+        try {
+            return BannerModSettlementResidentScheduleSeed.valueOf(name);
+        } catch (IllegalArgumentException exception) {
+            return BannerModSettlementResidentScheduleSeed.defaultFor(role, boundWorkAreaUuid);
+        }
     }
 }

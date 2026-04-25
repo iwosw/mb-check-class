@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class RecruitsRoute {
@@ -145,8 +146,11 @@ public class RecruitsRoute {
             WAIT;
 
             public static Type fromString(String s) {
+                if (s == null || s.isBlank()) {
+                    return WAIT;
+                }
                 try {
-                    return valueOf(s);
+                    return valueOf(s.trim().toUpperCase(Locale.ROOT));
                 } catch (Exception e) {
                     return WAIT;
                 }

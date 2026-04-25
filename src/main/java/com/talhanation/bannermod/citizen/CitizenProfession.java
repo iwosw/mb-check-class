@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.citizen;
 
 import javax.annotation.Nullable;
+import java.util.Locale;
 
 /**
  * Fine-grained profession a {@link CitizenCore} is currently performing.
@@ -81,11 +82,11 @@ public enum CitizenProfession {
      * don't explode on a dirty save.
      */
     public static CitizenProfession fromTagName(@Nullable String tagName) {
-        if (tagName == null || tagName.isEmpty()) {
+        if (tagName == null || tagName.isBlank()) {
             return NONE;
         }
         try {
-            return CitizenProfession.valueOf(tagName);
+            return CitizenProfession.valueOf(tagName.trim().toUpperCase(Locale.ROOT));
         }
         catch (IllegalArgumentException ignored) {
             return NONE;

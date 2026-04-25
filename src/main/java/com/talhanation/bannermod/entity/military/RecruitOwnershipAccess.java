@@ -59,7 +59,9 @@ interface RecruitOwnershipAccess {
     }
 
     default void setOwnerUUID(Optional<UUID> id) {
+        UUID oldOwner = this.getOwnerUUID();
         RecruitStateAccess.setOwnerUUID(recruit(), id);
+        RecruitIndex.instance().onOwnerChanged(recruit(), oldOwner, this.getOwnerUUID());
     }
 
     default boolean getIsOwned() {
@@ -88,7 +90,9 @@ interface RecruitOwnershipAccess {
     }
 
     default void setGroupUUID(UUID uuid) {
+        UUID oldGroup = this.getGroup();
         RecruitStateAccess.setGroupUUID(recruit(), uuid);
+        RecruitIndex.instance().onGroupChanged(recruit(), oldGroup, this.getGroup());
     }
 
     default int getKills() {

@@ -2,6 +2,7 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.persistence.military.RecruitsDiplomacyManager;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -27,7 +28,9 @@ public class MessageToClientUpdateDiplomacyList implements Message<MessageToClie
 
     @Override
     public void executeClientSide(NetworkEvent.Context context) {
+        RuntimeProfilingCounters.recordNbtPacket("network.full_sync.diplomacy", diplomacyNbt);
         ClientManager.diplomacyMap = RecruitsDiplomacyManager.mapFromNbt(diplomacyNbt);
+        ClientManager.markDiplomacyChanged();
     }
 
     @Override

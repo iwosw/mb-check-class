@@ -3,6 +3,8 @@ package com.talhanation.bannermod.client.military.render.layer;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.talhanation.bannermod.client.military.render.RecruitRenderLod;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HeadedModel;
 import net.minecraft.client.model.SkullModelBase;
@@ -50,6 +52,9 @@ public class VillagerRecruitCustomHeadLayer<T extends LivingEntity, M extends En
     }
 
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int p_116733_, T entity, float p_116735_, float p_116736_, float p_116737_, float p_116738_, float p_116739_, float p_116740_) {
+        if (entity instanceof AbstractRecruitEntity recruit && !RecruitRenderLod.shouldRenderCustomHead(recruit)) {
+            return;
+        }
         ItemStack itemstack = entity.getItemBySlot(EquipmentSlot.HEAD);
         if (!itemstack.isEmpty()) {
             Item item = itemstack.getItem();

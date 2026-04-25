@@ -49,13 +49,21 @@ public class BannerModGovernorManager extends SavedData {
     }
 
     public BannerModGovernorSnapshot getOrCreateSnapshot(UUID claimUuid, BannerModGovernorSnapshot fallback) {
-        return this.snapshots.computeIfAbsent(claimUuid, ignored -> fallback);
+        BannerModGovernorSnapshot snapshot = this.snapshots.get(claimUuid);
+        if (snapshot != null) {
+            return snapshot;
+        }
+        this.snapshots.put(claimUuid, fallback);
+        this.setDirty();
+        return fallback;
     }
 
     public void putSnapshot(BannerModGovernorSnapshot snapshot) {
         if (snapshot == null) return;
-        this.snapshots.put(snapshot.claimUuid(), snapshot);
-        this.setDirty();
+        BannerModGovernorSnapshot previous = this.snapshots.put(snapshot.claimUuid(), snapshot);
+        if (!snapshot.equals(previous)) {
+            this.setDirty();
+        }
     }
 
     @Nullable

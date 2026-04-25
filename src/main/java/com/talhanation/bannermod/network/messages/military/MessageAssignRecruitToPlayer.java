@@ -7,10 +7,10 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,16 +31,14 @@ public class MessageAssignRecruitToPlayer implements Message<MessageAssignRecrui
     }
 
     public void executeServerSide(NetworkEvent.Context context) {
-        ServerPlayer serverPlayer = context.getSender();
-        List<AbstractRecruitEntity> list = Objects.requireNonNull(context.getSender()).getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, context.getSender().getBoundingBox().inflate(64.0D));
+        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
         ServerLevel serverLevel = (ServerLevel) serverPlayer.getCommandSenderWorld();
 
-        for (AbstractRecruitEntity recruit : list) {
-            if(recruit.getUUID().equals(this.recruit)){
-                recruit.assignToPlayer(newOwner, null);
-                FactionEvents.notifyPlayer(serverLevel, new RecruitsPlayerInfo(newOwner, ""), 0, serverPlayer.getName().getString());
-                break;
-            }
+        Entity entity = serverLevel.getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit
+                && serverPlayer.getBoundingBox().inflate(64.0D).intersects(recruit.getBoundingBox())) {
+            recruit.assignToPlayer(newOwner, null);
+            FactionEvents.notifyPlayer(serverLevel, new RecruitsPlayerInfo(newOwner, ""), 0, serverPlayer.getName().getString());
         }
     }
 

@@ -31,6 +31,10 @@ public final class BannerModSettlementGrowthManager {
     private static final int MARKET_MISSING_BASE_SCORE = 500;
     private static final int DESIRED_GOOD_BASE_SCORE = 400;
     private static final int DESIRED_GOOD_PER_DRIVER_BONUS = 20;
+    private static final int SUPPLY_SHORTAGE_BASE_SCORE = 560;
+    private static final int SUPPLY_SHORTAGE_PER_UNIT_BONUS = 35;
+    private static final int SUPPLY_RESERVATION_BASE_SCORE = 480;
+    private static final int SUPPLY_RESERVATION_PER_UNIT_BONUS = 25;
     private static final int SIEGE_DEFENSE_BONUS = 300;
     private static final int SIEGE_NON_DEFENSE_PENALTY = 250;
     private static final int GOVERNOR_POLICY_WEIGHT = 5;
@@ -52,6 +56,7 @@ public final class BannerModSettlementGrowthManager {
         scoreHousingPressure(ctx, byProfile);
         scoreMissingMarket(ctx, byProfile);
         scoreDesiredGoods(ctx, byProfile);
+        scoreSpecificSupplySignals(ctx, byProfile);
         applyGovernorAdjustments(ctx, byProfile);
         applySiegeAdjustments(ctx, byProfile);
         if (byProfile.isEmpty()) {
@@ -157,9 +162,34 @@ public final class BannerModSettlementGrowthManager {
             mergeDemand(demandByGood, good.desiredGoodId(), good.driverCount());
         }
         for (BannerModSettlementSupplySignal signal : ctx.supplySignalState().signals()) {
-            mergeDemand(demandByGood, signal.goodId(), Math.max(signal.desiredUnits(), signal.reservationHintUnits()));
+            mergeDemand(demandByGood, signal.goodId(), signal.desiredUnits());
         }
         return demandByGood;
+    }
+
+    private static void scoreSpecificSupplySignals(
+            BannerModSettlementGrowthContext ctx,
+            Map<BannerModSettlementBuildingProfileSeed, ScoredCandidate> byProfile
+    ) {
+        for (BannerModSettlementSupplySignal signal : ctx.supplySignalState().signals()) {
+            int shortageUnits = signal.shortageUnits();
+            int reservationUnits = signal.reservationHintUnits();
+            if (shortageUnits <= 0 && reservationUnits <= 0) {
+                continue;
+            }
+            BannerModSettlementBuildingProfileSeed profile = profileForDesiredGood(signal.goodId());
+            if (profile == null) {
+                continue;
+            }
+            int score = 0;
+            if (shortageUnits > 0) {
+                score = Math.max(score, SUPPLY_SHORTAGE_BASE_SCORE + SUPPLY_SHORTAGE_PER_UNIT_BONUS * shortageUnits);
+            }
+            if (reservationUnits > 0) {
+                score = Math.max(score, SUPPLY_RESERVATION_BASE_SCORE + SUPPLY_RESERVATION_PER_UNIT_BONUS * reservationUnits);
+            }
+            mergeOrInsert(byProfile, profile, score + tradeRouteDemandBonus(profile, ctx.tradeRouteHandoffSeed()));
+        }
     }
 
     private static void mergeDemand(Map<String, Integer> demandByGood, String goodId, int units) {
@@ -305,7 +335,7 @@ public final class BannerModSettlementGrowthManager {
             BannerModSettlementGrowthContext ctx,
             BannerModSettlementBuildingProfileSeed profile
     ) {
-        long hi = mix64(ctx.gameTime(), profile.ordinal());
+        long hi = mix64(profile.ordinal() + 1L, profile.category().ordinal() + 1L);
         long lo = mix64(profile.hashCode(), ctx.buildings().size() + 1L);
         return new UUID(hi, lo);
     }

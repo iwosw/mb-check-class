@@ -2,9 +2,12 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -33,7 +36,20 @@ public class MessageRangedFire implements Message<MessageRangedFire> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer serverPlayer = context.getSender();
-        List<AbstractRecruitEntity> list = Objects.requireNonNull(context.getSender()).getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, context.getSender().getBoundingBox().inflate(100));
+        ServerPlayer sender = Objects.requireNonNull(context.getSender());
+        AABB commandBox = sender.getBoundingBox().inflate(100);
+        List<AbstractRecruitEntity> list = RecruitIndex.instance().groupInRange(
+                sender.getCommandSenderWorld(),
+                group,
+                sender.position(),
+                200.0D
+        );
+        if (list == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            list = sender.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, commandBox);
+        } else {
+            list.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
+        }
         for (AbstractRecruitEntity recruits : list) {
                 CommandEvents.onRangedFireCommand(serverPlayer, this.player, recruits, group, should);
         }

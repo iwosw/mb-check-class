@@ -4,7 +4,9 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -12,7 +14,6 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.Optional;
 
 public class MessagePatrolLeaderSetPatrolState implements Message<MessagePatrolLeaderSetPatrolState> {
     private UUID recruit;
@@ -36,10 +37,13 @@ public class MessagePatrolLeaderSetPatrolState implements Message<MessagePatrolL
     }
 
     public static void dispatchToServer(Player player, UUID recruitId, byte state) {
-        List<AbstractLeaderEntity> leaders = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractLeaderEntity.class,
-                player.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
-        );
+        if (!(player.getCommandSenderWorld() instanceof ServerLevel level)) return;
+        Entity entity = level.getEntity(recruitId);
+        AbstractLeaderEntity targetLeader = entity instanceof AbstractLeaderEntity leader
+                && leader.distanceToSqr(player) <= CommandTargeting.GROUP_COMMAND_RADIUS * CommandTargeting.GROUP_COMMAND_RADIUS
+                ? leader
+                : null;
+        List<AbstractLeaderEntity> leaders = targetLeader == null ? List.of() : List.of(targetLeader);
         CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
                 player.getUUID(),
                 recruitId,
@@ -61,7 +65,7 @@ public class MessagePatrolLeaderSetPatrolState implements Message<MessagePatrolL
             return;
         }
 
-        leaders.stream().filter(leader -> leader.getUUID().equals(recruitId)).findFirst().ifPresent(leader -> setState(leader, state));
+        setState(targetLeader, state);
     }
 
     static ValidationResult validateSelection(CommandTargeting.SingleRecruitSelection selection, byte state) {

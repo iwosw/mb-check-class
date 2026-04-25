@@ -6,6 +6,7 @@ import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -39,11 +40,12 @@ public class MessageUpdateGovernorPolicy implements Message<MessageUpdateGoverno
             return;
         }
         BannerModGovernorPolicy policy = policies[this.policyOrdinal];
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                recruitEntity -> recruitEntity.getUUID().equals(this.recruit) && recruitEntity.isAlive()
-        ).forEach(recruitEntity -> RecruitEvents.updateGovernorPolicy(player, recruitEntity, policy, this.value));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruitEntity
+                && recruitEntity.isAlive()
+                && player.getBoundingBox().inflate(16.0D).intersects(recruitEntity.getBoundingBox())) {
+            RecruitEvents.updateGovernorPolicy(player, recruitEntity, policy, this.value);
+        }
     }
 
     @Override

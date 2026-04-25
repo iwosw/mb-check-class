@@ -84,6 +84,15 @@ public class FormationUtils {
         );
     }
 
+    public static void testudoFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
+        FormationLayoutPlanner.assignAndApplySlots(
+                recruits,
+                FormationPatternBuilder.buildTestudoPositions(recruits, targetPos, player.getYRot(), spacingMultiplier),
+                null,
+                false
+        );
+    }
+
 
 
     public static void triangleFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos) {

@@ -18,6 +18,12 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
     protected final PlayersList.FilterType filterType;
     public final Player player;
     protected final boolean includeSelf;
+    private int lastOnlinePlayersVersion = -1;
+    private int lastFactionsVersion = -1;
+    private int entriesVersion = 0;
+    private int lastFilteredEntriesVersion = -1;
+    private String lastFilteredFilter = null;
+    private final List<RecruitsPlayerEntry> cachedFilteredEntries = new ArrayList<>();
 
     public PlayersList(int width, int height, int x, int y, int size, IPlayerSelection screen, PlayersList.FilterType filterType, Player player, boolean includeSelf) {
         super(width, height, x, y, size);
@@ -33,13 +39,21 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
     }
 
     public void tick() {
-        if(ClientManager.onlinePlayers != null){
+        if(ClientManager.onlinePlayers != null && (lastOnlinePlayersVersion != ClientManager.onlinePlayersVersion || lastFactionsVersion != ClientManager.factionsVersion)){
             updateEntryList();
         }
     }
 
     public void updateEntryList() {
+        if (entriesVersion > 0 && lastOnlinePlayersVersion == ClientManager.onlinePlayersVersion && lastFactionsVersion == ClientManager.factionsVersion) {
+            updateFilter();
+            return;
+        }
+
         entries.clear();
+        lastOnlinePlayersVersion = ClientManager.onlinePlayersVersion;
+        lastFactionsVersion = ClientManager.factionsVersion;
+        entriesVersion++;
 
         switch (filterType) {
             case SAME_TEAM -> {
@@ -84,7 +98,11 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
     }
 
     public void updateFilter() {
-        clearEntries();
+        if (lastFilteredEntriesVersion == entriesVersion && filter.equals(lastFilteredFilter)) {
+            replaceEntries(cachedFilteredEntries);
+            return;
+        }
+
         List<RecruitsPlayerEntry> filteredEntries = new ArrayList<>(entries);
         if (!filter.isEmpty()) {
             filteredEntries.removeIf(playerEntry ->
@@ -105,7 +123,11 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
             return volumeEntryToString(e1).compareToIgnoreCase(volumeEntryToString(e2));
         });
 
-        replaceEntries(filteredEntries);
+        cachedFilteredEntries.clear();
+        cachedFilteredEntries.addAll(filteredEntries);
+        lastFilteredEntriesVersion = entriesVersion;
+        lastFilteredFilter = filter;
+        replaceEntries(cachedFilteredEntries);
     }
 
     private String volumeEntryToString(RecruitsPlayerEntry entry) {
@@ -113,6 +135,7 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
     }
 
     public void setFilter(String filter) {
+        if (this.filter.equals(filter)) return;
         this.filter = filter;
         updateFilter();
     }

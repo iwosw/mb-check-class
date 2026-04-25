@@ -31,6 +31,7 @@ public class NomadEntity extends BowmanEntity {
 
     private static final EntityDataAccessor<Boolean> HAD_HORSE = SynchedEntityData.defineId(NomadEntity.class, EntityDataSerializers.BOOLEAN);
     public boolean isPatrol = false;
+    private int lootScanCooldown;
     public NomadEntity(EntityType<? extends AbstractRecruitEntity> entityType, Level world) {
         super(entityType, world);
     }
@@ -123,11 +124,15 @@ public class NomadEntity extends BowmanEntity {
         super.aiStep();
         this.getCommandSenderWorld().getProfiler().push("looting");
         if (!this.getCommandSenderWorld().isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.getCommandSenderWorld(), this)) {
-            this.getCommandSenderWorld().getEntitiesOfClass(
-                    ItemEntity.class,
-                    this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D),
-                    (itemEntity) -> !itemEntity.isRemoved() && !itemEntity.getItem().isEmpty() && !itemEntity.hasPickUpDelay() && this.wantsToPickUp(itemEntity.getItem())
-            ).forEach((this::pickUpItem));
+            if (lootScanCooldown-- <= 0) {
+                lootScanCooldown = 4 + this.getRandom().nextInt(4);
+
+                this.getCommandSenderWorld().getEntitiesOfClass(
+                        ItemEntity.class,
+                        this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D),
+                        (itemEntity) -> !itemEntity.isRemoved() && !itemEntity.getItem().isEmpty() && !itemEntity.hasPickUpDelay() && this.wantsToPickUp(itemEntity.getItem())
+                ).forEach((this::pickUpItem));
+            }
         }
 
         if (this.getVehicle() instanceof AbstractHorse abstractHorse) {

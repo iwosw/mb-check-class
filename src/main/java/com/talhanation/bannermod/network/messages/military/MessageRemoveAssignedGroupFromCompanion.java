@@ -10,6 +10,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
@@ -35,11 +36,9 @@ public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageR
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer serverPlayer = context.getSender();
-        serverPlayer.serverLevel().getEntitiesOfClass(AbstractLeaderEntity.class,
-                context.getSender().getBoundingBox().inflate(100D),
-                (leader) -> leader.getUUID().equals(this.companion)
-        ).forEach((companionEntity) -> {
-            if(companionEntity == null) return;
+        Entity entity = serverPlayer.serverLevel().getEntity(this.companion);
+        if (entity instanceof AbstractLeaderEntity companionEntity
+                && serverPlayer.getBoundingBox().inflate(100D).intersects(companionEntity.getBoundingBox())) {
 
             RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(companionEntity.getGroup());
             if(group == null) return;
@@ -58,7 +57,7 @@ public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageR
             RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
 
             BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
-        });
+        }
     }
 
     public MessageRemoveAssignedGroupFromCompanion fromBytes(FriendlyByteBuf buf) {

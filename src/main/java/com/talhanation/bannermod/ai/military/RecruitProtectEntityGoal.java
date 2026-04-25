@@ -4,13 +4,13 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.vehicle.Boat;
 
-import java.util.List;
 import java.util.Optional;
 
 public class RecruitProtectEntityGoal extends Goal {
@@ -87,11 +87,11 @@ public class RecruitProtectEntityGoal extends Goal {
     }
 
     public void getProtecting(){
-        List<LivingEntity> list = recruit.getCommandSenderWorld().getEntitiesOfClass(LivingEntity.class, recruit.getBoundingBox().inflate(32D));
-        for(LivingEntity livings : list){
-            if (recruit.getProtectUUID() != null && livings.getUUID().equals(recruit.getProtectUUID())){
-                this.protectingMob = livings;
-            }
+        if (recruit.getProtectUUID() == null || !(recruit.getCommandSenderWorld() instanceof ServerLevel level)) return;
+
+        Entity entity = level.getEntity(recruit.getProtectUUID());
+        if (entity instanceof LivingEntity living && living.distanceToSqr(recruit) <= 32D * 32D) {
+            this.protectingMob = living;
         }
     }
     private MutableComponent TEXT_PROTECT_DIED(String name) {

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChunkTileManager {
+    private static final long TILE_SAVE_COOLDOWN_MS = 2000;
     private static ChunkTileManager instance;
     private final Map<String, ChunkTile> loadedTiles = new HashMap<>();
     private final Minecraft mc = Minecraft.getInstance();
@@ -17,6 +18,7 @@ public class ChunkTileManager {
     private int currentTileX = Integer.MAX_VALUE;
     private int currentTileZ = Integer.MAX_VALUE;
     private final Map<String, Long> lastUpdateTimes = new HashMap<>();
+    private final Map<String, Long> lastSaveTimes = new HashMap<>();
     private long lastNeighborUpdateTime = 0;
     private int lastUpdatedNeighborIndex = 0;
 
@@ -33,6 +35,10 @@ public class ChunkTileManager {
     }
 
     public void updateCurrentTile() {
+        updateCurrentTile(true);
+    }
+
+    public void updateCurrentTile(boolean updateNeighbors) {
         if (mc.level == null || mc.player == null) return;
 
         int chunkX = mc.player.chunkPosition().x;
@@ -51,7 +57,7 @@ public class ChunkTileManager {
             currentTileZ = tileZ;
         }
 
-        if (currentTime - lastNeighborUpdateTime >= 500) {
+        if (updateNeighbors && currentTime - lastNeighborUpdateTime >= 500) {
             updateOneNeighborTile(tileX, tileZ);
             lastNeighborUpdateTime = currentTime;
         }
@@ -78,10 +84,19 @@ public class ChunkTileManager {
     private void updateTile(int tileX, int tileZ) {
         ChunkTile tile = getOrCreateTile(tileX, tileZ);
         File tileFile = getTileFile(tileX, tileZ);
-        if (tileFile.exists()) tile.mergeWithExistingTile(tileFile);
         updateOnlyLoadedChunks(tile);
+        long currentTime = System.currentTimeMillis();
+        saveTileIfDue(tile, tileFile, currentTime);
+        lastUpdateTimes.put(tileX + "_" + tileZ, currentTime);
+    }
+
+    private void saveTileIfDue(ChunkTile tile, File tileFile, long currentTime) {
+        String key = tile.getTileX() + "_" + tile.getTileZ();
+        Long lastSave = lastSaveTimes.get(key);
+        if (!tile.needsSave() || lastSave != null && currentTime - lastSave < TILE_SAVE_COOLDOWN_MS) return;
+
         tile.saveToFile(tileFile);
-        lastUpdateTimes.put(tileX + "_" + tileZ, System.currentTimeMillis());
+        lastSaveTimes.put(key, currentTime);
     }
 
     private void updateOnlyLoadedChunks(ChunkTile tile) {
@@ -148,6 +163,7 @@ public class ChunkTileManager {
             tile.close();
         }
         loadedTiles.clear();
+        lastSaveTimes.clear();
     }
 
     public Map<String, ChunkTile> getLoadedTiles() {

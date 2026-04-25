@@ -2,13 +2,16 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -32,11 +35,25 @@ public class MessageAssignNearbyRecruitsInGroup implements Message<MessageAssign
         RecruitsGroup newGroup = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
         if(newGroup == null) return;
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(100),
-                (recruit) -> recruit.isEffectedByCommand(player.getUUID())
-        ).forEach((recruit) -> this.setGroup(recruit, newGroup));
+        List<AbstractRecruitEntity> recruits = RecruitIndex.instance().ownerInRange(
+                player.getCommandSenderWorld(),
+                player.getUUID(),
+                player.position(),
+                100.0D
+        );
+        if (recruits == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(100),
+                    (recruit) -> recruit.isEffectedByCommand(player.getUUID())
+            );
+        }
+        recruits.forEach((recruit) -> {
+            if (recruit.isEffectedByCommand(player.getUUID())) {
+                this.setGroup(recruit, newGroup);
+            }
+        });
 
         RecruitEvents.recruitsGroupsManager.addOrUpdateGroup(player.serverLevel(), player, newGroup);
 

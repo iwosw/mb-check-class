@@ -31,6 +31,8 @@ public class UseShield extends Goal {
     private static final double LINE_HOLD_SCAN_RADIUS = 5.0D;
     /** Re-scan interval for hostile proximity (ticks). */
     private static final int HOSTILE_SCAN_INTERVAL_TICKS = 10;
+    /** Re-scan interval for mounted charge brace checks (ticks). */
+    private static final int BRACE_SCAN_INTERVAL_TICKS = 5;
     /** Stage 4.C: attribute-modifier uuid for the transient brace knockback-resistance boost. */
     private static final UUID BRACE_KB_RESIST_UUID = UUID.fromString("b7a1c3d2-4e5f-4c9b-8e2a-0b6c4d1f5a21");
     /** Stage 4.C: extra knockback resistance (ADDITION operand) applied while bracing. */
@@ -44,6 +46,8 @@ public class UseShield extends Goal {
     /** Nearest hostile observed during the last scan, or null. Used by Step 2.D. */
     @Nullable
     private LivingEntity cachedNearestHostile;
+    private int nextBraceScanTick = Integer.MIN_VALUE;
+    private boolean cachedBraceForCharge;
 
     public UseShield(AsyncPathfinderMob recruit){
         this.entity = recruit;
@@ -174,11 +178,22 @@ public class UseShield extends Goal {
         boolean hasShield = recruit.canBlock() && hasShieldInHand();
         boolean hasReach = WeaponReach.effectiveReachFor(recruit.getMainHandItem().getItem()) > 0.0D;
         if (!hasShield && !hasReach) {
+            this.cachedBraceForCharge = false;
             return false;
         }
 
+        int tick = recruit.tickCount;
+        if (tick < this.nextBraceScanTick) {
+            return this.cachedBraceForCharge;
+        }
+
         List<BraceAgainstChargePolicy.HostileObservation> hostiles = collectMountedHostiles(recruit);
-        return BraceAgainstChargePolicy.shouldBrace(stance, hasShield, hasReach, hostiles);
+        this.cachedBraceForCharge = BraceAgainstChargePolicy.shouldBrace(stance, hasShield, hasReach, hostiles);
+        int jitter = this.nextBraceScanTick == Integer.MIN_VALUE
+                ? Math.floorMod(recruit.getUUID().hashCode(), BRACE_SCAN_INTERVAL_TICKS)
+                : 0;
+        this.nextBraceScanTick = tick + BRACE_SCAN_INTERVAL_TICKS + jitter;
+        return this.cachedBraceForCharge;
     }
 
     private static List<BraceAgainstChargePolicy.HostileObservation> collectMountedHostiles(AbstractRecruitEntity recruit) {

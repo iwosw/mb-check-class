@@ -2,9 +2,12 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -41,10 +44,17 @@ public class MessageDisbandGroup implements Message<MessageDisbandGroup> {
 
         RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
 
-        List<AbstractRecruitEntity> list = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(100D)
-        );
+        List<AbstractRecruitEntity> list = null;
+        if (player.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            list = RecruitIndex.instance().allInBox(serverLevel, player.getBoundingBox().inflate(100D), false);
+        }
+        if (list == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            list = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(100D)
+            );
+        }
 
         for(AbstractRecruitEntity recruit : list){
             recruit.needsGroupUpdate = true;

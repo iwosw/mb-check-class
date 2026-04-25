@@ -2,6 +2,7 @@ package com.talhanation.bannermod.util;
 
 import com.talhanation.bannermod.ai.military.AttackCadence;
 import com.talhanation.bannermod.ai.military.WeaponReach;
+import com.talhanation.bannermod.compat.BetterCombatAttackBridge;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.OptionalInt;
 import java.util.Random;
 
 public abstract class AttackUtil {
@@ -24,6 +26,12 @@ public abstract class AttackUtil {
 
     public static void performAttack(AbstractRecruitEntity recruit, LivingEntity target) {
         if(recruit.attackCooldown == 0 && !recruit.swinging && recruit.getLookControl().isLookingAtTarget()){
+            int bannerCooldown = getAttackCooldown(recruit);
+            OptionalInt betterCombatCooldown = BetterCombatAttackBridge.tryStartAttack(recruit, target, bannerCooldown);
+            if (betterCombatCooldown.isPresent()) {
+                recruit.attackCooldown = Math.max(bannerCooldown, betterCombatCooldown.getAsInt());
+                return;
+            }
             if(canPerformHorseAttack(recruit, target)){
                 if(target.getVehicle() != null) recruit.doHurtTarget(target.getVehicle());
             }
@@ -33,7 +41,7 @@ public abstract class AttackUtil {
             // Stage 3.D: cadence is baseline + per-weapon windup. We bump cooldown
             // AFTER the hit rather than scheduling a deferred damage tick (see
             // AttackCadence javadoc for the why).
-            recruit.attackCooldown = getAttackCooldown(recruit);
+            recruit.attackCooldown = bannerCooldown;
         }
     }
 
@@ -92,7 +100,7 @@ public abstract class AttackUtil {
         if (living != null) {
             ItemStack held = living.getMainHandItem();
             if (held != null && !held.isEmpty()) {
-                extraReach = WeaponReach.effectiveReachFor(held.getItem());
+                extraReach = WeaponReach.effectiveReachFor(held);
             }
         }
         double effectiveBase = base + extraReach;

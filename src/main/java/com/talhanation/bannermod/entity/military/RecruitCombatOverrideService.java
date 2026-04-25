@@ -41,6 +41,8 @@ final class RecruitCombatOverrideService {
     private static final float BLOCK_KNOCKBACK_STRENGTH = 0.5f;
     /** Stage 4.B: cohesion-check cache TTL, in ticks. */
     private static final int COHESION_CACHE_TTL_TICKS = 10;
+    /** Minimum ticks between protect-target fanout scans for the same damaged recruit. */
+    private static final int PROTECT_TARGET_PROPAGATION_INTERVAL_TICKS = 5;
 
     private RecruitCombatOverrideService() {
     }
@@ -321,6 +323,12 @@ final class RecruitCombatOverrideService {
         if (recruit.getFollowState() != 5) {
             return;
         }
+        int tick = recruit.tickCount;
+        if (recruit.lastProtectTargetPropagationTick != Integer.MIN_VALUE
+                && tick - recruit.lastProtectTargetPropagationTick < PROTECT_TARGET_PROPAGATION_INTERVAL_TICKS) {
+            return;
+        }
+        recruit.lastProtectTargetPropagationTick = tick;
 
         for (AbstractRecruitEntity nearbyRecruit : recruit.getCommandSenderWorld().getEntitiesOfClass(
                 AbstractRecruitEntity.class,

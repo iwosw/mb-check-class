@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,22 +41,26 @@ public final class GlobalPathfindingController {
         PROFILING.beginTickWindow(request.requestGameTime(), settings.requestBudgetPerTick(), DEFERRED_TICKETS.size());
 
         if (deferredTicket != null && !DEFERRED_TICKETS.containsKey(deferredTicket.id())) {
+            RuntimeProfilingCounters.increment("pathfinding.request.status.dropped");
             return PathRequestResult.dropped(DeferredDropReason.INVALIDATED);
         }
 
         if (!PROFILING.tryConsumeBudget()) {
             if (deferredTicket != null) {
                 PROFILING.updateQueueDepth(DEFERRED_TICKETS.size());
+                RuntimeProfilingCounters.increment("pathfinding.request.status.deferred");
                 return PathRequestResult.deferred(deferredTicket);
             }
             if (settings.maxDeferredBacklog() <= 0 || DEFERRED_TICKETS.size() >= settings.maxDeferredBacklog()) {
                 PROFILING.recordDeferredDrop(DeferredDropReason.BACKLOG_CAP, DEFERRED_TICKETS.size());
+                RuntimeProfilingCounters.increment("pathfinding.request.status.dropped");
                 return PathRequestResult.dropped(DeferredDropReason.BACKLOG_CAP);
             }
 
             DeferredPathTicket newTicket = new DeferredPathTicket(nextDeferredTicketId++, request.requestGameTime());
             DEFERRED_TICKETS.put(newTicket.id(), newTicket);
             PROFILING.recordDeferred(DEFERRED_TICKETS.size());
+            RuntimeProfilingCounters.increment("pathfinding.request.status.deferred");
             return PathRequestResult.deferred(newTicket);
         }
 
@@ -67,6 +72,7 @@ public final class GlobalPathfindingController {
             }
             @SuppressWarnings("unchecked")
             T castResult = (T) flowFieldPath;
+            RuntimeProfilingCounters.increment("pathfinding.request.status.executed");
             return PathRequestResult.executed(castResult);
         }
 
@@ -78,6 +84,7 @@ public final class GlobalPathfindingController {
             }
             @SuppressWarnings("unchecked")
             T castResult = (T) reusedPath;
+            RuntimeProfilingCounters.increment("pathfinding.request.status.executed");
             return PathRequestResult.executed(castResult);
         }
 
@@ -87,6 +94,7 @@ public final class GlobalPathfindingController {
             PROFILING.recordDeferredResume(request.requestGameTime() - deferredTicket.firstDeferredGameTime(), DEFERRED_TICKETS.size());
         }
         rememberCandidate(request, result);
+        RuntimeProfilingCounters.increment("pathfinding.request.status.executed");
         return PathRequestResult.executed(result);
     }
 

@@ -17,6 +17,11 @@ public class RecruitsFactionList extends ListScreenListBase<RecruitsFactionEntry
     protected String filter;
     protected boolean showPlayerCount;
     protected boolean includeOwn;
+    private int lastFactionsVersion = -1;
+    private int entriesVersion = 0;
+    private int lastFilteredEntriesVersion = -1;
+    private String lastFilteredFilter = null;
+    private final List<RecruitsFactionEntry> cachedFilteredEntries = new ArrayList<>();
     public RecruitsFactionList(int width, int height, int x, int y, int size, IFactionSelection screen, boolean showPlayerCount, boolean includeOwn) {
         super(width, height, x, y, size);
         this.screen = screen;
@@ -29,12 +34,19 @@ public class RecruitsFactionList extends ListScreenListBase<RecruitsFactionEntry
         setRenderSelection(true);
     }
     public void tick() {
-        if(ClientManager.factions != null){
+        if(ClientManager.factions != null && lastFactionsVersion != ClientManager.factionsVersion){
             updateEntryList();
         }
     }
     public void updateEntryList() {
+        if (entriesVersion > 0 && lastFactionsVersion == ClientManager.factionsVersion) {
+            updateFilter();
+            return;
+        }
+
         entries.clear();
+        lastFactionsVersion = ClientManager.factionsVersion;
+        entriesVersion++;
 
         for (RecruitsFaction team : ClientManager.factions) {
             if(ClientManager.ownFaction == null || includeOwn || !ClientManager.ownFaction.getStringID().equals(team.getStringID()))
@@ -45,7 +57,11 @@ public class RecruitsFactionList extends ListScreenListBase<RecruitsFactionEntry
     }
 
     public void updateFilter() {
-        clearEntries();
+        if (lastFilteredEntriesVersion == entriesVersion && filter.equals(lastFilteredFilter)) {
+            replaceEntries(cachedFilteredEntries);
+            return;
+        }
+
         List<RecruitsFactionEntry> filteredEntries = new ArrayList<>(entries);
         if (!filter.isEmpty()) {
             filteredEntries.removeIf(teamEntry -> {
@@ -64,7 +80,11 @@ public class RecruitsFactionList extends ListScreenListBase<RecruitsFactionEntry
             return volumeEntryToString(e1).compareToIgnoreCase(volumeEntryToString(e2));
         });
 
-        replaceEntries(filteredEntries);
+        cachedFilteredEntries.clear();
+        cachedFilteredEntries.addAll(filteredEntries);
+        lastFilteredEntriesVersion = entriesVersion;
+        lastFilteredFilter = filter;
+        replaceEntries(cachedFilteredEntries);
     }
 
     private String volumeEntryToString(RecruitsFactionEntry entry) {
@@ -72,6 +92,7 @@ public class RecruitsFactionList extends ListScreenListBase<RecruitsFactionEntry
     }
 
     public void setFilter(String filter) {
+        if (this.filter.equals(filter)) return;
         this.filter = filter;
         updateFilter();
     }

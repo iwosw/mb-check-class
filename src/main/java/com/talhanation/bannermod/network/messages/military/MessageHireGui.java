@@ -4,6 +4,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -38,11 +39,10 @@ public class MessageHireGui implements Message<MessageHireGui> {
             return;
         }
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                v -> v.getUUID().equals(this.recruit) && v.isAlive()
-        ).forEach((recruit -> recruit.openHireGUI(player)));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit && recruit.isAlive() && recruit.distanceToSqr(player) <= 16.0D * 16.0D) {
+            recruit.openHireGUI(player);
+        }
     }
 
     @Override

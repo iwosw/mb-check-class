@@ -1,11 +1,14 @@
 package com.talhanation.bannermod.entity.civilian;
 
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 
 import java.util.List;
 
 final class WorkerRuntimeLoop {
+    private static final int LOOT_PICKUP_SCAN_INTERVAL_TICKS = 10;
+
     private WorkerRuntimeLoop() {
     }
 
@@ -19,6 +22,9 @@ final class WorkerRuntimeLoop {
     }
 
     private static void tickLootPickup(AbstractWorkerEntity worker) {
+        if (worker.tickCount % LOOT_PICKUP_SCAN_INTERVAL_TICKS != 0) {
+            return;
+        }
         if (!worker.canPickUpLoot() || !worker.isAliveForLooting()) {
             return;
         }
@@ -27,6 +33,8 @@ final class WorkerRuntimeLoop {
                 ItemEntity.class,
                 worker.getBoundingBox().inflate(5.5D, 5.5D, 5.5D)
         );
+        RuntimeProfilingCounters.increment("worker.loot_pickup.scans");
+        RuntimeProfilingCounters.add("worker.loot_pickup.items_seen", nearbyItems.size());
 
         for (ItemEntity itemEntity : nearbyItems) {
             if (!itemEntity.isRemoved()

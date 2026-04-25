@@ -23,6 +23,8 @@ import java.util.*;
 
 public class FarmerWorkGoal extends Goal {
 
+    private static final int PATH_REQUEST_COOLDOWN_TICKS = 20;
+
     public FarmerEntity farmer;
     public State state;
     public String errorMessage;
@@ -32,6 +34,9 @@ public class FarmerWorkGoal extends Goal {
     public Stack<BlockPos> stackToBreak;
     public Stack<BlockPos> stackToPlow;
     public List<NeededItem> neededItems = new ArrayList<>();
+    private int lastPathRequestTick = -PATH_REQUEST_COOLDOWN_TICKS;
+    @Nullable
+    private BlockPos lastPathRequestPos;
     public FarmerWorkGoal(FarmerEntity farmer) {
         this.farmer = farmer;
         setFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
@@ -452,15 +457,27 @@ public class FarmerWorkGoal extends Goal {
             double distance = farmer.getHorizontalDistanceTo(pos.getCenter());
             if(distance < threshold){
                 farmer.getNavigation().stop();
+                lastPathRequestPos = null;
                 return false;
             }
             else{
-                farmer.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                if(shouldRequestPath(pos)){
+                    farmer.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.8F);
+                }
                 farmer.setFollowState(6); //Working
                 farmer.getLookControl().setLookAt(pos.getCenter());
             }
             return true;
         }
+    }
+
+    private boolean shouldRequestPath(BlockPos pos) {
+        if(!pos.equals(lastPathRequestPos) || farmer.tickCount - lastPathRequestTick >= PATH_REQUEST_COOLDOWN_TICKS){
+            lastPathRequestPos = pos;
+            lastPathRequestTick = farmer.tickCount;
+            return true;
+        }
+        return false;
     }
 
     public enum State{

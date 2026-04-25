@@ -6,12 +6,12 @@ import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -39,20 +39,20 @@ public class MessageSetLeaderGroup implements Message<MessageSetLeaderGroup> {
     @Override
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.serverLevel().getEntitiesOfClass(
-                AbstractLeaderEntity.class,
-                player.getBoundingBox().inflate(100D),
-                leader -> leader.getUUID().equals(this.leaderUUID) && leader.isAlive()
-        ).forEach(leader -> {
-            if (groupUUID == null) {
-                leader.setGroupUUID(null);
-                return;
-            }
-            RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
-            if (group == null) return;
-            leader.setGroupUUID(group.getUUID());
-            RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
-        });
+        Entity entity = player.serverLevel().getEntity(this.leaderUUID);
+        if (!(entity instanceof AbstractLeaderEntity leader)
+                || !leader.isAlive()
+                || !player.getBoundingBox().inflate(100D).intersects(leader.getBoundingBox())) {
+            return;
+        }
+        if (groupUUID == null) {
+            leader.setGroupUUID(null);
+            return;
+        }
+        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        if (group == null) return;
+        leader.setGroupUUID(group.getUUID());
+        RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
     }
 
     @Override

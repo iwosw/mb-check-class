@@ -1,7 +1,9 @@
 package com.talhanation.bannermod.ai.military;
 
+import com.talhanation.bannermod.compat.BetterCombatWeaponAttributes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
@@ -48,6 +50,15 @@ public final class WeaponReach {
         return effectiveReachForId(key.toString());
     }
 
+    public static double effectiveReachFor(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0.0D;
+        }
+        double idReach = effectiveReachFor(stack.getItem());
+        double betterCombatReach = BetterCombatWeaponAttributes.extraReach(stack);
+        return Math.max(idReach, betterCombatReach);
+    }
+
     /**
      * Pure-string overload used for unit tests and for callers that already have
      * the item's registry id (e.g. {@code "recruits:iron_spear"}) or description
@@ -67,7 +78,9 @@ public final class WeaponReach {
         if (lower.contains("sarissa") || lower.contains("long_spear") || lower.contains("longspear")) {
             return SARISSA_EXTRA_REACH;
         }
-        if (lower.contains("pike") || lower.contains("halberd") || lower.contains("polearm")) {
+        if (lower.contains("pike") || lower.contains("halberd") || lower.contains("polearm")
+                || lower.contains("lance") || lower.contains("glaive") || lower.contains("partisan")
+                || lower.contains("billhook") || lower.contains("bardiche") || lower.contains("voulge")) {
             return PIKE_EXTRA_REACH;
         }
         if (lower.contains("spear")) {

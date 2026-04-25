@@ -2,10 +2,10 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -32,16 +32,16 @@ public class MessageFollowGui implements Message<MessageFollowGui> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> nearby = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                serverPlayer.getBoundingBox().inflate(16.0D),
-                recruit -> recruit.getUUID().equals(this.uuid)
-        );
+        Entity entity = serverPlayer.serverLevel().getEntity(this.uuid);
+        if (!(entity instanceof AbstractRecruitEntity recruit)
+                || !serverPlayer.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+            return;
+        }
 
         CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
                 serverPlayer.getUUID(),
                 this.uuid,
-                nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
+                List.of(new CommandTargeting.RecruitSnapshot(
                         recruit.getUUID(),
                         recruit.getOwnerUUID(),
                         recruit.getGroup(),
@@ -50,14 +50,14 @@ public class MessageFollowGui implements Message<MessageFollowGui> {
                         recruit.isAlive(),
                         recruit.getListen(),
                         recruit.distanceToSqr(serverPlayer)
-                )).toList()
+                ))
         );
 
         if (!selection.isSuccess()) {
             return;
         }
 
-        nearby.forEach(recruit -> CommandEvents.onMovementCommandGUI(recruit, state));
+        CommandEvents.onMovementCommandGUI(recruit, state);
     }
 
     public MessageFollowGui fromBytes(FriendlyByteBuf buf) {

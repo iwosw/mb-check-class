@@ -96,7 +96,6 @@ public class SelectGroupScreen extends ListScreenBase implements IGroupSelection
                 buttonAction.accept(selected);
 
                 this.groupList.setFocused(null);
-                this.groupList.updateEntryList();
                 this.selected = null;
                 this.init();
         });

@@ -42,9 +42,16 @@ final class RecruitCombatDecisions {
     }
 
     static boolean doHurtTarget(AbstractRecruitEntity recruit, @NotNull Entity entity) {
+        return doHurtTarget(recruit, entity, 1.0D);
+    }
+
+    static boolean doHurtTarget(AbstractRecruitEntity recruit, @NotNull Entity entity, double damageMultiplier) {
         float damage = (float) recruit.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
         if (entity instanceof LivingEntity livingEntity) {
             damage += net.minecraft.world.item.enchantment.EnchantmentHelper.getDamageBonus(recruit.getMainHandItem(), livingEntity.getMobType());
+        }
+        if (damageMultiplier > 0.0D && damageMultiplier != 1.0D) {
+            damage = (float) (damage * damageMultiplier);
         }
         int fireAspect = net.minecraft.world.item.enchantment.EnchantmentHelper.getFireAspect(recruit);
         if (fireAspect > 0) entity.setSecondsOnFire(fireAspect * 4);

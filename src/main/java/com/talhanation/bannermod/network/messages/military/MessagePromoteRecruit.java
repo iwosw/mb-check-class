@@ -4,11 +4,10 @@ import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public class MessagePromoteRecruit implements Message<MessagePromoteRecruit> {
@@ -33,11 +32,10 @@ public class MessagePromoteRecruit implements Message<MessagePromoteRecruit> {
         if (context.getSender() == null) {
             return;
         }
-        context.getSender().getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                context.getSender().getBoundingBox().inflate(16D),
-                livingEntity -> livingEntity.getUUID().equals(this.recruit)
-        ).forEach((recruit) -> RecruitEvents.promoteRecruit(recruit, profession, name, context.getSender()));
+        Entity entity = context.getSender().serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractRecruitEntity recruit && recruit.distanceToSqr(context.getSender()) <= 16D * 16D) {
+            RecruitEvents.promoteRecruit(recruit, profession, name, context.getSender());
+        }
 
     }
     public MessagePromoteRecruit fromBytes(FriendlyByteBuf buf) {

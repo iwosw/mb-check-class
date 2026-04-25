@@ -2,6 +2,8 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,9 +33,15 @@ public class MessageClearTarget implements Message<MessageClearTarget> {
 
     public void executeServerSide(NetworkEvent.Context context){
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> list = player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                context.getSender().getBoundingBox().inflate(100));
+        List<AbstractRecruitEntity> list = this.group == null
+                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
+                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
+        if (list == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            list = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(100));
+        }
         for (AbstractRecruitEntity recruits : list) {
             CommandEvents.onClearTargetButton(uuid, recruits, group);
         }
@@ -50,4 +58,3 @@ public class MessageClearTarget implements Message<MessageClearTarget> {
     }
 
 }
-

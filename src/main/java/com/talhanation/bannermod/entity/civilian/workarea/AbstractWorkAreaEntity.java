@@ -7,6 +7,7 @@ import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import net.minecraft.client.gui.screens.Screen;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -293,7 +294,16 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     public static List<AbstractWorkAreaEntity> getNearbyAreas(Level level, BlockPos center, int radius) {
         List<AbstractWorkAreaEntity> nearby = new ArrayList<>();
 
-        for (AbstractWorkAreaEntity area : level.getEntitiesOfClass(AbstractWorkAreaEntity.class, new AABB(center).inflate(radius))) {
+        AABB queryBox = new AABB(center).inflate(radius);
+        double queryRadius = halfDiagonal(queryBox);
+        List<AbstractWorkAreaEntity> scannedAreas = WorkAreaIndex.instance().queryInRange(
+                level,
+                queryBox.getCenter(),
+                queryRadius,
+                AbstractWorkAreaEntity.class
+        );
+        RuntimeProfilingCounters.add("work_area.nearby_seen", scannedAreas.size());
+        for (AbstractWorkAreaEntity area : scannedAreas) {
             if (!area.getOnPos().equals(center)) {
                 nearby.add(area);
             }
@@ -303,12 +313,27 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     public static boolean isAreaOverlapping(Level level, AbstractWorkAreaEntity currentArea, AABB targetBox) {
-        for (AbstractWorkAreaEntity other : level.getEntitiesOfClass(AbstractWorkAreaEntity.class, targetBox.inflate(64))) {
+        AABB queryBox = targetBox.inflate(64);
+        List<AbstractWorkAreaEntity> scannedAreas = WorkAreaIndex.instance().queryInRange(
+                level,
+                queryBox.getCenter(),
+                halfDiagonal(queryBox),
+                AbstractWorkAreaEntity.class
+        );
+        RuntimeProfilingCounters.add("work_area.overlap_seen", scannedAreas.size());
+        for (AbstractWorkAreaEntity other : scannedAreas) {
             if (other == currentArea) continue;
             if (other instanceof BuildArea) continue;  // BuildAreas are excluded
             if (other.getArea().intersects(targetBox)) return true;
         }
         return false;
+    }
+
+    private static double halfDiagonal(AABB box) {
+        double x = box.getXsize();
+        double y = box.getYsize();
+        double z = box.getZsize();
+        return Math.sqrt(x * x + y * y + z * z) / 2.0D;
     }
 
     public boolean isBeingWorkedOn(){

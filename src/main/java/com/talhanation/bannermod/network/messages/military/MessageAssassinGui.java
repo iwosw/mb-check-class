@@ -2,6 +2,7 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.entity.military.AssassinLeaderEntity;
 import de.maxhenkel.corelib.net.Message;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
@@ -38,11 +39,12 @@ public class MessageAssassinGui implements Message<MessageAssassinGui> {
             return;
         }
 
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AssassinLeaderEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                v -> v.getUUID().equals(this.recruit) && v.isAlive()
-        ).forEach((recruit) -> recruit.openGUI(player));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AssassinLeaderEntity assassin
+                && assassin.isAlive()
+                && player.getBoundingBox().inflate(16.0D).intersects(assassin.getBoundingBox())) {
+            assassin.openGUI(player);
+        }
     }
 
     @Override

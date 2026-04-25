@@ -9,6 +9,7 @@ import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.ai.civilian.FarmerPlantingPreparation;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import net.minecraft.network.chat.Component;
@@ -21,7 +22,6 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.StemBlock;
@@ -189,9 +189,7 @@ public final class WorkerSettlementSpawner {
     }
 
     private static List<CropArea> getClaimCropAreas(ServerLevel level, RecruitsClaim claim) {
-        ChunkPos centerChunk = claim.getCenter() != null ? claim.getCenter() : claim.getClaimedChunks().isEmpty() ? new ChunkPos(0, 0) : claim.getClaimedChunks().get(0);
-        BlockPos center = new BlockPos(centerChunk.getMiddleBlockX(), level.getSeaLevel(), centerChunk.getMiddleBlockZ());
-        return level.getEntitiesOfClass(CropArea.class, new net.minecraft.world.phys.AABB(center).inflate(96.0D), area -> claim.containsChunk(area.chunkPosition()));
+        return WorkAreaIndex.instance().queryInChunks(level, claim.getClaimedChunks(), CropArea.class);
     }
 
     @Nullable

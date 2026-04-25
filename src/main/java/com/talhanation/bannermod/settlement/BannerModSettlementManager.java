@@ -54,8 +54,10 @@ public class BannerModSettlementManager extends SavedData {
         if (snapshot == null) {
             return;
         }
-        this.snapshots.put(snapshot.claimUuid(), snapshot);
-        this.setDirty();
+        BannerModSettlementSnapshot previous = this.snapshots.put(snapshot.claimUuid(), snapshot);
+        if (!snapshot.equals(previous)) {
+            this.setDirty();
+        }
     }
 
     public void pruneMissingClaims(Set<UUID> activeClaimUuids) {

@@ -4,6 +4,7 @@ import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -30,16 +31,14 @@ public class MessageMoveMerchantTrade implements Message<MessageMoveMerchantTrad
         ServerPlayer player = context.getSender();
         if (player == null) return;
 
-        player.getCommandSenderWorld()
-                .getEntitiesOfClass(MerchantEntity.class,
-                        player.getBoundingBox().inflate(32.0D),
-                        v -> v.getUUID().equals(this.merchantUuid))
-                .stream().findAny()
-                .ifPresent(merchant -> {
-                    if (!player.getUUID().equals(merchant.getOwnerUUID()) && !player.hasPermissions(2)) return;
-                    if (moveUp) merchant.moveTradeUp(tradeUuid);
-                    else        merchant.moveTradeDown(tradeUuid);
-                });
+        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+        if (entity instanceof MerchantEntity merchant
+                && merchant.isAlive()
+                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+            if (!player.getUUID().equals(merchant.getOwnerUUID()) && !player.hasPermissions(2)) return;
+            if (moveUp) merchant.moveTradeUp(tradeUuid);
+            else        merchant.moveTradeDown(tradeUuid);
+        }
     }
 
     @Override

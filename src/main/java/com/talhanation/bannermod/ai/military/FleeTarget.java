@@ -6,11 +6,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class FleeTarget extends Goal {
 
     AsyncPathfinderMob entity;
+    private int fleePathCooldown;
 
     public FleeTarget(AsyncPathfinderMob creatureEntity) {
     this.entity = creatureEntity;
@@ -29,16 +28,13 @@ public class FleeTarget extends Goal {
     public void tick() {
         super.tick();
 
-        AtomicBoolean notEmpty = new AtomicBoolean(false);
+        LivingEntity target = this.entity.getTarget();
+        if (target != null && target.isAlive() && entity.distanceToSqr(target) <= 1024D) {
+            if (fleePathCooldown-- > 0) return;
+            fleePathCooldown = 6 + entity.getRandom().nextInt(4);
 
-        entity.getCommandSenderWorld().getEntitiesOfClass(
-                LivingEntity.class,
-                entity.getBoundingBox().inflate(32D),
-                (living) -> living.equals(this.entity.getTarget())
-        ).forEach(living -> {
-            notEmpty.set(true);
             double fleeDistance = 64.0D;
-            Vec3 vecTarget = new Vec3(living.getX(), living.getY(), living.getZ());
+            Vec3 vecTarget = new Vec3(target.getX(), target.getY(), target.getZ());
             Vec3 vecRec = new Vec3(entity.getX(), entity.getY(), entity.getZ());
             Vec3 fleeDir = vecRec.subtract(vecTarget);
             fleeDir = fleeDir.normalize();
@@ -47,9 +43,7 @@ public class FleeTarget extends Goal {
             if (entity instanceof AssassinEntity recruit) {
                 recruit.setFleeing(true);
             }
-        });
-
-        if (!notEmpty.get() && entity instanceof AssassinEntity recruit) {
+        } else if (entity instanceof AssassinEntity recruit) {
             recruit.setFleeing(false);
         }
     }

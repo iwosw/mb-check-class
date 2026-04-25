@@ -5,6 +5,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -14,7 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Optional;
 
 public class RecruitUpkeepEntityGoal extends Goal {
@@ -181,15 +181,8 @@ public class RecruitUpkeepEntityGoal extends Goal {
     }
 
     private Optional<Entity> findEntity() {
-        if (this.recruit.getUpkeepUUID() == null) return Optional.empty();
-
-        List<Entity> entities = recruit.getCommandSenderWorld().getEntitiesOfClass(
-                Entity.class,
-                recruit.getBoundingBox().inflate(100.0D),
-                (entity) -> entity.getUUID().equals(recruit.getUpkeepUUID())
-        );
-
-        return entities.isEmpty() ? Optional.empty() : Optional.of(entities.get(0));
+        if (this.recruit.getUpkeepUUID() == null || !(this.recruit.getCommandSenderWorld() instanceof ServerLevel level)) return Optional.empty();
+        return Optional.ofNullable(level.getEntity(this.recruit.getUpkeepUUID()));
     }
 
 

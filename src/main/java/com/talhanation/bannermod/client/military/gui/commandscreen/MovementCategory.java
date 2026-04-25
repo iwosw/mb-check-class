@@ -38,6 +38,7 @@ public class MovementCategory implements ICommandCategory {
     private static final MutableComponent TEXT_FORMATION_V = Component.translatable("gui.recruits.command.text.formation_v");
     private static final MutableComponent TEXT_FORMATION_CIRCLE = Component.translatable("gui.recruits.command.text.formation_circle");
     private static final MutableComponent TEXT_FORMATION_MOVEMENT = Component.translatable("gui.recruits.command.text.formation_movement");
+    private static final MutableComponent TEXT_FORMATION_TESTUDO = Component.literal("Testudo");
     private static final MutableComponent TEXT_FORMATION_NONE = Component.translatable("gui.recruits.command.text.formation_none");
     private static final MutableComponent TEXT_HOLD_MY_POS = Component.translatable("gui.recruits.command.text.holdMyPos");
     private static final MutableComponent TOOLTIP_MOVE = Component.translatable("gui.recruits.command.tooltip.move_hold");
@@ -156,10 +157,10 @@ public class MovementCategory implements ICommandCategory {
         backwardButton.active = isOneGroupActive;
         screen.addRenderableWidget(backwardButton);
 
-        int formationY = y + 80;
+        int formationY = y + 56;
 
         //NONE
-        RecruitsFormationButton noneFormationButton = new RecruitsFormationButton(CommandScreen.Formation.NONE, x, formationY,
+        RecruitsFormationButton noneFormationButton = new RecruitsFormationButton(CommandScreen.Formation.NONE, x - 63, formationY,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.NONE);
                 });
@@ -167,7 +168,7 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(noneFormationButton);
 
         //LINE UP
-        RecruitsFormationButton lineUpFormationButton = new RecruitsFormationButton(CommandScreen.Formation.LINE, x - 21, formationY,
+        RecruitsFormationButton lineUpFormationButton = new RecruitsFormationButton(CommandScreen.Formation.LINE, x - 42, formationY,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.LINE);
                 });
@@ -175,7 +176,7 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(lineUpFormationButton);
 
         //SQUARE
-        RecruitsFormationButton squareFormationButton = new RecruitsFormationButton(CommandScreen.Formation.SQUARE, x + 21, formationY,
+        RecruitsFormationButton squareFormationButton = new RecruitsFormationButton(CommandScreen.Formation.SQUARE, x - 21, formationY,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.SQUARE);
                 });
@@ -183,7 +184,7 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(squareFormationButton);
 
         //TRIANGLE
-        RecruitsFormationButton triangleFormationButton = new RecruitsFormationButton(CommandScreen.Formation.TRIANGLE, x - 42, formationY,
+        RecruitsFormationButton triangleFormationButton = new RecruitsFormationButton(CommandScreen.Formation.TRIANGLE, x, formationY,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.TRIANGLE);
                 });
@@ -191,7 +192,7 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(triangleFormationButton);
 
         //V_FORM
-        RecruitsFormationButton VFormFormationButton = new RecruitsFormationButton(CommandScreen.Formation.VFORM, x + 42, formationY,
+        RecruitsFormationButton VFormFormationButton = new RecruitsFormationButton(CommandScreen.Formation.VFORM, x + 21, formationY,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.VFORM);
                 });
@@ -199,7 +200,7 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(VFormFormationButton);
 
         //H CIRCLE
-        RecruitsFormationButton hcircleFormationButton = new RecruitsFormationButton(CommandScreen.Formation.HCIRCLE, x - 63, formationY,
+        RecruitsFormationButton hcircleFormationButton = new RecruitsFormationButton(CommandScreen.Formation.HCIRCLE, x + 42, formationY,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.HCIRCLE);
                 });
@@ -215,7 +216,7 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(hSquareFormationButton);
 
         //CIRCLE
-        RecruitsFormationButton circleFormationButton = new RecruitsFormationButton(CommandScreen.Formation.CIRCLE, x - 84, formationY,
+        RecruitsFormationButton circleFormationButton = new RecruitsFormationButton(CommandScreen.Formation.CIRCLE, x - 31, formationY + 24,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.CIRCLE);
                 });
@@ -223,18 +224,26 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(circleFormationButton);
 
         //MOVEMENT
-        RecruitsFormationButton movementFormationButton = new RecruitsFormationButton(CommandScreen.Formation.MOVEMENT, x + 84, formationY,
+        RecruitsFormationButton movementFormationButton = new RecruitsFormationButton(CommandScreen.Formation.MOVEMENT, x - 10, formationY + 24,
                 button -> {
                     screen.setFormation(CommandScreen.Formation.MOVEMENT);
                 });
         movementFormationButton.setTooltip(Tooltip.create(TEXT_FORMATION_MOVEMENT));
         screen.addRenderableWidget(movementFormationButton);
 
+        //TESTUDO
+        RecruitsFormationButton testudoFormationButton = new RecruitsFormationButton(CommandScreen.Formation.TESTUDO, x + 11, formationY + 24,
+                button -> {
+                    screen.setFormation(CommandScreen.Formation.TESTUDO);
+                });
+        testudoFormationButton.setTooltip(Tooltip.create(TEXT_FORMATION_TESTUDO));
+        screen.addRenderableWidget(testudoFormationButton);
+
         //TIGHT TOGGLE BUTTON
         Component tightText = CommandScreen.tightFormation ?
                 Component.literal("[X] ").append(TEXT_TIGHT) :
                 Component.literal("[ ] ").append(TEXT_TIGHT);
-        ExtendedButton tightCheckbox = new ExtendedButton(x + 95, formationY - 10, 60, 20, tightText,
+        ExtendedButton tightCheckbox = new ExtendedButton(x + 74, formationY + 14, 60, 20, tightText,
                 button -> {
                     screen.setTightFormation(!CommandScreen.tightFormation);
                 });
@@ -250,6 +259,7 @@ public class MovementCategory implements ICommandCategory {
         hcircleFormationButton.active = CommandScreen.formation == CommandScreen.Formation.HCIRCLE;
         circleFormationButton.active = CommandScreen.formation == CommandScreen.Formation.CIRCLE;
         movementFormationButton.active = CommandScreen.formation == CommandScreen.Formation.MOVEMENT;
+        testudoFormationButton.active = CommandScreen.formation == CommandScreen.Formation.TESTUDO;
 
 
     }

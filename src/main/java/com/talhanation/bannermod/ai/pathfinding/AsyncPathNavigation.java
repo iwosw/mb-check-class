@@ -31,6 +31,13 @@ public abstract class AsyncPathNavigation extends PathNavigation {
     private int reachRange;
     private final PathFinder pathFinder;
     private boolean isStuck;
+    @Nullable
+    private GlobalPathfindingController.DeferredPathTicket deferredPathTicket;
+    @Nullable
+    private Set<BlockPos> deferredPathTargets;
+    private boolean deferredPathEntityTarget;
+    private int deferredPathReachRange;
+    private float deferredPathFollowRange;
 
     public AsyncPathNavigation(PathfinderMob p_26515_, Level p_26516_) {
         super(p_26515_, p_26516_);
@@ -102,16 +109,48 @@ public abstract class AsyncPathNavigation extends PathNavigation {
         } else {
             BlockPos blockpos = p_148225_ ? this.mob.blockPosition().above() : this.mob.blockPosition();
             int i = (int)(p_148227_ + (float)p_148224_);
-            PathNavigationRegion pathnavigationregion = new PathNavigationRegion(this.level, blockpos.offset(-i, -i, -i), blockpos.offset(i, i, i));
-            float maxVisitedNodesMultiplier = 1.0F;
-            Path path = this.pathFinder.findPath(pathnavigationregion, this.mob, p_148223_, p_148227_, p_148226_, maxVisitedNodesMultiplier);
+            long gameTime = this.level.getGameTime();
+            if (this.deferredPathTicket != null && !this.matchesDeferredPathRequest(p_148223_, p_148225_, p_148226_, p_148227_)) {
+                GlobalPathfindingController.discardDeferred(this.deferredPathTicket, gameTime, GlobalPathfindingController.DeferredDropReason.INVALIDATED);
+                this.clearDeferredPathRequest();
+            }
+
+            GlobalPathfindingController.PathRequest request = new GlobalPathfindingController.PathRequest(
+                    p_148225_ ? GlobalPathfindingController.RequestKind.ENTITY_TARGET : GlobalPathfindingController.RequestKind.BLOCK_TARGETS,
+                    RecruitsServerConfig.UseAsyncPathfinding.get(),
+                    p_148223_.size(),
+                    gameTime
+            );
+            GlobalPathfindingController.PathRequestResult<Path> result = GlobalPathfindingController.requestPath(
+                    request,
+                    this.deferredPathTicket,
+                    () -> {
+                        PathNavigationRegion pathnavigationregion = new PathNavigationRegion(this.level, blockpos.offset(-i, -i, -i), blockpos.offset(i, i, i));
+                        float maxVisitedNodesMultiplier = 1.0F;
+                        return this.pathFinder.findPath(pathnavigationregion, this.mob, p_148223_, p_148227_, p_148226_, maxVisitedNodesMultiplier);
+                    }
+            );
+            if (result.status() == GlobalPathfindingController.RequestStatus.DEFERRED) {
+                this.deferredPathTicket = result.deferredTicket();
+                this.deferredPathTargets = ImmutableSet.copyOf(p_148223_);
+                this.deferredPathEntityTarget = p_148225_;
+                this.deferredPathReachRange = p_148226_;
+                this.deferredPathFollowRange = p_148227_;
+                return null;
+            }
+            this.clearDeferredPathRequest();
+            if (result.status() == GlobalPathfindingController.RequestStatus.DROPPED) {
+                return null;
+            }
+            Path path = result.result();
 
             if (!p_148223_.isEmpty())
                 this.targetPos = p_148223_.iterator().next(); // petal - assign early a target position. most calls will only have 1 position
 
             // petal start - async
             if(RecruitsServerConfig.UseAsyncPathfinding.get()) {
-                AsyncPathProcessor.awaitProcessing(path, this.level.getServer(), processedPath -> {
+                Path createdPath = path;
+                AsyncPathProcessor.awaitProcessing(createdPath, this.level.getServer(), () -> createdPath == this.path, processedPath -> {
                     if (processedPath != this.path){
                         return; // petal - check that processing didn't take so long that we calculated a new path
                     }
@@ -125,6 +164,19 @@ public abstract class AsyncPathNavigation extends PathNavigation {
             }
             return path;
         }
+    }
+
+    private boolean matchesDeferredPathRequest(Set<BlockPos> targets, boolean entityTarget, int reachRange, float followRange) {
+        return this.deferredPathTargets != null
+                && this.deferredPathTargets.equals(targets)
+                && this.deferredPathEntityTarget == entityTarget
+                && this.deferredPathReachRange == reachRange
+                && Float.compare(this.deferredPathFollowRange, followRange) == 0;
+    }
+
+    private void clearDeferredPathRequest() {
+        this.deferredPathTicket = null;
+        this.deferredPathTargets = null;
     }
 
     @Override

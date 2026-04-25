@@ -63,6 +63,28 @@ final class FormationPatternBuilder {
         return possiblePositions;
     }
 
+    static List<Vec3> buildTestudoPositions(List<AbstractRecruitEntity> recruits, Vec3 targetPos, float yaw, double spacingMultiplier) {
+        Vec3 forward = forwardFromYaw(yaw);
+        Vec3 left = leftOf(forward);
+        double spacing = FormationLayoutPlanner.scaleSpacingForShipCaptains(recruits, 1.35D * spacingMultiplier);
+        int size = recruits.size();
+        List<Vec3> possiblePositions = new ArrayList<>();
+        if (size <= 0) {
+            return possiblePositions;
+        }
+
+        List<double[]> localOffsets = size <= 9
+                ? smallTestudoOffsets(size)
+                : layeredSquareOffsets(size);
+
+        for (double[] offset : localOffsets) {
+            Vec3 lateral = left.scale(offset[0] * spacing);
+            Vec3 depth = forward.scale(offset[1] * spacing);
+            possiblePositions.add(targetPos.add(lateral).add(depth));
+        }
+        return possiblePositions;
+    }
+
     static List<Vec3> buildTrianglePositions(List<AbstractRecruitEntity> recruits, Vec3 targetPos, float yaw, double spacingMultiplier) {
         Vec3 forward = forwardFromYaw(yaw);
         Vec3 left = leftOf(forward);
@@ -169,6 +191,93 @@ final class FormationPatternBuilder {
 
     private static Vec3 leftOf(Vec3 forward) {
         return new Vec3(-forward.z, forward.y, forward.x);
+    }
+
+    private static List<double[]> smallTestudoOffsets(int size) {
+        List<double[]> out = new ArrayList<>();
+        switch (size) {
+            case 1 -> out.add(new double[]{0.0D, 0.0D});
+            case 2 -> {
+                out.add(new double[]{-0.5D, 0.0D});
+                out.add(new double[]{0.5D, 0.0D});
+            }
+            case 3 -> {
+                out.add(new double[]{-1.0D, 0.0D});
+                out.add(new double[]{0.0D, 0.0D});
+                out.add(new double[]{1.0D, 0.0D});
+            }
+            case 4 -> {
+                out.add(new double[]{-0.5D, 0.5D});
+                out.add(new double[]{0.5D, 0.5D});
+                out.add(new double[]{-0.5D, -0.5D});
+                out.add(new double[]{0.5D, -0.5D});
+            }
+            case 5 -> {
+                out.add(new double[]{-0.5D, 0.5D});
+                out.add(new double[]{0.5D, 0.5D});
+                out.add(new double[]{-0.5D, -0.5D});
+                out.add(new double[]{0.5D, -0.5D});
+                out.add(new double[]{0.0D, 0.0D});
+            }
+            case 6 -> {
+                out.add(new double[]{-1.0D, 0.5D});
+                out.add(new double[]{0.0D, 0.5D});
+                out.add(new double[]{1.0D, 0.5D});
+                out.add(new double[]{-1.0D, -0.5D});
+                out.add(new double[]{0.0D, -0.5D});
+                out.add(new double[]{1.0D, -0.5D});
+            }
+            case 7 -> {
+                out.add(new double[]{-1.0D, 1.0D});
+                out.add(new double[]{0.0D, 1.0D});
+                out.add(new double[]{1.0D, 1.0D});
+                out.add(new double[]{-1.0D, 0.0D});
+                out.add(new double[]{1.0D, 0.0D});
+                out.add(new double[]{-0.5D, -1.0D});
+                out.add(new double[]{0.5D, -1.0D});
+            }
+            case 8 -> {
+                out.add(new double[]{-1.0D, 1.0D});
+                out.add(new double[]{0.0D, 1.0D});
+                out.add(new double[]{1.0D, 1.0D});
+                out.add(new double[]{-1.0D, 0.0D});
+                out.add(new double[]{1.0D, 0.0D});
+                out.add(new double[]{-1.0D, -1.0D});
+                out.add(new double[]{0.0D, -1.0D});
+                out.add(new double[]{1.0D, -1.0D});
+            }
+            default -> {
+                out.add(new double[]{-1.0D, 1.0D});
+                out.add(new double[]{0.0D, 1.0D});
+                out.add(new double[]{1.0D, 1.0D});
+                out.add(new double[]{-1.0D, 0.0D});
+                out.add(new double[]{0.0D, 0.0D});
+                out.add(new double[]{1.0D, 0.0D});
+                out.add(new double[]{-1.0D, -1.0D});
+                out.add(new double[]{0.0D, -1.0D});
+                out.add(new double[]{1.0D, -1.0D});
+            }
+        }
+        return out;
+    }
+
+    private static List<double[]> layeredSquareOffsets(int size) {
+        int side = (int) Math.ceil(Math.sqrt(size));
+        double center = (side - 1) / 2.0D;
+        List<double[]> out = new ArrayList<>();
+        for (int ring = 0; ring <= side / 2 && out.size() < size; ring++) {
+            int min = ring;
+            int max = side - 1 - ring;
+            for (int z = max; z >= min && out.size() < size; z--) {
+                for (int x = min; x <= max && out.size() < size; x++) {
+                    if (x != min && x != max && z != min && z != max) {
+                        continue;
+                    }
+                    out.add(new double[]{x - center, z - center});
+                }
+            }
+        }
+        return out;
     }
 
     private static void addRingPositions(List<Vec3> positions, Vec3 targetPos, int count, double radius) {

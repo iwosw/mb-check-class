@@ -5,7 +5,9 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.util.FormationUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -17,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -132,6 +135,7 @@ final class MovementFormationCommandService {
             case 6 -> FormationUtils.vFormation(player, recruits, targetPos, spacingMultiplier);
             case 7 -> FormationUtils.circleFormation(player, recruits, targetPos, spacingMultiplier);
             case 8 -> FormationUtils.movementFormation(player, recruits, targetPos, spacingMultiplier);
+            case 9 -> FormationUtils.testudoFormation(player, recruits, targetPos, spacingMultiplier);
         }
     }
 
@@ -238,10 +242,12 @@ final class MovementFormationCommandService {
             return;
         }
 
-        List<AbstractRecruitEntity> recruits = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                serverPlayer.getBoundingBox().inflate(200)
-        );
+        AABB commandBox = serverPlayer.getBoundingBox().inflate(200);
+        List<AbstractRecruitEntity> recruits = RecruitIndex.instance().allInBox(serverPlayer.getCommandSenderWorld(), commandBox, false);
+        if (recruits == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            recruits = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, commandBox);
+        }
 
         List<RecruitsGroup> groups = RecruitEvents.recruitsGroupsManager.getPlayerGroups(serverPlayer);
         if (groups == null) {

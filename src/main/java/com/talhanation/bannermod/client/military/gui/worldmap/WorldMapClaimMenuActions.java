@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.network.messages.military.MessageTeleportPlayer;
 import com.talhanation.bannermod.network.messages.military.MessageUpdateClaim;
 import net.minecraft.network.chat.Component;
@@ -85,6 +86,7 @@ final class WorldMapClaimMenuActions {
     private void removeSelectedChunk(WorldMapScreen screen) {
         if (!screen.selectedClaim.containsChunk(screen.selectedChunk)) return;
         screen.selectedClaim.removeChunk(screen.selectedChunk);
+        ClientManager.markClaimsChanged();
         screen.selectedChunk = null;
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
     }

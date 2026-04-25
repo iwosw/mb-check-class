@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
@@ -16,7 +17,11 @@ final class WorkerMarketAreaAccess {
     }
 
     static boolean shouldBlockInteraction(Player player, Level level, BlockPos pos) {
-        List<MarketArea> markets = level.getEntitiesOfClass(MarketArea.class, new AABB(pos).inflate(8));
+        AABB queryBox = new AABB(pos).inflate(8);
+        double queryRadius = Math.sqrt(queryBox.getXsize() * queryBox.getXsize()
+                + queryBox.getYsize() * queryBox.getYsize()
+                + queryBox.getZsize() * queryBox.getZsize()) / 2.0D;
+        List<MarketArea> markets = WorkAreaIndex.instance().queryInRange(level, queryBox.getCenter(), queryRadius, MarketArea.class);
         if (markets.isEmpty()) {
             return false;
         }

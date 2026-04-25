@@ -180,7 +180,7 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
 
         boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringID, player.getUUID());
         BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenNobleTradeScreen(this.getUUID()));
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenNobleTradeScreen(this));
     }
     public void addXpLevel(int level){
         super.addXpLevel(level);
@@ -367,7 +367,6 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
     }
 
 }
-
 
 
 

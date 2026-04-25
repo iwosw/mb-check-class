@@ -2,7 +2,10 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -28,10 +31,18 @@ public class MessageClearUpkeep implements Message<MessageClearUpkeep> {
     }
 
     public void executeServerSide(NetworkEvent.Context context) {
-        Objects.requireNonNull(context.getSender()).getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                context.getSender().getBoundingBox().inflate(100)
-        ).forEach(
+        ServerPlayer player = Objects.requireNonNull(context.getSender());
+        List<AbstractRecruitEntity> recruits = this.group == null
+                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
+                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
+        if (recruits == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(100)
+            );
+        }
+        recruits.forEach(
                 (recruit) -> CommandEvents.onClearUpkeepButton(uuid, recruit, group)
         );
     }
@@ -47,4 +58,3 @@ public class MessageClearUpkeep implements Message<MessageClearUpkeep> {
         buf.writeUUID(group);
     }
 }
-

@@ -1,8 +1,10 @@
 package com.talhanation.bannermod.events.runtime;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.events.FactionEvents;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -31,9 +33,13 @@ final class FactionRuntimeSyncService {
     }
 
     static void markRecruitsNeedingTeamUpdate(ServerLevel level) {
-        List<AbstractRecruitEntity> recruitList = new ArrayList<>();
-        for (Entity entity : level.getEntities().getAll()) {
-            if (entity instanceof AbstractRecruitEntity recruit) recruitList.add(recruit);
+        List<AbstractRecruitEntity> recruitList = RecruitIndex.instance().all(level, false);
+        if (recruitList == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            recruitList = new ArrayList<>();
+            for (Entity entity : level.getEntities().getAll()) {
+                if (entity instanceof AbstractRecruitEntity recruit) recruitList.add(recruit);
+            }
         }
         for (AbstractRecruitEntity recruit : recruitList) {
             recruit.needsTeamUpdate = true;

@@ -2,6 +2,8 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,8 +34,14 @@ public class MessageRest implements Message<MessageRest> {
     }
 
     public void executeServerSide(NetworkEvent.Context context) {
-        ServerPlayer serverPlayer = context.getSender();
-        List<AbstractRecruitEntity> list = Objects.requireNonNull(context.getSender()).getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, context.getSender().getBoundingBox().inflate(100));
+        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+        List<AbstractRecruitEntity> list = this.group == null
+                ? RecruitIndex.instance().ownerInRange(serverPlayer.getCommandSenderWorld(), this.player, serverPlayer.position(), 100.0D)
+                : RecruitIndex.instance().groupInRange(serverPlayer.getCommandSenderWorld(), this.group, serverPlayer.position(), 100.0D);
+        if (list == null) {
+            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+            list = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, serverPlayer.getBoundingBox().inflate(100));
+        }
         for (AbstractRecruitEntity recruits : list) {
                 CommandEvents.onRestCommand(serverPlayer, this.player, recruits, group, should);
         }

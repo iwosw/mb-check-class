@@ -162,6 +162,7 @@ public class DiplomacyTeamListScreen extends ListScreenBase {
         neutralsButton.active = diplomacyFilter == DiplomacyTeamList.DiplomacyFilter.NEUTRALS;
 
         list.diplomacyFilter = diplomacyFilter;
+        list.updateEntryList();
     }
     @Override
     public void tick() {

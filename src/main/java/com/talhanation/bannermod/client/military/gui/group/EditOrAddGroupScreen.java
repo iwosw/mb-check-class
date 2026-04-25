@@ -182,6 +182,7 @@ public class EditOrAddGroupScreen extends Screen {
             RecruitsGroup newGroup = new RecruitsGroup(groupName, ClientManager.getPlayerInfo(), image);
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateGroup(newGroup));
             ClientManager.groups.add(newGroup);
+            ClientManager.markGroupsChanged();
 
             this.minecraft.setScreen(this.parent);
         }
@@ -191,6 +192,7 @@ public class EditOrAddGroupScreen extends Screen {
         String newName = groupNameField.getValue();
         if (!newName.isEmpty() && groupToEdit != null) {
             groupToEdit.setName(newName);
+            ClientManager.markGroupsChanged();
 
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateGroup(groupToEdit));
 
@@ -243,4 +245,3 @@ public class EditOrAddGroupScreen extends Screen {
         return this.image;
     }
 }
-

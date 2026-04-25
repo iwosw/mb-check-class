@@ -4,10 +4,10 @@ import com.talhanation.bannermod.entity.military.AssassinLeaderEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,11 +30,11 @@ public class MessageAssassinCount implements Message<MessageAssassinCount> {
 
     public void executeServerSide(NetworkEvent.Context context){
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AssassinLeaderEntity.class,
-                player.getBoundingBox().inflate(16.0D),
-                (leader) -> leader.getUUID().equals(this.uuid)
-        ).forEach((leader) -> leader.setCount(this.count));
+        Entity entity = player.serverLevel().getEntity(this.uuid);
+        if (entity instanceof AssassinLeaderEntity leader
+                && player.getBoundingBox().inflate(16.0D).intersects(leader.getBoundingBox())) {
+            leader.setCount(this.count);
+        }
     }
     public MessageAssassinCount fromBytes(FriendlyByteBuf buf) {
         this.count = buf.readInt();

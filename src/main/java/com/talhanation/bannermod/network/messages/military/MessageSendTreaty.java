@@ -6,6 +6,7 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -42,24 +43,20 @@ public class MessageSendTreaty implements Message<MessageSendTreaty> {
     @Override
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                MessengerEntity.class,
-                player.getBoundingBox().inflate(16D),
-                (messenger) -> messenger.getUUID().equals(this.recruit)
-        ).forEach((messenger) -> {
-            if (messenger.getUUID().equals(this.recruit)) {
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof MessengerEntity messenger
+                && player.getBoundingBox().inflate(16D).intersects(messenger.getBoundingBox())) {
 
-                if (!this.targetPlayerNbt.isEmpty()) {
-                    messenger.setTargetPlayerInfo(RecruitsPlayerInfo.getFromNBT(this.targetPlayerNbt));
-                }
-
-                if (start) {
-                    messenger.setTreatyDurationHours(this.durationHours);
-                    messenger.setIsTreatyMessenger(true);
-                    messenger.start();
-                }
+            if (!this.targetPlayerNbt.isEmpty()) {
+                messenger.setTargetPlayerInfo(RecruitsPlayerInfo.getFromNBT(this.targetPlayerNbt));
             }
-        });
+
+            if (start) {
+                messenger.setTreatyDurationHours(this.durationHours);
+                messenger.setIsTreatyMessenger(true);
+                messenger.start();
+            }
+        }
     }
 
     @Override

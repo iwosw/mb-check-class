@@ -4,6 +4,7 @@ import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -30,11 +31,10 @@ public class MessagePatrolLeaderSetCycle implements Message<MessagePatrolLeaderS
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        player.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractLeaderEntity.class,
-                player.getBoundingBox().inflate(100.0D),
-                (leader) -> leader.getUUID().equals(this.recruit)
-        ).forEach(leader -> leader.setCycle(this.cycle));
+        Entity entity = player.serverLevel().getEntity(this.recruit);
+        if (entity instanceof AbstractLeaderEntity leader && leader.distanceToSqr(player) <= 100.0D * 100.0D) {
+            leader.setCycle(this.cycle);
+        }
     }
 
     public MessagePatrolLeaderSetCycle fromBytes(FriendlyByteBuf buf) {

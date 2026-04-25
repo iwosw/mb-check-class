@@ -5,6 +5,7 @@ import com.talhanation.bannermod.ai.military.RecruitAiLodPolicy;
 import com.talhanation.bannermod.ai.military.async.AsyncManager;
 import com.talhanation.bannermod.ai.military.async.AsyncTaskWithCallback;
 import com.talhanation.bannermod.ai.military.controller.RecruitCommandStateTransitions;
+import com.talhanation.bannermod.compat.BetterCombatAttackBridge;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -72,6 +73,7 @@ final class RecruitRuntimeLoop {
         if (recruit.attackCooldown > 0) {
             recruit.attackCooldown--;
         }
+        BetterCombatAttackBridge.tickPendingAttack(recruit);
 
         runTargetSearchTick(recruit);
 

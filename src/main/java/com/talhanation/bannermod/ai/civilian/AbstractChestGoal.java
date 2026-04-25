@@ -25,6 +25,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public abstract class AbstractChestGoal extends Goal {
+    private static final int PATH_REQUEST_COOLDOWN_TICKS = 20;
+
     public StorageArea storageArea;
     public Stack<BlockPos> blockPosStack = new Stack<>();
     public Stack<StorageArea> storageAreaStack = new Stack<>();
@@ -32,6 +34,9 @@ public abstract class AbstractChestGoal extends Goal {
     public AbstractWorkerEntity worker;
     public BlockPos chestPos;
     public List<UUID> visited = new ArrayList<>();
+    private int lastPathRequestTick = -PATH_REQUEST_COOLDOWN_TICKS;
+    @Nullable
+    private BlockPos lastPathRequestPos;
     public AbstractChestGoal(AbstractWorkerEntity worker){
         this.worker = worker;
     }
@@ -49,15 +54,27 @@ public abstract class AbstractChestGoal extends Goal {
             double distance = pos.getCenter().distanceToSqr(worker.position());
             if(distance < 20){
                 worker.getNavigation().stop();
+                lastPathRequestPos = null;
                 return false;
             }
             else{
                 this.worker.setFollowState(6); //Deposit
-                this.worker.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.9F);
+                if(shouldRequestPath(pos)){
+                    this.worker.getNavigation().moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.9F);
+                }
                 this.worker.getLookControl().setLookAt(pos.getCenter());
             }
             return true;
         }
+    }
+
+    private boolean shouldRequestPath(BlockPos pos) {
+        if(!pos.equals(lastPathRequestPos) || worker.tickCount - lastPathRequestTick >= PATH_REQUEST_COOLDOWN_TICKS){
+            lastPathRequestPos = pos;
+            lastPathRequestTick = worker.tickCount;
+            return true;
+        }
+        return false;
     }
 
     public int getAmountOfItem(Item item){

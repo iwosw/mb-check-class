@@ -77,7 +77,7 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
     @Override
     protected void init() {
         super.init();
-        ClientManager.updateGroups();
+        ClientManager.updateGroups(true);
         this.rayBlockPos = getBlockPos();
         this.rayEntity = ClientEvent.getEntityByLooking();
         this.currentCategory = getSelectionFromClient();
@@ -191,20 +191,19 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
 
     private void createCategoryButtons(int centerX, int centerY) {
         List<ICommandCategory> allCategories = CommandCategoryManager.getCategories();
-        int spacing = 21;
+        int spacing = 23;
         int count = allCategories.size();
 
-        int totalWidth = (count - 1) * spacing;
-        int startX = centerX - totalWidth / 2;
-
-        int buttonY = centerY + 105;
+        int startX = centerX - 187;
+        int startY = centerY - 48;
 
         for (int i = 0; i < count; i++) {
             ICommandCategory category = allCategories.get(i);
-            int x = startX + i * spacing;
+            int x = startX;
+            int y = startY + i * spacing;
 
             RecruitsCategoryButton button = new RecruitsCategoryButton(
-                    category.getIcon(), x, buttonY, Component.literal(""),
+                    category.getIcon(), x, y, Component.literal(""),
                     press -> this.setCurrentCategory(category)
             );
 
@@ -508,7 +507,8 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
         HSQUARE((byte) 5),
         VFORM((byte) 6),
         CIRCLE((byte) 7),
-        MOVEMENT((byte) 8);
+        MOVEMENT((byte) 8),
+        TESTUDO((byte) 9);
 
         private final byte index;
 

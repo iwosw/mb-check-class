@@ -69,6 +69,10 @@ public enum BannerModSettlementBuildingProfileSeed {
         if (name == null || name.isBlank()) {
             return GENERAL;
         }
-        return BannerModSettlementBuildingProfileSeed.valueOf(name);
+        try {
+            return BannerModSettlementBuildingProfileSeed.valueOf(name);
+        } catch (IllegalArgumentException exception) {
+            return GENERAL;
+        }
     }
 }
