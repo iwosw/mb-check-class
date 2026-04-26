@@ -22,6 +22,7 @@
   "block.bannermod.nomad_block": "Nomad's Table",
   "block.bannermod.horseman_block": "Horseman's Table",
   "block.bannermod.crossbowman_block": "Crossbowman's Table",
+  "block.bannermod.siege_standard": "Siege Standard",
   "category.bannermod": "Recruits",
   "key.bannermod.command_screen_key": "Open Command Screen",
   "key.bannermod.team_screen_key": "Open Faction Screen",
