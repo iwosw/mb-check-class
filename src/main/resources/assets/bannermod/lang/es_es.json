@@ -729,12 +729,6 @@
   "gui.recruits.claim.block_placing": "Block-Placing",
   "gui.recruits.claim.block_breaking": "Block-Breaking",
   "gui.recruits.claim.block_interaction": "Block-Using",
-  "chat.recruits.text.siegeStartAttacker": "Siege on %s has started! Capture the claim!",
-  "chat.recruits.text.siegeStartDefender": "%s is now under siege by %s!",
-  "chat.recruits.text.siegeSuccessAttacker": "%s has been captured successfully!",
-  "chat.recruits.text.siegeSuccessDefender": "%s has been lost!",
-  "chat.recruits.text.siegeFailedAttacker": "Siege on %s has failed!",
-  "chat.recruits.text.siegeFailedDefender": "Siege on %s has been repelled!",
   "gui.recruits.error.name_too_short": "Name too short!",
   "gui.recruits.error.name_too_long": "Name too long!",
   "gui.recruits.error.name_in_use": "Name already in use!",
@@ -788,5 +782,8 @@
   "description.recruits.peaceTreaty": "When accepting this treaty both factions cannot attack each other for the duration.",
   "chat.recruits.text.messenger_target_player_not_accepted": "%s: I arrived, but %s did not accept our treaty proposal.",
   "chat.recruits.text.messenger_info_to_target_treaty": "%s: I have a important proposal from %s",
-  "chat.recruits.text.siegeBlockedOwnerOffline": "Siege on '%s' blocked: owner '%s' is not online."
+  "key.bannermod.command_screen_key": "Open Command Screen",
+  "key.bannermod.war_room_key": "Open War Room",
+  "key.bannermod.map_screen_key": "Open Claim-Map Screen",
+  "category.bannermod": "BannerMod"
 }
