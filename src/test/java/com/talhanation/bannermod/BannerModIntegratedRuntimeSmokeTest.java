@@ -16,7 +16,7 @@ class BannerModIntegratedRuntimeSmokeTest {
         assertEquals(BannerModMain.MOD_ID, WorkersRuntime.modId());
         assertEquals(BannerModNetworkBootstrap.workerPacketOffset(), WorkersRuntime.networkIdOffset());
         assertEquals(BannerModNetworkBootstrap.MILITARY_MESSAGES.length, BannerModNetworkBootstrap.workerPacketOffset());
-        assertEquals(23, BannerModNetworkBootstrap.CIVILIAN_MESSAGES.length);
+        assertEquals(22, BannerModNetworkBootstrap.CIVILIAN_MESSAGES.length);
         assertTrue(BannerModNetworkBootstrap.CIVILIAN_MESSAGES.length > 0);
     }
 }
