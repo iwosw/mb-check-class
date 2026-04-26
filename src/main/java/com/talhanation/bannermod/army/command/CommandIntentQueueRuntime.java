@@ -33,8 +33,7 @@ import java.util.UUID;
  *       as applied, advancing the queue on the very next tick.</li>
  * </ul>
  *
- * <p>The queue is in-memory only; restart wipes it. That mirrors HYW's reservation layer
- * and keeps the first slice cheap.</p>
+ * <p>The queue is in-memory only; restart wipes it and keeps the first slice cheap.</p>
  */
 public final class CommandIntentQueueRuntime {
     public static final double MOVE_TO_POINT_THRESHOLD = 2.5D;
@@ -195,7 +194,7 @@ public final class CommandIntentQueueRuntime {
         List<AbstractRecruitEntity> single = List.of(recruit);
         if (intent instanceof CommandIntent.Movement move) {
             if (issuer != null) {
-                CommandEvents.onMovementCommand(issuer, single, move.movementState(), move.formation(), move.tight());
+                CommandEvents.onMovementCommand(issuer, single, move.movementState(), move.formation(), move.tight(), move.targetPos());
             }
         } else if (intent instanceof CommandIntent.Face face) {
             if (issuer != null) {
@@ -220,7 +219,11 @@ public final class CommandIntentQueueRuntime {
         if (server == null || recruitUuid == null) return null;
         for (ServerLevel level : server.getAllLevels()) {
             Entity entity = level.getEntity(recruitUuid);
-            if (entity instanceof AbstractRecruitEntity recruit && recruit.isAlive()) {
+            if (AbstractRecruitEntity.class.isInstance(entity)) {
+                AbstractRecruitEntity recruit = AbstractRecruitEntity.class.cast(entity);
+                if (!recruit.isAlive()) {
+                    continue;
+                }
                 return recruit;
             }
         }

@@ -67,52 +67,7 @@ public class MessageMovement implements Message<MessageMovement> {
     }
 
     private static List<AbstractRecruitEntity> resolveTargets(Player sender, UUID playerUuid, UUID group) {
-        if (playerUuid == null || !sender.getUUID().equals(playerUuid)) {
-            BannerModMain.LOGGER.debug("Ignored movement command with mismatched sender UUID");
-            return List.of();
-        }
-
-        List<AbstractRecruitEntity> nearby = RecruitIndex.instance().groupInRange(
-                sender.getCommandSenderWorld(),
-                group,
-                sender.position(),
-                CommandTargeting.GROUP_COMMAND_RADIUS
-        );
-        if (nearby == null || nearby.isEmpty()) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            nearby = sender.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    sender.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
-            );
-        }
-        CommandTargeting.GroupCommandSelection selection = CommandTargeting.forGroupCommand(
-                sender.getUUID(),
-                sender.getTeam() == null ? null : sender.getTeam().getName(),
-                group,
-                nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
-                        recruit.getUUID(),
-                        recruit.getOwnerUUID(),
-                        recruit.getGroup(),
-                        recruit.getTeam() == null ? null : recruit.getTeam().getName(),
-                        recruit.isOwned(),
-                        recruit.isAlive(),
-                        recruit.getListen(),
-                        recruit.distanceToSqr(sender)
-                )).toList()
-        );
-
-        if (!selection.isSuccess()) {
-            BannerModMain.LOGGER.debug("Ignored movement command: {}", selection.failure());
-            return List.of();
-        }
-
-        Set<UUID> targetIds = new HashSet<>();
-        for (CommandTargeting.RecruitSnapshot recruit : selection.recruits()) {
-            targetIds.add(recruit.recruitUuid());
-        }
-
-        nearby.removeIf(recruit -> !targetIds.contains(recruit.getUUID()));
-        return nearby;
+        return RecruitCommandTargetResolver.resolveGroupTargets(sender, playerUuid, group, "movement");
     }
 
     public MessageMovement fromBytes(FriendlyByteBuf buf) {

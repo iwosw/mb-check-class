@@ -13,7 +13,7 @@ import java.util.UUID;
  * <ul>
  *   <li>Each verb is a record variant — type-safe dispatching via pattern matching in the
  *       {@link CommandIntentDispatcher}.</li>
- *   <li>Every variant carries the HYW-style meta fields ({@link #queueMode()},
+ *   <li>Every variant carries shared command meta fields ({@link #queueMode()},
  *       {@link #priority()}, {@link #issuedAtGameTime()}) so queueing and logging are
  *       uniform across command kinds.</li>
  *   <li>Records are comparable and serialisable by shape — good enough for an in-memory
@@ -31,7 +31,7 @@ public sealed interface CommandIntent {
     /** Monotonic server tick when the player issued the command. */
     long issuedAtGameTime();
 
-    /** Higher = more urgent. Peer of HYW's {@code priority} param. */
+    /** Higher = more urgent. */
     int priority();
 
     /** Append to the unit's command queue ({@code true}) or replace it ({@code false}). */

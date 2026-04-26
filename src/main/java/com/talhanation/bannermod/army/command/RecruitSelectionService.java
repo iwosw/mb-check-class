@@ -1,9 +1,11 @@
 package com.talhanation.bannermod.army.command;
 
+import com.talhanation.bannermod.citizen.CitizenRoleSelectors;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 
 import java.util.LinkedHashSet;
@@ -58,14 +60,13 @@ public final class RecruitSelectionService {
             RecruitSelectionRegistry.instance().clear(player == null ? null : player.getUUID());
             return 0;
         }
-        List<AbstractRecruitEntity> nearby = nearbyRecruits(player, radius, true);
         Set<UUID> selection = new LinkedHashSet<>();
-        for (AbstractRecruitEntity recruit : nearby) {
-            if (!candidateUuids.contains(recruit.getUUID())) continue;
-            if (!recruit.isAlive() || !recruit.isOwned()) continue;
-            UUID ownerUuid = recruit.getOwnerUUID();
-            if (ownerUuid == null || !ownerUuid.equals(player.getUUID())) continue;
-            selection.add(recruit.getUUID());
+        for (UUID candidateUuid : candidateUuids) {
+            Entity entity = player.serverLevel().getEntity(candidateUuid);
+            if (!isSelectableUnit(entity, player, radius)) {
+                continue;
+            }
+            selection.add(candidateUuid);
         }
         RecruitSelectionRegistry.instance().set(player.getUUID(), selection);
         return selection.size();
@@ -79,5 +80,15 @@ public final class RecruitSelectionService {
         }
         RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
         return player.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, box);
+    }
+
+    private static boolean isSelectableUnit(Entity entity, ServerPlayer player, double radius) {
+        if (entity == null || !entity.isAlive()) {
+            return false;
+        }
+        if (entity.distanceToSqr(player) > radius * radius) {
+            return false;
+        }
+        return CitizenRoleSelectors.isOwnedCommandableRecruitUnit(entity, player.getUUID());
     }
 }

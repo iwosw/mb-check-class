@@ -38,6 +38,10 @@ final class MovementFormationCommandService {
     }
 
     static void onMovementCommand(Player player, List<AbstractRecruitEntity> recruits, int movementState, int formation, boolean tight) {
+        onMovementCommand(player, recruits, movementState, formation, tight, null);
+    }
+
+    static void onMovementCommand(Player player, List<AbstractRecruitEntity> recruits, int movementState, int formation, boolean tight, @Nullable Vec3 explicitTargetPos) {
         if (formation != 0 && (movementState == 2 || movementState == 4 || movementState == 6 || movementState == 7 || movementState == 8)) {
             Vec3 targetPos = null;
 
@@ -45,8 +49,12 @@ final class MovementFormationCommandService {
                 case 2 -> targetPos = FormationUtils.getGeometricMedian(recruits, (ServerLevel) player.getCommandSenderWorld());
                 case 4 -> targetPos = player.position();
                 case 6 -> {
-                    HitResult hitResult = player.pick(200, 1F, true);
-                    targetPos = hitResult.getLocation();
+                    if (explicitTargetPos != null) {
+                        targetPos = explicitTargetPos;
+                    } else {
+                        HitResult hitResult = player.pick(200, 1F, true);
+                        targetPos = hitResult.getLocation();
+                    }
                 }
                 case 7 -> targetPos = getFormationRelativeTarget(player, recruits, 1D);
                 case 8 -> targetPos = getFormationRelativeTarget(player, recruits, -1D);
@@ -89,11 +97,18 @@ final class MovementFormationCommandService {
                         }
                     }
                     case 6 -> {
-                        HitResult hitResult = player.pick(100, 1F, true);
-                        if (hitResult.getType() == HitResult.Type.BLOCK) {
-                            BlockHitResult blockHitResult = (BlockHitResult) hitResult;
-                            BlockPos blockPos = blockHitResult.getBlockPos();
+                        BlockPos blockPos = null;
+                        if (explicitTargetPos != null) {
+                            blockPos = BlockPos.containing(explicitTargetPos);
+                        } else {
+                            HitResult hitResult = player.pick(100, 1F, true);
+                            if (hitResult.getType() == HitResult.Type.BLOCK) {
+                                BlockHitResult blockHitResult = (BlockHitResult) hitResult;
+                                blockPos = blockHitResult.getBlockPos();
+                            }
+                        }
 
+                        if (blockPos != null) {
                             recruit.setMovePos(blockPos);
                             recruit.setFollowState(0);
                             recruit.setShouldMovePos(true);

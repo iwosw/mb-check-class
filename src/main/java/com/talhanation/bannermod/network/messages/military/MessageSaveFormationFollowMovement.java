@@ -1,10 +1,12 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -32,8 +34,11 @@ public class MessageSaveFormationFollowMovement implements Message<MessageSaveFo
     }
 
     public void executeServerSide(NetworkEvent.Context context){
-        CommandEvents.saveFormation(context.getSender(), formation);
-        CommandEvents.saveUUIDList(context.getSender(), "ActiveGroups", RecruitsGroup.uuidListFromNbt(groups));
+        ServerPlayer sender = context.getSender();
+        if (sender == null || !sender.getUUID().equals(player_uuid)) return;
+        List<UUID> ownedGroups = RecruitCommandAuthority.filterOwnedGroups(sender, RecruitsGroup.uuidListFromNbt(groups));
+        CommandEvents.saveFormation(sender, formation);
+        CommandEvents.saveUUIDList(sender, "ActiveGroups", ownedGroups);
     }
 
     public MessageSaveFormationFollowMovement fromBytes(FriendlyByteBuf buf) {

@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Per-player server-side set of currently-selected recruit UUIDs.
  *
- * <p>HYW-style selection is orthogonal to groups: a player can select any subset of
+ * <p>Selection is orthogonal to groups: a player can select any subset of
  * their owned recruits (via radius command today, drag-box UI tomorrow), and subsequent
  * commands target that subset instead of the broader group.</p>
  *

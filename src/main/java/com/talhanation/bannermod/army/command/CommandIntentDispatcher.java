@@ -95,7 +95,7 @@ public final class CommandIntentDispatcher {
                                     List<AbstractRecruitEntity> safeActors) {
         if (intent instanceof CommandIntent.Movement move) {
             CommandEvents.onMovementCommand(
-                    player, safeActors, move.movementState(), move.formation(), move.tight());
+                    player, safeActors, move.movementState(), move.formation(), move.tight(), move.targetPos());
         } else if (intent instanceof CommandIntent.Face face) {
             CommandEvents.onFaceCommand(
                     player, safeActors, face.formation(), face.tight());
