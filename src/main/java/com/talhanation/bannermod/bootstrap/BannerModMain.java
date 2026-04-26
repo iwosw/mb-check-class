@@ -4,7 +4,6 @@ import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.events.DamageEvent;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.events.PillagerEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.events.VillagerEvents;
@@ -13,6 +12,7 @@ import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
 import com.talhanation.bannermod.client.military.events.ClientPlayerEvents;
 import com.talhanation.bannermod.client.military.events.KeyEvents;
+import com.talhanation.bannermod.client.military.gui.overlay.BattleWindowHud;
 import com.talhanation.bannermod.client.military.gui.overlay.ClaimOverlayManager;
 import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
@@ -23,6 +23,8 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.events.WarPvpEvents;
+import com.talhanation.bannermod.war.events.WarRevoltAutoResolver;
+import com.talhanation.bannermod.war.events.WarStateBroadcaster;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -136,12 +138,13 @@ public class BannerModMain {
         MinecraftForge.EVENT_BUS.register(new RecruitEvents());
         MinecraftForge.EVENT_BUS.register(new com.talhanation.bannermod.events.RecruitShieldEvents());
         MinecraftForge.EVENT_BUS.register(new ClaimEvents());
-        MinecraftForge.EVENT_BUS.register(new FactionEvents());
         MinecraftForge.EVENT_BUS.register(new CommandEvents());
         MinecraftForge.EVENT_BUS.register(new DamageEvent());
         MinecraftForge.EVENT_BUS.register(new PillagerEvents());
         MinecraftForge.EVENT_BUS.register(new VillagerEvents());
         MinecraftForge.EVENT_BUS.register(new WarPvpEvents());
+        MinecraftForge.EVENT_BUS.register(new WarRevoltAutoResolver());
+        MinecraftForge.EVENT_BUS.register(new WarStateBroadcaster());
         if (MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers()) {
             // Legacy recruits/workers update checkers target retired mod ids and stay disabled
             // until bannermod has one release-facing update contract.
@@ -191,6 +194,7 @@ public class BannerModMain {
         MinecraftForge.EVENT_BUS.register(new KeyEvents());
         MinecraftForge.EVENT_BUS.register(new ClientPlayerEvents());
         MinecraftForge.EVENT_BUS.register(new ClaimOverlayManager());
+        MinecraftForge.EVENT_BUS.register(new BattleWindowHud());
     }
 
     private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {
