@@ -3,7 +3,6 @@ package com.talhanation.bannermod.client.military.api;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.eventbus.api.Cancelable;
 import net.minecraftforge.eventbus.api.Event;
 
 import javax.annotation.Nullable;
@@ -66,41 +65,5 @@ public abstract class ClientClaimEvent extends Event {
         public boolean isCurrentClaim() {
             return isCurrentClaim;
         }
-    }
-
-    @Cancelable
-    public static class SiegeStarted extends ClientClaimEvent {
-        public SiegeStarted(RecruitsClaim claim) {
-            super(claim);
-        }
-    }
-
-    public static class SiegeEnded extends ClientClaimEvent {
-        private final boolean wasConquered;
-
-        public SiegeEnded(RecruitsClaim claim, boolean wasConquered) {
-            super(claim);
-            this.wasConquered = wasConquered;
-        }
-
-        public boolean wasConquered() {
-            return wasConquered;
-        }
-    }
-
-    public static class HealthChanged extends ClientClaimEvent {
-        private final int previousHealth;
-        private final int newHealth;
-
-        public HealthChanged(RecruitsClaim claim, int previousHealth, int newHealth) {
-            super(claim);
-            this.previousHealth = previousHealth;
-            this.newHealth = newHealth;
-        }
-
-        public int getPreviousHealth() { return previousHealth; }
-        public int getNewHealth() { return newHealth; }
-
-        public boolean isDamage() { return newHealth < previousHealth; }
     }
 }

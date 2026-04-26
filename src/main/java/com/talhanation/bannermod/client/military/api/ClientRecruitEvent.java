@@ -1,7 +1,6 @@
 package com.talhanation.bannermod.client.military.api;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -49,22 +48,5 @@ public abstract class ClientRecruitEvent extends Event {
         public Spawned(AbstractRecruitEntity recruit) {
             super(recruit);
         }
-    }
-
-
-    public static class FactionChanged extends ClientRecruitEvent {
-        @Nullable private final RecruitsFaction previousFaction;
-        @Nullable private final RecruitsFaction newFaction;
-
-        public FactionChanged(AbstractRecruitEntity recruit,
-                               @Nullable RecruitsFaction previousFaction,
-                               @Nullable RecruitsFaction newFaction) {
-            super(recruit);
-            this.previousFaction = previousFaction;
-            this.newFaction = newFaction;
-        }
-
-        @Nullable public RecruitsFaction getPreviousFaction() { return previousFaction; }
-        @Nullable public RecruitsFaction getNewFaction() { return newFaction; }
     }
 }

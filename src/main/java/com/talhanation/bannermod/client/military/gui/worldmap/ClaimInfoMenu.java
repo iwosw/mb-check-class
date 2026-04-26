@@ -1,19 +1,15 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.client.military.gui.component.BannerRenderer;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 public class ClaimInfoMenu {
-    private static final ResourceLocation SIEGE_ICON = new ResourceLocation("bannermod:textures/gui/image/enemy.png");
     private final WorldMapScreen parent;
     private boolean visible = false;
-    private boolean underSiege;
     private RecruitsClaim currentClaim;
     private BannerRenderer bannerRenderer;
-    private BannerRenderer bannerRendererAttacker;
     public int x, y;
     public int width = 120, height = 215;
 
@@ -23,18 +19,12 @@ public class ClaimInfoMenu {
 
     public void init() {
         this.bannerRenderer = new BannerRenderer(null);
-        this.bannerRendererAttacker = new BannerRenderer(null);
     }
 
     public void openForClaim(RecruitsClaim claim, int x, int y) {
         this.currentClaim = claim;
         this.visible = true;
-        bannerRenderer.setRecruitsFaction(claim.getOwnerFaction());
-        this.underSiege = claim.isUnderSiege;
-
-        if(!claim.attackingParties.isEmpty() && claim.attackingParties.get(0) != null){
-            bannerRendererAttacker.setRecruitsFaction(claim.attackingParties.get(0));
-        }
+        bannerRenderer.setBannerItem(ItemStack.EMPTY);
 
         this.x = x;
         this.y = y;
@@ -65,21 +55,12 @@ public class ClaimInfoMenu {
 
         guiGraphics.drawCenteredString(parent.getMinecraft().font, currentClaim.getName(), x + width / 2, y + 5, 0xFFFFFF);
 
-        if(this.underSiege){
-            bannerRenderer.renderBanner(guiGraphics, x - 7 - 35 + width / 2, y + 65,  this.width, this.height, 40);
-            bannerRendererAttacker.renderBanner(guiGraphics, x - 7 + 30 + width / 2, y + 65,  this.width, this.height, 40);
-            RenderSystem.setShaderTexture(0, SIEGE_ICON);
-            int iconSize = 18;
-            guiGraphics.blit(SIEGE_ICON, x + width / 2 - iconSize / 2, y + 50, 0, 0, iconSize, iconSize, iconSize, iconSize);
-        }
-        else{
-            bannerRenderer.renderBanner(guiGraphics, x - 7 + width / 2, y + 70,  this.width, this.height, 50);
-        }
+        bannerRenderer.renderBanner(guiGraphics, x - 7 + width / 2, y + 70,  this.width, this.height, 50);
 
         int textY = y + 120;
         guiGraphics.drawString(parent.getMinecraft().font,
-                "Faction: " + (currentClaim.getOwnerFaction() != null ?
-                        currentClaim.getOwnerFaction().getTeamDisplayName() : "None"),
+                "Owner: " + (currentClaim.getOwnerPoliticalEntityId() != null ?
+                        currentClaim.getOwnerPoliticalEntityId() : "None"),
                 x + 5, textY, 0xFFFFFF);
 
         textY += 15;
@@ -136,7 +117,7 @@ public class ClaimInfoMenu {
     public void close() {
         this.visible = false;
         this.currentClaim = null;
-        this.bannerRenderer.setRecruitsFaction(null);
+        this.bannerRenderer.setBannerItem(ItemStack.EMPTY);
     }
 
     public boolean isVisible() {
@@ -148,4 +129,3 @@ public class ClaimInfoMenu {
         this.y = y;
     }
 }
-

@@ -25,8 +25,7 @@ final class WorldMapClaimMenuActions {
     void addEntries(WorldMapContextMenu menu, ItemStack claimChunkCost, ItemStack claimAreaCost) {
         menu.addEntry(TEXT_CLAIM_CHUNK.getString(),
                 () -> screen.canClaimChunk(screen.selectedChunk)
-                        && (screen.isPlayerFactionLeader()
-                        || screen.isPlayerClaimLeader(screen.getNeighborClaim(screen.selectedChunk))),
+                        && screen.isPlayerClaimLeader(screen.getNeighborClaim(screen.selectedChunk)),
                 WorldMapScreen::claimChunk,
                 claimChunkCost,
                 "bufferzone, chunk"
@@ -34,7 +33,7 @@ final class WorldMapClaimMenuActions {
 
         menu.addEntry(TEXT_CLAIM_AREA.getString(),
                 () -> screen.canClaimArea(screen.getClaimArea(screen.selectedChunk))
-                        && screen.isPlayerFactionLeader(),
+                        && screen.getPlayer() != null,
                 WorldMapScreen::claimArea,
                 claimAreaCost,
                 "bufferzone, area"
@@ -42,16 +41,14 @@ final class WorldMapClaimMenuActions {
 
         menu.addEntry(TEXT_EDIT_CLAIM.getString(),
                 () -> screen.selectedClaim != null
-                        && screen.isPlayerFactionLeader(screen.selectedClaim.getOwnerFaction())
-                        || screen.isPlayerClaimLeader(),
+                        && screen.isPlayerClaimLeader(),
                 this::openClaimEditor
         );
 
         menu.addEntry(TEXT_REMOVE_CHUNK.getString(),
                 () -> screen.selectedChunk != null && screen.selectedClaim != null
                         && screen.canRemoveChunk(screen.selectedChunk, screen.selectedClaim)
-                        && (screen.isPlayerFactionLeader(screen.selectedClaim.getOwnerFaction())
-                        || screen.isPlayerClaimLeader(screen.selectedClaim)),
+                        && screen.isPlayerClaimLeader(screen.selectedClaim),
                 this::removeSelectedChunk
         );
 
@@ -59,8 +56,7 @@ final class WorldMapClaimMenuActions {
                 () -> screen.selectedChunk != null && screen.selectedClaim != null
                         && screen.isPlayerAdminAndCreative()
                         && screen.canRemoveChunk(screen.selectedChunk, screen.selectedClaim)
-                        && !(screen.isPlayerFactionLeader(screen.selectedClaim.getOwnerFaction())
-                        || screen.isPlayerClaimLeader(screen.selectedClaim)),
+                        && !screen.isPlayerClaimLeader(screen.selectedClaim),
                 this::removeSelectedChunk,
                 "admin"
         );

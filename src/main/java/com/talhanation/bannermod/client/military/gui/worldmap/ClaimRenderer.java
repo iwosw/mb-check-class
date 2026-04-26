@@ -3,7 +3,6 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 import com.talhanation.bannermod.client.military.gui.worldmap.ChunkTileManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.talhanation.bannermod.client.military.ClientManager;
-import com.talhanation.bannermod.client.military.gui.faction.FactionEditScreen;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -280,10 +279,9 @@ public class ClaimRenderer {
     }
 
     public static int getClaimColor(RecruitsClaim claim) {
-        if (claim.getOwnerFaction() == null) return 0xFF888888;
-
-        byte colorKey = claim.getOwnerFaction().getUnitColor();
-        return FactionEditScreen.unitColors.get(colorKey).getRGB();
+        if (claim.getOwnerPoliticalEntityId() == null) return 0xFF888888;
+        int hash = claim.getOwnerPoliticalEntityId().hashCode();
+        return 0xFF000000 | (hash & 0x00FFFFFF);
     }
 
     public static RecruitsClaim getClaimAtPosition(double mouseX, double mouseY, double offsetX, double offsetZ, double scale) {
@@ -298,21 +296,14 @@ public class ClaimRenderer {
     }
 
     public static void renderBufferZone(GuiGraphics guiGraphics, double offsetX, double offsetZ, double scale) {
-        if (ClientManager.ownFaction == null) return;
         Set<String> renderedBufferChunks = new HashSet<>();
         int bufferColor = 0x44FF4444;
 
         Set<String> ownClaimedChunks = new HashSet<>();
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-            if (claim.getOwnerFaction() != null && claim.getOwnerFaction().getStringID().equals(ClientManager.ownFaction.getStringID())) {
-                for (ChunkPos chunk : claim.getClaimedChunks()) {
-                    ownClaimedChunks.add(chunk.x + "," + chunk.z);
-                }
-            }
-        }
 
         for (RecruitsClaim foreignClaim : ClientManager.recruitsClaims) {
-            if (foreignClaim.getOwnerFaction() == null || foreignClaim.getOwnerFaction().getStringID().equals(ClientManager.ownFaction.getStringID())) {
+            String foreignOwnerKey = foreignClaim.getOwnerPoliticalEntityId() == null ? null : foreignClaim.getOwnerPoliticalEntityId().toString();
+            if (foreignOwnerKey == null) {
                 continue;
             }
 

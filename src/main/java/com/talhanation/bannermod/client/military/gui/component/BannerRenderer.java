@@ -2,7 +2,6 @@ package com.talhanation.bannermod.client.military.gui.component;
 
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.datafixers.util.Pair;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -24,22 +23,16 @@ public class BannerRenderer {
     private List<Pair<Holder<BannerPattern>, DyeColor>> resultBannerPatterns;
     private final ModelPart flag;
     private ItemStack bannerItem;
-    private RecruitsFaction recruitsFaction;
     private final Minecraft minecraft;
-    public BannerRenderer(@Nullable RecruitsFaction team) {
-        this.recruitsFaction = team;
+    public BannerRenderer(@Nullable ItemStack bannerItem) {
         boolean fail = true;
-        if (team != null && team.getBanner() != null){
-            ItemStack itemStack = ItemStack.of(team.getBanner());
-            if(itemStack.getItem() instanceof BannerItem bannerItem1){
-                this.bannerItem = itemStack;
+        if (bannerItem != null && bannerItem.getItem() instanceof BannerItem bannerItem1){
+                this.bannerItem = bannerItem;
                 this.resultBannerPatterns = BannerBlockEntity.createPatterns(
                         bannerItem1.getColor(),
                         BannerBlockEntity.getItemPatterns(this.bannerItem)
                 );
                 fail = false;
-            }
-
         }
 
         if(fail){
@@ -85,10 +78,4 @@ public class BannerRenderer {
         }
     }
 
-    public void setRecruitsFaction(RecruitsFaction faction){
-        if(faction == null) return;
-        this.recruitsFaction = faction;
-        this.bannerItem = ItemStack.of(faction.getBanner());
-        this.resultBannerPatterns = BannerBlockEntity.createPatterns(((BannerItem) this.bannerItem.getItem()).getColor(), BannerBlockEntity.getItemPatterns(this.bannerItem));
-    }
 }

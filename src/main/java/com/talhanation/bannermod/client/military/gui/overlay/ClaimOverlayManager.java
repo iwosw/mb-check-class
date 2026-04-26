@@ -6,6 +6,7 @@ import com.talhanation.bannermod.client.military.api.ClientOverlayEvent;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
+import com.talhanation.bannermod.war.client.WarClientState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
@@ -23,10 +24,10 @@ public class ClaimOverlayManager {
     private int tickCounter = 0;
     private ChunkPos lastPlayerChunk = null;
     private int lastClaimsVersion = -1;
+    private int lastWarStateVersion = -1;
+    private boolean lastKnownSiegeState = false;
     private String lastKnownClaimName = "";
     private String lastKnownFactionName = "";
-    private int lastKnownHealth = -1;
-    private boolean lastKnownSiegeState = false;
 
     private static final long FADE_DURATION = 500;
     private static final long FULL_DISPLAY_DURATION = 5000;
@@ -87,7 +88,8 @@ public class ClaimOverlayManager {
         if (ClientManager.currentClaim != null) {
             boolean cancelled = MinecraftForge.EVENT_BUS.post(new ClientOverlayEvent.RenderPre(event.getGuiGraphics(), ClientManager.currentClaim, currentState, alpha));
             if (!cancelled) {
-                renderer.render(event.getGuiGraphics(), mc, ClientManager.currentClaim, currentState, alpha, getPanelWidth());
+                boolean underSiege = WarClientState.isClaimUnderSiege(ClientManager.currentClaim);
+                renderer.render(event.getGuiGraphics(), mc, ClientManager.currentClaim, currentState, alpha, getPanelWidth(), underSiege);
 
                 MinecraftForge.EVENT_BUS.post(new ClientOverlayEvent.RenderPost(event.getGuiGraphics(), ClientManager.currentClaim, currentState, alpha));
             }
@@ -155,37 +157,17 @@ public class ClaimOverlayManager {
             hasChanges = true;
         }
 
-        if (!claim.getOwnerFactionStringID().equals(lastKnownFactionName)) {
-            lastKnownFactionName = claim.getOwnerFactionStringID();
+        String currentOwnerKey = claim.getOwnerPoliticalEntityId() == null ? "" : claim.getOwnerPoliticalEntityId().toString();
+        if (!currentOwnerKey.equals(lastKnownFactionName)) {
+            lastKnownFactionName = currentOwnerKey;
             hasChanges = true;
         }
 
-        if (claim.getHealth() != lastKnownHealth) {
-            int previousHealth = lastKnownHealth;
-            lastKnownHealth = claim.getHealth();
+        boolean underSiege = WarClientState.isClaimUnderSiege(claim);
+        if (underSiege != lastKnownSiegeState || lastWarStateVersion != WarClientState.version()) {
+            lastKnownSiegeState = underSiege;
+            lastWarStateVersion = WarClientState.version();
             hasChanges = true;
-
-            if (previousHealth != -1) {
-                MinecraftForge.EVENT_BUS.post(
-                        new ClientClaimEvent.HealthChanged(claim, previousHealth, claim.getHealth()));
-            }
-        }
-
-        if (claim.isUnderSiege != lastKnownSiegeState) {
-            lastKnownSiegeState = claim.isUnderSiege;
-            hasChanges = true;
-
-            if (claim.isUnderSiege) {
-                boolean cancelled = MinecraftForge.EVENT_BUS.post(new ClientClaimEvent.SiegeStarted(claim));
-                if (!cancelled) {
-                    claimEntryTime = System.currentTimeMillis();
-                    transitionToState(OverlayState.FULL, false);
-                }
-            }
-            else {
-                boolean wasConquered = !claim.getOwnerFactionStringID().equals(lastKnownFactionName);
-                MinecraftForge.EVENT_BUS.post(new ClientClaimEvent.SiegeEnded(claim, wasConquered));
-            }
         }
 
         if (hasChanges) {
@@ -197,19 +179,24 @@ public class ClaimOverlayManager {
         if (claim == null) {
             lastKnownClaimName = "";
             lastKnownFactionName = "";
-            lastKnownHealth = -1;
             lastKnownSiegeState = false;
             return;
         }
 
         lastKnownClaimName = claim.getName();
-        lastKnownFactionName = claim.getOwnerFactionStringID();
-        lastKnownHealth = claim.getHealth();
-        lastKnownSiegeState = claim.isUnderSiege;
+        lastKnownFactionName = (claim.getOwnerPoliticalEntityId() == null ? "" : claim.getOwnerPoliticalEntityId().toString());
+        lastKnownSiegeState = WarClientState.isClaimUnderSiege(claim);
     }
 
     private void updateOverlayState() {
-        if (ClientManager.currentClaim == null || ClientManager.currentClaim.isUnderSiege) {
+        if (ClientManager.currentClaim == null) {
+            return;
+        }
+
+        if (WarClientState.isClaimUnderSiege(ClientManager.currentClaim)) {
+            if (currentState != OverlayState.FULL) {
+                transitionToState(OverlayState.FULL, true);
+            }
             return;
         }
 
@@ -266,7 +253,6 @@ public class ClaimOverlayManager {
     private void reset() {
         ClientManager.recruitsClaims.clear();
         ClientManager.markClaimsChanged();
-        ClientManager.activeSiegeClaims.clear();
         ClientManager.currentClaim = null;
         currentState = OverlayState.HIDDEN;
         lastPlayerChunk = null;

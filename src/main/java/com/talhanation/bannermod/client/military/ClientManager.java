@@ -25,17 +25,10 @@ public class ClientManager {
     public static Map<UUID, RecruitsClaim> recruitsClaimsByUUID = new HashMap<>();
     public static Map<Long, RecruitsClaim> recruitsClaimsByChunk = new HashMap<>();
     public static int recruitsClaimsVersion;
-    public static Map<UUID, RecruitsClaim> activeSiegeClaims = new HashMap<>();
-    public static List<RecruitsFaction> factions = new ArrayList<>();
-    public static int factionsVersion;
     public static List<RecruitsGroup> groups = new ArrayList<>();
     public static int groupsVersion;
     public static List<FormationMapContact> formationMapContacts = new ArrayList<>();
     public static int formationMapContactsVersion;
-    public static RecruitsFaction ownFaction;
-    public static Map<String, Map<String, RecruitsDiplomacyManager.DiplomacyStatus>> diplomacyMap = new HashMap<>();
-    public static Map<String, Long> treaties = new HashMap<>();
-    public static int diplomacyVersion;
     public static int configValueClaimCost;
     public static int configValueChunkCost;
     public static boolean configValueCascadeClaimCost;
@@ -67,17 +60,10 @@ public class ClientManager {
         com.talhanation.bannermod.migration.StatePersistenceSeams.ClientSyncState resetState = SYNCHRONIZED_STATE.resetPreservingRoutes(routesMap);
         recruitsClaims = new ArrayList<>(resetState.claims());
         markClaimsChanged();
-        activeSiegeClaims = new HashMap<>(resetState.activeSieges());
-        factions = new ArrayList<>();
-        factionsVersion++;
         groups = new ArrayList<>();
         groupsVersion++;
         formationMapContacts = new ArrayList<>();
         formationMapContactsVersion++;
-        ownFaction = null;
-        diplomacyMap = new HashMap<>();
-        treaties = new HashMap<>();
-        diplomacyVersion++;
         configValueClaimCost = 0;
         configValueChunkCost = 0;
         configValueCascadeClaimCost = false;
@@ -100,42 +86,10 @@ public class ClientManager {
         routesMap = resetState.routes();
     }
 
-    public static void rebuildActiveSieges() {
-        activeSiegeClaims = new HashMap<>(SYNCHRONIZED_STATE.rebuild(recruitsClaims));
-    }
-
-    public static void updateActiveSiege(RecruitsClaim claim) {
-        activeSiegeClaims = new HashMap<>(SYNCHRONIZED_STATE.update(activeSiegeClaims, claim));
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static RecruitsDiplomacyManager.DiplomacyStatus getRelation(String team, String otherTeam) {
-        return diplomacyMap.getOrDefault(team, new HashMap<>()).getOrDefault(otherTeam, RecruitsDiplomacyManager.DiplomacyStatus.NEUTRAL);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static boolean hasTreaty(String factionA, String factionB) {
-        String[] sorted = new String[]{factionA, factionB};
-        java.util.Arrays.sort(sorted);
-        String key = sorted[0] + "|" + sorted[1];
-        Long expiry = treaties.get(key);
-        if (expiry == null) return false;
-        return System.currentTimeMillis() < expiry;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static long getTreatyRemainingMillis(String factionA, String factionB) {
-        String[] sorted = new String[]{factionA, factionB};
-        java.util.Arrays.sort(sorted);
-        String key = sorted[0] + "|" + sorted[1];
-        long expiry = treaties.getOrDefault(key, 0L);
-        return Math.max(0L, expiry - System.currentTimeMillis());
-    }
-
     @OnlyIn(Dist.CLIENT)
     public static RecruitsPlayerInfo getPlayerInfo() {
         Player player = Minecraft.getInstance().player;
-        if (player != null) return new RecruitsPlayerInfo(player.getUUID(), player.getName().getString(), ownFaction);
+        if (player != null) return new RecruitsPlayerInfo(player.getUUID(), player.getName().getString());
         return null;
     }
 
@@ -242,10 +196,6 @@ public class ClientManager {
         return null;
     }
 
-    public static void markFactionsChanged() {
-        factionsVersion++;
-    }
-
     public static void markGroupsChanged() {
         groupsVersion++;
     }
@@ -256,10 +206,6 @@ public class ClientManager {
 
     public static void markOnlinePlayersChanged() {
         onlinePlayersVersion++;
-    }
-
-    public static void markDiplomacyChanged() {
-        diplomacyVersion++;
     }
 
     // -------------------------------------------------------------------------

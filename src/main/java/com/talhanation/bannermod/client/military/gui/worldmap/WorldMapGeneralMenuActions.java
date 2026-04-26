@@ -1,8 +1,6 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.client.military.ClientManager;
-import com.talhanation.bannermod.client.military.gui.diplomacy.DiplomacyEditScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 final class WorldMapGeneralMenuActions {
@@ -17,10 +15,7 @@ final class WorldMapGeneralMenuActions {
 
     void addEntries(WorldMapContextMenu menu) {
         menu.addEntry(TEXT_DIPLOMACY.getString(),
-                () -> ClientManager.ownFaction != null
-                        && screen.selectedClaim != null
-                        && screen.selectedClaim.getOwnerFaction() != null
-                        && !ClientManager.ownFaction.getStringID().equals(screen.selectedClaim.getOwnerFactionStringID()),
+                () -> false,
                 this::openDiplomacyEditor
         );
 
@@ -46,6 +41,5 @@ final class WorldMapGeneralMenuActions {
     }
 
     private void openDiplomacyEditor(WorldMapScreen screen) {
-        Minecraft.getInstance().setScreen(new DiplomacyEditScreen(screen, screen.selectedClaim.getOwnerFaction()));
     }
 }

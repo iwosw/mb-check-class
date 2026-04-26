@@ -146,17 +146,14 @@ public class NobleTradeScreen extends RecruitsScreenBase {
     }
 
     public boolean isPlayerFactionLeader(){
-        if(this.villagerNoble.getTeam() != null){
-            String teamID = villagerNoble.getTeam().getName();
-            return ClientManager.ownFaction != null && ClientManager.ownFaction.getStringID().equals(teamID) && ClientManager.ownFaction.getTeamLeaderUUID().equals(player.getUUID());
-        }
         return false;
     }
 
     public boolean isPlayerClaimLeader(){
         if(this.villagerNoble.getTeam() != null){
             return ClientManager.currentClaim != null
-                    && ClientManager.currentClaim.getOwnerFaction().getStringID().equals(this.villagerNoble.getTeam().getName())
+                    && ClientManager.currentClaim.getOwnerPoliticalEntityId() != null
+                    && ClientManager.currentClaim.getOwnerPoliticalEntityId().toString().equals(this.villagerNoble.getTeam().getName())
                     && ClientManager.currentClaim.getPlayerInfo().getUUID().equals(player.getUUID());
         }
         return false;
@@ -469,4 +466,3 @@ public class NobleTradeScreen extends RecruitsScreenBase {
         }
     }
 }
-

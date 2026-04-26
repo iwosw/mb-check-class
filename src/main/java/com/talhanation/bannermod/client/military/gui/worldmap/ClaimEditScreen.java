@@ -5,7 +5,6 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.RecruitsScreenBase;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
-import com.talhanation.bannermod.client.military.gui.faction.FactionEditScreen;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.client.military.gui.widgets.SelectedPlayerWidget;
 import com.talhanation.bannermod.network.messages.military.MessageUpdateClaim;
@@ -147,8 +146,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
                 button -> {
                     this.claim.setName(editNameBox.getValue());
                     this.claim.setPlayer(playerInfo);
-                    this.claim.setOwnerFaction(playerInfo.getFaction());
-                    this.claim.attackingParties.clear();
+                    this.claim.setOwnerPoliticalEntityId(null);
                     this.claim.setBlockInteractionAllowed(this.allowBlockInteracting);
                     this.claim.setBlockPlacementAllowed(this.allowBlockPlacing);
                     this.claim.setBlockBreakingAllowed(this.allowBlockBreaking);
@@ -205,7 +203,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
     private void renderClaimMiniMapAreaFramed(GuiGraphics guiGraphics, int x, int y, int width, int height, RecruitsClaim claim) {
         List<ChunkPos> chunks = claim.getClaimedChunks();
         if (chunks.isEmpty()) return;
-        if (claim.getOwnerFaction() == null) return;
+        if (claim.getOwnerPoliticalEntityId() == null) return;
 
         Minecraft mc = Minecraft.getInstance();
         Font font = mc.font;
@@ -237,7 +235,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
 
         // Farbwerte vorbereiten
         int alpha = 190;
-        int rgb = FactionEditScreen.unitColors.get(claim.getOwnerFaction().getUnitColor()).getRGB();
+        int rgb = 0x6699CC;
         int r = (rgb >> 16) & 0xFF;
         int g = (rgb >> 8) & 0xFF;
         int b = rgb & 0xFF;

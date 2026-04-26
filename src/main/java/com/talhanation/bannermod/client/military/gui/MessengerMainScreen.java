@@ -2,7 +2,6 @@ package com.talhanation.bannermod.client.military.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -17,7 +16,6 @@ public class MessengerMainScreen extends RecruitsScreenBase {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
 
     private static final Component BUTTON_MESSAGES = Component.translatable("gui.recruits.messenger.tab.messages");
-    private static final Component BUTTON_TREATIES = Component.translatable("gui.recruits.messenger.tab.treaties");
     private static final Component TITLE = Component.translatable("gui.recruits.messenger.main_title");
 
     private final Player player;
@@ -46,12 +44,6 @@ public class MessengerMainScreen extends RecruitsScreenBase {
         );
         addRenderableWidget(messagesButton);
 
-
-        Button treatyButton = new ExtendedButton(btnX, guiTop + 55, btnWidth, 20, BUTTON_TREATIES,
-                button -> minecraft.setScreen(new MessengerTreatyScreen(messenger, player))
-        );
-        treatyButton.active = ClientManager.ownFaction != null && ClientManager.ownFaction.getTeamLeaderUUID().equals(player.getUUID());
-        addRenderableWidget(treatyButton);
     }
 
     @Override

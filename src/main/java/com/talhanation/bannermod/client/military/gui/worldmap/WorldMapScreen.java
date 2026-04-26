@@ -11,7 +11,6 @@ import com.talhanation.bannermod.army.map.FormationMapRelation;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -33,8 +32,6 @@ import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.List;
 import java.util.UUID;
-
-import static com.talhanation.bannermod.client.military.ClientManager.ownFaction;
 
 public class WorldMapScreen extends Screen {
     private static final ResourceLocation MAP_ICONS = new ResourceLocation("textures/map/map_icons.png");
@@ -655,15 +652,6 @@ public class WorldMapScreen extends Screen {
         // Faction / claim helpers (unchanged)
         // -------------------------------------------------------------------------
 
-        public boolean isPlayerFactionLeader() {
-            return this.isPlayerFactionLeader(ownFaction);
-        }
-
-        public boolean isPlayerFactionLeader(RecruitsFaction faction){
-            if (player == null || faction == null) return false;
-            return faction.getTeamLeaderUUID().equals(player.getUUID());
-        }
-
         public boolean isPlayerClaimLeader() {
             return this.isPlayerClaimLeader(selectedClaim);
         }
@@ -732,16 +720,16 @@ public class WorldMapScreen extends Screen {
             return claimController.canRemoveChunk(pos, claim);
         }
 
-        public int getClaimCost(RecruitsFaction ownerTeam){
-            return claimController.getClaimCost(ownerTeam);
+        public int getClaimCost(){
+            return claimController.getClaimCost();
         }
 
         public boolean canPlayerPay( int cost, Player player){
             return claimController.canPlayerPay(cost, player);
         }
 
-        public static boolean isInBufferZone(ChunkPos chunk, RecruitsFaction ownFaction){
-            return WorldMapClaimController.isInBufferZone(chunk, ownFaction);
+        public static boolean isInBufferZone(ChunkPos chunk){
+            return WorldMapClaimController.isInBufferZone(chunk);
         }
 
         public boolean canClaimChunk(ChunkPos pos){

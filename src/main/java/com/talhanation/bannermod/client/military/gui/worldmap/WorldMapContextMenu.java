@@ -37,7 +37,7 @@ public class WorldMapContextMenu {
         ItemStack itemStackClaimChunk = new ItemStack(currencyItemStack.getItem());
         itemStackClaimChunk.setCount(ClientManager.configValueChunkCost);
         ItemStack itemStackClaimArea = new ItemStack(currencyItemStack.getItem());
-        itemStackClaimArea.setCount(worldMapScreen.getClaimCost(ClientManager.ownFaction));
+        itemStackClaimArea.setCount(worldMapScreen.getClaimCost());
         WorldMapClaimMenuActions claimMenuActions = new WorldMapClaimMenuActions(worldMapScreen);
         WorldMapGeneralMenuActions generalMenuActions = new WorldMapGeneralMenuActions(worldMapScreen);
 

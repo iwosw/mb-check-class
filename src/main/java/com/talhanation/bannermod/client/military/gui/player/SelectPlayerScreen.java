@@ -103,10 +103,6 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
                 button -> {
                 buttonAction.accept(selected);
 
-                if(ClientManager.ownFaction != null) {
-                    ClientManager.ownFaction.removeJoinRequest(selected.getName());
-                    ClientManager.markFactionsChanged();
-                }
                 this.playerList.setFocused(null);
                 this.selected = null;
                 this.init();

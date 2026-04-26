@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenListBase;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.*;
@@ -19,7 +18,6 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
     public final Player player;
     protected final boolean includeSelf;
     private int lastOnlinePlayersVersion = -1;
-    private int lastFactionsVersion = -1;
     private int entriesVersion = 0;
     private int lastFilteredEntriesVersion = -1;
     private String lastFilteredFilter = null;
@@ -39,58 +37,24 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
     }
 
     public void tick() {
-        if(ClientManager.onlinePlayers != null && (lastOnlinePlayersVersion != ClientManager.onlinePlayersVersion || lastFactionsVersion != ClientManager.factionsVersion)){
+        if(ClientManager.onlinePlayers != null && lastOnlinePlayersVersion != ClientManager.onlinePlayersVersion){
             updateEntryList();
         }
     }
 
     public void updateEntryList() {
-        if (entriesVersion > 0 && lastOnlinePlayersVersion == ClientManager.onlinePlayersVersion && lastFactionsVersion == ClientManager.factionsVersion) {
+        if (entriesVersion > 0 && lastOnlinePlayersVersion == ClientManager.onlinePlayersVersion) {
             updateFilter();
             return;
         }
 
         entries.clear();
         lastOnlinePlayersVersion = ClientManager.onlinePlayersVersion;
-        lastFactionsVersion = ClientManager.factionsVersion;
         entriesVersion++;
 
-        switch (filterType) {
-            case SAME_TEAM -> {
-                if (ClientManager.ownFaction != null) {
-                    Set<UUID> onlineUUIDs = new HashSet<>();
-                    for (RecruitsPlayerInfo online : ClientManager.onlinePlayers) {
-                        onlineUUIDs.add(online.getUUID());
-                    }
-
-                    for (RecruitsPlayerInfo member : ClientManager.ownFaction.getMembers()) {
-                        if (includeSelf || !member.getUUID().equals(this.player.getUUID())) {
-                            member.setOnline(onlineUUIDs.contains(member.getUUID()));
-                            entries.add(new RecruitsPlayerEntry(screen, member));
-                        }
-                    }
-                }
-            }
-            default -> {
-                for (RecruitsPlayerInfo playerInfo : ClientManager.onlinePlayers) {
-                    if (includeSelf || !playerInfo.getUUID().equals(this.player.getUUID())) {
-                        switch (filterType) {
-                            default -> entries.add(new RecruitsPlayerEntry(screen, playerInfo));
-
-                            case TEAM_JOIN_REQUEST -> {
-                                if (ClientManager.ownFaction != null && ClientManager.ownFaction.getJoinRequests().contains(playerInfo.getName())) {
-                                    entries.add(new RecruitsPlayerEntry(screen, playerInfo));
-                                }
-                            }
-
-                            case ANY_TEAM -> {
-                                if (playerInfo.getFaction() != null) {
-                                    entries.add(new RecruitsPlayerEntry(screen, playerInfo));
-                                }
-                            }
-                        }
-                    }
-                }
+        for (RecruitsPlayerInfo playerInfo : ClientManager.onlinePlayers) {
+            if (includeSelf || !playerInfo.getUUID().equals(this.player.getUUID())) {
+                entries.add(new RecruitsPlayerEntry(screen, playerInfo));
             }
         }
 

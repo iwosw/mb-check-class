@@ -1,7 +1,6 @@
 package com.talhanation.bannermod.client.military.gui.player;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.talhanation.bannermod.client.military.gui.component.BannerRenderer;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenEntryBase;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenListBase;
 import com.talhanation.bannermod.util.GameProfileUtils;
@@ -24,13 +23,11 @@ public class RecruitsPlayerEntry extends ListScreenEntryBase<RecruitsPlayerEntry
     protected final Minecraft minecraft;
     protected final IPlayerSelection screen;
     protected final @NotNull RecruitsPlayerInfo player;
-    protected final BannerRenderer bannerRenderer;
 
     public RecruitsPlayerEntry(IPlayerSelection screen, @NotNull RecruitsPlayerInfo player) {
         this.minecraft = Minecraft.getInstance();
         this.screen = screen;
         this.player = player;
-        this.bannerRenderer = new BannerRenderer(player.getFaction());
     }
 
     @Override
@@ -67,9 +64,6 @@ public class RecruitsPlayerEntry extends ListScreenEntryBase<RecruitsPlayerEntry
         RenderSystem.disableBlend();
         guiGraphics.drawString(minecraft.font, player.getName(), (float) textX, (float) textY, nameColor, false);
 
-        if(bannerRenderer != null){
-            bannerRenderer.renderBanner(guiGraphics, left + 185, top, width, height, 15);
-        }
     }
 
     @NotNull

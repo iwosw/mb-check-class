@@ -3,7 +3,6 @@ package com.talhanation.bannermod.client.military.gui.commandscreen;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.CommandScreen;
 import com.talhanation.bannermod.client.military.gui.group.RecruitsCommandButton;
-import com.talhanation.bannermod.client.military.gui.faction.FactionMainScreen;
 import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.client.gui.components.Tooltip;
@@ -89,14 +88,6 @@ public class OtherCategory implements ICommandCategory {
         mountButton.setTooltip(Tooltip.create(TOOLTIP_MOUNT));
         mountButton.active = isOneGroupActive && screen.rayEntity != null;
         screen.addRenderableWidget(mountButton);
-
-        //TEAM
-        RecruitsCommandButton factionButton = new RecruitsCommandButton(x - 60, y + 50, TEXT_TEAM,
-                button -> {
-                    screen.getMinecraft().setScreen(new FactionMainScreen(player));
-                });
-        factionButton.setTooltip(Tooltip.create(TOOLTIP_TEAM));
-        screen.addRenderableWidget(factionButton);
 
         //BACK TO MOUNT
         RecruitsCommandButton backToMountButton = new RecruitsCommandButton(x + 100, y + 25, TEXT_BACK_TO_MOUNT,
@@ -196,4 +187,3 @@ public class OtherCategory implements ICommandCategory {
         return rayEntity instanceof Container || rayEntity instanceof InventoryCarrier || rayEntity instanceof AbstractHorse;
     }
 }
-

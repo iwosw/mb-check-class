@@ -2,8 +2,6 @@ package com.talhanation.bannermod.client.military.events;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.component.ImageToast;
-import com.talhanation.bannermod.client.military.gui.component.RecruitsTeamImageToast;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -21,7 +19,7 @@ public class RecruitsToastManager {
     private static final ResourceLocation CROWN_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/leader_crown.png");
     public static Images savedTeamForPlayer;//dirty fix calling twice bug
     public static Images savedForPlayer;//dirty fix for calling twice bug
-    public static void setTeamToastForPlayer(Images id, @Nullable Component title, @Nullable Component text, RecruitsFaction team){
+    public static void setTeamToastForPlayer(Images id, @Nullable Component title, @Nullable Component text){
         if(savedTeamForPlayer == id){
             savedTeamForPlayer = null;
             return;
@@ -33,22 +31,22 @@ public class RecruitsToastManager {
         Toast toast;
         switch (id) {
             case ALLY -> {
-                toast = new RecruitsTeamImageToast(ALLY_IMAGE, title, text, team);
+                toast = new ImageToast(ALLY_IMAGE, title, text);
             }
             case NEUTRAL -> {
-                toast = new RecruitsTeamImageToast(NEUTRAL_IMAGE, title, text, team);
+                toast = new ImageToast(NEUTRAL_IMAGE, title, text);
             }
             case ENEMY -> {
-                toast = new RecruitsTeamImageToast(ENEMY_IMAGE, title, text, team);
+                toast = new ImageToast(ENEMY_IMAGE, title, text);
             }
             case TEAM_JOIN -> {
-                toast = new RecruitsTeamImageToast(null, title, text, team);
+                toast = new ImageToast(null, title, text);
             }
             case CROWN -> {
-                toast = new RecruitsTeamImageToast(CROWN_IMAGE, title, text, team);
+                toast = new ImageToast(CROWN_IMAGE, title, text);
             }
             default -> {
-                toast = new RecruitsTeamImageToast(LETTER_IMAGE, title, text, team);
+                toast = new ImageToast(LETTER_IMAGE, title, text);
             }
         }
 
