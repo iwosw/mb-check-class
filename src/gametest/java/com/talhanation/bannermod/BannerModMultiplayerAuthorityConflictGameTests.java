@@ -94,7 +94,7 @@ public class BannerModMultiplayerAuthorityConflictGameTests {
                 owner,
                 RecruitsBattleGameTestSupport.WEST_RANGED_RIGHT_POS
         );
-        worker.currentCropArea = cropArea;
+        worker.setCurrentWorkArea(cropArea);
         cropArea.setBeingWorkedOn(true);
 
         MessageUpdateBuildArea outsiderUpdate = new MessageUpdateBuildArea(

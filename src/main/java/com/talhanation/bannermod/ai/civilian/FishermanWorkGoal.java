@@ -51,9 +51,10 @@ public class FishermanWorkGoal extends Goal {
     }
 
     private boolean isAreaNotRemoved() {
-        if(fisherman.currentFishingArea == null || !fisherman.currentFishingArea.isRemoved()) return true;
+        FishingArea area = fisherman.getCurrentFishingArea();
+        if(area == null || !area.isRemoved()) return true;
         else {
-            fisherman.currentFishingArea = null;
+            fisherman.setCurrentWorkArea(null);
         }
         return false;
     }
@@ -85,39 +86,39 @@ public class FishermanWorkGoal extends Goal {
 
         if(!isAreaNotRemoved()) return;
 
-        if(state != State.SELECT_WORK_AREA && this.fisherman.currentFishingArea == null){
+        if(state != State.SELECT_WORK_AREA && this.fisherman.getCurrentFishingArea() == null){
             setState(State.SELECT_WORK_AREA);
             return;
         }
 
         switch(state){
             case SELECT_WORK_AREA -> {
-                if(this.fisherman.currentFishingArea != null) setState(State.MOVE_TO_WORK_AREA);
+                if(this.fisherman.getCurrentFishingArea() != null) setState(State.MOVE_TO_WORK_AREA);
 
                 if(++cooldown < fisherman.getRandom().nextInt(300)) return;
                 this.cooldown = 0;
 
-                List<FishingArea> areas = getAvailableWorkAreasByPriority((ServerLevel) fisherman.getCommandSenderWorld(), fisherman, this.fisherman.currentFishingArea);
+                List<FishingArea> areas = getAvailableWorkAreasByPriority((ServerLevel) fisherman.getCommandSenderWorld(), fisherman, this.fisherman.getCurrentFishingArea());
 
                 if (!areas.isEmpty()) {
-                    this.fisherman.currentFishingArea = areas.get(0);
+                    this.fisherman.setCurrentWorkArea(areas.get(0));
                 }
 
-                if(this.fisherman.currentFishingArea == null) {
+                if(this.fisherman.getCurrentFishingArea() == null) {
                     fisherman.reportIdleReason("fisherman_no_area", Component.literal(fisherman.getName().getString() + ": Waiting for a fishing area."));
                     return;
                 }
 
                 fisherman.clearWorkStatus();
-                this.fisherman.currentFishingArea.setBeingWorkedOn(true);
-                this.fisherman.currentFishingArea.setTime(0);
+                this.fisherman.getCurrentFishingArea().setBeingWorkedOn(true);
+                this.fisherman.getCurrentFishingArea().setTime(0);
 
                 setState(State.MOVE_TO_WORK_AREA);
             }
 
             case MOVE_TO_WORK_AREA -> {
                 this.blockPos = null;
-                if(this.moveToPosition(this.fisherman.currentFishingArea.getOnPos(), 20)) return;
+                if(this.moveToPosition(this.fisherman.getCurrentFishingArea().getOnPos(), 20)) return;
 
                 setState(State.PREPARE_FISHING);
             }
@@ -147,7 +148,7 @@ public class FishermanWorkGoal extends Goal {
                 this.fisherman.swing(InteractionHand.MAIN_HAND);
                 this.fisherman.playSound(SoundEvents.FISHING_BOBBER_THROW, 1, 1);
 
-                Vec3 center = fisherman.currentFishingArea.getArea().getCenter();
+                Vec3 center = fisherman.getCurrentFishingArea().getArea().getCenter();
 
                 this.fishingBobber = fisherman.throwFishingHook(center);
 
@@ -199,9 +200,9 @@ public class FishermanWorkGoal extends Goal {
             }
 
             case DONE -> {
-                this.fisherman.currentFishingArea.setBeingWorkedOn(false);
+                this.fisherman.getCurrentFishingArea().setBeingWorkedOn(false);
                 blockPos = null;
-                this.fisherman.currentFishingArea = null;
+                this.fisherman.setCurrentWorkArea(null);
                 fisherman.clearWorkStatus();
             }
 

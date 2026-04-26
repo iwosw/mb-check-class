@@ -47,7 +47,7 @@ public class BannerModSettlementLaborGameTests {
         cropArea.setTeamStringID(TEAM_ID);
         storageArea.setTeamStringID(TEAM_ID);
         BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), TEAM_ID, ownerPlayer.getUUID(), ownerPlayer.getScoreboardName());
-        worker.currentCropArea = cropArea;
+        worker.setCurrentWorkArea(cropArea);
         cropArea.setBeingWorkedOn(true);
 
         helper.assertFalse(ownerPlayer.getUUID().equals(outsiderPlayer.getUUID()),

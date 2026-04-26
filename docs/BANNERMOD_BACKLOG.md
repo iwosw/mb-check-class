@@ -85,6 +85,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-002 — Worker AI consumes ValidatedBuildingRecord
 
+**Status: DONE 2026-04-27.**
+
 **Зачем.** Authoring уже идёт через building validation, но worker AI всё ещё местами живёт на legacy `currentXArea` полях.
 
 **Scope.**
@@ -100,6 +102,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - `compileJava` and relevant tests pass.
 
 **Progress 2026-04-26.** Settlement runtime publishes building/work-area orders through `BannerModSettlementOrchestrator`. `MessageAddWorkArea` had no remaining sender (only a registered handler + slot), so the class, the slot, and the dead Javadoc reference in `BannerModSettlementFactionEnforcementGameTests` are all gone; CIVILIAN_MESSAGES count is now 22 and the war packet base shifts down by one slot. `compileJava` is green. Live `current*Area` fields still survive on `FarmerEntity`/`FishermanEntity` and their work goals — migrating those to `ValidatedBuildingRecord` lookup is the next slice.
+
+**Progress 2026-04-27.** Migrated all 7 worker types (`FarmerEntity`, `FishermanEntity`, `MinerEntity`, `BuilderEntity`, `LumberjackEntity`, `AnimalFarmerEntity`, `MerchantEntity`) off the legacy public `current*Area` fields onto a single UUID-keyed binding seam in `AbstractWorkerEntity`. The shared base now owns one `currentWorkAreaCache` plus a `final getCurrentWorkArea()` that returns the cached entity if alive, otherwise lazy-resolves the bound UUID from `WorkerControlAccess.getBoundWorkAreaUUID()` against the live `ServerLevel.getEntity(uuid)`; `setCurrentWorkArea(area)` is the single mutator and updates both the cache and the bound UUID through `controlAccess.setBoundWorkAreaBinding`. `clearCurrentWorkAreaForRecovery()` now defaults to `setCurrentWorkArea(null)` (Merchant overrides to also clear `setCurrentMarketName("")`). Each subclass keeps a typed `getCurrentXArea()` wrapper (`getCurrentCropArea`, `getCurrentFishingArea`, `getCurrentMiningArea`, `getCurrentBuildArea`, `getCurrentLumberArea`, `getCurrentAnimalPen`, `getCurrentMarketArea`) so `*WorkGoal` code stays readable. All six `*WorkGoal` classes plus `WorkerSettlementSpawner` and 11 GameTests were converted to read through the typed getters and write through `setCurrentWorkArea(...)`. The bound UUID was already persisted by `CitizenPersistenceBridge` (`boundWorkArea` NBT key), so the migration is save-compatible — old worlds load the UUID into `WorkerControlAccess.boundWorkArea` and the next `getCurrentWorkArea()` call lazy-resolves the live area. `compileJava`, `compileTestJava`, `compileGametestJava`, and `test` are green.
 
 ---
 

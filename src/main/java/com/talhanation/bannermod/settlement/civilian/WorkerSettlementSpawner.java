@@ -146,7 +146,7 @@ public final class WorkerSettlementSpawner {
 
         CropArea existingArea = findClaimCropArea(level, claim, farmer);
         if (existingArea != null) {
-            farmer.currentCropArea = existingArea;
+            farmer.setCurrentWorkArea(existingArea);
             return;
         }
 
@@ -175,7 +175,7 @@ public final class WorkerSettlementSpawner {
         }
 
         level.addFreshEntity(cropArea);
-        farmer.currentCropArea = cropArea;
+        farmer.setCurrentWorkArea(cropArea);
     }
 
     @Nullable

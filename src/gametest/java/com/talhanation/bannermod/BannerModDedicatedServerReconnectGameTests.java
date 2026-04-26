@@ -53,7 +53,7 @@ public class BannerModDedicatedServerReconnectGameTests {
         BannerModDedicatedServerGameTestSupport.assignDetachedOwnership(cropArea, RECONNECTED_OWNER_UUID, RECONNECTED_OWNER_NAME);
         cropArea.setTeamStringID(RECONNECTED_OWNER_TEAM_ID);
         BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), RECONNECTED_OWNER_TEAM_ID, RECONNECTED_OWNER_UUID, RECONNECTED_OWNER_NAME);
-        worker.currentCropArea = cropArea;
+        worker.setCurrentWorkArea(cropArea);
         cropArea.setBeingWorkedOn(true);
 
         Player reconnectedPlayer = createReconnectedPlayer(helper, level);
@@ -111,7 +111,7 @@ public class BannerModDedicatedServerReconnectGameTests {
         BannerModDedicatedServerGameTestSupport.assignDetachedOwnership(originalCropArea, RECONNECTED_OWNER_UUID, RECONNECTED_OWNER_NAME);
         originalCropArea.setTeamStringID(RECONNECTED_OWNER_TEAM_ID);
         BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), RECONNECTED_OWNER_TEAM_ID, RECONNECTED_OWNER_UUID, RECONNECTED_OWNER_NAME);
-        originalWorker.currentCropArea = originalCropArea;
+        originalWorker.setCurrentWorkArea(originalCropArea);
         originalCropArea.setBeingWorkedOn(true);
 
         helper.runAfterDelay(5, () -> {

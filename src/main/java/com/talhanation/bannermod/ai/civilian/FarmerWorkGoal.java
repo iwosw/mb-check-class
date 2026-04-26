@@ -48,9 +48,10 @@ public class FarmerWorkGoal extends Goal {
     }
 
     private boolean isCropAreaNotRemoved() {
-        if(farmer.currentCropArea == null || !farmer.currentCropArea.isRemoved()) return true;
+        CropArea area = farmer.getCurrentCropArea();
+        if(area == null || !area.isRemoved()) return true;
         else {
-            farmer.currentCropArea = null;
+            farmer.setCurrentWorkArea(null);
         }
         return false;
     }
@@ -74,7 +75,7 @@ public class FarmerWorkGoal extends Goal {
 
         if(!isCropAreaNotRemoved()) return;
 
-        if(state != State.SELECT_WORK_AREA && this.farmer.currentCropArea == null){
+        if(state != State.SELECT_WORK_AREA && this.farmer.getCurrentCropArea() == null){
             setState(State.SELECT_WORK_AREA);
             return;
         }
@@ -83,7 +84,7 @@ public class FarmerWorkGoal extends Goal {
 
         switch(state){
             case SELECT_WORK_AREA -> {
-                if(this.farmer.currentCropArea != null) {
+                if(this.farmer.getCurrentCropArea() != null) {
                     setState(State.MOVE_TO_WORK_AREA);
                     return;
                 }
@@ -91,33 +92,33 @@ public class FarmerWorkGoal extends Goal {
                 if(!FarmerAreaSelectionTiming.shouldSearchForArea(false, ++cooldown)) return;
                 this.cooldown = 0;
 
-                List<CropArea> areas = getAvailableWorkAreasByPriority((ServerLevel) farmer.getCommandSenderWorld(), farmer, this.farmer.currentCropArea);
+                List<CropArea> areas = getAvailableWorkAreasByPriority((ServerLevel) farmer.getCommandSenderWorld(), farmer, this.farmer.getCurrentCropArea());
 
                 if (!areas.isEmpty()) {
-                    this.farmer.currentCropArea = areas.get(0);
+                    this.farmer.setCurrentWorkArea(areas.get(0));
                 }
 
-                if(this.farmer.currentCropArea == null) {
+                if(this.farmer.getCurrentCropArea() == null) {
                     farmer.reportIdleReason("farmer_no_area", Component.literal(farmer.getName().getString() + ": Waiting for a crop area."));
                     return;
                 }
 
                 farmer.clearWorkStatus();
-                this.farmer.currentCropArea.setBeingWorkedOn(true);
-                this.farmer.currentCropArea.setTime(0);
+                this.farmer.getCurrentCropArea().setBeingWorkedOn(true);
+                this.farmer.getCurrentCropArea().setTime(0);
                 this.workDone = false;
                 setState(State.MOVE_TO_WORK_AREA);
             }
 
             case MOVE_TO_WORK_AREA ->{
                 this.blockPos = null;
-                if(this.moveToPosition(this.farmer.currentCropArea.getOnPos(), 20)) return;
+                if(this.moveToPosition(this.farmer.getCurrentCropArea().getOnPos(), 20)) return;
                 setState(State.PREPARE_BREAK_BLOCKS);
             }
             case PREPARE_BREAK_BLOCKS -> {
-                this.farmer.currentCropArea.scanBreakArea();
+                this.farmer.getCurrentCropArea().scanBreakArea();
 
-                this.stackToBreak = this.farmer.currentCropArea.stackToBreak;
+                this.stackToBreak = this.farmer.getCurrentCropArea().stackToBreak;
 
                 if(stackToBreak.isEmpty()){
                     setState(State.PREPARE_PLOWING);
@@ -134,7 +135,7 @@ public class FarmerWorkGoal extends Goal {
                 setState(State.PREPARE_WATER_SPOT);
             }
             case PREPARE_WATER_SPOT -> {
-                BlockState centerPosState = farmer.getCommandSenderWorld().getBlockState(this.farmer.currentCropArea.getWaterPosCenter());
+                BlockState centerPosState = farmer.getCommandSenderWorld().getBlockState(this.farmer.getCurrentCropArea().getWaterPosCenter());
                 if(centerPosState.isAir()){
 
                     ItemStack itemStack = farmer.getMatchingItem(item -> farmer.isBucketWithWater(item));
@@ -147,7 +148,7 @@ public class FarmerWorkGoal extends Goal {
                     else if(itemStack.getItem() instanceof BucketItem bucketItem){
                         farmer.switchMainHandItem(item -> farmer.isBucketWithWater(item));
 
-                        bucketItem.emptyContents(null,  farmer.getCommandSenderWorld(), this.farmer.currentCropArea.getWaterPosCenter(), null);
+                        bucketItem.emptyContents(null,  farmer.getCommandSenderWorld(), this.farmer.getCurrentCropArea().getWaterPosCenter(), null);
                     }
                 }
 
@@ -155,9 +156,9 @@ public class FarmerWorkGoal extends Goal {
             }
 
             case PREPARE_PLOWING -> {
-                this.farmer.currentCropArea.scanPlowArea();
+                this.farmer.getCurrentCropArea().scanPlowArea();
 
-                this.stackToPlow = this.farmer.currentCropArea.stackToPlow;
+                this.stackToPlow = this.farmer.getCurrentCropArea().stackToPlow;
                 if(stackToPlow.isEmpty()){
                     applyLoopDecision(FarmerLoopProgress.selectNextAction(false, false, true));
                     return;
@@ -184,21 +185,21 @@ public class FarmerWorkGoal extends Goal {
             }
 
             case PREPARE_PLANT_SEEDS -> {
-                this.farmer.currentCropArea.scanPlantArea();
+                this.farmer.getCurrentCropArea().scanPlantArea();
 
-                this.stackToPlant = this.farmer.currentCropArea.stackToPlant;
+                this.stackToPlant = this.farmer.getCurrentCropArea().stackToPlant;
                 if(stackToPlant.isEmpty()){
                     applyLoopDecision(FarmerLoopProgress.selectNextAction(false, false, false));
                     return;
                 }
 
-                ItemStack seedTemplate = FarmerPlantingPreparation.resolveSeedTemplate(this.farmer.currentCropArea.getSeedStack(), this.farmer.getInventory().items);
-                if(!seedTemplate.isEmpty() && this.farmer.currentCropArea.getSeedStack().isEmpty()){
-                    this.farmer.currentCropArea.setSeedStack(seedTemplate);
-                    this.farmer.currentCropArea.updateType();
+                ItemStack seedTemplate = FarmerPlantingPreparation.resolveSeedTemplate(this.farmer.getCurrentCropArea().getSeedStack(), this.farmer.getInventory().items);
+                if(!seedTemplate.isEmpty() && this.farmer.getCurrentCropArea().getSeedStack().isEmpty()){
+                    this.farmer.getCurrentCropArea().setSeedStack(seedTemplate);
+                    this.farmer.getCurrentCropArea().updateType();
                 }
 
-                if(this.farmer.currentCropArea.getSeedStack().isEmpty()){
+                if(this.farmer.getCurrentCropArea().getSeedStack().isEmpty()){
                     farmer.requestRequiredItem(new NeededItem(FarmerPlantingPreparation::isSupportedSeed, stackToPlant.size(), true),
                             "farmer_missing_seeds",
                             Component.literal(farmer.getName().getString() + ": I need seeds for this field."));
@@ -207,9 +208,9 @@ public class FarmerWorkGoal extends Goal {
                     return;
                 }
 
-                ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.currentCropArea.getSeedStack()));
+                ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
                 if(seedFromInv == null){
-                    ItemStack seedStack = this.farmer.currentCropArea.getSeedStack();
+                    ItemStack seedStack = this.farmer.getCurrentCropArea().getSeedStack();
                     farmer.requestRequiredItem(new NeededItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, seedStack),  stackToPlant.size(), true),
                             "farmer_missing_seeds",
                             Component.literal(farmer.getName().getString() + ": I need more seeds for this field."));
@@ -219,7 +220,7 @@ public class FarmerWorkGoal extends Goal {
                 }
 
                 farmer.clearWorkStatus();
-                this.farmer.switchMainHandItem(itemStack -> itemStack.is(this.farmer.currentCropArea.getSeedStack().getItem()));
+                this.farmer.switchMainHandItem(itemStack -> itemStack.is(this.farmer.getCurrentCropArea().getSeedStack().getItem()));
 
                 setState(State.PLANT_SEEDS);
             }
@@ -235,9 +236,9 @@ public class FarmerWorkGoal extends Goal {
                     workDone = true;
                     setState(State.SELECT_WORK_AREA);
 
-                    this.farmer.currentCropArea.setBeingWorkedOn(false);
+                    this.farmer.getCurrentCropArea().setBeingWorkedOn(false);
                     blockPos = null;
-                    this.farmer.currentCropArea = null;
+                    this.farmer.setCurrentWorkArea(null);
                     this.cooldown = FarmerAreaSelectionTiming.cooldownAfterWorkCycle();
 
                     if(!this.neededItems.isEmpty()){
@@ -305,9 +306,9 @@ public class FarmerWorkGoal extends Goal {
 
     public boolean plantSeeds(Stack<BlockPos> positions){
         if(positions != null){
-            ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> itemStack.is(this.farmer.currentCropArea.getSeedStack().getItem()));
+            ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> itemStack.is(this.farmer.getCurrentCropArea().getSeedStack().getItem()));
             if(seedFromInv == null){
-                seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.currentCropArea.getSeedStack()));
+                seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
             }
             if(seedFromInv == null){
                 setState(State.PREPARE_PLANT_SEEDS);

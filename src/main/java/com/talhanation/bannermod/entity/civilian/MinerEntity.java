@@ -4,7 +4,6 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.MinerWorkGoal;
-import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -34,7 +33,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class MinerEntity extends AbstractWorkerEntity{
-    public MiningArea currentMiningArea;
     public MinerEntity(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
     }
@@ -146,14 +144,9 @@ public class MinerEntity extends AbstractWorkerEntity{
         return super.wantsToPickUp(itemStack);
     }
 
-    @Override
-    public AbstractWorkAreaEntity getCurrentWorkArea() {
-        return currentMiningArea;
-    }
-
-    @Override
-    protected void clearCurrentWorkAreaForRecovery() {
-        this.currentMiningArea = null;
+    @Nullable
+    public MiningArea getCurrentMiningArea() {
+        return getCurrentWorkArea() instanceof MiningArea ma ? ma : null;
     }
 
     public boolean shouldIgnoreBlock(BlockState blockState) {

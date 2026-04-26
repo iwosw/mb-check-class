@@ -63,6 +63,8 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     private final WorkerBlockBreakService blockBreakService = new WorkerBlockBreakService(this);
     private final WorkerStateAccess stateAccess = new WorkerStateAccess(this);
     private final CitizenCore citizenCore = WorkerCitizenBridge.createCore(this);
+    @Nullable
+    private AbstractWorkAreaEntity currentWorkAreaCache;
     @Override
     protected void registerGoals() {
         super.registerGoals();
@@ -73,7 +75,27 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
         this.goalSelector.removeGoal(new MoveTowardsTargetGoal(this, 0.9D, 32.0F));
     }
 
-    public abstract AbstractWorkAreaEntity getCurrentWorkArea();
+    @Nullable
+    public final AbstractWorkAreaEntity getCurrentWorkArea() {
+        if (this.currentWorkAreaCache != null && !this.currentWorkAreaCache.isRemoved()) {
+            return this.currentWorkAreaCache;
+        }
+        this.currentWorkAreaCache = null;
+        UUID bound = this.controlAccess.getBoundWorkAreaUUID();
+        if (bound == null) return null;
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) return null;
+        net.minecraft.world.entity.Entity resolved = serverLevel.getEntity(bound);
+        if (resolved instanceof AbstractWorkAreaEntity area && !area.isRemoved()) {
+            this.currentWorkAreaCache = area;
+            return area;
+        }
+        return null;
+    }
+
+    public final void setCurrentWorkArea(@Nullable AbstractWorkAreaEntity area) {
+        this.currentWorkAreaCache = area;
+        this.controlAccess.setBoundWorkAreaBinding(area == null ? null : area.getUUID());
+    }
 
     @Override
     public CitizenCore getCitizenCore() {
@@ -86,6 +108,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     }
 
     protected void clearCurrentWorkAreaForRecovery() {
+        setCurrentWorkArea(null);
     }
 
     @Nullable

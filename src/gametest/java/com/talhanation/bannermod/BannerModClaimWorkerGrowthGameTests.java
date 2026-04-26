@@ -131,8 +131,8 @@ public class BannerModClaimWorkerGrowthGameTests {
 
         helper.assertTrue(worker instanceof FarmerEntity, "Expected the configured claim-growth profession pool to spawn a farmer.");
         FarmerEntity farmer = (FarmerEntity) worker;
-        helper.assertTrue(farmer.currentCropArea != null, "Expected a claim-grown farmer on a prepared field to receive a crop area instead of idling without work.");
-        helper.assertTrue(farmer.currentCropArea.isAlive(), "Expected claim-grown farmer field seeding to create a live crop area entity.");
+        helper.assertTrue(farmer.getCurrentCropArea() != null, "Expected a claim-grown farmer on a prepared field to receive a crop area instead of idling without work.");
+        helper.assertTrue(farmer.getCurrentCropArea().isAlive(), "Expected claim-grown farmer field seeding to create a live crop area entity.");
 
         helper.succeed();
     }

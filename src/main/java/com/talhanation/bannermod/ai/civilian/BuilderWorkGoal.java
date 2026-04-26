@@ -86,7 +86,7 @@ public class BuilderWorkGoal extends Goal {
 
         if(!isBuildingAreaAvailable()) return;
 
-        if(state != State.SELECT_WORK_AREA && this.builderEntity.currentBuildArea == null){
+        if(state != State.SELECT_WORK_AREA && this.builderEntity.getCurrentBuildArea() == null){
             this.blockPos = null;
             setState(State.SELECT_WORK_AREA);
             return;
@@ -103,40 +103,40 @@ public class BuilderWorkGoal extends Goal {
         if(builderEntity.tickCount % 5 != 0) return;
         switch(state){
             case SELECT_WORK_AREA ->{
-                if(builderEntity.currentBuildArea != null) setState(State.MOVE_TO_WORK_AREA);
+                if(builderEntity.getCurrentBuildArea() != null) setState(State.MOVE_TO_WORK_AREA);
 
                 if(builderEntity.tickCount - lastAreaSearchTick < AREA_SEARCH_COOLDOWN_TICKS) return;
                 lastAreaSearchTick = builderEntity.tickCount;
 
-                List<BuildArea> areas = getAvailableWorkAreasByPriority((ServerLevel) builderEntity.getCommandSenderWorld(), builderEntity, builderEntity.currentBuildArea);
+                List<BuildArea> areas = getAvailableWorkAreasByPriority((ServerLevel) builderEntity.getCommandSenderWorld(), builderEntity, builderEntity.getCurrentBuildArea());
 
                 if (!areas.isEmpty()) {
-                    builderEntity.currentBuildArea = areas.get(0);
+                    builderEntity.setCurrentWorkArea(areas.get(0));
                 }
 
-                if(builderEntity.currentBuildArea == null) {
+                if(builderEntity.getCurrentBuildArea() == null) {
                     builderEntity.reportIdleReason("builder_no_area", Component.literal(builderEntity.getName().getString() + ": Waiting for a build area."));
                     return;
                 }
 
                 builderEntity.clearWorkStatus();
-                builderEntity.currentBuildArea.setBeingWorkedOn(true);
-                this.builderEntity.currentBuildArea.setTime(0);
+                builderEntity.getCurrentBuildArea().setBeingWorkedOn(true);
+                this.builderEntity.getCurrentBuildArea().setTime(0);
                 workDone = false;
                 setState(State.MOVE_TO_WORK_AREA);
             }
 
             case MOVE_TO_WORK_AREA ->{
                 this.blockPos = null;
-                if(this.moveToPosition(builderEntity.currentBuildArea.getOnPos(), 70)) return;
+                if(this.moveToPosition(builderEntity.getCurrentBuildArea().getOnPos(), 70)) return;
 
                 setState(State.PREPARE_BREAK_BLOCKS);
             }
 
             case PREPARE_BREAK_BLOCKS -> {
-                this.builderEntity.currentBuildArea.scanBreakArea();//SOMETHING WRONG I CAN FEEL IT
+                this.builderEntity.getCurrentBuildArea().scanBreakArea();//SOMETHING WRONG I CAN FEEL IT
 
-                this.stackToBreak = this.builderEntity.currentBuildArea.stackToBreak;
+                this.stackToBreak = this.builderEntity.getCurrentBuildArea().stackToBreak;
 
                 if(stackToBreak.isEmpty()){
                     setState(State.PREPARE_PLACE_BLOCKS);
@@ -162,8 +162,8 @@ public class BuilderWorkGoal extends Goal {
             }
 
             case PREPARE_PLACE_BLOCKS -> {
-                if (builderEntity.currentBuildArea.stackToPlace.isEmpty()) {
-                    if (!builderEntity.currentBuildArea.stackToPlaceMultiBlock.isEmpty()) {
+                if (builderEntity.getCurrentBuildArea().stackToPlace.isEmpty()) {
+                    if (!builderEntity.getCurrentBuildArea().stackToPlaceMultiBlock.isEmpty()) {
                         setState(State.PREPARE_PLACE_MULTIBLOCK);
                     } else {
                         setState(State.DONE);
@@ -171,9 +171,9 @@ public class BuilderWorkGoal extends Goal {
                     return;
                 }
 
-                minBuildHeight = (int) builderEntity.currentBuildArea.getArea().maxY;
+                minBuildHeight = (int) builderEntity.getCurrentBuildArea().getArea().maxY;
 
-                for (BuildBlock bb : builderEntity.currentBuildArea.stackToPlace) {
+                for (BuildBlock bb : builderEntity.getCurrentBuildArea().stackToPlace) {
                     int y = bb.getPos().getY();
                     if (y < minBuildHeight) {
                         minBuildHeight = y;
@@ -182,14 +182,14 @@ public class BuilderWorkGoal extends Goal {
 
 
                 this.stackToPlace = new Stack<>();
-                for (BuildBlock buildBlock : builderEntity.currentBuildArea.stackToPlace) {
+                for (BuildBlock buildBlock : builderEntity.getCurrentBuildArea().stackToPlace) {
                     BlockPos pos = buildBlock.getPos();
                     if (pos.getY() != minBuildHeight) continue;
 
                     Item item = BuildBlockParse.parseBlock(buildBlock.getState().getBlock()).getItem();
                     if(item == null){
                         if(builderEntity.getOwner() != null) builderEntity.getOwner().sendSystemMessage(Component.literal("Could not found item for " + buildBlock.getState().getBlock().getName() + " i, will skip this block." ));
-                        builderEntity.currentBuildArea.removeBuildBlockToPlace(pos);
+                        builderEntity.getCurrentBuildArea().removeBuildBlockToPlace(pos);
                         return;
                     }
                     else if (builderEntity.getInventory().hasAnyMatching(itemStack -> itemStack.is(item))) {
@@ -198,10 +198,10 @@ public class BuilderWorkGoal extends Goal {
                 }
 
                 if (stackToPlace.isEmpty()) {
-                    List<ItemStack> neededItems = builderEntity.currentBuildArea.getRequiredMaterials();
+                    List<ItemStack> neededItems = builderEntity.getCurrentBuildArea().getRequiredMaterials();
                     neededItems.sort(Comparator.comparingInt(ItemStack::getCount).reversed());
 
-                    Set<Item> allowedItems = builderEntity.currentBuildArea.stackToPlace.stream()
+                    Set<Item> allowedItems = builderEntity.getCurrentBuildArea().stackToPlace.stream()
                             .filter(bb -> bb.getPos().getY() == minBuildHeight)
                             .map(bb -> BuildBlockParse.parseBlock(bb.getState().getBlock()).getItem())
                             .collect(Collectors.toSet());
@@ -231,13 +231,13 @@ public class BuilderWorkGoal extends Goal {
             }
 
             case PREPARE_PLACE_MULTIBLOCK -> {
-                if (builderEntity.currentBuildArea.stackToPlaceMultiBlock.isEmpty()) {
+                if (builderEntity.getCurrentBuildArea().stackToPlaceMultiBlock.isEmpty()) {
                     setState(State.DONE);
                     return;
                 }
 
                 this.stackToPlace = new Stack<>();
-                for (BuildBlock bb : builderEntity.currentBuildArea.stackToPlaceMultiBlock) {
+                for (BuildBlock bb : builderEntity.getCurrentBuildArea().stackToPlaceMultiBlock) {
                     stackToPlace.push(bb.getPos());
                 }
 
@@ -253,7 +253,7 @@ public class BuilderWorkGoal extends Goal {
             case DONE -> {
                 if(!workDone){
                     workDone = true;
-                    BuildArea completedArea = builderEntity.currentBuildArea;
+                    BuildArea completedArea = builderEntity.getCurrentBuildArea();
 
                     // Spawn any entities that were scanned with the structure (work areas, etc.)
                     spawnScannedEntities(completedArea);
@@ -261,13 +261,13 @@ public class BuilderWorkGoal extends Goal {
                     completedArea.setBeingWorkedOn(false);
 
                     //ONLY FOR BUILDING AREA WILL REMOVE IT
-                    this.builderEntity.currentBuildArea.setDone(true);
+                    this.builderEntity.getCurrentBuildArea().setDone(true);
                     if (this.builderEntity.level() instanceof ServerLevel serverLevel) {
                         BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, completedArea.blockPosition());
                     }
 
                     blockPos = null;
-                    builderEntity.currentBuildArea = null;
+                    builderEntity.setCurrentWorkArea(null);
                     builderEntity.clearWorkStatus();
                     this.start();
                 }
@@ -282,9 +282,10 @@ public class BuilderWorkGoal extends Goal {
     }
 
     private boolean isBuildingAreaAvailable() {
-        if(builderEntity.currentBuildArea == null || !builderEntity.currentBuildArea.isRemoved()) return true;
+        BuildArea area = builderEntity.getCurrentBuildArea();
+        if(area == null || !area.isRemoved()) return true;
         else {
-            builderEntity.currentBuildArea = null;
+            builderEntity.setCurrentWorkArea(null);
         }
         return false;
     }
@@ -460,10 +461,10 @@ public class BuilderWorkGoal extends Goal {
                 }
             }
 
-            BlockState buildingState = builderEntity.currentBuildArea.getStateFromPos(blockPos);
+            BlockState buildingState = builderEntity.getCurrentBuildArea().getStateFromPos(blockPos);
             BlockState levelState = builderEntity.getCommandSenderWorld().getBlockState(blockPos);
 
-            if(builderEntity.currentBuildArea.statesMatch(levelState, buildingState)){
+            if(builderEntity.getCurrentBuildArea().statesMatch(levelState, buildingState)){
                 if(!positions.isEmpty()){
                     blockPos = positions.pop();
                 }
@@ -490,13 +491,13 @@ public class BuilderWorkGoal extends Goal {
                         buildingState = blockItem.getBlock().defaultBlockState();
                     }
 
-                    BlockState secondaryState = builderEntity.currentBuildArea.findPairedMultiBlockState(blockPos);
+                    BlockState secondaryState = builderEntity.getCurrentBuildArea().findPairedMultiBlockState(blockPos);
                     if (secondaryState != null) {
-                        BlockPos secondaryPos = builderEntity.currentBuildArea.findPairedMultiBlockPos(blockPos);
+                        BlockPos secondaryPos = builderEntity.getCurrentBuildArea().findPairedMultiBlockPos(blockPos);
                         builderEntity.getCommandSenderWorld().setBlock(blockPos, buildingState, Block.UPDATE_CLIENTS);
                         builderEntity.getCommandSenderWorld().setBlock(secondaryPos, secondaryState, Block.UPDATE_ALL);
                         builderEntity.getCommandSenderWorld().blockUpdated(blockPos, buildingState.getBlock());
-                        builderEntity.currentBuildArea.removeMultiBlockToPlace(secondaryPos);
+                        builderEntity.getCurrentBuildArea().removeMultiBlockToPlace(secondaryPos);
                     } else {
                         builderEntity.getCommandSenderWorld().setBlockAndUpdate(blockPos, buildingState);
                     }
@@ -504,7 +505,7 @@ public class BuilderWorkGoal extends Goal {
                     builderEntity.getCommandSenderWorld().playSound(null, blockPos.getX(), blockPos.getY(), blockPos.getZ(), buildingState.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
                     this.builderEntity.swing(InteractionHand.MAIN_HAND);
                     buildingItem.shrink(1);
-                    builderEntity.currentBuildArea.removeBuildBlockToPlace(blockPos);
+                    builderEntity.getCurrentBuildArea().removeBuildBlockToPlace(blockPos);
                 }
                 else{
                     return false;
@@ -527,7 +528,7 @@ public class BuilderWorkGoal extends Goal {
             blockPos = positions.pop();
         }
 
-        BlockState buildingState = builderEntity.currentBuildArea.getStateFromMultiBlockPos(blockPos);
+        BlockState buildingState = builderEntity.getCurrentBuildArea().getStateFromMultiBlockPos(blockPos);
         if (buildingState != null) {
             BlockState levelState = builderEntity.getCommandSenderWorld().getBlockState(blockPos);
             if (!levelState.equals(buildingState)) {
@@ -536,7 +537,7 @@ public class BuilderWorkGoal extends Goal {
                         buildingState.getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
                 builderEntity.swing(InteractionHand.MAIN_HAND);
             }
-            builderEntity.currentBuildArea.removeMultiBlockToPlace(blockPos);
+            builderEntity.getCurrentBuildArea().removeMultiBlockToPlace(blockPos);
         }
 
         if (!positions.isEmpty()) {

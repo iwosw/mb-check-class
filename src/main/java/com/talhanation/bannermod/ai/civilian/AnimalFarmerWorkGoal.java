@@ -94,13 +94,13 @@ public class AnimalFarmerWorkGoal extends Goal {
                 if(animalFarmerEntity.tickCount - lastAreaSearchTick < AREA_SEARCH_COOLDOWN_TICKS) return;
                 lastAreaSearchTick = animalFarmerEntity.tickCount;
 
-                List<AnimalPenArea> areas = getAvailableWorkAreasByPriority((ServerLevel) animalFarmerEntity.getCommandSenderWorld(), animalFarmerEntity, animalFarmerEntity.currentAnimalPen);
+                List<AnimalPenArea> areas = getAvailableWorkAreasByPriority((ServerLevel) animalFarmerEntity.getCommandSenderWorld(), animalFarmerEntity, animalFarmerEntity.getCurrentAnimalPen());
 
                 if (!areas.isEmpty()) {
-                    this.animalFarmerEntity.currentAnimalPen = areas.get(0);
+                    this.animalFarmerEntity.setCurrentWorkArea(areas.get(0));
                 }
 
-                if(this.animalFarmerEntity.currentAnimalPen == null) {
+                if(this.animalFarmerEntity.getCurrentAnimalPen() == null) {
                     animalFarmerEntity.reportIdleReason("animal_farmer_no_pen", Component.literal(animalFarmerEntity.getName().getString() + ": Waiting for an animal pen."));
                     return;
                 }
@@ -112,31 +112,31 @@ public class AnimalFarmerWorkGoal extends Goal {
 
             case MOVE_TO_WORK_AREA ->{
                 this.animal = null;
-                if(this.moveToPosition(animalFarmerEntity.currentAnimalPen.position(), 100)) return;
+                if(this.moveToPosition(animalFarmerEntity.getCurrentAnimalPen().position(), 100)) return;
 
                 setState(State.MOVE_TO_CENTER);
             }
 
             case MOVE_TO_CENTER ->{
                 this.animal = null;
-                if(this.moveToPosition(animalFarmerEntity.currentAnimalPen.position(), 30)) return;
+                if(this.moveToPosition(animalFarmerEntity.getCurrentAnimalPen().position(), 30)) return;
 
                 setState(State.PREPARE_BREED);
             }
 
             case PREPARE_BREED -> {
-                if(!animalFarmerEntity.currentAnimalPen.getBreed() || !animalFarmerEntity.currentAnimalPen.isBreedTime()){
+                if(!animalFarmerEntity.getCurrentAnimalPen().getBreed() || !animalFarmerEntity.getCurrentAnimalPen().isBreedTime()){
                     applyLoopDecision(AnimalFarmerLoopProgress.selectNextAction(false, false, 0,
-                            animalFarmerEntity.currentAnimalPen.getSpecial(), 1,
+                            animalFarmerEntity.getCurrentAnimalPen().getSpecial(), 1,
                             animalType == AnimalPenArea.AnimalTypes.CHICKEN,
-                            animalFarmerEntity.currentAnimalPen.getSlaughter(),
-                            animalFarmerEntity.currentAnimalPen.animalsToSlaughter.size(),
-                            animalFarmerEntity.currentAnimalPen.getMaxAnimals()));
+                            animalFarmerEntity.getCurrentAnimalPen().getSlaughter(),
+                            animalFarmerEntity.getCurrentAnimalPen().animalsToSlaughter.size(),
+                            animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals()));
                     return;
                 }
 
-                animalFarmerEntity.currentAnimalPen.scanAnimalBreed();
-                this.stackOfAnimals = animalFarmerEntity.currentAnimalPen.animalsToBreed;
+                animalFarmerEntity.getCurrentAnimalPen().scanAnimalBreed();
+                this.stackOfAnimals = animalFarmerEntity.getCurrentAnimalPen().animalsToBreed;
 
                 if(stackOfAnimals.isEmpty()){
                     setState(State.PREPARE_SPECIAL_TASK);
@@ -164,24 +164,24 @@ public class AnimalFarmerWorkGoal extends Goal {
             }
 
             case BREED -> {
-                if(animalFarmerEntity.currentAnimalPen.getBreed() && animalFarmerEntity.currentAnimalPen.isBreedTime() && this.breed()) return;
+                if(animalFarmerEntity.getCurrentAnimalPen().getBreed() && animalFarmerEntity.getCurrentAnimalPen().isBreedTime() && this.breed()) return;
 
-                this.animalFarmerEntity.currentAnimalPen.setBreedTime(2000);
+                this.animalFarmerEntity.getCurrentAnimalPen().setBreedTime(2000);
                 applyLoopDecision(AnimalFarmerLoopProgress.selectNextAction(false, false, 0,
-                        animalFarmerEntity.currentAnimalPen.getSpecial(), 1,
+                        animalFarmerEntity.getCurrentAnimalPen().getSpecial(), 1,
                         animalType == AnimalPenArea.AnimalTypes.CHICKEN,
-                        animalFarmerEntity.currentAnimalPen.getSlaughter(),
-                        animalFarmerEntity.currentAnimalPen.animalsToSlaughter.size(),
-                        animalFarmerEntity.currentAnimalPen.getMaxAnimals()));
+                        animalFarmerEntity.getCurrentAnimalPen().getSlaughter(),
+                        animalFarmerEntity.getCurrentAnimalPen().animalsToSlaughter.size(),
+                        animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals()));
             }
 
             case PREPARE_SPECIAL_TASK -> {
-                if(!animalFarmerEntity.currentAnimalPen.getSpecial()){
+                if(!animalFarmerEntity.getCurrentAnimalPen().getSpecial()){
                     applyLoopDecision(AnimalFarmerLoopProgress.selectNextAction(false, false, 0,
                             false, 0, false,
-                            animalFarmerEntity.currentAnimalPen.getSlaughter(),
-                            animalFarmerEntity.currentAnimalPen.animalsToSlaughter.size(),
-                            animalFarmerEntity.currentAnimalPen.getMaxAnimals()));
+                            animalFarmerEntity.getCurrentAnimalPen().getSlaughter(),
+                            animalFarmerEntity.getCurrentAnimalPen().animalsToSlaughter.size(),
+                            animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals()));
                     return;
                 }
 
@@ -191,35 +191,35 @@ public class AnimalFarmerWorkGoal extends Goal {
                     return;
                 }
 
-                this.animalFarmerEntity.currentAnimalPen.scanAnimalSpecial();
-                this.stackOfAnimals = animalFarmerEntity.currentAnimalPen.animalsForSpecialTask;
+                this.animalFarmerEntity.getCurrentAnimalPen().scanAnimalSpecial();
+                this.stackOfAnimals = animalFarmerEntity.getCurrentAnimalPen().animalsForSpecialTask;
 
                 if(stackOfAnimals.isEmpty() && animalType != AnimalPenArea.AnimalTypes.CHICKEN){
                     applyLoopDecision(AnimalFarmerLoopProgress.selectNextAction(false, false, 0,
                             false, 0, false,
-                            animalFarmerEntity.currentAnimalPen.getSlaughter(),
-                            animalFarmerEntity.currentAnimalPen.animalsToSlaughter.size(),
-                            animalFarmerEntity.currentAnimalPen.getMaxAnimals()));
+                            animalFarmerEntity.getCurrentAnimalPen().getSlaughter(),
+                            animalFarmerEntity.getCurrentAnimalPen().animalsToSlaughter.size(),
+                            animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals()));
                     return;
                 }
                 setState(State.SPECIAL_TASK);
             }
 
             case SPECIAL_TASK -> {
-                if(animalFarmerEntity.currentAnimalPen.getSpecial() && this.doSpecialTask()) return;
+                if(animalFarmerEntity.getCurrentAnimalPen().getSpecial() && this.doSpecialTask()) return;
                 applyLoopDecision(AnimalFarmerLoopProgress.selectNextAction(false, false, 0,
                         false, 0, false,
-                        animalFarmerEntity.currentAnimalPen.getSlaughter(),
-                        animalFarmerEntity.currentAnimalPen.animalsToSlaughter.size(),
-                        animalFarmerEntity.currentAnimalPen.getMaxAnimals()));
+                        animalFarmerEntity.getCurrentAnimalPen().getSlaughter(),
+                        animalFarmerEntity.getCurrentAnimalPen().animalsToSlaughter.size(),
+                        animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals()));
             }
 
             case PREPARE_SLAUGHTER -> {
-                if(!animalFarmerEntity.currentAnimalPen.getSlaughter()){
+                if(!animalFarmerEntity.getCurrentAnimalPen().getSlaughter()){
                     applyLoopDecision(AnimalFarmerLoopProgress.selectNextAction(false, false, 0,
                             false, 0, false,
                             false, 0,
-                            animalFarmerEntity.currentAnimalPen.getMaxAnimals()));
+                            animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals()));
                     return;
                 }
 
@@ -229,10 +229,10 @@ public class AnimalFarmerWorkGoal extends Goal {
                     return;
                 }
 
-                this.animalFarmerEntity.currentAnimalPen.scanAnimalSlaughter();
-                this.stackOfAnimals = animalFarmerEntity.currentAnimalPen.animalsToSlaughter;
+                this.animalFarmerEntity.getCurrentAnimalPen().scanAnimalSlaughter();
+                this.stackOfAnimals = animalFarmerEntity.getCurrentAnimalPen().animalsToSlaughter;
 
-                int max = animalFarmerEntity.currentAnimalPen.getMaxAnimals();
+                int max = animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals();
                 int size = stackOfAnimals.size();
 
                 if(max >= size){
@@ -260,12 +260,12 @@ public class AnimalFarmerWorkGoal extends Goal {
                 setState(State.SLAUGHTER);
             }
             case SLAUGHTER -> {
-                if(animalFarmerEntity.currentAnimalPen.getSlaughter() && this.slaughter()) return;
+                if(animalFarmerEntity.getCurrentAnimalPen().getSlaughter() && this.slaughter()) return;
 
                 applyLoopDecision(AnimalFarmerLoopProgress.selectNextAction(false, false, 0,
                         false, 0, false,
                         false, 0,
-                        animalFarmerEntity.currentAnimalPen.getMaxAnimals()));
+                        animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals()));
             }
 
             case DONE -> {
@@ -377,7 +377,7 @@ public class AnimalFarmerWorkGoal extends Goal {
             return false;
         }
 
-        int max = animalFarmerEntity.currentAnimalPen.getMaxAnimals();
+        int max = animalFarmerEntity.getCurrentAnimalPen().getMaxAnimals();
         int size = stackOfAnimals.size();
 
         if(max >= size || amountToSlaughter == 0){
@@ -410,7 +410,7 @@ public class AnimalFarmerWorkGoal extends Goal {
         if(!this.animalFarmerEntity.getMainHandItem().is(Items.EGG)){
             return false;
         }
-        if(this.moveToPosition(animalFarmerEntity.currentAnimalPen.getArea().getCenter(), 10)){
+        if(this.moveToPosition(animalFarmerEntity.getCurrentAnimalPen().getArea().getCenter(), 10)){
             return true;
         }
 
@@ -418,8 +418,8 @@ public class AnimalFarmerWorkGoal extends Goal {
         ThrownEgg thrownegg = new ThrownEgg(animalFarmerEntity.getCommandSenderWorld(), animalFarmerEntity);
         thrownegg.setItem(new ItemStack(Items.EGG));
 
-        double d0 = animalFarmerEntity.currentAnimalPen.getArea().getCenter().x() - this.animalFarmerEntity.getX();
-        double d2 = animalFarmerEntity.currentAnimalPen.getArea().getCenter().z() - this.animalFarmerEntity.getZ();
+        double d0 = animalFarmerEntity.getCurrentAnimalPen().getArea().getCenter().x() - this.animalFarmerEntity.getX();
+        double d2 = animalFarmerEntity.getCurrentAnimalPen().getArea().getCenter().z() - this.animalFarmerEntity.getZ();
 
         thrownegg.shoot(d0, 0, d2, 0.1F, 0F);
 
@@ -483,9 +483,9 @@ public class AnimalFarmerWorkGoal extends Goal {
     }
 
     private boolean hasUsableCurrentPen() {
-        return this.animalFarmerEntity.currentAnimalPen != null
-                && !this.animalFarmerEntity.currentAnimalPen.isRemoved()
-                && this.animalFarmerEntity.currentAnimalPen.canWorkHere(this.animalFarmerEntity);
+        return this.animalFarmerEntity.getCurrentAnimalPen() != null
+                && !this.animalFarmerEntity.getCurrentAnimalPen().isRemoved()
+                && this.animalFarmerEntity.getCurrentAnimalPen().canWorkHere(this.animalFarmerEntity);
     }
 
     private void prepareCurrentPen() {
@@ -494,26 +494,26 @@ public class AnimalFarmerWorkGoal extends Goal {
         }
 
         animalFarmerEntity.clearWorkStatus();
-        this.animalFarmerEntity.currentAnimalPen.setBeingWorkedOn(true);
-        this.animalFarmerEntity.currentAnimalPen.setTime(0);
-        this.animalType = this.animalFarmerEntity.currentAnimalPen.getAnimalType();
+        this.animalFarmerEntity.getCurrentAnimalPen().setBeingWorkedOn(true);
+        this.animalFarmerEntity.getCurrentAnimalPen().setTime(0);
+        this.animalType = this.animalFarmerEntity.getCurrentAnimalPen().getAnimalType();
     }
 
     private void clearCurrentPenBusyState() {
-        if (this.animalFarmerEntity.currentAnimalPen != null) {
-            this.animalFarmerEntity.currentAnimalPen.setBeingWorkedOn(false);
+        if (this.animalFarmerEntity.getCurrentAnimalPen() != null) {
+            this.animalFarmerEntity.getCurrentAnimalPen().setBeingWorkedOn(false);
         }
     }
 
     private void discardInvalidCurrentPen() {
         clearCurrentPenBusyState();
-        this.animalFarmerEntity.currentAnimalPen = null;
+        this.animalFarmerEntity.setCurrentWorkArea(null);
         this.animal = null;
     }
 
     private void finishCurrentPen() {
         clearCurrentPenBusyState();
-        this.animalFarmerEntity.currentAnimalPen = null;
+        this.animalFarmerEntity.setCurrentWorkArea(null);
         this.animal = null;
     }
 

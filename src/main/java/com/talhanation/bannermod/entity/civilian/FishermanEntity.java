@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class FishermanEntity extends AbstractWorkerEntity{
-    public FishingArea currentFishingArea;
     public FishermanEntity(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
     }
@@ -113,14 +112,9 @@ public class FishermanEntity extends AbstractWorkerEntity{
         return super.wantsToPickUp(itemStack);
     }
 
-    @Override
-    public FishingArea getCurrentWorkArea() {
-        return currentFishingArea;
-    }
-
-    @Override
-    protected void clearCurrentWorkAreaForRecovery() {
-        this.currentFishingArea = null;
+    @Nullable
+    public FishingArea getCurrentFishingArea() {
+        return getCurrentWorkArea() instanceof FishingArea fa ? fa : null;
     }
 
     public FishingBobberEntity throwFishingHook(Vec3 target){
