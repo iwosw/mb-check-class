@@ -51,8 +51,6 @@ public class MessageToClientUpdateClaims implements Message<MessageToClientUpdat
         ClientManager.currencyItemStack = this.currencyItemStack;
         ClientManager.configValueIsClaimingAllowed = this.allowClaiming;
         ClientManager.configFogOfWarEnabled = this.fogOfWarEnabled;
-
-        ClientManager.rebuildActiveSieges();
     }
 
     @Override

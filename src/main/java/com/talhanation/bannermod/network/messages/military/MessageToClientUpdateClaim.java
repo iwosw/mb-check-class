@@ -51,7 +51,6 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
                 }
 
                 ClientManager.markClaimsChanged();
-                ClientManager.updateActiveSiege(newClaim);
 
                 MinecraftForge.EVENT_BUS.post(new ClientClaimEvent.DataUpdated(newClaim, isCurrentClaim));
                 return;
@@ -60,7 +59,6 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
 
         ClientManager.recruitsClaims.add(newClaim);
         ClientManager.markClaimsChanged();
-        ClientManager.updateActiveSiege(newClaim);
         MinecraftForge.EVENT_BUS.post(
                 new ClientClaimEvent.DataUpdated(newClaim, false));
     }

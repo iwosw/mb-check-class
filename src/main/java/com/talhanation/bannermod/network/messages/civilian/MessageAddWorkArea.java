@@ -140,16 +140,18 @@ public class MessageAddWorkArea implements Message<MessageAddWorkArea> {
         if (!WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.get()) {
             return true;
         }
-        if (player.getTeam() == null || ClaimEvents.recruitsClaimManager == null) {
+        if (ClaimEvents.recruitsClaimManager == null || !(player.level() instanceof net.minecraft.server.level.ServerLevel level)) {
             return false;
         }
 
         ChunkPos chunkPos = new ChunkPos(targetPos);
         RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(chunkPos);
-        return claim != null
-                && claim.containsChunk(chunkPos)
-                && claim.getOwnerFaction() != null
-                && player.getTeam().getName().equals(claim.getOwnerFaction().getStringID());
+        if (claim == null || !claim.containsChunk(chunkPos) || claim.getOwnerPoliticalEntityId() == null) {
+            return false;
+        }
+        java.util.UUID playerEntityId = com.talhanation.bannermod.war.registry.PoliticalMembership.entityIdFor(
+                com.talhanation.bannermod.war.WarRuntimeContext.registry(level), player.getUUID());
+        return claim.getOwnerPoliticalEntityId().equals(playerEntityId);
     }
 
     private void sendDecision(ServerPlayer player, WorkAreaAuthoringRules.Decision decision) {

@@ -3,6 +3,9 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -13,7 +16,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.Objects;
+import java.util.UUID;
 
 
 public class MessageUpdateClaim implements Message<MessageUpdateClaim> {
@@ -48,7 +51,7 @@ public class MessageUpdateClaim implements Message<MessageUpdateClaim> {
         if (!isAdmin && overlapsOtherClaim(updatedClaim, existingClaim)) return;
 
         if (existingClaim != null && !isAdmin) {
-            updatedClaim.setOwnerFaction(existingClaim.getOwnerFaction());
+            updatedClaim.setOwnerPoliticalEntityId(existingClaim.getOwnerPoliticalEntityId());
             updatedClaim.setPlayer(existingClaim.getPlayerInfo());
             updatedClaim.setAdminClaim(existingClaim.isAdmin);
         }
@@ -74,10 +77,13 @@ public class MessageUpdateClaim implements Message<MessageUpdateClaim> {
         if (existingClaim.getPlayerInfo() != null && sender.getUUID().equals(existingClaim.getPlayerInfo().getUUID())) {
             return true;
         }
-        return sender.getTeam() != null
-                && existingClaim.getOwnerFaction() != null
-                && Objects.equals(sender.getTeam().getName(), existingClaim.getOwnerFactionStringID())
-                && Objects.equals(sender.getUUID(), existingClaim.getOwnerFaction().getTeamLeaderUUID());
+        UUID politicalEntityId = existingClaim.getOwnerPoliticalEntityId();
+        if (politicalEntityId == null) return false;
+        PoliticalRegistryRuntime registry = WarRuntimeContext.registry((ServerLevel) sender.getCommandSenderWorld());
+        PoliticalEntityRecord owner = registry.byId(politicalEntityId).orElse(null);
+        if (owner == null) return false;
+        UUID senderUuid = sender.getUUID();
+        return senderUuid.equals(owner.leaderUuid()) || owner.coLeaderUuids().contains(senderUuid);
     }
 
     private static boolean overlapsOtherClaim(RecruitsClaim updatedClaim, RecruitsClaim existingClaim) {

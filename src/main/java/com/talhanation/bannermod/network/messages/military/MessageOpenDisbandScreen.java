@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.FactionEvents;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,7 +34,6 @@ public class MessageOpenDisbandScreen implements Message<MessageOpenDisbandScree
         if (!player.getUUID().equals(this.player)) {
             return;
         }
-        FactionEvents.openDisbandingScreen(player, recruit);
     }
 
     @Override

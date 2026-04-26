@@ -1,10 +1,8 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
@@ -75,7 +73,6 @@ public class MessageAssignGroupToPlayer implements Message<MessageAssignGroupToP
         RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
         RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer((ServerLevel) player.getCommandSenderWorld(), newOwner.getUUID());
 
-        FactionEvents.notifyPlayer(serverLevel, newOwner, 2, group.getName());
     }
 
     public MessageAssignGroupToPlayer fromBytes(FriendlyByteBuf buf) {

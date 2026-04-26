@@ -50,9 +50,12 @@ final class BuildingRequestSecurity {
         if (claim.getPlayerInfo() != null && player.getUUID().equals(claim.getPlayerInfo().getUUID())) {
             return true;
         }
-        if (player.getTeam() != null && claim.getOwnerFaction() != null
-                && player.getTeam().getName().equals(claim.getOwnerFactionStringID())) {
-            return true;
+        if (claim.getOwnerPoliticalEntityId() != null) {
+            java.util.UUID playerEntityId = com.talhanation.bannermod.war.registry.PoliticalMembership.entityIdFor(
+                    com.talhanation.bannermod.war.WarRuntimeContext.registry(player.serverLevel()), player.getUUID());
+            if (claim.getOwnerPoliticalEntityId().equals(playerEntityId)) {
+                return true;
+            }
         }
         return claim.isBlockPlacementAllowed();
     }

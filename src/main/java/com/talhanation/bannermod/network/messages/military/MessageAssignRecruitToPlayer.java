@@ -1,8 +1,6 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +34,6 @@ public class MessageAssignRecruitToPlayer implements Message<MessageAssignRecrui
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruit, 64.0D);
         if (recruit != null) {
             recruit.assignToPlayer(newOwner, null);
-            FactionEvents.notifyPlayer(serverLevel, new RecruitsPlayerInfo(newOwner, ""), 0, serverPlayer.getName().getString());
         }
     }
 

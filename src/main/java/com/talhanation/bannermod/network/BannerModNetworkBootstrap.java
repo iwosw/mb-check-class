@@ -10,6 +10,9 @@ import com.talhanation.bannermod.network.messages.military.*;
 // Civilian network messages (migrated from workers.network.*)
 import com.talhanation.bannermod.network.messages.civilian.*;
 
+// War network messages (warfare-RP runtime sync)
+import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
+
 /**
  * Owns the single shared SimpleChannel for the merged bannermod runtime.
  *
@@ -77,28 +80,7 @@ public class BannerModNetworkBootstrap {
         MessageUpkeepPos.class,
         MessageClearUpkeep.class,
         MessageClearUpkeepGui.class,
-        MessageCreateTeam.class,
-        MessageSaveTeamSettings.class,
-        MessageLeaveTeam.class,
-        MessageAddPlayerToTeam.class,
-        MessageRemoveFromTeam.class,
-        MessageAddRecruitToTeam.class,
-        MessageTeamMainScreen.class,
-        MessageOpenTeamEditScreen.class,
-        MessageOpenTeamAddPlayerScreen.class,
-        MessageOpenTeamListScreen.class,
-        MessageOpenTeamInspectionScreen.class,
-        MessageSendJoinRequestTeam.class,
-        MessageToClientUpdateFactions.class,
-        MessageToClientUpdateOwnFaction.class,
         MessageToClientUpdateOnlinePlayers.class,
-        MessageToClientUpdateDiplomacyList.class,
-        MessageToClientUpdateTreaties.class,
-        MessageToClientSetDiplomaticToast.class,
-        MessageChangeDiplomacyStatus.class,
-        MessageSendTreaty.class,
-        MessageAnswerTreaty.class,
-        MessageToClientOpenTreatyAnswerScreen.class,
         MessageSendMessenger.class,
         MessageAnswerMessenger.class,
         MessageToClientOpenMessengerAnswerScreen.class,
@@ -130,7 +112,6 @@ public class BannerModNetworkBootstrap {
         MessagePatrolLeaderSetWaitTime.class,
         MessagePatrolLeaderSetEnemyAction.class,
         MessagePatrolLeaderSetInfoMode.class,
-        MessageToClientOpenTakeOverScreen.class,
         MessageToClientSetToast.class,
         MessagePromoteRecruit.class,
         MessageOpenGovernorScreen.class,
@@ -180,6 +161,15 @@ public class BannerModNetworkBootstrap {
         MessageRequestRegisterBuilding.class,
     };
 
+    /**
+     * War message catalog. Registered after civilian packets at indices
+     * [MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length .. ).
+     */
+    @SuppressWarnings({"rawtypes"})
+    public static final Class[] WAR_MESSAGES = {
+        MessageToClientUpdateWarState.class,
+    };
+
     private BannerModNetworkBootstrap() {
     }
 
@@ -211,6 +201,12 @@ public class BannerModNetworkBootstrap {
         // --- Civilian messages [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length) ---
         for (int j = 0; j < CIVILIAN_MESSAGES.length; j++) {
             CommonRegistry.registerMessage(channel, MILITARY_MESSAGES.length + j, CIVILIAN_MESSAGES[j]);
+        }
+
+        // --- War messages [MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length .. ) ---
+        int warOffset = MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length;
+        for (int k = 0; k < WAR_MESSAGES.length; k++) {
+            CommonRegistry.registerMessage(channel, warOffset + k, WAR_MESSAGES[k]);
         }
 
         // Bind to WorkersRuntime for compatibility
