@@ -56,6 +56,23 @@ public class WarDeclarationRuntime {
         return Optional.ofNullable(warsById.get(id));
     }
 
+    public Optional<WarDeclarationRecord> byIdFragment(String token) {
+        if (token == null || token.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return byId(UUID.fromString(token));
+        } catch (IllegalArgumentException ignored) {
+            String lower = token.toLowerCase(java.util.Locale.ROOT);
+            for (WarDeclarationRecord war : warsById.values()) {
+                if (war.id().toString().startsWith(lower)) {
+                    return Optional.of(war);
+                }
+            }
+            return Optional.empty();
+        }
+    }
+
     public Collection<WarDeclarationRecord> all() {
         return List.copyOf(warsById.values());
     }
