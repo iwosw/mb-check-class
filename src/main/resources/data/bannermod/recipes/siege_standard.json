@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GNG",
+    "DBD",
+    "GSG"
+  ],
+  "key": {
+    "B": {
+      "tag": "minecraft:banners"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "G": {
+      "item": "minecraft:gold_block"
+    },
+    "N": {
+      "item": "minecraft:emerald_block"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "bannermod:siege_standard",
+    "count": 1
+  }
+}
