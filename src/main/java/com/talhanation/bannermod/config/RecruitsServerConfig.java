@@ -66,7 +66,19 @@ public class RecruitsServerConfig {
     public static ForgeConfigSpec.BooleanValue UpdateCheckerServerside;
     public static ForgeConfigSpec.BooleanValue CompatCorpseMod;
     public static ForgeConfigSpec.BooleanValue UseAsyncPathfinding;
+    public static ForgeConfigSpec.BooleanValue UseTrueAsyncPathfinding;
     public static ForgeConfigSpec.IntValue AsyncPathfindingThreadsCount;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingWorkerThreads;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingMaxQueuedJobs;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingSnapshotBudgetNanos;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingCommitBudgetNanos;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingSolveDeadlineMillis;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingPerMobThrottleTicks;
+    public static ForgeConfigSpec.DoubleValue AsyncPathfindingTargetCoalesceDistance;
+    public static ForgeConfigSpec.BooleanValue AsyncPathfindingUseCoarseCache;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingCoarseCacheMaxEntries;
+    public static ForgeConfigSpec.IntValue AsyncPathfindingCoarseCacheMaxAgeTicks;
+    public static ForgeConfigSpec.DoubleValue AsyncPathfindingCoarseRefineDistance;
     public static ForgeConfigSpec.IntValue PathfindingRequestBudgetPerTick;
     public static ForgeConfigSpec.IntValue PathfindingMaxDeferredBacklog;
     public static ForgeConfigSpec.IntValue PathfindingMaxDeferredTicks;
@@ -88,6 +100,7 @@ public class RecruitsServerConfig {
     public static ForgeConfigSpec.BooleanValue CascadeThePriceOfClaims;
     public static ForgeConfigSpec.IntValue ClaimingCost;
     public static ForgeConfigSpec.IntValue ChunkCost;
+    public static ForgeConfigSpec.IntValue TownMinCenterDistance;
     public static ForgeConfigSpec.IntValue SiegeClaimsRecruitsAmount;
     public static ForgeConfigSpec.IntValue SiegeClaimsConquerTime;
     public static ForgeConfigSpec.BooleanValue NobleVillagerNeedsVillagers;
@@ -739,6 +752,14 @@ public class RecruitsServerConfig {
                 .worldRestart()
                 .define("UseAsyncPathfinding", true);
 
+        UseTrueAsyncPathfinding = BUILDER.comment("""
+                        Enable the true async pathfinding pipeline (snapshot -> worker solve -> commit).
+                        Disabled by default until A/B validation is complete.
+                        \t(takes effect after restart)
+                        \tdefault: false""")
+                .worldRestart()
+                .define("UseTrueAsyncPathfinding", false);
+
         AsyncPathfindingThreadsCount = BUILDER.comment("""
                         How much threads to use for pathfinding.
                         Needs to be calibrated manually.
@@ -747,6 +768,86 @@ public class RecruitsServerConfig {
                         \tdefault: 1""")
                 .worldRestart()
                 .defineInRange("AsyncPathfindingThreadsCount", 1, 1, Runtime.getRuntime().availableProcessors());
+
+        AsyncPathfindingWorkerThreads = BUILDER.comment("""
+                        Worker thread count for true async pathfinding scheduler.
+                        \t(takes effect after restart)
+                        \tdefault: max(1, availableProcessors - 2)""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingWorkerThreads",
+                        Math.max(1, Runtime.getRuntime().availableProcessors() - 2),
+                        1,
+                        Runtime.getRuntime().availableProcessors());
+
+        AsyncPathfindingMaxQueuedJobs = BUILDER.comment("""
+                        Maximum number of true async jobs admitted globally.
+                        \t(takes effect after restart)
+                        \tdefault: 256""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingMaxQueuedJobs", 256, 1, 8192);
+
+        AsyncPathfindingSnapshotBudgetNanos = BUILDER.comment("""
+                        Server-thread budget per tick for true async snapshot work (nanoseconds).
+                        \t(takes effect after restart)
+                        \tdefault: 1000000""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingSnapshotBudgetNanos", 1_000_000, 10_000, 50_000_000);
+
+        AsyncPathfindingCommitBudgetNanos = BUILDER.comment("""
+                        Server-thread budget per tick for true async commit work (nanoseconds).
+                        \t(takes effect after restart)
+                        \tdefault: 1000000""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingCommitBudgetNanos", 1_000_000, 10_000, 50_000_000);
+
+        AsyncPathfindingSolveDeadlineMillis = BUILDER.comment("""
+                        Per-request worker solve deadline for true async pathfinding (milliseconds).
+                        \t(takes effect after restart)
+                        \tdefault: 40""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingSolveDeadlineMillis", 40, 1, 5000);
+
+        AsyncPathfindingPerMobThrottleTicks = BUILDER.comment("""
+                        Minimum ticks between true async submissions per mob unless no path exists.
+                        \t(takes effect after restart)
+                        \tdefault: 4""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingPerMobThrottleTicks", 4, 0, 200);
+
+        AsyncPathfindingTargetCoalesceDistance = BUILDER.comment("""
+                        Target movement threshold (blocks) for reusing current path in true async mode.
+                        \t(takes effect after restart)
+                        \tdefault: 1.5""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingTargetCoalesceDistance", 1.5D, 0.0D, 16.0D);
+
+        AsyncPathfindingUseCoarseCache = BUILDER.comment("""
+                        Enable phase-E coarse/shared cache fast path for true async pathfinding.
+                        \t(takes effect after restart)
+                        \tdefault: false""")
+                .worldRestart()
+                .define("AsyncPathfindingUseCoarseCache", false);
+
+        AsyncPathfindingCoarseCacheMaxEntries = BUILDER.comment("""
+                        Maximum coarse/shared cache entries for true async pathfinding.
+                        \t(takes effect after restart)
+                        \tdefault: 256""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingCoarseCacheMaxEntries", 256, 1, 8192);
+
+        AsyncPathfindingCoarseCacheMaxAgeTicks = BUILDER.comment("""
+                        Coarse/shared cache max age in ticks before route invalidation.
+                        \t(takes effect after restart)
+                        \tdefault: 200""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingCoarseCacheMaxAgeTicks", 200, 1, 24000);
+
+        AsyncPathfindingCoarseRefineDistance = BUILDER.comment("""
+                        Start/target distance threshold for local refinement from cached coarse routes.
+                        \t(takes effect after restart)
+                        \tdefault: 3.0""")
+                .worldRestart()
+                .defineInRange("AsyncPathfindingCoarseRefineDistance", 3.0D, 0.0D, 16.0D);
 
         PathfindingRequestBudgetPerTick = BUILDER.comment("""
                         Maximum number of recruit path requests that may be issued in one game tick.
@@ -833,6 +934,14 @@ public class RecruitsServerConfig {
                 .worldRestart()
                 .define("CascadeThePriceOfClaims", false);
 
+        TownMinCenterDistance = BUILDER.comment("""
+                        Minimum distance in blocks between centers of separate towns owned by the same nation/faction.
+                        Set to 0 to disable this spacing rule.
+                        \t(takes effect after restart)
+                        \tdefault: 480""")
+                .worldRestart()
+                .defineInRange("TownMinCenterDistance", 480, 0, 100000);
+
         BlockPlacingBreakingOnlyWhenClaimed = BUILDER.comment("""
                         Should block breaking and placing for players only be possible when the chunk is claimed by the faction.
                         \t(takes effect after restart)
@@ -889,4 +998,3 @@ public class RecruitsServerConfig {
         spec.setConfig(configData);
     }
 }
-

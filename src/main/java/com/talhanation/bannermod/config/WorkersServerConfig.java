@@ -30,11 +30,18 @@ public class WorkersServerConfig {
     public static ForgeConfigSpec.IntValue SettlementSpawnMinimumVillagers;
     public static ForgeConfigSpec.IntValue SettlementSpawnWorkerCap;
     public static ForgeConfigSpec.IntValue SettlementSpawnCooldownDays;
+    public static ForgeConfigSpec.IntValue SettlementFortBannerMaxDistance;
+    public static ForgeConfigSpec.LongValue SettlementFortGraceTicks;
+    public static ForgeConfigSpec.LongValue SettlementFortExplosionGraceTicks;
+    public static ForgeConfigSpec.LongValue SettlementHouseGraceTicks;
+    public static ForgeConfigSpec.LongValue SettlementWorkplaceGraceTicks;
+    public static ForgeConfigSpec.IntValue SettlementRevalidationBatchSizePerTick;
     public static ForgeConfigSpec.ConfigValue<List<? extends String>> SettlementSpawnAllowedProfessions;
     public static ForgeConfigSpec.BooleanValue EnableClaimWorkerGrowth;
     public static ForgeConfigSpec.LongValue ClaimWorkerGrowthBaseCooldownTicks;
     public static ForgeConfigSpec.IntValue ClaimWorkerMaxPerClaim;
     public static ForgeConfigSpec.ConfigValue<List<? extends String>> ClaimWorkerProfessionPool;
+    public static ForgeConfigSpec.DoubleValue CitizenMilitiaMobilizationChance;
     public static ArrayList<String> FARMER_PICKUP = new ArrayList<>(
             Arrays.asList(
                     "minecraft:wheat",
@@ -236,6 +243,54 @@ public class WorkersServerConfig {
                 .worldRestart()
                 .defineInRange("SettlementSpawnCooldownDays", 3, 0, 365);
 
+        SettlementFortBannerMaxDistance = BUILDER.comment("""
+
+                        Maximum allowed distance in blocks between fort authority anchor and bound banner during bootstrap validation.
+                        \t(takes effect after restart)
+                        \tdefault: 8""")
+                .worldRestart()
+                .defineInRange("SettlementFortBannerMaxDistance", 8, 1, 64);
+
+        SettlementFortGraceTicks = BUILDER.comment("""
+
+                        Grace period in ticks before a failed fort validation becomes INVALID.
+                        \t(takes effect after restart)
+                        \tdefault: 24000 (1 Minecraft day)""")
+                .worldRestart()
+                .defineInRange("SettlementFortGraceTicks", 24000L, 0L, Long.MAX_VALUE);
+
+        SettlementFortExplosionGraceTicks = BUILDER.comment("""
+
+                        Grace period in ticks before a fort failure caused by explosion becomes INVALID.
+                        \t(takes effect after restart)
+                        \tdefault: 12000 (half Minecraft day)""")
+                .worldRestart()
+                .defineInRange("SettlementFortExplosionGraceTicks", 12000L, 0L, Long.MAX_VALUE);
+
+        SettlementHouseGraceTicks = BUILDER.comment("""
+
+                        Grace period in ticks before a failed house validation becomes INVALID.
+                        \t(takes effect after restart)
+                        \tdefault: 24000 (1 Minecraft day)""")
+                .worldRestart()
+                .defineInRange("SettlementHouseGraceTicks", 24000L, 0L, Long.MAX_VALUE);
+
+        SettlementWorkplaceGraceTicks = BUILDER.comment("""
+
+                        Grace period in ticks before a failed workplace/storage validation becomes INVALID.
+                        \t(takes effect after restart)
+                        \tdefault: 12000 (half Minecraft day)""")
+                .worldRestart()
+                .defineInRange("SettlementWorkplaceGraceTicks", 12000L, 0L, Long.MAX_VALUE);
+
+        SettlementRevalidationBatchSizePerTick = BUILDER.comment("""
+
+                        Maximum number of queued building revalidations processed per server tick.
+                        \t(takes effect after restart)
+                        \tdefault: 8""")
+                .worldRestart()
+                .defineInRange("SettlementRevalidationBatchSizePerTick", 8, 1, 256);
+
         SettlementSpawnAllowedProfessions = BUILDER.comment("""
                          
                          Ordered worker profession pool used for deterministic settlement worker birth and spawn selection.
@@ -284,6 +339,14 @@ public class WorkersServerConfig {
                         DEFAULT_SETTLEMENT_WORKER_PROFESSIONS,
                         value -> value instanceof String);
 
+        CitizenMilitiaMobilizationChance = BUILDER.comment("""
+
+                        Chance for an unarmed settlement citizen to mobilize into militia role when its claim is under siege.
+                        \t(takes effect after restart)
+                        \tdefault: 0.25""")
+                .worldRestart()
+                .defineInRange("CitizenMilitiaMobilizationChance", 0.25D, 0.0D, 1.0D);
+
         BUILDER.pop();
 
         SERVER = BUILDER.build();
@@ -318,6 +381,34 @@ public class WorkersServerConfig {
                 resolveInt(ClaimWorkerMaxPerClaim, 4),
                 resolveAllowedClaimGrowthProfessions()
         );
+    }
+
+    public static float citizenMilitiaMobilizationChance() {
+        return (float) resolveDouble(CitizenMilitiaMobilizationChance, 0.25D);
+    }
+
+    public static int settlementFortBannerMaxDistance() {
+        return resolveInt(SettlementFortBannerMaxDistance, 8);
+    }
+
+    public static long settlementFortGraceTicks() {
+        return resolveLong(SettlementFortGraceTicks, 24000L);
+    }
+
+    public static long settlementFortExplosionGraceTicks() {
+        return resolveLong(SettlementFortExplosionGraceTicks, 12000L);
+    }
+
+    public static long settlementHouseGraceTicks() {
+        return resolveLong(SettlementHouseGraceTicks, 24000L);
+    }
+
+    public static long settlementWorkplaceGraceTicks() {
+        return resolveLong(SettlementWorkplaceGraceTicks, 12000L);
+    }
+
+    public static int settlementRevalidationBatchSizePerTick() {
+        return resolveInt(SettlementRevalidationBatchSizePerTick, 8);
     }
 
     private static List<WorkerSettlementSpawnRules.WorkerProfession> resolveAllowedSettlementProfessions() {
@@ -391,6 +482,14 @@ public class WorkersServerConfig {
     }
 
     private static long resolveLong(ForgeConfigSpec.LongValue value, long fallback) {
+        try {
+            return value.get();
+        } catch (IllegalStateException exception) {
+            return fallback;
+        }
+    }
+
+    private static double resolveDouble(ForgeConfigSpec.DoubleValue value, double fallback) {
         try {
             return value.get();
         } catch (IllegalStateException exception) {
