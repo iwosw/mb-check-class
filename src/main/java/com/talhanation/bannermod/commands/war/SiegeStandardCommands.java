@@ -6,15 +6,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.talhanation.bannermod.registry.war.ModWarBlocks;
 import com.talhanation.bannermod.war.WarRuntimeContext;
-import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
-import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
-import com.talhanation.bannermod.war.runtime.SiegeStandardBlockEntity;
+import com.talhanation.bannermod.war.runtime.SiegeStandardPlacementService;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRuntime;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
-import com.talhanation.bannermod.war.runtime.WarState;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
@@ -22,8 +19,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -62,51 +59,27 @@ public final class SiegeStandardCommands {
         String warToken = StringArgumentType.getString(context, "warId");
         String sideToken = StringArgumentType.getString(context, "side");
         WarDeclarationRecord war = WarCommandSupport.requireWar(context, warToken);
-        if (war.state() == WarState.RESOLVED || war.state() == WarState.CANCELLED) {
-            context.getSource().sendFailure(Component.literal("War is closed; cannot place a siege standard."));
-            return 0;
-        }
         PoliticalEntityRecord side = WarCommandSupport.requireEntity(context, sideToken);
-        if (!war.involves(side.id())) {
-            context.getSource().sendFailure(Component.literal("Side is not a participant of this war."));
-            return 0;
-        }
-        if (!WarCommandSupport.isLeaderOrOp(context, side)) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
-        }
         BlockPos pos = overridePos;
-        if (pos == null) {
-            if (context.getSource().getEntity() == null) {
-                context.getSource().sendFailure(Component.literal("Provide a position or run as a player."));
-                return 0;
-            }
-            pos = context.getSource().getEntity().blockPosition();
-        }
-        int radius = overrideRadius > 0 ? overrideRadius : WarServerConfig.DefaultSiegeRadius.get();
-
-        ServerLevel level = WarCommandSupport.level(context);
-        SiegeStandardRuntime runtime = WarRuntimeContext.sieges(level);
-        long gameTime = level.getGameTime();
-        Optional<SiegeStandardRecord> placed = runtime.place(war.id(), side.id(), pos, radius, gameTime);
-        if (placed.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Failed to place siege standard."));
+        if (pos == null && context.getSource().getEntity() == null) {
+            context.getSource().sendFailure(Component.literal("Provide a position or run as a player."));
             return 0;
         }
-        // Place the visible block + bind the BlockEntity so a player can later break it to clean up.
-        // The break path in SiegeStandardBlock.onRemove deletes the matching SavedData record.
-        level.setBlockAndUpdate(pos, ModWarBlocks.SIEGE_STANDARD.get().defaultBlockState());
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof SiegeStandardBlockEntity siegeBe) {
-            siegeBe.bind(war.id(), side.id());
+        ServerPlayer actor = context.getSource().getEntity() instanceof ServerPlayer player ? player : null;
+        ServerLevel level = WarCommandSupport.level(context);
+        SiegeStandardPlacementService.Result result = SiegeStandardPlacementService.placeAt(
+                level, actor, war.id(), side.id(), pos, overrideRadius);
+        if (!result.ok()) {
+            if (result.outcome() == SiegeStandardPlacementService.Outcome.NOT_LEADER) {
+                throw WarCommandSupport.ERR_NOT_LEADER.create();
+            }
+            context.getSource().sendFailure(Component.literal(SiegeStandardPlacementService.describe(result.outcome())));
+            return 0;
         }
-        WarAuditLogSavedData audit = WarRuntimeContext.audit(level);
-        SiegeStandardRecord record = placed.get();
-        audit.append(war.id(), "SIEGE_PLACED",
-                "side=" + side.id() + ";pos=" + pos.toShortString() + ";radius=" + radius,
-                gameTime);
+        SiegeStandardRecord record = result.record();
         WarCommandSupport.reply(context,
-                "Siege standard placed for " + side.name() + " at " + pos.toShortString()
-                        + " (radius " + radius + ", id " + shortId(record.id()) + ").");
+                "Siege standard placed for " + side.name() + " at " + record.pos().toShortString()
+                        + " (radius " + record.radius() + ", id " + shortId(record.id()) + ").");
         return 1;
     }
 

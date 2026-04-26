@@ -12,6 +12,7 @@ import com.talhanation.bannermod.network.messages.civilian.*;
 
 // War network messages (warfare-RP runtime sync)
 import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
+import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
 import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
@@ -174,6 +175,7 @@ public class BannerModNetworkBootstrap {
         MessageCreatePoliticalEntity.class,
         MessageRenamePoliticalEntity.class,
         MessageSetPoliticalEntityCapital.class,
+        MessagePlaceSiegeStandardHere.class,
     };
 
     private BannerModNetworkBootstrap() {

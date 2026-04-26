@@ -1,15 +1,19 @@
 package com.talhanation.bannermod.client.military.gui.war;
 
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import com.talhanation.bannermod.war.runtime.WarState;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -40,6 +44,8 @@ public class WarListScreen extends Screen {
 
     private Button openAttackerBtn;
     private Button openDefenderBtn;
+    private Button placeSiegeBtn;
+    private Button statesBtn;
     private Button refreshBtn;
     private Button closeBtn;
 
@@ -68,17 +74,30 @@ public class WarListScreen extends Screen {
                 .bounds(detailX, detailY, 80, 18).build();
         openDefenderBtn = Button.builder(Component.literal("Defender info"), btn -> openEntity(selected != null ? selected.defenderPoliticalEntityId() : null))
                 .bounds(detailX + 88, detailY, 80, 18).build();
-        refreshBtn = Button.builder(Component.literal("Refresh"), btn -> refresh())
+        statesBtn = Button.builder(Component.literal("States"), btn -> this.minecraft.setScreen(new PoliticalEntityListScreen(this)))
                 .bounds(detailX, detailY + 22, 80, 18).build();
-        closeBtn = Button.builder(Component.literal("Close"), btn -> onClose())
+        placeSiegeBtn = Button.builder(Component.literal("Place siege here"), btn -> placeSiegeHere())
+                .bounds(detailX, detailY + 44, 80, 18).build();
+        refreshBtn = Button.builder(Component.literal("Refresh"), btn -> refresh())
                 .bounds(detailX + 88, detailY + 22, 80, 18).build();
+        closeBtn = Button.builder(Component.literal("Close"), btn -> onClose())
+                .bounds(detailX + 88, detailY + 44, 80, 18).build();
 
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
+        addRenderableWidget(statesBtn);
+        addRenderableWidget(placeSiegeBtn);
         addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
 
         updateButtonsState();
+    }
+
+    private void placeSiegeHere() {
+        UUID sideId = leaderSideOf(selected);
+        if (selected == null || sideId == null) return;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(
+                new MessagePlaceSiegeStandardHere(selected.id(), sideId, 0));
     }
 
     private void refresh() {
@@ -98,6 +117,30 @@ public class WarListScreen extends Screen {
         boolean has = selected != null;
         openAttackerBtn.active = has;
         openDefenderBtn.active = has;
+        if (placeSiegeBtn != null) {
+            placeSiegeBtn.active = has && leaderSideOf(selected) != null
+                    && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
+        }
+    }
+
+    @Nullable
+    private UUID leaderSideOf(@Nullable WarDeclarationRecord war) {
+        if (war == null) return null;
+        Player player = Minecraft.getInstance().player;
+        if (player == null) return null;
+        UUID local = player.getUUID();
+        UUID attacker = war.attackerPoliticalEntityId();
+        UUID defender = war.defenderPoliticalEntityId();
+        if (attacker != null && isLeaderOf(attacker, local)) return attacker;
+        if (defender != null && isLeaderOf(defender, local)) return defender;
+        return null;
+    }
+
+    private static boolean isLeaderOf(UUID entityId, UUID playerUuid) {
+        PoliticalEntityRecord entity = WarClientState.entityById(entityId);
+        if (entity == null) return false;
+        UUID leader = entity.leaderUuid();
+        return leader != null && leader.equals(playerUuid);
     }
 
     @Override
@@ -179,6 +222,20 @@ public class WarListScreen extends Screen {
         for (String s : body) {
             graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, 0xFFFFFF, false);
             line++;
+        }
+        for (SiegeStandardRecord siege : WarClientState.sieges()) {
+            if (!siege.warId().equals(war.id())) {
+                continue;
+            }
+            String side = entityName(siege.sidePoliticalEntityId());
+            String pos = siege.pos() == null ? "?" : siege.pos().toShortString();
+            String radius = " r=" + siege.radius() + " blocks";
+            graphics.drawString(font, font.plainSubstrByWidth("Standard: " + side + " @ " + pos + radius, w),
+                    x, y + 14 + line * 11, 0xFFAAFFAA, false);
+            line++;
+            if (line >= 14) {
+                break;
+            }
         }
     }
 
