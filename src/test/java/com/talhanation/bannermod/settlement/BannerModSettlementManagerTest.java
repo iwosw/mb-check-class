@@ -1,13 +1,11 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -29,7 +27,7 @@ class BannerModSettlementManagerTest {
                 claim.getUUID(),
                 claim.getCenter().x,
                 claim.getCenter().z,
-                claim.getOwnerFactionStringID(),
+                ownerKey(claim),
                 240L,
                 4,
                 1,
@@ -130,8 +128,8 @@ class BannerModSettlementManagerTest {
         RecruitsClaim staleClaim = claim(new ChunkPos(3, 3), "blueguild");
 
         BannerModSettlementManager manager = new BannerModSettlementManager();
-        manager.putSnapshot(BannerModSettlementSnapshot.create(keptClaim.getUUID(), keptClaim.getCenter(), keptClaim.getOwnerFactionStringID()));
-        manager.putSnapshot(BannerModSettlementSnapshot.create(staleClaim.getUUID(), staleClaim.getCenter(), staleClaim.getOwnerFactionStringID()));
+        manager.putSnapshot(BannerModSettlementSnapshot.create(keptClaim.getUUID(), keptClaim.getCenter(), ownerKey(keptClaim)));
+        manager.putSnapshot(BannerModSettlementSnapshot.create(staleClaim.getUUID(), staleClaim.getCenter(), ownerKey(staleClaim)));
 
         manager.pruneMissingClaims(Set.of(keptClaim.getUUID()));
 
@@ -142,7 +140,7 @@ class BannerModSettlementManagerTest {
     @Test
     void putSnapshotDoesNotMarkSavedDataDirtyWhenSnapshotIsUnchanged() {
         RecruitsClaim claim = claim(new ChunkPos(4, 4), "blueguild");
-        BannerModSettlementSnapshot snapshot = BannerModSettlementSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID());
+        BannerModSettlementSnapshot snapshot = BannerModSettlementSnapshot.create(claim.getUUID(), claim.getCenter(), ownerKey(claim));
         BannerModSettlementManager manager = new BannerModSettlementManager();
         manager.putSnapshot(snapshot);
         BannerModSettlementManager reloaded = BannerModSettlementManager.load(manager.save(new CompoundTag()));
@@ -153,20 +151,13 @@ class BannerModSettlementManagerTest {
     }
 
     private static RecruitsClaim claim(ChunkPos chunkPos, String factionId) {
-        RecruitsFaction faction = new RecruitsFaction(factionId, "leader", new CompoundTag());
-        RecruitsClaim claim = instantiateClaim(factionId, faction);
+        RecruitsClaim claim = new RecruitsClaim(factionId, UUID.nameUUIDFromBytes(factionId.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
         claim.addChunk(chunkPos);
         claim.setCenter(chunkPos);
         return claim;
     }
 
-    private static RecruitsClaim instantiateClaim(String name, RecruitsFaction faction) {
-        try {
-            Constructor<RecruitsClaim> constructor = RecruitsClaim.class.getDeclaredConstructor(UUID.class, String.class, RecruitsFaction.class);
-            constructor.setAccessible(true);
-            return constructor.newInstance(UUID.randomUUID(), name, faction);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Failed to create claim fixture", exception);
-        }
+    private static String ownerKey(RecruitsClaim claim) {
+        return claim.getOwnerPoliticalEntityId().toString();
     }
 }

@@ -1,12 +1,9 @@
 package com.talhanation.bannermod.governance;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Constructor;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,18 +16,19 @@ class BannerModGovernorServiceTest {
     @Test
     void ownerOrAdminCanDesignateFriendlyClaimGovernor() {
         RecruitsClaim claim = claim(new ChunkPos(4, 7), "blueguild");
+        String ownerKey = ownerKey(claim);
         UUID ownerUuid = UUID.randomUUID();
         BannerModGovernorService service = new BannerModGovernorService(new BannerModGovernorManager());
 
         BannerModGovernorService.OperationResult ownerResult = service.assignGovernor(
                 claim,
-                new BannerModGovernorAuthority.ActorContext(ownerUuid, "blueguild", false),
-                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, "blueguild")
+                new BannerModGovernorAuthority.ActorContext(ownerUuid, ownerKey, false),
+                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, ownerKey)
         );
         BannerModGovernorService.OperationResult adminResult = service.assignGovernor(
                 claim,
                 new BannerModGovernorAuthority.ActorContext(UUID.randomUUID(), "otherguild", true),
-                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, "blueguild")
+                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, ownerKey)
         );
 
         assertTrue(ownerResult.allowed());
@@ -43,14 +41,15 @@ class BannerModGovernorServiceTest {
     @Test
     void sameTeamAndOutsiderCannotAssignOrRevokeGovernorWhenPolicyForbidsIt() {
         RecruitsClaim claim = claim(new ChunkPos(6, 3), "blueguild");
+        String ownerKey = ownerKey(claim);
         UUID ownerUuid = UUID.randomUUID();
         BannerModGovernorService service = new BannerModGovernorService(new BannerModGovernorManager());
         BannerModGovernorService.RecruitGovernorTarget recruit =
-                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, "blueguild");
+                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, ownerKey);
 
         BannerModGovernorService.OperationResult sameTeamAssign = service.assignGovernor(
                 claim,
-                new BannerModGovernorAuthority.ActorContext(UUID.randomUUID(), "blueguild", false),
+                new BannerModGovernorAuthority.ActorContext(UUID.randomUUID(), ownerKey, false),
                 recruit
         );
         BannerModGovernorService.OperationResult outsiderAssign = service.assignGovernor(
@@ -59,11 +58,11 @@ class BannerModGovernorServiceTest {
                 recruit
         );
 
-        service.assignGovernor(claim, new BannerModGovernorAuthority.ActorContext(ownerUuid, "blueguild", false), recruit);
+        service.assignGovernor(claim, new BannerModGovernorAuthority.ActorContext(ownerUuid, ownerKey, false), recruit);
 
         BannerModGovernorService.OperationResult sameTeamRevoke = service.revokeGovernor(
                 claim,
-                new BannerModGovernorAuthority.ActorContext(UUID.randomUUID(), "blueguild", false)
+                new BannerModGovernorAuthority.ActorContext(UUID.randomUUID(), ownerKey, false)
         );
         BannerModGovernorService.OperationResult outsiderRevoke = service.revokeGovernor(
                 claim,
@@ -81,8 +80,9 @@ class BannerModGovernorServiceTest {
     @Test
     void degradedHostileAndUnclaimedSettlementsAreDeniedEvenWhenRecruitExists() {
         UUID ownerUuid = UUID.randomUUID();
+        String friendlyOwnerKey = UUID.randomUUID().toString();
         BannerModGovernorService.RecruitGovernorTarget recruit =
-                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, "blueguild");
+                new BannerModGovernorService.RecruitGovernorTarget(UUID.randomUUID(), ownerUuid, friendlyOwnerKey);
 
         RecruitsClaim hostileClaim = claim(new ChunkPos(2, 9), "redguild");
         RecruitsClaim degradedClaim = claim(new ChunkPos(3, 5), "redguild");
@@ -92,21 +92,21 @@ class BannerModGovernorServiceTest {
 
         BannerModGovernorService.OperationResult hostile = hostileService.assignGovernor(
                 hostileClaim,
-                new BannerModGovernorAuthority.ActorContext(ownerUuid, "blueguild", false),
+                new BannerModGovernorAuthority.ActorContext(ownerUuid, friendlyOwnerKey, false),
                 recruit,
-                "blueguild",
+                friendlyOwnerKey,
                 false
         );
         BannerModGovernorService.OperationResult degraded = degradedService.assignGovernor(
                 degradedClaim,
-                new BannerModGovernorAuthority.ActorContext(ownerUuid, "redguild", false),
+                new BannerModGovernorAuthority.ActorContext(ownerUuid, ownerKey(degradedClaim), false),
                 recruit,
-                "blueguild",
+                friendlyOwnerKey,
                 true
         );
         BannerModGovernorService.OperationResult unclaimed = unclaimedService.assignGovernor(
                 null,
-                new BannerModGovernorAuthority.ActorContext(ownerUuid, "blueguild", false),
+                new BannerModGovernorAuthority.ActorContext(ownerUuid, friendlyOwnerKey, false),
                 recruit
         );
 
@@ -119,20 +119,13 @@ class BannerModGovernorServiceTest {
     }
 
     private static RecruitsClaim claim(ChunkPos chunkPos, String factionId) {
-        RecruitsFaction faction = new RecruitsFaction(factionId, "leader", new CompoundTag());
-        RecruitsClaim claim = instantiateClaim(factionId, faction);
+        RecruitsClaim claim = new RecruitsClaim(factionId, UUID.nameUUIDFromBytes(factionId.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
         claim.addChunk(chunkPos);
         claim.setCenter(chunkPos);
         return claim;
     }
 
-    private static RecruitsClaim instantiateClaim(String name, RecruitsFaction faction) {
-        try {
-            Constructor<RecruitsClaim> constructor = RecruitsClaim.class.getDeclaredConstructor(UUID.class, String.class, RecruitsFaction.class);
-            constructor.setAccessible(true);
-            return constructor.newInstance(UUID.randomUUID(), name, faction);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Failed to create claim fixture", exception);
-        }
+    private static String ownerKey(RecruitsClaim claim) {
+        return claim.getOwnerPoliticalEntityId().toString();
     }
 }

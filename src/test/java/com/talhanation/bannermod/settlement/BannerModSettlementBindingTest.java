@@ -1,13 +1,10 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Constructor;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,9 +17,10 @@ class BannerModSettlementBindingTest {
     void friendlyClaimStatusAllowsPlacementAndSettlementOperation() {
         ChunkPos chunkPos = new ChunkPos(4, 7);
         RecruitsClaim claim = claim(chunkPos, "blueguild");
+        String ownerKey = ownerKey(claim);
 
-        BannerModSettlementBinding.Binding placementBinding = BannerModSettlementBinding.resolveFactionStatus(claim, chunkPos, "blueguild");
-        BannerModSettlementBinding.Binding settlementBinding = BannerModSettlementBinding.resolveSettlementStatus(claim, chunkPos, "blueguild");
+        BannerModSettlementBinding.Binding placementBinding = BannerModSettlementBinding.resolveFactionStatus(claim, chunkPos, ownerKey);
+        BannerModSettlementBinding.Binding settlementBinding = BannerModSettlementBinding.resolveSettlementStatus(claim, chunkPos, ownerKey);
 
         assertEquals(BannerModSettlementBinding.Status.FRIENDLY_CLAIM, placementBinding.status());
         assertTrue(placementBinding.isFriendly());
@@ -35,7 +33,7 @@ class BannerModSettlementBindingTest {
         ChunkPos chunkPos = new ChunkPos(2, 9);
         RecruitsClaim claim = claim(chunkPos, "redguild");
 
-        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(claim, chunkPos, "blueguild");
+        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(claim, chunkPos, UUID.randomUUID().toString());
 
         assertEquals(BannerModSettlementBinding.Status.HOSTILE_CLAIM, binding.status());
         assertFalse(binding.isFriendly());
@@ -57,29 +55,23 @@ class BannerModSettlementBindingTest {
     void degradedMismatchStatusMarksSettlementFootprintsThatLostFactionAlignment() {
         ChunkPos chunkPos = new ChunkPos(6, 3);
         RecruitsClaim claim = claim(chunkPos, "redguild");
+        String settlementOwnerKey = UUID.randomUUID().toString();
 
-        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveSettlementStatus(claim, chunkPos, "blueguild");
+        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveSettlementStatus(claim, chunkPos, settlementOwnerKey);
 
         assertEquals(BannerModSettlementBinding.Status.DEGRADED_MISMATCH, binding.status());
-        assertEquals("blueguild", binding.settlementFactionId());
-        assertEquals("redguild", binding.claimFactionId());
+        assertEquals(settlementOwnerKey, binding.settlementFactionId());
+        assertEquals(ownerKey(claim), binding.claimFactionId());
         assertFalse(BannerModSettlementBinding.allowsSettlementOperation(binding));
     }
 
     private static RecruitsClaim claim(ChunkPos chunkPos, String factionId) {
-        RecruitsFaction faction = new RecruitsFaction(factionId, "leader", new CompoundTag());
-        RecruitsClaim claim = instantiateClaim(factionId, faction);
+        RecruitsClaim claim = new RecruitsClaim(factionId, UUID.nameUUIDFromBytes(factionId.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
         claim.addChunk(chunkPos);
         return claim;
     }
 
-    private static RecruitsClaim instantiateClaim(String name, RecruitsFaction faction) {
-        try {
-            Constructor<RecruitsClaim> constructor = RecruitsClaim.class.getDeclaredConstructor(UUID.class, String.class, RecruitsFaction.class);
-            constructor.setAccessible(true);
-            return constructor.newInstance(UUID.randomUUID(), name, faction);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Failed to create claim fixture", exception);
-        }
+    private static String ownerKey(RecruitsClaim claim) {
+        return claim.getOwnerPoliticalEntityId().toString();
     }
 }

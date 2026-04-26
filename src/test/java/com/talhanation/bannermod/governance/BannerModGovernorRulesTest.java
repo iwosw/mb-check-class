@@ -2,12 +2,10 @@ package com.talhanation.bannermod.governance;
 
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,10 +21,11 @@ class BannerModGovernorRulesTest {
     void friendlyClaimAssignmentAllowsGovernorDesignationWhenRecruitAndOwnerExist() {
         ChunkPos chunkPos = new ChunkPos(4, 7);
         RecruitsClaim claim = claim(chunkPos, "blueguild");
+        String ownerKey = ownerKey(claim);
         UUID recruitUuid = UUID.randomUUID();
         UUID ownerUuid = UUID.randomUUID();
 
-        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveSettlementStatus(claim, chunkPos, "blueguild");
+        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveSettlementStatus(claim, chunkPos, ownerKey);
 
         assertEquals(BannerModGovernorRules.Decision.ALLOW,
                 BannerModGovernorRules.assignmentDecision(binding, recruitUuid, ownerUuid));
@@ -38,12 +37,13 @@ class BannerModGovernorRulesTest {
     void hostileUnclaimedAndDegradedStatesDenyGovernorControl() {
         ChunkPos chunkPos = new ChunkPos(2, 9);
         RecruitsClaim hostileClaim = claim(chunkPos, "redguild");
+        String friendlyOwnerKey = UUID.randomUUID().toString();
         BannerModGovernorSnapshot snapshot = BannerModGovernorSnapshot.create(UUID.randomUUID(), chunkPos, "blueguild")
                 .withGovernor(UUID.randomUUID(), UUID.randomUUID());
 
         assertEquals(BannerModGovernorRules.Decision.HOSTILE_SETTLEMENT,
                 BannerModGovernorRules.assignmentDecision(
-                        BannerModSettlementBinding.resolveFactionStatus(hostileClaim, chunkPos, "blueguild"),
+                        BannerModSettlementBinding.resolveFactionStatus(hostileClaim, chunkPos, friendlyOwnerKey),
                         UUID.randomUUID(),
                         UUID.randomUUID()));
         assertEquals(BannerModGovernorRules.Decision.UNCLAIMED_SETTLEMENT,
@@ -52,7 +52,7 @@ class BannerModGovernorRulesTest {
                         snapshot));
         assertEquals(BannerModGovernorRules.Decision.DEGRADED_SETTLEMENT,
                 BannerModGovernorRules.controlDecision(
-                        BannerModSettlementBinding.resolveSettlementStatus(hostileClaim, chunkPos, "blueguild"),
+                        BannerModSettlementBinding.resolveSettlementStatus(hostileClaim, chunkPos, friendlyOwnerKey),
                         snapshot));
     }
 
@@ -60,7 +60,7 @@ class BannerModGovernorRulesTest {
     void managerRoundTripsSnapshotsByClaimUuidWithoutChangingClaimIdentity() {
         ChunkPos chunkPos = new ChunkPos(6, 3);
         RecruitsClaim claim = claim(chunkPos, "blueguild");
-        BannerModGovernorSnapshot original = BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID())
+        BannerModGovernorSnapshot original = BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), ownerKey(claim))
                 .withGovernor(UUID.randomUUID(), UUID.randomUUID())
                 .withHeartbeatReport(200L, 180L, 5, 12, 9, List.of("stable"), List.of("garrison_low"))
                 .withFiscalRollup(new BannerModTreasuryLedgerSnapshot.FiscalRollup(18, 9, 9, 3, 12, 200L));
@@ -90,7 +90,7 @@ class BannerModGovernorRulesTest {
         RecruitsClaim claim = claim(chunkPos, "blueguild");
         BannerModGovernorManager manager = new BannerModGovernorManager();
 
-        manager.getOrCreateSnapshot(claim.getUUID(), BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID()));
+        manager.getOrCreateSnapshot(claim.getUUID(), BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), ownerKey(claim)));
 
         assertTrue(manager.isDirty());
     }
@@ -99,7 +99,7 @@ class BannerModGovernorRulesTest {
     void putSnapshotDoesNotMarkSavedDataDirtyWhenSnapshotIsUnchanged() {
         ChunkPos chunkPos = new ChunkPos(6, 3);
         RecruitsClaim claim = claim(chunkPos, "blueguild");
-        BannerModGovernorSnapshot snapshot = BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID());
+        BannerModGovernorSnapshot snapshot = BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), ownerKey(claim));
         BannerModGovernorManager manager = new BannerModGovernorManager();
         manager.putSnapshot(snapshot);
         BannerModGovernorManager reloaded = BannerModGovernorManager.load(manager.save(new CompoundTag()));
@@ -110,20 +110,13 @@ class BannerModGovernorRulesTest {
     }
 
     private static RecruitsClaim claim(ChunkPos chunkPos, String factionId) {
-        RecruitsFaction faction = new RecruitsFaction(factionId, "leader", new CompoundTag());
-        RecruitsClaim claim = instantiateClaim(factionId, faction);
+        RecruitsClaim claim = new RecruitsClaim(factionId, UUID.nameUUIDFromBytes(factionId.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
         claim.addChunk(chunkPos);
         claim.setCenter(chunkPos);
         return claim;
     }
 
-    private static RecruitsClaim instantiateClaim(String name, RecruitsFaction faction) {
-        try {
-            Constructor<RecruitsClaim> constructor = RecruitsClaim.class.getDeclaredConstructor(UUID.class, String.class, RecruitsFaction.class);
-            constructor.setAccessible(true);
-            return constructor.newInstance(UUID.randomUUID(), name, faction);
-        } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("Failed to create claim fixture", exception);
-        }
+    private static String ownerKey(RecruitsClaim claim) {
+        return claim.getOwnerPoliticalEntityId().toString();
     }
 }
