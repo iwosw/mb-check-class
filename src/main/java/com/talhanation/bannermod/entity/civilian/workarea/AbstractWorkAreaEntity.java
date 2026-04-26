@@ -4,8 +4,11 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.client.gui.screens.Screen;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.core.BlockPos;
@@ -159,7 +162,12 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     public boolean hurt(DamageSource damageSource, float a) {
         if(damageSource.getEntity() instanceof Player player){
             if(player.isCreative() && player.isCrouching() && player.hasPermissions(2)){
+                BlockPos discardedAt = this.blockPosition();
+                Level level = this.level();
                 this.discard();
+                if (level instanceof net.minecraft.server.level.ServerLevel serverLevel && discardedAt != null) {
+                    BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, discardedAt);
+                }
             }
         }
 
@@ -238,7 +246,7 @@ public abstract class AbstractWorkAreaEntity extends Entity {
             return false;
         }
 
-        String settlementFactionId = this.getTeamStringID();
+        String settlementFactionId = resolveSettlementPoliticalEntityId(this.getTeamStringID());
         if (settlementFactionId == null || settlementFactionId.isBlank()) {
             return true;
         }
@@ -249,6 +257,17 @@ public abstract class AbstractWorkAreaEntity extends Entity {
                 settlementFactionId
         );
         return BannerModSettlementBinding.allowsSettlementOperation(binding);
+    }
+
+    private String resolveSettlementPoliticalEntityId(String teamStringId) {
+        if (teamStringId == null || teamStringId.isBlank() || !(this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return teamStringId;
+        }
+        return WarRuntimeContext.registry(serverLevel)
+                .byName(teamStringId)
+                .map(PoliticalEntityRecord::id)
+                .map(UUID::toString)
+                .orElse(teamStringId);
     }
 
     public void setDone(boolean b) {

@@ -8,6 +8,7 @@ import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWo
 import com.talhanation.bannermod.persistence.civilian.BuildBlock;
 import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -95,6 +96,7 @@ public class BuildArea extends AbstractWorkAreaEntity {
         if(isDone()) {
             if (this.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
                 PrefabAutoStaffingRuntime.onBuildAreaCompleted(serverLevel, this);
+                BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, this.blockPosition());
             }
             this.remove(RemovalReason.DISCARDED);
         }
