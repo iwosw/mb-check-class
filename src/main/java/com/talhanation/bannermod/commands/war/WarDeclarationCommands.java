@@ -109,10 +109,11 @@ public final class WarDeclarationCommands {
         long peaceCooldownTicks = WarServerConfig.peaceCooldownTicks();
         int defenderDailyLimit = WarServerConfig.DefenderDailyDeclarations.get();
 
-        WarCooldownPolicy.Result cooldown = WarCooldownPolicy.canDeclare(
+        WarCooldownPolicy.Result cooldown = WarCooldownPolicy.canDeclareWithImmunity(
                 attacker.id(), defender.id(),
                 declarations.all(), gameTime, peaceCooldownTicks, defenderDailyLimit,
-                WarRuntimeContext.demilitarizations(level));
+                WarRuntimeContext.demilitarizations(level),
+                WarRuntimeContext.cooldowns(level));
         if (!cooldown.valid()) {
             context.getSource().sendFailure(Component.literal("Declaration blocked: " + cooldown.reason()));
             return 0;

@@ -23,6 +23,8 @@ public class WarServerConfig {
     public static final ForgeConfigSpec.IntValue DefenderDailyDeclarations;
     public static final ForgeConfigSpec.IntValue DefaultSiegeRadius;
     public static final ForgeConfigSpec.IntValue MinDeclarationDelayTicks;
+    public static final ForgeConfigSpec.IntValue LostTerritoryImmunityDays;
+    public static final ForgeConfigSpec.IntValue PeacefulToggleCooldownDays;
 
     static {
         RegulatedPvpEnabled = BUILDER.comment("""
@@ -61,11 +63,31 @@ public class WarServerConfig {
                         \tdefault: 6000 (5 minutes at 20 TPS)""")
                 .defineInRange("MinDeclarationDelayTicks", 6000, 0, Integer.MAX_VALUE);
 
+        LostTerritoryImmunityDays = BUILDER.comment("""
+                        Days of forced immunity granted to a state that just lost territory through
+                        \ttribute, vassalage, demilitarization, or annexation.
+                        \tdefault: 3""")
+                .defineInRange("LostTerritoryImmunityDays", 3, 0, 365);
+
+        PeacefulToggleCooldownDays = BUILDER.comment("""
+                        Days of cooldown enforced after a state toggles its PEACEFUL status. Prevents
+                        \tabusive flip-flopping between peaceful and combat-eligible status.
+                        \tdefault: 2""")
+                .defineInRange("PeacefulToggleCooldownDays", 2, 0, 365);
+
         SERVER = BUILDER.build();
     }
 
     public static long peaceCooldownTicks() {
         return Math.max(0L, PeaceCooldownDays.get().longValue()) * WarCooldownPolicy.TICKS_PER_DAY;
+    }
+
+    public static long lostTerritoryImmunityTicks() {
+        return Math.max(0L, LostTerritoryImmunityDays.get().longValue()) * WarCooldownPolicy.TICKS_PER_DAY;
+    }
+
+    public static long peacefulToggleCooldownTicks() {
+        return Math.max(0L, PeacefulToggleCooldownDays.get().longValue()) * WarCooldownPolicy.TICKS_PER_DAY;
     }
 
     public static BattleWindowSchedule resolveSchedule() {

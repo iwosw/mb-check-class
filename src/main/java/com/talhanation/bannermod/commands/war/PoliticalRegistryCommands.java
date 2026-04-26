@@ -4,10 +4,19 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.config.WarServerConfig;
+import com.talhanation.bannermod.war.cooldown.WarCooldownKind;
+import com.talhanation.bannermod.war.cooldown.WarCooldownPolicy;
+import com.talhanation.bannermod.war.cooldown.WarCooldownRuntime;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.persistence.military.RecruitsClaimSaveData;
+import com.talhanation.bannermod.settlement.BannerModSettlementManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
+import com.talhanation.bannermod.war.registry.PoliticalStatePromotionPolicy;
 import com.talhanation.bannermod.war.rp.PoliticalCharterFormatter;
 import com.talhanation.bannermod.war.runtime.OccupationRecord;
 import com.talhanation.bannermod.war.runtime.OccupationRuntime;
@@ -22,6 +31,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public final class PoliticalRegistryCommands {
     private PoliticalRegistryCommands() {
@@ -125,14 +135,54 @@ public final class PoliticalRegistryCommands {
                     + " (expected SETTLEMENT|STATE|VASSAL|PEACEFUL)"));
             return 0;
         }
+        if (status == PoliticalEntityStatus.STATE && record.status() != PoliticalEntityStatus.STATE) {
+            PoliticalStatePromotionPolicy.Result promotion = PoliticalStatePromotionPolicy.evaluate(
+                    settlementSnapshotForEntity(context, record.id()).orElse(null));
+            if (!promotion.allowed()) {
+                context.getSource().sendFailure(Component.literal(promotion.denialReason()));
+                return 0;
+            }
+        }
+        boolean togglesPeaceful = (status == PoliticalEntityStatus.PEACEFUL)
+                != (record.status() == PoliticalEntityStatus.PEACEFUL);
+        WarCooldownRuntime cooldowns = WarRuntimeContext.cooldowns(WarCommandSupport.level(context));
+        long gameTime = WarCommandSupport.level(context).getGameTime();
+        if (togglesPeaceful) {
+            WarCooldownPolicy.Result gate = WarCooldownPolicy.canTogglePeacefulStatus(
+                    record.id(), gameTime, cooldowns);
+            if (!gate.valid()) {
+                context.getSource().sendFailure(Component.literal("Cannot toggle PEACEFUL: " + gate.reason()));
+                return 0;
+            }
+        }
         boolean updated = WarCommandSupport.registry(context).updateStatus(record.id(), status);
         if (!updated) {
             context.getSource().sendFailure(Component.literal("Failed to update status."));
             return 0;
         }
+        if (togglesPeaceful) {
+            cooldowns.grant(record.id(), WarCooldownKind.PEACEFUL_TOGGLE_RECENT,
+                    gameTime + WarServerConfig.peacefulToggleCooldownTicks());
+        }
         WarCommandSupport.reply(context,
                 "Status of " + record.name() + " set to " + status.name() + ".");
         return 1;
+    }
+
+    private static Optional<BannerModSettlementSnapshot> settlementSnapshotForEntity(
+            com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
+            UUID politicalEntityId) {
+        var level = WarCommandSupport.level(context);
+        BannerModSettlementManager settlements = BannerModSettlementManager.get(level);
+        for (RecruitsClaim claim : RecruitsClaimSaveData.get(level).getAllClaims()) {
+            if (politicalEntityId.equals(claim.getOwnerPoliticalEntityId())) {
+                BannerModSettlementSnapshot snapshot = settlements.getSnapshot(claim.getUUID());
+                if (snapshot != null) {
+                    return Optional.of(snapshot);
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     private static int info(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)

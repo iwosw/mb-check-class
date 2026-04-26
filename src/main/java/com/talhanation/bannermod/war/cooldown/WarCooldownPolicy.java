@@ -11,8 +11,46 @@ public final class WarCooldownPolicy {
     public static final long TICKS_PER_DAY = 24L * 60L * 60L * 20L;
     public static final long DEFAULT_PEACE_COOLDOWN_TICKS = 7L * TICKS_PER_DAY;
     public static final int DEFAULT_DEFENDER_DAILY_DECLARATIONS = 1;
+    public static final long DEFAULT_LOST_TERRITORY_IMMUNITY_TICKS = 3L * TICKS_PER_DAY;
+    public static final long DEFAULT_PEACEFUL_TOGGLE_COOLDOWN_TICKS = 2L * TICKS_PER_DAY;
 
     private WarCooldownPolicy() {
+    }
+
+    /**
+     * Wrapper for the existing {@link #canDeclare} that also checks lost-territory
+     * immunity on the defender. Both checks use the same {@link Result} shape so a caller
+     * can surface the denial reason directly to the player.
+     */
+    public static Result canDeclareWithImmunity(UUID attackerId,
+                                                UUID defenderId,
+                                                Collection<WarDeclarationRecord> existingWars,
+                                                long nowGameTime,
+                                                long peaceCooldownTicks,
+                                                int defenderDailyDeclarations,
+                                                DemilitarizationRuntime demilitarizations,
+                                                WarCooldownRuntime cooldowns) {
+        Result base = canDeclare(attackerId, defenderId, existingWars, nowGameTime,
+                peaceCooldownTicks, defenderDailyDeclarations, demilitarizations);
+        if (!base.valid()) {
+            return base;
+        }
+        if (cooldowns != null && cooldowns.isActive(defenderId, WarCooldownKind.LOST_TERRITORY_IMMUNITY, nowGameTime)) {
+            return Result.invalid("defender_lost_territory_immunity");
+        }
+        return Result.ok();
+    }
+
+    public static Result canTogglePeacefulStatus(UUID politicalEntityId,
+                                                 long nowGameTime,
+                                                 WarCooldownRuntime cooldowns) {
+        if (politicalEntityId == null) {
+            return Result.invalid("missing_party");
+        }
+        if (cooldowns != null && cooldowns.isActive(politicalEntityId, WarCooldownKind.PEACEFUL_TOGGLE_RECENT, nowGameTime)) {
+            return Result.invalid("peaceful_toggle_cooldown_active");
+        }
+        return Result.ok();
     }
 
     public static Result canDeclare(UUID attackerId,

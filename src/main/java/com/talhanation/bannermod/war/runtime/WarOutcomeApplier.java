@@ -1,9 +1,12 @@
 package com.talhanation.bannermod.war.runtime;
 
 import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
+import com.talhanation.bannermod.war.cooldown.WarCooldownKind;
+import com.talhanation.bannermod.war.cooldown.WarCooldownRuntime;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,6 +17,9 @@ public final class WarOutcomeApplier {
     private final OccupationRuntime occupations;
     private final DemilitarizationRuntime demilitarizations;
     private final PoliticalRegistryRuntime registry;
+    @Nullable
+    private final WarCooldownRuntime cooldowns;
+    private final long lostTerritoryImmunityTicks;
 
     public WarOutcomeApplier(WarDeclarationRuntime declarations,
                              SiegeStandardRuntime sieges,
@@ -21,12 +27,25 @@ public final class WarOutcomeApplier {
                              OccupationRuntime occupations,
                              DemilitarizationRuntime demilitarizations,
                              PoliticalRegistryRuntime registry) {
+        this(declarations, sieges, audit, occupations, demilitarizations, registry, null, 0L);
+    }
+
+    public WarOutcomeApplier(WarDeclarationRuntime declarations,
+                             SiegeStandardRuntime sieges,
+                             WarAuditLogSavedData audit,
+                             OccupationRuntime occupations,
+                             DemilitarizationRuntime demilitarizations,
+                             PoliticalRegistryRuntime registry,
+                             @Nullable WarCooldownRuntime cooldowns,
+                             long lostTerritoryImmunityTicks) {
         this.declarations = declarations;
         this.sieges = sieges;
         this.audit = audit;
         this.occupations = occupations;
         this.demilitarizations = demilitarizations;
         this.registry = registry;
+        this.cooldowns = cooldowns;
+        this.lostTerritoryImmunityTicks = Math.max(0L, lostTerritoryImmunityTicks);
     }
 
     public Result applyWhitePeace(UUID warId, long gameTime) {
@@ -58,6 +77,7 @@ public final class WarOutcomeApplier {
         }
         declarations.updateState(warId, WarState.RESOLVED);
         clearSieges(warId);
+        grantLostTerritoryImmunity(war.defenderPoliticalEntityId(), gameTime);
         audit.append(warId, "OUTCOME_APPLIED", "type=TRIBUTE;amount=" + tributeAmount, gameTime);
         return Result.ok(WarOutcomeType.TRIBUTE);
     }
@@ -92,6 +112,7 @@ public final class WarOutcomeApplier {
         }
         declarations.updateState(warId, WarState.RESOLVED);
         clearSieges(warId);
+        grantLostTerritoryImmunity(war.defenderPoliticalEntityId(), gameTime);
         audit.append(warId, "OUTCOME_APPLIED",
                 "type=VASSALIZATION;defender=" + war.defenderPoliticalEntityId(), gameTime);
         return Result.ok(WarOutcomeType.VASSALIZATION);
@@ -116,11 +137,20 @@ public final class WarOutcomeApplier {
         }
         declarations.updateState(warId, WarState.RESOLVED);
         clearSieges(warId);
+        grantLostTerritoryImmunity(war.defenderPoliticalEntityId(), gameTime);
         audit.append(warId, "OUTCOME_APPLIED",
                 "type=FORCED_DEMILITARIZATION;defender=" + war.defenderPoliticalEntityId()
                         + ";endsAt=" + (gameTime + durationTicks),
                 gameTime);
         return Result.ok(WarOutcomeType.FORCED_DEMILITARIZATION);
+    }
+
+    private void grantLostTerritoryImmunity(UUID loserId, long gameTime) {
+        if (cooldowns == null || lostTerritoryImmunityTicks <= 0L || loserId == null) {
+            return;
+        }
+        cooldowns.grant(loserId, WarCooldownKind.LOST_TERRITORY_IMMUNITY,
+                gameTime + lostTerritoryImmunityTicks);
     }
 
     public boolean removeOccupationOnRevoltSuccess(UUID occupationId, long gameTime) {

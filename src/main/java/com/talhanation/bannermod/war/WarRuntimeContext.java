@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.war;
 
 import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
+import com.talhanation.bannermod.war.cooldown.WarCooldownRuntime;
+import com.talhanation.bannermod.war.cooldown.WarCooldownSavedData;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.registry.WarPoliticalRegistrySavedData;
 import com.talhanation.bannermod.war.runtime.DemilitarizationRuntime;
@@ -49,6 +51,10 @@ public final class WarRuntimeContext {
         return RevoltSavedData.get(level).runtime();
     }
 
+    public static WarCooldownRuntime cooldowns(ServerLevel level) {
+        return WarCooldownSavedData.get(level).runtime();
+    }
+
     public static WarAuditLogSavedData audit(ServerLevel level) {
         return WarAuditLogSavedData.get(level);
     }
@@ -60,7 +66,9 @@ public final class WarRuntimeContext {
                 audit(level),
                 occupations(level),
                 demilitarizations(level),
-                registry(level)
+                registry(level),
+                cooldowns(level),
+                com.talhanation.bannermod.war.config.WarServerConfig.lostTerritoryImmunityTicks()
         );
     }
 }
