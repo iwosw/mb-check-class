@@ -9,9 +9,9 @@ import com.talhanation.bannermod.citizen.CitizenProfessionRegistry;
 import com.talhanation.bannermod.citizen.CitizenProfessionSwitcher;
 import com.talhanation.bannermod.citizen.CitizenRoleContext;
 import com.talhanation.bannermod.citizen.CitizenStateSnapshot;
+import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import net.minecraft.core.BlockPos;
@@ -92,6 +92,11 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     }
 
     @Override
+    protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(net.minecraft.world.level.Level level) {
+        return new AsyncGroundPathNavigation(this, level);
+    }
+
+    @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.6D));
@@ -102,6 +107,7 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     @Override
     public void aiStep() {
         super.aiStep();
+        CitizenIndex.instance().onCitizenTick(this);
         if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
             PrefabAutoStaffingRuntime.assignCitizenToNearestVacancy((net.minecraft.server.level.ServerLevel) this.level(), this);
             tryConvertIntoPendingWorker();
@@ -144,9 +150,6 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
                 worker.setOwnerUUID(Optional.of(this.getOwnerUUID()));
                 worker.setIsOwned(this.isOwned());
             }
-            if (this.getTeam() != null) {
-                FactionEvents.addRecruitToTeam(worker, this.getTeam(), (net.minecraft.server.level.ServerLevel) this.level());
-            }
             worker.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
             this.level().addFreshEntity(worker);
             this.discard();
@@ -160,9 +163,6 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         if (this.getOwnerUUID() != null) {
             recruit.setOwnerUUID(Optional.of(this.getOwnerUUID()));
             recruit.setIsOwned(this.isOwned());
-        }
-        if (this.getTeam() != null) {
-            FactionEvents.addRecruitToTeam(recruit, this.getTeam(), (net.minecraft.server.level.ServerLevel) this.level());
         }
         recruit.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
         this.level().addFreshEntity(recruit);

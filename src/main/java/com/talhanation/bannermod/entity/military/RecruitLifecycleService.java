@@ -1,9 +1,7 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.events.RecruitEvent;
 import com.talhanation.bannermod.events.RecruitEvents;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -35,9 +33,6 @@ final class RecruitLifecycleService {
         if (recruit.getCommandSenderWorld().isClientSide()) return;
         RecruitEvents.recruitsPlayerUnitManager.removeRecruits(recruit.getOwnerUUID(), 1);
         recruit.setOwnerUUID(Optional.empty());
-        if (recruit.getTeam() != null && !keepTeam) {
-            FactionEvents.removeRecruitFromTeam(recruit, recruit.getTeam(), (ServerLevel) recruit.getCommandSenderWorld());
-        }
         if (recruit.getGroup() != null) {
             RecruitEvents.recruitsGroupsManager.removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
             recruit.setGroupUUID(null);
@@ -72,9 +67,6 @@ final class RecruitLifecycleService {
                 RecruitEvents.recruitsGroupsManager.addMember(group.getUUID(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
                 RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
             }
-            if (ownerTeam != null) {
-                FactionEvents.addRecruitToTeam(recruit, ownerTeam, (ServerLevel) recruit.getCommandSenderWorld());
-            }
         }
         if (message && !recruitedMessages.isEmpty()) {
             player.sendSystemMessage(recruitedMessages.get(recruit.getRandom().nextInt(recruitedMessages.size())));
@@ -88,18 +80,12 @@ final class RecruitLifecycleService {
         if (recruit.getCommandSenderWorld().getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_SHOWDEATHMESSAGES) && recruit.getOwner() instanceof ServerPlayer) {
             recruit.getOwner().sendSystemMessage(deathMessage);
         }
-        if (recruit.getTeam() != null) {
-            RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(recruit.getTeam().getName());
-            if (faction != null) faction.addNPCs(-1);
-            FactionEvents.recruitsFactionManager.broadcastToFactionPlayers(recruit.getTeam().getName(), (ServerLevel) recruit.getCommandSenderWorld());
-        }
         if (recruit.getGroup() != null) {
             RecruitEvents.recruitsGroupsManager.removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
         }
         if (recruit.isOwned()) {
             RecruitEvents.recruitsPlayerUnitManager.removeRecruits(recruit.getOwnerUUID(), 1);
         }
-        FactionEvents.removeRecruitFromTeam(recruit, recruit.getTeam(), (ServerLevel) recruit.getCommandSenderWorld());
     }
 
     static void updateTeam(AbstractRecruitEntity recruit) {
@@ -108,26 +94,7 @@ final class RecruitLifecycleService {
             if (owner != null) {
                 Team recruitTeam = recruit.getTeam();
                 Team ownerTeam = owner.getTeam();
-                if (ownerTeam == null) {
-                    if (recruitTeam != null) {
-                        FactionEvents.removeRecruitFromTeam(recruit, recruitTeam, (ServerLevel) recruit.getCommandSenderWorld());
-                        FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), recruitTeam.getName(), -1);
-                    }
-                    recruit.needsTeamUpdate = false;
-                } else if (recruitTeam == null) {
-                    FactionEvents.addRecruitToTeam(recruit, ownerTeam, (ServerLevel) recruit.getCommandSenderWorld());
-                    FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), ownerTeam.getName(), 1);
-                    recruit.needsTeamUpdate = false;
-                } else if (recruitTeam == ownerTeam) {
-                    recruit.updateColor(ownerTeam.getName());
-                    recruit.needsTeamUpdate = false;
-                } else {
-                    FactionEvents.removeRecruitFromTeam(recruit, recruitTeam, (ServerLevel) recruit.getCommandSenderWorld());
-                    FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), recruitTeam.getName(), -1);
-                    FactionEvents.addRecruitToTeam(recruit, ownerTeam, (ServerLevel) recruit.getCommandSenderWorld());
-                    FactionEvents.addNPCToData((ServerLevel) recruit.getCommandSenderWorld(), ownerTeam.getName(), 1);
-                    recruit.needsTeamUpdate = false;
-                }
+                recruit.needsTeamUpdate = false;
             }
         }
     }

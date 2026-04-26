@@ -1,7 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
@@ -367,7 +366,6 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
     }
 
 }
-
 
 
 

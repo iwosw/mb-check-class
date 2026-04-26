@@ -3,9 +3,7 @@ package com.talhanation.bannermod.entity.citizen;
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.citizen.CitizenRoleController;
-import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractInventoryEntity;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 
@@ -40,12 +38,5 @@ public abstract class AbstractCitizenEntity extends AbstractInventoryEntity {
 
     public boolean isMilitiaRole() {
         return this.getCitizenRole() == CitizenRole.MILITIA;
-    }
-
-    public boolean shouldMobilizeAsMilitia(RandomSource random) {
-        if (random == null) {
-            return false;
-        }
-        return random.nextFloat() < WorkersServerConfig.citizenMilitiaMobilizationChance();
     }
 }

@@ -23,8 +23,8 @@ import com.talhanation.bannermod.inventory.military.DebugInvMenu;
 import com.talhanation.bannermod.inventory.military.RecruitHireMenu;
 import com.talhanation.bannermod.inventory.military.RecruitInventoryMenu;
 import com.talhanation.bannermod.network.messages.military.*;
-import com.talhanation.bannermod.persistence.military.RecruitsDiplomacyManager;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalRelations;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -696,9 +696,10 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
         Important for mod compat: See smallships or siege weapons mod
     **/
     public boolean isAlliedTo(@NotNull Team team) {
-        if(!this.getCommandSenderWorld().isClientSide() && this.getTeam() != null){
-            RecruitsDiplomacyManager.DiplomacyStatus status = FactionEvents.recruitsDiplomacyManager.getRelation(this.getTeam().getName(), team.getName());
-            return status == RecruitsDiplomacyManager.DiplomacyStatus.ALLY;
+        if(!this.getCommandSenderWorld().isClientSide() && this.getTeam() != null && this.level() instanceof ServerLevel level){
+            UUID ownEntityId = RecruitPoliticalContext.politicalEntityIdOf(this, WarRuntimeContext.registry(level));
+            UUID otherEntityId = RecruitPoliticalContext.politicalEntityIdForToken(team.getName(), WarRuntimeContext.registry(level));
+            return PoliticalRelations.ally(WarRuntimeContext.registry(level), ownEntityId, otherEntityId);
         }
         return super.isAlliedTo(team);
     }
@@ -799,16 +800,6 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
      *********************************************************/
     public void updateTeam(){
         RecruitLifecycleService.updateTeam(this);
-    }
-
-    void updateColor(String name) {
-        if(!this.getCommandSenderWorld().isClientSide()){
-            RecruitsFaction recruitsFaction = FactionEvents.recruitsFactionManager.getFactionByStringID(name);
-            if(recruitsFaction != null && recruitsFaction.getUnitColor() != this.getColor()){
-                this.setColor(recruitsFaction.getUnitColor());
-                this.needsColorUpdate = false;
-            }
-        }
     }
 
     public void updateGroup() {

@@ -1,13 +1,14 @@
 package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.compat.Corpse;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.inventory.military.RecruitSimpleContainer;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -21,6 +22,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractSkullBlock;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -548,7 +550,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
         int amount = 0;
         for(int i = 0; i < container.getContainerSize(); i++) {
             ItemStack itemStack = container.getItem(i);
-            if(itemStack.is(FactionEvents.getCurrency().getItem())){
+            if(itemStack.is(getRecruitCurrency().getItem())){
                 amount += itemStack.getCount();
             }
         }
@@ -560,7 +562,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
         ItemStack currency = null;
         for(int i = 0; i < inv.getContainerSize(); i++){
             ItemStack itemStack = inv.getItem(i);
-            if(itemStack.is(FactionEvents.getCurrency().getItem())){
+            if(itemStack.is(getRecruitCurrency().getItem())){
                 currency = itemStack;
                 break;
             }
@@ -620,5 +622,13 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
                 return;
             }
         }
+    }
+
+    private static ItemStack getRecruitCurrency() {
+        String currencyId = RecruitsServerConfig.RecruitCurrency.get();
+        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(currencyId))
+                .map(Holder::value)
+                .map(Item::getDefaultInstance)
+                .orElseGet(Items.EMERALD::getDefaultInstance);
     }
 }

@@ -2,7 +2,6 @@ package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.CommandEvents;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.inventory.military.DebugInvMenu;
 import com.talhanation.bannermod.inventory.military.RecruitHireMenu;
@@ -10,7 +9,6 @@ import com.talhanation.bannermod.inventory.military.RecruitInventoryMenu;
 import com.talhanation.bannermod.network.messages.military.MessageDebugScreen;
 import com.talhanation.bannermod.network.messages.military.MessageHireGui;
 import com.talhanation.bannermod.network.messages.military.MessageRecruitGui;
-import com.talhanation.bannermod.network.messages.military.MessageToClientOpenTakeOverScreen;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateHireState;
 import com.talhanation.bannermod.registry.military.ModItems;
 import net.minecraft.core.BlockPos;
@@ -73,11 +71,6 @@ final class RecruitInteractionService {
                 }
             }
             if (recruit instanceof AbstractLeaderEntity) CommandEvents.checkPatrolLeaderState(recruit);
-            return InteractionResult.SUCCESS;
-        }
-
-        if (recruit.isOwned() && recruit.getTeam() != null && !player.getUUID().equals(recruit.getOwnerUUID()) && FactionEvents.recruitsFactionManager.getFactionByStringID(recruit.getTeam().getName()).getTeamLeaderUUID().equals(player.getUUID())) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenTakeOverScreen(recruit.getId(), recruit.getUUID()));
             return InteractionResult.SUCCESS;
         }
 

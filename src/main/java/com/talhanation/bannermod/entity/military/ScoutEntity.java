@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.entity.military;
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.util.FormationUtils;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
@@ -230,8 +229,7 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
 
             if(!potentialPlayerTargets.isEmpty()){
                 for(ServerPlayer player : potentialPlayerTargets){
-                    String teamName = player.getTeam() != null ? player.getTeam().getName() : "";
-                    RecruitsPlayerInfo playerInfo = new RecruitsPlayerInfo(player.getUUID(), player.getName().getString(), FactionEvents.recruitsFactionManager.getFactionByStringID(teamName));
+                    RecruitsPlayerInfo playerInfo = new RecruitsPlayerInfo(player.getUUID(), player.getName().getString());
                     int recruitsCount = countRecruits(player.getUUID());
                     int distance = (int) Math.sqrt(this.blockPosition().distSqr(player.blockPosition()));
                     String direction = getHorizontalDirection(this.blockPosition(), player.blockPosition());
@@ -318,25 +316,12 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
             if (playerInfo != null) {
                 Component playerName = Component.literal(playerInfo.getName());
 
-                //Scout: I'm Seeing talhanation (YellowTeam) and 12 units, 125 blocks South from me.
-                if (playerInfo.getFaction() != null) {
-                    playerName = Component.literal(playerInfo.getName()).withStyle(ChatFormatting.getById(playerInfo.getFaction().getTeamColor()));
-                    Component teamName = Component.literal(playerInfo.getFaction().getTeamDisplayName()).withStyle(ChatFormatting.getById(playerInfo.getFaction().getTeamColor()));
-                    scout.sendMessageToOwner(Component.literal("")
-                            .append(playerName).append(" (")
-                            .append(teamName).append("), with ")
-                            .append(recruitsText).append(" units, ")
-                            .append(distanceText).append(" blocks, ")
-                            .append(directionText).append(" from me.")
-                    );
-                } else {//Scout: I'm Seeing talhanation and 12 units, 125 blocks South from me.
-                    scout.sendMessageToOwner(Component.literal("")
-                            .append(playerName).append(" with ")
-                            .append(recruitsText).append(" units, ")
-                            .append(distanceText).append(" blocks, ")
-                            .append(directionText).append(" from me.")
-                    );
-                }
+                scout.sendMessageToOwner(Component.literal("")
+                        .append(playerName).append(" with ")
+                        .append(recruitsText).append(" units, ")
+                        .append(distanceText).append(" blocks, ")
+                        .append(directionText).append(" from me.")
+                );
             } else {// Scout: I'm Seeing 12 units of YellowTeam, 125 blocks North from me.
                 if (team != null) {
                     Component teamText = Component.literal(team);
@@ -353,7 +338,6 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
     }
 
 }
-
 
 
 

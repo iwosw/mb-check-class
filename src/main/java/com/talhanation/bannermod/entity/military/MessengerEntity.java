@@ -1,12 +1,9 @@
 package com.talhanation.bannermod.entity.military;
 
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.ai.military.UseShield;
 import com.talhanation.bannermod.network.messages.military.*;
-import com.talhanation.bannermod.network.messages.military.MessageToClientOpenTreatyAnswerScreen;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.client.Minecraft;
@@ -207,15 +204,7 @@ public class MessengerEntity extends AbstractChunkLoaderEntity implements ICompa
     public void openAnswerGUI(Player player) {
         if(this.level().isClientSide())return;
         if(player instanceof ServerPlayer serverPlayer && getTargetPlayerInfo() != null){
-            if (this.isTreatyMessenger()) {
-                String team = this.getTeam() != null ? this.getTeam().getName() : "";
-                RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(team);
-                RecruitsPlayerInfo ownerPlayerInfo = new RecruitsPlayerInfo(this.getOwnerUUID(), this.getOwnerName(), faction);
-
-                BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientOpenTreatyAnswerScreen(MessengerEntity.this, this.getTreatyDurationHours(), ownerPlayerInfo));
-            } else {
-                BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientOpenMessengerAnswerScreen(MessengerEntity.this, this.getMessage(), this.getTargetPlayerInfo()));
-            }
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientOpenMessengerAnswerScreen(MessengerEntity.this, this.getMessage(), this.getTargetPlayerInfo()));
             this.targetPlayerOpened = true;
         }
     }

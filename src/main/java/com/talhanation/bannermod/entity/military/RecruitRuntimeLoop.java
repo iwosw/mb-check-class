@@ -34,9 +34,7 @@ final class RecruitRuntimeLoop {
     }
 
     static void aiStep(AbstractRecruitEntity recruit) {
-        if (recruit.needsColorUpdate && recruit.getTeam() != null) {
-            recruit.updateColor(recruit.getTeam().getName());
-        }
+        recruit.needsColorUpdate = false;
         if (recruit instanceof IRangedRecruit && (recruit.tickCount + recruit.targetSearchTickOffset()) % 20 == 0) {
             recruit.pickUpArrows();
         }
