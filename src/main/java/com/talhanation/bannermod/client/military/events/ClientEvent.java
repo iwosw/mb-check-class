@@ -5,9 +5,11 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.models.RecruitVillagerModel;
 import com.talhanation.bannermod.client.military.render.RecruitHumanRenderer;
 import com.talhanation.bannermod.client.military.render.RecruitVillagerRenderer;
+import com.talhanation.bannermod.client.military.render.SiegeStandardBlockEntityRenderer;
 import com.talhanation.bannermod.client.military.render.layer.RecruitArmorLayer;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.registry.military.ModEntityTypes;
+import com.talhanation.bannermod.registry.war.ModWarBlockEntities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.entity.EntityRenderers;
@@ -56,6 +58,9 @@ public class ClientEvent {
 
         //OTHER
         EntityRenderers.register(ModEntityTypes.VILLAGER_NOBLE.get(), recruitProvider);
+
+        // War — political colour cap above the static siege-standard block model.
+        event.registerBlockEntityRenderer(ModWarBlockEntities.SIEGE_STANDARD.get(), SiegeStandardBlockEntityRenderer::new);
     }
 
     @SubscribeEvent
