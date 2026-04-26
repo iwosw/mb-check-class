@@ -47,6 +47,20 @@ public class OccupationRuntime {
         return removed;
     }
 
+    public Optional<OccupationRecord> updateLastTaxedAt(UUID id, long lastTaxedAtGameTime) {
+        OccupationRecord existing = recordsById.get(id);
+        if (existing == null) {
+            return Optional.empty();
+        }
+        if (existing.lastTaxedAtGameTime() == lastTaxedAtGameTime) {
+            return Optional.of(existing);
+        }
+        OccupationRecord updated = existing.withLastTaxedAtGameTime(lastTaxedAtGameTime);
+        recordsById.put(id, updated);
+        dirtyListener.run();
+        return Optional.of(updated);
+    }
+
     public Optional<OccupationRecord> byId(UUID id) {
         return Optional.ofNullable(recordsById.get(id));
     }

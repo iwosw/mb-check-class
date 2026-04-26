@@ -9,6 +9,7 @@ import com.talhanation.bannermod.war.runtime.DemilitarizationRuntime;
 import com.talhanation.bannermod.war.runtime.DemilitarizationSavedData;
 import com.talhanation.bannermod.war.runtime.OccupationRuntime;
 import com.talhanation.bannermod.war.runtime.OccupationSavedData;
+import com.talhanation.bannermod.war.runtime.OccupationTaxRuntime;
 import com.talhanation.bannermod.war.runtime.RevoltRuntime;
 import com.talhanation.bannermod.war.runtime.RevoltSavedData;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRuntime;
@@ -63,6 +64,15 @@ public final class WarRuntimeContext {
 
     public static WarAllyInviteRuntime allyInvites(ServerLevel level) {
         return WarAllyInviteSavedData.get(level).runtime();
+    }
+
+    public static OccupationTaxRuntime taxRuntime(ServerLevel level) {
+        return new OccupationTaxRuntime(
+                occupations(level),
+                com.talhanation.bannermod.governance.BannerModTreasuryManager.get(level),
+                com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager,
+                audit(level)
+        );
     }
 
     public static WarOutcomeApplier applierFor(ServerLevel level) {

@@ -26,6 +26,8 @@ public class WarServerConfig {
     public static final ForgeConfigSpec.IntValue LostTerritoryImmunityDays;
     public static final ForgeConfigSpec.IntValue PeacefulToggleCooldownDays;
     public static final ForgeConfigSpec.BooleanValue SiegeProtectionAttackersExplosivesOnly;
+    public static final ForgeConfigSpec.IntValue OccupationTaxAmountPerChunk;
+    public static final ForgeConfigSpec.IntValue OccupationTaxIntervalDays;
 
     static {
         RegulatedPvpEnabled = BUILDER.comment("""
@@ -84,6 +86,20 @@ public class WarServerConfig {
                         \tdefault: true""")
                 .define("SiegeProtectionAttackersExplosivesOnly", true);
 
+        OccupationTaxAmountPerChunk = BUILDER.comment("""
+                        Coins debited per occupied chunk per OccupationTaxIntervalDays. The amount
+                        \tis pulled from the defender's claim treasuries and credited to the
+                        \toccupier's first-owned claim ledger. Set to 0 to disable occupation tax.
+                        \tdefault: 5""")
+                .defineInRange("OccupationTaxAmountPerChunk", 5, 0, 100_000);
+
+        OccupationTaxIntervalDays = BUILDER.comment("""
+                        Real-day cadence between occupation tax cycles. Each occupation accrues at
+                        \tmost one cycle per call so a long server pause catches up gradually.
+                        \tSet to 0 to disable occupation tax.
+                        \tdefault: 1""")
+                .defineInRange("OccupationTaxIntervalDays", 1, 0, 365);
+
         SERVER = BUILDER.build();
     }
 
@@ -97,6 +113,10 @@ public class WarServerConfig {
 
     public static long peacefulToggleCooldownTicks() {
         return Math.max(0L, PeacefulToggleCooldownDays.get().longValue()) * WarCooldownPolicy.TICKS_PER_DAY;
+    }
+
+    public static long occupationTaxIntervalTicks() {
+        return Math.max(0L, OccupationTaxIntervalDays.get().longValue()) * WarCooldownPolicy.TICKS_PER_DAY;
     }
 
     public static BattleWindowSchedule resolveSchedule() {
