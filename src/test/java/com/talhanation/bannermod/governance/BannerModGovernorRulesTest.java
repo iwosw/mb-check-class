@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -81,6 +82,31 @@ class BannerModGovernorRulesTest {
         assertEquals(original.projectedTreasuryBalance(), restored.projectedTreasuryBalance());
         assertEquals(original.incidentTokens(), restored.incidentTokens());
         assertNull(reloaded.getSnapshot(UUID.randomUUID()));
+    }
+
+    @Test
+    void getOrCreateSnapshotMarksSavedDataDirtyWhenSnapshotIsInserted() {
+        ChunkPos chunkPos = new ChunkPos(6, 3);
+        RecruitsClaim claim = claim(chunkPos, "blueguild");
+        BannerModGovernorManager manager = new BannerModGovernorManager();
+
+        manager.getOrCreateSnapshot(claim.getUUID(), BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID()));
+
+        assertTrue(manager.isDirty());
+    }
+
+    @Test
+    void putSnapshotDoesNotMarkSavedDataDirtyWhenSnapshotIsUnchanged() {
+        ChunkPos chunkPos = new ChunkPos(6, 3);
+        RecruitsClaim claim = claim(chunkPos, "blueguild");
+        BannerModGovernorSnapshot snapshot = BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID());
+        BannerModGovernorManager manager = new BannerModGovernorManager();
+        manager.putSnapshot(snapshot);
+        BannerModGovernorManager reloaded = BannerModGovernorManager.load(manager.save(new CompoundTag()));
+
+        reloaded.putSnapshot(snapshot);
+
+        assertFalse(reloaded.isDirty());
     }
 
     private static RecruitsClaim claim(ChunkPos chunkPos, String factionId) {

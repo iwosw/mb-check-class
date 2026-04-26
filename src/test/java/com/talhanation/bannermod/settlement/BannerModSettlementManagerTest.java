@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -136,6 +137,19 @@ class BannerModSettlementManagerTest {
 
         assertNotNull(manager.getSnapshot(keptClaim.getUUID()));
         assertNull(manager.getSnapshot(staleClaim.getUUID()));
+    }
+
+    @Test
+    void putSnapshotDoesNotMarkSavedDataDirtyWhenSnapshotIsUnchanged() {
+        RecruitsClaim claim = claim(new ChunkPos(4, 4), "blueguild");
+        BannerModSettlementSnapshot snapshot = BannerModSettlementSnapshot.create(claim.getUUID(), claim.getCenter(), claim.getOwnerFactionStringID());
+        BannerModSettlementManager manager = new BannerModSettlementManager();
+        manager.putSnapshot(snapshot);
+        BannerModSettlementManager reloaded = BannerModSettlementManager.load(manager.save(new CompoundTag()));
+
+        reloaded.putSnapshot(snapshot);
+
+        assertFalse(reloaded.isDirty());
     }
 
     private static RecruitsClaim claim(ChunkPos chunkPos, String factionId) {

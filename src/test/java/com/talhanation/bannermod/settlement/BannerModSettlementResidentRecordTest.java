@@ -121,4 +121,41 @@ class BannerModSettlementResidentRecordTest {
         assertEquals(BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX, resident.scheduleWindowSeed());
         assertEquals(BannerModSettlementResidentSchedulePolicySeed.VILLAGE_LIFE_FLEX, resident.schedulePolicy().policySeed());
     }
+
+    @Test
+    void residentRecordFallsBackForUnknownScheduleSeed() {
+        UUID workAreaUuid = UUID.randomUUID();
+        CompoundTag residentTag = new CompoundTag();
+        residentTag.putUUID("ResidentUuid", UUID.randomUUID());
+        residentTag.putString("Role", BannerModSettlementResidentRole.CONTROLLED_WORKER.name());
+        residentTag.putUUID("BoundWorkAreaUuid", workAreaUuid);
+        residentTag.putString("ScheduleSeed", "NOT_A_REAL_SCHEDULE");
+
+        BannerModSettlementResidentRecord resident = BannerModSettlementResidentRecord.fromTag(residentTag);
+
+        assertEquals(BannerModSettlementResidentScheduleSeed.ASSIGNED_WORK, resident.scheduleSeed());
+        assertEquals(BannerModSettlementResidentSchedulePolicySeed.LOCAL_LABOR_DAY, resident.schedulePolicy().policySeed());
+    }
+
+    @Test
+    void schedulePolicyFallsBackForUnknownScheduleSeed() {
+        CompoundTag policyTag = new CompoundTag();
+        policyTag.putString("ScheduleSeed", "NOT_A_REAL_SCHEDULE");
+
+        BannerModSettlementResidentSchedulePolicy policy = BannerModSettlementResidentSchedulePolicy.fromTag(policyTag);
+
+        assertEquals(BannerModSettlementResidentScheduleSeed.SETTLEMENT_IDLE, policy.scheduleSeed());
+    }
+
+    @Test
+    void sellerDispatchRecordFallsBackForUnknownDispatchState() {
+        CompoundTag dispatchTag = new CompoundTag();
+        dispatchTag.putUUID("ResidentUuid", UUID.randomUUID());
+        dispatchTag.putUUID("MarketUuid", UUID.randomUUID());
+        dispatchTag.putString("DispatchState", "NOT_A_REAL_STATE");
+
+        BannerModSettlementSellerDispatchRecord dispatch = BannerModSettlementSellerDispatchRecord.fromTag(dispatchTag);
+
+        assertEquals(BannerModSettlementSellerDispatchState.READY, dispatch.dispatchState());
+    }
 }

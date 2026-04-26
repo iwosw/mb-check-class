@@ -365,15 +365,34 @@ class BannerModSettlementServiceTest {
         assertEquals(6, supplySignalState.signalCount());
         assertEquals(3, supplySignalState.shortageSignalCount());
         assertEquals(3, supplySignalState.shortageUnitCount());
-        assertEquals(20, supplySignalState.reservationHintUnitCount());
+        assertEquals(0, supplySignalState.reservationHintUnitCount());
         assertEquals(List.of(
-                new BannerModSettlementSupplySignal("food", 2, 1, 1, 4),
-                new BannerModSettlementSupplySignal("materials", 1, 1, 0, 3),
-                new BannerModSettlementSupplySignal("construction_materials", 1, 0, 1, 2),
-                new BannerModSettlementSupplySignal("market_goods", 3, 2, 1, 6),
-                new BannerModSettlementSupplySignal("storage_type:farmers", 1, 1, 0, 2),
-                new BannerModSettlementSupplySignal("trade_stock", 1, 2, 0, 3)
+                new BannerModSettlementSupplySignal("food", 2, 1, 1, 0),
+                new BannerModSettlementSupplySignal("materials", 1, 1, 0, 0),
+                new BannerModSettlementSupplySignal("construction_materials", 1, 0, 1, 0),
+                new BannerModSettlementSupplySignal("market_goods", 3, 2, 1, 0),
+                new BannerModSettlementSupplySignal("storage_type:farmers", 1, 1, 0, 0),
+                new BannerModSettlementSupplySignal("trade_stock", 1, 2, 0, 0)
         ), supplySignalState.signals());
+    }
+
+    @Test
+    void supplySignalsUseOnlySpecificReservationHints() {
+        BannerModSettlementSupplySignalState supplySignalState = BannerModSettlementService.summarizeSupplySignals(
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("market_goods", 3),
+                        new BannerModSettlementDesiredGoodSeed("food", 2)
+                )),
+                BannerModSettlementStockpileSummary.empty(),
+                BannerModSettlementMarketState.empty(),
+                List.of(),
+                List.of(),
+                new BannerModSettlementService.ReservationSignalSeed(1, 12, Map.of("market_goods", 12))
+        );
+
+        assertEquals(12, supplySignalState.reservationHintUnitCount());
+        assertEquals(new BannerModSettlementSupplySignal("market_goods", 3, 0, 3, 12), supplySignalState.signals().get(0));
+        assertEquals(new BannerModSettlementSupplySignal("food", 2, 0, 2, 0), supplySignalState.signals().get(1));
     }
 
     @Test

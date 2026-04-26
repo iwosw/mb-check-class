@@ -1,10 +1,13 @@
 package com.talhanation.bannermod.settlement.workorder;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -123,6 +126,46 @@ class SettlementWorkOrderRuntimeTest {
     }
 
     @Test
+    void completeRecordsExecutionReceipt() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        BlockPos target = new BlockPos(1, 64, 1);
+        runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.BUILD_BLOCK, target, null, 70, 10L));
+        SettlementWorkOrder claimed = runtime.claim(CLAIM_A, RESIDENT_A, null, 100L, 0L).orElseThrow();
+
+        runtime.complete(claimed.orderUuid(), 1234L);
+
+        assertEquals(0, runtime.size());
+        List<SettlementWorkOrderExecutionReceipt> receipts = runtime.recentCompletions();
+        assertEquals(1, receipts.size());
+        SettlementWorkOrderExecutionReceipt receipt = receipts.get(0);
+        assertEquals(claimed.orderUuid(), receipt.orderUuid());
+        assertEquals(CLAIM_A, receipt.claimUuid());
+        assertEquals(BUILDING_A, receipt.buildingUuid());
+        assertEquals(SettlementWorkOrderType.BUILD_BLOCK, receipt.type());
+        assertEquals(target, receipt.targetPos());
+        assertEquals(RESIDENT_A, receipt.claimedByResidentUuid());
+        assertEquals(1234L, receipt.completedGameTime());
+    }
+
+    @Test
+    void recentCompletionReceiptsAreBounded() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        int total = SettlementWorkOrderRuntime.MAX_RECENT_COMPLETION_RECEIPTS + 4;
+        for (int i = 0; i < total; i++) {
+            SettlementWorkOrder order = SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                    SettlementWorkOrderType.HARVEST_CROP, new BlockPos(i, 64, 1), null, 70, i);
+            runtime.publish(order);
+            runtime.complete(order.orderUuid(), i);
+        }
+
+        List<SettlementWorkOrderExecutionReceipt> receipts = runtime.recentCompletions();
+        assertEquals(SettlementWorkOrderRuntime.MAX_RECENT_COMPLETION_RECEIPTS, receipts.size());
+        assertEquals(4L, receipts.get(0).completedGameTime());
+        assertEquals((long) total - 1L, receipts.get(receipts.size() - 1).completedGameTime());
+    }
+
+    @Test
     void reclaimAbandonedReleasesExpiredClaims() {
         SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
         runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
@@ -165,5 +208,162 @@ class SettlementWorkOrderRuntimeTest {
         assertFalse(first.orderUuid().equals(second.orderUuid()));
         assertEquals(RESIDENT_A, first.claimedByResidentUuid());
         assertEquals(RESIDENT_B, second.claimedByResidentUuid());
+    }
+
+    @Test
+    void restoreSnapshotRebuildsClaimIndexesAndResidentClaims() {
+        SettlementWorkOrderRuntime source = new SettlementWorkOrderRuntime();
+        source.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+        source.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_B,
+                SettlementWorkOrderType.MINE_BLOCK, new BlockPos(2, 64, 2), null, 60, 12L));
+        SettlementWorkOrder claimed = source.claim(CLAIM_A, RESIDENT_A, null, 100L, 20L).orElseThrow();
+
+        SettlementWorkOrderRuntime restored = new SettlementWorkOrderRuntime();
+        restored.restoreSnapshot(source.snapshot());
+
+        assertEquals(2, restored.size());
+        assertTrue(restored.recentCompletions().isEmpty());
+        assertEquals(claimed.orderUuid(), restored.currentClaim(RESIDENT_A).orElseThrow().orderUuid());
+        assertEquals(1, restored.pendingFor(CLAIM_A).size());
+        assertEquals(1, restored.countForClaim(CLAIM_A, SettlementWorkOrderStatus.CLAIMED));
+        assertEquals(1, restored.ordersForBuilding(BUILDING_A).size());
+        assertEquals(1, restored.ordersForBuilding(BUILDING_B).size());
+    }
+
+    @Test
+    void restoreSnapshotMarksDirtyOnlyWhenPersistedOrdersChange() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+
+        runtime.restoreSnapshot(List.of());
+        assertEquals(0, dirtyCount.get());
+
+        SettlementWorkOrder order = SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L);
+
+        runtime.restoreSnapshot(List.of(order));
+        assertEquals(1, dirtyCount.get());
+
+        runtime.restoreSnapshot(List.of(order));
+        assertEquals(1, dirtyCount.get());
+
+        runtime.restoreSnapshot(List.of());
+        assertEquals(2, dirtyCount.get());
+    }
+
+    @Test
+    void workOrderTagRoundTripPreservesFields() {
+        SettlementWorkOrder source = new SettlementWorkOrder(
+                UUID.fromString("00000000-0000-0000-0000-0000000000d1"),
+                CLAIM_A,
+                BUILDING_A,
+                SettlementWorkOrderType.HAUL_RESOURCE,
+                new BlockPos(3, 65, 7),
+                "minecraft:wheat",
+                91,
+                1234L,
+                SettlementWorkOrderStatus.CLAIMED,
+                RESIDENT_A,
+                2345L
+        );
+
+        SettlementWorkOrder restored = SettlementWorkOrder.fromTag(source.toTag());
+
+        assertEquals(source, restored);
+    }
+
+    @Test
+    void workOrderTagRoundTripPreservesNullOptionals() {
+        SettlementWorkOrder source = SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.STOCK_MARKET, null, null, 12, 44L);
+
+        SettlementWorkOrder restored = SettlementWorkOrder.fromTag(source.toTag());
+
+        assertEquals(source, restored);
+    }
+
+    @Test
+    void runtimeTagRoundTripUsesSnapshotRestoreSemantics() {
+        SettlementWorkOrderRuntime source = new SettlementWorkOrderRuntime();
+        source.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+        source.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_B,
+                SettlementWorkOrderType.MINE_BLOCK, new BlockPos(2, 64, 2), "minecraft:stone", 60, 12L));
+        SettlementWorkOrder claimed = source.claim(CLAIM_A, RESIDENT_A, null, 100L, 20L).orElseThrow();
+
+        CompoundTag tag = source.toTag();
+        SettlementWorkOrderRuntime restored = SettlementWorkOrderRuntime.fromTag(tag);
+
+        assertEquals(source.snapshot(), restored.snapshot());
+        assertEquals(claimed.orderUuid(), restored.currentClaim(RESIDENT_A).orElseThrow().orderUuid());
+        assertEquals(1, restored.pendingFor(CLAIM_A).size());
+        assertEquals(1, restored.countForClaim(CLAIM_A, SettlementWorkOrderStatus.CLAIMED));
+        assertEquals(1, restored.ordersForBuilding(BUILDING_A).size());
+        assertEquals(1, restored.ordersForBuilding(BUILDING_B).size());
+    }
+
+    @Test
+    void savedDataRoundTripRestoresRuntimeSnapshot() {
+        SettlementWorkOrderSavedData source = new SettlementWorkOrderSavedData();
+        source.runtime().publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+        source.runtime().publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_B,
+                SettlementWorkOrderType.MINE_BLOCK, new BlockPos(2, 64, 2), "minecraft:stone", 60, 12L));
+        SettlementWorkOrder claimed = source.runtime().claim(CLAIM_A, RESIDENT_A, null, 100L, 20L).orElseThrow();
+
+        SettlementWorkOrderSavedData restored = SettlementWorkOrderSavedData.load(source.save(new CompoundTag()));
+
+        assertEquals(source.runtime().snapshot(), restored.runtime().snapshot());
+        assertEquals(claimed.orderUuid(), restored.runtime().currentClaim(RESIDENT_A).orElseThrow().orderUuid());
+        assertEquals(1, restored.runtime().pendingFor(CLAIM_A).size());
+        assertEquals(1, restored.runtime().countForClaim(CLAIM_A, SettlementWorkOrderStatus.CLAIMED));
+    }
+
+    @Test
+    void dirtyListenerRunsOnlyForEffectiveRuntimeMutations() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+        SettlementWorkOrder first = SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L);
+        SettlementWorkOrder duplicate = SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 80, 12L);
+
+        runtime.publish(first);
+        runtime.publish(duplicate);
+        runtime.release(UUID.randomUUID());
+        SettlementWorkOrder claimed = runtime.claim(CLAIM_A, RESIDENT_A, null, 100L, 20L).orElseThrow();
+        runtime.complete(claimed.orderUuid());
+
+        assertEquals(3, dirtyCount.get());
+    }
+
+    @Test
+    void purgeMarksDirtyOnlyWhenOrdersAreRemoved() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+        runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+
+        assertEquals(0, runtime.purgeBuilding(BUILDING_B));
+        assertEquals(1, runtime.purgeClaim(CLAIM_A));
+
+        assertEquals(2, dirtyCount.get());
+    }
+
+    @Test
+    void snapshotIsDefensiveCopy() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+
+        List<SettlementWorkOrder> snapshot = runtime.snapshot();
+        runtime.purgeClaim(CLAIM_A);
+
+        assertEquals(1, snapshot.size());
+        assertEquals(0, runtime.size());
     }
 }

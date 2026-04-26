@@ -5,11 +5,13 @@ import com.talhanation.bannermod.settlement.BannerModSettlementBuildingProfileSe
 import com.talhanation.bannermod.settlement.growth.PendingProject;
 import com.talhanation.bannermod.settlement.growth.ProjectBlocker;
 import com.talhanation.bannermod.settlement.growth.ProjectKind;
+import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -39,7 +41,7 @@ class BannerModSettlementProjectSchedulerTest {
     }
 
     @Test
-    void overflowBeyondCapSilentlyDropsExcess() {
+    void overflowBeyondCapKeepsHighestPriorityProjects() {
         BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
         UUID claim = UUID.randomUUID();
         int over = BannerModSettlementProjectScheduler.PER_CLAIM_QUEUE_CAP + 5;
@@ -54,12 +56,25 @@ class BannerModSettlementProjectSchedulerTest {
                 scheduler.pendingCount(claim),
                 "queue must clamp to per-claim cap");
 
-        // The first PER_CLAIM_QUEUE_CAP entries are the ones that stuck.
         List<PendingProject> kept = scheduler.snapshot(claim);
-        for (int i = 0; i < BannerModSettlementProjectScheduler.PER_CLAIM_QUEUE_CAP; i++) {
-            assertSame(submitted[i], kept.get(i),
-                    "overflow must drop late submissions, not early ones");
+        for (int i = 0; i < kept.size(); i++) {
+            assertSame(submitted[over - 1 - i], kept.get(i),
+                    "overflow must retain highest priority submissions first");
         }
+    }
+
+    @Test
+    void higherPrioritySubmitMovesAheadOfExistingQueue() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        UUID claim = UUID.randomUUID();
+        PendingProject low = ProjectTestFactory.general(10, 5);
+        PendingProject high = ProjectTestFactory.general(90, 5);
+
+        scheduler.submit(claim, low);
+        scheduler.submit(claim, high);
+
+        assertSame(high, scheduler.peek(claim).orElseThrow());
+        assertEquals(List.of(high, low), scheduler.snapshot(claim));
     }
 
     @Test
@@ -117,12 +132,12 @@ class BannerModSettlementProjectSchedulerTest {
         scheduler.submit(claim, second);
 
         List<PendingProject> before = scheduler.snapshot(claim);
-        assertEquals(List.of(first, second), before);
+        assertEquals(List.of(second, first), before);
 
         // Mutations to the scheduler after the snapshot must not change the snapshot.
         scheduler.pollNext(claim);
         assertEquals(2, before.size(), "snapshot must be independent of later polls");
-        assertSame(first, before.get(0));
+        assertSame(second, before.get(0));
 
         // And two successive snapshots must be independent lists with equal content.
         scheduler.submit(claim, first);
@@ -165,5 +180,128 @@ class BannerModSettlementProjectSchedulerTest {
 
         assertEquals(0, scheduler.pendingCount(claim));
         assertTrue(scheduler.snapshot(claim).isEmpty());
+    }
+
+    @Test
+    void pollingLastProjectRemovesNonPersistedEmptyQueue() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        UUID claim = UUID.randomUUID();
+        PendingProject project = ProjectTestFactory.general(50, 5);
+
+        scheduler.setDirtyListener(dirtyCount::incrementAndGet);
+        scheduler.submit(claim, project);
+        scheduler.pollNext(claim);
+        dirtyCount.set(0);
+
+        scheduler.reset();
+
+        assertEquals(0, dirtyCount.get());
+    }
+
+    @Test
+    void restoreFromTagMarksDirtyOnlyWhenPersistedSchedulerStateChanges() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        UUID claim = UUID.randomUUID();
+        PendingProject project = ProjectTestFactory.general(50, 5);
+
+        scheduler.setDirtyListener(dirtyCount::incrementAndGet);
+
+        scheduler.restoreFromTag(new CompoundTag());
+        assertEquals(0, dirtyCount.get());
+
+        BannerModSettlementProjectScheduler source = BannerModSettlementProjectScheduler.detached();
+        source.submit(claim, project);
+        CompoundTag tag = source.toTag();
+
+        scheduler.restoreFromTag(tag);
+        assertEquals(1, dirtyCount.get());
+
+        scheduler.restoreFromTag(tag);
+        assertEquals(1, dirtyCount.get());
+    }
+
+    @Test
+    void duplicateUnknownCancellationDoesNotDirtyAgain() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        UUID projectId = UUID.randomUUID();
+
+        scheduler.setDirtyListener(dirtyCount::incrementAndGet);
+
+        scheduler.cancel(projectId, ProjectCancellationReason.MANUAL);
+        scheduler.cancel(projectId, ProjectCancellationReason.MANUAL);
+
+        assertEquals(1, dirtyCount.get());
+    }
+
+    @Test
+    void nbtRoundTripRestoresQueuesAndCancellations() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        UUID claim = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+        PendingProject project = new PendingProject(
+                UUID.randomUUID(),
+                ProjectKind.REPAIR,
+                target,
+                BannerModSettlementBuildingCategory.STORAGE,
+                BannerModSettlementBuildingProfileSeed.STORAGE,
+                1200,
+                44L,
+                9,
+                ProjectBlocker.NO_MATERIALS
+        );
+        UUID cancelled = UUID.randomUUID();
+
+        scheduler.submit(claim, project);
+        scheduler.cancel(cancelled, ProjectCancellationReason.BLOCKED);
+
+        BannerModSettlementProjectScheduler restored = BannerModSettlementProjectScheduler.fromTag(scheduler.toTag());
+
+        assertEquals(1, restored.pendingCount(claim));
+        PendingProject restoredProject = restored.peek(claim).orElseThrow();
+        assertEquals(project.projectId(), restoredProject.projectId());
+        assertEquals(ProjectKind.REPAIR, restoredProject.kind());
+        assertEquals(target, restoredProject.targetBuildingUuid());
+        assertEquals(BannerModSettlementBuildingCategory.STORAGE, restoredProject.buildingCategory());
+        assertEquals(BannerModSettlementBuildingProfileSeed.STORAGE, restoredProject.profileSeed());
+        assertEquals(1000, restoredProject.priorityScore());
+        assertEquals(44L, restoredProject.proposedAtGameTime());
+        assertEquals(9, restoredProject.estimatedTickCost());
+        assertEquals(ProjectBlocker.NO_MATERIALS, restoredProject.blockerReason());
+        assertEquals(ProjectCancellationReason.BLOCKED, restored.lastCancellationReason(cancelled));
+    }
+
+    @Test
+    void savedDataRoundTripRestoresRuntimeQueue() {
+        BannerModSettlementProjectSavedData source = new BannerModSettlementProjectSavedData();
+        UUID claim = UUID.randomUUID();
+        PendingProject project = ProjectTestFactory.general(75, 6);
+
+        source.runtime().scheduler().submit(claim, project);
+
+        BannerModSettlementProjectSavedData restored = BannerModSettlementProjectSavedData.load(source.save(new CompoundTag()));
+
+        assertEquals(1, restored.runtime().scheduler().pendingCount(claim));
+        assertEquals(project.projectId(), restored.runtime().scheduler().peek(claim).orElseThrow().projectId());
+    }
+
+    @Test
+    void dirtyListenerRunsOnlyForEffectiveMutations() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        UUID claim = UUID.randomUUID();
+        PendingProject project = ProjectTestFactory.general(50, 5);
+
+        scheduler.setDirtyListener(dirtyCount::incrementAndGet);
+        scheduler.submit(claim, project);
+        scheduler.submit(claim, project);
+        scheduler.peek(claim);
+        scheduler.pollNext(claim);
+        scheduler.pollNext(claim);
+        scheduler.cancel(UUID.randomUUID(), ProjectCancellationReason.MANUAL);
+
+        assertEquals(3, dirtyCount.get());
     }
 }

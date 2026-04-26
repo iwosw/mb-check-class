@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -98,5 +99,28 @@ class BannerModTreasuryManagerTest {
 
         assertEquals(0, updated.treasuryBalance());
         assertNull(manager.getLedger(claimUuid));
+    }
+
+    @Test
+    void getOrCreateLedgerMarksSavedDataDirtyWhenLedgerIsInserted() {
+        UUID claimUuid = UUID.randomUUID();
+        BannerModTreasuryManager manager = new BannerModTreasuryManager();
+
+        manager.getOrCreateLedger(claimUuid, BannerModTreasuryLedgerSnapshot.create(claimUuid, new ChunkPos(2, 2), "blueguild"));
+
+        assertTrue(manager.isDirty());
+    }
+
+    @Test
+    void putLedgerDoesNotMarkSavedDataDirtyWhenLedgerIsUnchanged() {
+        UUID claimUuid = UUID.randomUUID();
+        BannerModTreasuryLedgerSnapshot ledger = BannerModTreasuryLedgerSnapshot.create(claimUuid, new ChunkPos(2, 2), "blueguild");
+        BannerModTreasuryManager manager = new BannerModTreasuryManager();
+        manager.putLedger(ledger);
+        BannerModTreasuryManager reloaded = BannerModTreasuryManager.load(manager.save(new CompoundTag()));
+
+        reloaded.putLedger(ledger);
+
+        assertFalse(reloaded.isDirty());
     }
 }

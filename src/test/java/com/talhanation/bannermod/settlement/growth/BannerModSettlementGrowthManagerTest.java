@@ -98,6 +98,47 @@ class BannerModSettlementGrowthManagerTest {
     }
 
     @Test
+    void concreteSupplyShortageOutranksBroadDesiredDemand() {
+        BannerModSettlementDesiredGoodsSeed desired = new BannerModSettlementDesiredGoodsSeed(List.of(
+                new BannerModSettlementDesiredGoodSeed("market_goods", 8)
+        ));
+        BannerModSettlementSupplySignalState supplySignalState = new BannerModSettlementSupplySignalState(
+                1, 1, 2, 0,
+                List.of(new BannerModSettlementSupplySignal("food", 1, 0, 2, 0))
+        );
+        BannerModSettlementGrowthContext ctx = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                desired,
+                NON_EMPTY_MARKET,
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                supplySignalState,
+                0, 0, 0, 77L
+        );
+
+        List<PendingProject> queue = BannerModSettlementGrowthManager.evaluateGrowthQueue(ctx, 4);
+
+        assertFalse(queue.isEmpty());
+        assertSame(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, queue.get(0).profileSeed());
+    }
+
+    @Test
+    void sameGrowthProfileKeepsStableProjectIdAcrossTicks() {
+        BannerModSettlementDesiredGoodsSeed desired = new BannerModSettlementDesiredGoodsSeed(List.of(
+                new BannerModSettlementDesiredGoodSeed("food", 2)
+        ));
+        BannerModSettlementGrowthContext early = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(), desired, NON_EMPTY_MARKET, 0, 0, 0, 10L);
+        BannerModSettlementGrowthContext late = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(), desired, NON_EMPTY_MARKET, 0, 0, 0, 200L);
+
+        PendingProject first = BannerModSettlementGrowthManager.pickNextProject(early).orElseThrow();
+        PendingProject second = BannerModSettlementGrowthManager.pickNextProject(late).orElseThrow();
+
+        assertEquals(first.projectId(), second.projectId());
+        assertNotEquals(first.proposedAtGameTime(), second.proposedAtGameTime());
+    }
+
+    @Test
     void pickNextProjectMirrorsTopOfQueue() {
         assertEquals(Optional.empty(), BannerModSettlementGrowthManager.pickNextProject(emptyContext()));
 

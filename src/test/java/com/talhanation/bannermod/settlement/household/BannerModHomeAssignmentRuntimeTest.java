@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -114,5 +115,55 @@ class BannerModHomeAssignmentRuntimeTest {
         Optional<HomeAssignment> home = runtime.homeFor(null);
 
         assertSame(Optional.empty(), home);
+    }
+
+    @Test
+    void nbtRoundTripRestoresAssignmentsInOrder() {
+        BannerModHomeAssignmentRuntime runtime = new BannerModHomeAssignmentRuntime();
+        runtime.assign(RESIDENT_A, HOUSE_1, HomePreference.ASSIGNED, 10L);
+        runtime.assign(RESIDENT_B, HOUSE_2, HomePreference.SHARED, 20L);
+
+        BannerModHomeAssignmentRuntime restored = BannerModHomeAssignmentRuntime.fromTag(runtime.toTag());
+
+        assertEquals(2, restored.totalAssignments());
+        List<HomeAssignment> snapshot = restored.snapshot();
+        assertEquals(RESIDENT_A, snapshot.get(0).residentUuid());
+        assertEquals(HOUSE_1, restored.homeFor(RESIDENT_A).orElseThrow().homeBuildingUuid());
+        assertEquals(HomePreference.SHARED, restored.homeFor(RESIDENT_B).orElseThrow().preference());
+        assertEquals(20L, restored.homeFor(RESIDENT_B).orElseThrow().assignedAtGameTime());
+    }
+
+    @Test
+    void mutationsMarkDirty() {
+        BannerModHomeAssignmentRuntime runtime = new BannerModHomeAssignmentRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+
+        runtime.assign(RESIDENT_A, HOUSE_1, HomePreference.ASSIGNED, 10L);
+        runtime.clearAssignment(UUID.randomUUID());
+        runtime.clearAssignment(RESIDENT_A);
+
+        assertEquals(2, dirtyCount.get());
+    }
+
+    @Test
+    void identicalAssignAndRestoreDoNotDirtyAgain() {
+        BannerModHomeAssignmentRuntime runtime = new BannerModHomeAssignmentRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+
+        runtime.assign(RESIDENT_A, HOUSE_1, HomePreference.ASSIGNED, 10L);
+        runtime.assign(RESIDENT_A, HOUSE_1, HomePreference.ASSIGNED, 10L);
+
+        assertEquals(1, dirtyCount.get());
+
+        List<HomeAssignment> snapshot = runtime.snapshot();
+        runtime.restoreSnapshot(snapshot);
+
+        assertEquals(1, dirtyCount.get());
+
+        runtime.restoreSnapshot(List.of());
+
+        assertEquals(2, dirtyCount.get());
     }
 }

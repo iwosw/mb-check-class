@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -144,5 +145,77 @@ class BannerModSellerDispatchRuntimeTest {
         runtime.reset();
         assertTrue(runtime.phase(SELLER_A).isEmpty());
         assertEquals(0, runtime.activeDispatches().size());
+    }
+
+    @Test
+    void nbtRoundTripRestoresDispatchesInOrder() {
+        BannerModSellerDispatchRuntime runtime = new BannerModSellerDispatchRuntime();
+        runtime.beginDispatch(SELLER_A, MARKET_A, 10L);
+        runtime.beginDispatch(SELLER_B, MARKET_B, 20L);
+        runtime.advance(SELLER_B, SellerPhase.SELLING, 30L);
+        runtime.tickPhase(SELLER_B, 31L);
+
+        BannerModSellerDispatchRuntime restored = BannerModSellerDispatchRuntime.fromTag(runtime.toTag());
+
+        List<SellerPhaseRecord> dispatches = restored.activeDispatches();
+        assertEquals(2, dispatches.size());
+        assertEquals(SELLER_A, dispatches.get(0).sellerResidentUuid());
+        assertEquals(SellerPhase.MOVING_TO_STALL, restored.phase(SELLER_A).orElseThrow().phase());
+        assertEquals(SellerPhase.SELLING, restored.phase(SELLER_B).orElseThrow().phase());
+        assertEquals(1, restored.phase(SELLER_B).orElseThrow().phaseTickCount());
+    }
+
+    @Test
+    void mutationsMarkDirty() {
+        BannerModSellerDispatchRuntime runtime = new BannerModSellerDispatchRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+
+        runtime.beginDispatch(SELLER_A, MARKET_A, 0L);
+        runtime.tickPhase(SELLER_A, 1L);
+        runtime.advance(SELLER_A, SellerPhase.RETURNED, 2L);
+        runtime.forceMarketClose(UUID.randomUUID(), 3L);
+        runtime.reset();
+
+        assertEquals(4, dirtyCount.get());
+    }
+
+    @Test
+    void tickPhaseDoesNotMutateTerminalDispatches() {
+        BannerModSellerDispatchRuntime runtime = new BannerModSellerDispatchRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+        runtime.beginDispatch(SELLER_A, MARKET_A, 0L);
+        runtime.advance(SELLER_A, SellerPhase.RETURNED, 1L);
+        dirtyCount.set(0);
+
+        runtime.tickPhase(SELLER_A, 2L);
+
+        SellerPhaseRecord record = runtime.phase(SELLER_A).orElseThrow();
+        assertEquals(SellerPhase.RETURNED, record.phase());
+        assertEquals(0, record.phaseTickCount());
+        assertEquals(0, dirtyCount.get());
+    }
+
+    @Test
+    void noOpAdvanceAndIdenticalRestoreDoNotDirty() {
+        BannerModSellerDispatchRuntime runtime = new BannerModSellerDispatchRuntime();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        runtime.setDirtyListener(dirtyCount::incrementAndGet);
+
+        runtime.beginDispatch(SELLER_A, MARKET_A, 0L);
+        runtime.advance(SELLER_A, SellerPhase.RETURNED, 10L);
+
+        assertEquals(2, dirtyCount.get());
+
+        runtime.advance(SELLER_A, SellerPhase.RETURNED, 10L);
+        assertEquals(2, dirtyCount.get());
+
+        List<SellerPhaseRecord> snapshot = runtime.activeDispatches();
+        runtime.restoreSnapshot(snapshot);
+        assertEquals(2, dirtyCount.get());
+
+        runtime.restoreSnapshot(List.of());
+        assertEquals(3, dirtyCount.get());
     }
 }
