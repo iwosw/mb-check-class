@@ -341,7 +341,7 @@ public class WorkersServerConfig {
 
         CitizenMilitiaMobilizationChance = BUILDER.comment("""
 
-                        Chance for an unarmed settlement citizen to mobilize into militia role when its claim is under siege.
+                        Chance for an unarmed settlement citizen to mobilize into militia role when its claim is inside an active war's siege-standard zone.
                         \t(takes effect after restart)
                         \tdefault: 0.25""")
                 .worldRestart()

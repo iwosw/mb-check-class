@@ -101,8 +101,6 @@ public class RecruitsServerConfig {
     public static ForgeConfigSpec.IntValue ClaimingCost;
     public static ForgeConfigSpec.IntValue ChunkCost;
     public static ForgeConfigSpec.IntValue TownMinCenterDistance;
-    public static ForgeConfigSpec.IntValue SiegeClaimsRecruitsAmount;
-    public static ForgeConfigSpec.IntValue SiegeClaimsConquerTime;
     public static ForgeConfigSpec.BooleanValue NobleVillagerNeedsVillagers;
     public static ForgeConfigSpec.BooleanValue ShouldProfessionBlocksTrade;
     public static ForgeConfigSpec.BooleanValue NobleVillagerSpawn;
@@ -754,11 +752,11 @@ public class RecruitsServerConfig {
 
         UseTrueAsyncPathfinding = BUILDER.comment("""
                         Enable the true async pathfinding pipeline (snapshot -> worker solve -> commit).
-                        Disabled by default until A/B validation is complete.
+                        Required for large army battles to avoid main-thread A* stalls.
                         \t(takes effect after restart)
-                        \tdefault: false""")
+                        \tdefault: true""")
                 .worldRestart()
-                .define("UseTrueAsyncPathfinding", false);
+                .define("UseTrueAsyncPathfinding", true);
 
         AsyncPathfindingThreadsCount = BUILDER.comment("""
                         How much threads to use for pathfinding.
@@ -955,28 +953,6 @@ public class RecruitsServerConfig {
                         \tdefault: false""")
                 .worldRestart()
                 .define("ExplosionBreaksBlocksInClaims", false);
-
-        SiegeRequiresOwnerOnline = BUILDER.comment("""
-                        Should a siege only be allowed to start when the claim owner (player) is currently online?
-                        If enabled and the owner is offline, attackers cannot initiate a siege.
-                        \\t(takes effect after restart)
-                        \\tdefault: false""")
-                .worldRestart()
-                .define("SiegeRequiresOwnerOnline", false);
-
-        SiegeClaimsRecruitsAmount = BUILDER.comment("""
-                        The amount of man power that is required to start a siege on a Claim.
-                        \t(takes effect after restart)
-                        \tdefault: 10""")
-                .worldRestart()
-                .defineInRange("SiegeClaimsRecruitsAmount", 10, 0, 1453);
-
-        SiegeClaimsConquerTime = BUILDER.comment("""
-                        The time in minutes that is required to conquer a Claim.
-                        \t(takes effect after restart)
-                        \tdefault: 10""")
-                .worldRestart()
-                .defineInRange("SiegeClaimsConquerTime", 10, 0, 1453);
 
         FogOfWarEnabled = BUILDER.comment("""
                         Should claims inside unexplored (fog-of-war) chunks be hidden on the world map?
