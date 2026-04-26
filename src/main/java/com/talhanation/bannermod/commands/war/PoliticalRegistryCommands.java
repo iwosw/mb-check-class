@@ -47,15 +47,6 @@ public final class PoliticalRegistryCommands {
                                 .executes(PoliticalRegistryCommands::info)))
                 .then(Commands.literal("list")
                         .executes(PoliticalRegistryCommands::list))
-                .then(Commands.literal("link")
-                        .then(Commands.literal("faction")
-                                .then(Commands.argument("entity", StringArgumentType.word())
-                                        .then(Commands.argument("factionId", StringArgumentType.word())
-                                                .executes(PoliticalRegistryCommands::linkFaction)))))
-                .then(Commands.literal("unlink")
-                        .then(Commands.literal("faction")
-                                .then(Commands.argument("entity", StringArgumentType.word())
-                                        .executes(PoliticalRegistryCommands::unlinkFaction))))
                 .then(Commands.literal("revolt")
                         .then(Commands.literal("declare")
                                 .then(Commands.argument("occupationId", StringArgumentType.word())
@@ -164,40 +155,6 @@ public final class PoliticalRegistryCommands {
         }
         WarCommandSupport.replyComponent(context, text);
         return registry.all().size();
-    }
-
-    private static int linkFaction(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-            throws CommandSyntaxException {
-        String token = StringArgumentType.getString(context, "entity");
-        String factionId = StringArgumentType.getString(context, "factionId");
-        PoliticalEntityRecord record = WarCommandSupport.requireEntity(context, token);
-        if (!WarCommandSupport.isLeaderOrOp(context, record)) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
-        }
-        PoliticalRegistryRuntime registry = WarCommandSupport.registry(context);
-        boolean updated = registry.updateLinkedFaction(record.id(), factionId);
-        if (!updated) {
-            context.getSource().sendFailure(Component.literal("Failed to link faction."));
-            return 0;
-        }
-        WarCommandSupport.reply(context, "Linked " + record.name() + " to faction " + factionId + ".");
-        return 1;
-    }
-
-    private static int unlinkFaction(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-            throws CommandSyntaxException {
-        String token = StringArgumentType.getString(context, "entity");
-        PoliticalEntityRecord record = WarCommandSupport.requireEntity(context, token);
-        if (!WarCommandSupport.isLeaderOrOp(context, record)) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
-        }
-        boolean updated = WarCommandSupport.registry(context).updateLinkedFaction(record.id(), "");
-        if (!updated) {
-            context.getSource().sendFailure(Component.literal("Failed to unlink faction."));
-            return 0;
-        }
-        WarCommandSupport.reply(context, "Unlinked faction from " + record.name() + ".");
-        return 1;
     }
 
     private static int revoltDeclare(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)

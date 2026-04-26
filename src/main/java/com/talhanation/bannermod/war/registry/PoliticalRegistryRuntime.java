@@ -48,8 +48,7 @@ public class PoliticalRegistryRuntime {
                 charter,
                 ideology,
                 homeRegion,
-                gameTime,
-                ""
+                gameTime
         );
         recordsById.put(record.id(), record);
         dirtyListener.run();
@@ -89,28 +88,6 @@ public class PoliticalRegistryRuntime {
         recordsById.put(id, record.withCapital(pos));
         dirtyListener.run();
         return true;
-    }
-
-    public boolean updateLinkedFaction(UUID id, String factionId) {
-        PoliticalEntityRecord record = recordsById.get(id);
-        if (record == null) {
-            return false;
-        }
-        recordsById.put(id, record.withLinkedFactionId(factionId == null ? "" : factionId));
-        dirtyListener.run();
-        return true;
-    }
-
-    public Optional<PoliticalEntityRecord> byLinkedFactionId(String factionId) {
-        if (factionId == null || factionId.isBlank()) {
-            return Optional.empty();
-        }
-        for (PoliticalEntityRecord record : recordsById.values()) {
-            if (factionId.equals(record.linkedFactionId())) {
-                return Optional.of(record);
-            }
-        }
-        return Optional.empty();
     }
 
     public Optional<PoliticalEntityRecord> byNameOrIdFragment(String token) {

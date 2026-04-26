@@ -19,8 +19,7 @@ public record PoliticalEntityRecord(
         String charter,
         String ideology,
         String homeRegion,
-        long createdAtGameTime,
-        String linkedFactionId
+        long createdAtGameTime
 ) {
     public PoliticalEntityRecord {
         coLeaderUuids = coLeaderUuids == null ? List.of() : List.copyOf(coLeaderUuids);
@@ -30,24 +29,17 @@ public record PoliticalEntityRecord(
         charter = charter == null ? "" : charter.trim();
         ideology = ideology == null ? "" : ideology.trim();
         homeRegion = homeRegion == null ? "" : homeRegion.trim();
-        linkedFactionId = linkedFactionId == null ? "" : linkedFactionId.trim();
     }
 
     public PoliticalEntityRecord withStatus(PoliticalEntityStatus newStatus) {
         return new PoliticalEntityRecord(id, name, newStatus, leaderUuid, coLeaderUuids, capitalPos,
-                color, charter, ideology, homeRegion, createdAtGameTime, linkedFactionId);
+                color, charter, ideology, homeRegion, createdAtGameTime);
     }
 
     public PoliticalEntityRecord withCapital(BlockPos newCapital) {
         return new PoliticalEntityRecord(id, name, status, leaderUuid, coLeaderUuids,
                 newCapital == null ? capitalPos : newCapital.immutable(),
-                color, charter, ideology, homeRegion, createdAtGameTime, linkedFactionId);
-    }
-
-    public PoliticalEntityRecord withLinkedFactionId(String newLinkedFactionId) {
-        return new PoliticalEntityRecord(id, name, status, leaderUuid, coLeaderUuids, capitalPos,
-                color, charter, ideology, homeRegion, createdAtGameTime,
-                newLinkedFactionId == null ? "" : newLinkedFactionId);
+                color, charter, ideology, homeRegion, createdAtGameTime);
     }
 
     public CompoundTag toTag() {
@@ -64,7 +56,6 @@ public record PoliticalEntityRecord(
         tag.putString("Ideology", ideology);
         tag.putString("HomeRegion", homeRegion);
         tag.putLong("CreatedAtGameTime", createdAtGameTime);
-        tag.putString("LinkedFactionId", linkedFactionId);
 
         net.minecraft.nbt.ListTag coLeaders = new net.minecraft.nbt.ListTag();
         for (UUID coLeaderUuid : coLeaderUuids) {
@@ -104,8 +95,7 @@ public record PoliticalEntityRecord(
                 tag.getString("Charter"),
                 tag.getString("Ideology"),
                 tag.getString("HomeRegion"),
-                tag.getLong("CreatedAtGameTime"),
-                tag.getString("LinkedFactionId")
+                tag.getLong("CreatedAtGameTime")
         );
     }
 }

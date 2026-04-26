@@ -2,6 +2,7 @@ package com.talhanation.bannermod.war.runtime;
 
 import com.talhanation.bannermod.war.audit.WarAuditEntry;
 import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
+import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -25,12 +26,24 @@ class WarOutcomeApplierTest {
         return record.id();
     }
 
+    private static WarOutcomeApplier applier(WarDeclarationRuntime declarations,
+                                             WarAuditLogSavedData audit) {
+        return new WarOutcomeApplier(
+                declarations,
+                new SiegeStandardRuntime(),
+                audit,
+                new OccupationRuntime(),
+                new DemilitarizationRuntime(),
+                new PoliticalRegistryRuntime()
+        );
+    }
+
     @Test
     void whitePeaceResolvesAndAudits() {
         WarDeclarationRuntime runtime = new WarDeclarationRuntime();
         UUID warId = seed(runtime, UUID.randomUUID(), UUID.randomUUID(), WarState.DECLARED);
         WarAuditLogSavedData audit = new WarAuditLogSavedData();
-        WarOutcomeApplier applier = new WarOutcomeApplier(runtime, new SiegeStandardRuntime(), audit);
+        WarOutcomeApplier applier = applier(runtime, audit);
 
         WarOutcomeApplier.Result result = applier.applyWhitePeace(warId, 100L);
         assertTrue(result.valid());
@@ -46,7 +59,7 @@ class WarOutcomeApplierTest {
     void tributeRejectsNegativeAmount() {
         WarDeclarationRuntime runtime = new WarDeclarationRuntime();
         UUID warId = seed(runtime, UUID.randomUUID(), UUID.randomUUID(), WarState.DECLARED);
-        WarOutcomeApplier applier = new WarOutcomeApplier(runtime, new SiegeStandardRuntime(), new WarAuditLogSavedData());
+        WarOutcomeApplier applier = applier(runtime, new WarAuditLogSavedData());
 
         WarOutcomeApplier.Result result = applier.applyTribute(warId, -5L, 0L);
         assertFalse(result.valid());
@@ -57,7 +70,7 @@ class WarOutcomeApplierTest {
     void cancelOnlyAllowedFromDeclared() {
         WarDeclarationRuntime runtime = new WarDeclarationRuntime();
         UUID warId = seed(runtime, UUID.randomUUID(), UUID.randomUUID(), WarState.ACTIVE);
-        WarOutcomeApplier applier = new WarOutcomeApplier(runtime, new SiegeStandardRuntime(), new WarAuditLogSavedData());
+        WarOutcomeApplier applier = applier(runtime, new WarAuditLogSavedData());
 
         WarOutcomeApplier.Result result = applier.cancel(warId, 0L, "test");
         assertFalse(result.valid());
@@ -67,7 +80,7 @@ class WarOutcomeApplierTest {
     @Test
     void unknownWarReturnsInvalid() {
         WarDeclarationRuntime runtime = new WarDeclarationRuntime();
-        WarOutcomeApplier applier = new WarOutcomeApplier(runtime, new SiegeStandardRuntime(), new WarAuditLogSavedData());
+        WarOutcomeApplier applier = applier(runtime, new WarAuditLogSavedData());
         WarOutcomeApplier.Result result = applier.applyWhitePeace(UUID.randomUUID(), 0L);
         assertFalse(result.valid());
         assertEquals("unknown_war", result.reason());

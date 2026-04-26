@@ -20,16 +20,6 @@ public final class WarCooldownPolicy {
                                     Collection<WarDeclarationRecord> existingWars,
                                     long nowGameTime,
                                     long peaceCooldownTicks,
-                                    int defenderDailyDeclarations) {
-        return canDeclare(attackerId, defenderId, existingWars, nowGameTime,
-                peaceCooldownTicks, defenderDailyDeclarations, null);
-    }
-
-    public static Result canDeclare(UUID attackerId,
-                                    UUID defenderId,
-                                    Collection<WarDeclarationRecord> existingWars,
-                                    long nowGameTime,
-                                    long peaceCooldownTicks,
                                     int defenderDailyDeclarations,
                                     DemilitarizationRuntime demilitarizations) {
         if (attackerId == null || defenderId == null) {
@@ -38,7 +28,7 @@ public final class WarCooldownPolicy {
         if (attackerId.equals(defenderId)) {
             return Result.invalid("self_declaration");
         }
-        if (demilitarizations != null && demilitarizations.isDemilitarized(attackerId, nowGameTime)) {
+        if (demilitarizations.isDemilitarized(attackerId, nowGameTime)) {
             return Result.invalid("attacker_demilitarized");
         }
         if (existingWars == null) {

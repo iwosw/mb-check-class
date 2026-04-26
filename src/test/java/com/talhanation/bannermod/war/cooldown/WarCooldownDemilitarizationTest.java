@@ -38,9 +38,10 @@ class WarCooldownDemilitarizationTest {
     }
 
     @Test
-    void nullDemilitarizationRuntimeIsOk() {
+    void emptyDemilitarizationRuntimeDoesNotBlock() {
         WarCooldownPolicy.Result result = WarCooldownPolicy.canDeclare(
-                UUID.randomUUID(), UUID.randomUUID(), List.of(), 0L, 0L, 1, null);
+                UUID.randomUUID(), UUID.randomUUID(), List.of(), 0L, 0L, 1,
+                new DemilitarizationRuntime());
         assertTrue(result.valid());
     }
 }

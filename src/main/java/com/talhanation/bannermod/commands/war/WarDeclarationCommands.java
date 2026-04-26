@@ -5,13 +5,11 @@ import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
 import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.cooldown.WarCooldownPolicy;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
-import com.talhanation.bannermod.war.registry.PoliticalFactionResolver;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.rp.WarDeclarationFormatter;
 import com.talhanation.bannermod.war.rp.WarNoticeService;
@@ -64,15 +62,6 @@ public final class WarDeclarationCommands {
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("warId", StringArgumentType.word())
                                 .executes(WarDeclarationCommands::vassalize)))
-                .then(Commands.literal("annex")
-                        .requires(source -> source.hasPermission(2))
-                        .then(Commands.argument("warId", StringArgumentType.word())
-                                .then(Commands.argument("chunkLimit", IntegerArgumentType.integer(1, 4096))
-                                        .executes(WarDeclarationCommands::annex))))
-                .then(Commands.literal("occupy")
-                        .requires(source -> source.hasPermission(2))
-                        .then(Commands.argument("warId", StringArgumentType.word())
-                                .executes(WarDeclarationCommands::occupy)))
                 .then(Commands.literal("demilitarize")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("warId", StringArgumentType.word())
@@ -217,60 +206,6 @@ public final class WarDeclarationCommands {
         ServerLevel level = WarCommandSupport.level(context);
         WarOutcomeApplier applier = WarRuntimeContext.applierFor(level);
         WarOutcomeApplier.Result result = applier.applyVassalize(war.id(), level.getGameTime());
-        return finalizeOutcome(context, level, war, ResolveMode.OUTCOME, result);
-    }
-
-    private static int annex(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-            throws CommandSyntaxException {
-        String token = StringArgumentType.getString(context, "warId");
-        int chunkLimit = IntegerArgumentType.getInteger(context, "chunkLimit");
-        WarDeclarationRecord war = WarCommandSupport.requireWar(context, token);
-        ServerLevel level = WarCommandSupport.level(context);
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> attacker = registry.byId(war.attackerPoliticalEntityId());
-        Optional<PoliticalEntityRecord> defender = registry.byId(war.defenderPoliticalEntityId());
-        if (attacker.isEmpty() || defender.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Annex failed: missing political entity record."));
-            return 0;
-        }
-        Optional<RecruitsFaction> attackerFaction = PoliticalFactionResolver.factionFor(level, attacker.get());
-        Optional<RecruitsFaction> defenderFaction = PoliticalFactionResolver.factionFor(level, defender.get());
-        if (attackerFaction.isEmpty() || defenderFaction.isEmpty()) {
-            context.getSource().sendFailure(Component.literal(
-                    "Annex needs both sides linked to factions via /bannermod state link faction."));
-            return 0;
-        }
-        int transferred = PoliticalFactionResolver.transferChunks(level,
-                defenderFaction.get(), attackerFaction.get(), chunkLimit);
-        WarOutcomeApplier applier = WarRuntimeContext.applierFor(level);
-        WarOutcomeApplier.Result result = applier.applyAnnex(war.id(), transferred, chunkLimit, level.getGameTime());
-        return finalizeOutcome(context, level, war, ResolveMode.OUTCOME, result);
-    }
-
-    private static int occupy(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-            throws CommandSyntaxException {
-        String token = StringArgumentType.getString(context, "warId");
-        WarDeclarationRecord war = WarCommandSupport.requireWar(context, token);
-        ServerLevel level = WarCommandSupport.level(context);
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> defender = registry.byId(war.defenderPoliticalEntityId());
-        if (defender.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Occupy failed: defender record missing."));
-            return 0;
-        }
-        Optional<RecruitsFaction> defenderFaction = PoliticalFactionResolver.factionFor(level, defender.get());
-        if (defenderFaction.isEmpty()) {
-            context.getSource().sendFailure(Component.literal(
-                    "Occupy needs the defender linked to a faction via /bannermod state link faction."));
-            return 0;
-        }
-        var chunks = PoliticalFactionResolver.allChunksForFaction(level, defenderFaction.get());
-        if (chunks.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Defender has no claimed chunks to occupy."));
-            return 0;
-        }
-        WarOutcomeApplier applier = WarRuntimeContext.applierFor(level);
-        WarOutcomeApplier.Result result = applier.applyOccupation(war.id(), chunks, level.getGameTime());
         return finalizeOutcome(context, level, war, ResolveMode.OUTCOME, result);
     }
 
