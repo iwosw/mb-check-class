@@ -191,7 +191,7 @@ final class WorkerSettlementEventService {
             citizen.setOwnerUUID(java.util.Optional.of(owner.leaderUuid()));
         }
         level.addFreshEntity(citizen);
-        PlayerTeam team = level.getScoreboard().getPlayerTeam(politicalEntityId.toString());
+        PlayerTeam team = level.getScoreboard().getPlayerTeam(owner.name());
         if (team != null) {
             level.getScoreboard().addPlayerToTeam(citizen.getScoreboardName(), team);
         }
@@ -229,6 +229,13 @@ final class WorkerSettlementEventService {
                                                          String settlementFactionId,
                                                          long gameTime,
                                                          WorkerSettlementSpawnRules.ClaimGrowthConfig config) {
+        if (level != null && settlementFactionId != null && !settlementFactionId.isBlank()) {
+            settlementFactionId = WarRuntimeContext.registry(level)
+                    .byName(settlementFactionId)
+                    .map(PoliticalEntityRecord::id)
+                    .map(UUID::toString)
+                    .orElse(settlementFactionId);
+        }
         return attemptClaimWorkerGrowth(level, claim, WorkerSettlementClaimPolicy.resolveClaimGrowthBinding(claim, settlementFactionId), gameTime, config);
     }
 }

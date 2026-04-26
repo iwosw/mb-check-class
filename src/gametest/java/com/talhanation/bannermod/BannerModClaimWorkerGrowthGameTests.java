@@ -147,8 +147,8 @@ public class BannerModClaimWorkerGrowthGameTests {
     }
 
     private static List<AbstractWorkerEntity> getClaimWorkers(ServerLevel level, RecruitsClaim claim) {
-        UUID leaderId = claim.getOwnerFaction() == null ? null : claim.getOwnerFaction().getTeamLeaderUUID();
-        String factionId = claim.getOwnerFaction() == null ? null : claim.getOwnerFactionStringID();
+        UUID leaderId = claim.getPlayerInfo() == null ? null : claim.getPlayerInfo().getUUID();
+        String politicalEntityId = claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString();
         ChunkPos anchorChunk = claim.getCenter() != null ? claim.getCenter() : new ChunkPos(0, 0);
         AABB claimBounds = new AABB(
                 anchorChunk.getMinBlockX(),
@@ -163,7 +163,8 @@ public class BannerModClaimWorkerGrowthGameTests {
                 return false;
             }
             boolean ownerMatch = leaderId != null && leaderId.equals(worker.getOwnerUUID());
-            boolean teamMatch = factionId != null && worker.getTeam() != null && factionId.equals(worker.getTeam().getName());
+            boolean teamMatch = politicalEntityId != null && worker.getTeam() != null && politicalEntityId.equals(
+                    BannerModDedicatedServerGameTestSupport.politicalEntityIdString(level, worker.getTeam().getName()));
             return ownerMatch || teamMatch;
         });
     }

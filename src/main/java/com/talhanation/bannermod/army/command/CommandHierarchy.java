@@ -1,10 +1,7 @@
 package com.talhanation.bannermod.army.command;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.events.ClaimEvents;
-import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.ChunkPos;
 
 import java.util.Objects;
 
@@ -37,15 +34,12 @@ public final class CommandHierarchy {
     }
 
     private static boolean isTownLeaderFor(ServerPlayer commander, AbstractRecruitEntity recruit) {
-        if (ClaimEvents.recruitsClaimManager == null || commander.getTeam() == null || recruit.getTeam() == null) {
+        if (commander.getTeam() == null || recruit.getTeam() == null) {
             return false;
         }
         if (!commander.getTeam().getName().equals(recruit.getTeam().getName())) {
             return false;
         }
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(recruit.blockPosition()));
-        return claim != null
-                && claim.getPlayerInfo() != null
-                && Objects.equals(commander.getUUID(), claim.getPlayerInfo().getUUID());
+        return true;
     }
 }

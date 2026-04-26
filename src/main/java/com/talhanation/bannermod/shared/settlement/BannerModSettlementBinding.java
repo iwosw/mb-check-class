@@ -49,7 +49,7 @@ public final class BannerModSettlementBinding {
         if (claimFactionId == null) {
             return new Binding(Status.UNCLAIMED, normalizedFactionId, null);
         }
-        if (normalizedFactionId != null && normalizedFactionId.equals(claimFactionId)) {
+        if (matchesClaimFaction(claim, normalizedFactionId, claimFactionId)) {
             return new Binding(Status.FRIENDLY_CLAIM, normalizedFactionId, claimFactionId);
         }
         return new Binding(Status.HOSTILE_CLAIM, normalizedFactionId, claimFactionId);
@@ -77,7 +77,7 @@ public final class BannerModSettlementBinding {
         if (claimFactionId == null) {
             return new Binding(Status.UNCLAIMED, normalizedSettlementFactionId, null);
         }
-        if (normalizedSettlementFactionId != null && normalizedSettlementFactionId.equals(claimFactionId)) {
+        if (matchesClaimFaction(claim, normalizedSettlementFactionId, claimFactionId)) {
             return new Binding(Status.FRIENDLY_CLAIM, normalizedSettlementFactionId, claimFactionId);
         }
         return new Binding(Status.DEGRADED_MISMATCH, normalizedSettlementFactionId, claimFactionId);
@@ -100,6 +100,17 @@ public final class BannerModSettlementBinding {
             return null;
         }
         return normalizeFactionId(claim.getOwnerPoliticalEntityId().toString());
+    }
+
+    private static boolean matchesClaimFaction(@Nullable RecruitsClaim claim, @Nullable String requestedFactionId, @Nullable String claimFactionId) {
+        if (requestedFactionId == null) {
+            return false;
+        }
+        if (requestedFactionId.equals(claimFactionId)) {
+            return true;
+        }
+        String claimName = claim == null ? null : normalizeFactionId(claim.getName());
+        return requestedFactionId.equals(claimName);
     }
 
     @Nullable

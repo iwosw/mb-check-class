@@ -1,7 +1,6 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
@@ -58,7 +57,7 @@ public class BannerModUpkeepFlowGameTests {
         BannerModSupplyStatus.RecruitSupplyStatus recruitStatus = recruit.getSupplyStatus(upkeepContainer);
 
         upkeepContainer.setItem(0, new ItemStack(Items.BREAD));
-        ItemStack currency = FactionEvents.getCurrency();
+        ItemStack currency = BannerModDedicatedServerGameTestSupport.recruitCurrencyStack();
         currency.setCount(16);
         upkeepContainer.setItem(1, currency);
         BannerModSupplyStatus.RecruitSupplyStatus resuppliedRecruitStatus = recruit.getSupplyStatus(upkeepContainer);

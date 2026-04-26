@@ -169,7 +169,11 @@ final class RecruitStateAccess {
     }
     static int getState(AbstractRecruitEntity recruit) { return recruit.getStateData(STATE); }
     static Optional<UUID> getGroupUUID(AbstractRecruitEntity recruit) { return recruit.getStateData(GROUP); }
-    static void setGroupUUID(AbstractRecruitEntity recruit, UUID uuid) { recruit.setStateData(GROUP, uuid == null ? Optional.empty() : Optional.of(uuid)); }
+    static void setGroupUUID(AbstractRecruitEntity recruit, UUID uuid) {
+        UUID oldGroup = recruit.getStateData(GROUP).orElse(null);
+        recruit.setStateData(GROUP, uuid == null ? Optional.empty() : Optional.of(uuid));
+        RecruitIndex.instance().onGroupChanged(recruit, oldGroup, uuid);
+    }
     static int getFollowState(AbstractRecruitEntity recruit) { return recruit.getStateData(FOLLOW_STATE); }
     static BlockPos getMovePos(AbstractRecruitEntity recruit) { return recruit.getStateData(MOVE_POS).orElse(null); }
     static boolean getListen(AbstractRecruitEntity recruit) { return recruit.getStateData(LISTEN); }

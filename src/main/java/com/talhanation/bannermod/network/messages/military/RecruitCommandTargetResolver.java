@@ -36,6 +36,16 @@ final class RecruitCommandTargetResolver {
                     sender.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
             );
         }
+        else if (nearby.isEmpty()) {
+            List<AbstractRecruitEntity> scanned = sender.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    sender.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
+            );
+            if (!scanned.isEmpty()) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                nearby = scanned;
+            }
+        }
 
         if (sender instanceof ServerPlayer serverPlayer) {
             nearby.removeIf(recruit -> !CommandHierarchy.canCommand(serverPlayer, recruit));

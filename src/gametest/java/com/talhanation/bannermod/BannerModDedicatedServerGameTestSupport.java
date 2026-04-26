@@ -2,16 +2,19 @@ package com.talhanation.bannermod;
 
 import com.mojang.authlib.GameProfile;
 import com.talhanation.bannermod.events.ClaimEvents;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
-import com.talhanation.bannermod.persistence.military.RecruitsFactionManager;
+import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import net.minecraft.ChatFormatting;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import net.minecraft.core.Holder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -19,9 +22,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -66,40 +73,35 @@ public final class BannerModDedicatedServerGameTestSupport {
         return team;
     }
 
-    public static RecruitsFaction ensureFaction(ServerLevel level, String factionId, UUID leaderId, String leaderName) {
-        if (FactionEvents.recruitsFactionManager == null) {
-            FactionEvents.recruitsFactionManager = new RecruitsFactionManager();
-            FactionEvents.recruitsFactionManager.load(level);
-        }
-
-        RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(factionId);
-        if (faction == null) {
-            FactionEvents.recruitsFactionManager.addTeam(
-                    factionId,
-                    factionId,
-                    leaderId,
-                    leaderName,
-                    new CompoundTag(),
-                    (byte) 0,
-                    ChatFormatting.WHITE
-            );
-            faction = FactionEvents.recruitsFactionManager.getFactionByStringID(factionId);
-        }
-
-        return faction;
+    public static UUID ensureFaction(ServerLevel level, String factionId, UUID leaderId, String leaderName) {
+        return WarRuntimeContext.registry(level)
+                .byName(factionId)
+                .or(() -> WarRuntimeContext.registry(level).create(
+                        factionId,
+                        leaderId,
+                        BlockPos.ZERO,
+                        "white",
+                        "",
+                        "",
+                        "",
+                        level.getGameTime()))
+                .map(PoliticalEntityRecord::id)
+                .orElseThrow(() -> new IllegalStateException("Could not create political entity " + factionId));
     }
 
     public static RecruitsClaim seedClaim(ServerLevel level, BlockPos pos, String factionId, UUID leaderId, String leaderName) {
         ensureClaimManager(level);
-        RecruitsFaction faction = ensureFaction(level, factionId, leaderId, leaderName);
+        UUID politicalEntityId = ensureFaction(level, factionId, leaderId, leaderName);
         ChunkPos chunkPos = new ChunkPos(pos);
         RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(chunkPos);
         if (claim == null) {
-            claim = new RecruitsClaim(faction);
+            claim = new RecruitsClaim(factionId, politicalEntityId);
             claim.setCenter(chunkPos);
         }
         claim.isRemoved = false;
-        claim.setOwnerFaction(faction);
+        claim.setName(factionId);
+        claim.setOwnerPoliticalEntityId(politicalEntityId);
+        claim.setPlayer(new RecruitsPlayerInfo(leaderId, leaderName));
         claim.addChunk(chunkPos);
         ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
         return claim;
@@ -124,11 +126,27 @@ public final class BannerModDedicatedServerGameTestSupport {
 
     public static RecruitsClaim swapClaimFaction(ServerLevel level, RecruitsClaim claim, String factionId, UUID leaderId, String leaderName) {
         ensureClaimManager(level);
-        RecruitsFaction faction = ensureFaction(level, factionId, leaderId, leaderName);
+        UUID politicalEntityId = ensureFaction(level, factionId, leaderId, leaderName);
         claim.isRemoved = false;
-        claim.setOwnerFaction(faction);
+        claim.setName(factionId);
+        claim.setOwnerPoliticalEntityId(politicalEntityId);
+        claim.setPlayer(new RecruitsPlayerInfo(leaderId, leaderName));
         ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
         return claim;
+    }
+
+    public static String politicalEntityIdString(ServerLevel level, String factionId) {
+        return WarRuntimeContext.registry(level)
+                .byName(factionId)
+                .map(PoliticalEntityRecord::id)
+                .map(UUID::toString)
+                .orElse(factionId);
+    }
+
+    public static ItemStack recruitCurrencyStack() {
+        ResourceLocation id = ResourceLocation.tryParse(RecruitsServerConfig.RecruitCurrency.get());
+        Optional<Holder<Item>> holder = id == null ? Optional.empty() : ForgeRegistries.ITEMS.getHolder(id);
+        return holder.map(itemHolder -> itemHolder.value().getDefaultInstance()).orElseGet(Items.EMERALD::getDefaultInstance);
     }
 
     public static void assignDetachedOwnership(AbstractRecruitEntity recruit, UUID ownerId) {
@@ -159,6 +177,9 @@ public final class BannerModDedicatedServerGameTestSupport {
     public static <T extends Entity> T loadEntity(GameTestHelper helper, EntityType<T> entityType, BlockPos relativePos, CompoundTag savedData) {
         T entity = BannerModGameTestSupport.spawnEntity(helper, entityType, relativePos);
         entity.load(savedData);
+        if (entity instanceof AbstractRecruitEntity) {
+            RecruitIndex.instance().onEntityJoin(entity);
+        }
         return entity;
     }
 

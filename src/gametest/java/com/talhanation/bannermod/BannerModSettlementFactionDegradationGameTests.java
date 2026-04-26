@@ -67,7 +67,7 @@ public class BannerModSettlementFactionDegradationGameTests {
         BannerModSettlementBinding.Binding binding = resolveBinding(setup.cropArea, OWNER_TEAM_ID);
         helper.assertTrue(binding.status() == BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
                 "Expected swapping the live claim owner faction to degrade the settlement footprint to DEGRADED_MISMATCH");
-        helper.assertTrue(CLAIM_HOLDER_TEAM_ID.equals(binding.claimFactionId()),
+        helper.assertTrue(BannerModDedicatedServerGameTestSupport.politicalEntityIdString(setup.level, CLAIM_HOLDER_TEAM_ID).equals(binding.claimFactionId()),
                 "Expected the degraded binding to point at the new live claim holder rather than the original settlement faction");
         helper.assertFalse(setup.cropArea.canWorkHere(setup.worker),
                 "Expected faction mismatch to stop civilian throughput through the shared settlement operation gate");
@@ -154,10 +154,12 @@ public class BannerModSettlementFactionDegradationGameTests {
      * seam, using the live claim manager exposed by {@link ClaimEvents}.
      */
     private static BannerModSettlementBinding.Binding resolveBinding(CropArea cropArea, String settlementFactionId) {
+        String politicalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(
+                (ServerLevel) cropArea.level(), settlementFactionId);
         return BannerModSettlementBinding.resolveSettlementStatus(
                 ClaimEvents.recruitsClaimManager,
                 cropArea.blockPosition(),
-                settlementFactionId
+                politicalEntityId
         );
     }
 }

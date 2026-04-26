@@ -1,7 +1,6 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
@@ -104,7 +103,7 @@ public class BannerModPlayerCycleGameTests {
                 "Expected the stitched player-cycle recruit to begin blocked on food and payment before resupply");
 
         upkeepContainer.setItem(0, new ItemStack(Items.BREAD));
-        ItemStack currency = FactionEvents.getCurrency();
+        ItemStack currency = BannerModDedicatedServerGameTestSupport.recruitCurrencyStack();
         currency.setCount(16);
         upkeepContainer.setItem(1, currency);
         BannerModSupplyStatus.RecruitSupplyStatus readyRecruitStatus = recruit.getSupplyStatus(upkeepContainer);

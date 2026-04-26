@@ -66,7 +66,16 @@ final class WorkerSettlementClaimPolicy {
     static BannerModSettlementBinding.Binding resolveSettlementBinding(Villager villager, RecruitsClaim claim) {
         String factionId = claim.getOwnerPoliticalEntityId() != null ? claim.getOwnerPoliticalEntityId().toString() : null;
         if (villager.getTeam() != null) {
-            factionId = villager.getTeam().getName();
+            String teamName = villager.getTeam().getName();
+            if (villager.level() instanceof ServerLevel serverLevel) {
+                factionId = WarRuntimeContext.registry(serverLevel)
+                        .byName(teamName)
+                        .map(PoliticalEntityRecord::id)
+                        .map(UUID::toString)
+                        .orElse(teamName);
+            } else {
+                factionId = teamName;
+            }
         }
         return BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, villager.blockPosition(), factionId);
     }

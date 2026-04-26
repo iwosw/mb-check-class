@@ -125,6 +125,10 @@ public final class WorkerSettlementSpawner {
         worker.setFollowState(0);
 
         level.addFreshEntity(worker);
+        PlayerTeam team = level.getScoreboard().getPlayerTeam(owner.name());
+        if (team != null) {
+            level.getScoreboard().addPlayerToTeam(worker.getScoreboardName(), team);
+        }
         seedClaimWorkAreaDefaults(level, worker, claim, owner, spawnPos);
         BannerModSettlementRefreshSupport.refreshSnapshot(level, worker.blockPosition());
 
@@ -159,7 +163,7 @@ public final class WorkerSettlementSpawner {
         cropArea.moveTo(fieldCenter.getX() - 4, fieldCenter.getY(), fieldCenter.getZ() + 4, 0.0F, 0.0F);
         cropArea.createArea();
         cropArea.setDone(false);
-        cropArea.setTeamStringID(owner.id().toString());
+        cropArea.setTeamStringID(owner.name());
         cropArea.setPlayerUUID(owner.leaderUuid());
         cropArea.setPlayerName(owner.name());
         cropArea.setCustomName(Component.literal(""));
