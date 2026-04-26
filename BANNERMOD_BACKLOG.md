@@ -1,0 +1,575 @@
+# BannerMod Backlog
+
+Единственный канонический файл для нереализованных задач. Старые scratch-планы и handoff-доки удаляются/не используются; если задача не здесь, она не считается активной.
+
+## Правила
+
+- Код и `src/**` важнее любых старых заметок.
+- Не добавлять параллельные legacy-системы ради совместимости.
+- Каждый пункт ниже должен закрываться отдельным проверяемым slice.
+- Player-facing flow важнее набора админ-команд.
+
+---
+
+## UI-001 — State/Faction UI replacement
+
+**Зачем.** Legacy faction UI удалён, но игроку нужен нормальный UI для political state вместо command-only управления.
+
+**Scope.**
+
+- State list/detail/create/edit screens.
+- Status, capital, leader/co-leader/member display.
+- Government form display/edit once `POL-001` exists.
+- Server packets for mutations, gated leader-or-op.
+- No `RecruitsFaction` UI resurrection.
+
+**Acceptance.**
+
+- Игрок создаёт и смотрит state без команд.
+- UI явно различает settlement, claim и political state.
+- `compileJava` passes; packet mutations are server-authoritative.
+
+---
+
+## UI-002 — Siege and War Room UI
+
+**Зачем.** `WarListScreen`/War Room не должен оставаться read-only списком; siege flow должен быть понятен в MP.
+
+**Scope.**
+
+- Active war detail screen.
+- Siege standard list, side, position, radius, placement validation.
+- Battle-window HUD/status.
+- War-zone overlay/marker.
+- Attacker/defender objective panel.
+
+**Acceptance.**
+
+- Игрок видит активные войны, battle windows, siege standards и зоны без чтения команд.
+- Неверное placement действие даёт понятную причину отказа.
+- Defender получает понятное предупреждение и статус осады.
+
+---
+
+## SETTLEMENT-001 — First 10 minutes onboarding
+
+**Зачем.** Новый игрок должен понять старт: fort/town hall, surveyor, wand, citizens, professions.
+
+**Scope.**
+
+- Starter fort / town hall placement flow.
+- `SettlementSurveyorToolItem` feedback.
+- `BuildingPlacementWandItem` placement/register/validate flow.
+- Citizen spawn/hire/profession UI.
+- Clear validation errors for buildings.
+
+**Acceptance.**
+
+- Игрок создаёт валидное поселение за 10 минут без чтения исходников.
+- UI показывает почему здание невалидно.
+- Citizens показывают профессию, назначение и проблему, если работы нет.
+
+---
+
+## SETTLEMENT-002 — Worker AI consumes ValidatedBuildingRecord
+
+**Зачем.** Authoring уже идёт через building validation, но worker AI всё ещё местами живёт на legacy `currentXArea` полях.
+
+**Scope.**
+
+- Replace authoritative worker assignments with `ValidatedBuildingRecord` IDs.
+- Migrate work goals away from `currentCropArea`, `currentLumberArea`, etc.
+- Remove dead `MessageAddWorkArea` client/server path once unused.
+
+**Acceptance.**
+
+- Worker work selection does not depend on legacy area fields as source of truth.
+- Wand-placed validated building can receive workers and produce behavior.
+- `compileJava` and relevant tests pass.
+
+---
+
+## SETTLEMENT-004 — Persistent settlement runtime state
+
+**Зачем.** Several settlement runtimes still keep scheduler tasks, seller phases, household assignments, project queues, and work-order claims mostly in memory.
+
+**Scope.**
+
+- Persist resident scheduler state where needed.
+- Persist seller/household/project/work-order claim state where gameplay depends on reload survival.
+- Keep dirty marking stable for no-op restores.
+
+**Acceptance.**
+
+- Reload does not lose active meaningful settlement work state.
+- No false dirty churn on identical reload/restore.
+- Focused persistence tests pass.
+
+---
+
+## SETTLEMENT-005 — Hauling and input-fetch work orders
+
+**Зачем.** `HAUL_RESOURCE` and `FETCH_INPUT` are still analysis-only because current work orders do not safely carry source/destination/count/filter.
+
+**Scope.**
+
+- Add safe payload for source, destination, resource filter, and count.
+- Add courier/worker assignment adapter.
+- Execute haul/fetch orders through the settlement work-order runtime.
+
+**Acceptance.**
+
+- Workers/couriers can fetch inputs for production and haul outputs to storage.
+- Orders survive release/expiry correctly.
+- Tests cover payload serialization and claim behavior.
+
+---
+
+## SETTLEMENT-006 — Civil mutation refresh hooks
+
+**Зачем.** Settlement refresh is more event-driven now, but not every important civil mutation path is hooked.
+
+**Scope.**
+
+- Prefab auto-staffing.
+- Worker death/removal.
+- Container placement/update.
+- Creative work-area discard.
+- Any remaining owner/binding/build completion paths found by audit.
+
+**Acceptance.**
+
+- Settlement snapshots update after all important civil world changes.
+- GameTest or equivalent live-world coverage exists before broad hook wiring.
+
+---
+
+## SETTLEMENT-007 — Sea-trade production consumer loop
+
+**Зачем.** Sea-trade entrypoints are recognized, but production/consumption gameplay is still thin.
+
+**Scope.**
+
+- Connect sea-trade availability to settlement production needs and outputs.
+- Consume/import/export goods through treasury/logistics where appropriate.
+- Show player-facing trade status in settlement UI.
+
+**Acceptance.**
+
+- Sea trade changes what settlement can produce/obtain.
+- UI explains trade bottlenecks and benefits.
+
+---
+
+## SETTLEMENT-008 — Persistence enum hardening
+
+**Зачем.** Several enum persistence paths were hardened, but remaining raw enum loads can still break old or malformed data.
+
+**Scope.**
+
+- Audit raw enum parsing in settlement/governance persistence.
+- Replace unsafe loads with bounded fallback helpers.
+
+**Acceptance.**
+
+- No raw `Enum.valueOf(...)` remains on persisted settlement/governance input without fallback.
+- Tests cover unknown enum values.
+
+---
+
+## SETTLEMENT-003 — Infrastructure gate for STATE promotion
+
+**Зачем.** `SETTLEMENT -> STATE` must require actual infrastructure, not just a status command.
+
+**Scope.**
+
+- Promotion policy checks required buildings: town hall, storage, market at minimum.
+- Command/UI rejects promotion with `infrastructure_insufficient`-style reason.
+- Configurable required building set if minimal.
+
+**Acceptance.**
+
+- Promotion without required buildings fails.
+- Promotion with required buildings succeeds.
+- Pure policy test exists.
+
+---
+
+## POL-001 — Government forms
+
+**Зачем.** Political state needs RP structure and authority rules; settlement must not be confused with government.
+
+**Scope.**
+
+- Add government form to political state data/spec.
+- Minimum forms: `MONARCHY`, `REPUBLIC`.
+- Authority policy for status/capital/war declarations.
+- UI display/edit via `UI-001`.
+
+**Acceptance.**
+
+- State has visible government form.
+- Monarchy/republic have different authority behavior.
+- Claims/settlements remain separate concepts.
+
+---
+
+## WAR-001 — Complete formal outcomes
+
+**Зачем.** Outcomes must be real gameplay, not audit-only text.
+
+**Scope.**
+
+- Verify current `WarOutcomeApplier` behavior against code.
+- Tribute treasury transfer.
+- Occupy real claims/chunks without legacy faction bridge.
+- Annex limited claims/chunks with strict cap.
+- Vassalize/demilitarize audit and UI state.
+
+**Acceptance.**
+
+- Each outcome changes exactly the intended state and writes audit.
+- Annex respects chunk/claim limit.
+- Tribute affects treasury, not only audit.
+- UI shows outcome result.
+
+---
+
+## WAR-002 — Occupation tax and control
+
+**Зачем.** Occupation must matter economically and politically.
+
+**Scope.**
+
+- Occupation tax per chunk/claim over time.
+- Idempotent tax timestamping.
+- Treasury transfer or debt/audit if unpaid.
+- Occupied claim/control display in UI.
+
+**Acceptance.**
+
+- Occupier gains tax; occupied pays or records debt.
+- Tax cannot double-charge after reload/tick repeats.
+- Audit entries exist for paid/defaulted tax.
+
+---
+
+## WAR-003 — Objective-based revolt resolution
+
+**Зачем.** Timer-based auto-success is not gameplay.
+
+**Scope.**
+
+- Revolt schedules into battle window.
+- Rebel/occupier presence or objective control decides success/failure.
+- Success removes occupation; failure records cooldown/audit.
+- UI shows pending revolt, window, objective, result.
+
+**Acceptance.**
+
+- Empty revolt does not auto-win.
+- Rebel-controlled objective succeeds.
+- Occupier defense can fail the revolt.
+
+---
+
+## WAR-004 — Cooldowns and immunity cleanup
+
+**Зачем.** MP war spam needs protection.
+
+**Scope.**
+
+- Lost-territory immunity.
+- Peaceful-toggle cooldown.
+- Clear denial reasons in command/UI.
+- Persist cooldown records.
+
+**Acceptance.**
+
+- Recently defeated/occupied target cannot be spam-attacked.
+- PEACEFUL cannot be toggled abusively.
+- Denials are visible and persisted.
+
+---
+
+## WAR-005 — Ally workflow for declarations
+
+**Зачем.** War records can model sides; player workflow must support allies.
+
+**Scope.**
+
+- Add allies during declaration or pre-active phase.
+- Ally accept/decline flow gated by leader authority.
+- PEACEFUL cannot join attacker side.
+- UI support in War Room.
+
+**Acceptance.**
+
+- Allies become valid PvP participants on their side.
+- Consent is required.
+- UI and audit reflect side membership.
+
+---
+
+## WAR-006 — Dynamic siege standard banner/color
+
+**Зачем.** Static model/texture now exists; next step is political readability.
+
+**Done.** Iron-block placeholder removed; model, texture, recipe, and mining tags exist.
+
+**Scope.**
+
+- Block entity renderer or model tint for political color/banner.
+- Item tooltip/model communicates war use.
+
+**Acceptance.**
+
+- Standard color/banner matches placing side or political entity.
+- No fallback iron-block visuals.
+
+---
+
+## COMBAT-001 — Morale, suppression, rout
+
+**Зачем.** Recruits should not always fight to death; MP battles need readable pressure and collapse.
+
+**Scope.**
+
+- Squad/local morale policy from casualties, odds, flanking, commander presence, recent damage.
+- Suppression under sustained ranged fire.
+- Fallback/rout behavior with visible feedback.
+
+**Acceptance.**
+
+- Badly outnumbered squads can rout.
+- Commander/nearby allies improve morale.
+- Player sees why units routed.
+
+---
+
+## COMBAT-002 — Officer/leader discipline aura
+
+**Зачем.** Commanders should matter in battlefield cohesion.
+
+**Scope.**
+
+- Captain/commander aura affects morale/discipline.
+- Same political entity checks.
+- Configurable radius/strength.
+
+**Acceptance.**
+
+- Units near commander hold longer than isolated units.
+- Aura does not buff enemies/neutral units.
+
+---
+
+## COMBAT-003 — Role-aware formation planner and shield-wall pressure
+
+**Зачем.** Formations need to behave like tactical units, not loose mobs.
+
+**Scope.**
+
+- Infantry/shield front ranks.
+- Ranged rear ranks/firing lanes.
+- Cavalry flank/harass slots.
+- Shield wall forward pressure behavior.
+- Isolated formation integrity penalty.
+
+**Acceptance.**
+
+- Mixed groups form layered lines.
+- Shield wall advances slowly and coherently.
+- Isolated units lose formation benefits.
+
+---
+
+## COMBAT-004 — Cavalry charge and pike counterplay
+
+**Зачем.** Cavalry and pikes need distinct battlefield roles.
+
+**Scope.**
+
+- Cavalry charge intent, burst, first-hit bonus, exhaustion window.
+- Pike anti-cavalry hold-ground bonus.
+- UI/command support if needed.
+
+**Acceptance.**
+
+- Cavalry charge punishes unsupported infantry.
+- Pike line punishes frontal cavalry charge.
+- Exhaustion prevents charge spam.
+
+---
+
+## COMBAT-005 — Ranged backline spacing and fallback
+
+**Зачем.** Ranged units should not stand in melee line and die passively.
+
+**Scope.**
+
+- Maintain distance from own melee line and enemies.
+- Fallback when enemies close.
+- Preserve firing lanes where possible.
+
+**Acceptance.**
+
+- Archers/crossbows prefer rear positions.
+- They fallback when cavalry/melee breaks through.
+
+---
+
+## COMBAT-006 — Siege objective targeting and escort
+
+**Зачем.** Armies need to interact with `SiegeStandardBlock`, not only players.
+
+**Scope.**
+
+- Attack enemy siege standard during battle window.
+- Defend/escort own standard.
+- Standard health/control pool and audit on destruction.
+
+**Acceptance.**
+
+- Ordered attackers can destroy enemy standard.
+- Defenders hold around own standard.
+- Destruction changes siege state/audit.
+
+---
+
+## PERF-001 — Async navigation audit for every custom mob
+
+**Зачем.** MP-scale fights/settlements need non-blocking navigation for all custom mobs, not just some recruits.
+
+**Scope.**
+
+- Audit every `createNavigation` / `PathNavigation` override.
+- Cover recruits, mounted units, sailors, citizens, workers, nobles, militia.
+- Replace unjustified sync vanilla navigation with async-safe navigation.
+
+**Acceptance.**
+
+- No custom mob uses expensive sync pathing without explicit reason.
+- Compile/test coverage or documented verification for navigation class selection.
+
+---
+
+## PERF-002 — Crowd render optimization beyond LOD layers
+
+**Зачем.** Existing recruit render LOD skips some expensive layers at distance, but large MP battles may still be dominated by base model, layer passes, nameplates, state changes, and animation work.
+
+**Scope.**
+
+- Profile recruit render costs: base model, layers, nameplates, texture/state switches, animation/model pose churn.
+- Evaluate distant/crowd simplified renderer or simpler model.
+- Collapse cosmetic/team/biome overlays where possible.
+- Skip held item/armor/nameplate work for non-near/non-selected crowds when safe.
+
+**Acceptance.**
+
+- Large recruit crowds have measured render improvement.
+- Close-range readability is preserved.
+- Optimization is backed by profiling evidence, not guesswork.
+
+---
+
+## TEST-001 — Fix ownership reconnect GameTest regression
+
+**Зачем.** A Better Combat-present GameTest smoke loaded successfully but failed existing required `reconnectedownerrecoversauthorityafterownershiproundtrip`.
+
+**Scope.**
+
+- Reproduce the failing GameTest.
+- Determine whether it is test fragility or a real ownership regression.
+- Fix or quarantine only with explicit rationale.
+
+**Acceptance.**
+
+- `verifyGameTestStage` is green again, or the failure is explicitly quarantined with a replacement check.
+
+---
+
+## PORT-001 — NeoForge 1.21.1 port
+
+**Зачем.** Future platform migration may be needed, but it is not active gameplay work and should not live as a separate stale Cursor plan.
+
+**Scope.**
+
+- Create a branch only when this becomes active.
+- Upgrade Gradle/toolchain/mod metadata for NeoForge 1.21.1.
+- Migrate registries, networking, events, item NBT/data components, and dependency APIs.
+- Rebuild tests and smoke run after compile.
+
+**Acceptance.**
+
+- Root build targets NeoForge 1.21.1 on the port branch.
+- `compileJava`, tests, and in-game smoke pass.
+- Old Forge 1.20.1 assumptions are either removed or documented.
+
+---
+
+## LEGACY-001 — Final legacy cleanup audit
+
+**Зачем.** Old faction/diplomacy/siege leftovers must not contradict regulated warfare.
+
+**Scope.**
+
+- Search and classify remaining `RecruitsFaction`, `RecruitsPlayerInfo`, `FactionEvents`, `RecruitsTeamSaveData` references.
+- Search old siege remnants: `isUnderSiege`, `SiegeEvent`, `ClaimSiegeRuntime`, `siegeSpeedPercent`.
+- Remove stale naming where semantics are already political UUIDs.
+
+**Acceptance.**
+
+- No live old faction/diplomacy/siege gameplay path remains.
+- Remaining names are either removed or documented as non-gameplay compatibility seams.
+- `compileJava` and tests pass.
+
+---
+
+## COMPAT-001 — Save-data and packet compatibility decision
+
+**Зачем.** Historical planning still names unified save-data and packet compatibility as deferred. The project needs an explicit decision: migrate, drop, or support only narrow critical paths.
+
+**Scope.**
+
+- Audit active SavedData and packet compatibility seams.
+- Decide which legacy worlds/packets are supported, if any.
+- Remove unsupported compatibility code or document narrow migration helpers.
+
+**Acceptance.**
+
+- Compatibility policy is explicit and reflected in code/docs.
+- No hidden promise of broad old-world compatibility remains.
+
+---
+
+## COMPAT-002 — Archive tree retirement decision
+
+**Зачем.** `recruits/` and `workers/` are reference archives, not active runtime. Decide whether to keep them, move them, or delete them after stabilization.
+
+**Scope.**
+
+- Confirm no build/test path depends on archive trees.
+- Decide archive retention policy.
+- Update docs and repo layout accordingly.
+
+**Acceptance.**
+
+- Archive status is unambiguous.
+- Active build remains root `src/**` only.
+
+---
+
+## OPS-001 — Warfare-RP UAT runbook
+
+**Зачем.** Smoke tests are scattered; server operator needs one reproducible script.
+
+**Scope.**
+
+- Create a concise UAT section or file after UI/runtime slices stabilize.
+- Cover state create, settlement setup, declaration, battle window, siege standard, PvP gate, outcome, occupation/revolt.
+
+**Acceptance.**
+
+- A dev server can run the flow in 5-10 minutes.
+- Every step has expected result and failure signal.
