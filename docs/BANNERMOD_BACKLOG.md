@@ -532,6 +532,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## LEGACY-001 — Final legacy cleanup audit
 
+**Status: DONE 2026-04-27.** Audit pass; no live legacy gameplay path remains, surviving names documented.
+
 **Зачем.** Old faction/diplomacy/siege leftovers must not contradict regulated warfare.
 
 **Scope.**
@@ -546,9 +548,24 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Remaining names are either removed or documented as non-gameplay compatibility seams.
 - `compileJava` and tests pass.
 
+**Audit 2026-04-27.** Repository scan results:
+
+- `RecruitsFaction` — **0 matches.** Removed.
+- `FactionEvents` — **0 matches.** Removed.
+- `RecruitsTeamSaveData` — **0 matches.** Removed.
+- `SiegeEvent` — **0 matches.** Removed.
+- `ClaimSiegeRuntime` — **0 matches.** Removed.
+- `siegeSpeedPercent` — **0 matches.** Removed.
+- `RecruitsPlayerInfo` — **76 matches in 23 files** (`persistence.military.RecruitsPlayerInfo` + uses across messenger/scout entities, `MessageToClientUpdateOnlinePlayers`, `RecruitsClaim`, `SelectPlayerScreen`, etc.). Inspected: this is a plain `(uuid, name, online)` DTO with no faction semantics. The `Recruits` prefix is historical naming; the type carries player metadata for the messenger / scout / online-player UI / claim ownership info. Not legacy faction code. Documented as a non-gameplay compatibility seam — rename is cosmetic and out of scope here.
+- `isUnderSiege` — **3 matches** in `BannerModSettlementGrowthContext` + `BannerModSettlementGrowthManager`. Inspected: reads the new governor `under_siege` incident token to gate settlement growth. Not legacy `ClaimSiegeRuntime`. Active gameplay seam.
+
+`compileJava`, `compileTestJava`, `compileGametestJava`, and `test` are green on the post-audit tree.
+
 ---
 
 ## COMPAT-001 — Save-data and packet compatibility decision
+
+**Status: DONE 2026-04-27.** Policy: support only narrow named migration helpers; no broad old-world compatibility promise.
 
 **Зачем.** Historical planning still names unified save-data and packet compatibility as deferred. The project needs an explicit decision: migrate, drop, or support only narrow critical paths.
 
@@ -563,9 +580,13 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Compatibility policy is explicit and reflected in code/docs.
 - No hidden promise of broad old-world compatibility remains.
 
+**Audit 2026-04-27.** 23 active `SavedData` files were enumerated under `src/main/java`: war runtime (`Occupation`, `WarAllyInvite`, `Demilitarization`, `SiegeStandard`, `Revolt`, `WarDeclaration`, `WarAuditLog`, `WarCooldown`, `WarPoliticalRegistry`), governance (`BannerModTreasuryManager`, `BannerModGovernorManager`), settlement (`BannerModSettlementManager`, `SettlementRegistryData`, `BuildingInvalidationQueueData`, `ValidatedBuildingRegistryData`, `BannerModHomeAssignmentSavedData`, `SettlementWorkOrderSavedData`, `BannerModSellerDispatchSavedData`, `PlayerBuildingRegistrySavedData`, `BannerModSettlementProjectSavedData`), military legacy (`RecruitPlayerUnitSaveData`, `RecruitsGroupsSaveData`, `RecruitsClaimSaveData`). Each file is its own forward-compatible record set with versioned NBT keys; each `fromTag` already tolerates missing keys via getter defaults. **Policy:** the project supports **forward compatibility only** — new fields must be additive with safe defaults; removed fields may be dropped. Pre-Phase-21 worker / faction NBT migration is **explicitly out of scope**; only the narrow `boundWorkArea` UUID seam (`CitizenPersistenceBridge`) and the legacy `bannermod-recruits-*.toml` / `bannermod-workers-server.toml` config filenames remain as named compatibility helpers. The single "broad old-world compatibility" promise is dropped: an old-world load that fails to find a SavedData file falls back to defaults, not to a parallel legacy reader. Packet IDs are stable post-Phase-21 (`MILITARY_MESSAGES.length=106` is the documented worker-packet offset); a packet protocol bump is a fresh slice, not a compat seam.
+
 ---
 
 ## COMPAT-002 — Archive tree retirement decision
+
+**Status: DONE 2026-04-27.** Policy: keep `recruits/` and `workers/` on disk as untracked archive trees only; active build sources from `src/**` only.
 
 **Зачем.** `recruits/` and `workers/` are reference archives, not active runtime. Decide whether to keep them, move them, or delete them after stabilization.
 
@@ -580,9 +601,13 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Archive status is unambiguous.
 - Active build remains root `src/**` only.
 
+**Audit 2026-04-27.** Verified that `build.gradle` and `settings.gradle` contain no references to `recruits/` or `workers/` (0 matches). The active build composes only `src/{main,test,gametest}` per the Phase 21 closeout decision logged in `.planning/STATE.md`. Both archive trees still exist on disk under their original paths and remain untracked outside of historical planning artifacts. **Policy:** archives stay on disk as reference-only material, untracked, with no plan to delete in the near term — they are still useful as evidence during forensic work or when recovering historical context. A future cleanup phase may delete them after a settlement aggregate / worker-runtime parity audit passes; until that audit lands, deletion is premature. CLAUDE.md already documents this stance (see `## Project` and `Workflow`).
+
 ---
 
 ## OPS-001 — Warfare-RP UAT runbook
+
+**Status: DONE 2026-04-27.**
 
 **Зачем.** Smoke tests are scattered; server operator needs one reproducible script.
 
@@ -595,3 +620,43 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 - A dev server can run the flow in 5-10 minutes.
 - Every step has expected result and failure signal.
+
+**Progress 2026-04-27.** `docs/UAT_RUNBOOK.md` lands the warfare-RP runbook in seven sections covering state creation (POL-001 / UI-001), settlement infrastructure gate (SETTLEMENT-003), war declaration + ally consent (WAR-001 / WAR-005), battle window + siege standard (UI-002 / WAR-006), PvP gate verification (WAR-005), outcome + occupation tax + lost-territory immunity (WAR-001 / WAR-002 / WAR-004), and the timer-driven revolt flow (WAR-003 noted as not yet objective-driven). Each step lists expected behavior and failure signal so a green run is unambiguous. The runbook explicitly flags WAR-003 as pending and the two pre-existing flake tests (`FLAKE-001` / `FLAKE-002`) as unrelated to this flow.
+
+---
+
+## FLAKE-001 — `failingHouseRevalidationBecomesInvalidAfterGrace` non-determinism
+
+**Зачем.** Pre-existing GameTest in `BannerModBuildingInvalidationGameTests:59` flakes on `verifyGameTestStage`. Blocks clean-stage signal for unrelated phases.
+
+**Scope.**
+
+- Reproduce the flake locally and instrument the `BuildingInvalidationRuntime.tickBatch` path with per-tick state transitions.
+- Determine whether the issue is (a) the empty harness world's game-time advancement vs `tickBatch` synchronicity, (b) `invalidSinceGameTime=now-10L` resolving to a value that doesn't actually exceed `SettlementHouseGraceTicks=1L` under the test seam, or (c) a missed dirty-flag propagation from `applyRevalidationResult`.
+- Fix the deterministic seam or move the test off `harness_empty` if the harness can't reliably advance game time alongside the runtime tick.
+
+**Acceptance.**
+
+- 50 consecutive `verifyGameTestStage` runs pass without this test failing.
+- Root cause is named in the commit message, not just papered over with a delay.
+
+**Hypothesis 2026-04-27.** The test pre-stages `state=DEGRADED + invalidSinceGameTime=now-10L` and then calls `tickBatch(8)` with `SettlementHouseGraceTicks=1L`. The expected transition is `DEGRADED → INVALID` because `now - invalidSinceGameTime = 10 ≥ grace`. Most likely the runtime computes "elapsed since invalidSince" against `level.getGameTime()` *during the batch tick*, but `harness_empty` may not advance the level's game time alongside `tickBatch` (which is a direct invocation, not a server tick). If `level.getGameTime()` is still the same as `now` from line 64, then `elapsed=10 ≥ 1` should still hold — but if the validator ALSO consults the world for actual block presence (no blocks → forced INVALID), and the queue drain order interleaves with the seed ordering, the result may end up `DEGRADED` instead of `INVALID`. Next session: instrument the validator with the actual elapsed value and the validator verdict path; print before/after state for each enqueued building.
+
+---
+
+## FLAKE-002 — `trueAsyncCommitDiscardsResultWhenEntityIsGone` does not bump counter
+
+**Зачем.** Pre-existing GameTest in `BannerModTrueAsyncPathfindingGameTests:75` flakes; per-recruit discard counter doesn't advance even though the entity is discarded by the time the synthetic result is committed.
+
+**Scope.**
+
+- Re-run the test with tick-level instrumentation around `TrueAsyncPathfindingRuntime.commitForTesting` and `AsyncPathNavigation.commitDiscardEntityGoneCount()`.
+- Determine whether the synthetic `PathResult` actually reaches the committer's entity-gone branch (vs. being dropped earlier on epoch mismatch or queue routing).
+- Fix the test seam OR fix the committer if the entity-gone check is the bug.
+
+**Acceptance.**
+
+- 50 consecutive `verifyGameTestStage` runs pass.
+- The discard counter is provably incremented on the entity-gone path with a unit test in addition to the GameTest.
+
+**Hypothesis 2026-04-27.** Previous session note: "Discard-test переписан на детерминистичный test seam, но сценарий всё ещё не триггерит counter — нужен debug session с тиковой инструментацией." Likely cause: the `epoch` snapshotted at line 82 (`navigation.incrementPathEpoch()`) advances **again** when `recruit::discard` runs at line 94 (entity removal may bump epoch or invalidate the navigation), so by the time `commitForTesting` runs at line 113, the synthetic result's `epoch` no longer matches the navigation's current epoch — the committer drops it on epoch mismatch *before* reaching the entity-gone discard branch. Test fix: either (a) capture the post-discard epoch and feed that into the synthetic result, or (b) have the test seam skip the epoch check and force the result through the committer to the entity-gone branch. Next session: instrument the committer to log every drop reason and run the test until the actual drop-reason token is named.
