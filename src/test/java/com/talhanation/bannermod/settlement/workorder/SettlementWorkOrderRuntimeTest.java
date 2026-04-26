@@ -275,6 +275,101 @@ class SettlementWorkOrderRuntimeTest {
     }
 
     @Test
+    void transportOrderClaimReleaseAndCompleteCycleHonoursPayload() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        SettlementWorkOrder published = runtime.publish(SettlementWorkOrder.pendingTransport(
+                CLAIM_A,
+                BUILDING_A,
+                SettlementWorkOrderType.HAUL_RESOURCE,
+                new BlockPos(10, 64, 10),
+                new BlockPos(20, 64, 20),
+                "minecraft:wheat",
+                32,
+                75,
+                100L
+        )).orElseThrow();
+
+        SettlementWorkOrder claimed = runtime.claim(CLAIM_A, RESIDENT_A, null, 200L, 50L).orElseThrow();
+        assertEquals(published.orderUuid(), claimed.orderUuid());
+        assertEquals(SettlementWorkOrderType.HAUL_RESOURCE, claimed.type());
+        assertEquals(new BlockPos(10, 64, 10), claimed.sourcePos());
+        assertEquals(new BlockPos(20, 64, 20), claimed.destinationPos());
+        assertEquals(new BlockPos(20, 64, 20), claimed.targetPos());
+        assertEquals("minecraft:wheat", claimed.resourceHintId());
+        assertEquals(32, claimed.itemCount());
+
+        runtime.release(claimed.orderUuid());
+        assertTrue(runtime.currentClaim(RESIDENT_A).isEmpty());
+        SettlementWorkOrder pending = runtime.pendingFor(CLAIM_A).get(0);
+        assertEquals(claimed.orderUuid(), pending.orderUuid());
+        assertEquals(SettlementWorkOrderStatus.PENDING, pending.status());
+        assertEquals(claimed.sourcePos(), pending.sourcePos());
+        assertEquals(claimed.destinationPos(), pending.destinationPos());
+        assertEquals(claimed.itemCount(), pending.itemCount());
+
+        SettlementWorkOrder reclaimed = runtime.claim(CLAIM_A, RESIDENT_A, null, 300L, 50L).orElseThrow();
+        runtime.complete(reclaimed.orderUuid(), 400L);
+        assertEquals(0, runtime.size());
+        assertEquals(1, runtime.recentCompletions().size());
+        SettlementWorkOrderExecutionReceipt receipt = runtime.recentCompletions().get(0);
+        assertEquals(SettlementWorkOrderType.HAUL_RESOURCE, receipt.type());
+        assertEquals(new BlockPos(20, 64, 20), receipt.targetPos());
+    }
+
+    @Test
+    void transportOrderRepublishIsRejectedAsDuplicateForSameDestination() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        SettlementWorkOrder first = SettlementWorkOrder.pendingTransport(
+                CLAIM_A,
+                BUILDING_A,
+                SettlementWorkOrderType.HAUL_RESOURCE,
+                new BlockPos(0, 64, 0),
+                new BlockPos(5, 64, 5),
+                null,
+                16,
+                60,
+                100L
+        );
+        SettlementWorkOrder secondAttempt = SettlementWorkOrder.pendingTransport(
+                CLAIM_A,
+                BUILDING_A,
+                SettlementWorkOrderType.HAUL_RESOURCE,
+                new BlockPos(0, 64, 0),
+                new BlockPos(5, 64, 5),
+                "minecraft:wheat",
+                64,
+                80,
+                200L
+        );
+
+        assertTrue(runtime.publish(first).isPresent());
+        assertTrue(runtime.publish(secondAttempt).isEmpty());
+        assertEquals(1, runtime.size());
+    }
+
+    @Test
+    void transportWorkOrderPayloadRoundTripPreservesSourceDestinationAndCount() {
+        SettlementWorkOrder source = SettlementWorkOrder.pendingTransport(
+                CLAIM_A,
+                BUILDING_A,
+                SettlementWorkOrderType.FETCH_INPUT,
+                new BlockPos(1, 64, 1),
+                new BlockPos(3, 64, 3),
+                "minecraft:wheat",
+                16,
+                90,
+                123L
+        );
+
+        SettlementWorkOrder restored = SettlementWorkOrder.fromTag(source.toTag());
+
+        assertEquals(source, restored);
+        assertEquals(new BlockPos(1, 64, 1), restored.sourcePos());
+        assertEquals(new BlockPos(3, 64, 3), restored.destinationPos());
+        assertEquals(16, restored.itemCount());
+    }
+
+    @Test
     void workOrderTagRoundTripPreservesNullOptionals() {
         SettlementWorkOrder source = SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
                 SettlementWorkOrderType.STOCK_MARKET, null, null, 12, 44L);

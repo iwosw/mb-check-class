@@ -26,7 +26,10 @@ public record SettlementWorkOrder(
         long createdGameTime,
         SettlementWorkOrderStatus status,
         @Nullable UUID claimedByResidentUuid,
-        long claimExpiryGameTime
+        long claimExpiryGameTime,
+        @Nullable BlockPos sourcePos,
+        @Nullable BlockPos destinationPos,
+        int itemCount
 ) {
     public SettlementWorkOrder {
         Objects.requireNonNull(orderUuid, "orderUuid");
@@ -34,6 +37,22 @@ public record SettlementWorkOrder(
         Objects.requireNonNull(buildingUuid, "buildingUuid");
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(status, "status");
+        itemCount = Math.max(0, itemCount);
+    }
+
+    public SettlementWorkOrder(UUID orderUuid,
+                               UUID claimUuid,
+                               UUID buildingUuid,
+                               SettlementWorkOrderType type,
+                               @Nullable BlockPos targetPos,
+                               @Nullable String resourceHintId,
+                               int priority,
+                               long createdGameTime,
+                               SettlementWorkOrderStatus status,
+                               @Nullable UUID claimedByResidentUuid,
+                               long claimExpiryGameTime) {
+        this(orderUuid, claimUuid, buildingUuid, type, targetPos, resourceHintId, priority, createdGameTime,
+                status, claimedByResidentUuid, claimExpiryGameTime, null, null, 0);
     }
 
     public Optional<BlockPos> target() {
@@ -58,7 +77,10 @@ public record SettlementWorkOrder(
                 createdGameTime,
                 newStatus,
                 newClaimant,
-                newExpiryGameTime
+                newExpiryGameTime,
+                sourcePos,
+                destinationPos,
+                itemCount
         );
     }
 
@@ -74,6 +96,13 @@ public record SettlementWorkOrder(
         if (this.resourceHintId != null) {
             tag.putString("ResourceHintId", this.resourceHintId);
         }
+        if (this.sourcePos != null) {
+            tag.putLong("SourcePos", this.sourcePos.asLong());
+        }
+        if (this.destinationPos != null) {
+            tag.putLong("DestinationPos", this.destinationPos.asLong());
+        }
+        tag.putInt("ItemCount", this.itemCount);
         tag.putInt("Priority", this.priority);
         tag.putLong("CreatedGameTime", this.createdGameTime);
         tag.putString("Status", this.status.name());
@@ -96,7 +125,10 @@ public record SettlementWorkOrder(
                 tag.getLong("CreatedGameTime"),
                 statusFromTagName(tag.getString("Status")),
                 tag.hasUUID("ClaimedByResidentUuid") ? tag.getUUID("ClaimedByResidentUuid") : null,
-                tag.getLong("ClaimExpiryGameTime")
+                tag.getLong("ClaimExpiryGameTime"),
+                tag.contains("SourcePos", Tag.TAG_LONG) ? BlockPos.of(tag.getLong("SourcePos")) : null,
+                tag.contains("DestinationPos", Tag.TAG_LONG) ? BlockPos.of(tag.getLong("DestinationPos")) : null,
+                tag.getInt("ItemCount")
         );
     }
 
@@ -134,7 +166,40 @@ public record SettlementWorkOrder(
                 createdGameTime,
                 SettlementWorkOrderStatus.PENDING,
                 null,
-                0L
+                0L,
+                null,
+                null,
+                0
+        );
+    }
+
+    public static SettlementWorkOrder pendingTransport(UUID claimUuid,
+                                                       UUID buildingUuid,
+                                                       SettlementWorkOrderType type,
+                                                       @Nullable BlockPos sourcePos,
+                                                       @Nullable BlockPos destinationPos,
+                                                       @Nullable String resourceHintId,
+                                                       int itemCount,
+                                                       int priority,
+                                                       long createdGameTime) {
+        if (type != SettlementWorkOrderType.FETCH_INPUT && type != SettlementWorkOrderType.HAUL_RESOURCE) {
+            throw new IllegalArgumentException("transport payload requires FETCH_INPUT or HAUL_RESOURCE, got " + type);
+        }
+        return new SettlementWorkOrder(
+                UUID.randomUUID(),
+                claimUuid,
+                buildingUuid,
+                type,
+                destinationPos,
+                resourceHintId,
+                priority,
+                createdGameTime,
+                SettlementWorkOrderStatus.PENDING,
+                null,
+                0L,
+                sourcePos,
+                destinationPos,
+                itemCount
         );
     }
 }

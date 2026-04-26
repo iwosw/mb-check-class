@@ -2,15 +2,19 @@ package com.talhanation.bannermod.ai.civilian;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
 import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrder;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -19,23 +23,33 @@ import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.StemBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.PlantType;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Worker goal that consumes {@link SettlementWorkOrder} claims from the per-level
  * {@link SettlementWorkOrderRuntime} and executes them in-world.
  *
- * <p>Only simple, broadly applicable block actions are executed here. Construction placement
- * resolves its target state from the owning {@link BuildArea}; orders never guess a block-state.</p>
+ * <p>Handles in-world block actions ({@code HARVEST_CROP}, {@code BUILD_BLOCK}, ...) and the
+ * transport family ({@code FETCH_INPUT}, {@code HAUL_RESOURCE}). Transport orders move items
+ * between source and destination storage anchors using {@link TransportContainerExchange};
+ * non-transport orders resolve their target state from the owning {@link BuildArea} or
+ * vanilla block state and never guess.</p>
  *
  * <p>Priority: this goal is registered alongside the legacy {@code *WorkGoal} at priority 0.
  * Its {@link #canUse()} is only true while the runtime holds a claim for the worker, so it
@@ -44,6 +58,7 @@ import java.util.Optional;
 public final class SettlementOrderWorkGoal extends Goal {
 
     private static final double REACH_THRESHOLD = 2.6D;
+    private static final double STORAGE_LOOKUP_RADIUS = 6.0D;
     private static final int MAX_PATH_TICKS = 20 * 30;
     private static final int MAX_ACTION_TICKS = 20 * 15;
 
@@ -52,6 +67,16 @@ public final class SettlementOrderWorkGoal extends Goal {
     private int pathTicks;
     private int actionTicks;
     private boolean attemptedExecution;
+    @Nullable
+    private TransportPhase transportPhase;
+    private int transportCarried;
+
+    private enum TransportPhase {
+        MOVE_TO_SOURCE,
+        WITHDRAW,
+        MOVE_TO_DESTINATION,
+        DEPOSIT
+    }
 
     public SettlementOrderWorkGoal(AbstractWorkerEntity worker) {
         this.worker = worker;
@@ -103,6 +128,10 @@ public final class SettlementOrderWorkGoal extends Goal {
         this.pathTicks = 0;
         this.actionTicks = 0;
         this.attemptedExecution = false;
+        this.transportCarried = 0;
+        this.transportPhase = isTransportType(activeOrder)
+                ? (activeOrder.sourcePos() != null ? TransportPhase.MOVE_TO_SOURCE : TransportPhase.MOVE_TO_DESTINATION)
+                : null;
     }
 
     @Override
@@ -112,6 +141,8 @@ public final class SettlementOrderWorkGoal extends Goal {
         this.pathTicks = 0;
         this.actionTicks = 0;
         this.attemptedExecution = false;
+        this.transportPhase = null;
+        this.transportCarried = 0;
         worker.getNavigation().stop();
     }
 
@@ -126,6 +157,11 @@ public final class SettlementOrderWorkGoal extends Goal {
         }
         SettlementWorkOrderRuntime runtime = BannerModSettlementOrchestrator.workOrderRuntime(level);
         if (runtime == null) {
+            return;
+        }
+
+        if (transportPhase != null) {
+            tickTransport(level, runtime);
             return;
         }
 
@@ -161,6 +197,149 @@ public final class SettlementOrderWorkGoal extends Goal {
         executeAt(level, target, runtime);
     }
 
+    private void tickTransport(ServerLevel level, SettlementWorkOrderRuntime runtime) {
+        switch (transportPhase) {
+            case MOVE_TO_SOURCE -> {
+                BlockPos src = activeOrder.sourcePos();
+                if (src == null) {
+                    transportPhase = TransportPhase.MOVE_TO_DESTINATION;
+                    pathTicks = 0;
+                    return;
+                }
+                if (!stepToward(src)) {
+                    runtime.release(activeOrder.orderUuid());
+                    this.activeOrder = null;
+                    return;
+                }
+                if (worker.getHorizontalDistanceTo(src.getCenter()) <= REACH_THRESHOLD) {
+                    worker.getNavigation().stop();
+                    transportPhase = TransportPhase.WITHDRAW;
+                    pathTicks = 0;
+                    actionTicks = 0;
+                }
+            }
+            case WITHDRAW -> {
+                int withdrawn = withdrawAtSource(level);
+                transportCarried += withdrawn;
+                transportPhase = TransportPhase.MOVE_TO_DESTINATION;
+                pathTicks = 0;
+                actionTicks = 0;
+            }
+            case MOVE_TO_DESTINATION -> {
+                BlockPos dst = activeOrder.destinationPos();
+                if (dst == null) {
+                    completeActiveOrder(runtime, level);
+                    this.activeOrder = null;
+                    return;
+                }
+                if (!stepToward(dst)) {
+                    runtime.release(activeOrder.orderUuid());
+                    this.activeOrder = null;
+                    return;
+                }
+                if (worker.getHorizontalDistanceTo(dst.getCenter()) <= REACH_THRESHOLD) {
+                    worker.getNavigation().stop();
+                    transportPhase = TransportPhase.DEPOSIT;
+                    pathTicks = 0;
+                    actionTicks = 0;
+                }
+            }
+            case DEPOSIT -> {
+                depositAtDestination(level);
+                completeActiveOrder(runtime, level);
+                this.activeOrder = null;
+            }
+        }
+    }
+
+    private boolean stepToward(BlockPos target) {
+        if (worker.getHorizontalDistanceTo(target.getCenter()) <= REACH_THRESHOLD) {
+            return true;
+        }
+        pathTicks++;
+        if (pathTicks > MAX_PATH_TICKS) {
+            return false;
+        }
+        worker.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0.9D);
+        worker.getLookControl().setLookAt(target.getCenter());
+        return true;
+    }
+
+    private int withdrawAtSource(ServerLevel level) {
+        BlockPos src = activeOrder.sourcePos();
+        if (src == null) {
+            return 0;
+        }
+        int requestedTotal = Math.max(activeOrder.itemCount(), 1);
+        int budget = Math.max(0, requestedTotal - transportCarried);
+        if (budget == 0) {
+            return 0;
+        }
+        BannerModLogisticsItemFilter filter = TransportContainerExchange
+                .filterFromResourceHint(activeOrder.resourceHintId());
+        int withdrawn = 0;
+        for (Container container : containersAt(level, src)) {
+            if (withdrawn >= budget) {
+                break;
+            }
+            withdrawn += TransportContainerExchange.withdrawInto(
+                    container, worker.getInventory(), filter, budget - withdrawn);
+        }
+        return withdrawn;
+    }
+
+    private void depositAtDestination(ServerLevel level) {
+        BlockPos dst = activeOrder.destinationPos();
+        if (dst == null) {
+            return;
+        }
+        BannerModLogisticsItemFilter filter = TransportContainerExchange
+                .filterFromResourceHint(activeOrder.resourceHintId());
+        for (Container container : containersAt(level, dst)) {
+            int moved = TransportContainerExchange.depositInto(container, worker.getInventory(), filter);
+            if (moved == 0) {
+                continue;
+            }
+            // Continue across containers in case the first slot ran out of space mid-stack.
+        }
+    }
+
+    private List<Container> containersAt(ServerLevel level, BlockPos pos) {
+        List<Container> out = new ArrayList<>();
+        StorageArea area = nearestStorageArea(level, pos);
+        if (area != null) {
+            area.scanStorageBlocks();
+            out.addAll(area.storageMap.values());
+            if (!out.isEmpty()) {
+                return out;
+            }
+        }
+        Container direct = directContainer(level, pos);
+        if (direct != null) {
+            out.add(direct);
+        }
+        return out;
+    }
+
+    @Nullable
+    private StorageArea nearestStorageArea(ServerLevel level, BlockPos pos) {
+        Vec3 center = Vec3.atCenterOf(pos);
+        List<StorageArea> nearby = WorkAreaIndex.instance().queryInRange(level, center, STORAGE_LOOKUP_RADIUS, StorageArea.class);
+        return nearby.stream()
+                .min(Comparator.comparingDouble(area -> area.distanceToSqr(center)))
+                .orElse(null);
+    }
+
+    @Nullable
+    private Container directContainer(ServerLevel level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        if (state.getBlock() instanceof ChestBlock chestBlock) {
+            return ChestBlock.getContainer(chestBlock, state, level, pos, false);
+        }
+        BlockEntity be = level.getBlockEntity(pos);
+        return be instanceof Container container ? container : null;
+    }
+
     private void executeAt(ServerLevel level, BlockPos target, SettlementWorkOrderRuntime runtime) {
         SettlementWorkOrderType type = activeOrder.type();
         switch (type) {
@@ -193,13 +372,27 @@ public final class SettlementOrderWorkGoal extends Goal {
     }
 
     private static boolean isExecutableOrder(SettlementWorkOrder order) {
-        if (order == null || order.targetPos() == null) {
+        if (order == null) {
+            return false;
+        }
+        if (isTransportType(order)) {
+            return order.sourcePos() != null || order.destinationPos() != null;
+        }
+        if (order.targetPos() == null) {
             return false;
         }
         return switch (order.type()) {
             case HARVEST_CROP, BREAK_BLOCK, MINE_BLOCK, FELL_TREE, TILL_SOIL, PLANT_CROP, REPLANT_TREE, BUILD_BLOCK -> true;
             default -> false;
         };
+    }
+
+    private static boolean isTransportType(@Nullable SettlementWorkOrder order) {
+        if (order == null) {
+            return false;
+        }
+        return order.type() == SettlementWorkOrderType.FETCH_INPUT
+                || order.type() == SettlementWorkOrderType.HAUL_RESOURCE;
     }
 
     private void executeBuildBlock(ServerLevel level, BlockPos target, SettlementWorkOrderRuntime runtime) {

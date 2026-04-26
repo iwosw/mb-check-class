@@ -5,6 +5,7 @@ import com.talhanation.bannermod.settlement.workorder.publisher.BuildAreaWorkOrd
 import com.talhanation.bannermod.settlement.workorder.publisher.CropAreaWorkOrderPublisher;
 import com.talhanation.bannermod.settlement.workorder.publisher.LumberAreaWorkOrderPublisher;
 import com.talhanation.bannermod.settlement.workorder.publisher.MiningAreaWorkOrderPublisher;
+import com.talhanation.bannermod.settlement.workorder.publisher.StockpileTransportWorkOrderPublisher;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public final class SettlementWorkOrderPublisherRegistry {
         registry.register(new BuildAreaWorkOrderPublisher());
         registry.register(new LumberAreaWorkOrderPublisher());
         registry.register(new MiningAreaWorkOrderPublisher());
+        registry.register(new StockpileTransportWorkOrderPublisher());
         return registry;
     }
 
