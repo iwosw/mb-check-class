@@ -19,7 +19,7 @@ public class BannerModGovernorService {
     public OperationResult assignGovernor(@Nullable RecruitsClaim claim,
                                           BannerModGovernorAuthority.ActorContext actor,
                                           RecruitGovernorTarget recruit) {
-        return assignGovernor(claim, actor, recruit, claim == null ? null : claim.getOwnerFactionStringID(), false);
+        return assignGovernor(claim, actor, recruit, claim == null ? null : legacyOwnerKey(claim), false);
     }
 
     public OperationResult assignGovernor(@Nullable RecruitsClaim claim,
@@ -89,9 +89,9 @@ public class BannerModGovernorService {
     }
 
     public BannerModGovernorSnapshot getOrCreateGovernorSnapshot(RecruitsClaim claim) {
-        BannerModGovernorSnapshot snapshot = getOrCreateSnapshot(claim, claim.getOwnerFactionStringID());
-        if (!equalsNullable(snapshot.settlementFactionId(), claim.getOwnerFactionStringID())) {
-            snapshot = snapshot.withSettlementFactionId(claim.getOwnerFactionStringID());
+        BannerModGovernorSnapshot snapshot = getOrCreateSnapshot(claim, legacyOwnerKey(claim));
+        if (!equalsNullable(snapshot.settlementFactionId(), legacyOwnerKey(claim))) {
+            snapshot = snapshot.withSettlementFactionId(legacyOwnerKey(claim));
             this.manager.putSnapshot(snapshot);
         }
         return snapshot;
@@ -169,6 +169,12 @@ public class BannerModGovernorService {
             return claim.getClaimedChunks().get(0);
         }
         return new ChunkPos(0, 0);
+    }
+
+    @Nullable
+    private static String legacyOwnerKey(@Nullable RecruitsClaim claim) {
+        if (claim == null || claim.getOwnerPoliticalEntityId() == null) return null;
+        return claim.getOwnerPoliticalEntityId().toString();
     }
 
     @Nullable

@@ -1,10 +1,8 @@
 package com.talhanation.bannermod.settlement.civilian;
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
 import com.talhanation.bannermod.ai.civilian.FarmerPlantingPreparation;
@@ -12,6 +10,8 @@ import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -98,9 +98,13 @@ public final class WorkerSettlementSpawner {
             return null;
         }
 
-        RecruitsFaction faction = claim.getOwnerFaction();
-        UUID leaderId = faction != null ? faction.getTeamLeaderUUID() : null;
-        if (faction == null || leaderId == null) {
+        UUID politicalEntityId = claim.getOwnerPoliticalEntityId();
+        if (politicalEntityId == null) {
+            return null;
+        }
+        PoliticalEntityRecord owner = WarRuntimeContext.registry(level).byId(politicalEntityId).orElse(null);
+        UUID leaderId = owner == null ? null : owner.leaderUuid();
+        if (owner == null || leaderId == null) {
             return null;
         }
 
@@ -121,26 +125,18 @@ public final class WorkerSettlementSpawner {
         worker.setFollowState(0);
 
         level.addFreshEntity(worker);
-        seedFactionDefaults(level, worker, faction);
-        seedClaimWorkAreaDefaults(level, worker, claim, faction, spawnPos);
+        seedClaimWorkAreaDefaults(level, worker, claim, owner, spawnPos);
         BannerModSettlementRefreshSupport.refreshSnapshot(level, worker.blockPosition());
 
         return worker;
     }
 
-    private static void seedFactionDefaults(ServerLevel level, AbstractWorkerEntity worker, RecruitsFaction faction) {
-        PlayerTeam team = level.getScoreboard().getPlayerTeam(faction.getStringID());
-        if (team != null) {
-            FactionEvents.addRecruitToTeam((AbstractRecruitEntity) worker, team, level);
-        }
-    }
-
     private static void seedClaimWorkAreaDefaults(ServerLevel level,
                                                   AbstractWorkerEntity worker,
                                                   RecruitsClaim claim,
-                                                  RecruitsFaction faction,
+                                                  PoliticalEntityRecord owner,
                                                   BlockPos spawnPos) {
-        if (!(worker instanceof FarmerEntity farmer) || claim == null || faction == null) {
+        if (!(worker instanceof FarmerEntity farmer) || claim == null || owner == null) {
             return;
         }
 
@@ -163,9 +159,9 @@ public final class WorkerSettlementSpawner {
         cropArea.moveTo(fieldCenter.getX() - 4, fieldCenter.getY(), fieldCenter.getZ() + 4, 0.0F, 0.0F);
         cropArea.createArea();
         cropArea.setDone(false);
-        cropArea.setTeamStringID(faction.getStringID());
-        cropArea.setPlayerUUID(faction.getTeamLeaderUUID());
-        cropArea.setPlayerName(faction.getTeamLeaderName());
+        cropArea.setTeamStringID(owner.id().toString());
+        cropArea.setPlayerUUID(owner.leaderUuid());
+        cropArea.setPlayerName(owner.name());
         cropArea.setCustomName(Component.literal(""));
 
         ItemStack seedStack = resolveFieldSeed(level, fieldCenter);

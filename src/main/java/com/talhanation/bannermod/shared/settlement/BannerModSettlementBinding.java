@@ -96,10 +96,10 @@ public final class BannerModSettlementBinding {
 
     @Nullable
     private static String resolveClaimFactionId(@Nullable RecruitsClaim claim, ChunkPos chunkPos) {
-        if (claim == null || !claim.containsChunk(chunkPos) || claim.getOwnerFaction() == null) {
+        if (claim == null || !claim.containsChunk(chunkPos) || claim.getOwnerPoliticalEntityId() == null) {
             return null;
         }
-        return normalizeFactionId(claim.getOwnerFactionStringID());
+        return normalizeFactionId(claim.getOwnerPoliticalEntityId().toString());
     }
 
     @Nullable

@@ -129,8 +129,8 @@ public final class BannerModSettlementService {
                                                      @Nullable BannerModGovernorManager governorManager) {
         ChunkPos anchorChunk = resolveAnchorChunk(claim);
         BannerModGovernorSnapshot governorSnapshot = governorManager == null ? null : governorManager.getSnapshot(claim.getUUID());
-        String settlementFactionId = claim.getOwnerFaction() != null
-                ? claim.getOwnerFactionStringID()
+        String settlementFactionId = claim.getOwnerPoliticalEntityId() != null
+                ? claim.getOwnerPoliticalEntityId().toString()
                 : governorSnapshot == null ? null : governorSnapshot.settlementFactionId();
 
         List<BannerModSettlementResidentRecord> residents = collectResidents(level, claim, governorSnapshot, settlementFactionId);

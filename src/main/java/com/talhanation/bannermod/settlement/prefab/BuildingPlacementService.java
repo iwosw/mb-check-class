@@ -1,10 +1,11 @@
 package com.talhanation.bannermod.settlement.prefab;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -124,8 +125,10 @@ public final class BuildingPlacementService {
             return Result.UNKNOWN_PREFAB;
         }
 
-        RecruitsFaction faction = claim.getOwnerFaction();
-        if (faction == null) {
+        PoliticalEntityRecord owner = claim.getOwnerPoliticalEntityId() == null
+                ? null
+                : WarRuntimeContext.registry(serverLevel).byId(claim.getOwnerPoliticalEntityId()).orElse(null);
+        if (owner == null) {
             return Result.INVALID_POSITION;
         }
 
@@ -142,11 +145,11 @@ public final class BuildingPlacementService {
         buildArea.moveTo(anchorPos, 0, 0);
         buildArea.createArea();
 
-        String teamId = faction.getStringID() == null ? "" : faction.getStringID();
+        String teamId = owner.id().toString();
         buildArea.setTeamStringID(teamId);
-        buildArea.setPlayerName(faction.getTeamLeaderName() == null ? "" : faction.getTeamLeaderName());
-        if (faction.getTeamLeaderUUID() != null) {
-            buildArea.setPlayerUUID(faction.getTeamLeaderUUID());
+        buildArea.setPlayerName(owner.name());
+        if (owner.leaderUuid() != null) {
+            buildArea.setPlayerUUID(owner.leaderUuid());
         }
         buildArea.setCustomName(Component.literal(""));
         buildArea.setStructureNBT(structure);

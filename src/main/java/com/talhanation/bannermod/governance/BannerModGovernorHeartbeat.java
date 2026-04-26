@@ -9,6 +9,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
+import com.talhanation.bannermod.war.runtime.WarSiegeQueries;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
@@ -180,7 +181,7 @@ public final class BannerModGovernorHeartbeat {
 
             HeartbeatReport report = evaluate(new HeartbeatInput(
                     binding.status(),
-                    claim != null && claim.isUnderSiege,
+                    claim != null && WarSiegeQueries.isClaimUnderSiege(level, claim),
                     claim == null ? 0 : countEntitiesInClaim(level, claim, Villager.class),
                     workers.size(),
                     recruits.size(),

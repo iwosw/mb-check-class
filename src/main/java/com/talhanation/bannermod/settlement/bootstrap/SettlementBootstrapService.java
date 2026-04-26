@@ -1,11 +1,12 @@
 package com.talhanation.bannermod.settlement.bootstrap;
 
 import com.talhanation.bannermod.events.ClaimEvents;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import com.talhanation.bannermod.war.registry.PoliticalMembership;
 import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
@@ -49,7 +50,7 @@ public final class SettlementBootstrapService {
         if (claim != null && !playerOwnsClaim(player, claim)) {
             return BootstrapResult.failure("Settlement bootstrap requires a fort inside your faction claim.");
         }
-        if (claim == null && isStarterTownTooCloseToSameNationTown(player, authorityPos)) {
+        if (claim == null && isStarterTownTooCloseToSameNationTown(level, player, authorityPos)) {
             return BootstrapResult.failure("New town center is too close to another town in your nation.");
         }
         if (claim == null) {
@@ -69,7 +70,7 @@ public final class SettlementBootstrapService {
         SettlementRecord settlement = new SettlementRecord(
                 settlementId,
                 player.getUUID(),
-                claim.getOwnerFactionStringID(),
+                claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString(),
                 claim.getUUID(),
                 level.dimension(),
                 authorityPos,
@@ -116,7 +117,7 @@ public final class SettlementBootstrapService {
         SettlementRecord settlement = new SettlementRecord(
                 settlementId,
                 player.getUUID(),
-                claim.getOwnerFactionStringID(),
+                claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString(),
                 claim.getUUID(),
                 level.dimension(),
                 authorityPos,
@@ -142,20 +143,23 @@ public final class SettlementBootstrapService {
         if (claim.getPlayerInfo() != null && player.getUUID().equals(claim.getPlayerInfo().getUUID())) {
             return true;
         }
-        return player.getTeam() != null
-                && claim.getOwnerFaction() != null
-                && player.getTeam().getName().equals(claim.getOwnerFactionStringID());
+        UUID politicalEntityId = claim.getOwnerPoliticalEntityId();
+        if (politicalEntityId == null || !(player.level() instanceof ServerLevel level)) return false;
+        PoliticalEntityRecord owner = WarRuntimeContext.registry(level).byId(politicalEntityId).orElse(null);
+        if (owner == null) return false;
+        UUID playerUuid = player.getUUID();
+        return playerUuid.equals(owner.leaderUuid()) || owner.coLeaderUuids().contains(playerUuid);
     }
 
-    private static boolean isStarterTownTooCloseToSameNationTown(ServerPlayer player, BlockPos authorityPos) {
-        if (ClaimEvents.recruitsClaimManager == null || FactionEvents.recruitsFactionManager == null || player.getTeam() == null) {
+    private static boolean isStarterTownTooCloseToSameNationTown(ServerLevel level, ServerPlayer player, BlockPos authorityPos) {
+        if (ClaimEvents.recruitsClaimManager == null) {
             return false;
         }
-        RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(player.getTeam().getName());
-        if (faction == null) {
+        UUID politicalEntityId = PoliticalMembership.entityIdFor(WarRuntimeContext.registry(level), player.getUUID());
+        if (politicalEntityId == null) {
             return false;
         }
-        RecruitsClaim candidate = new RecruitsClaim(faction);
+        RecruitsClaim candidate = new RecruitsClaim(player.getName().getString(), politicalEntityId);
         ChunkPos center = new ChunkPos(authorityPos);
         candidate.addChunk(center);
         candidate.setCenter(center);
@@ -170,11 +174,8 @@ public final class SettlementBootstrapService {
         if (ClaimEvents.recruitsClaimManager == null) {
             return null;
         }
-        if (player.getTeam() == null || FactionEvents.recruitsFactionManager == null) {
-            return null;
-        }
-        RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(player.getTeam().getName());
-        if (faction == null) {
+        UUID politicalEntityId = PoliticalMembership.entityIdFor(WarRuntimeContext.registry(level), player.getUUID());
+        if (politicalEntityId == null) {
             return null;
         }
 
@@ -184,10 +185,10 @@ public final class SettlementBootstrapService {
             return existing;
         }
 
-        RecruitsClaim claim = new RecruitsClaim(faction);
+        RecruitsClaim claim = new RecruitsClaim(player.getName().getString(), politicalEntityId);
         claim.addChunk(anchorChunk);
         claim.setCenter(anchorChunk);
-        claim.setPlayer(new RecruitsPlayerInfo(player.getUUID(), player.getName().getString(), faction));
+        claim.setPlayer(new RecruitsPlayerInfo(player.getUUID(), player.getName().getString()));
         if (ClaimEvents.recruitsClaimManager.isTownTooCloseToSameNationTown(
                 claim,
                 null,
