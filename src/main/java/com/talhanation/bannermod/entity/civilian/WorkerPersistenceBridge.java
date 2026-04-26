@@ -2,6 +2,7 @@ package com.talhanation.bannermod.entity.civilian;
 
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
+import com.talhanation.bannermod.citizen.CitizenRole;
 import net.minecraft.nbt.CompoundTag;
 
 final class WorkerPersistenceBridge {
@@ -14,6 +15,7 @@ final class WorkerPersistenceBridge {
         if (worker.lastStorage != null) {
             nbt.putUUID("lastStorage", worker.lastStorage);
         }
+        nbt.putString("CitizenRole", CitizenRole.CONTROLLED_WORKER.name());
         persistCitizenStateToLegacy(worker.getCitizenCore(), nbt);
     }
 

@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
@@ -32,6 +33,8 @@ import net.minecraftforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @OnlyIn(Dist.CLIENT)
@@ -41,6 +44,14 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
     private UUID cachedPreviewArea;
     private CompoundTag cachedPreviewNbt;
     private List<ScannedBlock> cachedPreviewStructure = List.of();
+    private final Map<BlockState, ModelData> previewModelDataCache = new HashMap<>();
+    private static boolean renderStructurePreviews = true;
+
+    public static boolean toggleStructurePreviewRendering() {
+        renderStructurePreviews = !renderStructurePreviews;
+        return renderStructurePreviews;
+    }
+
     public WorkerAreaRenderer(EntityRendererProvider.Context mgr) {
         super(mgr);
         this.shadowRadius = 0.0F;
@@ -50,24 +61,39 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
     public ResourceLocation getTextureLocation(AbstractWorkAreaEntity p_115034_) {
         return TextureAtlas.LOCATION_BLOCKS;
     }
+
+    @Override
+    public boolean shouldRender(AbstractWorkAreaEntity entity, Frustum frustum, double camX, double camY, double camZ) {
+        if (entity instanceof BuildArea buildArea) {
+            Player player = Minecraft.getInstance().player;
+            if (renderStructurePreviews
+                    && player != null
+                    && entity.canPlayerSee(player)
+                    && player.distanceToSqr(buildArea) <= STRUCTURE_PREVIEW_MAX_DISTANCE_SQR) {
+                return true;
+            }
+        }
+        return super.shouldRender(entity, frustum, camX, camY, camZ);
+    }
     //ItemEntityRenderer
     @Override
     public void render(@NotNull AbstractWorkAreaEntity abstractWorkAreaEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         Player player = Minecraft.getInstance().player;
         if(player == null) return;
+        if(!renderStructurePreviews) return;
 
         if(!abstractWorkAreaEntity.canPlayerSee(player)) return;
 
         if(abstractWorkAreaEntity instanceof BuildArea buildArea){
             if (player.distanceToSqr(buildArea) <= STRUCTURE_PREVIEW_MAX_DISTANCE_SQR) {
-                renderStructurePreview(poseStack, buildArea);
+                renderStructurePreview(poseStack, bufferSource, buildArea);
             } else {
                 RuntimeProfilingCounters.increment("build_preview.skipped.distance");
             }
         }
     }
 
-    private void renderStructurePreview(PoseStack poseStack, BuildArea buildArea) {
+    private void renderStructurePreview(PoseStack poseStack, MultiBufferSource bufferSource, BuildArea buildArea) {
         CompoundTag nbt = buildArea.getStructureNBT();
         if (nbt == null || nbt.isEmpty()) {
             RuntimeProfilingCounters.increment("build_preview.skipped.empty_nbt");
@@ -81,6 +107,9 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
 
         int width = nbt.getInt("width");
         Direction scanFacing = Direction.byName(nbt.getString("facing"));
+        if (scanFacing == null) {
+            scanFacing = Direction.SOUTH;
+        }
         Direction facing = buildArea.getFacing();
         Direction right = facing.getClockWise();
         int rotationSteps = (4 + facing.get2DDataValue() - scanFacing.get2DDataValue()) % 4;
@@ -88,7 +117,6 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
 
         Minecraft mc = Minecraft.getInstance();
         BlockRenderDispatcher dispatcher = mc.getBlockRenderer();
-        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
         poseStack.pushPose();
 
@@ -121,8 +149,10 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
 
             ModelData modelData = ModelData.EMPTY;
             if (state.getBlock() instanceof EntityBlock entityBlock) {
-                BlockEntity be = entityBlock.newBlockEntity(BlockPos.ZERO, state);
-                if (be != null) modelData = be.getModelData();
+                modelData = previewModelDataCache.computeIfAbsent(state, ignored -> {
+                    BlockEntity be = entityBlock.newBlockEntity(BlockPos.ZERO, state);
+                    return be == null ? ModelData.EMPTY : be.getModelData();
+                });
             }
 
             if (rotatedState.getRenderShape() == RenderShape.MODEL) {
@@ -147,7 +177,6 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
             }
         }
 
-        bufferSource.endBatch();
         poseStack.popPose();
     }
 

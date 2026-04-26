@@ -2,9 +2,11 @@ package com.talhanation.bannermod.client.civilian.events;
 
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.citizen.render.CitizenRenderer;
 import com.talhanation.bannermod.client.civilian.render.FishingBobberRenderer;
 import com.talhanation.bannermod.client.civilian.render.WorkerAreaRenderer;
 import com.talhanation.bannermod.client.civilian.render.WorkerVillagerRenderer;
+import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.client.civilian.render.WorkerHumanRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
@@ -29,6 +31,7 @@ public class ClientEvent {
         EntityRenderers.register(ModEntityTypes.ANIMAL_PEN_AREA.get(), WorkerAreaRenderer::new);
 
         EntityRenderers.register(ModEntityTypes.FISHING_BOBBER.get(), FishingBobberRenderer::new);
+        EntityRenderers.register(ModCitizenEntityTypes.CITIZEN.get(), CitizenRenderer::new);
 
 
         // Config read is deferred into the provider lambda — `provider.create(ctx)` runs in

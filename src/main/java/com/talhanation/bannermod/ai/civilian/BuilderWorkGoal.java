@@ -92,15 +92,12 @@ public class BuilderWorkGoal extends Goal {
             return;
         }
 
-        if(builderEntity.tickCount % 20 == 0){
-            if(blockPos != null && moveToPosition(blockPos, 40)) return;
+        if(blockPos != null && moveToPosition(blockPos, 40)) return;
 
+        if(state == State.BREAK_BLOCKS){
+            if(this.mineBlocks(this.stackToBreak)) return;
 
-            if(state == State.BREAK_BLOCKS){
-                if(this.mineBlocks(this.stackToBreak)) return;
-
-                setState(State.PREPARE_PLACE_BLOCKS);
-            }
+            setState(State.PREPARE_PLACE_BLOCKS);
         }
 
         if(builderEntity.tickCount % 5 != 0) return;

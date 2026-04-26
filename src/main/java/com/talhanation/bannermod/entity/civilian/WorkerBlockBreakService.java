@@ -19,8 +19,8 @@ import net.minecraft.world.level.material.Fluids;
 
 final class WorkerBlockBreakService {
     private final AbstractWorkerEntity worker;
-    private int currentTimeBreak;
-    private int breakingTime;
+    private float currentTimeBreak;
+    private float breakingTime;
     private int previousTimeBreak;
 
     WorkerBlockBreakService(AbstractWorkerEntity worker) {
@@ -45,11 +45,16 @@ final class WorkerBlockBreakService {
 
         this.playHitSound(level, pos, state);
         if (this.breakingTime == 0) {
-            this.breakingTime = (int) (state.getDestroySpeed(level, pos) * 30);
+            float blockHardness = state.getDestroySpeed(level, pos);
+            if (blockHardness < 0.0F) {
+                this.resetBreakProgress();
+                return;
+            }
+            this.breakingTime = Math.max(1.0F, blockHardness * 30.0F);
         }
 
-        float destroySpeed = this.worker.getUseItem().getDestroySpeed(state) * 2;
-        this.currentTimeBreak += (int) destroySpeed;
+        float destroySpeed = this.worker.getMainHandItem().getDestroySpeed(state) * 2.0F;
+        this.currentTimeBreak += Math.max(0.1F, destroySpeed);
 
         int stage = (int) ((float) this.currentTimeBreak / this.breakingTime * 10);
         if (stage != this.previousTimeBreak) {

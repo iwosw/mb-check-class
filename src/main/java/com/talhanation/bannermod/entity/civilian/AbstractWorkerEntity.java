@@ -3,7 +3,6 @@ package com.talhanation.bannermod.entity.civilian;
 import com.google.common.collect.ImmutableSet;
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenRole;
-import com.talhanation.bannermod.citizen.CitizenRoleController;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.entity.military.AbstractChunkLoaderEntity;
@@ -64,7 +63,6 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     private final WorkerBlockBreakService blockBreakService = new WorkerBlockBreakService(this);
     private final WorkerStateAccess stateAccess = new WorkerStateAccess(this);
     private final CitizenCore citizenCore = WorkerCitizenBridge.createCore(this);
-    private CitizenRoleController citizenRoleController = CitizenRoleController.noop(CitizenRole.WORKER);
     @Override
     protected void registerGoals() {
         super.registerGoals();
@@ -84,17 +82,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
     @Override
     public CitizenRole getCitizenRole() {
-        return CitizenRole.WORKER;
-    }
-
-    @Override
-    public CitizenRoleController getCitizenRoleController() {
-        return this.citizenRoleController;
-    }
-
-    @Override
-    public void setCitizenRoleController(CitizenRoleController controller) {
-        this.citizenRoleController = controller == null ? CitizenRoleController.noop(this.getCitizenRole()) : controller;
+        return CitizenRole.CONTROLLED_WORKER;
     }
 
     protected void clearCurrentWorkAreaForRecovery() {
@@ -158,6 +146,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
         this.getCommandSenderWorld().getProfiler().push("looting");
         WorkerRuntimeLoop.aiStep(this);
+        this.getCitizenRoleController().onServerAiStep(this);
         this.getCommandSenderWorld().getProfiler().pop();
     }
 
@@ -259,6 +248,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
         WorkerIndex.instance().onWorkerTick(this);
         WorkerRuntimeLoop.tick(this);
+        this.getCitizenRoleController().onServerTick(this);
     }
 
     public abstract List<Item> inventoryInputHelp();
