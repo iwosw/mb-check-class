@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CTX_BIN="${CTX_BIN:-ctx}"
+
+if [[ "$#" -ge 1 && "$1" != -* ]]; then
+  exec "$CTX_BIN" search "$@"
+fi
+
+exec /usr/bin/rg "$@"

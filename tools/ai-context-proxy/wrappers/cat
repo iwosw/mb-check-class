@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CTX_BIN="${CTX_BIN:-ctx}"
+
+if [[ "$#" -eq 1 && -f "$1" ]]; then
+  exec "$CTX_BIN" file "$1"
+fi
+
+exec /usr/bin/cat "$@"

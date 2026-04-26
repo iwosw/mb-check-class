@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CTX_BIN="${CTX_BIN:-ctx}"
+
+if [[ "$#" -eq 3 && "$1" == "-n" && "$2" =~ ^([0-9]+),([0-9]+)p$ && -f "$3" ]]; then
+  exec "$CTX_BIN" exact "$3" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+fi
+
+if [[ "$#" -eq 2 && "$1" =~ ^-n([0-9]+),([0-9]+)p$ && -f "$2" ]]; then
+  exec "$CTX_BIN" exact "$2" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+fi
+
+exec /usr/bin/sed "$@"

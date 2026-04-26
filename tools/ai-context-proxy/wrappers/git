@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CTX_BIN="${CTX_BIN:-ctx}"
+
+if [[ "$#" -ge 1 && "$1" == "status" ]]; then
+  if [[ "$#" -eq 1 ]]; then
+    exec "$CTX_BIN" status
+  fi
+  if [[ "$#" -eq 2 && ( "$2" == "--short" || "$2" == "-s" || "$2" == "--porcelain" || "$2" == "--porcelain=v1" ) ]]; then
+    exec "$CTX_BIN" status
+  fi
+fi
+
+if [[ "$#" -ge 1 && "$1" == "diff" ]]; then
+  if [[ "$#" -eq 1 ]]; then
+    exec "$CTX_BIN" diff
+  fi
+  if [[ "$#" -eq 2 && "$2" == "--stat" ]]; then
+    exec "$CTX_BIN" diff
+  fi
+  if [[ "$#" -eq 2 && "$2" == "--cached" ]]; then
+    exec "$CTX_BIN" diff --staged
+  fi
+  if [[ "$#" -eq 3 && "$2" == "--cached" && "$3" == "--stat" ]]; then
+    exec "$CTX_BIN" diff --staged
+  fi
+fi
+
+exec /usr/bin/git "$@"

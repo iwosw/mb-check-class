@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec /usr/bin/find "$@" \
+  -not -path '*/.git/*' \
+  -not -path '*/.gradle/*' \
+  -not -path '*/.analysis/*' \
+  -not -path '*/build/*' \
+  -not -path '*/run/*' \
+  -not -path '*/run_gametest/*' \
+  | /usr/bin/head -n 300
