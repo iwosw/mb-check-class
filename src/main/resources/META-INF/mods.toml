@@ -11,8 +11,6 @@ modId="bannermod"
 version='1.14.3'
 
 displayName="BannerMod"
-updateJSONURL="https://raw.githubusercontent.com/talhanation/recruits/main/update.json"
-displayURL="https://modrinth.com/mod/villager-recruits/versions"
 
 logoFile="logo.png"
 

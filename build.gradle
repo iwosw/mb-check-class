@@ -37,7 +37,7 @@ mixin {
 }
 
 version = '1.14.3'
-group = 'com.talhanation.recruits'
+group = 'com.talhanation.bannermod'
 archivesBaseName = 'bannermod-1.20.1'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
