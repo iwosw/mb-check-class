@@ -1,8 +1,13 @@
 package com.talhanation.bannermod.war.runtime;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public record BattleWindowSchedule(List<BattleWindow> windows) {
@@ -25,5 +30,29 @@ public record BattleWindowSchedule(List<BattleWindow> windows) {
             }
         }
         return false;
+    }
+
+    public ListTag toListTag() {
+        ListTag list = new ListTag();
+        for (BattleWindow window : windows) {
+            if (window != null) list.add(window.toTag());
+        }
+        return list;
+    }
+
+    public static BattleWindowSchedule fromListTag(ListTag list) {
+        if (list == null || list.isEmpty()) return new BattleWindowSchedule(List.of());
+        List<BattleWindow> parsed = new ArrayList<>(list.size());
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag tag = list.getCompound(i);
+            BattleWindow window = BattleWindow.fromTag(tag);
+            if (window != null) parsed.add(window);
+        }
+        return new BattleWindowSchedule(parsed);
+    }
+
+    public static ListTag readListFromCompound(CompoundTag tag, String key) {
+        if (tag == null) return new ListTag();
+        return tag.getList(key, Tag.TAG_COMPOUND);
     }
 }
