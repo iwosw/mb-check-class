@@ -294,6 +294,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 **Progress 2026-04-26.** New `WarCooldownKind` (`LOST_TERRITORY_IMMUNITY`, `PEACEFUL_TOGGLE_RECENT`), `WarCooldownRecord`, `WarCooldownRuntime`, and `WarCooldownSavedData` mirror the existing demilitarization persistence pattern. `WarCooldownPolicy.canDeclareWithImmunity` wraps the existing `canDeclare` and adds a defender-immunity check; `canTogglePeacefulStatus` gates PEACEFUL flips. `WarOutcomeApplier` grants `LOST_TERRITORY_IMMUNITY` to the defender after `applyTribute`, `applyVassalize`, and `applyDemilitarization`; `PoliticalRegistryCommands.setStatus` records `PEACEFUL_TOGGLE_RECENT` on every PEACEFUL flip and refuses subsequent toggles until the cooldown expires. `WarServerConfig` exposes `LostTerritoryImmunityDays` (default 3) and `PeacefulToggleCooldownDays` (default 2). Targeted JUnit covers the runtime grant/expiry/dirty-listener semantics, the immunity gate on declaration, and the peaceful-toggle gate.
 
+## WAR-005 — Allies in war (consent flow)
+
 **Зачем.** War records can model sides; player workflow must support allies.
 
 **Scope.**
@@ -308,6 +310,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Allies become valid PvP participants on their side.
 - Consent is required.
 - UI and audit reflect side membership.
+
+**Progress 2026-04-26.** Pre-active wars now accept allies via a consent-based invitation flow. New persistence layer mirrors the existing pattern: `WarAllyInviteRecord` (id/warId/side/invitee/inviter/createdAt with NBT round-trip), `WarAllyInviteRuntime` (CRUD + `existing(warId,side,invitee)` dedup + dirty listener), `WarAllyInviteSavedData` (file id `bannermodWarAllyInvites`), and a new `WarRuntimeContext.allyInvites(level)` accessor. Pure `WarAllyPolicy` returns one denial enum (`OK`, `WAR_NOT_FOUND`, `WAR_NOT_PRE_ACTIVE`, `INVITEE_UNKNOWN`, `INVITEE_IS_MAIN_SIDE`, `INVITEE_ALREADY_ON_SIDE`, `INVITEE_ON_OPPOSING_SIDE`, `PEACEFUL_CANNOT_JOIN_ATTACKER`, `INVITE_NOT_FOUND`, `INVITE_WAR_MISMATCH`); `WarAllyService` is the single entry point shared by slash commands and packets, performs leader-or-op auth, re-checks the policy on accept (so a status flip between invite and accept doesn't sneak through), removes dangling invites when the war advances, and writes `ALLY_INVITED`/`ALLY_JOINED`/`ALLY_INVITE_DECLINED`/`ALLY_INVITE_CANCELLED` audit entries. Slash subtree `/bannermod war ally invite|accept|decline|cancel|list`. Three new client→server packets (`MessageInviteAlly`, `MessageRespondAllyInvite`, `MessageCancelAllyInvite`) wire the War Room UI: a new `WarAlliesScreen` lists pending invites and current allies of each side and exposes Invite-to-Attacker/Defender buttons that open `WarAllyInvitePickerScreen` (filtered by client-side mirror of the same policy). Invites are synced through `WarClientState` (new `AllyInvites` ListTag). Targeted JUnit covers every denial token in the policy, the runtime ally append/remove dirty semantics, the invite NBT round-trip, dedup by (war, side, invitee), and removeForWar bulk cleanup. UI follow-ups outstanding: ally membership doesn't yet drive PvP gate participation (next slice); the picker uses left-click only — right-click decline path still goes through DEL/BACKSPACE on the parent screen.
 
 ---
 
