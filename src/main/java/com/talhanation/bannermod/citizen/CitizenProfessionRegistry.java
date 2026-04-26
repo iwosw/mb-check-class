@@ -62,8 +62,8 @@ public final class CitizenProfessionRegistry {
     }
 
     /**
-     * Look up by the legacy per-profession entity id string (e.g.
-     * {@code "recruits:bowman"}). Returns empty when no profession matches
+     * Look up by the legacy or active per-profession entity id string (e.g.
+     * {@code "recruits:bowman"} or {@code "bannermod:bowman"}). Returns empty when no profession matches
      * — caller should treat as a completely unknown entity id.
      */
     public Optional<CitizenProfessionController> lookupByLegacyEntityId(@Nullable String legacyEntityId) {

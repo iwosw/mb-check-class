@@ -7,6 +7,8 @@ import net.minecraft.world.phys.Vec3;
 import java.util.UUID;
 
 public final class CitizenPersistenceBridge {
+    public static final String TAG_CITIZEN_PROFESSION = "CitizenProfession";
+    public static final String TAG_CITIZEN_ROLE = "CitizenRole";
 
     private CitizenPersistenceBridge() {
     }
@@ -30,6 +32,12 @@ public final class CitizenPersistenceBridge {
             target.putUUID("boundWorkArea", snapshot.boundWorkAreaUuid());
         }
         return target;
+    }
+
+    public static void writeCanonicalRole(CompoundTag target, CitizenProfession profession) {
+        CitizenProfession resolved = profession == null ? CitizenProfession.NONE : profession;
+        target.putString(TAG_CITIZEN_PROFESSION, resolved.name());
+        target.putString(TAG_CITIZEN_ROLE, resolved.coarseRole().name());
     }
 
     private static CitizenStateSnapshot fromLegacy(CompoundTag legacy) {

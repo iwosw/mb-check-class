@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.citizen;
 
+import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
+
 public interface CitizenRoleController {
 
     CitizenRole role();
@@ -11,6 +13,12 @@ public interface CitizenRoleController {
     }
 
     default void onBoundWorkAreaRemembered(CitizenRoleContext context) {
+    }
+
+    default void onServerAiStep(AbstractCitizenEntity citizen) {
+    }
+
+    default void onServerTick(AbstractCitizenEntity citizen) {
     }
 
     static CitizenRoleController noop(CitizenRole role) {

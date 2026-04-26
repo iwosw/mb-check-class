@@ -2,12 +2,18 @@ package com.talhanation.bannermod.entity.citizen;
 
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenCoreState;
+import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.citizen.CitizenProfessionController;
 import com.talhanation.bannermod.citizen.CitizenProfessionRegistry;
 import com.talhanation.bannermod.citizen.CitizenProfessionSwitcher;
 import com.talhanation.bannermod.citizen.CitizenRoleContext;
 import com.talhanation.bannermod.citizen.CitizenStateSnapshot;
+import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
+import com.talhanation.bannermod.events.FactionEvents;
+import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
+import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -15,6 +21,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -92,6 +99,102 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
     }
 
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
+            PrefabAutoStaffingRuntime.assignCitizenToNearestVacancy((net.minecraft.server.level.ServerLevel) this.level(), this);
+            tryConvertIntoPendingWorker();
+        }
+    }
+
+    private void tryConvertIntoPendingWorker() {
+        if (this.activeProfession() != CitizenProfession.NONE) {
+            return;
+        }
+        if (!this.getPersistentData().contains(PrefabAutoStaffingRuntime.TAG_PENDING_WORKER_PROFESSION, Tag.TAG_STRING)) {
+            return;
+        }
+        CitizenProfession targetProfession = CitizenProfession.fromTagName(
+                this.getPersistentData().getString(PrefabAutoStaffingRuntime.TAG_PENDING_WORKER_PROFESSION)
+        );
+        EntityType<? extends AbstractWorkerEntity> workerType = workerTypeFor(targetProfession);
+        EntityType<? extends com.talhanation.bannermod.entity.military.AbstractRecruitEntity> recruitType = recruitTypeFor(targetProfession);
+        if (workerType == null && recruitType == null) {
+            return;
+        }
+        UUID boundWorkAreaUuid = this.getBoundWorkAreaUUID();
+        if (boundWorkAreaUuid == null) {
+            return;
+        }
+        Entity boundWorkArea = ((net.minecraft.server.level.ServerLevel) this.level()).getEntity(boundWorkAreaUuid);
+        if (boundWorkArea == null || this.distanceToSqr(boundWorkArea) > 9.0D) {
+            return;
+        }
+        if (!PrefabAutoStaffingRuntime.hasConversionSlot((net.minecraft.server.level.ServerLevel) this.level(), boundWorkAreaUuid, this.getUUID())) {
+            return;
+        }
+        if (workerType != null) {
+            AbstractWorkerEntity worker = workerType.create(this.level());
+            if (worker == null) {
+                return;
+            }
+            worker.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
+            if (this.getOwnerUUID() != null) {
+                worker.setOwnerUUID(Optional.of(this.getOwnerUUID()));
+                worker.setIsOwned(this.isOwned());
+            }
+            if (this.getTeam() != null) {
+                FactionEvents.addRecruitToTeam(worker, this.getTeam(), (net.minecraft.server.level.ServerLevel) this.level());
+            }
+            worker.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
+            this.level().addFreshEntity(worker);
+            this.discard();
+            return;
+        }
+        com.talhanation.bannermod.entity.military.AbstractRecruitEntity recruit = recruitType.create(this.level());
+        if (recruit == null) {
+            return;
+        }
+        recruit.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
+        if (this.getOwnerUUID() != null) {
+            recruit.setOwnerUUID(Optional.of(this.getOwnerUUID()));
+            recruit.setIsOwned(this.isOwned());
+        }
+        if (this.getTeam() != null) {
+            FactionEvents.addRecruitToTeam(recruit, this.getTeam(), (net.minecraft.server.level.ServerLevel) this.level());
+        }
+        recruit.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
+        this.level().addFreshEntity(recruit);
+        this.discard();
+    }
+
+    @Nullable
+    private static EntityType<? extends AbstractWorkerEntity> workerTypeFor(CitizenProfession profession) {
+        return switch (profession) {
+            case FARMER -> ModEntityTypes.FARMER.get();
+            case LUMBERJACK -> ModEntityTypes.LUMBERJACK.get();
+            case MINER -> ModEntityTypes.MINER.get();
+            case BUILDER -> ModEntityTypes.BUILDER.get();
+            case MERCHANT -> ModEntityTypes.MERCHANT.get();
+            case FISHERMAN -> ModEntityTypes.FISHERMAN.get();
+            case ANIMAL_FARMER -> ModEntityTypes.ANIMAL_FARMER.get();
+            default -> null;
+        };
+    }
+
+    @Nullable
+    private static EntityType<? extends com.talhanation.bannermod.entity.military.AbstractRecruitEntity> recruitTypeFor(CitizenProfession profession) {
+        return switch (profession) {
+            case RECRUIT_SPEAR -> com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get();
+            case RECRUIT_BOWMAN -> com.talhanation.bannermod.registry.military.ModEntityTypes.BOWMAN.get();
+            case RECRUIT_CROSSBOWMAN -> com.talhanation.bannermod.registry.military.ModEntityTypes.CROSSBOWMAN.get();
+            case RECRUIT_HORSEMAN -> com.talhanation.bannermod.registry.military.ModEntityTypes.HORSEMAN.get();
+            case RECRUIT_SHIELDMAN -> com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT_SHIELDMAN.get();
+            default -> null;
+        };
+    }
+
     // ------------------------------------------------------------------
     // Profession surface
     // ------------------------------------------------------------------
@@ -136,7 +239,7 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putString("CitizenProfession", this.activeProfession().name());
+        CitizenPersistenceBridge.writeCanonicalRole(tag, this.activeProfession());
         if (this.state.getOwnerUUID() != null) {
             tag.putUUID("CitizenOwner", this.state.getOwnerUUID());
         }
@@ -176,9 +279,14 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        CitizenProfession profession = tag.contains("CitizenProfession", Tag.TAG_STRING)
-                ? CitizenProfession.fromTagName(tag.getString("CitizenProfession"))
+        CitizenProfession profession = tag.contains(CitizenPersistenceBridge.TAG_CITIZEN_PROFESSION, Tag.TAG_STRING)
+                ? CitizenProfession.fromTagName(tag.getString(CitizenPersistenceBridge.TAG_CITIZEN_PROFESSION))
                 : CitizenProfession.NONE;
+        if (profession == CitizenProfession.NONE
+                && !tag.contains(CitizenPersistenceBridge.TAG_CITIZEN_PROFESSION, Tag.TAG_STRING)
+                && (tag.hasUUID("OwnerUUID") || tag.contains("FollowState", Tag.TAG_INT))) {
+            this.state.apply(CitizenPersistenceBridge.fromRecruitLegacy(tag));
+        }
         this.switcher = new CitizenProfessionSwitcher(this.registry, this, profession);
         this.entityData.set(DATA_PROFESSION, profession.name());
 

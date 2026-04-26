@@ -52,6 +52,31 @@ class CitizenProfessionRegistryTest {
     }
 
     @Test
+    void lookupByActiveBannermodEntityIdResolvesProfessionController() {
+        CitizenProfessionRegistry registry = CitizenProfessionRegistry.defaults();
+        ProbeFarmerController probe = new ProbeFarmerController();
+        registry.register(probe);
+
+        Optional<CitizenProfessionController> byActiveId = registry.lookupByLegacyEntityId("bannermod:farmer");
+
+        assertTrue(byActiveId.isPresent());
+        assertSame(probe, byActiveId.get());
+    }
+
+    @Test
+    void professionReverseLookupFromActiveEntityIdCoversAllNonNoneValues() {
+        for (CitizenProfession profession : CitizenProfession.values()) {
+            if (profession == CitizenProfession.NONE) {
+                continue;
+            }
+            String legacyId = profession.legacyEntityId();
+            assertNotNull(legacyId, "every non-NONE profession should carry a legacy entity id for save migration: " + profession);
+            String activeId = "bannermod:" + legacyId.substring(legacyId.indexOf(':') + 1);
+            assertEquals(profession, CitizenProfession.fromLegacyEntityId(activeId));
+        }
+    }
+
+    @Test
     void unknownLegacyEntityIdReturnsEmpty() {
         CitizenProfessionRegistry registry = CitizenProfessionRegistry.defaults();
 

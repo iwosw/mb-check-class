@@ -5,7 +5,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenPersistenceBridge;
 import com.talhanation.bannermod.citizen.CitizenRole;
-import com.talhanation.bannermod.citizen.CitizenRoleController;
+import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
 import com.talhanation.bannermod.events.*;
 import com.talhanation.bannermod.events.RecruitEvent;
 import com.talhanation.bannermod.compat.IWeapon;
@@ -82,7 +82,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public abstract class AbstractRecruitEntity extends AbstractInventoryEntity implements RecruitCommandAccess, RecruitOwnershipAccess, RecruitUpkeepAccess, RecruitEquipmentAccess, RecruitProgressionAccess {
+public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implements RecruitCommandAccess, RecruitOwnershipAccess, RecruitUpkeepAccess, RecruitEquipmentAccess, RecruitProgressionAccess {
     static {
         RecruitStateAccess.ensureAccessorsRegistered();
     }
@@ -122,7 +122,6 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
     /** Last tick this recruit fanned out a protect-target reaction after being hit. */
     public int lastProtectTargetPropagationTick = Integer.MIN_VALUE;
     private final CitizenCore citizenCore = RecruitCitizenBridge.createCore(this);
-    private CitizenRoleController citizenRoleController = CitizenRoleController.noop(CitizenRole.RECRUIT);
 
     public AbstractRecruitEntity(EntityType<? extends AbstractInventoryEntity> entityType, Level world) {
         super(entityType, world);
@@ -147,16 +146,9 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
         return this.citizenCore;
     }
 
+    @Override
     public CitizenRole getCitizenRole() {
-        return CitizenRole.RECRUIT;
-    }
-
-    public CitizenRoleController getCitizenRoleController() {
-        return this.citizenRoleController;
-    }
-
-    public void setCitizenRoleController(CitizenRoleController controller) {
-        this.citizenRoleController = controller == null ? CitizenRoleController.noop(this.getCitizenRole()) : controller;
+        return CitizenRole.CONTROLLED_RECRUIT;
     }
 
     public void rideTick() {
@@ -288,6 +280,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
         if (this.getCommandSenderWorld().isClientSide()) return;
 
         RecruitRuntimeLoop.aiStep(this);
+        this.getCitizenRoleController().onServerAiStep(this);
 
     }
     public void tick() {
@@ -295,6 +288,7 @@ public abstract class AbstractRecruitEntity extends AbstractInventoryEntity impl
         if(this.level().isClientSide()) return;
 
         RecruitRuntimeLoop.tick(this);
+        this.getCitizenRoleController().onServerTick(this);
 
     }
 

@@ -59,20 +59,32 @@ public enum CitizenProfession {
     }
 
     /**
-     * Reverse lookup: legacy entity id string → profession. Returns
+     * Reverse lookup: legacy or active entity id string → profession. Returns
      * {@link #NONE} for unknown ids so the save-migration path has a
      * deterministic fallback.
      */
-    public static CitizenProfession fromLegacyEntityId(@Nullable String legacyId) {
-        if (legacyId == null) {
+    public static CitizenProfession fromLegacyEntityId(@Nullable String entityId) {
+        if (entityId == null) {
             return NONE;
         }
         for (CitizenProfession profession : values()) {
-            if (legacyId.equals(profession.legacyEntityId)) {
+            if (entityId.equals(profession.legacyEntityId) || entityId.equals(profession.activeEntityId())) {
                 return profession;
             }
         }
         return NONE;
+    }
+
+    @Nullable
+    private String activeEntityId() {
+        if (this.legacyEntityId == null) {
+            return null;
+        }
+        int separator = this.legacyEntityId.indexOf(':');
+        if (separator < 0) {
+            return this.legacyEntityId;
+        }
+        return "bannermod:" + this.legacyEntityId.substring(separator + 1);
     }
 
     /**
