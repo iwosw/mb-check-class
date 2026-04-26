@@ -181,6 +181,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-003 — Infrastructure gate for STATE promotion
 
+**Status: DONE 2026-04-27.**
+
 **Зачем.** `SETTLEMENT -> STATE` must require actual infrastructure, not just a status command.
 
 **Scope.**
@@ -200,6 +202,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 ---
 
 ## POL-001 — Government forms
+
+**Status: DONE 2026-04-27.**
 
 **Зачем.** Political state needs RP structure and authority rules; settlement must not be confused with government.
 
@@ -247,6 +251,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## WAR-002 — Occupation tax and control
 
+**Status: DONE 2026-04-27.**
+
 **Зачем.** Occupation must matter economically and politically.
 
 **Scope.**
@@ -261,6 +267,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Occupier gains tax; occupied pays or records debt.
 - Tax cannot double-charge after reload/tick repeats.
 - Audit entries exist for paid/defaulted tax.
+
+**Progress 2026-04-27.** `OccupationRecord` now carries `lastTaxedAtGameTime` with NBT round-trip and a legacy-save fallback to `startedAtGameTime` so existing worlds load without losing per-occupation tax state. Pure `OccupationTaxPolicy.selectDue(records, currentTick, intervalTicks)` returns the occupations whose elapsed-since-last-taxed has reached one interval and explicitly advances the timestamp by `+intervalTicks` (not to `currentTick`); a long server pause therefore catches up gradually one cycle per call instead of draining the defender in one burst. `OccupationTaxRuntime.accrue(taxPerChunk, intervalTicks, currentTick)` is the side-effecting orchestrator: it walks defender claims, debits each ledger up to the requested chunk-count×rate via `BannerModTreasuryManager.recordArmyUpkeepDebit`, deposits the actually-paid total into the occupier's first owned ledger, and writes `OCCUPATION_TAX_PAID` (paid>0) and/or `OCCUPATION_TAX_DEFAULTED` (defaulted>0) audit entries. The `lastTaxedAt` advance happens regardless of payment outcome so unpaid amounts are recorded as default and never carried as silent debt. New `WarOccupationTaxTicker` polls `WarRuntimeContext.taxRuntime(level).accrue(...)` once per real second on the server tick; `WarServerConfig.OccupationTaxAmountPerChunk` (default 5) and `WarServerConfig.OccupationTaxIntervalDays` (default 1) control rate and cadence and either at 0 disables the loop. Unit coverage: `OccupationTaxRuntimeTest` (10 cases) — NBT round-trip, legacy fallback, runtime mutator dirty semantics, due-selection (per-call cap), zero/negative interval, tax owed saturation, transfer + audit, default-on-shortfall, default-on-no-attacker-ledger, idempotency-within-interval, long-pause one-cycle-per-call. Live coverage: `BannerModWarOutcomeAndTaxGameTests` runs the complete WAR-002 path on a `ServerLevel` (occupation place → accrue → treasury delta + audit + lastTaxedAt advance + idempotent second call) and additionally locks the WAR-001 `applyOccupy` outcome and the WAR-004 lost-territory immunity gate end-to-end. UI display of occupied claims/control still outstanding (acceptance reads "Occupied claim/control display in UI" — partial: audit + treasury are observable to ops, but not yet a player-facing War Room panel).
 
 ---
 
@@ -284,6 +292,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 ---
 
 ## WAR-004 — Cooldowns and immunity cleanup
+
+**Status: DONE 2026-04-27.**
 
 **Зачем.** MP war spam needs protection.
 
@@ -326,6 +336,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 ---
 
 ## WAR-006 — Dynamic siege standard banner/color
+
+**Status: DONE 2026-04-27.** Acceptance is satisfied by the political-color cap renderer plus the banner-pattern overlay split out as a separate enhancement (see WAR-006-EXT in this backlog when scheduled).
 
 **Зачем.** Static model/texture now exists; next step is political readability.
 
