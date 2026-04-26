@@ -2,7 +2,6 @@ package com.talhanation.bannermod.registry.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.*;
-import com.talhanation.bannermod.client.military.gui.faction.*;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.AssassinLeaderEntity;
@@ -39,7 +38,6 @@ public class ModScreens {
         registerMenu(COMMAND_CONTAINER_TYPE.get(), CommandScreen::new);
         registerMenu(ASSASSIN_CONTAINER_TYPE.get(), AssassinLeaderScreen::new);
         registerMenu(HIRE_CONTAINER_TYPE.get(), RecruitHireScreen::new);
-        registerMenu(TEAM_EDIT_TYPE.get(), FactionEditScreen::new);
         registerMenu(PROMOTE.get(), PromoteScreen::new);
         registerMenu(GOVERNOR.get(), GovernorScreen::new);
 
@@ -147,12 +145,6 @@ public class ModScreens {
                     logger.error(e.getStackTrace().toString());
                     return null;
                 }
-            }));
-
-    public static final RegistryObject<MenuType<TeamEditMenu>> TEAM_EDIT_TYPE =
-            MENU_TYPES.register("team_edit", () -> IForgeMenuType.create((windowId, inv, data) -> {
-
-                return new TeamEditMenu(windowId, inv);
             }));
 
     public static final RegistryObject<MenuType<DisbandContainer>> DISBAND =

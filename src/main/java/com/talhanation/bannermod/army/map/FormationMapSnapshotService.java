@@ -4,9 +4,10 @@ import com.talhanation.bannermod.army.command.CommandHierarchy;
 import com.talhanation.bannermod.army.command.CommandRole;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.IStrategicFire;
+import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
-import com.talhanation.bannermod.events.FactionEvents;
-import com.talhanation.bannermod.persistence.military.RecruitsDiplomacyManager;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalRelations;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
@@ -62,11 +63,10 @@ public final class FormationMapSnapshotService {
         String viewerTeam = viewer.getTeam() == null ? null : viewer.getTeam().getName();
         String recruitTeam = recruit.getTeam() == null ? null : recruit.getTeam().getName();
         if (viewerTeam != null && viewerTeam.equals(recruitTeam)) return FormationMapRelation.FRIENDLY;
-        if (viewerTeam != null && recruitTeam != null && FactionEvents.recruitsDiplomacyManager != null) {
-            RecruitsDiplomacyManager.DiplomacyStatus status = FactionEvents.recruitsDiplomacyManager.getRelation(viewerTeam, recruitTeam);
-            if (status == RecruitsDiplomacyManager.DiplomacyStatus.ENEMY) return FormationMapRelation.HOSTILE;
-            if (status == RecruitsDiplomacyManager.DiplomacyStatus.ALLY) return FormationMapRelation.FRIENDLY;
-        }
+        UUID viewerPoliticalEntityId = RecruitPoliticalContext.politicalEntityIdOf(viewer, WarRuntimeContext.registry(viewer.serverLevel()));
+        UUID recruitPoliticalEntityId = RecruitPoliticalContext.politicalEntityIdOf(recruit, WarRuntimeContext.registry(viewer.serverLevel()));
+        if (PoliticalRelations.atWar(WarRuntimeContext.declarations(viewer.serverLevel()), viewerPoliticalEntityId, recruitPoliticalEntityId)) return FormationMapRelation.HOSTILE;
+        if (PoliticalRelations.ally(WarRuntimeContext.registry(viewer.serverLevel()), viewerPoliticalEntityId, recruitPoliticalEntityId)) return FormationMapRelation.FRIENDLY;
         return FormationMapRelation.NEUTRAL;
     }
 

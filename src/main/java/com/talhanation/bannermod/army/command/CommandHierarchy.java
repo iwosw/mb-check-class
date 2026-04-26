@@ -2,9 +2,7 @@ package com.talhanation.bannermod.army.command;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.events.ClaimEvents;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 
@@ -35,14 +33,7 @@ public final class CommandHierarchy {
     }
 
     private static boolean isNationLeaderFor(ServerPlayer commander, AbstractRecruitEntity recruit) {
-        if (FactionEvents.recruitsFactionManager == null || commander.getTeam() == null || recruit.getTeam() == null) {
-            return false;
-        }
-        if (!commander.getTeam().getName().equals(recruit.getTeam().getName())) {
-            return false;
-        }
-        RecruitsFaction faction = FactionEvents.recruitsFactionManager.getFactionByStringID(commander.getTeam().getName());
-        return faction != null && Objects.equals(commander.getUUID(), faction.getTeamLeaderUUID());
+        return false;
     }
 
     private static boolean isTownLeaderFor(ServerPlayer commander, AbstractRecruitEntity recruit) {
