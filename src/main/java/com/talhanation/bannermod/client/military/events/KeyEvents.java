@@ -2,13 +2,16 @@ package com.talhanation.bannermod.client.military.events;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.civilian.render.WorkerAreaRenderer;
 import com.talhanation.bannermod.client.military.gui.worldmap.WorldMapScreen;
 import com.talhanation.bannermod.client.military.gui.faction.FactionMainScreen;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.registry.military.ModShortcuts;
+import com.talhanation.bannermod.network.messages.military.MessageRequestFormationMapSnapshot;
 import com.talhanation.bannermod.network.messages.military.MessageWriteSpawnEgg;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -36,8 +39,16 @@ public class KeyEvents {
 
         if (ModShortcuts.MAP_SCREEN_KEY.isDown()) {
             if (minecraft.level != null && minecraft.level.dimension() == Level.OVERWORLD) {
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRequestFormationMapSnapshot());
                 minecraft.setScreen(new WorldMapScreen());
             }
+        }
+
+        if (com.talhanation.bannermod.registry.civilian.ModShortcuts.TOGGLE_PREFAB_RENDER_KEY != null
+                && com.talhanation.bannermod.registry.civilian.ModShortcuts.TOGGLE_PREFAB_RENDER_KEY.consumeClick()) {
+            boolean enabled = WorkerAreaRenderer.toggleStructurePreviewRendering();
+            clientPlayerEntity.displayClientMessage(Component.translatable(
+                    enabled ? "key.workers.toggle_prefab_render.enabled" : "key.workers.toggle_prefab_render.disabled"), true);
         }
     }
 

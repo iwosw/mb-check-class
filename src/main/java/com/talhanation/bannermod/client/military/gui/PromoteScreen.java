@@ -116,7 +116,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
         createProfessionButtons(BUTTON_PATROL_LEADER, TOOLTIP_PATROL_LEADER, 2,recruit.getXpLevel() >= 5);
         createProfessionButtons(BUTTON_CAPTAIN, BannerModMain.isSmallShipsCompatible ? TOOLTIP_CAPTAIN : TOOLTIP_CAPTAIN_DISABLED, 3, recruit.getXpLevel() >= 5 && BannerModMain.isSmallShipsLoaded && BannerModMain.isSmallShipsCompatible);
         createProfessionButtons(BUTTON_ASSASSIN, TOOLTIP_ASSASSIN, 4, false && recruit.getXpLevel() >= 5);
-        createProfessionButtons(BUTTON_SIEGE_ENGINEER, TOOLTIP_SIEGE_ENGINEER, 5, false && recruit.getXpLevel() >= 5 && BannerModMain.isSiegeWeaponsLoaded);
+        createProfessionButtons(BUTTON_SIEGE_ENGINEER, TOOLTIP_SIEGE_ENGINEER, 5, recruit.getXpLevel() >= 5 && BannerModMain.isSiegeWeaponsLoaded);
 
         createProfessionButtons(BUTTON_GOVERNOR, TOOLTIP_GOVERNOR, 6, canDesignateGovernor());
         createProfessionButtons(BUTTON_SPY, TOOLTIP_SPY, 7, false && recruit.getXpLevel() >= 7);

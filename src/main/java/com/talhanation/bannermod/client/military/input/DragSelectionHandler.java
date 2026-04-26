@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.input;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.citizen.CitizenRoleSelectors;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.messages.military.MessageSelectRecruits;
 import net.minecraft.client.KeyMapping;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * HYW-style drag-box selection for recruits.
+ * Drag-box selection for recruits.
  *
  * <p>Interaction model:</p>
  * <ul>
@@ -54,6 +55,8 @@ public final class DragSelectionHandler {
     );
 
     private static final double CANDIDATE_RADIUS = 96.0D;
+    private static final int MAX_CANDIDATES_SCANNED = 512;
+    private static final int MAX_SELECTED_RECRUITS = 128;
     private static final int RECT_FILL_COLOR = 0x22_44_AA_CC;
     private static final int RECT_BORDER_COLOR = 0xFF_99_FF_FF;
 
@@ -137,16 +140,18 @@ public final class DragSelectionHandler {
 
         AABB candidateBounds = player.getBoundingBox().inflate(CANDIDATE_RADIUS);
         List<UUID> selected = new ArrayList<>();
+        int candidatesScanned = 0;
         for (Entity entity : mc.level.entitiesForRendering()) {
-            if (!(entity instanceof AbstractRecruitEntity recruit)) continue;
-            if (!candidateBounds.intersects(recruit.getBoundingBox())) continue;
-            if (!recruit.isAlive() || !ownedByUs(recruit, player)) continue;
-            WorldToScreenProjector.Projection projection = WorldToScreenProjector.project(recruit.getBoundingBox().getCenter());
+            if (!candidateBounds.intersects(entity.getBoundingBox())) continue;
+            if (++candidatesScanned > MAX_CANDIDATES_SCANNED) break;
+            if (!isCommandableCitizenUnit(entity, player)) continue;
+            WorldToScreenProjector.Projection projection = WorldToScreenProjector.project(entity.getBoundingBox().getCenter());
             if (projection == null || !projection.visible()) continue;
             double sx = projection.screenX();
             double sy = projection.screenY();
             if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
-                selected.add(recruit.getUUID());
+                selected.add(entity.getUUID());
+                if (selected.size() >= MAX_SELECTED_RECRUITS) break;
             }
         }
         boolean additive = mc.options.keyShift.isDown();
@@ -157,6 +162,13 @@ public final class DragSelectionHandler {
         if (!recruit.isOwned()) return false;
         UUID ownerUuid = recruit.getOwnerUUID();
         return ownerUuid != null && ownerUuid.equals(player.getUUID());
+    }
+
+    private static boolean isCommandableCitizenUnit(Entity entity, Player player) {
+        if (entity instanceof AbstractRecruitEntity recruit) {
+            return recruit.isAlive() && ownedByUs(recruit, player);
+        }
+        return CitizenRoleSelectors.isOwnedCommandableRecruitUnit(entity, player.getUUID());
     }
 
     private static void resetState() {

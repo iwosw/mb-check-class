@@ -156,9 +156,13 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
     }
 
     public void setFormation(Formation f){
+        Formation previous = formation;
         formation = f;
         ClientManager.formationSelection = f.getIndex();
         this.setButtons();
+        if (f != Formation.NONE && f != previous) {
+            sendFormationRefreshCommandToServer();
+        }
     }
 
     public void setTightFormation(boolean tight){
@@ -221,6 +225,17 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
             for(RecruitsGroup group : getActiveGroups()){
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMovement(player.getUUID(), state, group.getUUID(), formation.getIndex(), tightFormation));
             }
+        }
+    }
+
+    private void sendFormationRefreshCommandToServer() {
+        if (ClientManager.groups == null || ClientManager.groups.isEmpty()) {
+            return;
+        }
+        for (RecruitsGroup group : getActiveGroups()) {
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(
+                    new MessageMovement(player.getUUID(), 2, group.getUUID(), formation.getIndex(), tightFormation)
+            );
         }
     }
 

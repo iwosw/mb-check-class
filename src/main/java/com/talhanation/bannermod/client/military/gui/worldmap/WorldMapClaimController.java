@@ -166,16 +166,7 @@ final class WorldMapClaimController {
     }
 
     boolean canClaimArea(List<ChunkPos> areaChunks) {
-        if (screen.selectedChunk == null || areaChunks == null || areaChunks.isEmpty() || ClientManager.ownFaction == null) {
-            return false;
-        }
-        if (isPlayerTooFar(screen.selectedChunk)) return false;
-
-        for (ChunkPos chunk : areaChunks) {
-            if (ClientManager.getClaimAtChunk(chunk) != null) return false;
-            if (isInBufferZone(chunk, ClientManager.ownFaction)) return false;
-        }
-        return true;
+        return false;
     }
 
     List<ChunkPos> getClaimableChunks(ChunkPos center, int radius) {

@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.army.map.FormationMapContact;
 import com.talhanation.bannermod.persistence.military.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
@@ -29,6 +30,8 @@ public class ClientManager {
     public static int factionsVersion;
     public static List<RecruitsGroup> groups = new ArrayList<>();
     public static int groupsVersion;
+    public static List<FormationMapContact> formationMapContacts = new ArrayList<>();
+    public static int formationMapContactsVersion;
     public static RecruitsFaction ownFaction;
     public static Map<String, Map<String, RecruitsDiplomacyManager.DiplomacyStatus>> diplomacyMap = new HashMap<>();
     public static Map<String, Long> treaties = new HashMap<>();
@@ -69,6 +72,8 @@ public class ClientManager {
         factionsVersion++;
         groups = new ArrayList<>();
         groupsVersion++;
+        formationMapContacts = new ArrayList<>();
+        formationMapContactsVersion++;
         ownFaction = null;
         diplomacyMap = new HashMap<>();
         treaties = new HashMap<>();
@@ -243,6 +248,10 @@ public class ClientManager {
 
     public static void markGroupsChanged() {
         groupsVersion++;
+    }
+
+    public static void markFormationMapContactsChanged() {
+        formationMapContactsVersion++;
     }
 
     public static void markOnlinePlayersChanged() {
