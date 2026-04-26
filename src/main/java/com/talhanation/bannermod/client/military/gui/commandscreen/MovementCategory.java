@@ -77,7 +77,7 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(moveButton);
 
         //FACE
-        RecruitsCommandButton faceButton = new RecruitsCommandButton(x, y + 50, TEXT_FACE,
+        RecruitsCommandButton faceButton = new RecruitsCommandButton(x, y, TEXT_FACE,
                 button -> {
                     screen.sendFaceCommandToServer();
                     screen.sendCommandInChat(100);
