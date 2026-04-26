@@ -1,7 +1,12 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
 import com.google.common.collect.ImmutableSet;
+import com.talhanation.bannermod.ai.pathfinding.async.PathPriority;
+import com.talhanation.bannermod.ai.pathfinding.async.PathResult;
+import com.talhanation.bannermod.ai.pathfinding.async.PathResultStatus;
+import com.talhanation.bannermod.ai.pathfinding.async.TrueAsyncPathfindingRuntime;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.protocol.game.DebugPackets;
@@ -21,7 +26,10 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +46,8 @@ public abstract class AsyncPathNavigation extends PathNavigation {
     private boolean deferredPathEntityTarget;
     private int deferredPathReachRange;
     private float deferredPathFollowRange;
+    private final AtomicLong pathEpoch = new AtomicLong();
+    private long lastTrueAsyncRequestGameTime = Long.MIN_VALUE;
 
     public AsyncPathNavigation(PathfinderMob p_26515_, Level p_26516_) {
         super(p_26515_, p_26516_);
@@ -107,9 +117,16 @@ public abstract class AsyncPathNavigation extends PathNavigation {
         } else if (this.path != null && !this.path.isDone() && p_148223_.contains(this.targetPos)) {
             return this.path;
         } else {
+            if (RecruitsServerConfig.UseTrueAsyncPathfinding.get() && this.level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                TrueAsyncRequest trueAsyncRequest = tryTrueAsyncPath(serverLevel, p_148223_, p_148225_, p_148226_, p_148227_);
+                if (trueAsyncRequest.accepted()) {
+                    return trueAsyncRequest.path();
+                }
+            }
             BlockPos blockpos = p_148225_ ? this.mob.blockPosition().above() : this.mob.blockPosition();
             int i = (int)(p_148227_ + (float)p_148224_);
             long gameTime = this.level.getGameTime();
+            long requestEpoch = this.incrementPathEpoch();
             if (this.deferredPathTicket != null && !this.matchesDeferredPathRequest(p_148223_, p_148225_, p_148226_, p_148227_)) {
                 GlobalPathfindingController.discardDeferred(this.deferredPathTicket, gameTime, GlobalPathfindingController.DeferredDropReason.INVALIDATED);
                 this.clearDeferredPathRequest();
@@ -150,7 +167,7 @@ public abstract class AsyncPathNavigation extends PathNavigation {
             // petal start - async
             if(RecruitsServerConfig.UseAsyncPathfinding.get()) {
                 Path createdPath = path;
-                AsyncPathProcessor.awaitProcessing(createdPath, this.level.getServer(), () -> createdPath == this.path, processedPath -> {
+                AsyncPathProcessor.awaitProcessing(createdPath, this.level.getServer(), () -> shouldAcceptAsyncResult(requestEpoch, createdPath), processedPath -> {
                     if (processedPath != this.path){
                         return; // petal - check that processing didn't take so long that we calculated a new path
                     }
@@ -164,6 +181,124 @@ public abstract class AsyncPathNavigation extends PathNavigation {
             }
             return path;
         }
+    }
+
+    public long incrementPathEpoch() {
+        return this.pathEpoch.incrementAndGet();
+    }
+
+    public long currentPathEpoch() {
+        return this.pathEpoch.get();
+    }
+
+    public UUID getMobUuid() {
+        return this.mob.getUUID();
+    }
+
+    public BlockPos currentBlockPos() {
+        return this.mob.blockPosition();
+    }
+
+    public double agentWidth() {
+        return this.mob.getBbWidth();
+    }
+
+    public double agentHeight() {
+        return this.mob.getBbHeight();
+    }
+
+    public double stepHeight() {
+        return this.mob.maxUpStep();
+    }
+
+    public boolean isTrueAsyncCommitTargetAlive() {
+        return this.mob.isAlive() && !this.mob.isRemoved() && this.mob.isAddedToWorld();
+    }
+
+    public boolean hasUnsupportedTrueAsyncPassability() {
+        return false;
+    }
+
+    public void applyTrueAsyncPathResult(PathResult result, int reachRange) {
+        if (result.status() != PathResultStatus.SUCCESS && result.status() != PathResultStatus.PARTIAL) {
+            RuntimeProfilingCounters.increment("pathfinding.true_async.commit.discard.status_" + result.status().name().toLowerCase());
+            return;
+        }
+        if (result.nodes().isEmpty()) {
+            RuntimeProfilingCounters.increment("pathfinding.true_async.commit.discard.empty_nodes");
+            return;
+        }
+        List<Node> nodes = result.nodes().stream()
+                .map(pos -> new Node(pos.getX(), pos.getY(), pos.getZ()))
+                .toList();
+        BlockPos target = result.nodes().get(result.nodes().size() - 1);
+        Path committedPath = new Path(nodes, target, result.reached());
+        this.path = committedPath;
+        this.targetPos = target;
+        this.reachRange = reachRange;
+        this.resetStuckTimeout();
+    }
+
+    @Nullable
+    private TrueAsyncRequest tryTrueAsyncPath(net.minecraft.server.level.ServerLevel level,
+                                              Set<BlockPos> targets,
+                                              boolean entityTarget,
+                                              int reachRange,
+                                              float followRange) {
+        long gameTime = this.level.getGameTime();
+        int throttleTicks = Math.max(0, RecruitsServerConfig.AsyncPathfindingPerMobThrottleTicks.get());
+        if (this.path != null && !this.path.isDone() && throttleTicks > 0 && gameTime - this.lastTrueAsyncRequestGameTime < throttleTicks) {
+            RuntimeProfilingCounters.increment("pathfinding.true_async.request.throttled");
+            return new TrueAsyncRequest(true, this.path);
+        }
+
+        double coalesceDistance = Math.max(0.0D, RecruitsServerConfig.AsyncPathfindingTargetCoalesceDistance.get());
+        if (coalesceDistance > 0.0D && this.path != null && !this.path.isDone() && this.targetPos != null) {
+            BlockPos nextTarget = targets.iterator().next();
+            if (this.targetPos.closerThan(nextTarget, coalesceDistance + 1.0D)) {
+                RuntimeProfilingCounters.increment("pathfinding.true_async.request.coalesced");
+                return new TrueAsyncRequest(true, this.path);
+            }
+        }
+
+        long epoch = this.incrementPathEpoch();
+        PathPriority priority = entityTarget ? PathPriority.COMBAT : PathPriority.FOLLOW;
+        boolean accepted = TrueAsyncPathfindingRuntime.instance().enqueue(
+                this,
+                level,
+                targets,
+                reachRange,
+                followRange,
+                epoch,
+                priority
+        );
+        if (!accepted) {
+            RuntimeProfilingCounters.increment("pathfinding.true_async.request.fallback_sync");
+            return new TrueAsyncRequest(false, null);
+        }
+
+        this.lastTrueAsyncRequestGameTime = gameTime;
+        RuntimeProfilingCounters.increment("pathfinding.true_async.request.enqueued");
+        return new TrueAsyncRequest(true, this.path);
+    }
+
+    private record TrueAsyncRequest(boolean accepted, @Nullable Path path) {
+    }
+
+    private boolean shouldAcceptAsyncResult(long requestEpoch, @Nullable Path createdPath) {
+        if (createdPath != this.path) {
+            RuntimeProfilingCounters.increment("pathfinding.true_async.commit.discard.stale_path_reference");
+            return false;
+        }
+        if (requestEpoch != this.currentPathEpoch()) {
+            RuntimeProfilingCounters.increment("pathfinding.true_async.commit.discard.stale_epoch");
+            return false;
+        }
+        if (this.mob.isRemoved() || !this.mob.isAlive()) {
+            RuntimeProfilingCounters.increment("pathfinding.true_async.commit.discard.entity_gone");
+            return false;
+        }
+        return true;
     }
 
     private boolean matchesDeferredPathRequest(Set<BlockPos> targets, boolean entityTarget, int reachRange, float followRange) {

@@ -13,10 +13,7 @@ import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.BiFunction;
-
 public class RecruitPathNavigation extends AsyncGroundPathNavigation {
-    private static BiFunction<Integer, NodeEvaluator, PathFinder> pathfinderSupplier = (p_26453_, nodeEvaluator) -> new PathFinder(nodeEvaluator, p_26453_);
     AbstractRecruitEntity recruit;
 
     private static final NodeEvaluatorGenerator nodeEvaluatorGenerator = () -> {
@@ -32,9 +29,6 @@ public class RecruitPathNavigation extends AsyncGroundPathNavigation {
     public RecruitPathNavigation(AbstractRecruitEntity recruit, Level world) {
         super(recruit, world);
         this.recruit = recruit;
-        if(RecruitsServerConfig.UseAsyncPathfinding.get()) {
-            pathfinderSupplier = (p_26453_, nodeEvaluator) -> new AsyncPathfinder(nodeEvaluator, p_26453_, nodeEvaluatorGenerator, this.level);
-        }
     }
 
     @Override
@@ -44,7 +38,10 @@ public class RecruitPathNavigation extends AsyncGroundPathNavigation {
         this.nodeEvaluator.setCanPassDoors(true);
         this.nodeEvaluator.setCanFloat(true);
 
-        return pathfinderSupplier.apply(range, this.nodeEvaluator);
+        if(RecruitsServerConfig.UseAsyncPathfinding.get()) {
+            return new AsyncPathfinder(this.nodeEvaluator, range, nodeEvaluatorGenerator, this.level);
+        }
+        return new PathFinder(this.nodeEvaluator, range);
     }
 
     public boolean moveTo(double x, double y, double z, double speed) {
