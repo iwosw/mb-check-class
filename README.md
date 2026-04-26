@@ -1,52 +1,47 @@
 # BannerMod
 
-BannerMod turns Minecraft into a living multiplayer kingdom sandbox: found a settlement, grow it into a state, raise citizens and soldiers, command formations, trade, defend your land, and fight regulated wars that have real consequences.
+BannerMod is a multiplayer kingdom sandbox for Minecraft Forge 1.20.1. It merges the old Villager Recruits and Workers ideas into one live mod: settlements, workers, claims, political states, armies, formations, logistics, trade, sieges, and regulated wars all belong to the same gameplay loop.
 
-It is built from the spirit of Villager Recruits and Workers, but aims higher than “spawn some guards” or “place a few work zones”. The goal is a server mod where towns feel alive, armies are readable, wars are planned events, and players have reasons to build, negotiate, raid, defend, and rebuild.
+The active mod lives in the root `src/**` tree under the `bannermod` runtime. The old `recruits/` and `workers/` folders are archive/reference trees only.
 
-## What You Do
+## Start Here
 
-- Build a starter fort and turn it into a working settlement.
-- Bring in citizens and give them jobs.
-- Mark farms, storage, markets, workshops, barracks, and other buildings.
-- Grow from a small settlement into a real state.
-- Recruit and command troops in formations.
-- Use shield walls, ranged lines, cavalry, commanders, and siege objectives.
-- Declare formal wars instead of starting random 24/7 grief fights.
-- Fight during scheduled battle windows so wars become events players can show up for.
-- Place siege standards to create battle zones.
-- Win tribute, vassalage, occupation, territory, or peace through server-backed outcomes.
+- Player/server guides: `MULTIPLAYER_GUIDE_RU.md`, `MULTIPLAYER_GUIDE_EN.md`
+- Documentation index: `docs/README.md`
+- Current developer status: `docs/STATUS.md`
+- Contribution flow: `docs/CONTRIBUTING.md`
+- Canonical unfinished-work queue: `docs/BANNERMOD_BACKLOG.md`
 
-## Why It Exists
+## Current Gameplay Shape
 
-Old Recruits was great at giving players soldiers. Old Workers was great at giving settlements labor. BannerMod is the merged idea: a multiplayer world where the economy, citizens, armies, claims, and wars all belong to one game loop.
+BannerMod is playable in pieces and still under active stabilization. The current runtime already has:
 
-The design target is not a chaotic raid mod. It is a roleplay-friendly war sandbox for servers:
+- political entities with settlement/state/vassal/peaceful status;
+- claim ownership tied to political sides;
+- settlement snapshots for residents, buildings, stockpile, market, trade, projects, jobs, and work orders;
+- persisted work-order claims and transport payloads for hauling/fetch execution;
+- infrastructure gating before a settlement can be promoted into a state;
+- War Room UI for active wars, political entities, siege standards, and siege-zone HUD status;
+- government-form editing for monarchy/republic authority differences;
+- recruit formation stance control, shield-wall behavior, reach weapons, flanking, cohesion, brace, and counter rules.
 
-- wars are declared;
-- battle times are known;
-- neutral players are protected;
-- outcomes are recorded;
-- settlements matter;
-- armies should look and behave like armies.
+Important unfinished areas remain in `docs/BANNERMOD_BACKLOG.md`.
 
-## Current Player Docs
-
-- `MULTIPLAYER_GUIDE.md` — give this to players.
-- `BANNERMOD_BACKLOG.md` — unfinished work and future slices.
-- `DEVELOPMENT.md` — short map for developers and agents.
-
-## Project Status
-
-BannerMod is an active merge/stabilization workspace. The root `src/**` tree is the live mod. Old `recruits/` and `workers/` folders are historical reference, not separate live mods.
-
-The mod is playable in pieces, but still under heavy development. The biggest remaining work is player-facing UI, deeper settlement onboarding, polished war outcomes, better siege flow, and more tactical combat behavior.
-
-## For Developers
+## Build
 
 ```bash
 ./gradlew compileJava
 ./gradlew test
 ```
 
-Keep unfinished work in `BANNERMOD_BACKLOG.md`. Do not revive old duplicate faction, diplomacy, or siege systems as parallel gameplay.
+Use `./gradlew verifyGameTestStage` when changing gameplay wiring, ownership, AI, networking, persistence, or multiplayer behavior.
+
+## Repository Truth
+
+- Active source: `src/**`
+- Active mod id: `bannermod`
+- Active planning: `.planning/`
+- Active backlog: `docs/BANNERMOD_BACKLOG.md`
+- Archive/reference source trees: `recruits/`, `workers/`
+
+Do not revive old duplicate faction, diplomacy, worker, or siege systems as parallel gameplay. If code and old planning notes disagree, trust the live code and update the backlog or docs instead of adding compatibility layers without a concrete need.

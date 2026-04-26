@@ -2,6 +2,8 @@
 
 Единственный канонический файл для нереализованных задач. Старые scratch-планы и handoff-доки удаляются/не используются; если задача не здесь, она не считается активной.
 
+Документация по моду живет в `docs/`. Корневые `MULTIPLAYER_GUIDE_RU.md` и `MULTIPLAYER_GUIDE_EN.md` остаются player-facing гайдами; корневой `README.md` остается входной точкой репозитория.
+
 ## Правила
 
 - Код и `src/**` важнее любых старых заметок.
@@ -29,6 +31,8 @@
 - UI явно различает settlement, claim и political state.
 - `compileJava` passes; packet mutations are server-authoritative.
 
+**Progress 2026-04-26.** Player-facing political entity list/detail UI lives over the synced war snapshot, reachable from the War Room. Three server-authoritative mutation packets (`MessageCreatePoliticalEntity`, `MessageRenamePoliticalEntity`, `MessageSetPoliticalEntityCapital`) wire the Create / Rename / Capital-here buttons; create reuses `PoliticalRegistryRuntime.canCreate`, rename uses a new `validateRename` + `updateName` runtime path, and both rename and set-capital enforce the new shared `PoliticalEntityAuthority.isLeaderOrOp` check. Packet round-trip tests, a registry rename test, and a leader-or-op auth test pass. Government-form UI/edit (POL-001) and color/charter editing still outstanding.
+
 ---
 
 ## UI-002 — Siege and War Room UI
@@ -48,6 +52,8 @@
 - Игрок видит активные войны, battle windows, siege standards и зоны без чтения команд.
 - Неверное placement действие даёт понятную причину отказа.
 - Defender получает понятное предупреждение и статус осады.
+
+**Progress 2026-04-26.** War Room lists siege standards with side, position, and radius for the selected war. The War Room now ships a "Place siege here" button: it is enabled only when the local player is the leader of one of the selected war's sides and the war is not RESOLVED/CANCELLED. The button posts `MessagePlaceSiegeStandardHere`, which delegates to a new server-side `SiegeStandardPlacementService` shared with the slash command — validation outcomes (war closed, side not participant, not leader, ...) come back as a single denial-token enum, so the chat and packet paths can never disagree on what is legal. A new client HUD (`WarSiegeZoneOverlay`, registered above the hotbar) renders a top-center banner whenever the player is inside any siege standard's radius for an active war, showing the war name, owning side, and current war state. War-Room battle-window/clock display still outstanding.
 
 ---
 
@@ -87,6 +93,8 @@
 - Wand-placed validated building can receive workers and produce behavior.
 - `compileJava` and relevant tests pass.
 
+**Progress 2026-04-26.** Settlement runtime publishes building/work-area orders through `BannerModSettlementOrchestrator`. `MessageAddWorkArea` had no remaining sender (only a registered handler + slot), so the class, the slot, and the dead Javadoc reference in `BannerModSettlementFactionEnforcementGameTests` are all gone; CIVILIAN_MESSAGES count is now 22 and the war packet base shifts down by one slot. `compileJava` is green. Live `current*Area` fields still survive on `FarmerEntity`/`FishermanEntity` and their work goals — migrating those to `ValidatedBuildingRecord` lookup is the next slice.
+
 ---
 
 ## SETTLEMENT-004 — Persistent settlement runtime state
@@ -105,6 +113,8 @@
 - No false dirty churn on identical reload/restore.
 - Focused persistence tests pass.
 
+**Progress 2026-04-26.** Work-order runtime persistence and no-op restore dirty checks are covered by `SettlementWorkOrderRuntimeTest`; targeted tests pass.
+
 ---
 
 ## SETTLEMENT-005 — Hauling and input-fetch work orders
@@ -122,6 +132,8 @@
 - Workers/couriers can fetch inputs for production and haul outputs to storage.
 - Orders survive release/expiry correctly.
 - Tests cover payload serialization and claim behavior.
+
+**Progress 2026-04-26.** `SettlementWorkOrder` carries source position, destination position, resource hint/filter, and item count for `FETCH_INPUT`/`HAUL_RESOURCE`. `SettlementOrderWorkGoal` executes transport orders through a four-phase state machine (move-to-source → withdraw → move-to-destination → deposit) using a stateless `TransportContainerExchange` helper that resolves containers via the nearest `StorageArea` (or a direct block-entity at the anchor pos) and respects the resource-hint filter and requested item count. `StockpileTransportWorkOrderPublisher` turns each authored stockpile route into a `HAUL_RESOURCE` order; runtime dedup keys on (building, type, destination) so republishing is a no-op. Targeted JUnit covers filter parsing, publisher helpers, and a transport claim/release/complete cycle. Live in-game smoke verification of cross-storage item movement under the new state machine remains open.
 
 ---
 
@@ -142,6 +154,8 @@
 - Settlement snapshots update after all important civil world changes.
 - GameTest or equivalent live-world coverage exists before broad hook wiring.
 
+**Progress 2026-04-26.** Build completion (`BuildArea.tick` after `isDone()`), creative work-area discard (`AbstractWorkAreaEntity.hurt`), worker death (`LivingDeathEvent`), worker destroy-removal (`EntityLeaveLevelEvent` filtered by `RemovalReason.shouldDestroy()`), and container place/break events all now trigger `BannerModSettlementRefreshSupport.refreshSnapshot`. Container hooks gate on `SettlementContainerHookPolicy.shouldRefresh(isContainer, insideStorageArea)` so distant chests do not pay the snapshot cost; the predicate is unit-tested. Live GameTest coverage of the new event paths is still outstanding.
+
 ---
 
 ## SETTLEMENT-007 — Sea-trade production consumer loop
@@ -159,21 +173,7 @@
 - Sea trade changes what settlement can produce/obtain.
 - UI explains trade bottlenecks and benefits.
 
----
-
-## SETTLEMENT-008 — Persistence enum hardening
-
-**Зачем.** Several enum persistence paths were hardened, but remaining raw enum loads can still break old or malformed data.
-
-**Scope.**
-
-- Audit raw enum parsing in settlement/governance persistence.
-- Replace unsafe loads with bounded fallback helpers.
-
-**Acceptance.**
-
-- No raw `Enum.valueOf(...)` remains on persisted settlement/governance input without fallback.
-- Tests cover unknown enum values.
+**Progress 2026-04-26.** Existing settlement snapshot trade-route/sea-entrypoint hints are documented for players; no new production consumer loop landed in this slice.
 
 ---
 
@@ -192,6 +192,8 @@
 - Promotion without required buildings fails.
 - Promotion with required buildings succeeds.
 - Pure policy test exists.
+
+**Progress 2026-04-26.** Added `PoliticalStatePromotionPolicy` and command-side `STATE` promotion gate. Promotion now requires a settlement snapshot with town hall/starter fort, storage, and market infrastructure; pure policy tests pass.
 
 ---
 
@@ -212,9 +214,7 @@
 - Monarchy/republic have different authority behavior.
 - Claims/settlements remain separate concepts.
 
----
-
-## WAR-001 — Complete formal outcomes
+**Progress 2026-04-26.** Added `GovernmentForm` enum (`MONARCHY`, `REPUBLIC`); persisted on `PoliticalEntityRecord` with backward-compatible 11-arg constructor and tag fallback to `MONARCHY` for old saves. New `MessageSetGovernmentForm` packet (leader-only) toggles via the runtime's `updateGovernmentForm`. UI shows the current form on the political-entity detail panel and ships a "→ Republic / → Monarchy" toggle button on `PoliticalEntityListScreen` enabled only for leaders. `PoliticalEntityAuthority.canAct` extends authority to co-leaders when the form is `REPUBLIC`; `MONARCHY` keeps it leader-only. `GovernmentFormTest` covers enum default, authority delegation, runtime mutation, tag round-trip, and legacy-save fallback.
 
 **Зачем.** Outcomes must be real gameplay, not audit-only text.
 
@@ -290,9 +290,7 @@
 - PEACEFUL cannot be toggled abusively.
 - Denials are visible and persisted.
 
----
-
-## WAR-005 — Ally workflow for declarations
+**Progress 2026-04-26.** New `WarCooldownKind` (`LOST_TERRITORY_IMMUNITY`, `PEACEFUL_TOGGLE_RECENT`), `WarCooldownRecord`, `WarCooldownRuntime`, and `WarCooldownSavedData` mirror the existing demilitarization persistence pattern. `WarCooldownPolicy.canDeclareWithImmunity` wraps the existing `canDeclare` and adds a defender-immunity check; `canTogglePeacefulStatus` gates PEACEFUL flips. `WarOutcomeApplier` grants `LOST_TERRITORY_IMMUNITY` to the defender after `applyTribute`, `applyVassalize`, and `applyDemilitarization`; `PoliticalRegistryCommands.setStatus` records `PEACEFUL_TOGGLE_RECENT` on every PEACEFUL flip and refuses subsequent toggles until the cooldown expires. `WarServerConfig` exposes `LostTerritoryImmunityDays` (default 3) and `PeacefulToggleCooldownDays` (default 2). Targeted JUnit covers the runtime grant/expiry/dirty-listener semantics, the immunity gate on declaration, and the peaceful-toggle gate.
 
 **Зачем.** War records can model sides; player workflow must support allies.
 
@@ -326,6 +324,8 @@
 
 - Standard color/banner matches placing side or political entity.
 - No fallback iron-block visuals.
+
+**Progress 2026-04-26.** `SiegeStandardBlockEntity` now syncs `warId` and `sidePoliticalEntityId` to the client via `getUpdateTag` / `getUpdatePacket`. New `SiegeStandardBlockEntityRenderer` paints a small political-color cap (cuboid + outline) above the static model; the cap colour is parsed from the bound side's `PoliticalEntityRecord.color` through a dedicated, unit-tested `PoliticalColorParser` (accepts `RRGGBB` or `AARRGGBB`, falls back to white). The siege standard `BlockItem` is now a `SiegeStandardBlockItem` with a two-line tooltip pointing players at the War Room "Place siege here" flow. Native banner-pattern overlay still outstanding.
 
 ---
 
@@ -470,22 +470,6 @@
 - Large recruit crowds have measured render improvement.
 - Close-range readability is preserved.
 - Optimization is backed by profiling evidence, not guesswork.
-
----
-
-## TEST-001 — Fix ownership reconnect GameTest regression
-
-**Зачем.** A Better Combat-present GameTest smoke loaded successfully but failed existing required `reconnectedownerrecoversauthorityafterownershiproundtrip`.
-
-**Scope.**
-
-- Reproduce the failing GameTest.
-- Determine whether it is test fragility or a real ownership regression.
-- Fix or quarantine only with explicit rationale.
-
-**Acceptance.**
-
-- `verifyGameTestStage` is green again, or the failure is explicitly quarantined with a replacement check.
 
 ---
 

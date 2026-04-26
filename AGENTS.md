@@ -68,6 +68,13 @@ After coding, provide:
 - Do not stage Markdown (`*.md`, `*.mdc`) unless explicitly asked. If Markdown is requested in a commit, only `AGENTS.md` and `CLAUDE.md` are allowed by default; do not commit planning docs or other guide files unless the user explicitly names them.
 - For multi-line commit messages: write the message to `/tmp/commit_msg.txt` via the file-writing tool, then `git commit -F /tmp/commit_msg.txt`. The `ctx` pre-bash hook blocks heredoc patterns (`<<'EOF'`).
 
+10. Contribution flow
+- Read `docs/STATUS.md` before picking up brownfield work.
+- Use `docs/CONTRIBUTING.md` as the contribution flow for code, tests, docs, and commits.
+- Use `docs/BANNERMOD_BACKLOG.md` as the canonical active backlog.
+- Put module documentation under `docs/`; keep root player guides split as `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md`.
+- The local context multitool is documented in `tools/ai-context-proxy/README.md` and summarized in `docs/TOOLS.md`.
+
 <!-- GSD:project-start source:.planning/PROJECT.md -->
 ## Project
 
@@ -82,6 +89,5 @@ This workspace is the realized merged runtime of the Forge mods historically liv
 ## Workflow
 
 - Use `.planning/` as the active planning context.
-- Use `.planning_legacy_recruits/` and `.planning_legacy_workers/` as archived source contexts.
-- Prefer the real code over legacy plans when they disagree, and record the conflict in `MERGE_NOTES.md`.
+- Prefer the real code over legacy plans when they disagree, and record material conflicts in `.planning/STATE.md` or `docs/STATUS.md`.
 <!-- GSD:workflow-end -->

@@ -18,8 +18,8 @@ progress:
 - Runtime base: the root `src/**` tree under `com.talhanation.bannermod` (Phase 21 completed the in-place merge)
 - Active runtime mod: `bannermod`
 - Workers status: fully absorbed; civilian Java code lives under `bannermod.{entity,ai,client,inventory,items,persistence,registry,settlement}.civilian`; civilian network packets live under `bannermod.network.messages.civilian` at packet-ID offset = MILITARY_MESSAGES.length (106).
-- Pending major work: root `BANNERMOD_BACKLOG.md` is the canonical active queue. Phase files remain on disk as history/crosswalk evidence only; compact Phase 25/26 status files should not be used as independent task lists.
-- Primary references: `MERGE_PLAN.md`, `MERGE_NOTES.md`, `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`, `DEVELOPMENT.md`
+- Pending major work: `docs/BANNERMOD_BACKLOG.md` is the canonical active queue. Phase files remain on disk as history/crosswalk evidence only; compact Phase 25/26 status files should not be used as independent task lists.
+- Primary references: `.planning/CODEBASE.md`, `.planning/VERIFICATION.md`, `docs/DEVELOPMENT.md`, `docs/STATUS.md`, `docs/CONTRIBUTING.md`, `docs/BANNERMOD_BACKLOG.md`
 - Phase 06 planning artifacts: `.planning/phases/06-player-cycle-gametest-validation/`
 - Phase 07 planning artifacts: `.planning/phases/07-dedicated-server-authority-edge-validation/`
 - Phase 08 planning artifacts: `.planning/phases/08-multiplayer-authority-conflict-validation/`
@@ -53,9 +53,9 @@ progress:
 ## Decisions
 
 - Phase 01 plan 01 keeps the repository anchored to one root Gradle project named `bannermod`.
-- `.planning/` is the only active planning root; `.planning_legacy_recruits/` and `.planning_legacy_workers/` remain archive-only context.
+- `.planning/` is the only active planning root.
 - [Phase 01-workspace-bootstrap]: Keep the default bootstrap validation baseline at compileJava, processResources, and test until root GameTests become meaningful.
-- [Phase 01-workspace-bootstrap]: Use MERGE_NOTES.md as the active log whenever legacy wording or archived plans disagree with root code and docs.
+- [Phase 01-workspace-bootstrap]: Use `.planning/STATE.md` and `docs/STATUS.md` as active logs whenever legacy wording or archived plans disagree with root code and docs.
 - [Phase 02-runtime-unification-design]: BannerMod remains the only active public runtime identity for the merged mod.
 - [Phase 02-runtime-unification-design]: Workers-owned GUI, structure, and language assets now have an explicit bannermod namespace end-state.
 - [Phase 02-runtime-unification-design]: The merged runtime only guarantees known Workers-era migration seams, not standalone workers mod compatibility.

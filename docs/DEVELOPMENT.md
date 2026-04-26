@@ -6,7 +6,7 @@
 - Active code lives under `src/**`.
 - The only live mod entrypoint is `src/main/java/com/talhanation/bannermod/bootstrap/BannerModMain.java`.
 - Active planning lives under `.planning/`.
-- Unfinished work lives in `BANNERMOD_BACKLOG.md` only.
+- Unfinished work lives in `docs/BANNERMOD_BACKLOG.md` only.
 
 ## Ignore By Default
 
@@ -19,8 +19,9 @@ Those paths are retained for archive/reference only. They are not active build o
 
 ## First Places To Read
 
-- Player/server flow: `MULTIPLAYER_GUIDE.md`
-- Unfinished work: `BANNERMOD_BACKLOG.md`
+- Repository status and contribution flow: `docs/STATUS.md`, `docs/CONTRIBUTING.md`
+- Player/server flow: `MULTIPLAYER_GUIDE_RU.md`, `MULTIPLAYER_GUIDE_EN.md`
+- Unfinished work: `docs/BANNERMOD_BACKLOG.md`
 - Runtime/bootstrap: `src/main/java/com/talhanation/bannermod/bootstrap/`
 - Shared packet contract: `src/main/java/com/talhanation/bannermod/network/BannerModNetworkBootstrap.java`
 - Military gameplay: `src/main/java/com/talhanation/bannermod/entity/military/`
