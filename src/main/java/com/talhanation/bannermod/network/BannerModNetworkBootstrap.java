@@ -12,6 +12,8 @@ import com.talhanation.bannermod.network.messages.civilian.*;
 
 // War network messages (warfare-RP runtime sync)
 import com.talhanation.bannermod.network.messages.war.MessageCancelAllyInvite;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
 import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
@@ -184,6 +186,8 @@ public class BannerModNetworkBootstrap {
         MessageInviteAlly.class,
         MessageRespondAllyInvite.class,
         MessageCancelAllyInvite.class,
+        MessageSetPoliticalEntityColor.class,
+        MessageSetPoliticalEntityCharter.class,
     };
 
     private BannerModNetworkBootstrap() {

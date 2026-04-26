@@ -22,6 +22,8 @@ public class PoliticalEntityNameInputScreen extends Screen {
     private final String prompt;
     private final String initialValue;
     private final Consumer<String> onSubmit;
+    private final int maxLength;
+    private final boolean allowEmpty;
     private int guiLeft;
     private int guiTop;
     private EditBox editBox;
@@ -31,11 +33,29 @@ public class PoliticalEntityNameInputScreen extends Screen {
                                           String prompt,
                                           String initialValue,
                                           Consumer<String> onSubmit) {
+        this(parent, title, prompt, initialValue, onSubmit, 32, false);
+    }
+
+    /**
+     * Extended constructor for color / charter editing where:
+     *   - {@code maxLength} differs from the 32-character name cap; and
+     *   - {@code allowEmpty} controls whether submitting an empty string is a meaningful
+     *     value (e.g. clearing the field) vs. a "do nothing" guard like for renames.
+     */
+    public PoliticalEntityNameInputScreen(Screen parent,
+                                          String title,
+                                          String prompt,
+                                          String initialValue,
+                                          Consumer<String> onSubmit,
+                                          int maxLength,
+                                          boolean allowEmpty) {
         super(Component.literal(title));
         this.parent = parent;
         this.prompt = prompt == null ? "" : prompt;
         this.initialValue = initialValue == null ? "" : initialValue;
         this.onSubmit = onSubmit;
+        this.maxLength = Math.max(1, maxLength);
+        this.allowEmpty = allowEmpty;
     }
 
     @Override
@@ -45,7 +65,7 @@ public class PoliticalEntityNameInputScreen extends Screen {
         this.guiTop = (this.height - H) / 2;
 
         this.editBox = new EditBox(this.font, guiLeft + 10, guiTop + 36, W - 20, 18, Component.literal(""));
-        this.editBox.setMaxLength(32);
+        this.editBox.setMaxLength(this.maxLength);
         this.editBox.setValue(this.initialValue);
         this.editBox.setFocused(true);
         this.editBox.setEditable(true);
@@ -60,7 +80,7 @@ public class PoliticalEntityNameInputScreen extends Screen {
 
     private void submit() {
         String value = this.editBox.getValue().trim();
-        if (value.isEmpty()) {
+        if (value.isEmpty() && !this.allowEmpty) {
             return;
         }
         this.onSubmit.accept(value);

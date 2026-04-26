@@ -5,10 +5,13 @@ import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEnti
 import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.GovernmentForm;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
+import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -40,6 +43,10 @@ public class PoliticalEntityListScreen extends Screen {
     private Button setCapitalButton;
     @Nullable
     private Button toggleFormButton;
+    @Nullable
+    private Button setColorButton;
+    @Nullable
+    private Button setCharterButton;
 
     public PoliticalEntityListScreen(@Nullable Screen parent) {
         super(Component.literal("States"));
@@ -63,6 +70,13 @@ public class PoliticalEntityListScreen extends Screen {
                 .bounds(guiLeft + 140, guiTop + H - 24, 84, 18).build());
         this.toggleFormButton = addRenderableWidget(Button.builder(Component.literal("Toggle gov form"), btn -> toggleGovernmentForm())
                 .bounds(guiLeft + 228, guiTop + H - 24, 96, 18).build());
+        // Second row of leader-only mutators (color / charter). Placed above the bottom row to
+        // keep the spatial separation between "create / rename / capital / form" identity ops
+        // and the "presentation" ops (color / charter) so the leader's eyes don't get tangled.
+        this.setColorButton = addRenderableWidget(Button.builder(Component.literal("Color"), btn -> openColorDialog())
+                .bounds(guiLeft + 8, guiTop + H - 44, 60, 18).build());
+        this.setCharterButton = addRenderableWidget(Button.builder(Component.literal("Charter"), btn -> openCharterDialog())
+                .bounds(guiLeft + 72, guiTop + H - 44, 80, 18).build());
         addRenderableWidget(Button.builder(Component.literal("Refresh"), btn -> refresh())
                 .bounds(guiLeft + W - 172, guiTop + H - 44, 80, 18).build());
         addRenderableWidget(Button.builder(Component.literal("Back"), btn -> onClose())
@@ -113,6 +127,43 @@ public class PoliticalEntityListScreen extends Screen {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetGovernmentForm(this.selected.id(), next));
     }
 
+    private void openColorDialog() {
+        if (this.selected == null) return;
+        UUID id = this.selected.id();
+        // 9 chars: optional '#' + up to 8 hex digits (covers AARRGGBB).
+        Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
+                this,
+                "State color",
+                "Hex color (RRGGBB or AARRGGBB; empty to clear):",
+                this.selected.color(),
+                value -> sendColor(id, value),
+                9,
+                /* allowEmpty */ true
+        ));
+    }
+
+    private void openCharterDialog() {
+        if (this.selected == null) return;
+        UUID id = this.selected.id();
+        Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
+                this,
+                "State charter",
+                "Charter text (max " + PoliticalRegistryValidation.MAX_CHARTER_LENGTH + " chars; empty to clear):",
+                this.selected.charter(),
+                value -> sendCharter(id, value),
+                PoliticalRegistryValidation.MAX_CHARTER_LENGTH,
+                /* allowEmpty */ true
+        ));
+    }
+
+    private void sendColor(UUID entityId, String newColor) {
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetPoliticalEntityColor(entityId, newColor));
+    }
+
+    private void sendCharter(UUID entityId, String newCharter) {
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetPoliticalEntityCharter(entityId, newCharter));
+    }
+
     private void sendCreate(String name) {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCreatePoliticalEntity(name));
     }
@@ -137,6 +188,12 @@ public class PoliticalEntityListScreen extends Screen {
                         : "→ Monarchy";
                 this.toggleFormButton.setMessage(Component.literal(label));
             }
+        }
+        if (this.setColorButton != null) {
+            this.setColorButton.active = leader;
+        }
+        if (this.setCharterButton != null) {
+            this.setCharterButton.active = leader;
         }
     }
 

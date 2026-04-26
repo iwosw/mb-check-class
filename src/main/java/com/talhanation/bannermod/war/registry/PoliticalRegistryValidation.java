@@ -7,6 +7,7 @@ import java.util.UUID;
 public final class PoliticalRegistryValidation {
     public static final int MIN_NAME_LENGTH = 3;
     public static final int MAX_NAME_LENGTH = 32;
+    public static final int MAX_CHARTER_LENGTH = 256;
 
     private PoliticalRegistryValidation() {
     }
@@ -59,6 +60,55 @@ public final class PoliticalRegistryValidation {
 
     public static String normalizeName(String name) {
         return name == null ? "" : name.trim().replaceAll("\\s+", " ");
+    }
+
+    /**
+     * Validate a color string for the political-entity color field. Empty / null is allowed
+     * (clears the color). Otherwise the string must be a 6- or 8-hex-digit colour with an
+     * optional leading '#' as accepted by {@link PoliticalColorParser}. Pure — no side effects.
+     */
+    public static Result validateColor(String color) {
+        if (color == null) {
+            return Result.ok();
+        }
+        String trimmed = color.trim();
+        if (trimmed.isEmpty()) {
+            return Result.ok();
+        }
+        String hex = trimmed.charAt(0) == '#' ? trimmed.substring(1) : trimmed;
+        if (hex.length() != 6 && hex.length() != 8) {
+            return Result.invalid("color_bad_length");
+        }
+        for (int i = 0; i < hex.length(); i++) {
+            char c = hex.charAt(i);
+            boolean hexDigit = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+            if (!hexDigit) {
+                return Result.invalid("color_not_hex");
+            }
+        }
+        return Result.ok();
+    }
+
+    /** Returns the canonical stored form for a validated color string (trimmed; empty allowed). */
+    public static String normalizeColor(String color) {
+        return color == null ? "" : color.trim();
+    }
+
+    /**
+     * Validate a charter (free-text RP description). Empty / null is allowed. Length capped at
+     * {@link #MAX_CHARTER_LENGTH} after trim to bound packet size and UI render cost.
+     */
+    public static Result validateCharter(String charter) {
+        String normalized = normalizeCharter(charter);
+        if (normalized.length() > MAX_CHARTER_LENGTH) {
+            return Result.invalid("charter_too_long");
+        }
+        return Result.ok();
+    }
+
+    /** Trim-only normalisation — keeps internal whitespace so RP formatting survives. */
+    public static String normalizeCharter(String charter) {
+        return charter == null ? "" : charter.trim();
     }
 
     public static String slug(String name) {

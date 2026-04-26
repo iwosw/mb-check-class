@@ -72,6 +72,19 @@ public record PoliticalEntityRecord(
                 newForm == null ? governmentForm : newForm);
     }
 
+    public PoliticalEntityRecord withColor(String newColor) {
+        return new PoliticalEntityRecord(id, name, status, leaderUuid, coLeaderUuids, capitalPos,
+                newColor == null ? color : newColor,
+                charter, ideology, homeRegion, createdAtGameTime, governmentForm);
+    }
+
+    public PoliticalEntityRecord withCharter(String newCharter) {
+        return new PoliticalEntityRecord(id, name, status, leaderUuid, coLeaderUuids, capitalPos,
+                color,
+                newCharter == null ? charter : newCharter,
+                ideology, homeRegion, createdAtGameTime, governmentForm);
+    }
+
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
         tag.putUUID("Id", id);
