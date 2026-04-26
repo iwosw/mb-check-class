@@ -4,7 +4,9 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.client.WarClientState;
+import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import net.minecraft.nbt.CompoundTag;
@@ -19,7 +21,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Server-authoritative broadcaster for the warfare-RP runtime snapshot.
@@ -74,12 +75,13 @@ public class WarStateBroadcaster {
         Collection<PoliticalEntityRecord> entities = WarRuntimeContext.registry(level).all();
         Collection<WarDeclarationRecord> wars = WarRuntimeContext.declarations(level).all();
         Collection<SiegeStandardRecord> sieges = WarRuntimeContext.sieges(level).all();
-        int hash = stateHash(entities, wars, sieges);
+        BattleWindowSchedule schedule = resolveSchedule();
+        int hash = stateHash(entities, wars, sieges, schedule);
         if (primed && hash == lastHash) return;
         lastHash = hash;
         primed = true;
 
-        CompoundTag payload = WarClientState.encode(entities, wars, sieges);
+        CompoundTag payload = WarClientState.encode(entities, wars, sieges, schedule);
         BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.ALL.noArg(),
                 new MessageToClientUpdateWarState(payload));
     }
@@ -88,15 +90,25 @@ public class WarStateBroadcaster {
         CompoundTag payload = WarClientState.encode(
                 WarRuntimeContext.registry(level).all(),
                 WarRuntimeContext.declarations(level).all(),
-                WarRuntimeContext.sieges(level).all()
+                WarRuntimeContext.sieges(level).all(),
+                resolveSchedule()
         );
         BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new MessageToClientUpdateWarState(payload));
     }
 
+    private static BattleWindowSchedule resolveSchedule() {
+        try {
+            return WarServerConfig.resolveSchedule();
+        } catch (IllegalStateException ex) {
+            return BattleWindowSchedule.defaultSchedule();
+        }
+    }
+
     private static int stateHash(Collection<PoliticalEntityRecord> entities,
                                  Collection<WarDeclarationRecord> wars,
-                                 Collection<SiegeStandardRecord> sieges) {
+                                 Collection<SiegeStandardRecord> sieges,
+                                 BattleWindowSchedule schedule) {
         int result = 1;
         for (PoliticalEntityRecord entity : entities) {
             result = 31 * result + entity.toTag().hashCode();
@@ -106,6 +118,9 @@ public class WarStateBroadcaster {
         }
         for (SiegeStandardRecord siege : sieges) {
             result = 31 * result + siege.toTag().hashCode();
+        }
+        if (schedule != null) {
+            result = 31 * result + schedule.toListTag().hashCode();
         }
         return result;
     }

@@ -2,6 +2,7 @@ package com.talhanation.bannermod.war.client;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import net.minecraft.core.BlockPos;
@@ -30,10 +31,12 @@ public final class WarClientState {
     public static final String NBT_ENTITIES = "Entities";
     public static final String NBT_WARS = "Wars";
     public static final String NBT_SIEGES = "Sieges";
+    public static final String NBT_SCHEDULE = "Schedule";
 
     private static List<PoliticalEntityRecord> entities = List.of();
     private static List<WarDeclarationRecord> wars = List.of();
     private static List<SiegeStandardRecord> sieges = List.of();
+    private static BattleWindowSchedule schedule = new BattleWindowSchedule(List.of());
     private static Map<UUID, PoliticalEntityRecord> entitiesById = Map.of();
     private static int version = 0;
 
@@ -52,6 +55,10 @@ public final class WarClientState {
         return sieges;
     }
 
+    public static BattleWindowSchedule schedule() {
+        return schedule;
+    }
+
     public static PoliticalEntityRecord entityById(UUID id) {
         return entitiesById.get(id);
     }
@@ -64,6 +71,7 @@ public final class WarClientState {
         entities = List.of();
         wars = List.of();
         sieges = List.of();
+        schedule = new BattleWindowSchedule(List.of());
         entitiesById = Map.of();
         version++;
     }
@@ -76,6 +84,7 @@ public final class WarClientState {
         entities = decodeEntities(tag.getList(NBT_ENTITIES, Tag.TAG_COMPOUND));
         wars = decodeWars(tag.getList(NBT_WARS, Tag.TAG_COMPOUND));
         sieges = decodeSieges(tag.getList(NBT_SIEGES, Tag.TAG_COMPOUND));
+        schedule = BattleWindowSchedule.fromListTag(tag.getList(NBT_SCHEDULE, Tag.TAG_COMPOUND));
         Map<UUID, PoliticalEntityRecord> byId = new HashMap<>();
         for (PoliticalEntityRecord entity : entities) {
             byId.put(entity.id(), entity);
@@ -86,7 +95,8 @@ public final class WarClientState {
 
     public static CompoundTag encode(Iterable<PoliticalEntityRecord> entitySrc,
                                      Iterable<WarDeclarationRecord> warSrc,
-                                     Iterable<SiegeStandardRecord> siegeSrc) {
+                                     Iterable<SiegeStandardRecord> siegeSrc,
+                                     BattleWindowSchedule scheduleSrc) {
         CompoundTag tag = new CompoundTag();
         ListTag entitiesTag = new ListTag();
         for (PoliticalEntityRecord entity : entitySrc) entitiesTag.add(entity.toTag());
@@ -97,6 +107,9 @@ public final class WarClientState {
         tag.put(NBT_ENTITIES, entitiesTag);
         tag.put(NBT_WARS, warsTag);
         tag.put(NBT_SIEGES, siegesTag);
+        if (scheduleSrc != null) {
+            tag.put(NBT_SCHEDULE, scheduleSrc.toListTag());
+        }
         return tag;
     }
 

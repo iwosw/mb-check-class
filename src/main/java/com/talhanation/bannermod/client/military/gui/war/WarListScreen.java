@@ -4,6 +4,8 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import com.talhanation.bannermod.war.runtime.BattleWindowClock;
+import com.talhanation.bannermod.war.runtime.BattleWindowDisplay;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import com.talhanation.bannermod.war.runtime.WarState;
@@ -16,6 +18,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nullable;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,9 +32,11 @@ import java.util.UUID;
  */
 public class WarListScreen extends Screen {
     private static final int W = 380;
-    private static final int H = 240;
+    private static final int H = 252;
     private static final int ROW_H = 16;
     private static final int LIST_VISIBLE = 10;
+    private static final int LIST_TOP_OFFSET = 36;
+    private static final int DETAIL_TOP_OFFSET = 36;
 
     private final Screen parent;
 
@@ -152,15 +157,26 @@ public class WarListScreen extends Screen {
         int titleY = guiTop + 6;
         graphics.drawCenteredString(font, "Active Wars (" + wars.size() + ")", guiLeft + W / 2, titleY, 0xFFFFFF);
 
+        renderBattleWindowBanner(graphics);
         renderList(graphics, mouseX, mouseY);
         renderDetailPanel(graphics);
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
+    private void renderBattleWindowBanner(GuiGraphics graphics) {
+        BattleWindowClock.Phase phase = BattleWindowClock.compute(
+                WarClientState.schedule(), ZonedDateTime.now());
+        String text = BattleWindowDisplay.formatPhase(phase);
+        int color = phase instanceof BattleWindowClock.Phase.Open ? 0xFF55FF55 : 0xFFAAAAAA;
+        graphics.drawString(font,
+                font.plainSubstrByWidth(text, W - 16),
+                guiLeft + 8, guiTop + 20, color, false);
+    }
+
     private void renderList(GuiGraphics graphics, int mouseX, int mouseY) {
         int listX = guiLeft + 8;
-        int listY = guiTop + 24;
+        int listY = guiTop + LIST_TOP_OFFSET;
         int listW = 184;
         int listH = LIST_VISIBLE * ROW_H;
         graphics.fill(listX, listY, listX + listW, listY + listH, 0x60000000);
@@ -194,7 +210,7 @@ public class WarListScreen extends Screen {
 
     private void renderDetailPanel(GuiGraphics graphics) {
         int x = guiLeft + 200;
-        int y = guiTop + 24;
+        int y = guiTop + DETAIL_TOP_OFFSET;
         int w = W - 200 - 8;
 
         graphics.drawString(font, "Detail", x, y, 0xFFFFFF, false);
@@ -273,7 +289,7 @@ public class WarListScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             int listX = guiLeft + 8;
-            int listY = guiTop + 24;
+            int listY = guiTop + LIST_TOP_OFFSET;
             int listW = 184;
             int listH = LIST_VISIBLE * ROW_H;
             if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + listH) {
