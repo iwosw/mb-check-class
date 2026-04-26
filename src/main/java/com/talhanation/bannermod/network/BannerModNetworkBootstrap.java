@@ -16,18 +16,18 @@ import com.talhanation.bannermod.network.messages.civilian.*;
  * Military packets are registered at indices [0..MILITARY_MESSAGES.length) and
  * civilian packets at [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length).
  *
- * Ordering within each family is preserved verbatim from the legacy messages[] arrays
- * in recruits.Main.setup() and workers.WorkersMain.setup() respectively, so packet IDs
- * remain stable across saves and client/server pairs.
+ * Existing ordering within each family is preserved from the legacy messages[] arrays
+ * in recruits.Main.setup() and workers.WorkersMain.setup() respectively; newly restored
+ * packets are appended to avoid renumbering existing military packets.
  *
- * workerPacketOffset() == MILITARY_MESSAGES.length == 106.
+ * workerPacketOffset() == MILITARY_MESSAGES.length == 107.
  */
 public class BannerModNetworkBootstrap {
 
     /**
      * Military message catalog (verbatim order from recruits.Main legacy setup).
      * Registered at channel indices [0..MILITARY_MESSAGES.length).
-     * Count: 106.
+     * Count: 107.
      */
     @SuppressWarnings({"rawtypes"})
     public static final Class[] MILITARY_MESSAGES = {
@@ -141,12 +141,17 @@ public class BannerModNetworkBootstrap {
         MessageSelectRecruits.class,
         MessageCombatStance.class,
         MessageCombatStanceGui.class,
+        MessageAssignRecruitToPlayer.class,
+        MessageRequestFormationMapSnapshot.class,
+        MessageToClientUpdateFormationMapSnapshot.class,
+        MessageFormationMapMoveOrder.class,
+        MessageFormationMapEngage.class,
     };
 
     /**
      * Civilian message catalog (verbatim order from workers.WorkersMain legacy setup).
      * Registered at channel indices [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length).
-     * Count: 20. workerPacketOffset == MILITARY_MESSAGES.length == 106.
+     * Count: 23. workerPacketOffset == MILITARY_MESSAGES.length == 107.
      */
     @SuppressWarnings({"rawtypes"})
     public static final Class[] CIVILIAN_MESSAGES = {
@@ -172,6 +177,7 @@ public class BannerModNetworkBootstrap {
         MessageRecoverWorkerControl.class,
         MessageRequestPlaceBuilding.class,
         MessageRequestValidateBuilding.class,
+        MessageRequestRegisterBuilding.class,
     };
 
     private BannerModNetworkBootstrap() {
@@ -179,7 +185,7 @@ public class BannerModNetworkBootstrap {
 
     /**
      * Returns the offset at which civilian (worker) packets begin in the shared channel.
-     * Equal to MILITARY_MESSAGES.length (106).
+     * Equal to MILITARY_MESSAGES.length (107).
      * Matches the merged runtime's current worker packet offset.
      */
     public static int workerPacketOffset() {
@@ -190,8 +196,8 @@ public class BannerModNetworkBootstrap {
      * Creates and returns the single shared SimpleChannel with all military and civilian
      * packets registered. Must be called once during FMLCommonSetupEvent.
      *
-     * Military packets: indices [0..106)
-     * Civilian packets: indices [106..126)
+     * Military packets: indices [0..107)
+     * Civilian packets: indices [107..130)
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static SimpleChannel createSharedChannel() {

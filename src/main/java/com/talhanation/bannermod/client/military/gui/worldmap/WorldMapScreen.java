@@ -6,6 +6,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.army.map.FormationMapContact;
+import com.talhanation.bannermod.army.map.FormationMapRelation;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
@@ -30,6 +32,7 @@ import org.lwjgl.glfw.GLFW;
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.List;
+import java.util.UUID;
 
 import static com.talhanation.bannermod.client.military.ClientManager.ownFaction;
 
@@ -58,6 +61,7 @@ public class WorldMapScreen extends Screen {
     private WorldMapContextMenu contextMenu;
     RecruitsClaim selectedClaim = null;
     private ClaimInfoMenu claimInfoMenu;
+    private UUID selectedFormationContactId = null;
     int snapshotWorldX = 0;
     int snapshotWorldZ = 0;
     private final WorldMapRouteInteractionLayer routeInteractionLayer;
@@ -186,6 +190,10 @@ public class WorldMapScreen extends Screen {
         }
 
         if (player != null) renderPlayerPosition(guiGraphics);
+
+        WorldMapMoveOrderMarker.render(guiGraphics, offsetX, offsetZ, scale);
+
+        FormationMapOverlayRenderer.render(guiGraphics, offsetX, offsetZ, scale, selectedFormationContactId);
 
         if (selectedChunk != null && (selectedClaim == null || contextMenu.isVisible())) {
             renderChunkOutline(guiGraphics, selectedChunk.x, selectedChunk.z, CHUNK_SELECTION_COLOR);
@@ -410,6 +418,14 @@ public class WorldMapScreen extends Screen {
 
         if (hoveredChunk != null) selectedChunk = hoveredChunk;
 
+        FormationMapContact clickedContact = FormationMapOverlayRenderer.contactAt(mouseX, mouseY, offsetX, offsetZ, scale);
+        if (button == 0 && clickedContact != null) {
+            if (clickedContact.relation() == FormationMapRelation.SUBORDINATE) {
+                selectedFormationContactId = clickedContact.contactId();
+            }
+            return true;
+        }
+
         RecruitsClaim clickedClaim = ClaimRenderer.getClaimAtPosition(mouseX, mouseY, offsetX, offsetZ, scale);
         if (clickedClaim != null) {
             boolean canInspect = !ClientManager.configFogOfWarEnabled
@@ -432,7 +448,8 @@ public class WorldMapScreen extends Screen {
             double worldZ = (mouseY - offsetZ) / scale;
             clickedBlockX = (int) Math.floor(worldX);
             clickedBlockZ = (int) Math.floor(worldZ);
-            this.contextMenu = new WorldMapContextMenu(this);
+            FormationMapContact selectedContact = getSelectedFormationContact();
+            this.contextMenu = new WorldMapContextMenu(this, selectedContact, clickedContact);
             contextMenu.openAt((int) mouseX, (int) mouseY);
             snapshotWorldX = clickedBlockX;
             snapshotWorldZ = clickedBlockZ;
@@ -446,6 +463,17 @@ public class WorldMapScreen extends Screen {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private FormationMapContact getSelectedFormationContact() {
+        if (selectedFormationContactId == null) return null;
+        for (FormationMapContact contact : ClientManager.formationMapContacts) {
+            if (selectedFormationContactId.equals(contact.contactId())) {
+                return contact;
+            }
+        }
+        selectedFormationContactId = null;
+        return null;
     }
 
     @Override

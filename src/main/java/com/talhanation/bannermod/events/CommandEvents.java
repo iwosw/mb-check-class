@@ -44,6 +44,11 @@ public class CommandEvents {
     public static void onMovementCommand(Player player, List<AbstractRecruitEntity> recruits, int movementState, int formation, boolean tight) {
         MovementFormationCommandService.onMovementCommand(player, recruits, movementState, formation, tight);
     }
+
+    public static void onMovementCommand(Player player, List<AbstractRecruitEntity> recruits, int movementState, int formation, boolean tight, Vec3 targetPos) {
+        MovementFormationCommandService.onMovementCommand(player, recruits, movementState, formation, tight, targetPos);
+    }
+
     public static void applyFormation(int formation, List<AbstractRecruitEntity> recruits, Player player, Vec3 targetPos) {
         MovementFormationCommandService.applyFormation(formation, recruits, player, targetPos);
     }
@@ -114,7 +119,6 @@ public class CommandEvents {
     public static void onAttackCommand(Player player, UUID player_uuid, List<AbstractRecruitEntity> list, UUID group) {
         HitResult hitResult = player.pick(100, 1F, false);
         BlockPos blockpos = null;
-        AABB aabb = null;
         List<LivingEntity> targets = new ArrayList<>();
         if (hitResult.getType() == HitResult.Type.ENTITY){
             EntityHitResult entityHitResult = (EntityHitResult) hitResult;
@@ -128,12 +132,31 @@ public class CommandEvents {
         }
         else return;
 
-        aabb = new AABB(blockpos).inflate(10);
+        applyAttackAt(player, player_uuid, list, group, blockpos, targets, 10);
+    }
+
+    /**
+     * Map-driven attack: assign combat targets near {@code targetPos} to {@code list} of recruits.
+     * Used by world-map "free charge" / formation engagement actions where the target comes
+     * over the network (UUID + BlockPos) instead of from {@code player.pick(...)}.
+     *
+     * @param searchRadius half-extent of the AABB around {@code targetPos} in blocks
+     */
+    public static void onAttackCommandAt(Player player, UUID player_uuid, List<AbstractRecruitEntity> list, UUID group,
+                                         BlockPos targetPos, double searchRadius) {
+        applyAttackAt(player, player_uuid, list, group, targetPos, new ArrayList<>(), searchRadius);
+    }
+
+    private static void applyAttackAt(Player player, UUID player_uuid, List<AbstractRecruitEntity> list, UUID group,
+                                      BlockPos blockpos, List<LivingEntity> seedTargets, double searchRadius) {
+        if (blockpos == null) return;
+        AABB aabb = new AABB(blockpos).inflate(searchRadius);
 
         list.removeIf(recruit -> !recruit.isEffectedByCommand(player_uuid, group));
 
-        List<LivingEntity> validTargets = player.getCommandSenderWorld()
-                .getEntitiesOfClass(LivingEntity.class, aabb);
+        List<LivingEntity> validTargets = seedTargets.isEmpty()
+                ? player.getCommandSenderWorld().getEntitiesOfClass(LivingEntity.class, aabb)
+                : new ArrayList<>(seedTargets);
 
         if (list.isEmpty() || validTargets.isEmpty()) return;
 
@@ -164,6 +187,23 @@ public class CommandEvents {
                         bowman.setStrategicFirePos(blockpos);
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Map-driven strategic fire: enable strategic fire and set the target position
+     * directly for every {@link IStrategicFire} recruit in {@code list}. Used by world-map
+     * "open fire" actions where the target comes over the network.
+     */
+    public static void onStrategicFireCommandAt(UUID player_uuid, List<AbstractRecruitEntity> list, UUID group,
+                                                BlockPos targetPos, boolean should) {
+        if (targetPos == null) return;
+        for (AbstractRecruitEntity recruit : list) {
+            if (!recruit.isEffectedByCommand(player_uuid, group)) continue;
+            if (recruit instanceof IStrategicFire bowman) {
+                bowman.setShouldStrategicFire(should);
+                bowman.setStrategicFirePos(targetPos);
             }
         }
     }

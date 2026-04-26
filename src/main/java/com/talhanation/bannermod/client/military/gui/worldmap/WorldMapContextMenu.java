@@ -1,10 +1,12 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
+import com.talhanation.bannermod.army.map.FormationMapContact;
 import com.talhanation.bannermod.client.military.ClientManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -24,6 +26,12 @@ public class WorldMapContextMenu {
     private double snapshotMouseY;
 
     public WorldMapContextMenu(WorldMapScreen worldMapScreen) {
+        this(worldMapScreen, null, null);
+    }
+
+    public WorldMapContextMenu(WorldMapScreen worldMapScreen,
+                               @Nullable FormationMapContact ownSelection,
+                               @Nullable FormationMapContact clickedContact) {
         this.worldMapScreen = worldMapScreen;
         ItemStack currencyItemStack = ClientManager.getCurrencyItemStackOrDefault();
         ItemStack itemStackClaimChunk = new ItemStack(currencyItemStack.getItem());
@@ -33,6 +41,7 @@ public class WorldMapContextMenu {
         WorldMapClaimMenuActions claimMenuActions = new WorldMapClaimMenuActions(worldMapScreen);
         WorldMapGeneralMenuActions generalMenuActions = new WorldMapGeneralMenuActions(worldMapScreen);
 
+        WorldMapFormationMenuActions.addEntries(this, worldMapScreen, ownSelection, clickedContact);
         claimMenuActions.addEntries(this, itemStackClaimChunk, itemStackClaimArea);
         generalMenuActions.addEntries(this);
     }
