@@ -3,8 +3,8 @@ package com.talhanation.bannermod.client.military.events;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.render.WorkerAreaRenderer;
+import com.talhanation.bannermod.client.military.gui.war.WarListScreen;
 import com.talhanation.bannermod.client.military.gui.worldmap.WorldMapScreen;
-import com.talhanation.bannermod.client.military.gui.faction.FactionMainScreen;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.registry.military.ModShortcuts;
 import com.talhanation.bannermod.network.messages.military.MessageRequestFormationMapSnapshot;
@@ -33,15 +33,15 @@ public class KeyEvents {
             CommandEvents.openCommandScreen(clientPlayerEntity);
         }
 
-        if (ModShortcuts.TEAM_SCREEN_KEY.isDown()) {
-            minecraft.setScreen(new FactionMainScreen(clientPlayerEntity));
-        }
-
         if (ModShortcuts.MAP_SCREEN_KEY.isDown()) {
             if (minecraft.level != null && minecraft.level.dimension() == Level.OVERWORLD) {
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRequestFormationMapSnapshot());
                 minecraft.setScreen(new WorldMapScreen());
             }
+        }
+
+        if (ModShortcuts.WAR_ROOM_KEY.consumeClick()) {
+            minecraft.setScreen(new WarListScreen(null));
         }
 
         if (com.talhanation.bannermod.registry.civilian.ModShortcuts.TOGGLE_PREFAB_RENDER_KEY != null
