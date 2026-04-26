@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import com.mojang.brigadier.arguments.BoolArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 
 final class ClaimManagerAdminCommands {
     private ClaimManagerAdminCommands() {
@@ -44,53 +43,6 @@ final class ClaimManagerAdminCommands {
                                     claim.setAdminClaim(isAdmin);
                                     ctx.getSource().sendSuccess(() ->
                                             Component.literal("Claim [" + claim + "] is now set to admin = " + isAdmin), false);
-                                    broadcastClaims(ctx.getSource());
-                                    return 1;
-                                })))
-                .then(Commands.literal("setHealth")
-                        .then(Commands.argument("amount", IntegerArgumentType.integer())
-                                .executes(ctx -> {
-                                    int amount = IntegerArgumentType.getInteger(ctx, "amount");
-                                    RecruitsClaim claim = getClaimAtPlayerPosition(ctx.getSource().getPlayerOrException());
-
-                                    if (claim == null) {
-                                        ctx.getSource().sendFailure(Component.literal("No claim found at your position."));
-                                        return 0;
-                                    }
-
-                                    claim.setHealth(amount);
-                                    ctx.getSource().sendSuccess(() ->
-                                            Component.literal("Claim health was set to " + claim.getHealth()), false);
-                                    broadcastClaims(ctx.getSource());
-                                    return 1;
-                                })))
-                .then(Commands.literal("getHealth")
-                        .executes(ctx -> {
-                            RecruitsClaim claim = getClaimAtPlayerPosition(ctx.getSource().getPlayerOrException());
-
-                            if (claim == null) {
-                                ctx.getSource().sendFailure(Component.literal("No claim found at your position."));
-                                return 0;
-                            }
-
-                            ctx.getSource().sendSuccess(() ->
-                                    Component.literal(claim + " has " + claim.getHealth() + "health"), false);
-                            return 1;
-                        }))
-                .then(Commands.literal("setSiege")
-                        .then(Commands.argument("siege", BoolArgumentType.bool())
-                                .executes(ctx -> {
-                                    boolean siege = BoolArgumentType.getBool(ctx, "siege");
-                                    RecruitsClaim claim = getClaimAtPlayerPosition(ctx.getSource().getPlayerOrException());
-
-                                    if (claim == null) {
-                                        ctx.getSource().sendFailure(Component.literal("No claim found at your position."));
-                                        return 0;
-                                    }
-
-                                    claim.setAdminClaim(siege);
-                                    ctx.getSource().sendSuccess(() ->
-                                            Component.literal("Claim [" + claim + "] is setSiege= " + siege), false);
                                     broadcastClaims(ctx.getSource());
                                     return 1;
                                 })))
