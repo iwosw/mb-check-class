@@ -2,6 +2,7 @@ package com.talhanation.bannermod.war.registry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,8 @@ public record PoliticalEntityRecord(
         String charter,
         String ideology,
         String homeRegion,
-        long createdAtGameTime
+        long createdAtGameTime,
+        GovernmentForm governmentForm
 ) {
     public PoliticalEntityRecord {
         coLeaderUuids = coLeaderUuids == null ? List.of() : List.copyOf(coLeaderUuids);
@@ -29,22 +31,45 @@ public record PoliticalEntityRecord(
         charter = charter == null ? "" : charter.trim();
         ideology = ideology == null ? "" : ideology.trim();
         homeRegion = homeRegion == null ? "" : homeRegion.trim();
+        governmentForm = governmentForm == null ? GovernmentForm.MONARCHY : governmentForm;
+    }
+
+    /** Backwards-compatible constructor used by older call sites that pre-date POL-001. */
+    public PoliticalEntityRecord(UUID id,
+                                 String name,
+                                 PoliticalEntityStatus status,
+                                 UUID leaderUuid,
+                                 List<UUID> coLeaderUuids,
+                                 BlockPos capitalPos,
+                                 String color,
+                                 String charter,
+                                 String ideology,
+                                 String homeRegion,
+                                 long createdAtGameTime) {
+        this(id, name, status, leaderUuid, coLeaderUuids, capitalPos, color, charter, ideology,
+                homeRegion, createdAtGameTime, GovernmentForm.MONARCHY);
     }
 
     public PoliticalEntityRecord withStatus(PoliticalEntityStatus newStatus) {
         return new PoliticalEntityRecord(id, name, newStatus, leaderUuid, coLeaderUuids, capitalPos,
-                color, charter, ideology, homeRegion, createdAtGameTime);
+                color, charter, ideology, homeRegion, createdAtGameTime, governmentForm);
     }
 
     public PoliticalEntityRecord withCapital(BlockPos newCapital) {
         return new PoliticalEntityRecord(id, name, status, leaderUuid, coLeaderUuids,
                 newCapital == null ? capitalPos : newCapital.immutable(),
-                color, charter, ideology, homeRegion, createdAtGameTime);
+                color, charter, ideology, homeRegion, createdAtGameTime, governmentForm);
     }
 
     public PoliticalEntityRecord withName(String newName) {
         return new PoliticalEntityRecord(id, newName == null ? name : newName, status, leaderUuid,
-                coLeaderUuids, capitalPos, color, charter, ideology, homeRegion, createdAtGameTime);
+                coLeaderUuids, capitalPos, color, charter, ideology, homeRegion, createdAtGameTime, governmentForm);
+    }
+
+    public PoliticalEntityRecord withGovernmentForm(GovernmentForm newForm) {
+        return new PoliticalEntityRecord(id, name, status, leaderUuid, coLeaderUuids, capitalPos,
+                color, charter, ideology, homeRegion, createdAtGameTime,
+                newForm == null ? governmentForm : newForm);
     }
 
     public CompoundTag toTag() {
@@ -61,6 +86,7 @@ public record PoliticalEntityRecord(
         tag.putString("Ideology", ideology);
         tag.putString("HomeRegion", homeRegion);
         tag.putLong("CreatedAtGameTime", createdAtGameTime);
+        tag.putString("GovernmentForm", governmentForm.name());
 
         net.minecraft.nbt.ListTag coLeaders = new net.minecraft.nbt.ListTag();
         for (UUID coLeaderUuid : coLeaderUuids) {
@@ -74,7 +100,7 @@ public record PoliticalEntityRecord(
 
     public static PoliticalEntityRecord fromTag(CompoundTag tag) {
         List<UUID> coLeaders = new ArrayList<>();
-        net.minecraft.nbt.ListTag coLeaderTags = tag.getList("CoLeaders", net.minecraft.nbt.Tag.TAG_COMPOUND);
+        net.minecraft.nbt.ListTag coLeaderTags = tag.getList("CoLeaders", Tag.TAG_COMPOUND);
         for (int i = 0; i < coLeaderTags.size(); i++) {
             CompoundTag coLeaderTag = coLeaderTags.getCompound(i);
             if (coLeaderTag.hasUUID("Uuid")) {
@@ -89,6 +115,10 @@ public record PoliticalEntityRecord(
             // Unknown saved status falls back to the least privileged registered status.
         }
 
+        GovernmentForm governmentForm = tag.contains("GovernmentForm", Tag.TAG_STRING)
+                ? GovernmentForm.fromTagName(tag.getString("GovernmentForm"))
+                : GovernmentForm.MONARCHY;
+
         return new PoliticalEntityRecord(
                 tag.getUUID("Id"),
                 tag.getString("Name"),
@@ -100,7 +130,8 @@ public record PoliticalEntityRecord(
                 tag.getString("Charter"),
                 tag.getString("Ideology"),
                 tag.getString("HomeRegion"),
-                tag.getLong("CreatedAtGameTime")
+                tag.getLong("CreatedAtGameTime"),
+                governmentForm
         );
     }
 }

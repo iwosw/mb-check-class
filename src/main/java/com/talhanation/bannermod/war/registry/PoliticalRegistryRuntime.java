@@ -116,6 +116,19 @@ public class PoliticalRegistryRuntime {
         return true;
     }
 
+    public boolean updateGovernmentForm(UUID id, GovernmentForm newForm) {
+        PoliticalEntityRecord record = recordsById.get(id);
+        if (record == null || newForm == null) {
+            return false;
+        }
+        if (record.governmentForm() == newForm) {
+            return true;
+        }
+        recordsById.put(id, record.withGovernmentForm(newForm));
+        dirtyListener.run();
+        return true;
+    }
+
     public Optional<PoliticalEntityRecord> byNameOrIdFragment(String token) {
         if (token == null || token.isBlank()) {
             return Optional.empty();

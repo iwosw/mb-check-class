@@ -38,4 +38,44 @@ public final class PoliticalEntityAuthority {
         UUID leader = record.leaderUuid();
         return leader != null && leader.equals(actorUuid);
     }
+
+    /**
+     * Government-form aware variant. {@link GovernmentForm#REPUBLIC} extends authority to
+     * registered co-leaders; {@link GovernmentForm#MONARCHY} keeps it leader-only. Op
+     * permission still overrides everything so admins can recover from misconfiguration.
+     */
+    public static boolean canAct(@Nullable ServerPlayer player, @Nullable PoliticalEntityRecord record) {
+        if (player == null || record == null) {
+            return false;
+        }
+        if (player.hasPermissions(2)) {
+            return true;
+        }
+        return canAct(player.getUUID(), false, record);
+    }
+
+    /** Pure variant of {@link #canAct(ServerPlayer, PoliticalEntityRecord)} for tests. */
+    public static boolean canAct(@Nullable UUID actorUuid, boolean opPrivilege, @Nullable PoliticalEntityRecord record) {
+        if (record == null) {
+            return false;
+        }
+        if (opPrivilege) {
+            return true;
+        }
+        if (actorUuid == null) {
+            return false;
+        }
+        UUID leader = record.leaderUuid();
+        if (leader != null && leader.equals(actorUuid)) {
+            return true;
+        }
+        if (record.governmentForm() != null && record.governmentForm().coLeadersShareAuthority()) {
+            for (UUID coLeader : record.coLeaderUuids()) {
+                if (coLeader != null && coLeader.equals(actorUuid)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

@@ -3,8 +3,10 @@ package com.talhanation.bannermod.client.military.gui.war;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
+import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
 import com.talhanation.bannermod.war.client.WarClientState;
+import com.talhanation.bannermod.war.registry.GovernmentForm;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import net.minecraft.client.Minecraft;
@@ -36,6 +38,8 @@ public class PoliticalEntityListScreen extends Screen {
     private Button renameButton;
     @Nullable
     private Button setCapitalButton;
+    @Nullable
+    private Button toggleFormButton;
 
     public PoliticalEntityListScreen(@Nullable Screen parent) {
         super(Component.literal("States"));
@@ -57,8 +61,10 @@ public class PoliticalEntityListScreen extends Screen {
                 .bounds(guiLeft + 72, guiTop + H - 24, 64, 18).build());
         this.setCapitalButton = addRenderableWidget(Button.builder(Component.literal("Capital here"), btn -> setCapitalHere())
                 .bounds(guiLeft + 140, guiTop + H - 24, 84, 18).build());
+        this.toggleFormButton = addRenderableWidget(Button.builder(Component.literal("Toggle gov form"), btn -> toggleGovernmentForm())
+                .bounds(guiLeft + 228, guiTop + H - 24, 96, 18).build());
         addRenderableWidget(Button.builder(Component.literal("Refresh"), btn -> refresh())
-                .bounds(guiLeft + W - 172, guiTop + H - 24, 80, 18).build());
+                .bounds(guiLeft + W - 172, guiTop + H - 44, 80, 18).build());
         addRenderableWidget(Button.builder(Component.literal("Back"), btn -> onClose())
                 .bounds(guiLeft + W - 86, guiTop + H - 24, 80, 18).build());
         updateLeaderButtons();
@@ -99,6 +105,14 @@ public class PoliticalEntityListScreen extends Screen {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetPoliticalEntityCapital(this.selected.id()));
     }
 
+    private void toggleGovernmentForm() {
+        if (this.selected == null) return;
+        GovernmentForm next = this.selected.governmentForm() == GovernmentForm.MONARCHY
+                ? GovernmentForm.REPUBLIC
+                : GovernmentForm.MONARCHY;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetGovernmentForm(this.selected.id(), next));
+    }
+
     private void sendCreate(String name) {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCreatePoliticalEntity(name));
     }
@@ -114,6 +128,15 @@ public class PoliticalEntityListScreen extends Screen {
         }
         if (this.setCapitalButton != null) {
             this.setCapitalButton.active = leader;
+        }
+        if (this.toggleFormButton != null) {
+            this.toggleFormButton.active = leader;
+            if (this.selected != null) {
+                String label = this.selected.governmentForm() == GovernmentForm.MONARCHY
+                        ? "→ Republic"
+                        : "→ Monarchy";
+                this.toggleFormButton.setMessage(Component.literal(label));
+            }
         }
     }
 
@@ -173,6 +196,8 @@ public class PoliticalEntityListScreen extends Screen {
         String[] lines = {
                 "Name: " + displayName(selected),
                 "Status: " + selected.status().name(),
+                "Government: " + selected.governmentForm().name()
+                        + (selected.governmentForm().coLeadersShareAuthority() ? " (co-leaders share authority)" : " (leader sole authority)"),
                 "Leader: " + shortId(selected.leaderUuid()),
                 "Co-leaders: " + selected.coLeaderUuids().size(),
                 "Capital: " + (selected.capitalPos() == null ? "(none)" : selected.capitalPos().toShortString()),
