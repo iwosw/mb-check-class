@@ -16,10 +16,13 @@ import com.talhanation.bannermod.client.military.events.KeyEvents;
 import com.talhanation.bannermod.client.military.gui.overlay.ClaimOverlayManager;
 import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
+import com.talhanation.bannermod.commands.war.BannerModWarCommands;
 import com.talhanation.bannermod.compat.MedievalSiegeMachinesCompat;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.config.WorkersServerConfig;
+import com.talhanation.bannermod.war.config.WarServerConfig;
+import com.talhanation.bannermod.war.events.WarPvpEvents;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -65,6 +68,8 @@ public class BannerModMain {
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER, "bannermod-recruits-server.toml");
         // Register workers config
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER, "bannermod-workers-server.toml");
+        // Register war/RP config — own filename to avoid the SERVER filename collision called out above.
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WarServerConfig.SERVER, "bannermod-war-server.toml");
 
         // Lifecycle
         modEventBus.addListener(this::setup);
@@ -89,6 +94,13 @@ public class BannerModMain {
         com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes.ENTITY_TYPES.register(modEventBus);
         com.talhanation.bannermod.registry.citizen.ModCitizenItems.ITEMS.register(modEventBus);
 
+        // Register war deferred registers (block + item + block-entity for the SiegeStandard).
+        // ModWarBlockEntities depends on ModWarBlocks via SIEGE_STANDARD.get(); registration order
+        // matches the deferred-init contract: BLOCKS resolves first at common-setup, then BLOCK_ENTITY_TYPES.
+        com.talhanation.bannermod.registry.war.ModWarBlocks.BLOCKS.register(modEventBus);
+        com.talhanation.bannermod.registry.war.ModWarItems.ITEMS.register(modEventBus);
+        com.talhanation.bannermod.registry.war.ModWarBlockEntities.BLOCK_ENTITIES.register(modEventBus);
+
         // Creative tabs
         modEventBus.addListener(this::addCreativeTabs);
 
@@ -108,6 +120,7 @@ public class BannerModMain {
     public void onRegisterCommands(RegisterCommandsEvent event) {
         PatrolSpawnCommand.register(event.getDispatcher());
         RecruitsAdminCommands.register(event.getDispatcher());
+        BannerModWarCommands.register(event.getDispatcher());
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -128,6 +141,7 @@ public class BannerModMain {
         MinecraftForge.EVENT_BUS.register(new DamageEvent());
         MinecraftForge.EVENT_BUS.register(new PillagerEvents());
         MinecraftForge.EVENT_BUS.register(new VillagerEvents());
+        MinecraftForge.EVENT_BUS.register(new WarPvpEvents());
         if (MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers()) {
             // Legacy recruits/workers update checkers target retired mod ids and stay disabled
             // until bannermod has one release-facing update contract.
