@@ -44,6 +44,9 @@ public class MessageRequestPlaceBuilding implements Message<MessageRequestPlaceB
         if (prefabId == null || pos == null) {
             return;
         }
+        if (!BuildingRequestSecurity.canUseWandAt(player, pos)) {
+            return;
+        }
         Direction facing = Direction.from3DDataValue(this.facingIndex);
         BuildingPlacementService.placeFor(player, prefabId, pos, facing);
     }

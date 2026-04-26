@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
-import com.talhanation.bannermod.settlement.prefab.validation.BuildingValidationService;
+import com.talhanation.bannermod.settlement.prefab.player.PlayerBuildingRegistrationService;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -9,27 +9,26 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
-/**
- * Client → server request to validate a player-built structure.
- *
- * <p>Carries the chosen prefab id and three world positions: two opposite corners of the
- * bounding box and the player's center tap (sanity check for intent). Handled by
- * {@link BuildingValidationService}.</p>
- */
-public class MessageRequestValidateBuilding implements Message<MessageRequestValidateBuilding> {
+public class MessageRequestRegisterBuilding implements Message<MessageRequestRegisterBuilding> {
     public ResourceLocation prefabId;
     public BlockPos cornerA;
     public BlockPos cornerB;
     public BlockPos center;
+    public BlockPos keyBlock;
 
-    public MessageRequestValidateBuilding() {
+    public MessageRequestRegisterBuilding() {
     }
 
-    public MessageRequestValidateBuilding(ResourceLocation prefabId, BlockPos cornerA, BlockPos cornerB, BlockPos center) {
+    public MessageRequestRegisterBuilding(ResourceLocation prefabId,
+                                          BlockPos cornerA,
+                                          BlockPos cornerB,
+                                          BlockPos center,
+                                          BlockPos keyBlock) {
         this.prefabId = prefabId;
         this.cornerA = cornerA;
         this.cornerB = cornerB;
         this.center = center;
+        this.keyBlock = keyBlock;
     }
 
     @Override
@@ -43,18 +42,19 @@ public class MessageRequestValidateBuilding implements Message<MessageRequestVal
         if (player == null) {
             return;
         }
-        if (!BuildingRequestSecurity.canUseWandAt(player, cornerA, cornerB, center)) {
+        if (!BuildingRequestSecurity.canUseWandAt(player, cornerA, cornerB, center, keyBlock)) {
             return;
         }
-        BuildingValidationService.validate(player, prefabId, cornerA, cornerB, center);
+        PlayerBuildingRegistrationService.register(player, prefabId, cornerA, cornerB, center, keyBlock);
     }
 
     @Override
-    public MessageRequestValidateBuilding fromBytes(FriendlyByteBuf buf) {
+    public MessageRequestRegisterBuilding fromBytes(FriendlyByteBuf buf) {
         this.prefabId = buf.readResourceLocation();
         this.cornerA = buf.readBlockPos();
         this.cornerB = buf.readBlockPos();
         this.center = buf.readBlockPos();
+        this.keyBlock = buf.readBlockPos();
         return this;
     }
 
@@ -64,5 +64,6 @@ public class MessageRequestValidateBuilding implements Message<MessageRequestVal
         buf.writeBlockPos(cornerA);
         buf.writeBlockPos(cornerB);
         buf.writeBlockPos(center);
+        buf.writeBlockPos(keyBlock);
     }
 }

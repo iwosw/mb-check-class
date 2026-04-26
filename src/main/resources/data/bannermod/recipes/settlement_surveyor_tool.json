@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " BI",
+    " SB",
+    "S  "
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:oak_planks"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "bannermod:settlement_surveyor_tool",
+    "count": 1
+  }
+}

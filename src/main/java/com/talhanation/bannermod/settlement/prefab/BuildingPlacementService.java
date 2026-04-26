@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.settlement.prefab;
 
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.persistence.military.RecruitsFaction;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
@@ -10,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -78,7 +81,8 @@ public final class BuildingPlacementService {
         buildArea.setHeightSize(descriptor.height());
         buildArea.setDepthSize(descriptor.depth());
         buildArea.setFacing(actualFacing);
-        buildArea.moveTo(targetPos.above(), 0, 0);
+        BlockPos anchorPos = resolveLeveledAnchor(serverLevel, targetPos, descriptor.width(), descriptor.depth());
+        buildArea.moveTo(anchorPos, 0, 0);
         buildArea.createArea();
 
         String teamId = player.getTeam() == null ? "" : player.getTeam().getName();
@@ -100,5 +104,83 @@ public final class BuildingPlacementService {
         player.sendSystemMessage(Component.translatable(
                 "bannermod.prefab.place.ok", descriptor.displayKey()));
         return Result.PLACED;
+    }
+
+    public static Result placeForClaim(ServerLevel serverLevel,
+                                       RecruitsClaim claim,
+                                       ResourceLocation prefabId,
+                                       BlockPos targetPos,
+                                       Direction facing) {
+        if (serverLevel == null || claim == null) {
+            return Result.INVALID_POSITION;
+        }
+        Objects.requireNonNull(prefabId, "prefabId");
+        Objects.requireNonNull(targetPos, "targetPos");
+        Direction actualFacing = facing == null ? Direction.SOUTH : facing;
+
+        BuildingPrefabRegistry.instance().ensureDefaultsLoaded();
+        Optional<BuildingPrefab> maybePrefab = BuildingPrefabRegistry.instance().lookup(prefabId);
+        if (maybePrefab.isEmpty()) {
+            return Result.UNKNOWN_PREFAB;
+        }
+
+        RecruitsFaction faction = claim.getOwnerFaction();
+        if (faction == null) {
+            return Result.INVALID_POSITION;
+        }
+
+        BuildingPrefab prefab = maybePrefab.get();
+        BuildingPrefabDescriptor descriptor = prefab.descriptor();
+        CompoundTag structure = prefab.buildStructureNBT(actualFacing);
+
+        BuildArea buildArea = new BuildArea(ModEntityTypes.BUILDAREA.get(), serverLevel);
+        buildArea.setWidthSize(descriptor.width());
+        buildArea.setHeightSize(descriptor.height());
+        buildArea.setDepthSize(descriptor.depth());
+        buildArea.setFacing(actualFacing);
+        BlockPos anchorPos = resolveLeveledAnchor(serverLevel, targetPos, descriptor.width(), descriptor.depth());
+        buildArea.moveTo(anchorPos, 0, 0);
+        buildArea.createArea();
+
+        String teamId = faction.getStringID() == null ? "" : faction.getStringID();
+        buildArea.setTeamStringID(teamId);
+        buildArea.setPlayerName(faction.getTeamLeaderName() == null ? "" : faction.getTeamLeaderName());
+        if (faction.getTeamLeaderUUID() != null) {
+            buildArea.setPlayerUUID(faction.getTeamLeaderUUID());
+        }
+        buildArea.setCustomName(Component.literal(""));
+        buildArea.setStructureNBT(structure);
+        buildArea.setDone(false);
+
+        serverLevel.addFreshEntity(buildArea);
+        buildArea.setStartBuild(false);
+        PrefabBuildAreaTracker.markPrefabBuildArea(buildArea.getUUID(), prefabId);
+        BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, buildArea.blockPosition());
+        return Result.PLACED;
+    }
+
+    private static BlockPos resolveLeveledAnchor(ServerLevel level, BlockPos requestedPos, int width, int depth) {
+        if (level == null || requestedPos == null) {
+            return requestedPos;
+        }
+        int minX = requestedPos.getX();
+        int minZ = requestedPos.getZ();
+        int maxX = minX + Math.max(0, width - 1);
+        int maxZ = minZ + Math.max(0, depth - 1);
+
+        int minY = Integer.MAX_VALUE;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                if (y < minY) {
+                    minY = y;
+                }
+            }
+        }
+        if (minY == Integer.MAX_VALUE) {
+            return requestedPos;
+        }
+        // Heightmap returns "first free block above terrain"; anchor should be one block lower.
+        return new BlockPos(requestedPos.getX(), minY - 1, requestedPos.getZ());
     }
 }

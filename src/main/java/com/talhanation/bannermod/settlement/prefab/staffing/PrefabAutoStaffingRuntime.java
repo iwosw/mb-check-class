@@ -4,24 +4,29 @@ import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
+import com.talhanation.bannermod.citizen.CitizenProfession;
+import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefab;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabProfession;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabRegistry;
 import com.talhanation.bannermod.settlement.prefab.PrefabBuildAreaTracker;
+import com.talhanation.bannermod.settlement.prefab.impl.BarracksPrefab;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.scores.PlayerTeam;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Auto-staffing hook for prefab-backed BuildAreas. When a BuildArea that was spawned via a
@@ -38,6 +43,10 @@ import java.util.UUID;
  * <p>Server-only, in-memory. Not persisted.</p>
  */
 public final class PrefabAutoStaffingRuntime {
+    public static final String TAG_PENDING_WORKER_PROFESSION = "BannerModPendingWorkerProfession";
+    private static final Map<UUID, VacancyRecord> VACANCIES = new ConcurrentHashMap<>();
+    private static final double VACANCY_ASSIGN_RADIUS_SQR = 96.0D * 96.0D;
+    private static OccupancySnapshot occupancySnapshot;
 
     private PrefabAutoStaffingRuntime() {
     }
@@ -68,15 +77,8 @@ public final class PrefabAutoStaffingRuntime {
             return;
         }
 
-        EntityType<?> entityType = entityTypeFor(profession);
-        if (entityType == null) {
-            System.err.println("[PrefabAutoStaffing] No entity type mapping for profession=" + profession + " (prefab=" + prefabId + ")");
-            return;
-        }
-
         AbstractWorkAreaEntity workArea = findEmbeddedWorkArea(level, buildArea);
-
-        spawnAndBind(level, buildArea, entityType, profession, workArea);
+        registerVacancy(buildArea, prefabId, profession, workArea);
     }
 
     /**
@@ -150,66 +152,159 @@ public final class PrefabAutoStaffingRuntime {
         return nearest;
     }
 
-    private static void spawnAndBind(ServerLevel level,
-                                     BuildArea buildArea,
-                                     EntityType<?> entityType,
-                                     BuildingPrefabProfession profession,
-                                     @Nullable AbstractWorkAreaEntity workArea) {
-        Entity entity = entityType.create(level);
-        if (entity == null) {
-            System.err.println("[PrefabAutoStaffing] Failed to create entity of type " + entityType + " for profession " + profession);
+    private static void registerVacancy(BuildArea buildArea,
+                                        ResourceLocation prefabId,
+                                        BuildingPrefabProfession profession,
+                                        @Nullable AbstractWorkAreaEntity workArea) {
+        UUID anchorUuid = workArea != null ? workArea.getUUID() : buildArea.getUUID();
+        int slots = vacancySlotsFor(prefabId, profession);
+        if (slots <= 0) {
             return;
         }
-
-        double spawnX = buildArea.getX();
-        double spawnY = buildArea.getY();
-        double spawnZ = buildArea.getZ();
-        entity.moveTo(spawnX, spawnY, spawnZ, 0.0F, 0.0F);
-
-        UUID ownerUuid = buildArea.getPlayerUUID();
-        String teamStringId = buildArea.getTeamStringID();
-
-        if (entity instanceof AbstractWorkerEntity worker) {
-            if (ownerUuid != null) {
-                worker.setOwnerUUID(Optional.of(ownerUuid));
-                worker.setIsOwned(true);
-            }
-            applyTeam(level, entity, teamStringId);
-            level.addFreshEntity(worker);
-            if (workArea != null && isWorkerProfession(profession)) {
-                worker.getCitizenCore().setBoundWorkAreaUUID(workArea.getUUID());
-            }
-            return;
-        }
-
-        if (entity instanceof AbstractRecruitEntity recruit) {
-            if (ownerUuid != null) {
-                recruit.setOwnerUUID(Optional.of(ownerUuid));
-                recruit.setIsOwned(true);
-            }
-            applyTeam(level, entity, teamStringId);
-            level.addFreshEntity(recruit);
-            return;
-        }
-
-        // Generic fallback — just add the entity.
-        level.addFreshEntity(entity);
+        VACANCIES.put(anchorUuid, new VacancyRecord(anchorUuid, profession, slots));
     }
 
-    private static void applyTeam(ServerLevel level, Entity entity, @Nullable String teamStringId) {
-        if (teamStringId == null || teamStringId.isEmpty()) {
+    public static void assignCitizenToNearestVacancy(ServerLevel level, CitizenEntity citizen) {
+        if (level == null || citizen == null || !citizen.isAlive() || citizen.isRemoved()) {
             return;
         }
-        PlayerTeam team = level.getScoreboard().getPlayerTeam(teamStringId);
-        if (team == null) {
+        if (citizen.getPersistentData().contains(TAG_PENDING_WORKER_PROFESSION)) {
             return;
         }
-        // Workers and recruits share the AbstractRecruitEntity hierarchy — both route through the
-        // faction team service so team mirrors the BuildArea's faction owner.
-        if (entity instanceof AbstractRecruitEntity recruit) {
-            FactionEvents.addRecruitToTeam(recruit, team, level);
+        VacancyRecord best = null;
+        double bestDistanceSqr = Double.POSITIVE_INFINITY;
+        for (VacancyRecord vacancy : VACANCIES.values()) {
+            Entity anchor = level.getEntity(vacancy.anchorUuid());
+            if (anchor == null || !anchor.isAlive()) {
+                continue;
+            }
+            int freeSlots = vacancy.totalSlots() - currentOccupancy(level, vacancy.anchorUuid());
+            if (freeSlots <= 0) {
+                continue;
+            }
+            double distSqr = citizen.distanceToSqr(anchor);
+            if (distSqr > VACANCY_ASSIGN_RADIUS_SQR) {
+                continue;
+            }
+            if (distSqr < bestDistanceSqr) {
+                bestDistanceSqr = distSqr;
+                best = vacancy;
+            }
+        }
+        if (best == null) {
             return;
         }
-        level.getScoreboard().addPlayerToTeam(entity.getScoreboardName(), team);
+        CitizenProfession pending = toCitizenProfession(best.profession());
+        if (pending == CitizenProfession.NONE) {
+            return;
+        }
+        citizen.getPersistentData().putString(TAG_PENDING_WORKER_PROFESSION, pending.name());
+        citizen.setBoundWorkAreaUUID(best.anchorUuid());
+        incrementOccupancy(level, best.anchorUuid());
+    }
+
+    public static boolean hasConversionSlot(ServerLevel level, UUID anchorUuid, UUID convertingCitizenUuid) {
+        if (level == null || anchorUuid == null) {
+            return false;
+        }
+        VacancyRecord vacancy = VACANCIES.get(anchorUuid);
+        int totalSlots = vacancy == null ? 1 : vacancy.totalSlots();
+        return currentOccupancy(level, anchorUuid, convertingCitizenUuid) < totalSlots;
+    }
+
+    private static int currentOccupancy(ServerLevel level, UUID anchorUuid) {
+        return currentOccupancy(level, anchorUuid, null);
+    }
+
+    private static int currentOccupancy(ServerLevel level, UUID anchorUuid, @Nullable UUID excludingCitizenUuid) {
+        int count = occupancyByAnchor(level).getOrDefault(anchorUuid, 0);
+        return excludingCitizenUuid != null && anchorUuid.equals(boundCitizen(level, excludingCitizenUuid))
+                ? Math.max(0, count - 1)
+                : count;
+    }
+
+    private static void incrementOccupancy(ServerLevel level, UUID anchorUuid) {
+        occupancyByAnchor(level).merge(anchorUuid, 1, Integer::sum);
+    }
+
+    @Nullable
+    private static UUID boundCitizen(ServerLevel level, UUID citizenUuid) {
+        Entity entity = level.getEntity(citizenUuid);
+        return entity instanceof CitizenEntity citizen ? citizen.getBoundWorkAreaUUID() : null;
+    }
+
+    private static Map<UUID, Integer> occupancyByAnchor(ServerLevel level) {
+        long gameTime = level.getGameTime();
+        if (occupancySnapshot == null
+                || occupancySnapshot.gameTime() != gameTime
+                || !occupancySnapshot.dimension().equals(level.dimension())) {
+            occupancySnapshot = new OccupancySnapshot(level.dimension(), gameTime, scanOccupancy(level));
+        }
+        return occupancySnapshot.occupancyByAnchor();
+    }
+
+    private static Map<UUID, Integer> scanOccupancy(ServerLevel level) {
+        AABB search = new AABB(-30_000_000, level.getMinBuildHeight(), -30_000_000, 30_000_000, level.getMaxBuildHeight(), 30_000_000);
+        Map<UUID, Integer> occupancy = new HashMap<>();
+        for (CitizenEntity citizen : level.getEntitiesOfClass(CitizenEntity.class, search)) {
+            UUID bound = citizen.getBoundWorkAreaUUID();
+            if (bound != null) {
+                occupancy.merge(bound, 1, Integer::sum);
+            }
+        }
+        for (AbstractWorkerEntity worker : level.getEntitiesOfClass(AbstractWorkerEntity.class, search)) {
+            UUID bound = worker.getCitizenCore().getBoundWorkAreaUUID();
+            if (bound != null) {
+                occupancy.merge(bound, 1, Integer::sum);
+            }
+        }
+        for (AbstractRecruitEntity recruit : level.getEntitiesOfClass(AbstractRecruitEntity.class, search)) {
+            UUID bound = recruit.getCitizenCore().getBoundWorkAreaUUID();
+            if (bound != null) {
+                occupancy.merge(bound, 1, Integer::sum);
+            }
+        }
+        return occupancy;
+    }
+
+    private static int vacancySlotsFor(ResourceLocation prefabId, BuildingPrefabProfession profession) {
+        if (profession == null || profession == BuildingPrefabProfession.NONE) {
+            return 0;
+        }
+        boolean recruitRole = switch (profession) {
+            case RECRUIT_SWORDSMAN, RECRUIT_ARCHER, RECRUIT_PIKEMAN, RECRUIT_CROSSBOW, RECRUIT_CAVALRY -> true;
+            default -> false;
+        };
+        if (!recruitRole) {
+            return 1;
+        }
+        return BarracksPrefab.ID.equals(prefabId) ? 4 : 1;
+    }
+
+    private static CitizenProfession toCitizenProfession(BuildingPrefabProfession profession) {
+        if (profession == null) {
+            return CitizenProfession.NONE;
+        }
+        return switch (profession) {
+            case FARMER -> CitizenProfession.FARMER;
+            case LUMBERJACK -> CitizenProfession.LUMBERJACK;
+            case MINER -> CitizenProfession.MINER;
+            case BUILDER -> CitizenProfession.BUILDER;
+            case MERCHANT -> CitizenProfession.MERCHANT;
+            case FISHERMAN -> CitizenProfession.FISHERMAN;
+            case ANIMAL_FARMER, SHEPHERD -> CitizenProfession.ANIMAL_FARMER;
+            case RECRUIT_SWORDSMAN -> CitizenProfession.RECRUIT_SPEAR;
+            case RECRUIT_ARCHER -> CitizenProfession.RECRUIT_BOWMAN;
+            case RECRUIT_PIKEMAN -> CitizenProfession.RECRUIT_SHIELDMAN;
+            case RECRUIT_CROSSBOW -> CitizenProfession.RECRUIT_CROSSBOWMAN;
+            case RECRUIT_CAVALRY -> CitizenProfession.RECRUIT_HORSEMAN;
+            case NONE -> CitizenProfession.NONE;
+        };
+    }
+
+    private record VacancyRecord(UUID anchorUuid, BuildingPrefabProfession profession, int totalSlots) {
+    }
+
+    private record OccupancySnapshot(net.minecraft.resources.ResourceKey<Level> dimension, long gameTime, Map<UUID, Integer> occupancyByAnchor) {
     }
 }

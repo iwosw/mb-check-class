@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 
 /**
  * Storage warehouse — log shell with a door opening, a flat plank roof, and a 3×3
@@ -19,9 +20,9 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class StoragePrefab implements BuildingPrefab {
     public static final ResourceLocation ID = new ResourceLocation("bannermod", "storage");
 
-    private static final int WIDTH = 7;
-    private static final int HEIGHT = 5;
-    private static final int DEPTH = 7;
+    private static final int WIDTH = 9;
+    private static final int HEIGHT = 7;
+    private static final int DEPTH = 9;
 
     private static final BuildingPrefabDescriptor DESCRIPTOR = new BuildingPrefabDescriptor(
             ID, "bannermod.prefab.storage.name", "bannermod.prefab.storage.description",
@@ -32,45 +33,70 @@ public final class StoragePrefab implements BuildingPrefab {
     @Override
     public CompoundTag buildStructureNBT(Direction facing) {
         BlockState planks = Blocks.OAK_PLANKS.defaultBlockState();
-        BlockState log = Blocks.OAK_LOG.defaultBlockState();
+        BlockState log = Blocks.STRIPPED_OAK_LOG.defaultBlockState();
+        BlockState stone = Blocks.STONE_BRICKS.defaultBlockState();
         BlockState chest = Blocks.CHEST.defaultBlockState();
+        BlockState stairSouth = Blocks.OAK_STAIRS.defaultBlockState().setValue(net.minecraft.world.level.block.StairBlock.FACING, Direction.SOUTH);
+        BlockState stairNorth = Blocks.OAK_STAIRS.defaultBlockState().setValue(net.minecraft.world.level.block.StairBlock.FACING, Direction.NORTH);
+        BlockState slab = Blocks.OAK_SLAB.defaultBlockState();
+        BlockState glass = Blocks.GLASS_PANE.defaultBlockState();
+        BlockState doorLower = Blocks.OAK_DOOR.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.DoorBlock.FACING, Direction.SOUTH)
+                .setValue(net.minecraft.world.level.block.DoorBlock.HALF, DoubleBlockHalf.LOWER);
+        BlockState doorUpper = Blocks.OAK_DOOR.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.DoorBlock.FACING, Direction.SOUTH)
+                .setValue(net.minecraft.world.level.block.DoorBlock.HALF, DoubleBlockHalf.UPPER);
 
         BuildingStructureNbtBuilder b = BuildingStructureNbtBuilder.of(WIDTH, HEIGHT, DEPTH, facing, "bannermod:storage");
 
-        // Floor 7×7.
-        b.fill(0, 0, 0, 6, 0, 6, planks);
+        // Foundation + floor.
+        b.fill(0, 0, 0, 8, 0, 8, stone);
+        b.fill(1, 1, 1, 7, 1, 7, planks);
 
-        // Log walls y=1..3 around perimeter.
-        for (int y = 1; y <= 3; y++) {
-            b.rect(0, 0, 6, 6, y, log);
+        // Log walls.
+        for (int y = 2; y <= 4; y++) {
+            b.rect(0, 0, 8, 8, y, log);
         }
 
-        // Cut door opening at (3, 1, 0) and (3, 2, 0) — overwrite with plank floor passage
-        // but spec says "omit those two log blocks". We write OAK_PLANKS.defaultBlockState()
-        // no — BuildArea interprets each entry as a block to place. "Omit" means we must not
-        // emit a block entry for those coordinates at all. Since rect already emitted them,
-        // we overwrite with AIR so the resulting state is an opening.
-        b.block(3, 1, 0, Blocks.AIR.defaultBlockState());
-        b.block(3, 2, 0, Blocks.AIR.defaultBlockState());
+        // Door opening + proper door blocks.
+        b.block(4, 2, 0, doorLower);
+        b.block(4, 3, 0, doorUpper);
 
-        // Flat plank roof at y=4.
-        b.fill(0, 4, 0, 6, 4, 6, planks);
+        // Windows.
+        b.block(2, 3, 0, glass);
+        b.block(6, 3, 0, glass);
+        b.block(0, 3, 2, glass);
+        b.block(0, 3, 6, glass);
+        b.block(8, 3, 2, glass);
+        b.block(8, 3, 6, glass);
 
-        // 3×3 chest grid at y=1.
-        int[] xs = { 1, 3, 5 };
-        int[] zs = { 1, 3, 5 };
+        // Solid roof core with stair trim.
+        b.fill(1, 5, 1, 7, 5, 7, planks);
+        b.fill(2, 6, 2, 6, 6, 6, slab);
+        for (int x = 1; x <= 7; x++) {
+            b.block(x, 5, 0, stairSouth);
+            b.block(x, 5, 8, stairNorth);
+        }
+        for (int z = 1; z <= 7; z++) {
+            b.block(0, 5, z, stairSouth);
+            b.block(8, 5, z, stairNorth);
+        }
+
+        // Chest rows with walkable aisle.
+        int[] xs = { 2, 6 };
+        int[] zs = { 2, 4, 6 };
         for (int cx : xs) {
             for (int cz : zs) {
-                b.block(cx, 1, cz, chest);
+                b.block(cx, 2, cz, chest);
             }
         }
 
         // Embedded StorageArea at center.
         b.entity(
                 ModEntityTypes.STORAGEAREA.get(),
-                3, 1, 3,
+                4, 2, 4,
                 Direction.SOUTH,
-                7, 3, 7
+                9, 4, 9
         );
 
         return b.build();

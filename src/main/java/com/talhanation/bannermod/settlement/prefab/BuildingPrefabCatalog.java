@@ -10,6 +10,7 @@ import com.talhanation.bannermod.settlement.prefab.impl.MarketStallPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.MinePrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.PasturePrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.StoragePrefab;
+import com.talhanation.bannermod.settlement.prefab.impl.TownHallPrefab;
 
 /**
  * Central list of built-in prefabs. Agents are free to add new entries here without
@@ -33,5 +34,6 @@ public final class BuildingPrefabCatalog {
         registry.register(new StoragePrefab());
         registry.register(new HousePrefab());
         registry.register(new BarracksPrefab());
+        registry.register(new TownHallPrefab());
     }
 }

@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 
 /**
  * Military barracks. Auto-staffing spawns a swordsman recruit by default.
@@ -17,8 +18,8 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class BarracksPrefab implements BuildingPrefab {
     public static final ResourceLocation ID = new ResourceLocation("bannermod", "barracks");
 
-    private static final int WIDTH = 9;
-    private static final int HEIGHT = 5;
+    private static final int WIDTH = 11;
+    private static final int HEIGHT = 8;
     private static final int DEPTH = 9;
 
     private static final BuildingPrefabDescriptor DESCRIPTOR = new BuildingPrefabDescriptor(
@@ -29,46 +30,81 @@ public final class BarracksPrefab implements BuildingPrefab {
 
     @Override
     public CompoundTag buildStructureNBT(Direction facing) {
-        BlockState bricks = Blocks.STONE_BRICKS.defaultBlockState();
-        BlockState wall = Blocks.COBBLESTONE_WALL.defaultBlockState();
-        BlockState bed = Blocks.RED_BED.defaultBlockState();
+        BlockState planks = Blocks.SPRUCE_PLANKS.defaultBlockState();
+        BlockState logs = Blocks.SPRUCE_LOG.defaultBlockState();
+        BlockState stone = Blocks.STONE_BRICKS.defaultBlockState();
+        BlockState cobble = Blocks.COBBLESTONE.defaultBlockState();
+        BlockState glass = Blocks.GLASS_PANE.defaultBlockState();
+        BlockState slab = Blocks.SPRUCE_SLAB.defaultBlockState();
+        BlockState roofNorth = Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(net.minecraft.world.level.block.StairBlock.FACING, Direction.NORTH);
+        BlockState roofSouth = Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(net.minecraft.world.level.block.StairBlock.FACING, Direction.SOUTH);
+        BlockState bedWhite = Blocks.WHITE_BED.defaultBlockState();
+        BlockState bedRed = Blocks.RED_BED.defaultBlockState();
+        BlockState doorLower = Blocks.SPRUCE_DOOR.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.DoorBlock.FACING, Direction.SOUTH)
+                .setValue(net.minecraft.world.level.block.DoorBlock.HALF, DoubleBlockHalf.LOWER);
+        BlockState doorUpper = Blocks.SPRUCE_DOOR.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.DoorBlock.FACING, Direction.SOUTH)
+                .setValue(net.minecraft.world.level.block.DoorBlock.HALF, DoubleBlockHalf.UPPER);
         BlockState chest = Blocks.CHEST.defaultBlockState();
         BlockState table = Blocks.CRAFTING_TABLE.defaultBlockState();
-        BlockState air = Blocks.AIR.defaultBlockState();
+        BlockState lantern = Blocks.LANTERN.defaultBlockState();
 
         BuildingStructureNbtBuilder b = BuildingStructureNbtBuilder.of(WIDTH, HEIGHT, DEPTH, facing, "bannermod:barracks");
 
-        // Floor 9×9 stone bricks.
-        b.fill(0, 0, 0, 8, 0, 8, bricks);
+        // Foundation + floor (two-layer so the build never "hangs" visually).
+        b.fill(0, 0, 0, 10, 0, 8, cobble);
+        b.fill(1, 1, 1, 9, 1, 7, planks);
 
-        // Stone brick walls y=1..3 around perimeter.
+        // Timber frame walls with stone corners.
+        for (int y = 2; y <= 4; y++) {
+            b.rect(0, 0, 10, 8, y, logs);
+        }
         for (int y = 1; y <= 3; y++) {
-            b.rect(0, 0, 8, 8, y, bricks);
+            b.block(0, y, 0, stone);
+            b.block(10, y, 0, stone);
+            b.block(0, y, 8, stone);
+            b.block(10, y, 8, stone);
         }
 
-        // Door opening at (4, 1, 0) and (4, 2, 0) — overwrite with AIR for a passable gap.
-        b.block(4, 1, 0, air);
-        b.block(4, 2, 0, air);
+        // Door and front stoop.
+        b.block(5, 2, 0, doorLower);
+        b.block(5, 3, 0, doorUpper);
+        b.block(5, 1, 0, stone);
 
-        // Flat stone brick roof at y=4.
-        b.fill(0, 4, 0, 8, 4, 8, bricks);
+        // Windows.
+        b.block(3, 3, 0, glass);
+        b.block(7, 3, 0, glass);
+        b.block(0, 3, 2, glass);
+        b.block(0, 3, 6, glass);
+        b.block(10, 3, 2, glass);
+        b.block(10, 3, 6, glass);
+        b.block(3, 3, 8, glass);
+        b.block(7, 3, 8, glass);
 
-        // Arrow slits — cobblestone walls at listed positions (overwrite the stone brick).
-        b.block(2, 3, 0, wall);
-        b.block(6, 3, 0, wall);
-        b.block(0, 3, 2, wall);
-        b.block(0, 3, 6, wall);
-        b.block(8, 3, 2, wall);
-        b.block(8, 3, 6, wall);
+        // Solid roof shell (no holes): full plank deck + decorative stair edges.
+        b.fill(1, 5, 1, 9, 5, 7, planks);
+        b.fill(2, 6, 2, 8, 6, 6, slab);
+        for (int x = 1; x <= 9; x++) {
+            b.block(x, 5, 0, roofSouth);
+            b.block(x, 5, 8, roofNorth);
+        }
+        for (int z = 1; z <= 7; z++) {
+            b.block(0, 5, z, roofSouth);
+            b.block(10, 5, z, roofNorth);
+        }
 
-        // Three beds along the back wall (x=2, 4, 6 at z=7).
-        b.block(2, 1, 7, bed);
-        b.block(4, 1, 7, bed);
-        b.block(6, 1, 7, bed);
+        // Proper sleeping rows.
+        b.block(2, 2, 6, bedWhite);
+        b.block(2, 2, 4, bedRed);
+        b.block(8, 2, 6, bedWhite);
+        b.block(8, 2, 4, bedRed);
 
-        // Armory chest and crafting table.
-        b.block(4, 1, 4, chest);
-        b.block(6, 1, 4, table);
+        // Armory area and center table.
+        b.block(5, 2, 4, table);
+        b.block(4, 2, 2, chest);
+        b.block(6, 2, 2, chest);
+        b.block(5, 4, 4, lantern);
 
         // No embedded work-area entity — recruits are spawned via the auto-staffing hook.
         return b.build();

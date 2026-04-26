@@ -3,6 +3,7 @@ package com.talhanation.bannermod.items.civilian;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.gui.PlaceBuildingScreen;
 import com.talhanation.bannermod.network.messages.civilian.MessageRequestPlaceBuilding;
+import com.talhanation.bannermod.network.messages.civilian.MessageRequestRegisterBuilding;
 import com.talhanation.bannermod.network.messages.civilian.MessageRequestValidateBuilding;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -49,8 +50,10 @@ public class BuildingPlacementWandItem extends Item {
     public static final String TAG_WAND_MODE = "bannermod:wand_mode";
     public static final String TAG_VALIDATION_CORNER_A = "bannermod:validation_corner_a";
     public static final String TAG_VALIDATION_CORNER_B = "bannermod:validation_corner_b";
+    public static final String TAG_VALIDATION_CENTER = "bannermod:validation_center";
     public static final String MODE_PLACE = "place";
     public static final String MODE_VALIDATE = "validate";
+    public static final String MODE_REGISTER = "register";
 
     public BuildingPlacementWandItem(Properties properties) {
         super(properties);
@@ -61,13 +64,19 @@ public class BuildingPlacementWandItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
             if (!level.isClientSide) {
-                String newMode = MODE_VALIDATE.equals(readMode(stack)) ? MODE_PLACE : MODE_VALIDATE;
+                String mode = readMode(stack);
+                String newMode;
+                if (MODE_PLACE.equals(mode)) {
+                    newMode = MODE_VALIDATE;
+                } else if (MODE_VALIDATE.equals(mode)) {
+                    newMode = MODE_REGISTER;
+                } else {
+                    newMode = MODE_PLACE;
+                }
                 stack.getOrCreateTag().putString(TAG_WAND_MODE, newMode);
                 clearTapState(stack);
                 player.sendSystemMessage(Component.translatable(
-                        MODE_VALIDATE.equals(newMode)
-                                ? "bannermod.prefab.wand.mode.validate"
-                                : "bannermod.prefab.wand.mode.place")
+                        modeTranslation(newMode))
                         .withStyle(ChatFormatting.GOLD));
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
@@ -90,8 +99,8 @@ public class BuildingPlacementWandItem extends Item {
         ItemStack stack = context.getItemInHand();
 
         if (player.isShiftKeyDown()) {
+            clearTapState(stack);
             if (!level.isClientSide) {
-                clearTapState(stack);
                 player.sendSystemMessage(Component.translatable(
                         "bannermod.prefab.wand.validate.reset").withStyle(ChatFormatting.YELLOW));
             }
@@ -115,6 +124,9 @@ public class BuildingPlacementWandItem extends Item {
         if (MODE_VALIDATE.equals(mode)) {
             return handleValidateTap(context, stack, prefabId);
         }
+        if (MODE_REGISTER.equals(mode)) {
+            return handleRegisterTap(context, stack, prefabId);
+        }
 
         if (level.isClientSide) {
             BlockPos targetPos = context.getClickedPos().relative(context.getClickedFace());
@@ -133,7 +145,7 @@ public class BuildingPlacementWandItem extends Item {
 
         BlockPos clicked = context.getClickedPos();
 
-        if (level.isClientSide) {
+        if (!level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
 
@@ -163,15 +175,52 @@ public class BuildingPlacementWandItem extends Item {
         return InteractionResult.SUCCESS;
     }
 
+    private InteractionResult handleRegisterTap(UseOnContext context, ItemStack stack, ResourceLocation prefabId) {
+        Level level = context.getLevel();
+        Player player = context.getPlayer();
+        if (player == null) {
+            return InteractionResult.PASS;
+        }
+        if (!level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+
+        BlockPos clicked = context.getClickedPos();
+        CompoundTag tag = stack.getOrCreateTag();
+        if (!tag.contains(TAG_VALIDATION_CORNER_A)) {
+            tag.putLong(TAG_VALIDATION_CORNER_A, clicked.asLong());
+            player.sendSystemMessage(Component.literal("Corner A selected").withStyle(ChatFormatting.AQUA));
+            return InteractionResult.SUCCESS;
+        }
+        if (!tag.contains(TAG_VALIDATION_CORNER_B)) {
+            tag.putLong(TAG_VALIDATION_CORNER_B, clicked.asLong());
+            player.sendSystemMessage(Component.literal("Corner B selected").withStyle(ChatFormatting.AQUA));
+            return InteractionResult.SUCCESS;
+        }
+        if (!tag.contains(TAG_VALIDATION_CENTER)) {
+            tag.putLong(TAG_VALIDATION_CENTER, clicked.asLong());
+            player.sendSystemMessage(Component.literal("Center selected. Tap key block.").withStyle(ChatFormatting.YELLOW));
+            return InteractionResult.SUCCESS;
+        }
+
+        BlockPos cornerA = BlockPos.of(tag.getLong(TAG_VALIDATION_CORNER_A));
+        BlockPos cornerB = BlockPos.of(tag.getLong(TAG_VALIDATION_CORNER_B));
+        BlockPos center = BlockPos.of(tag.getLong(TAG_VALIDATION_CENTER));
+        BlockPos keyBlock = clicked;
+        clearTapState(stack);
+
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(
+                new MessageRequestRegisterBuilding(prefabId, cornerA, cornerB, center, keyBlock));
+        return InteractionResult.SUCCESS;
+    }
+
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
         String mode = readMode(stack);
         MutableComponent modeLine = Component.translatable(
                         "bannermod.prefab.wand.tooltip.mode",
-                        Component.translatable(MODE_VALIDATE.equals(mode)
-                                ? "bannermod.prefab.wand.mode.validate.label"
-                                : "bannermod.prefab.wand.mode.place.label"))
+                        Component.translatable(modeTranslation(mode) + ".label"))
                 .withStyle(ChatFormatting.GRAY);
         tooltip.add(modeLine);
         String selected = readSelectedPrefab(stack);
@@ -179,14 +228,16 @@ public class BuildingPlacementWandItem extends Item {
             tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.selected", selected)
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
-        if (MODE_VALIDATE.equals(mode)) {
+        if (MODE_VALIDATE.equals(mode) || MODE_REGISTER.equals(mode)) {
             CompoundTag tag = stack.getTag();
             int taps = 0;
             if (tag != null) {
                 if (tag.contains(TAG_VALIDATION_CORNER_A)) taps++;
                 if (tag.contains(TAG_VALIDATION_CORNER_B)) taps++;
+                if (tag.contains(TAG_VALIDATION_CENTER)) taps++;
             }
-            tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.taps", taps, 3)
+            int needed = MODE_REGISTER.equals(mode) ? 4 : 3;
+            tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.taps", taps, needed)
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
     }
@@ -206,6 +257,7 @@ public class BuildingPlacementWandItem extends Item {
         }
         tag.remove(TAG_VALIDATION_CORNER_A);
         tag.remove(TAG_VALIDATION_CORNER_B);
+        tag.remove(TAG_VALIDATION_CENTER);
     }
 
     private static String readSelectedPrefab(ItemStack stack) {
@@ -214,6 +266,16 @@ public class BuildingPlacementWandItem extends Item {
             return null;
         }
         return tag.getString(TAG_SELECTED_PREFAB);
+    }
+
+    private static String modeTranslation(String mode) {
+        if (MODE_VALIDATE.equals(mode)) {
+            return "bannermod.prefab.wand.mode.validate";
+        }
+        if (MODE_REGISTER.equals(mode)) {
+            return "bannermod.prefab.wand.mode.register";
+        }
+        return "bannermod.prefab.wand.mode.place";
     }
 
     @OnlyIn(Dist.CLIENT)
