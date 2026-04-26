@@ -15,6 +15,8 @@
 
 ## UI-001 — State/Faction UI replacement
 
+**Status: DONE 2026-04-27.** Color/charter editing landed; remaining outstanding items (rich form display, more granular charter formatting) belong to a future polish slice rather than this acceptance.
+
 **Зачем.** Legacy faction UI удалён, но игроку нужен нормальный UI для political state вместо command-only управления.
 
 **Scope.**
@@ -32,6 +34,8 @@
 - `compileJava` passes; packet mutations are server-authoritative.
 
 **Progress 2026-04-26.** Player-facing political entity list/detail UI lives over the synced war snapshot, reachable from the War Room. Three server-authoritative mutation packets (`MessageCreatePoliticalEntity`, `MessageRenamePoliticalEntity`, `MessageSetPoliticalEntityCapital`) wire the Create / Rename / Capital-here buttons; create reuses `PoliticalRegistryRuntime.canCreate`, rename uses a new `validateRename` + `updateName` runtime path, and both rename and set-capital enforce the new shared `PoliticalEntityAuthority.isLeaderOrOp` check. Packet round-trip tests, a registry rename test, and a leader-or-op auth test pass. Government-form UI/edit (POL-001) and color/charter editing still outstanding.
+
+**Progress 2026-04-27.** Color and charter editing closed via two new server-authoritative packets (`MessageSetPoliticalEntityColor`, `MessageSetPoliticalEntityCharter`) and a runtime mutator pair (`PoliticalRegistryRuntime.updateColor` / `updateCharter`) gated by `PoliticalEntityAuthority.isLeaderOrOp` and validated through `PoliticalRegistryValidation.validateColor` (RRGGBB / AARRGGBB hex with optional `#`, empty allowed) / `validateCharter` (free text capped at `MAX_CHARTER_LENGTH=256`). Identical values are no-ops without dirty churn; invalid input rejects without mutating the record. `PoliticalEntityNameInputScreen` gained an extended constructor (`maxLength`, `allowEmpty`) so the same modal serves all four editors without forking; `PoliticalEntityListScreen` now ships Color / Charter buttons in a dedicated second action row, leader-active. JUnit `PoliticalEntityColorAndCharterTest` covers both validators (boundary / hex / hash / length / garbage), both mutators (mutate / no-op / invalid-rejection / unknown-entity / empty-clears), the new record withers, and the NBT round-trip of color/charter through `PoliticalRegistryRuntime`. Government-form UI/edit (POL-001) is also live (toggle button on the same screen, `MessageSetGovernmentForm`).
 
 ---
 
@@ -157,6 +161,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - GameTest or equivalent live-world coverage exists before broad hook wiring.
 
 **Progress 2026-04-26.** Build completion (`BuildArea.tick` after `isDone()`), creative work-area discard (`AbstractWorkAreaEntity.hurt`), worker death (`LivingDeathEvent`), worker destroy-removal (`EntityLeaveLevelEvent` filtered by `RemovalReason.shouldDestroy()`), and container place/break events all now trigger `BannerModSettlementRefreshSupport.refreshSnapshot`. Container hooks gate on `SettlementContainerHookPolicy.shouldRefresh(isContainer, insideStorageArea)` so distant chests do not pay the snapshot cost; the predicate is unit-tested. Live GameTest coverage of the new event paths is still outstanding.
+
+**Progress 2026-04-27.** Live event-bus coverage landed. `BannerModSettlementRefreshSupport` exposes a static `invocationCount()` observability seam (per-process `AtomicLong` bumped each time `refreshSnapshot` passes the null-guards and dispatches to `BannerModSettlementService.refreshClaimAt`). New `BannerModSettlementRefreshHookGameTests` runs two GameTests in their own batches: `workerDeathTriggersSettlementSnapshotRefresh` exercises the `LivingDeathEvent` path through `worker.kill()`; `workerForcedRemovalTriggersSettlementSnapshotRefresh` exercises the `EntityLeaveLevelEvent` (RemovalReason.DISCARDED) path through `worker.remove(DISCARDED)`. Both tests snapshot the counter before the mutation and assert it advances after the live Forge event fires. Container place/break and BuildArea-completion paths still rely on the unit-tested policy predicate plus the same shared `refreshSnapshot` seam, so this slice closes the long-standing open line for SETTLEMENT-006.
 
 ---
 
