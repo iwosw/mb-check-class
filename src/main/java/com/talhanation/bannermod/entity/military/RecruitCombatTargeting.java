@@ -24,6 +24,12 @@ final class RecruitCombatTargeting {
     private static final double FORMATION_CLOSE_FOCUS_DISTANCE_SQR_FALLBACK = 16.0D;
     /** Closer-switch hysteresis: new reactive target must be meaningfully closer than current. */
     private static final double REACTIVE_SWITCH_DISTANCE_MARGIN_SQR = 9.0D;
+    /**
+     * Formation retargeting guard: when a fresh nearby threat appears in this radius,
+     * don't keep stale sticky targets that are materially farther away.
+     */
+    private static final double FORMATION_NEARBY_THREAT_RADIUS_SQR = 64.0D;
+    private static final double FORMATION_SWITCH_ADVANTAGE_MARGIN_SQR = 16.0D;
 
     private RecruitCombatTargeting() {
     }
@@ -74,6 +80,10 @@ final class RecruitCombatTargeting {
             return null;
         }
         LivingEntity currentTarget = recruit.getTarget();
+        if (recruit.isInFormation
+                && shouldPreferNearbyFormationThreat(recruit, currentTarget, liveTargets, validityCheck)) {
+            currentTarget = null;
+        }
         if (shouldRetainCurrentTarget(recruit, currentTarget, liveTargets, validityCheck)) {
             return currentTarget;
         }
@@ -165,6 +175,25 @@ final class RecruitCombatTargeting {
         double currentDistanceSqr = recruit.distanceToSqr(currentTarget);
         double bestDistanceSqr = recruit.distanceToSqr(candidates.get(0));
         return currentDistanceSqr <= bestDistanceSqr + TARGET_STICKINESS_DISTANCE_BUFFER_SQR;
+    }
+
+    private static boolean shouldPreferNearbyFormationThreat(AbstractRecruitEntity recruit,
+                                                             @Nullable LivingEntity currentTarget,
+                                                             List<LivingEntity> candidates,
+                                                             Predicate<LivingEntity> validityCheck) {
+        if (currentTarget == null || !validityCheck.test(currentTarget) || candidates.isEmpty()) {
+            return false;
+        }
+        LivingEntity nearestCandidate = candidates.get(0);
+        if (nearestCandidate == currentTarget) {
+            return false;
+        }
+        double nearestDistanceSqr = recruit.distanceToSqr(nearestCandidate);
+        if (nearestDistanceSqr > FORMATION_NEARBY_THREAT_RADIUS_SQR) {
+            return false;
+        }
+        double currentDistanceSqr = recruit.distanceToSqr(currentTarget);
+        return nearestDistanceSqr + FORMATION_SWITCH_ADVANTAGE_MARGIN_SQR < currentDistanceSqr;
     }
 
     private static double formationCloseFocusDistanceSqr() {

@@ -95,7 +95,7 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
             if (canSee) {
                 ++this.seeTime;
             } else {
-                this.seeTime = 0;
+                --this.seeTime;
             }
 
             if(isTooFar){
@@ -196,7 +196,7 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
                                         this.state = State.SHOOT;
                                         this.seeTime = 0;
                                     }
-                                } else if (crossBowman.getShouldHoldPos()) {
+                                } else if (crossBowman.getShouldHoldPos() && this.seeTime < -40) {
                                     this.crossBowman.setTarget(null);
                                 }
                             } else {
@@ -300,6 +300,6 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
 
     private void handleWander(boolean inRange, boolean isFar, boolean isClose){
         if (inRange) this.crossBowman.getNavigation().stop();
-        if (isFar) this.crossBowman.getNavigation().moveTo(crossBowman, this.speedModifier);
+        if (isFar) this.crossBowman.getNavigation().moveTo(target, this.speedModifier);
     }
 }

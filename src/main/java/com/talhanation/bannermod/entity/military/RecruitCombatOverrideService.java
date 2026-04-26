@@ -33,7 +33,7 @@ import java.util.UUID;
 
 final class RecruitCombatOverrideService {
 
-    /** Ticks of shield stagger applied after a successful directional block (HYW parity ≈ 5s). */
+    /** Ticks of shield stagger applied after a successful directional block. */
     private static final int BLOCK_STAGGER_COOLDOWN_TICKS = 100;
     /** Extra mitigation multiplier for shieldman-class recruits (stacked onto stance). */
     private static final float SHIELDMAN_BONUS_REMAINING = 0.9f;
@@ -191,7 +191,7 @@ final class RecruitCombatOverrideService {
 
     /**
      * Step 2.A/B: directional shield mitigation with stance-driven reduction and
-     * HYW-style stagger cooldown on a successful block.
+     * BannerMod stagger cooldown on a successful block.
      */
     private static float applyShieldMitigation(AbstractRecruitEntity recruit, DamageSource damageSource, float damage) {
         if (damage <= 0f) {

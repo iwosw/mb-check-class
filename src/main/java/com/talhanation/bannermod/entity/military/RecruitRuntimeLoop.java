@@ -356,7 +356,9 @@ final class RecruitRuntimeLoop {
         return target != null
                 && target.isAlive()
                 && !target.isRemoved()
-                && recruit.targetingConditions.test(recruit, target);
+                // Avoid vanilla forCombat neutral-mob gating (e.g. spider day-passive state).
+                // Recruit-specific policy already lives in shouldAttack/canAttack.
+                && recruit.shouldAttack(target);
     }
 
     private static void recruitCheckDespawn(AbstractRecruitEntity recruit) {

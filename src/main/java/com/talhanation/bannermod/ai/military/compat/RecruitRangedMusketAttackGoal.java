@@ -119,7 +119,7 @@ public class RecruitRangedMusketAttackGoal extends Goal {
             if (canSee) {
                 ++this.seeTime;
             } else {
-                this.seeTime = 0;
+                --this.seeTime;
             }
 
             if(isTooFar){
@@ -378,6 +378,6 @@ public class RecruitRangedMusketAttackGoal extends Goal {
 
     private void handleWander(boolean inRange, boolean isFar, boolean isClose){
         if (inRange) this.crossBowman.getNavigation().stop();
-        if (isFar) this.crossBowman.getNavigation().moveTo(crossBowman, this.speedModifier);
+        if (isFar) this.crossBowman.getNavigation().moveTo(target, this.speedModifier);
     }
 }

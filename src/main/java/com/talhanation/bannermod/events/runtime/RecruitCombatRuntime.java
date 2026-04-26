@@ -27,16 +27,12 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 public final class RecruitCombatRuntime {
     private static final Set<Projectile> CANCELED_PROJECTILES = new HashSet<>();
-    private static final List<AbstractArrow> TRACKED_ARROWS = new ArrayList<>();
     private static int tickCounter = 0;
 
     private RecruitCombatRuntime() {
@@ -70,10 +66,12 @@ public final class RecruitCombatRuntime {
             return;
         }
 
-        if (owner instanceof AbstractRecruitEntity recruit) {
+        AbstractRecruitEntity recruit = RecruitEntityAccess.asRecruit(owner);
+        if (recruit != null) {
             if (impactLiving instanceof Animal animal) {
                 Entity passenger = animal.getFirstPassenger();
-                if (passenger instanceof AbstractRecruitEntity passengerRecruit && !canAttack(recruit, passengerRecruit)) {
+                AbstractRecruitEntity passengerRecruit = RecruitEntityAccess.asRecruit(passenger);
+                if (passengerRecruit != null && !canAttack(recruit, passengerRecruit)) {
                     event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
                     return;
                 }
@@ -135,7 +133,8 @@ public final class RecruitCombatRuntime {
 
         if (BannerModMain.isMusketModLoaded) {
             Entity sourceEntity = event.getSource().getEntity();
-            if (sourceEntity instanceof AbstractRecruitEntity owner && IWeapon.isMusketModWeapon(owner.getMainHandItem())) {
+            AbstractRecruitEntity owner = RecruitEntityAccess.asRecruit(sourceEntity);
+            if (owner != null && IWeapon.isMusketModWeapon(owner.getMainHandItem())) {
                 LivingEntity impactEntity = event.getEntity();
                 if (!canAttack(owner, impactEntity)) {
                     event.setCanceled(true);
@@ -178,7 +177,8 @@ public final class RecruitCombatRuntime {
 
     public static void onRecruitDeath(LivingDeathEvent event) {
         Entity target = event.getEntity();
-        if (target instanceof AbstractRecruitEntity recruit) {
+        AbstractRecruitEntity recruit = RecruitEntityAccess.asRecruit(target);
+        if (recruit != null) {
             if (!recruit.getIsOwned()) {
                 return;
             }
@@ -200,13 +200,9 @@ public final class RecruitCombatRuntime {
         }
         tickCounter = 0;
 
-        TRACKED_ARROWS.addAll(event.level.getEntitiesOfClass(AbstractArrow.class, event.level.getWorldBorder().getCollisionShape().bounds()));
-        Iterator<AbstractArrow> iterator = TRACKED_ARROWS.iterator();
-        while (iterator.hasNext()) {
-            AbstractArrow arrow = iterator.next();
+        for (AbstractArrow arrow : event.level.getEntitiesOfClass(AbstractArrow.class, event.level.getWorldBorder().getCollisionShape().bounds())) {
             if (arrow.pickup == AbstractArrow.Pickup.DISALLOWED && arrow.inGroundTime > 300) {
                 arrow.discard();
-                iterator.remove();
             }
         }
     }

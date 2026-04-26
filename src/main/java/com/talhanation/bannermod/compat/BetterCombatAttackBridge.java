@@ -196,33 +196,22 @@ public final class BetterCombatAttackBridge {
         }
         Object attacksValue = attacks.get();
         if (attacksValue.getClass().isArray()) {
-            Object firstAttack = null;
             int length = Array.getLength(attacksValue);
             for (int i = 0; i < length; i++) {
                 Object attack = Array.get(attacksValue, i);
-                if (attack != null && firstAttack == null) {
-                    firstAttack = attack;
-                }
                 if (attack != null && conditionsMatch(attack, mounted, offhandEmpty, offhandShield)) {
                     return Optional.of(attack);
                 }
             }
-            // Better Combat condition sets differ between versions/packs; if no strict
-            // condition match exists, still use the first declared attack so recruit
-            // animation/cadence do not silently disappear.
-            return Optional.ofNullable(firstAttack);
+            return Optional.empty();
         }
         if (attacksValue instanceof Iterable<?> iterable) {
-            Object firstAttack = null;
             for (Object attack : iterable) {
-                if (attack != null && firstAttack == null) {
-                    firstAttack = attack;
-                }
                 if (attack != null && conditionsMatch(attack, mounted, offhandEmpty, offhandShield)) {
                     return Optional.of(attack);
                 }
             }
-            return Optional.ofNullable(firstAttack);
+            return Optional.empty();
         }
         return Optional.empty();
     }

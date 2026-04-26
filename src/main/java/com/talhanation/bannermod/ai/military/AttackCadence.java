@@ -3,8 +3,8 @@ package com.talhanation.bannermod.ai.military;
 /**
  * Stage 3.D: per-unit attack cadence.
  *
- * <p>HYW tunes polearm attacks to have a real windup and slightly longer
- * cooldown than a plain sword swing. We model this without touching the damage
+ * <p>Polearms need a readable windup and slightly longer cooldown than a plain
+ * sword swing. We model this without touching the damage
  * application path: the damage tick itself is unchanged, but the post-hit
  * cooldown is extended by a weapon-specific windup so the rhythm is
  * "swing → delayed recovery". This is option (b) from the stage brief — chosen

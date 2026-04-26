@@ -55,7 +55,7 @@ final class RecruitCombatDecisions {
         }
         int fireAspect = net.minecraft.world.item.enchantment.EnchantmentHelper.getFireAspect(recruit);
         if (fireAspect > 0) entity.setSecondsOnFire(fireAspect * 4);
-        // Stage 4.D: HYW-style unit-type matchup counters — only against other recruits
+        // Stage 4.D: BannerMod unit-type matchup counters — only against other recruits
         // so PvE / PvP balance against players and monsters is untouched.
         if (entity instanceof AbstractRecruitEntity defender) {
             UnitTypeMatchup.UnitClass attackerClass = classifyUnit(recruit);

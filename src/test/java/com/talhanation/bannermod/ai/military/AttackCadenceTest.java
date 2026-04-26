@@ -48,6 +48,16 @@ class AttackCadenceTest {
     }
 
     @Test
+    void polearmPackAliasesUsePikeCadence() {
+        int expected = (int) Math.round(BASELINE * AttackCadence.PIKE_COOLDOWN_MULT)
+                + AttackCadence.PIKE_WINDUP_TICKS;
+        assertEquals(expected, AttackCadence.cooldownTicksFor(BASELINE, "bettercombat:iron_lance"));
+        assertEquals(expected, AttackCadence.cooldownTicksFor(BASELINE, "medieval:glaive"));
+        assertEquals(AttackCadence.PIKE_WINDUP_TICKS,
+                AttackCadence.windupTicksFor("weapons:partisan"));
+    }
+
+    @Test
     void sarissaUsesSarissaCadence() {
         int got = AttackCadence.cooldownTicksFor(BASELINE, "recruits:sarissa");
         int expected = (int) Math.round(BASELINE * AttackCadence.SARISSA_COOLDOWN_MULT)

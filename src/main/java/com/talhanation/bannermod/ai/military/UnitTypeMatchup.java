@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.ai.military;
 
 /**
- * Stage 4.D: HYW-parity unit-type damage counters.
+ * Stage 4.D: BannerMod unit-type damage counters.
  *
  * <p>BannerMod doesn't tag recruits with explicit unit classes, so we infer the
  * class from (a) whether the recruit is mounted, (b) the held weapon category,
@@ -74,7 +74,7 @@ public final class UnitTypeMatchup {
      * Outgoing-damage multiplier for an attacker of {@code attacker} class hitting a
      * defender of {@code defender} class. Any matchup not listed returns {@code 1.0}.
      *
-     * <p>Matrix (HYW parity, simplified):
+     * <p>Matrix:
      * <pre>
      *   LIGHT vs HEAVY                      = 0.80  (light weapons bounce off armour)
      *   HEAVY vs LIGHT                      = 1.20

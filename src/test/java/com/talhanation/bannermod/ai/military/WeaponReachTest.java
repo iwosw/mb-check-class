@@ -37,6 +37,22 @@ class WeaponReachTest {
     }
 
     @Test
+    void polearmPackAliasesGrantTwoBlockExtraReach() {
+        assertEquals(WeaponReach.PIKE_EXTRA_REACH,
+                WeaponReach.effectiveReachForId("bettercombat:iron_lance"), EPS);
+        assertEquals(WeaponReach.PIKE_EXTRA_REACH,
+                WeaponReach.effectiveReachForId("medieval:glaive"), EPS);
+        assertEquals(WeaponReach.PIKE_EXTRA_REACH,
+                WeaponReach.effectiveReachForId("weapons:partisan"), EPS);
+        assertEquals(WeaponReach.PIKE_EXTRA_REACH,
+                WeaponReach.effectiveReachForId("weapons:billhook"), EPS);
+        assertEquals(WeaponReach.PIKE_EXTRA_REACH,
+                WeaponReach.effectiveReachForId("weapons:bardiche"), EPS);
+        assertEquals(WeaponReach.PIKE_EXTRA_REACH,
+                WeaponReach.effectiveReachForId("weapons:voulge"), EPS);
+    }
+
+    @Test
     void sarissaAndLongSpearGrantTwoAndAHalfBlockExtraReach() {
         assertEquals(WeaponReach.SARISSA_EXTRA_REACH,
                 WeaponReach.effectiveReachForId("recruits:sarissa"), EPS);
