@@ -1,20 +1,16 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.events.RecruitsOnWriteSpawnEggEvent;
-import com.talhanation.bannermod.registry.military.ModItems;
+import com.talhanation.bannermod.citizen.CitizenProfession;
+import com.talhanation.bannermod.entity.citizen.CitizenEntity;
+import com.talhanation.bannermod.registry.citizen.ModCitizenItems;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.scores.Team;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
@@ -38,26 +34,32 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractRecruitEntity recruitEntity && recruitEntity.distanceToSqr(player) <= 64.0D * 64.0D) {
-            writeSpawnEggToHand(player, recruitEntity, InteractionHand.MAIN_HAND);
+        if (entity instanceof CitizenEntity citizenEntity && citizenEntity.distanceToSqr(player) <= 64.0D * 64.0D) {
+            writeCitizenSpawnEggToHand(player, citizenEntity, InteractionHand.MAIN_HAND);
         }
     }
 
-    public static boolean writeSpawnEggToHand(ServerPlayer player, AbstractRecruitEntity recruitEntity, InteractionHand hand) {
-        if (player == null || recruitEntity == null || hand == null) {
+    public static boolean writeCitizenSpawnEggToHand(ServerPlayer player, CitizenEntity citizenEntity, InteractionHand hand) {
+        if (player == null || citizenEntity == null || hand == null) {
             return false;
         }
         if (!player.getItemInHand(hand).isEmpty()) {
             return false;
         }
-
         MessageWriteSpawnEgg writer = new MessageWriteSpawnEgg();
-        ItemStack itemStack = writer.getItemStack(recruitEntity.getType());
+        ItemStack itemStack = writer.getItemStackForCitizenProfession(citizenEntity.activeProfession());
         if (itemStack.isEmpty()) {
             return false;
         }
-
-        CompoundTag entityTag = writer.fillRecruitsInfo(new CompoundTag(), recruitEntity);
+        CompoundTag entityTag = new CompoundTag();
+        entityTag.putString("CitizenProfession", citizenEntity.activeProfession().name());
+        entityTag.putString("Name", citizenEntity.getName().getString());
+        if (citizenEntity.getOwnerUUID() != null) {
+            entityTag.putUUID("OwnerUUID", citizenEntity.getOwnerUUID());
+        }
+        if (citizenEntity.getTeam() != null) {
+            entityTag.putString("Team", citizenEntity.getTeam().getName());
+        }
         CompoundTag itemTag = new CompoundTag();
         itemTag.put("EntityTag", entityTag);
         itemStack.setTag(itemTag);
@@ -65,140 +67,9 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
         return true;
     }
 
-    public CompoundTag fillRecruitsInfo(CompoundTag entityTag, AbstractRecruitEntity recruitEntity) {
-        String name = recruitEntity.getName().getString();
-        Team team = recruitEntity.getTeam();
-        if (team != null) {
-            entityTag.putString("Team", team.getName());
-        }
-        entityTag.putString("Name", name);
-        entityTag.putInt("AggroState", recruitEntity.getState());
-        entityTag.putInt("FollowState", recruitEntity.getFollowState());
-        entityTag.putBoolean("ShouldFollow", recruitEntity.getShouldFollow());
-        entityTag.putBoolean("ShouldMount", recruitEntity.getShouldMount());
-        entityTag.putBoolean("ShouldProtect", recruitEntity.getShouldProtect());
-        entityTag.putBoolean("ShouldBlock", recruitEntity.getShouldBlock());
-        if(recruitEntity.getGroup() != null) entityTag.putUUID("Group", recruitEntity.getGroup());
-        entityTag.putInt("Variant", recruitEntity.getVariant());
-        entityTag.putBoolean("Listen", recruitEntity.getListen());
-        entityTag.putBoolean("Fleeing", recruitEntity.getFleeing());
-        entityTag.putBoolean("isFollowing", recruitEntity.isFollowing());
-        entityTag.putInt("Xp", recruitEntity.getXp());
-        entityTag.putInt("Level", recruitEntity.getXpLevel());
-        entityTag.putInt("Kills", recruitEntity.getKills());
-        entityTag.putFloat("Hunger", recruitEntity.getHunger());
-        entityTag.putFloat("Moral", recruitEntity.getMorale());
-        entityTag.putBoolean("isOwned", recruitEntity.getIsOwned());
-        entityTag.putInt("Cost", recruitEntity.getCost());
-        entityTag.putInt("mountTimer", recruitEntity.getMountTimer());
-        entityTag.putInt("upkeepTimer", recruitEntity.getUpkeepTimer());
-        entityTag.putInt("Color", recruitEntity.getColor());
-        entityTag.putInt("Biome", recruitEntity.getBiome());
-
-        if (recruitEntity.getHoldPos() != null) {
-            entityTag.putDouble("HoldPosX", recruitEntity.getHoldPos().x());
-            entityTag.putDouble("HoldPosY", recruitEntity.getHoldPos().y());
-            entityTag.putDouble("HoldPosZ", recruitEntity.getHoldPos().z());
-            entityTag.putBoolean("ShouldHoldPos", recruitEntity.getShouldHoldPos());
-        }
-
-        if (recruitEntity.getMovePos() != null) {
-            entityTag.putInt("MovePosX", recruitEntity.getMovePos().getX());
-            entityTag.putInt("MovePosY", recruitEntity.getMovePos().getY());
-            entityTag.putInt("MovePosZ", recruitEntity.getMovePos().getZ());
-            entityTag.putBoolean("ShouldMovePos", recruitEntity.getShouldMovePos());
-        }
-
-        if (recruitEntity.getOwnerUUID() != null) {
-            entityTag.putUUID("OwnerUUID", recruitEntity.getOwnerUUID());
-        }
-
-        if (recruitEntity.getMountUUID() != null) {
-            entityTag.putUUID("MountUUID", recruitEntity.getMountUUID());
-        }
-
-        if (recruitEntity.getProtectUUID() != null) {
-            entityTag.putUUID("ProtectUUID", recruitEntity.getProtectUUID());
-        }
-
-        if (recruitEntity.getUpkeepUUID() != null) {
-            entityTag.putUUID("UpkeepUUID", recruitEntity.getUpkeepUUID());
-        }
-
-        if (recruitEntity.getUpkeepPos() != null) {
-            entityTag.putInt("UpkeepPosX", recruitEntity.getUpkeepPos().getX());
-            entityTag.putInt("UpkeepPosY", recruitEntity.getUpkeepPos().getY());
-            entityTag.putInt("UpkeepPosZ", recruitEntity.getUpkeepPos().getZ());
-        }
-
-        ListTag listnbt = new ListTag();
-        for (int i = 0; i < recruitEntity.inventory.getContainerSize(); ++i) {
-            ItemStack itemstack = recruitEntity.inventory.getItem(i);
-            if (!itemstack.isEmpty()) {
-                CompoundTag compoundnbt = new CompoundTag();
-                compoundnbt.putByte("Slot", (byte) i);
-                itemstack.save(compoundnbt);
-                listnbt.add(compoundnbt);
-            }
-        }
-        entityTag.put("Items", listnbt);
-
-        ListTag listtag = new ListTag();
-        for (ItemStack itemstack : recruitEntity.armorItems) {
-            CompoundTag compoundtag = new CompoundTag();
-            if (!itemstack.isEmpty()) {
-                itemstack.save(compoundtag);
-            }
-
-            listtag.add(compoundtag);
-        }
-
-        entityTag.put("ArmorItems", listtag);
-        ListTag listtag1 = new ListTag();
-
-        for (ItemStack itemstack1 : recruitEntity.handItems) {
-            CompoundTag compoundtag1 = new CompoundTag();
-            if (!itemstack1.isEmpty()) {
-                itemstack1.save(compoundtag1);
-            }
-
-            listtag1.add(compoundtag1);
-        }
-
-        entityTag.put("HandItems", listtag1);
-
-        MinecraftForge.EVENT_BUS.post(new RecruitsOnWriteSpawnEggEvent(recruitEntity, entityTag));
-
-        return entityTag;
-    }
-
-    public ItemStack getItemStack(EntityType<?> type){
-        ItemStack itemStack = ItemStack.EMPTY;
-        if (type == ModItems.RECRUIT_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.RECRUIT_SPAWN_EGG.get());
-        } else if (type == ModItems.RECRUIT_SHIELD_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.RECRUIT_SHIELD_SPAWN_EGG.get());
-        } else if (type == ModItems.BOWMAN_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.BOWMAN_SPAWN_EGG.get());
-        } else if (type == ModItems.CROSSBOWMAN_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.CROSSBOWMAN_SPAWN_EGG.get());
-        } else if (type == ModItems.HORSEMAN_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.HORSEMAN_SPAWN_EGG.get());
-        } else if (type == ModItems.NOMAD_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.NOMAD_SPAWN_EGG.get());
-        } else if (type == ModItems.VILLAGER_NOBLE_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.VILLAGER_NOBLE_SPAWN_EGG.get());
-        } else if (type == ModItems.MESSENGER_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.MESSENGER_SPAWN_EGG.get());
-        } else if (type == ModItems.SCOUT_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.SCOUT_SPAWN_EGG.get());
-        } else if (type == ModItems.PATROL_LEADER_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.PATROL_LEADER_SPAWN_EGG.get());
-        } else if (type == ModItems.CAPTAIN_SPAWN_EGG.get().getType(null)) {
-            itemStack = new ItemStack(ModItems.CAPTAIN_SPAWN_EGG.get());
-        }
-
-        return itemStack;
+    private ItemStack getItemStackForCitizenProfession(CitizenProfession profession) {
+        if (profession == CitizenProfession.NONE) return ItemStack.EMPTY;
+        return new ItemStack(ModCitizenItems.CITIZEN_SPAWN_EGG.get());
     }
 
     public MessageWriteSpawnEgg fromBytes(FriendlyByteBuf buf) {

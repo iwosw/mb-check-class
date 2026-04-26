@@ -10,13 +10,13 @@ import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.events.VillagerEvents;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
-import com.talhanation.bannermod.WorkersUpdateChecker;
 import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
 import com.talhanation.bannermod.client.military.events.ClientPlayerEvents;
 import com.talhanation.bannermod.client.military.events.KeyEvents;
 import com.talhanation.bannermod.client.military.gui.overlay.ClaimOverlayManager;
 import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
+import com.talhanation.bannermod.compat.MedievalSiegeMachinesCompat;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.config.WorkersServerConfig;
@@ -87,6 +87,7 @@ public class BannerModMain {
 
         // Register citizen unified entity type (Cit-02 onward)
         com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes.ENTITY_TYPES.register(modEventBus);
+        com.talhanation.bannermod.registry.citizen.ModCitizenItems.ITEMS.register(modEventBus);
 
         // Creative tabs
         modEventBus.addListener(this::addCreativeTabs);
@@ -127,9 +128,9 @@ public class BannerModMain {
         MinecraftForge.EVENT_BUS.register(new DamageEvent());
         MinecraftForge.EVENT_BUS.register(new PillagerEvents());
         MinecraftForge.EVENT_BUS.register(new VillagerEvents());
-        MinecraftForge.EVENT_BUS.register(this);
         if (MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers()) {
-            MinecraftForge.EVENT_BUS.register(new WorkersUpdateChecker());
+            // Legacy recruits/workers update checkers target retired mod ids and stay disabled
+            // until bannermod has one release-facing update contract.
         }
 
         // Create shared channel; recruits at [0..N), workers at [N..N+M)
@@ -139,7 +140,8 @@ public class BannerModMain {
         isMusketModLoaded = ModList.get().isLoaded("musketmod");
         isSmallShipsLoaded = ModList.get().isLoaded("smallships");
         isSmallShipsCompatible = isSmallShipsLoaded;
-        isSiegeWeaponsLoaded = ModList.get().isLoaded("siegeweapons");
+        isSiegeWeaponsLoaded = MedievalSiegeMachinesCompat.isLoaded();
+        MedievalSiegeMachinesCompat.logDetectedState();
         isEpicKnightsLoaded = ModList.get().isLoaded("epicknights");
         isCorpseLoaded = ModList.get().isLoaded("corpse");
         isRPGZLoaded = ModList.get().isLoaded("rpgz");
@@ -179,26 +181,7 @@ public class BannerModMain {
 
     private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
-            // Civilian spawn eggs
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.FARMER_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.LUMBERJACK_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.MINER_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.MERCHANT_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.BUILDER_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.FISHERMAN_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.ANIMAL_FARMER_SPAWN_EGG.get());
-            // Military spawn eggs
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.RECRUIT_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.BOWMAN_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.CROSSBOWMAN_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.RECRUIT_SHIELD_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.HORSEMAN_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.NOMAD_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.VILLAGER_NOBLE_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.MESSENGER_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.SCOUT_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.PATROL_LEADER_SPAWN_EGG.get());
-            event.accept(com.talhanation.bannermod.registry.military.ModItems.CAPTAIN_SPAWN_EGG.get());
+            event.accept(com.talhanation.bannermod.registry.citizen.ModCitizenItems.CITIZEN_SPAWN_EGG.get());
         }
     }
 }
