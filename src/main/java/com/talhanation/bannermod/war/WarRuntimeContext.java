@@ -74,7 +74,9 @@ public final class WarRuntimeContext {
                 demilitarizations(level),
                 registry(level),
                 cooldowns(level),
-                com.talhanation.bannermod.war.config.WarServerConfig.lostTerritoryImmunityTicks()
+                com.talhanation.bannermod.war.config.WarServerConfig.lostTerritoryImmunityTicks(),
+                com.talhanation.bannermod.governance.BannerModTreasuryManager.get(level),
+                com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager
         );
     }
 }

@@ -167,7 +167,7 @@ public class WarAlliesScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+        if (button == 0 || button == 1) {
             int listX = guiLeft + 8;
             int listY = guiTop + 24;
             int listW = W - 16;
@@ -177,8 +177,12 @@ public class WarAlliesScreen extends Screen {
                 int idx = scrollOffset + (int) ((mouseY - listY) / ROW_H);
                 if (idx >= 0 && idx < rows.size()) {
                     Row row = rows.get(idx);
-                    if (row.invite() != null) {
-                        triggerInviteAction(row.invite());
+                    WarAllyInviteRecord invite = row.invite();
+                    if (invite != null) {
+                        if (button == 1) {
+                            return declineIfAddressedToMe(invite);
+                        }
+                        triggerInviteAction(invite);
                         return true;
                     }
                 }
@@ -190,7 +194,6 @@ public class WarAlliesScreen extends Screen {
     private void triggerInviteAction(WarAllyInviteRecord invite) {
         UUID local = localPlayerUuid();
         if (isLeaderOf(invite.inviteePoliticalEntityId(), local)) {
-            // Click cycles accept on left-click; right-click decline (not yet wired here).
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRespondAllyInvite(invite.id(), true));
             rebuildRows();
             return;
@@ -200,6 +203,15 @@ public class WarAlliesScreen extends Screen {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCancelAllyInvite(invite.id()));
             rebuildRows();
         }
+    }
+
+    private boolean declineIfAddressedToMe(WarAllyInviteRecord invite) {
+        if (!isLeaderOf(invite.inviteePoliticalEntityId(), localPlayerUuid())) {
+            return false;
+        }
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRespondAllyInvite(invite.id(), false));
+        rebuildRows();
+        return true;
     }
 
     @Override
@@ -291,7 +303,7 @@ public class WarAlliesScreen extends Screen {
                 String name = screen.entityName(invite.inviteePoliticalEntityId());
                 String tag;
                 if (WarAlliesScreen.isLeaderOf(invite.inviteePoliticalEntityId(), local)) {
-                    tag = " (click to accept · DEL/BACKSPACE to decline)";
+                    tag = " (left-click: accept · right-click / DEL: decline)";
                 } else if (WarAlliesScreen.isLeaderOf(
                         screen.currentWar() == null
                                 ? null
