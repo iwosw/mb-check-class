@@ -111,6 +111,39 @@ public class RecruitsClaimManager {
         return new ArrayList<>(new HashSet<>(this.claims.values()));
     }
 
+    public boolean isTownTooCloseToSameNationTown(RecruitsClaim candidate, @Nullable RecruitsClaim ignoredClaim, int minDistanceBlocks) {
+        if (candidate == null || candidate.isRemoved || minDistanceBlocks <= 0) return false;
+        if (candidate.getOwnerFaction() == null) return false;
+        String factionId = candidate.getOwnerFactionStringID();
+        if (factionId == null || factionId.isEmpty()) return false;
+        ChunkPos candidateCenter = resolveCenter(candidate);
+        if (candidateCenter == null) return false;
+
+        long minDistanceSqr = (long) minDistanceBlocks * (long) minDistanceBlocks;
+        for (RecruitsClaim claim : getAllClaims()) {
+            if (claim == null || claim.isRemoved) continue;
+            if (ignoredClaim != null && claim.getUUID().equals(ignoredClaim.getUUID())) continue;
+            if (claim.getOwnerFaction() == null) continue;
+            if (!factionId.equals(claim.getOwnerFactionStringID())) continue;
+            ChunkPos center = resolveCenter(claim);
+            if (center == null) continue;
+
+            long dx = (long) candidateCenter.getMiddleBlockX() - center.getMiddleBlockX();
+            long dz = (long) candidateCenter.getMiddleBlockZ() - center.getMiddleBlockZ();
+            if (dx * dx + dz * dz < minDistanceSqr) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    private static ChunkPos resolveCenter(RecruitsClaim claim) {
+        if (claim.getCenter() != null) return claim.getCenter();
+        List<ChunkPos> chunks = claim.getClaimedChunks();
+        return chunks.isEmpty() ? null : chunks.get(0);
+    }
+
     public boolean claimExists(RecruitsClaim claim, List<ChunkPos> allPos) {
         for (ChunkPos pos : allPos) {
             if (claims.containsKey(pos)) {

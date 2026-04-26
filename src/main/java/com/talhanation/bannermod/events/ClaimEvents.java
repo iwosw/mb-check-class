@@ -7,6 +7,9 @@ import com.talhanation.bannermod.governance.BannerModTreasuryManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
 import com.talhanation.bannermod.settlement.BannerModSettlementService;
+import com.talhanation.bannermod.settlement.validation.BuildingInvalidationReason;
+import com.talhanation.bannermod.settlement.validation.BuildingInvalidationRuntime;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
@@ -136,6 +139,8 @@ public class ClaimEvents {
         if(governorMaintenanceStage != GOVERNOR_STAGE_IDLE){
             tickGovernorMaintenance(level);
         }
+
+        BuildingInvalidationRuntime.tickBatch(level, WorkersServerConfig.settlementRevalidationBatchSizePerTick());
     }
 
     private void tickGovernorMaintenance(ServerLevel level) {
@@ -221,20 +226,38 @@ public class ClaimEvents {
     @SubscribeEvent
     public void onBlockBreakEvent(BlockEvent.BreakEvent event) {
         if(event.getLevel().isClientSide()) return;
-        if(claimProtectionPolicy().shouldDenyBlockBreak(event.getLevel(), event.getPos(), event.getPlayer())) event.setCanceled(true);
+        if(claimProtectionPolicy().shouldDenyBlockBreak(event.getLevel(), event.getPos(), event.getPlayer())) {
+            event.setCanceled(true);
+            return;
+        }
+        if (event.getLevel() instanceof ServerLevel level) {
+            BuildingInvalidationRuntime.enqueueByBlockChange(level, event.getPos(), BuildingInvalidationReason.BLOCK_BROKEN);
+        }
     }
 
     @SubscribeEvent
     public void onBlockPlaceEvent(BlockEvent.EntityPlaceEvent event) {
         if(event.getLevel().isClientSide()) return;
-        if(claimProtectionPolicy().shouldDenyBlockPlacement(event.getLevel(), event.getPos(), event.getEntity())) event.setCanceled(true);
+        if(claimProtectionPolicy().shouldDenyBlockPlacement(event.getLevel(), event.getPos(), event.getEntity())) {
+            event.setCanceled(true);
+            return;
+        }
+        if (event.getLevel() instanceof ServerLevel level) {
+            BuildingInvalidationRuntime.enqueueByBlockChange(level, event.getPos(), BuildingInvalidationReason.BLOCK_PLACED);
+        }
     }
 
     @SubscribeEvent
     public void onFluidPlaceBlockEvent(BlockEvent.FluidPlaceBlockEvent event) {
         LevelAccessor level = event.getLevel();
         if(level.isClientSide()) return;
-        if(claimProtectionPolicy().shouldDenyFluidPlacement(level, event.getPos(), event.getLiquidPos())) event.setCanceled(true);
+        if(claimProtectionPolicy().shouldDenyFluidPlacement(level, event.getPos(), event.getLiquidPos())) {
+            event.setCanceled(true);
+            return;
+        }
+        if (level instanceof ServerLevel serverLevel) {
+            BuildingInvalidationRuntime.enqueueByBlockChange(serverLevel, event.getPos(), BuildingInvalidationReason.FLUID_CHANGED);
+        }
     }
 
     @SubscribeEvent
@@ -252,6 +275,10 @@ public class ClaimEvents {
 
         if(claim != null && RecruitsServerConfig.ExplosionProtectionInClaims.get()){
             event.setCanceled(true);
+            return;
+        }
+        if (event.getLevel() instanceof ServerLevel level) {
+            BuildingInvalidationRuntime.enqueueByBlockChange(level, pos, BuildingInvalidationReason.EXPLOSION);
         }
     }
     @SubscribeEvent

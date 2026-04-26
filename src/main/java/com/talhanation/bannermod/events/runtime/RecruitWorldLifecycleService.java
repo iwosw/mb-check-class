@@ -19,7 +19,6 @@ import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTeleportEvent;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -79,6 +78,9 @@ public final class RecruitWorldLifecycleService {
         if (event.level.isClientSide || !(event.level instanceof ServerLevel serverLevel)) {
             return;
         }
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
 
         if (RecruitsServerConfig.ShouldRecruitPatrolsSpawn.get()) {
             recruitPatrols.computeIfAbsent(serverLevel, ignored -> new RecruitsPatrolSpawn(serverLevel)).tick();
@@ -91,18 +93,15 @@ public final class RecruitWorldLifecycleService {
         if (serverLevel.getGameTime() % 20 == 0 && FactionEvents.recruitsTreatyManager != null) {
             FactionEvents.recruitsTreatyManager.tick(serverLevel);
         }
+
+        CitizenWorldLifecycleService.tickAsyncPathfinding(serverLevel);
     }
 
     public static void markRecruitsForGroupRefresh(ServerLevel level, RecruitsGroupsManager groupsManager) {
         List<AbstractRecruitEntity> recruitList = RecruitIndex.instance().all(level, false);
         if (recruitList == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            recruitList = new ArrayList<>();
-            for (Entity entity : level.getEntities().getAll()) {
-                if (entity instanceof AbstractRecruitEntity recruit) {
-                    recruitList.add(recruit);
-                }
-            }
+            RuntimeProfilingCounters.increment("recruit.index.unavailable");
+            return;
         }
         for (AbstractRecruitEntity recruit : recruitList) {
             recruit.needsGroupUpdate = true;

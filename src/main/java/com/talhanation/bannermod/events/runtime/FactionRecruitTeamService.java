@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Team;
 import net.minecraftforge.network.PacketDistributor;
@@ -112,12 +111,8 @@ public final class FactionRecruitTeamService {
             return list;
         }
 
-        RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-        for (Entity entity : level.getEntities().getAll()) {
-            if (entity instanceof AbstractRecruitEntity recruit && recruit.getOwner() != null && recruit.getOwnerUUID().equals(playerUuid)) {
-                list.add(recruit);
-            }
-        }
+        RuntimeProfilingCounters.increment("recruit.index.unavailable");
+        BannerModMain.LOGGER.warn("Recruit index unavailable for {}; skipping unbounded team recruit lookup", level.dimension().location());
         return list;
     }
 

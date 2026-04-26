@@ -15,6 +15,7 @@ import com.talhanation.bannermod.persistence.military.*;
 import com.talhanation.bannermod.events.RecruitEvent;
 import com.talhanation.bannermod.events.runtime.RecruitCombatRuntime;
 import com.talhanation.bannermod.events.runtime.RecruitWorldLifecycleService;
+import com.talhanation.bannermod.ai.pathfinding.async.TrueAsyncPathfindingRuntime;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -163,6 +164,7 @@ public class RecruitEvents {
 
         // Fix: Async-Executor sauber herunterfahren damit der Server nicht hängt
         com.talhanation.bannermod.ai.pathfinding.AsyncPathProcessor.shutdown();
+        TrueAsyncPathfindingRuntime.instance().shutdown();
     }
 
     @SubscribeEvent

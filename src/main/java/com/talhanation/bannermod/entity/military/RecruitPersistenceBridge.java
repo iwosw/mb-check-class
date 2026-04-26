@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.citizen.CitizenRole;
 import com.talhanation.bannermod.events.RecruitEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -43,6 +44,7 @@ final class RecruitPersistenceBridge {
         nbt.putBoolean("isInFormation", recruit.isInFormation);
         nbt.putInt("paymentTimer", recruit.paymentTimer);
         nbt.putString("CombatStance", recruit.getCombatStance().name());
+        nbt.putString("CitizenRole", CitizenRole.CONTROLLED_RECRUIT.name());
 
         AbstractRecruitEntity.persistCitizenStateToLegacy(recruit.getCitizenCore(), nbt);
 
