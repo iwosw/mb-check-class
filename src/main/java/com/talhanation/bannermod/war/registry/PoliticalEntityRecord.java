@@ -42,6 +42,11 @@ public record PoliticalEntityRecord(
                 color, charter, ideology, homeRegion, createdAtGameTime);
     }
 
+    public PoliticalEntityRecord withName(String newName) {
+        return new PoliticalEntityRecord(id, newName == null ? name : newName, status, leaderUuid,
+                coLeaderUuids, capitalPos, color, charter, ideology, homeRegion, createdAtGameTime);
+    }
+
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
         tag.putUUID("Id", id);

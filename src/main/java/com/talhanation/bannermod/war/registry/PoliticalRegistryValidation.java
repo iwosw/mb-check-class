@@ -30,6 +30,33 @@ public final class PoliticalRegistryValidation {
         return Result.ok();
     }
 
+    /**
+     * Validate a rename of {@code currentEntityId} to {@code newName} against the existing
+     * registry. Identical to {@link #validateCreate} but ignores any duplicate match for the
+     * entity being renamed (so a leader can re-issue the same name as a no-op safety) and
+     * does not require a leader uuid.
+     */
+    public static Result validateRename(String newName,
+                                        UUID currentEntityId,
+                                        Collection<PoliticalEntityRecord> existing) {
+        String normalized = normalizeName(newName);
+        if (normalized.length() < MIN_NAME_LENGTH) {
+            return Result.invalid("name_too_short");
+        }
+        if (normalized.length() > MAX_NAME_LENGTH) {
+            return Result.invalid("name_too_long");
+        }
+        for (PoliticalEntityRecord record : existing) {
+            if (currentEntityId != null && currentEntityId.equals(record.id())) {
+                continue;
+            }
+            if (record.name().equalsIgnoreCase(normalized)) {
+                return Result.invalid("duplicate_name");
+            }
+        }
+        return Result.ok();
+    }
+
     public static String normalizeName(String name) {
         return name == null ? "" : name.trim().replaceAll("\\s+", " ");
     }

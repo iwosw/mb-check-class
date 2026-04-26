@@ -90,6 +90,32 @@ public class PoliticalRegistryRuntime {
         return true;
     }
 
+    public PoliticalRegistryValidation.Result canRename(UUID id, String newName) {
+        if (id == null || !recordsById.containsKey(id)) {
+            return PoliticalRegistryValidation.Result.invalid("entity_not_found");
+        }
+        return PoliticalRegistryValidation.validateRename(newName, id, recordsById.values());
+    }
+
+    public boolean updateName(UUID id, String newName) {
+        PoliticalEntityRecord record = recordsById.get(id);
+        if (record == null) {
+            return false;
+        }
+        PoliticalRegistryValidation.Result validation =
+                PoliticalRegistryValidation.validateRename(newName, id, recordsById.values());
+        if (!validation.valid()) {
+            return false;
+        }
+        String normalized = PoliticalRegistryValidation.normalizeName(newName);
+        if (normalized.equals(record.name())) {
+            return true;
+        }
+        recordsById.put(id, record.withName(normalized));
+        dirtyListener.run();
+        return true;
+    }
+
     public Optional<PoliticalEntityRecord> byNameOrIdFragment(String token) {
         if (token == null || token.isBlank()) {
             return Optional.empty();
