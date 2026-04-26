@@ -33,6 +33,8 @@ final class ClaimAccessQueries {
     }
 
     static boolean isFriendlyToClaim(LivingEntity livingEntity, RecruitsClaim claim) {
-        return livingEntity.getTeam() != null && livingEntity.getTeam().getName().equals(claim.getOwnerFactionStringID());
+        return livingEntity.getTeam() != null
+                && claim.getOwnerPoliticalEntityId() != null
+                && livingEntity.getTeam().getName().equals(claim.getOwnerPoliticalEntityId().toString());
     }
 }

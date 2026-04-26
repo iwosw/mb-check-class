@@ -5,7 +5,6 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.BowmanEntity;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
-import com.talhanation.bannermod.network.messages.military.MessageAddRecruitToTeam;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -69,15 +68,6 @@ final class RecruitCommandActionService {
                 ItemStack emeraldsLeft = currencyItemStack.copy();
                 emeraldsLeft.setCount(playerEmeralds);
                 playerInv.add(emeraldsLeft);
-
-                if (player.getTeam() != null) {
-                    if (player.getCommandSenderWorld().isClientSide) {
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAddRecruitToTeam(player.getTeam().getName(), 1));
-                    } else {
-                        ServerPlayer serverPlayer = (ServerPlayer) player;
-                        FactionEvents.addNPCToData(serverPlayer.serverLevel(), player.getTeam().getName(), 1);
-                    }
-                }
 
                 return true;
             }

@@ -243,15 +243,6 @@ public class RecruitEvents {
     }
 
     private void setTeamsAsEnemies(Team attackerTeam, Team targetTeam, ServerLevel level) {
-        String attackerTeamName = attackerTeam.getName();
-        String targetTeamName = targetTeam.getName();
-
-        if (FactionEvents.recruitsDiplomacyManager != null) {
-            FactionEvents.recruitsDiplomacyManager.setRelation(attackerTeamName, targetTeamName,
-                    RecruitsDiplomacyManager.DiplomacyStatus.ENEMY, level);
-            FactionEvents.recruitsDiplomacyManager.setRelation(targetTeamName, attackerTeamName,
-                    RecruitsDiplomacyManager.DiplomacyStatus.ENEMY, level);
-        }
     }
 
     @SubscribeEvent

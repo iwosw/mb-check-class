@@ -7,6 +7,9 @@ import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -61,7 +64,7 @@ final class WorkerSettlementClaimPolicy {
     }
 
     static BannerModSettlementBinding.Binding resolveSettlementBinding(Villager villager, RecruitsClaim claim) {
-        String factionId = claim.getOwnerFaction() != null ? claim.getOwnerFactionStringID() : null;
+        String factionId = claim.getOwnerPoliticalEntityId() != null ? claim.getOwnerPoliticalEntityId().toString() : null;
         if (villager.getTeam() != null) {
             factionId = villager.getTeam().getName();
         }
@@ -75,24 +78,23 @@ final class WorkerSettlementClaimPolicy {
 
     static <T extends Entity> int countEntitiesInClaim(ServerLevel level, RecruitsClaim claim, Class<T> entityType) {
         if (entityType == AbstractWorkerEntity.class) {
+            ClaimOwnerKey ownerKey = resolveClaimOwnerKey(level, claim);
             return WorkerIndex.instance()
                     .queryInClaim(level, claim)
-                    .map(workers -> (int) workers.stream().filter(worker -> workerMatchesClaimOwner(worker, claim)).count())
+                    .map(workers -> (int) workers.stream().filter(worker -> workerMatchesClaimOwner(worker, ownerKey)).count())
                     .orElseGet(() -> {
                         RuntimeProfilingCounters.increment("worker.index.fallback_scans");
-                        return countEntitiesInClaimByScan(level, claim, entityType);
+                        return countEntitiesInClaimByScan(level, claim, entityType, ownerKey);
                     });
         }
-        return countEntitiesInClaimByScan(level, claim, entityType);
+        return countEntitiesInClaimByScan(level, claim, entityType, ClaimOwnerKey.EMPTY);
     }
 
-    private static <T extends Entity> int countEntitiesInClaimByScan(ServerLevel level, RecruitsClaim claim, Class<T> entityType) {
+    private static <T extends Entity> int countEntitiesInClaimByScan(ServerLevel level, RecruitsClaim claim, Class<T> entityType, ClaimOwnerKey ownerKey) {
         if (level == null || claim == null || entityType == null || claim.getClaimedChunks().isEmpty()) {
             return 0;
         }
         AABB claimBounds = getClaimBounds(level, claim);
-        UUID leaderId = claim.getOwnerFaction() == null ? null : claim.getOwnerFaction().getTeamLeaderUUID();
-        String factionId = claim.getOwnerFaction() == null ? null : claim.getOwnerFactionStringID();
         return level.getEntitiesOfClass(entityType, claimBounds, entity -> {
             if (!entity.isAlive() || !claim.containsChunk(entity.chunkPosition())) {
                 return false;
@@ -101,20 +103,30 @@ final class WorkerSettlementClaimPolicy {
                 return true;
             }
 
-            return workerMatchesClaimOwner(worker, leaderId, factionId);
+            return workerMatchesClaimOwner(worker, ownerKey);
         }).size();
     }
 
-    private static boolean workerMatchesClaimOwner(AbstractWorkerEntity worker, RecruitsClaim claim) {
-        UUID leaderId = claim.getOwnerFaction() == null ? null : claim.getOwnerFaction().getTeamLeaderUUID();
-        String factionId = claim.getOwnerFaction() == null ? null : claim.getOwnerFactionStringID();
-        return workerMatchesClaimOwner(worker, leaderId, factionId);
+    private static ClaimOwnerKey resolveClaimOwnerKey(ServerLevel level, RecruitsClaim claim) {
+        UUID politicalEntityId = claim.getOwnerPoliticalEntityId();
+        if (politicalEntityId == null) return ClaimOwnerKey.EMPTY;
+        PoliticalEntityRecord owner = WarRuntimeContext.registry(level).byId(politicalEntityId).orElse(null);
+        if (owner == null) return new ClaimOwnerKey(null, java.util.Set.of(), politicalEntityId.toString());
+        java.util.Set<UUID> ownerUuids = new java.util.HashSet<>();
+        if (owner.leaderUuid() != null) ownerUuids.add(owner.leaderUuid());
+        ownerUuids.addAll(owner.coLeaderUuids());
+        return new ClaimOwnerKey(owner.leaderUuid(), ownerUuids, politicalEntityId.toString());
     }
 
-    private static boolean workerMatchesClaimOwner(AbstractWorkerEntity worker, UUID leaderId, String factionId) {
-        boolean ownerMatch = leaderId != null && leaderId.equals(worker.getOwnerUUID());
-        boolean teamMatch = factionId != null && worker.getTeam() != null && factionId.equals(worker.getTeam().getName());
+    private static boolean workerMatchesClaimOwner(AbstractWorkerEntity worker, ClaimOwnerKey ownerKey) {
+        UUID workerOwner = worker.getOwnerUUID();
+        boolean ownerMatch = workerOwner != null && ownerKey.ownerUuids().contains(workerOwner);
+        boolean teamMatch = ownerKey.factionId() != null && worker.getTeam() != null && ownerKey.factionId().equals(worker.getTeam().getName());
         return ownerMatch || teamMatch;
+    }
+
+    private record ClaimOwnerKey(@Nullable UUID leaderId, java.util.Set<UUID> ownerUuids, @Nullable String factionId) {
+        private static final ClaimOwnerKey EMPTY = new ClaimOwnerKey(null, java.util.Set.of(), null);
     }
 
     private static long resolveClaimGrowthElapsedTicks(RecruitsClaim claim, long gameTime, Map<UUID, Long> claimWorkerGrowthSpawnTimes) {

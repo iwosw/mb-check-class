@@ -13,7 +13,6 @@ import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
-import com.talhanation.bannermod.util.ClaimUtil;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.persistence.military.*;
 import net.minecraft.core.BlockPos;
@@ -43,21 +42,13 @@ public class ClaimEvents {
     public static MinecraftServer server;
     public static RecruitsClaimManager recruitsClaimManager;
 
-    public static int siegeCounter;
-
-    public static int detectionCounter;
-
-    private static final int SIEGE_TICK_INTERVAL = 100;
-
-    private static final int DETECTION_TICK_INTERVAL = 300;
-
     private static final int GOVERNOR_TICK_INTERVAL = 200;
 
-    private static final int GOVERNOR_HEARTBEAT_BATCH_SIZE = 4;
+    private static final int GOVERNOR_HEARTBEAT_BATCH_SIZE = 16;
 
-    private static final int SETTLEMENT_REFRESH_BATCH_SIZE = 4;
+    private static final int SETTLEMENT_REFRESH_BATCH_SIZE = 16;
 
-    private static final int SETTLEMENT_ORCHESTRATOR_BATCH_SIZE = 4;
+    private static final int SETTLEMENT_ORCHESTRATOR_BATCH_SIZE = 16;
 
     private static final int GOVERNOR_STAGE_IDLE = 0;
 
@@ -112,23 +103,11 @@ public class ClaimEvents {
         ServerLevel level = server.overworld();
         if(level == null || level.isClientSide()) return;
 
-        siegeCounter++;
-        detectionCounter++;
         governorCounter++;
 
         // Command-intent queue advancement runs every tick — the runtime already no-ops
         // cheaply when no recruit has a queued head.
         CommandIntentQueueRuntime.instance().tick(server, level.getGameTime());
-
-        if(siegeCounter >= SIEGE_TICK_INTERVAL){
-            siegeCounter = 0;
-            siegeRuntime().tickActiveSieges(level);
-        }
-
-        if(detectionCounter >= DETECTION_TICK_INTERVAL){
-            detectionCounter = 0;
-            siegeRuntime().tickDetection(level);
-        }
 
         if(governorMaintenanceStage == GOVERNOR_STAGE_IDLE && governorCounter >= GOVERNOR_TICK_INTERVAL){
             governorCounter = 0;
@@ -208,10 +187,6 @@ public class ClaimEvents {
         governorMaintenanceCursor = nextIndex;
     }
 
-
-    public static float calculateSiegeSpeedPercent(int attackerCount, int defenderCount) {
-        return ClaimSiegeRuntime.calculateSiegeSpeedPercent(attackerCount, defenderCount);
-    }
 
     public static List<AbstractRecruitEntity> getRecruitsOfTeamInRange(Level level, Player attackingPlayer, double radius, String teamId) {
         List<AbstractRecruitEntity> recruits = RecruitIndex.instance().allInBox(level, attackingPlayer.getBoundingBox().inflate(radius), true);
@@ -331,18 +306,6 @@ public class ClaimEvents {
 
     private ClaimProtectionPolicy claimProtectionPolicy() {
         return new ClaimProtectionPolicy(recruitsClaimManager);
-    }
-
-    private ClaimSiegeRuntime siegeRuntime() {
-        return new ClaimSiegeRuntime(server, recruitsClaimManager);
-    }
-
-    public static void sendVillagersHome(ServerLevel level, RecruitsClaim claim) {
-        ClaimSiegeRuntime.sendVillagersHome(level, claim);
-    }
-
-    public static void siegeOverVillagers(ServerLevel level, RecruitsClaim claim) {
-        ClaimSiegeRuntime.siegeOverVillagers(level, claim);
     }
 
 }

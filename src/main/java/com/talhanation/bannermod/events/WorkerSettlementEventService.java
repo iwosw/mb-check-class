@@ -10,6 +10,7 @@ import com.talhanation.bannermod.settlement.prefab.BuildingPlacementService;
 import com.talhanation.bannermod.settlement.prefab.impl.BarracksPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.StoragePrefab;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
+import com.talhanation.bannermod.war.runtime.WarSiegeQueries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -17,9 +18,10 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.entity.npc.Villager;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
-import com.talhanation.bannermod.persistence.military.RecruitsFaction;
+import com.talhanation.bannermod.entity.citizen.CitizenIndex;
 import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
-import net.minecraft.world.phys.AABB;
+import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.world.scores.PlayerTeam;
 
 import java.util.HashMap;
@@ -63,29 +65,41 @@ final class WorkerSettlementEventService {
         }
 
         for (RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()) {
-            if (claim == null || claim.getOwnerFaction() == null) {
+            if (claim == null || claim.getOwnerPoliticalEntityId() == null) {
                 continue;
             }
             bootstrapClaimSettlement(level, claim);
             mobilizeCitizensIfClaimUnderSiege(level, claim);
-            attemptClaimWorkerGrowth(level, claim, claim.getOwnerFactionStringID(), level.getGameTime());
+            attemptClaimWorkerGrowth(level, claim, claim.getOwnerPoliticalEntityId().toString(), level.getGameTime());
         }
     }
 
     private static void mobilizeCitizensIfClaimUnderSiege(ServerLevel level, RecruitsClaim claim) {
-        if (!claim.isUnderSiege) {
+        if (!WarSiegeQueries.isClaimUnderSiege(level, claim)) {
             return;
         }
         float chance = WorkersServerConfig.citizenMilitiaMobilizationChance();
         if (chance <= 0.0F) {
             return;
         }
-        List<CitizenEntity> nearbyCitizens = citizensInClaim(level, claim);
+        UUID politicalEntityId = claim.getOwnerPoliticalEntityId();
+        if (politicalEntityId == null) {
+            return;
+        }
+        PoliticalEntityRecord owner = WarRuntimeContext.registry(level).byId(politicalEntityId).orElse(null);
+        if (owner == null) {
+            return;
+        }
+        List<CitizenEntity> nearbyCitizens = CitizenIndex.instance().queryInClaim(level, claim).orElse(List.of());
         for (CitizenEntity citizen : nearbyCitizens) {
             if (!citizen.isAlive()) {
                 continue;
             }
             if (citizen.activeProfession() != CitizenProfession.NONE) {
+                continue;
+            }
+            UUID citizenOwner = citizen.getOwnerUUID();
+            if (citizenOwner == null || !isPoliticalMember(owner, citizenOwner)) {
                 continue;
             }
             if (citizen.getRandom().nextFloat() >= chance) {
@@ -95,28 +109,14 @@ final class WorkerSettlementEventService {
         }
     }
 
-    private static List<CitizenEntity> citizensInClaim(ServerLevel level, RecruitsClaim claim) {
-        ChunkPos anchorChunk = claim.getCenter();
-        if (anchorChunk == null && !claim.getClaimedChunks().isEmpty()) {
-            anchorChunk = claim.getClaimedChunks().get(0);
+    private static boolean isPoliticalMember(PoliticalEntityRecord entity, UUID playerUuid) {
+        if (entity == null || playerUuid == null) {
+            return false;
         }
-        if (anchorChunk == null) {
-            return List.of();
+        if (playerUuid.equals(entity.leaderUuid())) {
+            return true;
         }
-        int minChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).min().orElse(anchorChunk.x);
-        int maxChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).max().orElse(anchorChunk.x);
-        int minChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).min().orElse(anchorChunk.z);
-        int maxChunkZ = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.z).max().orElse(anchorChunk.z);
-        AABB claimBounds = new AABB(
-                minChunkX * 16.0D,
-                level.getMinBuildHeight(),
-                minChunkZ * 16.0D,
-                (maxChunkX + 1) * 16.0D,
-                level.getMaxBuildHeight(),
-                (maxChunkZ + 1) * 16.0D
-        );
-        return level.getEntitiesOfClass(CitizenEntity.class, claimBounds, citizen ->
-                citizen.isAlive() && claim.containsChunk(citizen.chunkPosition()));
+        return entity.coLeaderUuids().contains(playerUuid);
     }
 
     private static void bootstrapClaimSettlement(ServerLevel level, RecruitsClaim claim) {
@@ -125,7 +125,7 @@ final class WorkerSettlementEventService {
             return;
         }
 
-        BannerModSettlementBinding.Binding binding = WorkerSettlementClaimPolicy.resolveClaimGrowthBinding(claim, claim.getOwnerFactionStringID());
+        BannerModSettlementBinding.Binding binding = WorkerSettlementClaimPolicy.resolveClaimGrowthBinding(claim, claim.getOwnerPoliticalEntityId().toString());
         if (!BannerModSettlementBinding.allowsSettlementOperation(binding)) {
             return;
         }
@@ -173,8 +173,12 @@ final class WorkerSettlementEventService {
     }
 
     private static void spawnInitialCitizen(ServerLevel level, RecruitsClaim claim, BlockPos spawnPos) {
-        RecruitsFaction faction = claim.getOwnerFaction();
-        if (faction == null) {
+        UUID politicalEntityId = claim.getOwnerPoliticalEntityId();
+        if (politicalEntityId == null) {
+            return;
+        }
+        PoliticalEntityRecord owner = WarRuntimeContext.registry(level).byId(politicalEntityId).orElse(null);
+        if (owner == null) {
             return;
         }
         CitizenEntity citizen = ModCitizenEntityTypes.CITIZEN.get().create(level);
@@ -183,11 +187,11 @@ final class WorkerSettlementEventService {
         }
         citizen.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
         citizen.setOwned(true);
-        if (faction.getTeamLeaderUUID() != null) {
-            citizen.setOwnerUUID(java.util.Optional.of(faction.getTeamLeaderUUID()));
+        if (owner.leaderUuid() != null) {
+            citizen.setOwnerUUID(java.util.Optional.of(owner.leaderUuid()));
         }
         level.addFreshEntity(citizen);
-        PlayerTeam team = level.getScoreboard().getPlayerTeam(faction.getStringID());
+        PlayerTeam team = level.getScoreboard().getPlayerTeam(politicalEntityId.toString());
         if (team != null) {
             level.getScoreboard().addPlayerToTeam(citizen.getScoreboardName(), team);
         }

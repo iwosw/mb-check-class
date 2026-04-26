@@ -70,9 +70,6 @@ public class DebugEvents {
                     recruits.addXp(RecruitsServerConfig.RecruitsMaxXpForLevelUp.get()); recruits.checkLevel();
                 }
             }
-            case 23 -> {
-                FactionEvents.removeRecruitFromTeam(recruits, recruits.getTeam(), (ServerLevel) recruits.getCommandSenderWorld());}
-
             case 24 -> {
                 int current =  recruits.getColor();
                 int next = current + 1;

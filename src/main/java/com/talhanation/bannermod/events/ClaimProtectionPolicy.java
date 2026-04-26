@@ -73,6 +73,6 @@ final class ClaimProtectionPolicy {
     boolean shouldDenyEntityAttack(Player player, Entity target) {
         if (ClaimAccessQueries.hasAdminBypass(player)) return false;
         RecruitsClaim claim = ClaimAccessQueries.getClaim(claimManager, player.level(), target.blockPosition());
-        return claim != null && !claim.isUnderSiege && !ClaimAccessQueries.isFriendlyToClaim(player, claim);
+        return claim != null && !ClaimAccessQueries.isFriendlyToClaim(player, claim);
     }
 }

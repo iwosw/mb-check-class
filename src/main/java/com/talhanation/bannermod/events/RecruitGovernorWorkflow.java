@@ -91,7 +91,7 @@ final class RecruitGovernorWorkflow {
                 : governorService((ServerLevel) recruit.getCommandSenderWorld()).getOrCreateGovernorSnapshot(claim);
         BannerModSettlementBinding.Binding binding = claim == null
                 ? BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, recruit.blockPosition(), recruit.getTeam() == null ? null : recruit.getTeam().getName())
-                : BannerModSettlementBinding.resolveSettlementStatus(claim, claim.getCenter() == null ? new ChunkPos(recruit.blockPosition()) : claim.getCenter(), claim.getOwnerFactionStringID());
+                : BannerModSettlementBinding.resolveSettlementStatus(claim, claim.getCenter() == null ? new ChunkPos(recruit.blockPosition()) : claim.getCenter(), claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString());
 
         BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateGovernorScreen(
                 recruit.getUUID(),
