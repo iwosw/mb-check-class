@@ -1,5 +1,7 @@
 # Merge Roadmap
 
+> Historical planning note: this roadmap is retained as phase history and crosswalk evidence. All unfinished active work is tracked in root `BANNERMOD_BACKLOG.md`; do not use old phase text as a separate task queue.
+
 ## Phase 1: Workspace Bootstrap
 
 - Establish one root Gradle entrypoint.
@@ -508,7 +510,9 @@ Status: In Progress; opener slices landed a persisted claim-keyed settlement agg
 - Latest slice: `ClaimEvents` now calls a new `BannerModSettlementOrchestrator` after settlement refresh, so refreshed claim snapshots feed the additive Phase 25 growth/project/home/seller/goal/job runtimes on the governor tick without changing entity behavior or persistence shape.
 - Latest slice: Phase 25 now also folds live logistics reservations into snapshot-owned trade/supply signalling, refreshes settlement snapshots from more civilian work-area mutation packets plus successful merchant trades, and reconciles stale live seller dispatches against the current snapshot seed instead of letting them drift across market changes.
 - Latest slice: Phase 25 growth scoring now consumes reservation-aware supply/trade hints during live project queue evaluation, remaining settlement-critical civilian mutations now trigger immediate claim snapshot refreshes, and resident job handlers only run during scheduled work windows while respecting per-handler cooldowns.
-- Latest slice: Compact Phase 25 entered the Manor-Lords-style building-centric migration. A per-level `SettlementWorkOrderRuntime` now holds pending/claimed block-level orders, `CropAreaWorkOrderPublisher`, `BuildAreaWorkOrderPublisher`, `LumberAreaWorkOrderPublisher`, and `MiningAreaWorkOrderPublisher` emit concrete work orders from building records each tick, `HarvestJobHandler` / `BuildJobHandler` now actually claim those orders, and a new `SettlementOrderWorkGoal` on every `AbstractWorkerEntity` preempts the legacy zone goal when a claim is live. Legacy profession goals remain as compatibility fallback for placement-style orders.
+- Latest slice: Compact Phase 25 entered the Manor-Lords-style building-centric migration. A per-level `SettlementWorkOrderRuntime` now holds pending/claimed block-level orders, `CropAreaWorkOrderPublisher`, `BuildAreaWorkOrderPublisher`, `LumberAreaWorkOrderPublisher`, and `MiningAreaWorkOrderPublisher` emit concrete work orders from building records each tick, `HarvestJobHandler` / `BuildJobHandler` now actually claim those orders, and a new `SettlementOrderWorkGoal` on every `AbstractWorkerEntity` preempts the legacy zone goal when a claim is live. BUILD_BLOCK placement now resolves its target block-state from the owning BuildArea instead of guessing, while legacy profession goals remain as compatibility fallback for remaining specialist work.
+- Latest slice: Phase 25 now records recent completed work-order receipts as observable runtime output, keeps growth project identity stable across ticks, ranks live project queues by priority instead of FIFO, and separates concrete shortage/reservation supply pressure from broad desired-good background demand.
+- Latest slice: Phase 25 runtime persistence churn was reduced by making restore/no-op transitions dirty-aware across work orders, project queues, home assignments, and seller dispatch phases, without changing saved NBT shape or gameplay behavior.
 
 ## Phase 26: Army Command, Formations, And Warfare
 
@@ -522,14 +526,14 @@ Planning artifacts live under `.planning/phases/26-army-command-formations-warfa
 
 Status: In progress.
 
-**Landed slices (2026-04-21):**
+**Landed slices (2026-04-21 through 2026-04-25):**
 - HYW-selection UI opener (`b5e57ac` recruit selection registry; `cd5a19b` drag-box selection UI).
 - Combat AI overhaul (`.planning/phases/26-army-command-formations-warfare/26-COMBAT-AI-SLICE-STATUS.md`, commits `ebe813d`, `2ff128c`, `33f86bf`, `fab08a4`): round-robin target selection with recent-loss LOD boost; `CombatStance` (`LOOSE`/`LINE_HOLD`/`SHIELD_WALL`) with NBT persistence, formation leash, gap-fill on neighbour death, slow body-yaw; directional 120° shield block with stance-tuned mitigation via Forge `ShieldBlockEvent` cancellation; SHIELD_WALL auto-block + facing pivot; per-item weapon reach (spear/pike/sarissa), second-rank poke via `FriendlyLineOfSight`, per-unit attack cadence; flank multiplier (×1.15 side / ×1.5 back), formation cohesion (×0.85), brace-for-cavalry with knockback resistance, and HYW unit-type counter matrix. 12 pure helpers + 129 green tests under `com.talhanation.bannermod.ai.military.*`.
+- Player-facing stance commands, packets, command-screen UI, per-recruit stance control, ranged-goal stance leash, polearm/lance reach aliases, and native Better Combat metadata/attack-flow bridge have landed in the dirty root workspace. Better Mob Combat is intentionally not a dependency or adapter.
 
 **Next slice (planned):**
-- Player-facing stance commands / packets / UI so `LOOSE`/`LINE_HOLD`/`SHIELD_WALL` is selectable in-game.
-- Extend stance leash into `RecruitRangedBowAttackGoal` and `RecruitRangedCrossbowAttackGoal`.
-- GameTest coverage for the stance→behavior loop once command entrypoints exist.
+- Fix or quarantine the current `reconnectedownerrecoversauthorityafterownershiproundtrip` GameTest failure, then rerun full `verifyGameTestStage` with the current Phase 26/Better Combat surface.
+- Continue warfare expansion only after the current dirty stance/combat bridge surface is reviewed and split.
 
 ## Phase 27: Read Models, UI, And Player Operations
 

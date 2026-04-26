@@ -10,6 +10,8 @@
 
 ## Deferred Until Full Runtime Merge
 
+> Canonical tracking for these deferred decisions now lives in `BANNERMOD_BACKLOG.md` (`COMPAT-001`, `COMPAT-002`).
+
 - Unified save-data and packet compatibility guarantees.
 - Retirement of `recruits/` and `workers/` as standalone source roots.
 
@@ -75,7 +77,7 @@
 
 - Phase numbering note: Phases 29-31 are historical completed branches with their own completed requirement evidence; they remain on disk as historical execution records and are not folded into the compact future program.
 - Phase numbering note: old future phases 32-49 were folded into compact Phases 24-28 and should no longer be read as separate queued roadmap phases.
-- Phase 24 is the only currently executing active phase. It keeps the existing logistics and courier validation work in place and now also owns the lower-layer economy substrate previously split across old Phases 25-26.
+- Compact Phases 24-26 are the active landed/dirty stabilization surface: Phase 24 provides the logistics substrate, Phase 25 owns the settlement economy/resident/work-order runtime, and Phase 26 owns the current command/combat/stance/Better Combat work. Do not read Phase 24 as the only active phase in the current root workspace.
 - Compact Phase 25 owns the next settlement-facing economy, governance expansion, resident simulation, and village-life work that was previously scattered across old Phases 33-47: settlement aggregate, resident records, building-driven economy, stockpile/market state, resident roles/goal scheduler, growth/projects, village-life loops, and phased retirement/replacement of vanilla-village-dependent settlement logic with custom BannerMod simulation.
 - Compact Phase 26 owns the military-side command, formation, morale, siege, territory-war expansion, and settlement-defense bridge that were previously scattered across old Phases 27, 36-38, and 40-42.
 - Compact Phase 27 owns read models, communication surfaces, settlement-chief UI, and player/operator tooling that were previously split across old Phases 32 and 48.

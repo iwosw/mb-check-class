@@ -1,5 +1,7 @@
 # Phase 26 Slice Status: Combat AI Overhaul (HYW Parity)
 
+> Historical status note: this phase file is retained as execution history. All unfinished follow-up work has been consolidated into root `BANNERMOD_BACKLOG.md`; do not use this file as an active task queue.
+
 ## Scope
 
 Phase 26 owns the military-side command, formation, morale, siege, and territory-war expansion that used to be spread across old Phases 27, 36–38, and 40–42. This slice narrows that scope to the **HYW-parity combat AI** work: smarter target selection, phalanx-style line cohesion, directional shield blocks, reach-weapon semantics, and HYW's unit-type damage counters. Player-facing UI and packet wiring for combat stances stay out of this slice.
@@ -21,6 +23,16 @@ Phase 26 owns the military-side command, formation, morale, siege, and territory
 - Added `MessageCombatStanceGui` for single-recruit stance changes in the recruit inventory path, reusing `CommandTargeting.forSingleRecruit(...)` rather than falling back to loose direct mutation.
 - `RecruitInventoryScreen` now exposes a compact per-recruit stance cycle button, so the player can inspect and change `LOOSE` / `LINE_HOLD` / `SHIELD_WALL` without using the group command screen.
 - `BannerModNetworkBootstrap.workerPacketOffset()` is now effectively `MILITARY_MESSAGES.length == 106` because the per-recruit stance packet extends the military catalog by one more message.
+
+## Follow-up Landed 2026-04-25
+
+- `RecruitMeleeAttackGoal.start()` now keeps recognized reach weapons equipped when melee begins, so spear/pike/sarissa-style troops do not silently switch away from the weapons that drive rank-2 poke, cadence, brace, and formation identity.
+- `WeaponReach.effectiveReachForId(...)` now recognizes common polearm/lance aliases (`lance`, `glaive`, `partisan`, `billhook`, `bardiche`, `voulge`) as the pike reach bucket, which also routes them through pike cadence because `AttackCadence` consumes the same resolver.
+- Added a reflection-only Better Combat reach metadata seam: `BetterCombatWeaponAttributes` reads `net.bettercombat.logic.WeaponRegistry#getAttributes(ItemStack)` and `net.bettercombat.api.WeaponAttributes#attackRange()` when present, then `WeaponReach.effectiveReachFor(ItemStack)` folds any range above the 5-block BannerMod baseline into the same extra-reach path used by `AttackUtil`.
+- Better Combat is now the only compile-only optional combat compat input. Better Mob Combat is deliberately not a dependency or runtime adapter because its current recruit compat mixins target stale `com.talhanation.recruits.*` classes.
+- Added `BetterCombatAttackBridge`: recruit melee now reads Better Combat weapon attacks directly through reflection, starts a BannerMod-owned pending upswing, applies Better Combat `upswing()` / `damageMultiplier()` / `angle()` / `hitbox()` metadata, and then calls `AbstractRecruitEntity.doHurtTarget(..., multiplier)` so BannerMod's server-side shield/flank/unit-counter damage rules remain authoritative.
+- Added native Better Combat-style secondary AOE hits for eligible attacks. Secondary targets are selected server-side only, capped, arc/range/LOS checked, and filtered through `recruit.shouldAttack(...)` before damage so allies/same-owner/same-group/treaty-protected entities are not swept.
+- Added BannerMod-owned synced attack presentation state and lightweight humanoid pose overlays for recruit human/villager renderers. This uses Better Combat attack shape metadata for presentation only; Better Combat's own player-only animation packet is not used as recruit combat authority.
 
 ## Delivered
 
@@ -50,7 +62,7 @@ Phase 26 owns the military-side command, formation, morale, siege, and territory
 
 ### Stage 3 — Reach weapons + rank-2 poke + per-unit cadence (commit `33f86bf`)
 
-- `WeaponReach.effectiveReachFor` returns per-item extra reach via registry-id heuristics: `sarissa`/`long_spear` +2.5, `pike`/`halberd`/`polearm` +2.0, `spear` +1.0, plain melee +0. Folded additively into `AttackUtil.getAttackReachSqr` alongside Forge `ENTITY_REACH` and Epic Fight compat.
+- `WeaponReach.effectiveReachFor` returns per-item extra reach via registry-id heuristics and optional Better Combat weapon metadata: `sarissa`/`long_spear` +2.5, `pike`/`halberd`/`polearm`/common polearm aliases +2.0, `spear` +1.0, Better Combat `attackRange() - 5.0` when larger, plain melee +0. Folded additively into `AttackUtil.getAttackReachSqr` alongside Forge `ENTITY_REACH` and Epic Fight compat.
 - `FriendlyLineOfSight.canReachThroughAllies` + `RecruitMeleeAttackGoal.hasReachLineOfSight`: reach holders (≥1 block extra) can strike through allied recruits between them and the target. World raycast still gates on blocks; allies don't break LOS for reach weapons.
 - `AttackCadence.cooldownTicksFor` tunes post-hit cooldown per weapon: spear +2 tick windup, pike ×1.1 + 4 ticks, sarissa ×1.15 + 5 ticks, plain melee unchanged. Integrated in `AttackUtil.getAttackCooldown`.
 
@@ -63,6 +75,8 @@ Phase 26 owns the military-side command, formation, morale, siege, and territory
 
 ## Intentionally Deferred
 
+> Canonical tracking now lives in `BANNERMOD_BACKLOG.md` under `COMBAT-*`, `UI-*`, and `TEST-*`. The list below is historical evidence of what this slice did not ship.
+
 - **Spear/pike item classes.** BannerMod does not ship `SpearItem`/`PikeItem` yet; `WeaponReach` uses string heuristics. When real classes land, `WeaponReach.effectiveReachFor(Item)` is the single extension point for `instanceof` checks.
 - **Velocity-aware charge detection in `BraceAgainstChargePolicy`.** Current implementation is proximity-only on mounted hostile — enough to trigger bracing; no predictive timing.
 - **Morale-driven retreat.** Still environmental (`FleeTNT`/`FleeFire`/`FleeTarget`). No panic-threshold or formation-wide rout.
@@ -72,6 +86,18 @@ Phase 26 owns the military-side command, formation, morale, siege, and territory
 - Re-ran `./gradlew compileJava compileTestJava compileGameTestJava --console=plain` — BUILD SUCCESSFUL.
 - Re-ran `./gradlew verifyGameTestStage --console=plain` — BUILD SUCCESSFUL with all 39 required tests passing.
 - Current Phase 26 stance-control follow-up is locally green across compile plus full root GameTest validation.
+
+## Verification Update (2026-04-25)
+
+- `git diff --check` — passed.
+- `./gradlew test --tests com.talhanation.bannermod.ai.military.WeaponReachTest --tests com.talhanation.bannermod.ai.military.AttackCadenceTest --console=plain` — BUILD SUCCESSFUL after the polearm alias reach/cadence follow-up.
+- `./gradlew compileJava --console=plain` — BUILD SUCCESSFUL after the same follow-up.
+- `./gradlew test --tests com.talhanation.bannermod.compat.BetterCombatWeaponAttributesTest --tests com.talhanation.bannermod.ai.military.WeaponReachTest --tests com.talhanation.bannermod.ai.military.AttackCadenceTest --console=plain` — BUILD SUCCESSFUL after the Better Combat reach-metadata seam. One prior parallel run hit a local Gradle incremental output `NoSuchFileException`; a standalone rerun passed.
+- `./gradlew compileJava processResources --console=plain` — BUILD SUCCESSFUL after replacing the BMC bridge with the native direct Better Combat attack adapter.
+- `./gradlew test --tests com.talhanation.bannermod.compat.BetterCombatAttackBridgeTest --tests com.talhanation.bannermod.compat.BetterCombatWeaponAttributesTest --tests com.talhanation.bannermod.ai.military.WeaponReachTest --tests com.talhanation.bannermod.ai.military.AttackCadenceTest --console=plain` — BUILD SUCCESSFUL after the native Better Combat adapter.
+- `./gradlew compileJava processResources --console=plain` — BUILD SUCCESSFUL after adding native Better Combat AOE and synced presentation pose state.
+- `./gradlew test --tests com.talhanation.bannermod.compat.BetterCombatAttackBridgeTest --tests com.talhanation.bannermod.compat.BetterCombatWeaponAttributesTest --tests com.talhanation.bannermod.ai.military.WeaponReachTest --tests com.talhanation.bannermod.ai.military.AttackCadenceTest --console=plain` — BUILD SUCCESSFUL after the AOE/presentation follow-up.
+- `./gradlew verifyGameTestStage --console=plain` with Better Combat present in the dev runtime started the Forge GameTest server and loaded Better Combat (`WeaponRegistry` encoded), but finished red on existing required GameTest `reconnectedownerrecoversauthorityafterownershiproundtrip`; no Better Combat/BMC mixin crash occurred in this live smoke.
 
 ## Files Added / Modified
 
