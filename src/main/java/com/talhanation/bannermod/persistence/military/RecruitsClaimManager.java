@@ -4,31 +4,31 @@ import com.talhanation.bannermod.events.ClaimEvent;
 import net.minecraftforge.common.MinecraftForge;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateClaim;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateClaims;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.*;
 public class RecruitsClaimManager {
     private final Map<ChunkPos, RecruitsClaim> claims = new HashMap<>();
-    private final Map<UUID, RecruitsClaim> activeSieges = new HashMap<>();
 
     public void load(ServerLevel level) {
         RecruitsClaimSaveData data = RecruitsClaimSaveData.get(level);
         this.claims.clear();
-        this.activeSieges.clear();
         for (RecruitsClaim claim : data.getAllClaims()) {
             for (ChunkPos pos : claim.getClaimedChunks()) {
                 this.claims.put(pos, claim);
-            }
-            if (claim.isUnderSiege) {
-                this.activeSieges.put(claim.getUUID(), claim);
             }
         }
     }
@@ -70,29 +70,8 @@ public class RecruitsClaimManager {
             MinecraftForge.EVENT_BUS.post(new ClaimEvent.Removed(claim, level));
 
             claims.entrySet().removeIf(entry -> entry.getValue().equals(claim));
-            activeSieges.remove(claim.getUUID());
             persistClaims(RecruitsClaimSaveData.get(level));
         }
-    }
-
-    public void addActiveSiege(RecruitsClaim claim) {
-        if (claim != null) {
-            activeSieges.put(claim.getUUID(), claim);
-        }
-    }
-
-    public void removeActiveSiege(RecruitsClaim claim) {
-        if (claim != null) {
-            activeSieges.remove(claim.getUUID());
-        }
-    }
-
-    public Collection<RecruitsClaim> getActiveSieges() {
-        return activeSieges.values();
-    }
-
-    public boolean isActiveSiege(RecruitsClaim claim) {
-        return claim != null && activeSieges.containsKey(claim.getUUID());
     }
 
     // -------------------------------------------------------------------------
@@ -113,9 +92,8 @@ public class RecruitsClaimManager {
 
     public boolean isTownTooCloseToSameNationTown(RecruitsClaim candidate, @Nullable RecruitsClaim ignoredClaim, int minDistanceBlocks) {
         if (candidate == null || candidate.isRemoved || minDistanceBlocks <= 0) return false;
-        if (candidate.getOwnerFaction() == null) return false;
-        String factionId = candidate.getOwnerFactionStringID();
-        if (factionId == null || factionId.isEmpty()) return false;
+        UUID candidateOwner = candidate.getOwnerPoliticalEntityId();
+        if (candidateOwner == null) return false;
         ChunkPos candidateCenter = resolveCenter(candidate);
         if (candidateCenter == null) return false;
 
@@ -123,8 +101,7 @@ public class RecruitsClaimManager {
         for (RecruitsClaim claim : getAllClaims()) {
             if (claim == null || claim.isRemoved) continue;
             if (ignoredClaim != null && claim.getUUID().equals(ignoredClaim.getUUID())) continue;
-            if (claim.getOwnerFaction() == null) continue;
-            if (!factionId.equals(claim.getOwnerFactionStringID())) continue;
+            if (!candidateOwner.equals(claim.getOwnerPoliticalEntityId())) continue;
             ChunkPos center = resolveCenter(claim);
             if (center == null) continue;
 
@@ -172,9 +149,17 @@ public class RecruitsClaimManager {
                             RecruitsServerConfig.CascadeThePriceOfClaims.get(),
                             RecruitsServerConfig.AllowClaiming.get(),
                             RecruitsServerConfig.FogOfWarEnabled.get(),
-                            FactionEvents.getCurrency()
+                            getRecruitCurrency()
                     ));
         }
+    }
+
+    private static ItemStack getRecruitCurrency() {
+        String currencyId = RecruitsServerConfig.RecruitCurrency.get();
+        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(currencyId))
+                .map(Holder::value)
+                .map(Item::getDefaultInstance)
+                .orElseGet(Items.EMERALD::getDefaultInstance);
     }
 
     public void broadcastClaimUpdateTo(RecruitsClaim claim, List<ServerPlayer> players) {

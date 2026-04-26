@@ -1,19 +1,10 @@
 package com.talhanation.bannermod.persistence.military;
-import com.talhanation.bannermod.events.ClaimEvents;
-import com.talhanation.bannermod.events.FactionEvents;
-import com.talhanation.bannermod.events.SiegeEvent;
-import net.minecraftforge.common.MinecraftForge;
-import com.talhanation.bannermod.config.RecruitsServerConfig;
-import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class RecruitsClaim {
@@ -21,38 +12,29 @@ public class RecruitsClaim {
     private final UUID uuid;
     private final List<ChunkPos> claimedChunks = new ArrayList<>();
     private String name;
-    private RecruitsFaction ownerFaction;
+    @Nullable
+    private UUID ownerPoliticalEntityId;
     private boolean allowBlockInteraction = false;
     private boolean allowBlockPlacement   = false;
     private boolean allowBlockBreaking    = false;
-    public List<RecruitsFaction> defendingParties = new ArrayList<>();
-    public List<RecruitsFaction> attackingParties = new ArrayList<>();
     public ChunkPos center;
-    public boolean isUnderSiege;
-    public int health;
-    /** Prozentuale Siege-Geschwindigkeit (0.0 = pausiert, 1.0 = normal, 2.0 = +100%). Serverseitig berechnet, zum Client synchronisiert. */
-    public float siegeSpeedPercent;
     public RecruitsPlayerInfo playerInfo;
     public boolean isAdmin;
     public boolean isRemoved;
     public static int MAX_SIZE = 50;
-    public RecruitsClaim(String name, RecruitsFaction ownerFaction) {
+
+    public RecruitsClaim(String name, @Nullable UUID politicalEntityId) {
         this.uuid = UUID.randomUUID();
         this.name = name;
-        this.ownerFaction = ownerFaction;
+        this.ownerPoliticalEntityId = politicalEntityId;
         this.isAdmin = false;
-        resetHealth();
     }
 
-    private RecruitsClaim(UUID uuid, String name, RecruitsFaction ownerFaction){
+    private RecruitsClaim(UUID uuid, String name, @Nullable UUID politicalEntityId){
         this.uuid = uuid;
         this.name = name;
-        this.ownerFaction = ownerFaction;
+        this.ownerPoliticalEntityId = politicalEntityId;
         this.isAdmin = false;
-    }
-
-    public RecruitsClaim(RecruitsFaction faction) {
-        this(faction.getTeamDisplayName(), faction);
     }
 
     public UUID getUUID() {
@@ -90,12 +72,11 @@ public class RecruitsClaim {
         return name;
     }
 
-    public String getOwnerFactionStringID() {
-        return ownerFaction.getStringID();
+    @Nullable
+    public UUID getOwnerPoliticalEntityId() {
+        return ownerPoliticalEntityId;
     }
-    public RecruitsFaction getOwnerFaction(){
-        return ownerFaction;
-    }
+
     public RecruitsPlayerInfo getPlayerInfo(){
         return playerInfo;
     }
@@ -117,8 +98,8 @@ public class RecruitsClaim {
     public void setAdminClaim(boolean admin){
         this.isAdmin = admin;
     }
-    public void setOwnerFaction(RecruitsFaction faction) {
-        this.ownerFaction = faction;
+    public void setOwnerPoliticalEntityId(@Nullable UUID politicalEntityId) {
+        this.ownerPoliticalEntityId = politicalEntityId;
     }
     public void setPlayer(RecruitsPlayerInfo playerInfo) {
         this.playerInfo = playerInfo;
@@ -135,22 +116,6 @@ public class RecruitsClaim {
         this.allowBlockBreaking = allow;
     }
 
-    public int getHealth() {
-        return health;
-    }
-
-    public void setHealth(int health) {
-        this.health = health;
-    }
-
-    public float getSiegeSpeedPercent() {
-        return siegeSpeedPercent;
-    }
-
-    public void setSiegeSpeedPercent(float siegeSpeedPercent) {
-        this.siegeSpeedPercent = siegeSpeedPercent;
-    }
-
     @Override
     public String toString() {
         return this.getName();
@@ -160,15 +125,13 @@ public class RecruitsClaim {
         CompoundTag nbt = new CompoundTag();
         nbt.putUUID("UUID", this.uuid);
         nbt.putString("name", name);
-        if (ownerFaction != null) nbt.put("ownerFaction", ownerFaction.toNBT());
+        if (ownerPoliticalEntityId != null) nbt.putUUID("ownerPoliticalEntity", ownerPoliticalEntityId);
         if (playerInfo != null) nbt.put("playerInfo", playerInfo.toNBT());
         nbt.putBoolean("allowInteraction", allowBlockInteraction);
         nbt.putBoolean("allowPlacement", allowBlockPlacement);
         nbt.putBoolean("allowBreaking", allowBlockBreaking);
         nbt.putBoolean("isAdmin", isAdmin);
-        nbt.putBoolean("isUnderSiege", isUnderSiege);
         nbt.putBoolean("isRemoved", isRemoved);
-        // Claimed Chunks
         ListTag chunkList = new ListTag();
         for (ChunkPos pos : claimedChunks) {
             CompoundTag chunkTag = new CompoundTag();
@@ -180,27 +143,6 @@ public class RecruitsClaim {
 
         nbt.putInt("centerX", this.getCenter().x);
         nbt.putInt("centerZ", this.getCenter().z);
-        nbt.putInt("health", this.getHealth());
-        nbt.putFloat("siegeSpeedPercent", this.getSiegeSpeedPercent());
-
-        // Defending Parties
-        ListTag defendingList = new ListTag();
-        if(defendingParties != null && !defendingParties.isEmpty()){
-            for (RecruitsFaction team : defendingParties) {
-                if(team != null) defendingList.add(team.toNBT());
-            }
-        }
-        nbt.put("defendingParties", defendingList);
-
-        // Attacking Parties
-        ListTag attackingList = new ListTag();
-        if(attackingParties != null && !attackingParties.isEmpty()){
-            for (RecruitsFaction team : attackingParties) {
-                if(team != null) attackingList.add(team.toNBT());
-            }
-        }
-
-        nbt.put("attackingParties", attackingList);
 
         return nbt;
     }
@@ -208,8 +150,8 @@ public class RecruitsClaim {
     public static RecruitsClaim fromNBT(CompoundTag nbt) {
         UUID uuid = nbt.getUUID("UUID");
         String name = nbt.getString("name");
-        RecruitsFaction recruitsFaction = RecruitsFaction.fromNBT(nbt.getCompound("ownerFaction"));
-        RecruitsClaim claim = new RecruitsClaim(uuid, name, recruitsFaction);
+        UUID ownerPoliticalEntityId = nbt.hasUUID("ownerPoliticalEntity") ? nbt.getUUID("ownerPoliticalEntity") : null;
+        RecruitsClaim claim = new RecruitsClaim(uuid, name, ownerPoliticalEntityId);
         RecruitsPlayerInfo playerInfo = RecruitsPlayerInfo.getFromNBT(nbt.getCompound("playerInfo"));
         if (playerInfo != null) claim.setPlayer(playerInfo);
 
@@ -218,7 +160,6 @@ public class RecruitsClaim {
         claim.setBlockPlacementAllowed(nbt.getBoolean("allowPlacement"));
         claim.setBlockBreakingAllowed(nbt.getBoolean("allowBreaking"));
         claim.setAdminClaim(nbt.getBoolean("isAdmin"));
-        claim.isUnderSiege = nbt.getBoolean("isUnderSiege");
         claim.isRemoved = nbt.getBoolean("isRemoved");
 
         if (nbt.contains("chunks", Tag.TAG_LIST)) {
@@ -234,25 +175,6 @@ public class RecruitsClaim {
         int x = nbt.getInt("centerX");
         int z = nbt.getInt("centerZ");
         claim.setCenter(new ChunkPos(x, z));
-
-        claim.setHealth(nbt.getInt("health"));
-        claim.setSiegeSpeedPercent(nbt.getFloat("siegeSpeedPercent"));
-
-        // Defending Parties
-        if (nbt.contains("defendingParties", Tag.TAG_LIST)) {
-            ListTag defendingList = nbt.getList("defendingParties", Tag.TAG_COMPOUND);
-            for (Tag tag : defendingList) {
-                claim.defendingParties.add(RecruitsFaction.fromNBT((CompoundTag) tag));
-            }
-        }
-
-        // Attacking Parties
-        if (nbt.contains("attackingParties", Tag.TAG_LIST)) {
-            ListTag attackingList = nbt.getList("attackingParties", Tag.TAG_COMPOUND);
-            for (Tag tag : attackingList) {
-                claim.attackingParties.add(RecruitsFaction.fromNBT((CompoundTag) tag));
-            }
-        }
 
         return claim;
     }
@@ -281,149 +203,5 @@ public class RecruitsClaim {
         }
 
         return list;
-    }
-
-    public void setSiegeSuccess(ServerLevel level){
-        for(Player player : FactionEvents.recruitsFactionManager.getPlayersInTeam(this.getOwnerFactionStringID(), level)){
-            player.sendSystemMessage(SIEGE_SUCCESS_DEFENDER(this.getName()));
-        }
-        if(attackingParties == null || attackingParties.isEmpty()) return;
-
-        RecruitsFaction recruitsFaction = attackingParties.get(0);
-
-        if(recruitsFaction == null) return;
-
-        this.setOwnerFaction(recruitsFaction);
-        this.setPlayer(new RecruitsPlayerInfo(recruitsFaction.getTeamLeaderUUID(), recruitsFaction.getTeamLeaderName(), recruitsFaction));
-        this.isUnderSiege = false;
-        this.resetHealth();
-
-        for(Player player : FactionEvents.recruitsFactionManager.getPlayersInTeam(this.getOwnerFactionStringID(), level)){
-            player.sendSystemMessage(SIEGE_SUCCESS_ATTACKER(this.getName()));
-        }
-
-        this.attackingParties.clear();
-        this.defendingParties.clear();
-
-        // SiegeEvent.Success feuern – Besitz wurde bereits übertragen
-        MinecraftForge.EVENT_BUS.post(new SiegeEvent.Success(this, level));
-    }
-
-    public void resetHealth() {
-        this.health = getMaxHealth();
-    }
-
-    public int getMaxHealth(){
-        return 60 * RecruitsServerConfig.SiegeClaimsConquerTime.get();
-    }
-    public void setUnderSiege(boolean newState, ServerLevel level) {
-        if (this.isUnderSiege == newState) return;
-
-        RecruitsFaction owner = getOwnerFaction();
-
-        if (owner == null) return;
-
-        if (newState) {
-            // SiegeEvent.Start feuern – cancelable, damit andere Mods/Config den Start verhindern können
-            SiegeEvent.Start startEvent = new SiegeEvent.Start(this, level);
-            MinecraftForge.EVENT_BUS.post(startEvent);
-            if (startEvent.isCanceled()) return;
-
-            startSiege(owner, level);
-        } else {
-            endSiege(owner, level);
-            MinecraftForge.EVENT_BUS.post(new SiegeEvent.End(this, level));
-        }
-
-        this.isUnderSiege = newState;
-    }
-    private void startSiege(RecruitsFaction owner, ServerLevel level) {
-        notifyDefendersSiegeStart(owner, level);
-        notifyAttackersSiegeStart(level);
-
-        ClaimEvents.sendVillagersHome(level, this);
-    }
-
-    private void endSiege(RecruitsFaction owner, ServerLevel level) {
-        notifyDefendersSiegeFailed(owner, level);
-        notifyAttackersSiegeFailed(level);
-    }
-
-    private void notifyDefendersSiegeStart(RecruitsFaction owner, ServerLevel level) {
-        Component msg = SIEGE_START_DEFENDER(getName(), getAttackingParties().toString());
-
-        for (Player player : getPlayersOfFaction(owner, level)) {
-            player.sendSystemMessage(msg);
-        }
-    }
-
-    private void notifyAttackersSiegeStart(ServerLevel level) {
-        Component msg = SIEGE_START_ATTACKER(getName());
-
-        for (RecruitsFaction attacker : getAttackingParties()) {
-            for (Player player : getPlayersOfFaction(attacker, level)) {
-                player.sendSystemMessage(msg);
-            }
-        }
-    }
-    private void notifyDefendersSiegeFailed(RecruitsFaction owner, ServerLevel level) {
-        Component msg = SIEGE_FAILED_DEFENDER(getName());
-
-        for (Player player : getPlayersOfFaction(owner, level)) {
-            player.sendSystemMessage(msg);
-        }
-    }
-
-    private void notifyAttackersSiegeFailed(ServerLevel level) {
-        Component msg = SIEGE_FAILED_ATTACKER(getName());
-
-        for (RecruitsFaction attacker : getAttackingParties()) {
-            for (Player player : getPlayersOfFaction(attacker, level)) {
-                player.sendSystemMessage(msg);
-            }
-        }
-    }
-
-    public void addParty(List<RecruitsFaction> list, RecruitsFaction recruitsFaction) {
-        if(recruitsFaction == null) return;
-
-        if(!list.isEmpty()){
-            for(RecruitsFaction attacker : list){
-                if(attacker != null && attacker.getStringID().equals(recruitsFaction.getStringID())) return;
-            }
-        }
-
-        list.add(recruitsFaction);
-    }
-
-
-    private List<RecruitsFaction> getAttackingParties() {
-        return attackingParties == null ? Collections.emptyList() : attackingParties;
-    }
-    private List<ServerPlayer> getPlayersOfFaction(RecruitsFaction faction, ServerLevel level) {
-        return FactionEvents.recruitsFactionManager
-                .getPlayersInTeam(faction.getStringID(), level);
-    }
-
-    public Component SIEGE_START_ATTACKER(String claim){
-        return Component.translatable("chat.recruits.text.siegeStartAttacker", claim).withStyle(ChatFormatting.GOLD);
-    }
-    public Component SIEGE_START_DEFENDER(String claim, String attackers){
-        return Component.translatable("chat.recruits.text.siegeStartDefender", claim, attackers).withStyle(ChatFormatting.GOLD);
-    }
-
-    public Component SIEGE_FAILED_ATTACKER(String claim){
-        return Component.translatable("chat.recruits.text.siegeFailedAttacker", claim).withStyle(ChatFormatting.GOLD);
-    }
-
-    public Component SIEGE_FAILED_DEFENDER(String claim){
-        return Component.translatable("chat.recruits.text.siegeFailedDefender", claim).withStyle(ChatFormatting.GOLD);
-    }
-    public Component SIEGE_SUCCESS_ATTACKER(String claim){
-        return Component.translatable("chat.recruits.text.siegeSuccessAttacker", claim).withStyle(ChatFormatting.GOLD);
-    }
-
-    public Component SIEGE_SUCCESS_DEFENDER(String claim){
-        return Component.translatable("chat.recruits.text.siegeSuccessDefender", claim).withStyle(ChatFormatting.GOLD);
     }
 }

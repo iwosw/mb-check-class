@@ -4,7 +4,6 @@ package com.talhanation.bannermod.persistence.military;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -13,17 +12,10 @@ public class RecruitsPlayerInfo {
     private UUID uuid;
     private String name;
     private boolean online;
-    @Nullable
-    private final RecruitsFaction recruitsFaction;
 
     public RecruitsPlayerInfo(UUID uuid, String name) {
-        this(uuid, name, null);
-    }
-
-    public RecruitsPlayerInfo(UUID uuid, String name, @Nullable RecruitsFaction recruitsFaction) {
         this.uuid = uuid;
         this.name = name;
-        this.recruitsFaction = recruitsFaction;
     }
 
     public UUID getUUID() {
@@ -50,18 +42,12 @@ public class RecruitsPlayerInfo {
         this.online = online;
     }
 
-    @Nullable
-    public RecruitsFaction getFaction(){
-        return recruitsFaction;
-    }
-
     @Override
     public String toString() {
         return "{" +
                 ", uuid=" + uuid +
                 ", name=" + name +
                 ", online=" + online +
-                ", team=" + recruitsFaction +
                 '}';
     }
 
@@ -70,9 +56,6 @@ public class RecruitsPlayerInfo {
         nbt.putUUID("UUID", uuid);
         nbt.putString("Name", name);
         nbt.putBoolean("Online", online);
-        if(recruitsFaction != null){
-            nbt.put("RecruitsTeam", this.recruitsFaction.toNBT());
-        }
         return nbt;
     }
 
@@ -82,9 +65,8 @@ public class RecruitsPlayerInfo {
         UUID uuid = nbt.getUUID("UUID");
         String name = nbt.getString("Name");
         boolean online = nbt.getBoolean("Online");
-        RecruitsFaction team = RecruitsFaction.fromNBT(nbt.getCompound("RecruitsTeam"));
 
-        RecruitsPlayerInfo info = new RecruitsPlayerInfo(uuid, name, team);
+        RecruitsPlayerInfo info = new RecruitsPlayerInfo(uuid, name);
         info.setOnline(online);
         return info;
     }

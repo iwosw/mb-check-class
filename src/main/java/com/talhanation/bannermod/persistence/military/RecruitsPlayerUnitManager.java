@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.persistence.military;
 
-import com.talhanation.bannermod.events.FactionEvents;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
@@ -72,50 +71,13 @@ public class RecruitsPlayerUnitManager {
     }
 
     public boolean canPlayerRecruit(String stringId, UUID playerUUID) {
-        RecruitsFaction recruitsFaction = FactionEvents.recruitsFactionManager.getFactionByStringID(stringId);
-
         int currentRecruitCount = getRecruitCount(playerUUID);
-        int maxRecruitCount = 0;
-
-        if (recruitsFaction == null) {
-            maxRecruitCount = RecruitsServerConfig.MaxRecruitsForPlayer.get();
-        } else {
-            int maxRecruitsInFaction = recruitsFaction.maxNPCs;
-            if(maxRecruitsInFaction == 0) maxRecruitsInFaction = 1000000000;
-
-            if (playerUUID.equals(recruitsFaction.getTeamLeaderUUID())) {
-                maxRecruitCount = maxRecruitsInFaction;
-            } else {
-                maxRecruitCount = recruitsFaction.getMaxNPCsPerPlayer();
-            }
-
-            if (recruitsFaction.npcs >= maxRecruitsInFaction) {
-                return false;
-            }
-        }
-
+        int maxRecruitCount = RecruitsServerConfig.MaxRecruitsForPlayer.get();
         return currentRecruitCount < maxRecruitCount;
     }
     public int getRemainingRecruitSlots(String stringId, UUID playerUUID) {
-        RecruitsFaction recruitsFaction = FactionEvents.recruitsFactionManager.getFactionByStringID(stringId);
-
         int currentRecruitCount = getRecruitCount(playerUUID);
-        int maxRecruitCount;
-
-        if (recruitsFaction == null) {
-            maxRecruitCount = RecruitsServerConfig.MaxRecruitsForPlayer.get();
-        } else {
-            if (playerUUID.equals(recruitsFaction.getTeamLeaderUUID())) {
-                maxRecruitCount = recruitsFaction.maxNPCs;
-            } else {
-                maxRecruitCount = recruitsFaction.getMaxNPCsPerPlayer();
-            }
-
-            if (recruitsFaction.npcs >= recruitsFaction.maxNPCs) {
-                return 0;
-            }
-        }
-
+        int maxRecruitCount = RecruitsServerConfig.MaxRecruitsForPlayer.get();
         int remaining = maxRecruitCount - currentRecruitCount;
         return Math.max(remaining, 0);
     }
