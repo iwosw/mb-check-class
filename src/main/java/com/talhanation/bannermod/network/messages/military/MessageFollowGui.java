@@ -5,7 +5,6 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -32,9 +31,8 @@ public class MessageFollowGui implements Message<MessageFollowGui> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        Entity entity = serverPlayer.serverLevel().getEntity(this.uuid);
-        if (!(entity instanceof AbstractRecruitEntity recruit)
-                || !serverPlayer.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.uuid, 16.0D);
+        if (recruit == null) {
             return;
         }
 

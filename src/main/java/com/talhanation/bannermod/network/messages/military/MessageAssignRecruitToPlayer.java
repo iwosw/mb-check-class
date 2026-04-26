@@ -7,7 +7,6 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -34,9 +33,8 @@ public class MessageAssignRecruitToPlayer implements Message<MessageAssignRecrui
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
         ServerLevel serverLevel = (ServerLevel) serverPlayer.getCommandSenderWorld();
 
-        Entity entity = serverLevel.getEntity(this.recruit);
-        if (entity instanceof AbstractRecruitEntity recruit
-                && serverPlayer.getBoundingBox().inflate(64.0D).intersects(recruit.getBoundingBox())) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruit, 64.0D);
+        if (recruit != null) {
             recruit.assignToPlayer(newOwner, null);
             FactionEvents.notifyPlayer(serverLevel, new RecruitsPlayerInfo(newOwner, ""), 0, serverPlayer.getName().getString());
         }

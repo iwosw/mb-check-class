@@ -42,12 +42,16 @@ public class MessageToClientOpenTakeOverScreen implements Message<MessageToClien
         if (player == null || player.level() == null) {
             return;
         }
-        if (player.level().getEntity(this.entityId) instanceof AbstractRecruitEntity recruit
-                && recruit.getUUID().equals(this.recruit)
-                && recruit.isAlive()
-                && player.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+        for (AbstractRecruitEntity recruit : player.level().getEntitiesOfClass(
+                AbstractRecruitEntity.class,
+                player.getBoundingBox().inflate(16.0D),
+                candidate -> candidate.isAlive() && candidate.getUUID().equals(this.recruit)
+        )) {
+            if (this.entityId != -1 && recruit.getId() != this.entityId) {
+                continue;
+            }
             Minecraft.getInstance().setScreen(new TakeOverScreen(recruit, player));
-            return;
+            break;
         }
     }
 

@@ -6,7 +6,6 @@ import com.talhanation.bannermod.events.CommandEvents;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -37,9 +36,8 @@ public class MessageCombatStanceGui implements Message<MessageCombatStanceGui> {
         }
 
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        Entity entity = serverPlayer.serverLevel().getEntity(this.recruitUuid);
-        if (!(entity instanceof AbstractRecruitEntity recruit)
-                || !serverPlayer.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruitUuid, 16.0D);
+        if (recruit == null) {
             return;
         }
 

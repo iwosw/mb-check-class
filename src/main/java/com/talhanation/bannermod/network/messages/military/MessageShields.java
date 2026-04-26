@@ -58,52 +58,7 @@ public class MessageShields implements Message<MessageShields> {
     }
 
     private static List<AbstractRecruitEntity> resolveTargets(Player player, UUID playerUuid, UUID group) {
-        if (playerUuid == null || !player.getUUID().equals(playerUuid)) {
-            BannerModMain.LOGGER.debug("Ignored shields command with mismatched sender UUID");
-            return List.of();
-        }
-
-        List<AbstractRecruitEntity> nearby = RecruitIndex.instance().groupInRange(
-                player.getCommandSenderWorld(),
-                group,
-                player.position(),
-                CommandTargeting.GROUP_COMMAND_RADIUS
-        );
-        if (nearby == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            nearby = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(CommandTargeting.GROUP_COMMAND_RADIUS)
-            );
-        }
-        CommandTargeting.GroupCommandSelection selection = CommandTargeting.forGroupCommand(
-                player.getUUID(),
-                player.getTeam() == null ? null : player.getTeam().getName(),
-                group,
-                nearby.stream().map(recruit -> new CommandTargeting.RecruitSnapshot(
-                        recruit.getUUID(),
-                        recruit.getOwnerUUID(),
-                        recruit.getGroup(),
-                        recruit.getTeam() == null ? null : recruit.getTeam().getName(),
-                        recruit.isOwned(),
-                        recruit.isAlive(),
-                        recruit.getListen(),
-                        recruit.distanceToSqr(player)
-                )).toList()
-        );
-
-        if (!selection.isSuccess()) {
-            BannerModMain.LOGGER.debug("Ignored shields command: {}", selection.failure());
-            return List.of();
-        }
-
-        Set<UUID> targetIds = new HashSet<>();
-        for (CommandTargeting.RecruitSnapshot recruit : selection.recruits()) {
-            targetIds.add(recruit.recruitUuid());
-        }
-
-        nearby.removeIf(recruit -> !targetIds.contains(recruit.getUUID()));
-        return nearby;
+        return RecruitCommandTargetResolver.resolveGroupTargets(player, playerUuid, group, "shields");
     }
 
     public MessageShields fromBytes(FriendlyByteBuf buf) {

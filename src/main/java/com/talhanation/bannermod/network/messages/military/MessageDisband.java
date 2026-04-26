@@ -1,10 +1,10 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -30,9 +30,8 @@ public class MessageDisband implements Message<MessageDisband> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractRecruitEntity recruit
-                && player.getBoundingBox().inflate(16D).intersects(recruit.getBoundingBox())) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16D);
+        if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
             recruit.disband(context.getSender(), keepTeam, true);
         }
     }

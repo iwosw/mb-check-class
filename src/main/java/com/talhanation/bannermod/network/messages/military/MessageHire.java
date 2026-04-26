@@ -7,7 +7,6 @@ import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -36,8 +35,8 @@ public class MessageHire implements Message<MessageHire> {
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractRecruitEntity recruit && recruit.isAlive() && recruit.distanceToSqr(player) <= 16.0D * 16.0D) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 16.0D * 16.0D);
+        if (recruit != null) {
             CommandEvents.handleRecruiting(player, group, recruit, true);
         }
     }

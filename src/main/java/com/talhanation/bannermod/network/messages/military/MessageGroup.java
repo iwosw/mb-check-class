@@ -1,11 +1,11 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -32,19 +32,21 @@ public class MessageGroup implements Message<MessageGroup> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruitUUID);
-        if (entity instanceof AbstractRecruitEntity recruit && player.getBoundingBox().inflate(100).intersects(recruit.getBoundingBox())) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruitUUID, 100.0D);
+        if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
             this.setGroup(recruit, player, groupUUID);
         }
     }
 
     public void setGroup(AbstractRecruitEntity recruit, ServerPlayer player , UUID groupUUID){
+        RecruitsGroup newGroup = RecruitCommandAuthority.ownedGroup(player, groupUUID);
+        if (newGroup == null) return;
+
         RecruitsGroup oldGroup = RecruitEvents.recruitsGroupsManager.getGroup(recruit.getGroup());
-        RecruitsGroup newGroup = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
         if(oldGroup != null && newGroup != null && oldGroup.getUUID().equals(newGroup.getUUID())) return;
 
         if(oldGroup != null) RecruitEvents.recruitsGroupsManager.removeMember(oldGroup.getUUID(), recruit.getUUID(), player.serverLevel());
-        if(newGroup != null) RecruitEvents.recruitsGroupsManager.addMember(newGroup.getUUID(), recruit.getUUID(), player.serverLevel());
+        RecruitEvents.recruitsGroupsManager.addMember(newGroup.getUUID(), recruit.getUUID(), player.serverLevel());
 
         recruit.setGroupUUID(newGroup.getUUID());
     }

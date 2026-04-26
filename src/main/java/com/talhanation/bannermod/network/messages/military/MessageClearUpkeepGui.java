@@ -4,7 +4,6 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -28,9 +27,8 @@ public class MessageClearUpkeepGui implements Message<MessageClearUpkeepGui> {
 
     public void executeServerSide(NetworkEvent.Context context){
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (entity instanceof AbstractRecruitEntity recruit
-                && player.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
+        if (recruit != null) {
             recruit.clearUpkeepPos();
             recruit.clearUpkeepEntity();
         }

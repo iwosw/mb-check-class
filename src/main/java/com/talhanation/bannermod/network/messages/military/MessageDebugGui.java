@@ -6,7 +6,6 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -34,9 +33,8 @@ public class MessageDebugGui implements Message<MessageDebugGui> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (entity instanceof AbstractRecruitEntity recruit
-                && player.getBoundingBox().inflate(16.0D).intersects(recruit.getBoundingBox())) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
+        if (recruit != null) {
             DebugEvents.handleMessage(id, recruit, context.getSender());
             recruit.setCustomName(Component.literal(name));
         }

@@ -4,7 +4,7 @@ import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -29,12 +29,13 @@ public class MessagePromoteRecruit implements Message<MessagePromoteRecruit> {
     }
 
     public void executeServerSide(NetworkEvent.Context context){
-        if (context.getSender() == null) {
+        ServerPlayer sender = context.getSender();
+        if (sender == null) {
             return;
         }
-        Entity entity = context.getSender().serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractRecruitEntity recruit && recruit.distanceToSqr(context.getSender()) <= 16D * 16D) {
-            RecruitEvents.promoteRecruit(recruit, profession, name, context.getSender());
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(sender, this.recruit, 16D * 16D);
+        if (recruit != null) {
+            RecruitEvents.promoteRecruit(recruit, profession, name, sender);
         }
 
     }

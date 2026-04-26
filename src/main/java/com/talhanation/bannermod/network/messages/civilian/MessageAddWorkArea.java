@@ -34,6 +34,12 @@ public class MessageAddWorkArea implements Message<MessageAddWorkArea> {
     public void executeServerSide(NetworkEvent.Context context){
         ServerPlayer player = context.getSender();
         if(player == null) return;
+        // Buildings-first migration: legacy packet keeps supporting raw BuildArea only.
+        // All profession surfaces should be created through prefab placement.
+        if (this.type != 2) {
+            this.sendDecision(player, WorkAreaAuthoringRules.Decision.INVALID_REQUEST);
+            return;
+        }
 
         AbstractWorkAreaEntity workArea = this.createWorkArea(player);
         if (workArea == null) {

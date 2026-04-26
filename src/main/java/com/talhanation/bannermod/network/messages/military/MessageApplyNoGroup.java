@@ -7,7 +7,6 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -41,10 +40,11 @@ public class MessageApplyNoGroup implements Message<MessageApplyNoGroup> {
             recruitList.addAll(indexed);
         } else {
             RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            for(Entity entity : serverLevel.getEntities().getAll()){
-                if(entity instanceof AbstractRecruitEntity recruit && recruit.getGroup() != null && recruit.getGroup().equals(groupID))
-                    recruitList.add(recruit);
-            }
+            recruitList.addAll(serverLevel.getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    player.getBoundingBox().inflate(256.0D),
+                    recruit -> recruit.getGroup() != null && recruit.getGroup().equals(groupID)
+            ));
         }
 
         for(AbstractRecruitEntity recruit : recruitList){

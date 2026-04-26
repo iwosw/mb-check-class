@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 
 /**
  * Pure command-target selection contract shared by Phase 4 packet handlers.
- * Group commands preserve the existing 100-block nearby-owned-recruits radius,
+     * Group commands preserve the existing 100-block nearby-owned-or-allied-recruits radius,
  * while invalid or unauthorized inputs degrade to stable empty results.
  */
 public final class CommandTargeting {

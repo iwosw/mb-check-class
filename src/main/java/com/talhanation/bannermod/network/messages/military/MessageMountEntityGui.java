@@ -37,8 +37,8 @@ public class MessageMountEntityGui implements Message<MessageMountEntityGui> {
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
 
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractRecruitEntity recruit && recruit.isAlive() && recruit.distanceToSqr(player) <= 32.0D * 32.0D) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 32.0D * 32.0D);
+        if (recruit != null) {
             this.mount(recruit);
         }
     }

@@ -57,15 +57,11 @@ public class MessageAssignGroupToCompanion implements Message<MessageAssignGroup
                 serverPlayer.position(),
                 100.0D
         );
-        List<LivingEntity> list;
+        List<AbstractRecruitEntity> list;
         if (recruits == null) {
             RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            list = serverLevel.getEntitiesOfClass(
-                    LivingEntity.class,
-                    serverPlayer.getBoundingBox().inflate(100)
-            );
-            list.removeIf(living -> !(living instanceof AbstractRecruitEntity recruit)
-                    || (recruit.getGroup() == null || !recruit.getGroup().equals(group.getUUID()))
+            list = serverLevel.getEntitiesOfClass(AbstractRecruitEntity.class, serverPlayer.getBoundingBox().inflate(100));
+            list.removeIf(recruit -> (recruit.getGroup() == null || !recruit.getGroup().equals(group.getUUID()))
                     || recruit.getUUID().equals(this.companionUUID));
         } else {
             list = new ArrayList<>();
@@ -76,10 +72,11 @@ public class MessageAssignGroupToCompanion implements Message<MessageAssignGroup
             }
         }
 
-        for (LivingEntity living : list) {
-            if(living instanceof AbstractRecruitEntity recruit) ICompanion.assignToLeaderCompanion(companionEntity, recruit);
+        for (AbstractRecruitEntity recruit : list) {
+            ICompanion.assignToLeaderCompanion(companionEntity, recruit);
         }
-        companionEntity.army = new NPCArmy(serverLevel, list, null);
+        List<LivingEntity> armyMembers = new ArrayList<>(list);
+        companionEntity.army = new NPCArmy(serverLevel, armyMembers, null);
         group.leaderUUID = companionUUID;
         companionEntity.setGroupUUID(group.getUUID());
 
