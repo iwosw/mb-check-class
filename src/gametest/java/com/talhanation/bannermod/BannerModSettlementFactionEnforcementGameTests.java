@@ -45,8 +45,9 @@ public class BannerModSettlementFactionEnforcementGameTests {
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
 
             BannerModDedicatedServerGameTestSupport.seedClaim(level, workAreaPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
+            String friendlyPoliticalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(level, FRIENDLY_TEAM_ID);
 
-            boolean placed = attemptWorkAreaPlacement(level, owner, workAreaPos, FRIENDLY_TEAM_ID);
+            boolean placed = attemptWorkAreaPlacement(level, owner, workAreaPos);
             CropArea cropArea = findCropArea(level, workAreaPos);
             FarmerEntity worker = BannerModGameTestSupport.spawnOwnedFarmer(helper, owner, new BlockPos(4, 2, 2));
             BannerModDedicatedServerGameTestSupport.joinTeam(level, FRIENDLY_TEAM_ID, worker);
@@ -55,7 +56,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
                     ClaimEvents.recruitsClaimManager,
                     workAreaPos,
-                    FRIENDLY_TEAM_ID
+                    friendlyPoliticalEntityId
             );
 
             helper.assertTrue(placed,
@@ -86,12 +87,13 @@ public class BannerModSettlementFactionEnforcementGameTests {
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
 
             BannerModDedicatedServerGameTestSupport.seedClaim(level, workAreaPos, FRIENDLY_TEAM_ID, claimOwner.getUUID(), claimOwner.getScoreboardName());
+            String hostilePoliticalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(level, HOSTILE_TEAM_ID);
 
-            boolean placed = attemptWorkAreaPlacement(level, hostilePlayer, workAreaPos, HOSTILE_TEAM_ID);
+            boolean placed = attemptWorkAreaPlacement(level, hostilePlayer, workAreaPos);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
                     ClaimEvents.recruitsClaimManager,
                     workAreaPos,
-                    HOSTILE_TEAM_ID
+                    hostilePoliticalEntityId
             );
 
             helper.assertFalse(placed,
@@ -125,11 +127,12 @@ public class BannerModSettlementFactionEnforcementGameTests {
                 }
             }
 
-            boolean placed = attemptWorkAreaPlacement(level, player, workAreaPos, FRIENDLY_TEAM_ID);
+            String friendlyPoliticalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(level, FRIENDLY_TEAM_ID);
+            boolean placed = attemptWorkAreaPlacement(level, player, workAreaPos);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
                     ClaimEvents.recruitsClaimManager,
                     workAreaPos,
-                    FRIENDLY_TEAM_ID
+                    friendlyPoliticalEntityId
             );
 
             helper.assertFalse(placed,
@@ -160,16 +163,14 @@ public class BannerModSettlementFactionEnforcementGameTests {
     }
 
     /**
-     * Mirrors the gating + spawn responsibilities of
-     * {@link com.talhanation.bannermod.network.messages.civilian.MessageAddWorkArea#executeServerSide}
+     * Mirrors the gating + spawn responsibilities of the legacy work-area authoring path
      * without requiring a {@code NetworkEvent.Context}. Returns {@code true} when the consolidated
      * authoring gate would have allowed the placement (and the test crop area was actually inserted),
      * {@code false} otherwise.
      */
     private static boolean attemptWorkAreaPlacement(ServerLevel level,
                                                     ServerPlayer player,
-                                                    BlockPos workAreaPos,
-                                                    String expectedFactionId) {
+                                                    BlockPos workAreaPos) {
         CropArea workArea = new CropArea(ModEntityTypes.CROPAREA.get(), level);
         workArea.setWidthSize(9);
         workArea.setHeightSize(2);
@@ -203,7 +204,8 @@ public class BannerModSettlementFactionEnforcementGameTests {
         RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(chunkPos);
         return claim != null
                 && claim.containsChunk(chunkPos)
-                && claim.getOwnerFaction() != null
-                && player.getTeam().getName().equals(claim.getOwnerFaction().getStringID());
+                && claim.getOwnerPoliticalEntityId() != null
+                && claim.getOwnerPoliticalEntityId().equals(com.talhanation.bannermod.war.registry.PoliticalMembership.entityIdFor(
+                com.talhanation.bannermod.war.WarRuntimeContext.registry(player.serverLevel()), player.getUUID()));
     }
 }

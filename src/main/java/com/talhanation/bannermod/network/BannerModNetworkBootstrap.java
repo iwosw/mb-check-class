@@ -134,13 +134,13 @@ public class BannerModNetworkBootstrap {
     };
 
     /**
-     * Civilian message catalog (verbatim order from workers.WorkersMain legacy setup).
+     * Civilian message catalog (verbatim order from workers.WorkersMain legacy setup, minus
+     * the dead {@code MessageAddWorkArea} slot retired in 2026-04 — see SETTLEMENT-002).
      * Registered at channel indices [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length).
-     * Count: 23. workerPacketOffset == MILITARY_MESSAGES.length == 107.
+     * Count: 22. workerPacketOffset == MILITARY_MESSAGES.length == 107.
      */
     @SuppressWarnings({"rawtypes"})
     public static final Class[] CIVILIAN_MESSAGES = {
-        MessageAddWorkArea.class,
         MessageToClientOpenWorkAreaScreen.class,
         MessageUpdateWorkArea.class,
         MessageUpdateCropArea.class,
