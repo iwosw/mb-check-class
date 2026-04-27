@@ -580,6 +580,527 @@
         "renderStructurePreview loops scanned blocks and may create block entities.",
         "getCachedPreviewStructure stores only one preview structure."
       ]
+    },
+    {
+      "id": "GEO-001",
+      "title": "Terrain-derived settlement roles",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The transcript's strongest usable idea is that feudal power should emerge from logistics geography rather than arbitrary titles. BannerMod settlements and political entities need terrain/logistics roles so Crusader Kings-style politics has a Minecraft-world reason to exist.",
+      "scope": [
+        "Classify settlements or claims into practical roles such as surplus hub, chokepoint fort, junction market, river gate, upstream source, or landlocked specialist using existing world/claim/building data.",
+        "Expose the assigned role and one-line job description in player-facing settlement or political UI.",
+        "Use the role as design input for later economy, war, and diplomacy systems without hardcoding forced borders.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes player-facing settlement mechanics."
+      ],
+      "acceptance": [
+        "A settlement with farms/storage can be identified as a surplus hub, a crossing/route fort as a chokepoint, and a market/route intersection as a junction by observable in-game data.",
+        "The UI or inspection text tells the player why the settlement matters in one sentence, not just its name or owner.",
+        "The system does not require manually authored lore to make a settlement politically meaningful.",
+        "Player guides describe settlement roles and how players can create or exploit them."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "Transcript lines 1-17: barony as logistics answer and chokepoint/surplus lord.",
+        "Transcript lines 53-61: workflow for marking nodes, routes, shadows, hierarchy, and job descriptions."
+      ]
+    },
+    {
+      "id": "ECON-001",
+      "title": "Distance-aware supply routes and water advantage",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The transcript's oxen-paradox idea is suitable if simplified: land transport should be limited and water/routes should make supply cheaper, giving BannerMod economy strategic geography like Total War supply lines without simulating medieval mileage literally.",
+      "scope": [
+        "Add a lightweight route-cost model for settlement goods movement that distinguishes land, road, downstream or water-adjacent routes where available.",
+        "Apply the route cost to logistics recommendations, desired goods, or work-order feasibility before adding punitive starvation or collapse mechanics.",
+        "Show players when a settlement is cheap to supply, expensive to supply, or effectively isolated.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes economy and settlement planning."
+      ],
+      "acceptance": [
+        "Two otherwise similar settlements at different route distances can produce different supply recommendations or bottleneck warnings.",
+        "Water/river/coastal access gives an observable logistics advantage without requiring exact real-world mile conversion.",
+        "The first implementation affects visibility and planning before destructive penalties, avoiding opaque player punishment.",
+        "Player guides explain why roads/water/routes matter for settlement logistics."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "Transcript lines 5-8: oxen paradox and three-day rule as supply limit.",
+        "Transcript lines 35-49: navigable water as major transport advantage and upstream/downstream asymmetry."
+      ]
+    },
+    {
+      "id": "ECON-002",
+      "title": "Specialized production for landlocked settlements",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The transcript's refinery-baron idea fits Minecraft gameplay: settlements that cannot cheaply move bulk goods should convert local resources into higher-value goods, creating Bannerlord-style regional identity and trade reasons.",
+      "scope": [
+        "Define a small set of specialist settlement outputs from existing resources/buildings, such as grain to ale, wool to cloth, milk to cheese, ore to tools, or timber to worked goods.",
+        "Tie specialization to validated buildings, local resources, or settlement role rather than random assignment.",
+        "Surface the specialization in settlement UI and logistics recommendations.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this adds player-facing production mechanics."
+      ],
+      "acceptance": [
+        "A landlocked or route-expensive settlement can gain a clear specialist output instead of only being worse at bulk trade.",
+        "Specialist output has a visible input, output, and reason in UI or inspection text.",
+        "The implementation reuses existing settlement goods/work-order systems where possible instead of creating a parallel economy.",
+        "Player guides explain how to create and use specialist settlements."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "Transcript lines 29-35: landlocked specialist converts bulk into higher-value goods to survive transport limits."
+      ]
+    },
+    {
+      "id": "WAR-009",
+      "title": "Logistics objectives for wars and raids",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The transcript validates a non-bullshit war loop for Minecraft strategy: wars should target supply routes, granaries, junctions, crossings, and market flow, not only entity kills or abstract claims.",
+      "scope": [
+        "Add war objective types or raid hooks for disrupting settlement logistics nodes such as granaries, roads, junction markets, river gates, or chokepoint forts.",
+        "Connect objective damage/control to existing war-state, siege-zone, settlement snapshot, or incident systems where feasible.",
+        "Show the affected route, settlement role, or supply consequence in War Room or settlement UI.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes warfare objectives."
+      ],
+      "acceptance": [
+        "A war can have an observable logistics objective beyond killing units, such as blockading a junction, raiding a surplus store, or holding a crossing.",
+        "Successful disruption produces visible economic or strategic pressure without silently corrupting settlement state.",
+        "Defenders can understand what is being disrupted and what action would restore it.",
+        "Player guides explain logistics objectives and counters."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "Transcript lines 11-17: chokepoints, tolls, safe passage, and hollowed power when routes bypass them.",
+        "Transcript lines 55-57: difficult-route vacuums become bandit/security problems and potential new power centers."
+      ]
+    },
+    {
+      "id": "POL-003",
+      "title": "Logistics-driven loyalty pressure",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The transcript's CK-compatible idea is that vassal loyalty follows supply dependency: upstream/source lords become independent, downstream/gatekeeper lords become transactional, and isolated weak lords resent powerful flow controllers.",
+      "scope": [
+        "Add non-destructive loyalty pressure signals derived from settlement role, route dependency, isolation, and supply disruption.",
+        "Surface the pressure as explainable political warnings or modifiers before adding automatic revolt behavior.",
+        "Connect pressure to existing political authority, ally, war, or government-form systems only where rules already support it.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes political gameplay."
+      ],
+      "acceptance": [
+        "Political UI can explain at least one loyalty pressure with a logistics reason, such as isolated, dependent on gatekeeper, upstream autonomy, or route disrupted.",
+        "The first implementation warns or modifies decisions rather than spawning surprise rebellions without player-readable cause.",
+        "Pressure can be reduced by restoring supply access, improving routes, or changing political arrangements where supported.",
+        "Player guides explain logistics loyalty pressures and mitigation."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "Transcript lines 39-45: upstream source lords trend rebellious, downstream gatekeepers trend diplomatic and transactional.",
+        "Transcript lines 49-52: river few versus landlocked many creates structural political tension."
+      ]
+    },
+    {
+      "id": "RP-001",
+      "title": "Clean up or reconnect legacy diplomacy and treaty flow",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Legacy team diplomacy hooks and player-facing treaty/localization remnants still exist, but the active enemy-setting implementation is stubbed, making the supported RP model ambiguous.",
+      "scope": [
+        "Decide whether legacy team diplomacy/treaty controls are deprecated or bridged into political relations.",
+        "Remove dead player-facing controls/text or implement non-stubbed behavior through the active political relation model."
+      ],
+      "acceptance": [
+        "No player-facing diplomacy control reaches a path where RecruitDiplomacyPolicy.isEnemy is permanently false or setTeamsAsEnemies is empty.",
+        "Docs identify the single supported diplomacy model for recruits and political entities."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/events/runtime/RecruitDiplomacyPolicy.java",
+        "src/main/java/com/talhanation/bannermod/combat/RecruitCombatDecisions.java"
+      ]
+    },
+    {
+      "id": "DOC-001",
+      "title": "Update revolt documentation for objective-based resolution",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Runtime revolt resolution is objective-presence based, but UAT documentation still describes the behavior as timer-only/not objective-driven.",
+      "scope": [
+        "Revise UAT/player-facing docs that describe revolt completion to match WarRevoltAutoResolver and WarRevoltScheduler."
+      ],
+      "acceptance": [
+        "Documentation describes rebel-only presence, defender-present failure, and empty-objective pending behavior.",
+        "No current docs claim implemented revolts are only timer-based or not objective-driven."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/war/runtime/WarRevoltScheduler.java",
+        "docs/UAT_RUNBOOK.md"
+      ]
+    },
+    {
+      "id": "SIEGE-001",
+      "title": "Remove siege-standard blocks when outcomes clear sieges",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "War outcomes clear runtime siege records but leave placed siege-standard blocks in the world, causing visible objectives to diverge from war state.",
+      "scope": [
+        "Make outcome cleanup remove corresponding siege_standard blocks or route cleanup through a world-aware siege service."
+      ],
+      "acceptance": [
+        "Resolving or cancelling a war removes all visible siege standards for that war.",
+        "Runtime records and world blocks cannot diverge after white peace, cancel, tribute, occupation, annex, vassalize, or demilitarize.",
+        "A focused test or deterministic verification covers outcome siege cleanup."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/war/runtime/WarOutcomeApplier.java:376"
+      ]
+    },
+    {
+      "id": "SIEGE-002",
+      "title": "Prevent duplicate siege standards at one position",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "SiegeStandardRuntime creates a new record for every placement while the world can only bind one block entity at a position, allowing runtime/block desync.",
+      "scope": [
+        "Reject duplicate position placement or replace the existing record and block atomically for command and UI placement paths."
+      ],
+      "acceptance": [
+        "Placing twice at the same BlockPos cannot leave multiple runtime records for one block.",
+        "byPos maps to the same war/side as the block entity binding.",
+        "Command and UI paths return clear feedback for duplicate or replacement behavior."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/war/runtime/SiegeStandardRuntime.java:24"
+      ]
+    },
+    {
+      "id": "SIEGE-003",
+      "title": "Make siege placement dimension-safe",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The War Room siege placement packet always targets the Overworld while using the sender position, so a player in another dimension can place an Overworld standard at copied coordinates.",
+      "scope": [
+        "Either restrict siege placement to the supported dimension with clear feedback or persist and sync standards by dimension."
+      ],
+      "acceptance": [
+        "Clicking Place siege here outside the supported dimension cannot place an Overworld block at the player's copied coordinates.",
+        "Command and packet placement paths share the same dimension rule.",
+        "Tests cover Overworld and non-Overworld placement behavior."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/network/messages/war/MessagePlaceSiegeStandardHere.java:47"
+      ]
+    },
+    {
+      "id": "SIEGE-004",
+      "title": "Fix siege HUD war label",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The siege HUD looks up a political entity by war UUID, so it falls back to short UUIDs instead of showing a recognizable war label.",
+      "scope": [
+        "Render attacker-vs-defender names or another real war label in the siege HUD.",
+        "Update guide wording if the HUD label semantics change."
+      ],
+      "acceptance": [
+        "HUD shows recognizable attacker and defender names for active siege zones.",
+        "A short war UUID appears only when entity names are genuinely unavailable.",
+        "Guide wording matches the actual HUD label."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/client/military/hud/WarSiegeZoneOverlay.java:94"
+      ]
+    },
+    {
+      "id": "SIEGE-005",
+      "title": "Align under-siege claim semantics with siege radius",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "HUD/zone logic uses radius containment, but claim under-siege checks only test the standard block chunk, making settlement effects narrower than the visible siege zone.",
+      "scope": [
+        "Decide whether settlement effects should trigger by standard chunk or radius-overlap, then make server and client mirror semantics identical and documented."
+      ],
+      "acceptance": [
+        "WarSiegeQueries and WarClientState.isClaimUnderSiege use identical semantics.",
+        "HUD radius and settlement effects are either intentionally different and documented, or made consistent.",
+        "Tests cover a standard just outside a claim whose radius overlaps it."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/war/runtime/WarSiegeQueries.java",
+        "src/main/java/com/talhanation/bannermod/war/client/WarClientState.java"
+      ]
+    },
+    {
+      "id": "MSM-001",
+      "title": "Fix Siege-Engineer promotion contract",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The client enables Siege-Engineer promotion when MSM is loaded, but server promotion mapping has no profession 5 and silently returns.",
+      "scope": [
+        "Either disable the Siege-Engineer promotion until implemented or add a real server-side profession/entity mapping for profession 5.",
+        "Add server-side validation so unsupported promotion ids are rejected predictably."
+      ],
+      "acceptance": [
+        "With MSM absent, Siege-Engineer is unavailable.",
+        "With MSM present, clicking Siege-Engineer creates an implemented recruit type or shows a clear unsupported result.",
+        "RecruitEvents.entitiesByProfession and PromoteScreen agree on profession id 5 behavior."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/client/military/gui/PromoteScreen.java:119",
+        "src/main/java/com/talhanation/bannermod/events/RecruitEvents.java:66"
+      ]
+    },
+    {
+      "id": "MSM-002",
+      "title": "Add explicit Medieval Siege Machines compatibility adapter",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Current MSM integration only detects mod presence; there is no optional API/entity adapter for supported machine capabilities.",
+      "scope": [
+        "Add an optional compat layer that detects MSM entity ids or API capabilities without requiring MSM at runtime.",
+        "Define supported operations in code, such as crew seat, aim, load, fire, and movement if exposed by MSM."
+      ],
+      "acceptance": [
+        "Build and game start succeed without MSM.",
+        "With MSM installed, compat reports detected supported siege machine entity types or capabilities.",
+        "Unsupported MSM machines are ignored safely without hard dependency crashes."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/compat/MedievalSiegeMachinesCompat.java",
+        "build.gradle"
+      ]
+    },
+    {
+      "id": "MSM-003",
+      "title": "Add recruit siege-machine operation AI",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Recruits cannot currently be confirmed to crew, aim, load, fire, move, or operate MSM siege machines; generic mounting only calls startRiding.",
+      "scope": [
+        "Implement recruit behavior for intended MSM use: crew, aim, load/fire, and operate/move where supported by MSM.",
+        "Gate behavior behind MSM loaded, supported machine, and valid recruit command or role."
+      ],
+      "acceptance": [
+        "A supported siege machine can be assigned to a recruit.",
+        "Recruit moves to the machine and occupies the correct operating or crew position.",
+        "Recruit can aim and fire at a valid target using server-side state.",
+        "Behavior stops cleanly on dismount, death, loss of command, or machine removal."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/ai/military/RecruitMountEntity.java"
+      ]
+    },
+    {
+      "id": "MSM-004",
+      "title": "Route siege-machine orders through command pipeline",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "No MSM-specific command intent exists, and direct packet-driven mount behavior bypasses the unified army command pipeline expected for movement/attack-style orders.",
+      "scope": [
+        "Add first-class command intent or intents for siege-machine assignment and operation if they mutate army behavior.",
+        "Dispatch siege-machine orders through CommandIntentDispatcher to preserve queueing, logging, and selection behavior."
+      ],
+      "acceptance": [
+        "Siege-machine orders appear in CommandIntentLog.",
+        "Selection narrowing applies to siege-machine orders.",
+        "Queued and immediate siege-machine orders behave consistently with existing movement and attack commands.",
+        "No packet handler directly mutates recruit siege-machine operation state."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/army/command/CommandIntent.java",
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageMountEntity.java"
+      ]
+    },
+    {
+      "id": "MSM-005",
+      "title": "Implement recruit targeting for siege objectives",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "SiegeObjectivePolicy supports standard attack rules, but recruit AI currently only escorts same-side standards and does not acquire enemy standards as attack targets.",
+      "scope": [
+        "Wire SiegeObjectivePolicy.canAttackStandard into recruit target acquisition or a dedicated attack goal for BannerMod siege standards.",
+        "Keep same-side escort behavior unchanged."
+      ],
+      "acceptance": [
+        "Recruits from opposing political entities can attack enemy siege standards.",
+        "Same-side recruits do not attack their own standards.",
+        "Damage uses existing server-side standard control-pool logic.",
+        "Recruit attack behavior is covered by tests or deterministic verification."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/combat/SiegeObjectivePolicy.java",
+        "src/main/java/com/talhanation/bannermod/ai/military/RecruitSiegeEscortGoal.java"
+      ]
+    },
+    {
+      "id": "SETTLEMENT-010",
+      "title": "In-game settlement founding onboarding",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The code supports a multi-step founding path, but a player must already know to create a political state, craft the surveyor, set anchor and zones, validate in air, and then use a separate wand for later prefab work. docs/STATUS.md explicitly calls full settlement onboarding incomplete.",
+      "scope": [
+        "Add player-facing founding guidance covering political state creation, starter fort requirements, surveyor mode/role workflow, validation-in-air, claim bootstrap rules, and next steps after success.",
+        "Surface guidance in-game through tooltips, status messages, or a compact screen/HUD path rather than relying only on external docs.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes player-facing onboarding."
+      ],
+      "acceptance": [
+        "A new survival player can discover the required sequence from in-game UI/messages: create or join state, build fort, validate fort, receive or bind claim, then expand settlement.",
+        "Failed founding attempts explain the missing prerequisite, such as no political state, no anchor, missing zone, invalid fort, town too close, or not owned claim.",
+        "The in-game guidance names the correct tools and interactions without requiring source or docs."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SETTLEMENT-011",
+      "title": "Starter workers have actionable first jobs",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "SettlementBootstrapService spawns farmer, miner, lumberjack, and builder as starter citizens, but WorkerSettlementSpawner only seeds a default CropArea for farmers. Miner, lumberjack, and builder can enter the new settlement unassigned until the player creates areas, which makes the bootstrap success message overpromise immediate settlement life.",
+      "scope": [
+        "Define the intended post-bootstrap state for each starter profession: either auto-bind a minimal valid work target or explicitly mark the worker as waiting for player-authored work.",
+        "Show player feedback after bootstrap listing which starter workers are ready and which need a mine, lumber camp, build area, or other setup.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes early settlement mechanics/UX."
+      ],
+      "acceptance": [
+        "After founding, each starter worker has either a valid bound/current work area or a visible waiting reason tied to a next player action.",
+        "The bootstrap success feedback distinguishes spawned workers from free citizens and does not imply all professions are already working when they are not.",
+        "A focused test or GameTest covers the starter bootstrap assignments/waiting reasons for farmer, miner, lumberjack, and builder."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SETTLEMENT-012",
+      "title": "Validated buildings feed settlement snapshots and progression",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Manual validation registers ValidatedBuildingRecord data, but BannerModSettlementService.collectBuildings currently builds settlement snapshots from live AbstractWorkAreaEntity records. That means manually validated houses, storage, markets, and other buildings can be invisible to capacity, home assignment, growth scoring, and political promotion even after validation succeeds.",
+      "scope": [
+        "Merge valid ValidatedBuildingRecord entries for a settlement into BannerModSettlementSnapshot building records alongside live work areas.",
+        "Map validated building type, capacity, quality, zones, and anchor data into resident capacity, workplace slots, stockpile/service flags, and progression inputs where applicable.",
+        "Avoid double-counting when a prefab BuildArea/work area and a validated building describe the same structure."
+      ],
+      "acceptance": [
+        "A manually validated house contributes resident capacity/home assignment inputs.",
+        "Manually validated storage and market buildings can satisfy settlement infrastructure checks where equivalent prefab/work-area buildings do.",
+        "Snapshot tests cover manual-only, prefab-only, and overlapping manual-plus-prefab building cases."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SETTLEMENT-013",
+      "title": "Survival free-citizen source for vacancy professions",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The intended flow says free CitizenEntity instances occupy vacancies and convert into workers or recruits, but the normal settlement bootstrap and villager growth paths spawn workers directly, while docs say spawn eggs are not the normal survival flow. Without a reliable survival source of free citizens, vacancy-based professions and barracks recruitment can be unreachable or unclear.",
+      "scope": [
+        "Define and implement the normal survival source for unassigned CitizenEntity population in settlements.",
+        "Connect citizen spawning/availability to settlement housing, safety, food, growth, or explicit player action as appropriate for the existing mechanics.",
+        "Expose citizen availability and vacancy matching state in player-facing feedback or settlement UI.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes settlement population flow."
+      ],
+      "acceptance": [
+        "A survival settlement can produce or attract at least one free CitizenEntity without spawn eggs or admin commands.",
+        "A free citizen can take a prefab barracks or worker vacancy and convert through the existing pending-profession path.",
+        "Players can see why no citizens are available when vacancies exist but remain unfilled."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UI-008",
+      "title": "Settlement surveyor tool feedback and localization",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "SettlementSurveyorToolItem is the core UI for founding and manual validation, but it uses hardcoded English literals, cryptic enum names for modes/roles, no preview of captured zones, and no compact checklist before validation. This makes the main settlement loop difficult even when mechanics work.",
+      "scope": [
+        "Replace player-facing surveyor literals with localized keys and readable mode/role labels.",
+        "Add concise feedback for current anchor, selected role, captured zones, pending corner, and validation readiness.",
+        "Show validation result details in a way that separates blocking errors, warnings, and successful registered outputs."
+      ],
+      "acceptance": [
+        "Surveyor messages and tooltip text render from lang files in English and Russian.",
+        "Before validating, the player can tell which anchor, mode, role, and zones are currently stored on the tool.",
+        "After validation, the player sees whether a fort bootstrapped a settlement, a building was registered, or which requirement blocked success."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SEC-006",
+      "title": "Preserve political ownership when editing claims",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "ClaimEditScreen.save mutates the local claim and calls claim.setOwnerPoliticalEntityId(null) before MessageUpdateClaim. Editing a settlement claim can silently strip the political owner, breaking settlement faction binding and later worker/faction logic even if the edit only changed name or permissions.",
+      "scope": [
+        "Ensure claim edit packets preserve existing ownerPoliticalEntityId unless the server-side action is explicitly transferring ownership.",
+        "Move ownership-changing behavior behind a server-authorized intent with explicit validation and feedback.",
+        "Add regression coverage for editing claim name/permissions on a politically owned settlement claim."
+      ],
+      "acceptance": [
+        "Saving a claim name or permission edit does not clear the claim's political owner.",
+        "Settlement snapshots still report the same settlementFactionId after a non-ownership claim edit.",
+        "Any denied ownership transfer gives a visible server-side reason and does not mutate the client map as accepted."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "POL-004",
+      "title": "Player-facing settlement-to-state progression",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "PoliticalStatePromotionPolicy gates command-side promotion from settlement to state on starter fort or town hall plus storage and market, but the active War Room state UI only exposes create/rename/capital/form/color/charter actions. Players cannot discover or complete the faction progression loop from settlement infrastructure to political status in UI.",
+      "scope": [
+        "Add a player-facing promotion/status flow that shows current political entity status, required settlement infrastructure, and missing requirements.",
+        "Expose promotion action or guided command-equivalent UI when requirements are satisfied and authority allows it.",
+        "Keep validation server-authoritative and reuse PoliticalStatePromotionPolicy for command/UI parity.",
+        "Update MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md when implemented because this changes political progression UX."
+      ],
+      "acceptance": [
+        "A leader can see why a settlement cannot become a state, including missing starter fort/town hall, storage, or market.",
+        "When requirements are met, the UI or guided flow can request promotion and shows accepted or denied feedback.",
+        "Command and UI promotion checks agree on requirements and authority."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
