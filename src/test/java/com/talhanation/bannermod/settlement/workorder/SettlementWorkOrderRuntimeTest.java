@@ -113,6 +113,55 @@ class SettlementWorkOrderRuntimeTest {
     }
 
     @Test
+    void releaseClaimsForResidentReturnsActiveClaimToPending() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+
+        SettlementWorkOrder claimed = runtime.claim(CLAIM_A, RESIDENT_A, null, 100L, 50L).orElseThrow();
+
+        List<SettlementWorkOrder> released = runtime.releaseClaimsForResident(RESIDENT_A);
+
+        assertEquals(1, released.size());
+        assertEquals(claimed.orderUuid(), released.get(0).orderUuid());
+        assertEquals(SettlementWorkOrderStatus.PENDING, released.get(0).status());
+        assertTrue(runtime.currentClaim(RESIDENT_A).isEmpty());
+        assertEquals(1, runtime.pendingFor(CLAIM_A).size());
+    }
+
+    @Test
+    void releaseClaimsForResidentIsNoOpForResidentWithoutClaim() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+
+        assertTrue(runtime.releaseClaimsForResident(RESIDENT_A).isEmpty());
+        assertTrue(runtime.releaseClaimsForResident(null).isEmpty());
+        assertEquals(1, runtime.pendingFor(CLAIM_A).size());
+    }
+
+    @Test
+    void releaseClaimsForResidentOnlyReleasesThatResidentsClaim() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 1), null, 70, 10L));
+        runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
+                SettlementWorkOrderType.HARVEST_CROP, new BlockPos(1, 64, 2), null, 70, 12L));
+
+        SettlementWorkOrder claimedA = runtime.claim(CLAIM_A, RESIDENT_A, null, 100L, 50L).orElseThrow();
+        SettlementWorkOrder claimedB = runtime.claim(CLAIM_A, RESIDENT_B, null, 101L, 50L).orElseThrow();
+
+        runtime.releaseClaimsForResident(RESIDENT_A);
+
+        assertTrue(runtime.currentClaim(RESIDENT_A).isEmpty());
+        assertEquals(claimedB.orderUuid(), runtime.currentClaim(RESIDENT_B).orElseThrow().orderUuid());
+        assertEquals(SettlementWorkOrderStatus.CLAIMED,
+                runtime.find(claimedB.orderUuid()).orElseThrow().status());
+        assertEquals(SettlementWorkOrderStatus.PENDING,
+                runtime.find(claimedA.orderUuid()).orElseThrow().status());
+    }
+
+    @Test
     void completeRemovesOrder() {
         SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
         runtime.publish(SettlementWorkOrder.pending(CLAIM_A, BUILDING_A,
