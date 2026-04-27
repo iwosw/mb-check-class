@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
@@ -10,7 +9,6 @@ import com.talhanation.bannermod.network.messages.military.MessageUpdateGovernor
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -30,8 +28,8 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
 
     public GovernorScreen(GovernorContainer container, Inventory playerInventory, Component title) {
         super(TEXTURE, container, playerInventory, title);
-        this.imageWidth = 195;
-        this.imageHeight = 160;
+        this.imageWidth = 320;
+        this.imageHeight = 188;
         this.player = container.getPlayerEntity();
         this.recruit = container.getRecruit();
     }
@@ -41,9 +39,9 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         super.init();
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
-        addPolicyButtons(BannerModGovernorPolicy.GARRISON_PRIORITY, 88);
-        addPolicyButtons(BannerModGovernorPolicy.FORTIFICATION_PRIORITY, 112);
-        addPolicyButtons(BannerModGovernorPolicy.TAX_PRESSURE, 136);
+        addPolicyButtons(BannerModGovernorPolicy.GARRISON_PRIORITY, 108);
+        addPolicyButtons(BannerModGovernorPolicy.FORTIFICATION_PRIORITY, 132);
+        addPolicyButtons(BannerModGovernorPolicy.TAX_PRESSURE, 156);
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageOpenGovernorScreen(this.recruit.getUUID(), false));
     }
 
@@ -63,10 +61,9 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
     }
 
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        guiGraphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, 0xE0C6B98D);
+        guiGraphics.fill(leftPos + 3, topPos + 3, leftPos + imageWidth - 3, topPos + imageHeight - 3, 0xF0E6D8B8);
+        guiGraphics.fill(leftPos + 202, topPos + 22, leftPos + imageWidth - 8, topPos + imageHeight - 8, 0x503B2F20);
     }
 
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
@@ -87,10 +84,6 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         y += 12;
         guiGraphics.drawString(font, Component.literal("Heartbeat: " + state.lastHeartbeatTick), x, y, 4210752, false);
         y += 12;
-        guiGraphics.drawString(font, Component.literal("Garrison guidance: " + readableToken(state.garrisonRecommendation)), x, y, 4210752, false);
-        y += 12;
-        guiGraphics.drawString(font, Component.literal("Fortification advice: " + readableToken(state.fortificationRecommendation)), x, y, 4210752, false);
-        y += 16;
         guiGraphics.drawString(font, Component.literal("Incidents:"), x, y, 4210752, false);
         y += 12;
         for (String incident : state.incidents) {
@@ -101,19 +94,29 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
             guiGraphics.drawString(font, Component.literal("- none"), x, y, 4210752, false);
             y += 10;
         }
-        y += 6;
-        guiGraphics.drawString(font, Component.literal("Recommendations:"), x, y, 4210752, false);
-        y += 12;
-        for (String recommendation : state.recommendations) {
-            guiGraphics.drawString(font, Component.literal("- " + recommendation), x, y, 4210752, false);
-            y += 10;
+        guiGraphics.drawString(font, Component.literal("garrison priority: " + BannerModGovernorPolicy.GARRISON_PRIORITY.valueLabel(state.garrisonPriority)), leftPos + 10, topPos + 112, 4210752, false);
+        guiGraphics.drawString(font, Component.literal("fortification priority: " + BannerModGovernorPolicy.FORTIFICATION_PRIORITY.valueLabel(state.fortificationPriority)), leftPos + 10, topPos + 136, 4210752, false);
+        guiGraphics.drawString(font, Component.literal("tax pressure: " + BannerModGovernorPolicy.TAX_PRESSURE.valueLabel(state.taxPressure)), leftPos + 10, topPos + 160, 4210752, false);
+
+        int logisticsX = leftPos + 210;
+        int logisticsY = topPos + 10;
+        guiGraphics.drawString(font, Component.literal("Logistics"), logisticsX, logisticsY, 4210752, false);
+        logisticsY += 14;
+        for (String line : state.logisticsLines) {
+            guiGraphics.drawString(font, Component.literal(shorten(line, 26)), logisticsX, logisticsY, 4210752, false);
+            logisticsY += 11;
         }
-        if (state.recommendations.isEmpty()) {
-            guiGraphics.drawString(font, Component.literal("- none"), x, y, 4210752, false);
+        logisticsY += 4;
+        guiGraphics.drawString(font, Component.literal("Advice"), logisticsX, logisticsY, 4210752, false);
+        logisticsY += 12;
+        guiGraphics.drawString(font, Component.literal(shorten("Garrison: " + readableToken(state.garrisonRecommendation), 26)), logisticsX, logisticsY, 4210752, false);
+        logisticsY += 11;
+        guiGraphics.drawString(font, Component.literal(shorten("Fort: " + readableToken(state.fortificationRecommendation), 26)), logisticsX, logisticsY, 4210752, false);
+        logisticsY += 11;
+        for (int i = 0; i < Math.min(3, state.recommendations.size()); i++) {
+            guiGraphics.drawString(font, Component.literal(shorten("- " + readableToken(state.recommendations.get(i)), 26)), logisticsX, logisticsY, 4210752, false);
+            logisticsY += 10;
         }
-        guiGraphics.drawString(font, Component.literal("garrison priority: " + BannerModGovernorPolicy.GARRISON_PRIORITY.valueLabel(state.garrisonPriority)), leftPos + 10, topPos + 92, 4210752, false);
-        guiGraphics.drawString(font, Component.literal("fortification priority: " + BannerModGovernorPolicy.FORTIFICATION_PRIORITY.valueLabel(state.fortificationPriority)), leftPos + 10, topPos + 116, 4210752, false);
-        guiGraphics.drawString(font, Component.literal("tax pressure: " + BannerModGovernorPolicy.TAX_PRESSURE.valueLabel(state.taxPressure)), leftPos + 10, topPos + 140, 4210752, false);
     }
 
     public static void applyUpdate(UUID recruitId,
@@ -130,16 +133,24 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
                                      int treasuryBalance,
                                      int lastTreasuryNet,
                                      int projectedTreasuryBalance,
-                                     List<String> incidents,
-                                     List<String> recommendations) {
+                                      List<String> incidents,
+                                      List<String> recommendations,
+                                      List<String> logisticsLines) {
         latestState = new GovernorViewState(recruitId, settlementStatus, citizenCount, taxesDue, taxesCollected, lastHeartbeatTick,
                 garrisonRecommendation, fortificationRecommendation, garrisonPriority, fortificationPriority, taxPressure,
                 treasuryBalance, lastTreasuryNet, projectedTreasuryBalance,
-                new ArrayList<>(incidents), new ArrayList<>(recommendations));
+                new ArrayList<>(incidents), new ArrayList<>(recommendations), new ArrayList<>(logisticsLines));
     }
 
     private static String readableToken(String token) {
         return token == null || token.isBlank() ? "none" : token.replace('_', ' ');
+    }
+
+    private static String shorten(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) {
+            return value == null ? "" : value;
+        }
+        return value.substring(0, Math.max(0, maxLength - 3)) + "...";
     }
 
     private record GovernorViewState(UUID recruitId,
@@ -155,15 +166,16 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
                                      int taxPressure,
                                      int treasuryBalance,
                                      int lastTreasuryNet,
-                                     int projectedTreasuryBalance,
-                                     List<String> incidents,
-                                     List<String> recommendations) {
+                                      int projectedTreasuryBalance,
+                                      List<String> incidents,
+                                      List<String> recommendations,
+                                      List<String> logisticsLines) {
         private static GovernorViewState empty() {
             return new GovernorViewState(new UUID(0L, 0L), "unknown", 0, 0, 0, 0L,
                     "hold_course", "hold_course",
                     BannerModGovernorPolicy.DEFAULT_VALUE, BannerModGovernorPolicy.DEFAULT_VALUE, BannerModGovernorPolicy.DEFAULT_VALUE,
                     0, 0, 0,
-                    List.of(), List.of());
+                    List.of(), List.of(), List.of("No settlement logistics snapshot"));
         }
     }
 }

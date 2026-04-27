@@ -65,7 +65,7 @@
     {
       "id": "WAR-007",
       "title": "War Room declare-war wizard",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War Room is now the political/war hub, but starting a war still requires /war declare, so the player-facing warfare loop falls back to chat commands at the most important step.",
       "scope": [
@@ -79,12 +79,18 @@
         "/war declare remains available and behavior-equivalent to the UI path."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "War Room now has a Declare war wizard with attacker/defender/goal/casus belli selection. MessageDeclareWar routes UI declarations through WarDeclarationService, and WarDeclarationCommands now uses the same service for /war declare, preserving leader/op, offensive-status, cooldown, audit, notice, and failure-message behavior. Successful UI declaration sends an immediate war-state snapshot back to the player; server denial messages are sent via chat. Player guides and politics warfare docs updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "WarListScreen.init has info/state/siege/ally/refresh actions but no declare action.",
         "docs/POLITICS_WARFARE_EN.md documents declaration through /war declare.",
         "WarDeclarationCommands contains the command-only declaration path."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "WAR-008",
@@ -142,7 +148,7 @@
     {
       "id": "SETTLEMENT-009",
       "title": "Settlement logistics and work-order dashboard",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Settlement snapshots track stockpiles, desired goods, projects, market state, residents, buildings, and supply signals, but the Governor UI mostly exposes taxes, incidents, and recommendation tokens. Players cannot see why production or growth is stuck.",
       "scope": [
@@ -156,12 +162,18 @@
         "Governor screen no longer relies on raw token-like recommendations for core bottlenecks."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Governor sync now builds server-side logistics lines from BannerModSettlementSnapshot and SettlementWorkOrderRuntime: pending/claimed/recent completed work orders, shortage blockers, stockpile capacity/routes, missing goods, and project hint. GovernorScreen renders a read-only Logistics panel instead of relying only on raw recommendation tokens for bottlenecks. Player guides EN/RU updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "BannerModSettlementSnapshot contains rich settlement state.",
         "BannerModGovernorSnapshot carries rollups/tokens.",
         "GovernorScreen renders taxes, incidents, recommendations, and policy labels but not logistics/work-order detail."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "POL-002",
