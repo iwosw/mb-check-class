@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
@@ -45,11 +46,14 @@ public class MessageSetLeaderGroup implements Message<MessageSetLeaderGroup> {
                 || !player.getBoundingBox().inflate(100D).intersects(leader.getBoundingBox())) {
             return;
         }
+        if (!RecruitCommandAuthority.canDirectlyControl(player, leader)) {
+            return;
+        }
         if (groupUUID == null) {
             leader.setGroupUUID(null);
             return;
         }
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        RecruitsGroup group = RecruitCommandAuthority.ownedGroup(player, groupUUID);
         if (group == null) return;
         leader.setGroupUUID(group.getUUID());
         RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
