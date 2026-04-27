@@ -53,7 +53,7 @@ After coding, provide:
 - Verification results
 
 7. Multi-agent rule isolation
-- This repo carries multiple agent rule files: `AGENTS.md` (opencode), `CLAUDE.md` (Claude Code), `GEMINI.md` (Gemini), `.cursorrules` + `.cursor/` (Cursor), `.windsurf/` (Windsurf), `.github/copilot-instructions.md` (Copilot).
+- This repo carries multiple agent rule files: `AGENTS.md` (opencode), `CLAUDE.md` (Claude Code), `GEMINI.md` (Gemini), `.cursor/` (Cursor), `.windsurf/` (Windsurf), `.github/copilot-instructions.md` (Copilot).
 - Each file applies only to its own agent.
 - When adding or changing a rule, edit only the file matching the agent currently running — do not push opencode-specific rules into a sibling file.
 

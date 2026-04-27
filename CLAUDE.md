@@ -27,7 +27,7 @@ This workspace is the realized merged runtime of the Forge mods historically liv
 
 ## Agent rule files
 
-This repo carries multiple agent rule files: `CLAUDE.md` (Claude Code), `AGENTS.md` (opencode), `GEMINI.md` (Gemini), `.cursorrules` + `.cursor/` (Cursor), `.windsurf/` (Windsurf), `.github/copilot-instructions.md` (Copilot). Each file applies only to its own agent. When adding or changing a rule, edit only the file matching the agent currently running — do not push Claude-specific rules into a sibling file.
+This repo carries multiple agent rule files: `CLAUDE.md` (Claude Code), `AGENTS.md` (opencode), `GEMINI.md` (Gemini), `.cursor/` (Cursor), `.windsurf/` (Windsurf), `.github/copilot-instructions.md` (Copilot). Each file applies only to its own agent. When adding or changing a rule, edit only the file matching the agent currently running — do not push Claude-specific rules into a sibling file.
 
 ## Worktree freshness
 

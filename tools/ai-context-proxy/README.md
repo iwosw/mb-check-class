@@ -95,7 +95,6 @@ This repository wires the tool into common agent entrypoints:
 - `AGENTS.md` tells opencode/Codex-style agents to use `ctx` first.
 - `CLAUDE.md` tells Claude Code to use `ctx` first.
 - `.cursor/rules/ai-context-proxy.mdc` applies the same policy in Cursor.
-- `.cursorrules` covers older Cursor rule loading.
 - `.github/copilot-instructions.md` covers GitHub Copilot Chat.
 - `GEMINI.md` covers Gemini-style agents.
 - `.windsurf/rules/ai-context-proxy.md` covers Windsurf-style agents.
