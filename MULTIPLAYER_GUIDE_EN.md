@@ -136,9 +136,11 @@ War Room is the main in-game UI for war and politics:
 - **Battle window banner**: top of the screen shows the current battle-window phase ("OPEN FRI 19:00-20:30 — closes in 45m" / "CLOSED — next SUN 18:00-19:30 in 1d 22h"). Green = open, gray = closed. The schedule is server-configured (`BattleWindows` in `bannermod-war-server.toml`) and synced to the client automatically.
 - **Active wars list** on the left: each war shows state (`DECLARED`/`ACTIVE`/`IN_SIEGE_WINDOW`/`RESOLVED`/`CANCELLED`), attacker, defender.
 - **Detail panel** on the right: attacker, defender, war state, goal type, casus belli, declaration time, allies, target positions, siege standards.
-- Buttons: `Attacker info` / `Defender info` (open `PoliticalEntityInfoScreen`), `States` (state list), `Place siege here` (drop a siege standard at your current position), `Refresh`, `Close`.
+- Buttons: `Attacker info` / `Defender info` (open `PoliticalEntityInfoScreen`), `States` (state list), `Declare war`, `Place siege here` (drop a siege standard at your current position), `Refresh`, `Close`.
 
 `Place siege here` is enabled only when you are the leader of one of the war's sides and the war is not `RESOLVED`/`CANCELLED`. It sends `MessagePlaceSiegeStandardHere`, and the server validates against the same rules as `/bannermod siege place`.
+
+`Declare war` opens a small War Room wizard where a state leader picks attacker, defender, goal, and optional casus belli text. The server still applies the same validation and cooldown denial reasons as `/bannermod war declare`, and the command remains available.
 
 When you stand inside the radius of a siege standard belonging to an active war, an additional HUD banner shows the war name, owning side, and current war state.
 

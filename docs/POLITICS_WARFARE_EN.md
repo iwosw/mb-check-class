@@ -34,8 +34,8 @@ Politics, claims, war declarations, allies, siege standards, occupations, and ou
 
 ## War Declaration Commands
 
-- Current UI coverage starts after a war exists. The current code has no declare-war button in `WarListScreen`; declaring a new war uses the command path.
-- Declare: `/war declare <attacker> <defender> <goal> [casusBelli]`.
+- War Room exposes a declare-war wizard in `WarListScreen`; it reuses the same server-side validation and cooldown denial reasons as the command path.
+- Declare command remains available: `/war declare <attacker> <defender> <goal> [casusBelli]`.
 - Info: `/war info <warId>`.
 - List: `/war list`.
 - Cancel: `/war cancel <warId>`.

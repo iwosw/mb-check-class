@@ -65,7 +65,7 @@
     {
       "id": "WAR-007",
       "title": "War Room declare-war wizard",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War Room is now the political/war hub, but starting a war still requires /war declare, so the player-facing warfare loop falls back to chat commands at the most important step.",
       "scope": [
@@ -79,12 +79,18 @@
         "/war declare remains available and behavior-equivalent to the UI path."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "War Room now has a Declare war wizard with attacker/defender/goal/casus belli selection. MessageDeclareWar routes UI declarations through WarDeclarationService, and WarDeclarationCommands now uses the same service for /war declare, preserving leader/op, offensive-status, cooldown, audit, notice, and failure-message behavior. Successful UI declaration sends an immediate war-state snapshot back to the player; server denial messages are sent via chat. Player guides and politics warfare docs updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "WarListScreen.init has info/state/siege/ally/refresh actions but no declare action.",
         "docs/POLITICS_WARFARE_EN.md documents declaration through /war declare.",
         "WarDeclarationCommands contains the command-only declaration path."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "WAR-008",

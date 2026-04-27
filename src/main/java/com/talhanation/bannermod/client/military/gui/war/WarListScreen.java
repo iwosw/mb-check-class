@@ -56,6 +56,7 @@ public class WarListScreen extends Screen {
     private Button openDefenderBtn;
     private Button placeSiegeBtn;
     private Button alliesBtn;
+    private Button declareBtn;
     private Button statesBtn;
     private Button refreshBtn;
     private Button closeBtn;
@@ -89,12 +90,15 @@ public class WarListScreen extends Screen {
         int alliesY = guiTop + LIST_TOP_OFFSET + LIST_VISIBLE * ROW_H + 4;
         alliesBtn = Button.builder(Component.literal("Allies for selected war"), btn -> openAllies())
                 .bounds(guiLeft + 8, alliesY, 184, 18).build();
+        declareBtn = Button.builder(Component.literal("Declare war"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)))
+                .bounds(guiLeft + 8, alliesY + 22, 184, 18).build();
 
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
         addRenderableWidget(statesBtn);
         addRenderableWidget(placeSiegeBtn);
         addRenderableWidget(alliesBtn);
+        addRenderableWidget(declareBtn);
         addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
 
@@ -147,6 +151,12 @@ public class WarListScreen extends Screen {
         }
         if (alliesBtn != null) {
             alliesBtn.active = has;
+        }
+        if (declareBtn != null) {
+            declareBtn.active = WarClientState.entities().stream().anyMatch(entity -> {
+                Player player = Minecraft.getInstance().player;
+                return player != null && player.getUUID().equals(entity.leaderUuid()) && entity.status().canDeclareOffensiveWar();
+            });
         }
     }
 

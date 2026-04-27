@@ -9,8 +9,6 @@ import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import com.talhanation.bannermod.war.WarRuntimeContext;
-import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
-import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.cooldown.WarCooldownPolicy;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
@@ -19,6 +17,7 @@ import com.talhanation.bannermod.war.rp.WarNoticeService;
 import com.talhanation.bannermod.war.runtime.ClaimRepublisher;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRuntime;
+import com.talhanation.bannermod.war.runtime.WarDeclarationService;
 import com.talhanation.bannermod.war.runtime.WarGoalType;
 import com.talhanation.bannermod.war.runtime.WarOutcomeApplier;
 import net.minecraft.commands.CommandSourceStack;
@@ -32,6 +31,7 @@ import net.minecraft.world.level.ChunkPos;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class WarDeclarationCommands {
     private WarDeclarationCommands() {
@@ -102,14 +102,6 @@ public final class WarDeclarationCommands {
 
         PoliticalEntityRecord attacker = WarCommandSupport.requireEntity(context, attackerToken);
         PoliticalEntityRecord defender = WarCommandSupport.requireEntity(context, defenderToken);
-        if (!WarCommandSupport.isLeaderOrOp(context, attacker)) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
-        }
-        if (!attacker.status().canDeclareOffensiveWar()) {
-            context.getSource().sendFailure(Component.literal(
-                    "Attacker status " + attacker.status().name() + " cannot declare offensive war."));
-            return 0;
-        }
         WarGoalType goal;
         try {
             goal = WarGoalType.valueOf(goalToken.toUpperCase(java.util.Locale.ROOT));
@@ -119,48 +111,15 @@ public final class WarDeclarationCommands {
         }
 
         ServerLevel level = WarCommandSupport.level(context);
-        WarDeclarationRuntime declarations = WarRuntimeContext.declarations(level);
-        long gameTime = level.getGameTime();
-        long peaceCooldownTicks = WarServerConfig.peaceCooldownTicks();
-        int defenderDailyLimit = WarServerConfig.DefenderDailyDeclarations.get();
-
-        WarCooldownPolicy.Result cooldown = WarCooldownPolicy.canDeclareWithImmunity(
-                attacker.id(), defender.id(),
-                declarations.all(), gameTime, peaceCooldownTicks, defenderDailyLimit,
-                WarRuntimeContext.demilitarizations(level),
-                WarRuntimeContext.cooldowns(level));
-        if (!cooldown.valid()) {
-            context.getSource().sendFailure(Component.literal("Declaration blocked: " + cooldown.reason()));
+        UUID actorUuid = context.getSource().getEntity() == null ? null : context.getSource().getEntity().getUUID();
+        WarDeclarationService.Result result = WarDeclarationService.declare(
+                context.getSource().getServer(), level, actorUuid, context.getSource().hasPermission(2),
+                attacker, defender, goal, casusBelli);
+        if (!result.success()) {
+            context.getSource().sendFailure(result.message());
             return 0;
         }
-
-        long minDelay = WarServerConfig.MinDeclarationDelayTicks.get();
-        Optional<WarDeclarationRecord> declared = declarations.declareWar(
-                attacker.id(),
-                defender.id(),
-                goal,
-                casusBelli,
-                List.of(),
-                List.of(),
-                List.of(),
-                gameTime,
-                minDelay
-        );
-        if (declared.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Failed to declare war."));
-            return 0;
-        }
-
-        WarAuditLogSavedData audit = WarRuntimeContext.audit(level);
-        WarDeclarationRecord war = declared.get();
-        audit.append(war.id(), "WAR_DECLARED",
-                "attacker=" + attacker.id() + ";defender=" + defender.id() + ";goal=" + goal.name(),
-                gameTime);
-
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        WarNoticeService.broadcastDeclaration(context.getSource().getServer(), war, registry);
-        WarCommandSupport.replyComponent(context,
-                Component.literal("War declared: ").append(WarDeclarationFormatter.summary(war, registry)));
+        WarCommandSupport.replyComponent(context, result.message());
         return 1;
     }
 
