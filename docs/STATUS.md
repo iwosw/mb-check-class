@@ -18,6 +18,7 @@ Last updated: 2026-04-26.
 - Worker/settlement claim binding is being normalized away from legacy faction IDs toward political-entity UUIDs and scoreboard team names.
 - Manual validated farm, mine, lumber camp, and architect workshop buildings now create citizen profession vacancies and show the vacancy output during validation/inspection.
 - Claim deletion packets now resolve and delete only persisted server-side claims after the same owner/co-leader/admin authority check used by claim updates.
+- Face, ranged-fire, and upkeep military packets now use the real server sender UUID for authority instead of client-supplied owner UUID fields.
 - GameTests are being hardened around claim worker growth, dedicated-server ownership, player cycle, settlement degradation, and upkeep currency sourcing.
 
 ## Known Open Areas

@@ -244,7 +244,7 @@
     {
       "id": "SEC-002",
       "title": "Remove spoofable owner UUIDs from military packets",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Some server-bound military packets still use client-supplied player UUIDs for filtering or effects, which creates spoof risk and inconsistent authority compared with context.getSender().",
       "scope": [
@@ -258,11 +258,17 @@
         "Tests cover face-command, ranged-fire, and upkeep spoof attempts."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "MessageFaceCommand, MessageRangedFire, and MessageUpkeepEntity now derive the actor UUID from context.getSender().getUUID() and ignore the client-supplied owner UUID field for server-side filtering/effects while preserving packet codec compatibility. Added MilitaryPacketActorIdentityTest covering spoofed wire UUID attempts for face-command, ranged-fire, and upkeep paths. Verified with ./gradlew compileJava and ./gradlew test --tests com.talhanation.bannermod.network.messages.military.MilitaryPacketActorIdentityTest."
+        }
+      ],
       "evidence": [
         "MessageFaceCommand, MessageRangedFire, and MessageUpkeepEntity use client-provided UUIDs.",
         "CommandIntentDispatcher assumes caller supplied already-authorized actors."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SEC-003",
