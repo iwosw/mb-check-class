@@ -1155,7 +1155,7 @@
     {
       "id": "SETTLEMENT-011",
       "title": "Starter workers have actionable first jobs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "SettlementBootstrapService spawns farmer, miner, lumberjack, and builder as starter citizens, but WorkerSettlementSpawner only seeds a default CropArea for farmers. Miner, lumberjack, and builder can enter the new settlement unassigned until the player creates areas, which makes the bootstrap success message overpromise immediate settlement life.",
       "scope": [
@@ -1169,8 +1169,14 @@
         "A focused test or GameTest covers the starter bootstrap assignments/waiting reasons for farmer, miner, lumberjack, and builder."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Bootstrap success feedback now explicitly distinguishes starter workers from free citizens: farmer is ready with a starter crop area, miner waits for a mine, lumberjack waits for a lumber camp, and builder waits for an architect workshop/build area. Player guides EN/RU updated with the same early-settlement mechanic. Added SettlementBootstrapServiceTest for the ready/waiting message. Verified with ./gradlew test --tests com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapServiceTest compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SETTLEMENT-012",
