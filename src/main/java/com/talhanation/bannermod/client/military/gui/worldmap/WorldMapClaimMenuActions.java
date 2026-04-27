@@ -1,9 +1,8 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.network.messages.military.MessageClaimIntent;
 import com.talhanation.bannermod.network.messages.military.MessageTeleportPlayer;
-import com.talhanation.bannermod.network.messages.military.MessageUpdateClaim;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -81,15 +80,12 @@ final class WorldMapClaimMenuActions {
 
     private void removeSelectedChunk(WorldMapScreen screen) {
         if (!screen.selectedClaim.containsChunk(screen.selectedChunk)) return;
-        screen.selectedClaim.removeChunk(screen.selectedChunk);
-        ClientManager.markClaimsChanged();
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClaimIntent(MessageClaimIntent.Action.REMOVE_CHUNK, screen.selectedClaim.getUUID(), screen.selectedChunk));
         screen.selectedChunk = null;
-        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
     }
 
     private void deleteSelectedClaim(WorldMapScreen screen) {
-        screen.selectedClaim.isRemoved = true;
-        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(screen.selectedClaim));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClaimIntent(MessageClaimIntent.Action.DELETE, screen.selectedClaim.getUUID(), screen.selectedChunk));
         screen.selectedClaim = null;
     }
 

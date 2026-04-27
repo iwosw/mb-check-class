@@ -104,6 +104,7 @@ public class BannerModNetworkBootstrap {
         MessageToClientUpdateClaims.class,
         MessageUpdateClaim.class,
         MessageDeleteClaim.class,
+        MessageClaimIntent.class,
         MessageToClientReceiveRoute.class,
         MessageTransferRoute.class,
         MessageToClientUpdateGroups.class,
