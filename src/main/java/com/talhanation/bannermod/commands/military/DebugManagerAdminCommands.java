@@ -35,6 +35,7 @@ final class DebugManagerAdminCommands {
             "worker.index",
             "work_area.index",
             "settlement.heartbeat",
+            "recruit.render",
             "network"
     };
 

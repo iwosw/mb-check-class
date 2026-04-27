@@ -39,6 +39,7 @@ public final class RecruitCrowdRenderEvents {
     public static void onRenderLivingPre(RenderLivingEvent.Pre<?, ?> event) {
         if (event.getEntity() instanceof AbstractRecruitEntity recruit
                 && RecruitRenderLod.shouldUseCrowdImpostor(recruit)) {
+            RuntimeProfilingCounters.increment("recruit.render.normal_skipped_for_impostor");
             event.setCanceled(true);
         }
     }
@@ -63,18 +64,24 @@ public final class RecruitCrowdRenderEvents {
         if (recruits.isEmpty()) {
             return;
         }
+        RuntimeProfilingCounters.add("recruit.render.crowd_query_results", recruits.size());
 
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
         Set<RenderType> usedRenderTypes = new HashSet<>();
         int rendered = 0;
+        int candidates = 0;
+        int frustumCulled = 0;
         float partialTick = event.getPartialTick();
+        long startNanos = System.nanoTime();
 
         for (AbstractRecruitEntity recruit : recruits) {
             if (!RecruitRenderLod.shouldUseCrowdImpostor(recruit)) {
                 continue;
             }
+            candidates++;
             if (event.getFrustum() != null && !event.getFrustum().isVisible(recruit.getBoundingBox())) {
+                frustumCulled++;
                 continue;
             }
             ResourceLocation texture = crowdTexture(recruit);
@@ -90,6 +97,13 @@ public final class RecruitCrowdRenderEvents {
         }
         if (rendered > 0) {
             RuntimeProfilingCounters.add("recruit.render.crowd_impostors", rendered);
+            RuntimeProfilingCounters.add("recruit.render.crowd_impostor_nanos", System.nanoTime() - startNanos);
+        }
+        if (candidates > 0) {
+            RuntimeProfilingCounters.add("recruit.render.crowd_impostor_candidates", candidates);
+        }
+        if (frustumCulled > 0) {
+            RuntimeProfilingCounters.add("recruit.render.crowd_impostor_frustum_culled", frustumCulled);
         }
     }
 
