@@ -1414,5 +1414,6 @@
   "item.bannermod.settlement_surveyor_tool": "Settlement Surveyor Tool",
   "key.bannermod.drag_select": "Drag-select recruits",
   "key.categories.bannermod": "Bannermod",
-  "key.bannermod.war_room_key": "Open War Room"
+  "key.bannermod.war_room_key": "Open War Room",
+  "bannermod.morale.routed": "%s has routed: %s"
 }

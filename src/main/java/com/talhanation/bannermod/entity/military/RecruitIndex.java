@@ -147,14 +147,20 @@ public final class RecruitIndex {
         int chunkRadius = Math.max(1, (int) Math.ceil(radius / 16.0D));
         double radiusSqr = radius * radius;
         List<AbstractRecruitEntity> results = new ArrayList<>();
-        for (UUID uuid : index.byUuid.keySet()) {
-            Entity entity = serverLevel.getEntity(uuid);
-            if (!(entity instanceof AbstractRecruitEntity recruit)) continue;
-            if (aliveOnly && !recruit.isAlive()) continue;
-            ChunkPos recruitChunk = recruit.chunkPosition();
-            if (Math.abs(recruitChunk.x - centerChunk.x) > chunkRadius || Math.abs(recruitChunk.z - centerChunk.z) > chunkRadius) continue;
-            if (recruit.distanceToSqr(center) > radiusSqr) continue;
-            results.add(recruit);
+        // Walk only chunks the radius covers — the chunk-keyed bucket pre-filters to
+        // recruits, so we never visit non-recruit entities or recruits outside the box.
+        for (int cx = centerChunk.x - chunkRadius; cx <= centerChunk.x + chunkRadius; cx++) {
+            for (int cz = centerChunk.z - chunkRadius; cz <= centerChunk.z + chunkRadius; cz++) {
+                Set<UUID> bucket = index.byChunk.get(new ChunkPos(cx, cz));
+                if (bucket == null) continue;
+                for (UUID uuid : bucket) {
+                    Entity entity = serverLevel.getEntity(uuid);
+                    if (!(entity instanceof AbstractRecruitEntity recruit)) continue;
+                    if (aliveOnly && !recruit.isAlive()) continue;
+                    if (recruit.distanceToSqr(center) > radiusSqr) continue;
+                    results.add(recruit);
+                }
+            }
         }
         counters.indexedCandidates.add(results.size());
         return results;
@@ -172,13 +178,23 @@ public final class RecruitIndex {
             return null;
         }
 
+        int minCx = (int) Math.floor(box.minX) >> 4;
+        int maxCx = (int) Math.floor(box.maxX) >> 4;
+        int minCz = (int) Math.floor(box.minZ) >> 4;
+        int maxCz = (int) Math.floor(box.maxZ) >> 4;
         List<AbstractRecruitEntity> results = new ArrayList<>();
-        for (UUID uuid : index.byUuid.keySet()) {
-            Entity entity = serverLevel.getEntity(uuid);
-            if (!(entity instanceof AbstractRecruitEntity recruit)) continue;
-            if (aliveOnly && !recruit.isAlive()) continue;
-            if (!recruit.getBoundingBox().intersects(box)) continue;
-            results.add(recruit);
+        for (int cx = minCx; cx <= maxCx; cx++) {
+            for (int cz = minCz; cz <= maxCz; cz++) {
+                Set<UUID> bucket = index.byChunk.get(new ChunkPos(cx, cz));
+                if (bucket == null) continue;
+                for (UUID uuid : bucket) {
+                    Entity entity = serverLevel.getEntity(uuid);
+                    if (!(entity instanceof AbstractRecruitEntity recruit)) continue;
+                    if (aliveOnly && !recruit.isAlive()) continue;
+                    if (!recruit.getBoundingBox().intersects(box)) continue;
+                    results.add(recruit);
+                }
+            }
         }
         counters.indexedCandidates.add(results.size());
         return results;
@@ -302,16 +318,43 @@ public final class RecruitIndex {
         }
     }
 
+    /**
+     * Per-tick hook so the chunk-keyed bucket follows recruits as they cross chunk
+     * borders. Vanilla does not raise an "entity changed chunk" event, so we resync
+     * lazily on the recruit tick: if {@link #lastKnownChunk} disagrees with the
+     * recruit's current chunk position we re-bucket. The cost is one map lookup per
+     * recruit tick — cheap and self-healing if chunks unload mid-flight.
+     */
+    public void onRecruitTick(AbstractRecruitEntity recruit) {
+        if (recruit == null) return;
+        if (!(recruit.level() instanceof ServerLevel level)) return;
+        levelIndex(level).touch(recruit);
+    }
+
     private static final class LevelIndex {
         private final Map<UUID, UUID> byUuid = new ConcurrentHashMap<>();
         private final Map<UUID, Set<UUID>> byOwner = new ConcurrentHashMap<>();
         private final Map<UUID, Set<UUID>> byGroup = new ConcurrentHashMap<>();
+        /**
+         * Chunk-keyed recruit bucket. Lets {@link #allInBox} and {@link #allInRange}
+         * iterate only the chunks intersecting the query AABB, with a recruit-only
+         * candidate set inside each — strictly fewer iterations than vanilla's
+         * {@code getEntitiesOfClass(AbstractRecruitEntity.class, box)} when chunks
+         * also contain non-recruit entities (mobs / items / players), and equal when
+         * they don't.
+         */
+        private final Map<ChunkPos, Set<UUID>> byChunk = new ConcurrentHashMap<>();
+        /** Last chunk we bucketed each recruit into; used by {@link #touch} to detect crossings. */
+        private final Map<UUID, ChunkPos> lastKnownChunk = new ConcurrentHashMap<>();
 
         private void add(AbstractRecruitEntity recruit) {
             UUID uuid = recruit.getUUID();
             byUuid.put(uuid, uuid);
             addTo(byOwner, recruit.getOwnerUUID(), uuid);
             addTo(byGroup, recruit.getGroup(), uuid);
+            ChunkPos cp = recruit.chunkPosition();
+            addToChunk(cp, uuid);
+            lastKnownChunk.put(uuid, cp);
         }
 
         private void remove(AbstractRecruitEntity recruit) {
@@ -319,6 +362,30 @@ public final class RecruitIndex {
             removeUuid(uuid);
             removeFrom(byOwner, recruit.getOwnerUUID(), uuid);
             removeFrom(byGroup, recruit.getGroup(), uuid);
+            ChunkPos cp = lastKnownChunk.remove(uuid);
+            if (cp == null) {
+                cp = recruit.chunkPosition();
+            }
+            removeFromChunk(cp, uuid);
+        }
+
+        private void touch(AbstractRecruitEntity recruit) {
+            UUID uuid = recruit.getUUID();
+            if (!byUuid.containsKey(uuid)) {
+                // Index missed onJoin (e.g. captured before subscriber registered) — heal lazily.
+                add(recruit);
+                return;
+            }
+            ChunkPos current = recruit.chunkPosition();
+            ChunkPos previous = lastKnownChunk.get(uuid);
+            if (previous != null && previous.equals(current)) {
+                return;
+            }
+            if (previous != null) {
+                removeFromChunk(previous, uuid);
+            }
+            addToChunk(current, uuid);
+            lastKnownChunk.put(uuid, current);
         }
 
         private void removeUuid(UUID uuid) {
@@ -348,6 +415,21 @@ public final class RecruitIndex {
             uuids.remove(recruitUuid);
             if (uuids.isEmpty()) {
                 index.remove(key);
+            }
+        }
+
+        private void addToChunk(ChunkPos cp, UUID recruitUuid) {
+            if (cp == null) return;
+            byChunk.computeIfAbsent(cp, ignored -> ConcurrentHashMap.newKeySet()).add(recruitUuid);
+        }
+
+        private void removeFromChunk(ChunkPos cp, UUID recruitUuid) {
+            if (cp == null) return;
+            Set<UUID> uuids = byChunk.get(cp);
+            if (uuids == null) return;
+            uuids.remove(recruitUuid);
+            if (uuids.isEmpty()) {
+                byChunk.remove(cp);
             }
         }
     }

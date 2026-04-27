@@ -258,7 +258,12 @@ public final class PrefabAutoStaffingRuntime {
                 occupancy.merge(bound, 1, Integer::sum);
             }
         }
-        for (AbstractRecruitEntity recruit : level.getEntitiesOfClass(AbstractRecruitEntity.class, search)) {
+        java.util.List<AbstractRecruitEntity> recruits = com.talhanation.bannermod.entity.military.RecruitIndex
+                .instance().allInBox(level, search, true);
+        if (recruits == null) {
+            recruits = level.getEntitiesOfClass(AbstractRecruitEntity.class, search);
+        }
+        for (AbstractRecruitEntity recruit : recruits) {
             UUID bound = recruit.getCitizenCore().getBoundWorkAreaUUID();
             if (bound != null) {
                 occupancy.merge(bound, 1, Integer::sum);

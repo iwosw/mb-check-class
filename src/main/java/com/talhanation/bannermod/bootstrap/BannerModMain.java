@@ -10,6 +10,7 @@ import com.talhanation.bannermod.events.VillagerEvents;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.events.civilian.SettlementMutationRefreshEvents;
+import com.talhanation.bannermod.events.civilian.SettlementWorkOrderClaimReleaseEvents;
 import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
 import com.talhanation.bannermod.client.military.events.ClientPlayerEvents;
 import com.talhanation.bannermod.client.military.events.KeyEvents;
@@ -148,6 +149,7 @@ public class BannerModMain {
         MinecraftForge.EVENT_BUS.register(new WarStateBroadcaster());
         MinecraftForge.EVENT_BUS.register(new com.talhanation.bannermod.war.events.WarOccupationTaxTicker());
         MinecraftForge.EVENT_BUS.register(new SettlementMutationRefreshEvents());
+        MinecraftForge.EVENT_BUS.register(new SettlementWorkOrderClaimReleaseEvents());
         if (MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers()) {
             // Legacy recruits/workers update checkers target retired mod ids and stay disabled
             // until bannermod has one release-facing update contract.

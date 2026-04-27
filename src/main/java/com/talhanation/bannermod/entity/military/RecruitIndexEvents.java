@@ -21,6 +21,11 @@ public final class RecruitIndexEvents {
     @SubscribeEvent
     public static void onLeave(EntityLeaveLevelEvent event) {
         RecruitIndex.instance().onEntityLeave(event.getEntity());
+        if (event.getEntity() instanceof AbstractRecruitEntity recruit) {
+            com.talhanation.bannermod.combat.RecruitMoraleService.invalidate(recruit.getUUID());
+            com.talhanation.bannermod.combat.CavalryChargeService.invalidate(recruit.getUUID());
+            com.talhanation.bannermod.combat.RangedSpacingService.invalidate(recruit.getUUID());
+        }
     }
 
     @SubscribeEvent

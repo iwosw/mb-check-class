@@ -50,6 +50,40 @@ public class SiegeStandardRuntime {
         return removed;
     }
 
+    /**
+     * Apply a single damage event to the standard's control pool. Returns the policy's
+     * {@link com.talhanation.bannermod.combat.SiegeObjectivePolicy.DamageOutcome} so the
+     * caller can write exactly one destruction-audit row when the pool drops to zero.
+     *
+     * <p>The runtime updates the stored record in place; persistence is the
+     * {@link SiegeStandardSavedData} layer's job and runs on the dirty listener tick.</p>
+     */
+    public java.util.Optional<com.talhanation.bannermod.combat.SiegeObjectivePolicy.DamageOutcome>
+    applyDamage(UUID id, int damage) {
+        SiegeStandardRecord existing = standardsById.get(id);
+        if (existing == null) {
+            return java.util.Optional.empty();
+        }
+        com.talhanation.bannermod.combat.SiegeObjectivePolicy.DamageOutcome outcome =
+                com.talhanation.bannermod.combat.SiegeObjectivePolicy.applyDamage(
+                        existing.controlPool(), damage, existing.maxControlPool());
+        SiegeStandardRecord updated = existing.withControlPool(outcome.controlAfter());
+        standardsById.put(id, updated);
+        dirtyListener.run();
+        return java.util.Optional.of(outcome);
+    }
+
+    /** Return the standard whose pos matches {@code pos}, or empty if none. */
+    public java.util.Optional<SiegeStandardRecord> byPos(BlockPos pos) {
+        if (pos == null) return java.util.Optional.empty();
+        for (SiegeStandardRecord record : standardsById.values()) {
+            if (record.pos().equals(pos)) {
+                return java.util.Optional.of(record);
+            }
+        }
+        return java.util.Optional.empty();
+    }
+
     public Optional<SiegeStandardRecord> byId(UUID id) {
         return Optional.ofNullable(standardsById.get(id));
     }

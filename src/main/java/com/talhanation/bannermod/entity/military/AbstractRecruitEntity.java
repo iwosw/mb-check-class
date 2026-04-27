@@ -379,6 +379,8 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
     ////////////////////////////////////REGISTER////////////////////////////////////
 
     protected void registerGoals() {
+        this.goalSelector.addGoal(0, new com.talhanation.bannermod.ai.military.RecruitMoraleRoutGoal(this));
+        this.goalSelector.addGoal(7, new com.talhanation.bannermod.ai.military.RecruitSiegeEscortGoal(this));
         this.goalSelector.addGoal(4, new BlockWithWeapon(this));
         this.goalSelector.addGoal(0, new RecruitFloatGoal(this));
         this.goalSelector.addGoal(1, new RecruitQuaffGoal(this));

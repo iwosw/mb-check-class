@@ -65,10 +65,23 @@ final class RecruitCombatDecisions {
                 damage = (float) (damage * mult);
             }
         }
+        // COMBAT-004: cavalry-charge first-hit bonus / pike-brace penalty. Applies on the
+        // outgoing damage so the multiplier reaches non-recruit targets too (the inbound
+        // RecruitCombatOverrideService.applyBraceAgainstCavalryMitigation only fires when the
+        // target is a recruit, which would silently drop the bonus against vanilla mobs).
+        double chargeMultiplier = com.talhanation.bannermod.combat.CavalryChargeService
+                .computeChargeMultiplierFor(recruit, entity);
+        if (chargeMultiplier != 1.0D) {
+            damage = (float) (damage * chargeMultiplier);
+        }
         boolean flag = entity.hurt(recruit.damageSources().mobAttack(recruit), damage);
         if (flag) {
             recruit.doEnchantDamageEffects(recruit, entity);
             recruit.setLastHurtMob(entity);
+            // COMBAT-004: a successful melee hit during a CHARGING window transitions the
+            // attacker to EXHAUSTED via CavalryChargePolicy.advance — that's the gate that
+            // stops the rider from spamming +100% bonus every swing.
+            com.talhanation.bannermod.combat.CavalryChargeService.onChargeHit(recruit);
         }
         recruit.addXp(1);
         if (recruit.getHunger() > 0) recruit.setHunger(recruit.getHunger() - 0.1F);

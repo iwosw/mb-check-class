@@ -11,10 +11,28 @@ public record SiegeStandardRecord(
         UUID sidePoliticalEntityId,
         BlockPos pos,
         int radius,
-        long placedAtGameTime
+        long placedAtGameTime,
+        int controlPool,
+        int maxControlPool
 ) {
     public SiegeStandardRecord {
         radius = Math.max(8, radius);
+        if (maxControlPool <= 0) {
+            maxControlPool = com.talhanation.bannermod.combat.SiegeObjectivePolicy.DEFAULT_CONTROL_POOL;
+        }
+        controlPool = Math.max(0, Math.min(maxControlPool, controlPool));
+    }
+
+    public SiegeStandardRecord(UUID id, UUID warId, UUID sidePoliticalEntityId,
+                               BlockPos pos, int radius, long placedAtGameTime) {
+        this(id, warId, sidePoliticalEntityId, pos, radius, placedAtGameTime,
+                com.talhanation.bannermod.combat.SiegeObjectivePolicy.DEFAULT_CONTROL_POOL,
+                com.talhanation.bannermod.combat.SiegeObjectivePolicy.DEFAULT_CONTROL_POOL);
+    }
+
+    public SiegeStandardRecord withControlPool(int newControl) {
+        return new SiegeStandardRecord(id, warId, sidePoliticalEntityId, pos, radius,
+                placedAtGameTime, newControl, maxControlPool);
     }
 
     public boolean contains(BlockPos point) {
@@ -38,17 +56,25 @@ public record SiegeStandardRecord(
         tag.putInt("Z", pos.getZ());
         tag.putInt("Radius", radius);
         tag.putLong("PlacedAtGameTime", placedAtGameTime);
+        tag.putInt("ControlPool", controlPool);
+        tag.putInt("MaxControlPool", maxControlPool);
         return tag;
     }
 
     public static SiegeStandardRecord fromTag(CompoundTag tag) {
+        int max = tag.contains("MaxControlPool")
+                ? tag.getInt("MaxControlPool")
+                : com.talhanation.bannermod.combat.SiegeObjectivePolicy.DEFAULT_CONTROL_POOL;
+        int control = tag.contains("ControlPool") ? tag.getInt("ControlPool") : max;
         return new SiegeStandardRecord(
                 tag.getUUID("Id"),
                 tag.getUUID("WarId"),
                 tag.getUUID("Side"),
                 new BlockPos(tag.getInt("X"), tag.getInt("Y"), tag.getInt("Z")),
                 tag.getInt("Radius"),
-                tag.getLong("PlacedAtGameTime")
+                tag.getLong("PlacedAtGameTime"),
+                control,
+                max
         );
     }
 }

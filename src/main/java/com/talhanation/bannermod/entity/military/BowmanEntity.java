@@ -45,6 +45,7 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        this.goalSelector.addGoal(1, new com.talhanation.bannermod.ai.military.RecruitRangedSpacingGoal(this));
         this.goalSelector.addGoal(2, new RecruitStrategicFire(this, 10, 20));
         this.goalSelector.addGoal(4, new RecruitRangedBowAttackGoal<>(this, 1.15D, 10, 20, 44.0F, getMeleeStartRange()));
         this.goalSelector.addGoal(8, new RecruitMoveTowardsTargetGoal(this, 1.15D, (float) this.getMeleeStartRange()));

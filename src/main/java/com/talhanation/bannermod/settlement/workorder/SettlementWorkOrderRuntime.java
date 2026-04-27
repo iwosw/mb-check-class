@@ -176,6 +176,26 @@ public final class SettlementWorkOrderRuntime {
         return Optional.of(claimed);
     }
 
+    /**
+     * Release every order currently claimed by {@code residentUuid} back to PENDING.
+     * Returns the orders that were actually released (empty if the resident held no claim).
+     *
+     * <p>Used by the entity-death / forced-removal hook so a worker that dies mid-route does
+     * not leave its claim parked in CLAIMED until the expiry timer fires. The method is
+     * idempotent — calling it on a resident with no claim is a no-op.</p>
+     */
+    public List<SettlementWorkOrder> releaseClaimsForResident(UUID residentUuid) {
+        if (residentUuid == null) {
+            return List.of();
+        }
+        UUID orderUuid = orderByResident.get(residentUuid);
+        if (orderUuid == null) {
+            return List.of();
+        }
+        Optional<SettlementWorkOrder> released = release(orderUuid);
+        return released.<List<SettlementWorkOrder>>map(List::of).orElseGet(List::of);
+    }
+
     /** Release a claimed order back to PENDING. */
     public Optional<SettlementWorkOrder> release(UUID orderUuid) {
         Objects.requireNonNull(orderUuid, "orderUuid");

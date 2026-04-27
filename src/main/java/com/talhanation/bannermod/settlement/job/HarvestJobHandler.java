@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Gathering-style work handler bound to {@link BannerModSettlementJobHandlerSeed#FLOATING_LABOR_POOL}.
+ * Floating-labor work handler bound to {@link BannerModSettlementJobHandlerSeed#FLOATING_LABOR_POOL}.
  *
  * <p>On each step the handler:</p>
  * <ol>
@@ -23,13 +23,19 @@ import java.util.UUID;
  *       real block-level action is executed by the bound worker entity via
  *       {@code SettlementOrderWorkGoal}.</li>
  *   <li>Otherwise it attempts to claim the highest-priority PENDING order matching the
- *       supported gathering types for the resident's current settlement claim.</li>
+ *       supported gathering or transport types for the resident's current settlement claim.</li>
  *   <li>If no order is available it reports {@link JobExecutionResult#BLOCKED_NO_TARGET}.</li>
  * </ol>
  *
  * <p>The handler is a pure coordination step — it never mutates blocks directly. Completion
  * of the order is reported by the worker AI through
  * {@link SettlementWorkOrderRuntime#complete(UUID)}.</p>
+ *
+ * <p>Transport orders ({@code FETCH_INPUT} / {@code HAUL_RESOURCE}) are intentionally
+ * included here so a floating-laborer assigned to a building can also drive the transport
+ * state machine in {@code SettlementOrderWorkGoal} when no harvest/till/plant work is
+ * pending. Without this, transport orders sit unclaimed even though the runtime, the
+ * container exchange, and the AI goal that consumes them are all wired up.</p>
  */
 public final class HarvestJobHandler implements JobHandler {
 
@@ -42,7 +48,9 @@ public final class HarvestJobHandler implements JobHandler {
             SettlementWorkOrderType.TILL_SOIL,
             SettlementWorkOrderType.FELL_TREE,
             SettlementWorkOrderType.REPLANT_TREE,
-            SettlementWorkOrderType.MINE_BLOCK
+            SettlementWorkOrderType.MINE_BLOCK,
+            SettlementWorkOrderType.FETCH_INPUT,
+            SettlementWorkOrderType.HAUL_RESOURCE
     );
 
     @Override
