@@ -16,6 +16,7 @@ import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementService;
 import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
+import com.talhanation.bannermod.settlement.BannerModSettlementStrategicSignals;
 import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
 import com.talhanation.bannermod.settlement.BannerModSettlementDesiredGoodSeed;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderExecutionReceipt;
@@ -146,6 +147,18 @@ final class RecruitGovernorWorkflow {
         lines.add("Blocked: " + settlementSnapshot.supplySignalState().shortageSignalCount() + " shortages / " + settlementSnapshot.supplySignalState().shortageUnitCount() + " units");
         lines.add("Stockpile: " + settlementSnapshot.stockpileSummary().containerCount() + " containers, " + settlementSnapshot.stockpileSummary().slotCapacity() + " slots");
         lines.add("Storage routes: " + settlementSnapshot.stockpileSummary().routedStorageCount() + " routed, " + settlementSnapshot.stockpileSummary().portEntrypointCount() + " ports");
+        BannerModSettlementStrategicSignals signals = BannerModSettlementStrategicSignals.fromSnapshot(settlementSnapshot);
+        lines.add("Role: " + signals.roleId() + " - " + signals.roleDescription());
+        lines.add("Route cost: " + signals.routeCostId() + " - " + signals.routeCostDescription());
+        if (!"none".equals(signals.specializationId())) {
+            lines.add("Specialty: " + signals.specializationId() + " - " + signals.specializationDescription());
+        }
+        if (!signals.logisticsObjectiveIds().isEmpty()) {
+            lines.add("War objectives: " + String.join(", ", signals.logisticsObjectiveIds()));
+        }
+        if (!signals.loyaltyPressureIds().isEmpty()) {
+            lines.add("Loyalty pressure: " + String.join(", ", signals.loyaltyPressureIds()));
+        }
         java.util.List<BannerModSettlementDesiredGoodSeed> desiredGoods = settlementSnapshot.desiredGoodsSeed().desiredGoods();
         if (desiredGoods.isEmpty()) {
             lines.add("Missing goods: none signaled");
