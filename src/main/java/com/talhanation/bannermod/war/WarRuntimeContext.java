@@ -19,8 +19,13 @@ import com.talhanation.bannermod.war.runtime.WarAllyInviteSavedData;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRuntime;
 import com.talhanation.bannermod.war.runtime.WarDeclarationSavedData;
 import com.talhanation.bannermod.war.runtime.WarOutcomeApplier;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+
+import javax.annotation.Nullable;
+import java.util.UUID;
 
 public final class WarRuntimeContext {
     private WarRuntimeContext() {
@@ -40,6 +45,24 @@ public final class WarRuntimeContext {
 
     public static SiegeStandardRuntime sieges(ServerLevel level) {
         return SiegeStandardSavedData.get(level).runtime();
+    }
+
+    /**
+     * Resolve a player's political-entity UUID via leadership in the registry. Returns
+     * {@code null} for unaffiliated players (no entity has them as leader / co-leader). Used
+     * by COMBAT-006 to feed {@code SiegeObjectivePolicy.canAttackStandard}.
+     */
+    @Nullable
+    public static UUID factionOf(@Nullable ServerLevel level, @Nullable Player player) {
+        if (level == null || player == null) return null;
+        UUID actorUuid = player.getUUID();
+        for (PoliticalEntityRecord record : registry(level).all()) {
+            if (actorUuid.equals(record.leaderUuid())) return record.id();
+            if (record.coLeaderUuids() != null && record.coLeaderUuids().contains(actorUuid)) {
+                return record.id();
+            }
+        }
+        return null;
     }
 
     public static OccupationRuntime occupations(ServerLevel level) {
