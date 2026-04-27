@@ -24,6 +24,7 @@ public final class RecruitIndexEvents {
         if (event.getEntity() instanceof AbstractRecruitEntity recruit) {
             com.talhanation.bannermod.combat.RecruitMoraleService.invalidate(recruit.getUUID());
             com.talhanation.bannermod.combat.CavalryChargeService.invalidate(recruit.getUUID());
+            com.talhanation.bannermod.combat.RangedSpacingService.invalidate(recruit.getUUID());
         }
     }
 

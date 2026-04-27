@@ -56,6 +56,8 @@ final class RecruitRuntimeLoop {
                     recruit, serverLevel, serverLevel.getGameTime());
             com.talhanation.bannermod.combat.CavalryChargeService.tick(
                     recruit, serverLevel.getGameTime());
+            com.talhanation.bannermod.combat.RangedSpacingService.tick(
+                    recruit, serverLevel, serverLevel.getGameTime());
         }
         if (recruit.despawnTimer > 0) {
             recruit.despawnTimer--;

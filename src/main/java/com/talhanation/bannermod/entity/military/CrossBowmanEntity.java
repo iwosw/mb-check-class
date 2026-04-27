@@ -67,6 +67,7 @@ public class CrossBowmanEntity extends AbstractStrategicFireRecruitEntity implem
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        this.goalSelector.addGoal(1, new com.talhanation.bannermod.ai.military.RecruitRangedSpacingGoal(this));
         if(isMusketModLoaded){
             this.goalSelector.addGoal(0, new RecruitRangedMusketAttackGoal(this, this.getMeleeStartRange()));
         }
