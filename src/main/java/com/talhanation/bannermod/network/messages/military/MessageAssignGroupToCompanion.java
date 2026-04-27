@@ -46,7 +46,7 @@ public class MessageAssignGroupToCompanion implements Message<MessageAssignGroup
         Entity entity = serverLevel.getEntity(this.companionUUID);
         if (!(entity instanceof AbstractLeaderEntity companionEntity)
                 || !serverPlayer.getBoundingBox().inflate(100).intersects(companionEntity.getBoundingBox())
-                || !RecruitCommandAuthority.canDirectlyControl(serverPlayer, companionEntity)) {
+                || !canAssignCompanionGroup(serverPlayer, companionEntity)) {
             return;
         }
 
@@ -89,6 +89,11 @@ public class MessageAssignGroupToCompanion implements Message<MessageAssignGroup
         companionEntity.setGroupUUID(group.getUUID());
 
         RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
+    }
+
+    static boolean canAssignCompanionGroup(ServerPlayer player, AbstractLeaderEntity companionEntity) {
+        return RecruitCommandAuthority.canDirectlyControl(player, companionEntity)
+                && RecruitCommandAuthority.ownedGroup(player, companionEntity == null ? null : companionEntity.getGroup()) != null;
     }
 
     public MessageAssignGroupToCompanion fromBytes(FriendlyByteBuf buf) {
