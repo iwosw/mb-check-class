@@ -387,6 +387,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Commander/nearby allies improve morale.
 - Player sees why units routed.
 
+**Progress 2026-04-27.** Pure-logic morale resolution landed under `com.talhanation.bannermod.combat`. New `MoralePolicy.evaluate(MoraleSnapshot)` returns a `MoraleAssessment(state, reasons)` so the upcoming combat-AI hookup, audit log, and player-facing UI can read the same answer without re-running the policy. Inputs (`MoraleSnapshot` record): squad size, casualties taken, visible hostile count, commander presence, nearby ally count, recent damage events, isolated flag — all clamped at construction so callers can't smuggle bad numbers past the policy. Pressure tokens (`CASUALTIES_HEAVY` / `CASUALTIES_MODERATE` at 50% / 25% loss, `OUTNUMBERED_3X` / `OUTNUMBERED_2X` at 3:1 / 2:1 vs survivors, `ISOLATED`, `SUSTAINED_FIRE` at >= 6 events) accumulate to a pressure score with thresholds at 4 (ROUTED) and 2 (SHAKEN). Relief tokens (`COMMANDER_PRESENT` downgrades ROUTED -> SHAKEN; `ALLIES_NEARBY` >= 3 downgrades SHAKEN -> STEADY at low pressure) are appended to the same `reasons` list so the UI can explain *why* a squad routed (or didn't). Tunable thresholds are public constants ready for a future Forge-config layer. Locked in by `MoralePolicyTest` (10 cases — calm STEADY / heavy+3x ROUT / commander-relief / isolated SHAKEN / ally-relief at threshold / sustained-fire trigger / wiped squad / clamp guards / null snapshot / reason-order stability). Combat-AI wiring (rout disengagement goal, shaken hit-rate dampening, suppression hookup) is the remaining open work for this slice.
+
 ---
 
 ## COMBAT-002 — Officer/leader discipline aura
