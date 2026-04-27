@@ -9,6 +9,7 @@ import com.talhanation.bannermod.ai.military.FormationSlotRegistry;
 import com.talhanation.bannermod.ai.military.FormationTargetSelectionController;
 import com.talhanation.bannermod.ai.military.ShieldBlockGeometry;
 import com.talhanation.bannermod.ai.military.ShieldMitigation;
+import com.talhanation.bannermod.combat.FormationPlanner;
 import com.talhanation.bannermod.events.RecruitEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
@@ -132,6 +133,9 @@ final class RecruitCombatOverrideService {
         if (stance != CombatStance.LINE_HOLD && stance != CombatStance.SHIELD_WALL) {
             return damage;
         }
+        if (isIsolatedFromFormationSlot(recruit)) {
+            return damage;
+        }
         boolean cohesive;
         int now = recruit.tickCount;
         if (recruit.cachedCohesionTick != Integer.MIN_VALUE
@@ -218,6 +222,9 @@ final class RecruitCombatOverrideService {
         }
 
         CombatStance stance = recruit.getCombatStance();
+        if ((stance == CombatStance.LINE_HOLD || stance == CombatStance.SHIELD_WALL) && isIsolatedFromFormationSlot(recruit)) {
+            stance = CombatStance.LOOSE;
+        }
         boolean staggered = recruit.blockCoolDown > 0;
         float mitigated = ShieldMitigation.damageAfterBlock(stance, damage, true, true, staggered);
         if (recruit instanceof RecruitShieldmanEntity) {
@@ -236,6 +243,23 @@ final class RecruitCombatOverrideService {
         }
 
         return mitigated;
+    }
+
+    private static boolean isIsolatedFromFormationSlot(AbstractRecruitEntity recruit) {
+        UUID ownerId = recruit.getOwnerUUID();
+        UUID groupId = recruit.getGroup();
+        if (ownerId == null || groupId == null) {
+            return false;
+        }
+        Map<Integer, FormationSlotRegistry.SlotEntry> slots = FormationSlotRegistry.slotsOf(
+                new FormationTargetSelectionController.CohortKey(ownerId, groupId)
+        );
+        for (FormationSlotRegistry.SlotEntry entry : slots.values()) {
+            if (entry != null && recruit.getUUID().equals(entry.ownerId()) && entry.holdPos() != null) {
+                return FormationPlanner.isIsolated(recruit.position().distanceTo(entry.holdPos()));
+            }
+        }
+        return false;
     }
 
     private static boolean isBlockableDamageSource(DamageSource damageSource) {
