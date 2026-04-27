@@ -231,6 +231,10 @@ public final class RecruitCombatRuntime {
         return RecruitDiplomacyPolicy.isEnemy(team1, team2);
     }
 
+    public static boolean isEnemy(LivingEntity attacker, LivingEntity target) {
+        return RecruitDiplomacyPolicy.isEnemy(attacker, target);
+    }
+
     public static boolean isNeutral(Team team1, Team team2) {
         return RecruitDiplomacyPolicy.isNeutral(team1, team2);
     }

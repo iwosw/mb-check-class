@@ -225,30 +225,9 @@ public class RecruitEvents {
         RecruitCombatRuntime.onLivingHurt(event);
     }
 
-    private static final double DAMAGE_THRESHOLD_PERCENTAGE = 0.75;
-
     @SubscribeEvent
     public void onLivingAttack(LivingAttackEvent event) {
         RecruitCombatRuntime.onLivingAttack(event);
-    }
-
-    private void handleSignificantDamage(LivingEntity attacker, LivingEntity target, double damage, ServerLevel level) {
-        Team attackerTeam = attacker.getTeam();
-        Team targetTeam = target.getTeam();
-
-        if (attackerTeam == null || targetTeam == null) return;
-
-
-        double newHealth = target.getHealth() - damage;
-        double damageThreshold = target.getMaxHealth() * DAMAGE_THRESHOLD_PERCENTAGE;
-
-
-        if (newHealth < damageThreshold) {
-            setTeamsAsEnemies(attackerTeam, targetTeam, level);
-        }
-    }
-
-    private void setTeamsAsEnemies(Team attackerTeam, Team targetTeam, ServerLevel level) {
     }
 
     @SubscribeEvent
@@ -278,6 +257,10 @@ public class RecruitEvents {
 
     public static boolean isEnemy(Team team1, Team team2) {
         return RecruitCombatRuntime.isEnemy(team1, team2);
+    }
+
+    public static boolean isEnemy(LivingEntity attacker, LivingEntity target) {
+        return RecruitCombatRuntime.isEnemy(attacker, target);
     }
 
     public static boolean isNeutral(Team team1, Team team2) {

@@ -868,7 +868,7 @@
     {
       "id": "RP-001",
       "title": "Clean up or reconnect legacy diplomacy and treaty flow",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Legacy team diplomacy hooks and player-facing treaty/localization remnants still exist, but the active enemy-setting implementation is stubbed, making the supported RP model ambiguous.",
       "scope": [
@@ -880,11 +880,17 @@
         "Docs identify the single supported diplomacy model for recruits and political entities."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Recruit target decisions now use political war relation through entity-context isEnemy(recruit, target) instead of the legacy always-false team enemy path; damage authority remains routed through canHarmTeam. Removed empty duplicate RecruitEvents enemy-stub handlers and hid the disabled legacy world-map diplomacy menu entry. Verified with ctx log -- ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/events/runtime/RecruitDiplomacyPolicy.java",
         "src/main/java/com/talhanation/bannermod/combat/RecruitCombatDecisions.java"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "DOC-001",

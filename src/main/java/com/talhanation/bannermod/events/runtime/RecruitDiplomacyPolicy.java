@@ -23,6 +23,18 @@ final class RecruitDiplomacyPolicy {
         return false;
     }
 
+    static boolean isEnemy(LivingEntity attacker, LivingEntity target) {
+        if (!(attacker.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        UUID attackerEntityId = RecruitPoliticalContext.politicalEntityIdOf(attacker, WarRuntimeContext.registry(level));
+        UUID targetEntityId = RecruitPoliticalContext.politicalEntityIdOf(target, WarRuntimeContext.registry(level));
+        return attackerEntityId != null
+                && targetEntityId != null
+                && !attackerEntityId.equals(targetEntityId)
+                && PoliticalRelations.atWar(WarRuntimeContext.declarations(level), attackerEntityId, targetEntityId);
+    }
+
     static boolean isNeutral(Team team1, Team team2) {
         return team1 == null || team2 == null || !team1.equals(team2);
     }
