@@ -5,20 +5,29 @@ BannerMod is a brownfield merge workspace. Contributions should be small, verifi
 ## Source Of Truth
 
 - Use root `src/**` and `build.gradle` as runtime truth.
-- Use `docs/BANNERMOD_BACKLOG.md` as the unfinished-work queue.
+- Use `tools/backlog` as the interface to the unfinished-work queue in `docs/BANNERMOD_BACKLOG.json`.
 - Use `.planning/` for execution history and planning context.
 - Treat `recruits/` and `workers/` as archive/reference only.
 
 ## Flow
 
-1. Pick one backlog item or one clearly bounded bug.
+1. Pick one backlog item with `tools/backlog batch --limit 5` / `tools/backlog show <ID>`, or pick one clearly bounded bug.
 2. Inspect the current worktree with `tools/ai-context-proxy/bin/ctx status`.
 3. Reproduce the bug or define acceptance checks before editing.
 4. Make the smallest code change that satisfies the check.
 5. Add or update focused tests when behavior changes.
-6. Run the cheapest relevant verification first, then wider gates only when the touched area needs them.
-7. Update `docs/BANNERMOD_BACKLOG.md`, `docs/STATUS.md`, and `.planning/STATE.md` when the shipped behavior or project status changes.
-8. Commit atomically by area: code, tools, and docs should usually be separate commits.
+6. Self-verify the result against every acceptance item of the backlog task before marking it done.
+7. Update `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md` when the task changes UI, changes mechanics, or adds player-facing mechanics that non-technical players must know.
+8. Run the cheapest relevant verification first, then wider gates only when the touched area needs them.
+9. Update the backlog through `tools/backlog progress` or `tools/backlog done --verification`, and update `docs/STATUS.md` / `.planning/STATE.md` when shipped behavior or project status changes.
+10. Commit atomically by area: code, tools, and docs should usually be separate commits.
+
+## Backlog Intake
+
+- Add backlog work with `tools/backlog add <ID> <title> --why ... --scope ... --acceptance ...`.
+- Use `--dry-run` before writing when drafting or reviewing task shape.
+- The tool rejects duplicate IDs, invalid ID format, empty fields, and tasks without concrete scope or acceptance checks.
+- Include guide-update scope/acceptance when the proposed task changes UI, changes mechanics, or adds player-facing mechanics.
 
 ## Verification Defaults
 

@@ -6,7 +6,7 @@
 - Active code lives under `src/**`.
 - The only live mod entrypoint is `src/main/java/com/talhanation/bannermod/bootstrap/BannerModMain.java`.
 - Active planning lives under `.planning/`.
-- Unfinished work lives in `docs/BANNERMOD_BACKLOG.md` only.
+- Unfinished work lives in `docs/BANNERMOD_BACKLOG.json` only; use `tools/backlog` to inspect or update it.
 
 ## Ignore By Default
 
@@ -21,7 +21,7 @@ Those paths are retained for archive/reference only. They are not active build o
 
 - Repository status and contribution flow: `docs/STATUS.md`, `docs/CONTRIBUTING.md`
 - Player/server flow: `MULTIPLAYER_GUIDE_RU.md`, `MULTIPLAYER_GUIDE_EN.md`
-- Unfinished work: `docs/BANNERMOD_BACKLOG.md`
+- Unfinished work: `tools/backlog batch --limit 5` and `tools/backlog show <ID>`
 - Runtime/bootstrap: `src/main/java/com/talhanation/bannermod/bootstrap/`
 - Shared packet contract: `src/main/java/com/talhanation/bannermod/network/BannerModNetworkBootstrap.java`
 - Military gameplay: `src/main/java/com/talhanation/bannermod/entity/military/`
@@ -56,3 +56,10 @@ Check `BannerModMain` before assuming config taxonomy from old planning notes.
 - `./gradlew verifyGameTestStage`
 
 Use GameTests when changing runtime behavior, AI, ownership, networking, or persistence.
+
+## Backlog Task Closure
+
+- Before marking a backlog item done, self-verify the implementation against every acceptance item.
+- If the item changes UI, changes mechanics, or adds player-facing mechanics, update both root multiplayer guides before marking it done.
+- Record the verification with `tools/backlog done <ID> --verification "..."`.
+- If only part of the acceptance is satisfied, use `tools/backlog progress <ID> "..."` and keep the task open.

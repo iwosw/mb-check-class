@@ -1,0 +1,585 @@
+{
+  "schema": 1,
+  "canonical": true,
+  "description": "Ordered BannerMod unfinished-work backlog. Use tools/backlog.py instead of reading this file directly during normal agent work.",
+  "rules": [
+    "This JSON file is the single canonical backlog; docs/BANNERMOD_BACKLOG.md is only a human-facing pointer.",
+    "Use tools/backlog.py batch/list/show to inspect work instead of dumping the whole JSON file into context.",
+    "Every task must include id, title, status, why, scope, acceptance, and updated date.",
+    "DONE means every acceptance item is observably satisfied in the current codebase, not merely supported by a lower-level policy or partial slice.",
+    "Before marking a task done, run the relevant verification and record the result in verification. If a check cannot be run, record why.",
+    "If a task changes UI, changes gameplay mechanics, or adds player-facing mechanics, update both MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md before marking it done.",
+    "Append progress entries instead of rewriting history. Keep old evidence and progress unless it is factually wrong.",
+    "Add new work as an open task with concrete deliverables and verifiable acceptance checks. Do not add vague reminders."
+  ],
+  "tasks": [
+    {
+      "id": "PERF-002",
+      "title": "Crowd render optimization beyond LOD layers",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Existing recruit render LOD skips some expensive layers at distance, but large multiplayer battles may still be dominated by base model rendering, layer passes, nameplates, state changes, and animation work.",
+      "scope": [
+        "Profile recruit render costs: base model, layers, nameplates, texture/state switches, and animation/model pose churn.",
+        "Evaluate a distant/crowd simplified renderer or simpler model.",
+        "Collapse cosmetic/team/biome overlays where possible.",
+        "Skip held item, armor, and nameplate work for non-near/non-selected crowds when safe."
+      ],
+      "acceptance": [
+        "Large recruit crowds have a measured render improvement.",
+        "Close-range readability is preserved.",
+        "Optimization is backed by profiling evidence, not guesswork."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-27",
+          "text": "Added recruit.render debug profiling counters for crowd impostor rendering. The task remains open until a real client profiling run proves before/after improvement and near-range readability."
+        }
+      ],
+      "verification": [],
+      "evidence": [
+        "Recruit render profiling summary includes recruit.render counters."
+      ]
+    },
+    {
+      "id": "PORT-001",
+      "title": "NeoForge 1.21.1 port",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Future platform migration may be needed, but it is not active gameplay work and should not live as a stale parallel plan.",
+      "scope": [
+        "Create a branch only when this becomes active.",
+        "Upgrade Gradle, toolchain, and mod metadata for NeoForge 1.21.1.",
+        "Migrate registries, networking, events, item NBT/data components, and dependency APIs.",
+        "Rebuild tests and smoke run after compile."
+      ],
+      "acceptance": [
+        "Root build targets NeoForge 1.21.1 on the port branch.",
+        "compileJava, tests, and in-game smoke pass.",
+        "Old Forge 1.20.1 assumptions are either removed or documented."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "WAR-007",
+      "title": "War Room declare-war wizard",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "War Room is now the political/war hub, but starting a war still requires /war declare, so the player-facing warfare loop falls back to chat commands at the most important step.",
+      "scope": [
+        "Add a War Room action flow to pick attacker, defender, war goal, and optional casus belli text.",
+        "Reuse the same server-side declaration validation and cooldown denial reasons as WarDeclarationCommands.",
+        "Refresh the selected war list/detail after successful declaration and show rejection reasons in UI/chat feedback."
+      ],
+      "acceptance": [
+        "A state leader can declare a valid war from War Room without typing a command.",
+        "Invalid declarations show the same denial reason as the command path.",
+        "/war declare remains available and behavior-equivalent to the UI path."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "WarListScreen.init has info/state/siege/ally/refresh actions but no declare action.",
+        "docs/POLITICS_WARFARE_EN.md documents declaration through /war declare.",
+        "WarDeclarationCommands contains the command-only declaration path."
+      ]
+    },
+    {
+      "id": "WAR-008",
+      "title": "Player-facing war outcome negotiation UI",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "War resolution actions exist, but cancel/peace/tribute/vassalize/demilitarize/occupy/annex are command-driven and partly admin-gated, so normal leaders lack a clear surrender, peace, or outcome flow.",
+      "scope": [
+        "Add a War Room outcome panel for legal leader actions: cancel, peace offer, tribute request, occupation, or other rules-approved outcomes.",
+        "Keep op/admin-only forced outcomes visibly locked or labeled as admin-only.",
+        "Surface outcome success, denial, and audit summary without requiring server log inspection."
+      ],
+      "acceptance": [
+        "Leaders can resolve eligible wars through UI where gameplay rules allow it.",
+        "Admin-only outcomes cannot be triggered by non-op UI paths.",
+        "Tribute, occupation, and annex success or denial is visible in War Room."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "WarDeclarationCommands exposes outcome commands and gates several behind permission level 2.",
+        "WarListScreen renders selected war details but no outcome controls."
+      ]
+    },
+    {
+      "id": "SETTLEMENT-008",
+      "title": "Manual validated buildings create gameplay vacancies",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Docs present manual building validation as a normal survival growth path, but auto-staffing vacancies are registered from prefab BuildArea completion, making manual validated workplaces feel inert compared with prefabs.",
+      "scope": [
+        "Define vacancy/profession outputs for manually validated farm, mine, lumber camp, storage, market, barracks, and similar buildings where applicable.",
+        "Register vacancies from ValidatedBuildingRecord data, not only prefab BuildArea completion.",
+        "Show player feedback for which jobs or recruit/citizen slots a validated building created."
+      ],
+      "acceptance": [
+        "A manually validated workplace can attract, convert, or employ citizens like an equivalent prefab path.",
+        "Player inspection shows the building's vacancy/profession output.",
+        "Prefab and manual paths share tests for vacancy registration parity."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/GAMEPLAY_FLOW_EN.md describes manual validation and profession buildings.",
+        "docs/CITIZENS_PROFESSIONS_RECRUITS_EN.md notes manual validated buildings and prefab vacancies are not equivalent.",
+        "PrefabAutoStaffingRuntime.onBuildAreaCompleted registers vacancies only after prefab completion."
+      ]
+    },
+    {
+      "id": "SETTLEMENT-009",
+      "title": "Settlement logistics and work-order dashboard",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Settlement snapshots track stockpiles, desired goods, projects, market state, residents, buildings, and supply signals, but the Governor UI mostly exposes taxes, incidents, and recommendation tokens. Players cannot see why production or growth is stuck.",
+      "scope": [
+        "Add a read-only settlement logistics panel showing stockpile summary, desired goods, work-order counts by status, and project blockers.",
+        "Link incidents/recommendations to concrete buildings, residents, or missing goods where possible.",
+        "Keep management controls out of this slice unless already supported server-side."
+      ],
+      "acceptance": [
+        "Player can see pending, claimed, completed, or blocked work orders from UI.",
+        "Player can identify missing goods or project blockers without reading logs or source.",
+        "Governor screen no longer relies on raw token-like recommendations for core bottlenecks."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "BannerModSettlementSnapshot contains rich settlement state.",
+        "BannerModGovernorSnapshot carries rollups/tokens.",
+        "GovernorScreen renders taxes, incidents, recommendations, and policy labels but not logistics/work-order detail."
+      ]
+    },
+    {
+      "id": "POL-002",
+      "title": "Co-leader management flow",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Political records persist co-leaders and government forms, but normal players have no clear add/remove co-leader flow, making republic/shared-authority gameplay hard to use.",
+      "scope": [
+        "Add leader-authorized co-leader invite/add/remove actions.",
+        "Surface the co-leader list and authority effect in the state UI.",
+        "Reuse PoliticalEntityRecord persistence and the shared political authority policy."
+      ],
+      "acceptance": [
+        "A state leader can add and remove co-leaders without save editing.",
+        "Republic co-leaders can perform intended co-leader actions; monarchy co-leaders cannot unless policy explicitly allows it.",
+        "UI clearly shows who has authority and why."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "PoliticalEntityRecord stores coLeaderUuids and governmentForm.",
+        "PoliticalRegistryRuntime has mutators for name/status/capital/form/color/charter but no co-leader mutator.",
+        "Politics docs mention co-leaders without a management path."
+      ]
+    },
+    {
+      "id": "COMMAND-001",
+      "title": "Recruit command acknowledgement and queue feedback",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "The unified command pipeline supports queueing and logging, but normal command UI sends immediate commands and gives little feedback about affected units, overwritten orders, empty selections, or queue state.",
+      "scope": [
+        "Add visible command acknowledgements: selected group, affected unit count, accepted/rejected state, and queued/replaced state.",
+        "Expose a simple pending-order count per selected group or recruit when queue mode is enabled.",
+        "Add or deliberately hide a queue modifier depending on final intended gameplay."
+      ],
+      "acceptance": [
+        "Issuing a command tells the player how many recruits accepted it.",
+        "Empty selection, invalid target, or no-authority failures produce clear feedback.",
+        "Queue mode is either available with visible pending orders or intentionally disabled in UI."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "CommandIntentDispatcher supports queued vs immediate dispatch.",
+        "CommandIntentLog is debug/in-memory only.",
+        "MessageMovement sends queueMode=false.",
+        "CommandScreen sends commands without accepted/queued/replaced feedback."
+      ]
+    },
+    {
+      "id": "SEC-001",
+      "title": "Server-authorize claim deletion packets",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Claim deletion must be server-authoritative. A packet path that trusts client-authored claim data can delete or broadcast state without proving sender ownership, dimension, political authority, or op/admin status.",
+      "scope": [
+        "Gate claim deletion through the same authority model as claim update.",
+        "Reject null sender, wrong dimension, unknown claim UUID, and unauthorized players.",
+        "Delete only the persisted server-side claim record, never arbitrary client-provided NBT."
+      ],
+      "acceptance": [
+        "A non-owner/non-op packet cannot delete another player's claim.",
+        "Owner, allowed co-leader, and admin behavior is covered by tests.",
+        "Malformed or missing sender packets reject cleanly without crash or mutation."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "MessageDeleteClaim deletes from client-supplied claim data.",
+        "MessageUpdateClaim has a guarded canEditClaim path that can be reused or unified."
+      ]
+    },
+    {
+      "id": "SEC-002",
+      "title": "Remove spoofable owner UUIDs from military packets",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Some server-bound military packets still use client-supplied player UUIDs for filtering or effects, which creates spoof risk and inconsistent authority compared with context.getSender().",
+      "scope": [
+        "Use context.getSender().getUUID() as the only actor identity for server-side authorization.",
+        "Reject or ignore mismatched wire UUIDs where fields remain for packet compatibility.",
+        "Route commandable recruit actions through CommandIntentDispatcher where applicable."
+      ],
+      "acceptance": [
+        "Packets containing another player's UUID cannot affect that player's recruits or upkeep state.",
+        "Command audit records the real sender, not a client-provided UUID.",
+        "Tests cover face-command, ranged-fire, and upkeep spoof attempts."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "MessageFaceCommand, MessageRangedFire, and MessageUpkeepEntity use client-provided UUIDs.",
+        "CommandIntentDispatcher assumes caller supplied already-authorized actors."
+      ]
+    },
+    {
+      "id": "SEC-003",
+      "title": "Close group and leader assignment authority gaps",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Group leadership and companion assignment mutate recruit/group state; proximity checks are not enough protection in multiplayer if the sender does not own or control the target recruit/group.",
+      "scope": [
+        "Require RecruitCommandAuthority.canDirectlyControl for target recruits/leaders before leader, companion, or group assignment mutations.",
+        "Require owned-group validation before writing setGroupUUID or changing group leader state.",
+        "Align all group assignment packet paths with the safer existing group ownership pattern."
+      ],
+      "acceptance": [
+        "A nearby player cannot assign another player's leader, companion, or group.",
+        "Owned recruit/group flows still work.",
+        "Server tests cover cross-player denial and owner success."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "MessageSetLeaderGroup and MessageAssignGroupToCompanion mutate state after weak or partial checks.",
+        "MessageGroup shows a safer owned-group pattern."
+      ]
+    },
+    {
+      "id": "SEC-004",
+      "title": "Dimension-aware claim protection",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Claim protection currently keys lookups by chunk position while events can run in any dimension, so identical X/Z chunks in Nether or End can inherit Overworld claim permissions.",
+      "scope": [
+        "Add dimension identity to claim storage/lookups, or explicitly restrict protection to Overworld and document that rule.",
+        "Update persistence, sync, and access queries to preserve or enforce dimension semantics.",
+        "Cover block/entity protection checks across at least two dimensions."
+      ],
+      "acceptance": [
+        "Overworld claims do not affect Nether/End chunks at matching X/Z unless explicitly supported.",
+        "Claim save/load preserves dimension or the code rejects non-Overworld claims consistently.",
+        "Tests cover same chunk coordinates in two dimensions."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "ClaimEvents loads/saves the manager from Overworld.",
+        "ClaimAccessQueries looks up by ChunkPos.",
+        "RecruitsClaimManager keys claims by ChunkPos."
+      ]
+    },
+    {
+      "id": "SEC-005",
+      "title": "Unified political authority policy",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Government-aware authority exists, but mutation packets, claim editing, and UI enablement use different leader/co-leader/op checks. That makes republic and monarchy authority inconsistent in multiplayer.",
+      "scope": [
+        "Define one policy for leader, co-leader, member, and op authority per government form.",
+        "Apply it consistently to political mutations, claim editing, ally/war actions, and UI button enablement.",
+        "Add tests for command and packet parity."
+      ],
+      "acceptance": [
+        "Republic co-leaders can perform intended actions and monarchy co-leaders cannot unless explicitly allowed.",
+        "Packet, command, and UI paths agree for rename, capital, color, charter, claim edit, and ally/war actions.",
+        "Denial messages explain whether failure is role, government form, or op permission."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "PoliticalEntityAuthority.canAct is government-aware.",
+        "Some mutation packets use leader-only isLeaderOrOp.",
+        "MessageUpdateClaim.canEditClaim permits co-leaders directly."
+      ]
+    },
+    {
+      "id": "UI-003",
+      "title": "War UI client mirror freshness",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "War/state UI reads from a client mirror that can survive login/logout and screens often copy snapshots on init/manual refresh, so players can see stale political or war data after server/world changes.",
+      "scope": [
+        "Clear WarClientState during client login/logout lifecycle.",
+        "Make War Room and state screens track WarClientState.version() and refresh selected/list/button state automatically.",
+        "Show sync-pending/stale state when no authoritative snapshot has arrived."
+      ],
+      "acceptance": [
+        "Switching worlds/servers never shows previous war/state data.",
+        "An open War Room updates after server snapshot without pressing Refresh.",
+        "Stale selections are disabled or cleared safely."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "WarClientState has clear() and version().",
+        "ClientSyncLifecycleEvents has login/logout hooks.",
+        "WarListScreen snapshots state in init()/manual refresh()."
+      ]
+    },
+    {
+      "id": "UI-004",
+      "title": "Server-authoritative atomic claim editing UX",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "World-map claim UI mutates local claim objects optimistically and sends payment/update/delete separately. Server rejection can follow a charge or leave the map briefly showing unconfirmed state.",
+      "scope": [
+        "Replace create/add/remove/delete/edit flows with intent packets validated and charged atomically server-side.",
+        "Return success or denial feedback for overlap, distance, permissions, dimension, and config-disabled cases.",
+        "Update the client map only from authoritative sync after acceptance."
+      ],
+      "acceptance": [
+        "Failed claim actions do not charge currency.",
+        "Client map does not show unconfirmed claim mutations as accepted state.",
+        "Denial reasons are visible in the world-map UI."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "WorldMapClaimController.claimArea/claimChunk and WorldMapClaimMenuActions.removeSelectedChunk/deleteSelectedClaim mutate/send client-authored claim state.",
+        "MessageUpdateClaim consumes full claim NBT server-side."
+      ]
+    },
+    {
+      "id": "UI-005",
+      "title": "Build Area authoring validation and feedback",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Build Area scan/build flow relies on client-side structure scanning and sends structure data to the server, while player feedback for invalid scans, bounds, materials, or build-start rejection is thin.",
+      "scope": [
+        "Add explicit scan/build status text and validation errors to Build Area UI.",
+        "Add server-side bounds/NBT sanity checks independent of the client UI.",
+        "Surface required-material and build-start rejection reasons in the screen."
+      ],
+      "acceptance": [
+        "Invalid or oversized scans are rejected with a visible reason.",
+        "Build/Place actions show accepted or denied state.",
+        "Server enforces dimensions and NBT limits even if the client sends malformed data."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "BuildAreaScreen.performClientScan and button handlers scan/send structure data.",
+        "MessageUpdateBuildArea accepts update payloads server-side."
+      ]
+    },
+    {
+      "id": "UI-006",
+      "title": "Storage route authoring UX and validation display",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Storage route setup exposes raw UUID/filter/count/priority fields and saves on close/toggles; parse failures are chat-only, which is brittle for non-technical players.",
+      "scope": [
+        "Add an explicit Apply action with inline validation for destination, count, priority, and filters.",
+        "Render localized blocked reasons and server parse errors inside the screen.",
+        "Add destination picker or summary so players do not need to copy raw UUIDs."
+      ],
+      "acceptance": [
+        "Invalid route fields are highlighted before send.",
+        "Server rejection appears inline on the route screen.",
+        "A player can pick or confirm a destination without manually typing a UUID."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "StorageAreaScreen builds raw text fields and sends on close/toggle.",
+        "MessageUpdateStorageArea parses updates and reports failures outside the screen flow."
+      ]
+    },
+    {
+      "id": "UI-007",
+      "title": "Accessibility and localization pass for active screens",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Several active screens use hardcoded English literals and custom widgets with empty narration hooks, reducing localization quality and accessibility.",
+      "scope": [
+        "Move hardcoded active UI strings in war/state/build/storage screens to language keys.",
+        "Add narration for dropdowns, status widgets, and label widgets.",
+        "Add hover tooltips for disabled actions and color-coded statuses."
+      ],
+      "acceptance": [
+        "War/state/build/storage screens render player-facing text from lang keys.",
+        "Screen readers announce dropdown values/options and static status widgets.",
+        "Disabled action buttons explain why they are unavailable."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "WarListScreen and PoliticalEntityListScreen use button/render literals.",
+        "DropDownMenu, BlackShowingTextField, and ItemWithLabelWidget have empty narration overrides."
+      ]
+    },
+    {
+      "id": "PERF-003",
+      "title": "Budget true-async pathfinding snapshot work",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "True async pathfinding can still spend server-thread time building region snapshots before scheduler admission/backpressure, so large path bursts may scan/copy regions even when work is later rejected.",
+      "scope": [
+        "Enforce AsyncPathfindingSnapshotBudgetNanos before or around snapshot building.",
+        "Check scheduler capacity before expensive region capture.",
+        "Add counters for snapshot time, skipped snapshots, and rejected-before-build requests."
+      ],
+      "acceptance": [
+        "Under a synthetic crowd path burst, server-thread snapshot time stays within budget.",
+        "Rejected requests do not build RegionSnapshot.",
+        "Profiling counters expose budget hits and pre-build rejections."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "TrueAsyncPathfindingRuntime.enqueue builds snapshots before async scheduling decisions.",
+        "RegionSnapshotBuilder.captureDynamicObstacles scans regions.",
+        "Config exposes AsyncPathfindingSnapshotBudgetNanos."
+      ]
+    },
+    {
+      "id": "PERF-004",
+      "title": "Dirty/incremental war-state sync",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "War sync polls every second by converting full war, political, siege, invite, occupation, revolt, and schedule state to NBT for hashing, then sends full snapshots on change. Idle servers pay serialization cost for no gameplay change.",
+      "scope": [
+        "Replace per-second full-NBT hash polling with dirty/version counters or cached encoded payloads.",
+        "Avoid full serialization while state is unchanged.",
+        "Consider delta packets for large collections if cached full snapshots are still too heavy."
+      ],
+      "acceptance": [
+        "Idle war runtime performs no full-record NBT serialization per second.",
+        "Unchanged state sends no packets.",
+        "Changed state still reaches logged-in clients promptly."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "WarStateBroadcaster.onServerTick computes stateHash.",
+        "stateHash serializes all records.",
+        "WarClientState.encode produces the full client mirror payload."
+      ]
+    },
+    {
+      "id": "PERF-005",
+      "title": "Avoid full claim-list rebroadcast on login",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "A player join broadcasts the full claim list to all players, serializing the entire claim set per recipient. This scales with claims times online players for a single login.",
+      "scope": [
+        "Send full claim state only to the joining player on login.",
+        "Cache one encoded claim snapshot per full-sync event if broadcast remains necessary elsewhere.",
+        "Keep targeted single-claim update packets for mutations."
+      ],
+      "acceptance": [
+        "Player login sends one full claim sync to the joining player only.",
+        "Full claim NBT is encoded once per sync event.",
+        "Claim mutation still updates clients that need the changed state."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "ClaimEvents.onPlayerJoin calls full broadcast.",
+        "RecruitsClaimManager.broadcastClaimsToAll sends full state to every player.",
+        "MessageToClientUpdateClaims serializes all claims."
+      ]
+    },
+    {
+      "id": "PERF-006",
+      "title": "Cache and throttle formation-map snapshots",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Formation-map snapshot requests scan indexed recruits and compute role/relation data per visible recruit. Repeated polling by multiple players can become repeated O(all recruits) server work.",
+      "scope": [
+        "Add per-player request throttling and short-lived cached snapshots keyed by player/level/version.",
+        "Reuse relation context during a snapshot build.",
+        "Add counters for request count, recruit candidates, throttles, cache hits, and emitted contacts."
+      ],
+      "acceptance": [
+        "Repeated map requests within the cache window do not rescan all recruits.",
+        "Spammed requests are throttled without disconnecting legitimate users.",
+        "Contact correctness remains unchanged after movement/group changes."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "MessageRequestFormationMapSnapshot.executeServerSide directly builds snapshots.",
+        "FormationMapSnapshotService.buildSnapshot iterates recruits and computes relation through relationFor."
+      ]
+    },
+    {
+      "id": "PERF-007",
+      "title": "Stable batched settlement-orchestrator iteration",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Settlement orchestration is batched, but each batch recreates and sorts the full snapshot list before processing its slice. Large settlement counts pay O(n log n) setup on every batch tick.",
+      "scope": [
+        "Maintain a stable ordered snapshot cursor for each maintenance cycle, or provide deterministic indexed iteration from the manager.",
+        "Copy/sort at most once per full cycle.",
+        "Preserve existing heartbeat/orchestrator counters."
+      ],
+      "acceptance": [
+        "A maintenance pass over many settlements copies/sorts at most once per cycle.",
+        "Batch order remains deterministic.",
+        "Existing processed/total/completed counters remain meaningful."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "ClaimEvents drives settlement orchestration batches.",
+        "BannerModSettlementOrchestrator.tickBatch rebuilds and sorts snapshot collections while processing slices."
+      ]
+    },
+    {
+      "id": "PERF-008",
+      "title": "Cap and cache Build Area preview rendering",
+      "status": "open",
+      "updated": "2026-04-27",
+      "why": "Structure previews can render every scanned block of every nearby visible BuildArea every frame, and the cache is single-preview only. Large prefabs or multiple nearby areas can spike client frame time.",
+      "scope": [
+        "Add preview block/render budgets and distance/frustum/LOD limits.",
+        "Replace the single-entry parsed-structure cache with a bounded multi-entry cache.",
+        "Avoid per-frame block-entity construction where possible."
+      ],
+      "acceptance": [
+        "Large prefab previews have a measured frame-time cap.",
+        "Multiple nearby BuildAreas do not constantly reparse structures.",
+        "Preview remains accurate near the player."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "WorkerAreaRenderer.render iterates visible areas.",
+        "renderStructurePreview loops scanned blocks and may create block entities.",
+        "getCachedPreviewStructure stores only one preview structure."
+      ]
+    }
+  ]
+}

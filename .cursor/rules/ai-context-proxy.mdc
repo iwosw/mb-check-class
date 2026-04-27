@@ -1,0 +1,35 @@
+---
+description: Use compact context-proxy tools before raw repository reads.
+alwaysApply: true
+---
+
+# AI Context Proxy
+
+Use `tools/ai-context-proxy/bin/ctx` as the default context gateway for this repository.
+
+Rules:
+
+- Prefer `ctx repo-map` when module location is unclear.
+- Prefer `ctx search <pattern> [path]` over broad `rg` or `grep`.
+- Prefer `ctx file <path>` before opening large files.
+- Read exact code with `ctx symbol <path> <symbol>` or `ctx exact <path> <start> <end>` before editing.
+- Run noisy commands through `ctx log -- <command...>`.
+- Do not dump large files or broad search output with raw `cat`, `sed`, `find`, `rg`, or `grep` unless `ctx` is insufficient and you explain why.
+
+Optional shell setup:
+
+```bash
+export PATH="$PWD/tools/ai-context-proxy/wrappers:$PWD/tools/ai-context-proxy/bin:$PATH"
+```
+
+## Backlog
+
+- Use `tools/backlog` instead of reading `docs/BANNERMOD_BACKLOG.json` directly.
+- Use `tools/backlog batch --limit 5`, `tools/backlog show <ID>`, `tools/backlog add ... --dry-run`, and `tools/backlog validate` for normal backlog work.
+- Before marking a task done, self-verify every acceptance item and record the result with `tools/backlog done <ID> --verification "..."`.
+- If a task changes UI, changes gameplay mechanics, or adds player-facing mechanics, update both `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md` before marking it done.
+
+## Minecraft UI
+
+- For Minecraft GUI/HUD work, apply `.agents/skills/minecraft-ui-design/SKILL.md`.
+- UI must be Minecraft-native, minimal, readable, localized, server-authoritative for gameplay mutations, and checked for overlap with hotbar/chat/crosshair/boss bars/existing BannerMod overlays.
