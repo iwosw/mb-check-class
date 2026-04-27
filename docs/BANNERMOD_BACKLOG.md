@@ -113,8 +113,6 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-004 — Persistent settlement runtime state
 
-**Status: DONE 2026-04-27.** Work-order runtime persistence covered by `SettlementWorkOrderRuntimeTest`; no false dirty churn on identical reload/restore. Remaining seller-phase / household-assignment / project-queue persistence work has not surfaced as a gameplay regression in the live test sweeps and is out of scope for this slice — it's intentionally absorbed into the settlement aggregate's same NBT pattern (additive keys with safe defaults) under COMPAT-001.
-
 **Зачем.** Several settlement runtimes still keep scheduler tasks, seller phases, household assignments, project queues, and work-order claims mostly in memory.
 
 **Scope.**
@@ -131,11 +129,11 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 **Progress 2026-04-26.** Work-order runtime persistence and no-op restore dirty checks are covered by `SettlementWorkOrderRuntimeTest`; targeted tests pass.
 
+**Progress 2026-04-27.** No new persistence work landed today. Work-order persistence has stayed green across the day's gametest sweeps but seller-phase / household-assignment / project-queue persistence has not been audited end-to-end in this session, so the acceptance criterion ("Reload does not lose active meaningful settlement work state") is **not** verified for those subsystems yet. Slice stays open until those three are explicitly checked.
+
 ---
 
 ## SETTLEMENT-005 — Hauling and input-fetch work orders
-
-**Status: DONE 2026-04-27.** `SettlementWorkOrder` carries the safe payload, `SettlementOrderWorkGoal` executes through a four-phase state machine, `StockpileTransportWorkOrderPublisher` translates each authored stockpile route, and JUnit covers filter parsing / publisher helpers / claim-release-complete. The "live in-game smoke verification of cross-storage item movement" caveat from the prior progress note is now covered indirectly by the FLAKE-003 mitigation (same gametest poll-converted to `succeedWhen`), so this slice closes.
 
 **Зачем.** `HAUL_RESOURCE` and `FETCH_INPUT` are still analysis-only because current work orders do not safely carry source/destination/count/filter.
 
@@ -152,6 +150,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Tests cover payload serialization and claim behavior.
 
 **Progress 2026-04-26.** `SettlementWorkOrder` carries source position, destination position, resource hint/filter, and item count for `FETCH_INPUT`/`HAUL_RESOURCE`. `SettlementOrderWorkGoal` executes transport orders through a four-phase state machine (move-to-source → withdraw → move-to-destination → deposit) using a stateless `TransportContainerExchange` helper that resolves containers via the nearest `StorageArea` (or a direct block-entity at the anchor pos) and respects the resource-hint filter and requested item count. `StockpileTransportWorkOrderPublisher` turns each authored stockpile route into a `HAUL_RESOURCE` order; runtime dedup keys on (building, type, destination) so republishing is a no-op. Targeted JUnit covers filter parsing, publisher helpers, and a transport claim/release/complete cycle. Live in-game smoke verification of cross-storage item movement under the new state machine remains open.
+
+**Progress 2026-04-27.** No new courier-runtime work today. The `authoredRouteCourierMovesItemsBetweenStorageEndpoints` gametest exercises a one-shot cross-storage transport on a `harness_empty` world and is now stable across 5 consecutive sweeps after the FLAKE-003 mitigation, which is supporting evidence that the production state machine completes a delivery — but it is not a substitute for the live in-world smoke flagged in the 2026-04-26 progress note (multi-storage routing under settlement-tick load, resource-hint filter against shared chests, claim release on entity death mid-route). Acceptance criterion "Workers/couriers can fetch inputs for production" is not exercised by the existing test at all. Slice stays open until those gaps are covered.
 
 ---
 
@@ -182,8 +182,6 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-007 — Sea-trade production consumer loop
 
-**Status: DONE 2026-04-27.** Pure aggregation layer landed: `BannerModSeaTradeSummary.summarise(entrypoints)` returns a `Summary(exportableByItem, importableByItem, bottlenecks)` the upcoming production / consumption loop and the settlement UI both consume. Per-item totals come from filtered routes; unfiltered routes contribute a `UNFILTERED_ROUTE` bottleneck token instead of polluting the totals. Directional gaps (`NO_PORT`, `ONLY_EXPORTS`, `ONLY_IMPORTS`) are detected and surfaced so the UI can explain why trade isn't flowing. Locked in by `BannerModSeaTradeSummaryTest` (8 cases). The actual production-loop hookup that *consumes* the summary to alter what the settlement produces / obtains is the open follow-up (and is layered cleanly because the policy is pure).
-
 **Зачем.** Sea-trade entrypoints are recognized, but production/consumption gameplay is still thin.
 
 **Scope.**
@@ -198,6 +196,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - UI explains trade bottlenecks and benefits.
 
 **Progress 2026-04-26.** Existing settlement snapshot trade-route/sea-entrypoint hints are documented for players; no new production consumer loop landed in this slice.
+
+**Progress 2026-04-27.** Pure aggregation layer landed: `BannerModSeaTradeSummary.summarise(entrypoints)` returns a `Summary(exportableByItem, importableByItem, bottlenecks)` value record. Filtered routes contribute their `requestedCount` to every item their filter names; unfiltered (`isAny`) routes contribute a `UNFILTERED_ROUTE` bottleneck token instead of polluting per-item totals. Directional gaps surface as `NO_PORT`, `ONLY_EXPORTS`, or `ONLY_IMPORTS`. Locked in by `BannerModSeaTradeSummaryTest` (8 cases). **Neither acceptance criterion is met** by this slice alone — "sea trade changes what settlement can produce/obtain" needs the production-loop hookup to consume the summary; "UI explains trade bottlenecks and benefits" needs a settlement UI surface to render the bottleneck tokens. The aggregation layer is the prerequisite both consumers will build on.
 
 ---
 
@@ -424,8 +424,6 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## COMBAT-003 — Role-aware formation planner and shield-wall pressure
 
-**Status: DONE 2026-04-27.** Pure-logic slot planner landed in `com.talhanation.bannermod.combat`. `FormationSlot` enum (FRONT_RANK / SUPPORT_RANK / REAR_RANK / FLANK / UNASSIGNED), `FormationPlanner.slotFor(role)` maps every `CombatRole` (INFANTRY -> FRONT_RANK, PIKE -> SUPPORT_RANK, RANGED -> REAR_RANK, CAVALRY -> FLANK), `FormationPlanner.assign(roles)` returns an insertion-ordered count per slot (every slot present even when zero, so UI iteration is stable). Shield-wall pressure: `shieldWallReady(assignment)` returns true at `SHIELD_WALL_MIN_FRONT_RANK = 3` so the upcoming combat-AI goal can switch the front rank from "hold" to "advance slowly". Isolation penalty: `isIsolated(distance)` / `cohesionMultiplier(distance)` apply `ISOLATION_PENALTY_MULTIPLIER = 0.5` when the unit drifts beyond `FORMATION_COHESION_RADIUS = 8` blocks (negative / NaN / +∞ all count as isolated, defensively). All three acceptance criteria (mixed groups form layered lines, shield wall advances slowly and coherently, isolated units lose formation benefits) verifiable from `FormationPlannerTest` (11 cases). Combat-AI wiring (formation goal that physically positions members per slot) is the open follow-up.
-
 **Зачем.** Formations need to behave like tactical units, not loose mobs.
 
 **Scope.**
@@ -441,6 +439,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Mixed groups form layered lines.
 - Shield wall advances slowly and coherently.
 - Isolated units lose formation benefits.
+
+**Progress 2026-04-27.** Pure-logic slot planner landed in `com.talhanation.bannermod.combat`. `FormationSlot` enum (FRONT_RANK / SUPPORT_RANK / REAR_RANK / FLANK / UNASSIGNED), `FormationPlanner.slotFor(role)` maps every `CombatRole` (INFANTRY -> FRONT_RANK, PIKE -> SUPPORT_RANK, RANGED -> REAR_RANK, CAVALRY -> FLANK), `FormationPlanner.assign(roles)` returns an insertion-ordered count per slot. `shieldWallReady(assignment)` returns true at `SHIELD_WALL_MIN_FRONT_RANK = 3` for the upcoming "advance slowly" toggle. `isIsolated(distance)` / `cohesionMultiplier(distance)` apply `ISOLATION_PENALTY_MULTIPLIER = 0.5` beyond `FORMATION_COHESION_RADIUS = 8` blocks. Locked in by `FormationPlannerTest` (11 cases). **None of the three acceptance criteria are observably met by this slice** — they all require the combat-AI formation goal that physically positions members per slot, which is the open follow-up.
 
 ---
 
@@ -485,8 +485,6 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## COMBAT-006 — Siege objective targeting and escort
 
-**Status: DONE 2026-04-27.** Pure-logic policy landed: `SiegeObjectivePolicy.canAttackStandard(attackerEntityId, standardEntityId)` (opposing-side only, both ids non-null), `SiegeObjectivePolicy.shouldEscort(actorEntityId, standardEntityId)` (same-side only), and `SiegeObjectivePolicy.applyDamage(currentControl, damage, maxControl)` returning a `DamageOutcome(controlAfter, destroyed)` record. The `destroyed` flag is set only when the hit reduces the pool from positive to zero — not on follow-up hits to an already-dead standard — so the audit log can write exactly one `SIEGE_STANDARD_DESTROYED` row per destruction event. Default control pool is `DEFAULT_CONTROL_POOL = 100`, ready for a future Forge-config layer. Locked in by `SiegeObjectivePolicyTest` (10 cases). Combat-AI wiring (recruit target acquisition consumes `canAttackStandard`, defend goal consumes `shouldEscort`, siege standard block damage handler calls `applyDamage` and writes the audit on `destroyed=true`) is the open follow-up.
-
 **Зачем.** Armies need to interact with `SiegeStandardBlock`, not only players.
 
 **Scope.**
@@ -500,6 +498,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Ordered attackers can destroy enemy standard.
 - Defenders hold around own standard.
 - Destruction changes siege state/audit.
+
+**Progress 2026-04-27.** Pure-logic policy landed: `SiegeObjectivePolicy.canAttackStandard(attackerEntityId, standardEntityId)` (opposing-side only, both ids non-null), `SiegeObjectivePolicy.shouldEscort(actorEntityId, standardEntityId)` (same-side only), and `SiegeObjectivePolicy.applyDamage(currentControl, damage, maxControl)` returning a `DamageOutcome(controlAfter, destroyed)` record. The `destroyed` flag fires only when the hit reduces the pool from positive to zero, so a follow-up cleanup hit on a dead standard never re-emits a destruction event. `DEFAULT_CONTROL_POOL = 100`, ready for a future Forge-config layer. Locked in by `SiegeObjectivePolicyTest` (10 cases). **None of the three acceptance criteria are observably met by this slice** — recruit AI does not yet target standards, defend goal does not yet escort own standards, and the standard block damage handler does not yet call `applyDamage` and write the destruction audit. All three are the open follow-up.
 
 ---
 
