@@ -86,13 +86,13 @@ public class BannerModWarOutcomeAndTaxGameTests {
         long tickAtAccrue = placedAt + 15L;
 
         BannerModTreasuryManager treasury = BannerModTreasuryManager.get(level);
-        int defenderBalanceBeforeTax = treasury.getLedger(setup.defenderClaim.getUUID()).treasuryBalance();
-        int attackerBalanceBeforeTax = treasury.getLedger(setup.attackerClaim.getUUID()).treasuryBalance();
+        int defenderBalanceBeforeTax = treasuryBalanceForEntity(level, setup.defenderEntityId);
+        int attackerBalanceBeforeTax = treasuryBalanceForEntity(level, setup.attackerEntityId);
         WarRuntimeContext.taxRuntime(level).accrue(5, intervalTicks, tickAtAccrue);
 
-        helper.assertTrue(treasury.getLedger(setup.defenderClaim.getUUID()).treasuryBalance() == defenderBalanceBeforeTax - 5,
+        helper.assertTrue(treasuryBalanceForEntity(level, setup.defenderEntityId) == defenderBalanceBeforeTax - 5,
                 "Expected defender claim treasury debited by 5 after one tax cycle");
-        helper.assertTrue(treasury.getLedger(setup.attackerClaim.getUUID()).treasuryBalance() == attackerBalanceBeforeTax + 5,
+        helper.assertTrue(treasuryBalanceForEntity(level, setup.attackerEntityId) == attackerBalanceBeforeTax + 5,
                 "Expected attacker claim treasury credited by 5 after one tax cycle");
 
         WarAuditEntry paid = latestAuditOfType(WarRuntimeContext.audit(level), setup.warId, "OCCUPATION_TAX_PAID");
@@ -105,7 +105,7 @@ public class BannerModWarOutcomeAndTaxGameTests {
         // Second accrue at the same logical tick is inside the next interval window — no-op.
         int auditCountBefore = WarRuntimeContext.audit(level).all().size();
         WarRuntimeContext.taxRuntime(level).accrue(5, intervalTicks, tickAtAccrue);
-        helper.assertTrue(treasury.getLedger(setup.defenderClaim.getUUID()).treasuryBalance() == defenderBalanceBeforeTax - 5,
+        helper.assertTrue(treasuryBalanceForEntity(level, setup.defenderEntityId) == defenderBalanceBeforeTax - 5,
                 "Expected idempotent second accrue to leave defender balance untouched");
         helper.assertTrue(WarRuntimeContext.audit(level).all().size() == auditCountBefore,
                 "Expected idempotent second accrue to add zero new audit entries");
@@ -216,6 +216,16 @@ public class BannerModWarOutcomeAndTaxGameTests {
     private static void seedTreasury(ServerLevel level, RecruitsClaim claim, int amount) {
         BannerModTreasuryManager.get(level).depositTaxes(
                 claim.getUUID(), claim.getCenter(), null, amount, level.getGameTime());
+    }
+
+    private static int treasuryBalanceForEntity(ServerLevel level, UUID politicalEntityId) {
+        int total = 0;
+        for (RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()) {
+            if (politicalEntityId.equals(claim.getOwnerPoliticalEntityId())) {
+                total += BannerModTreasuryManager.get(level).getLedger(claim.getUUID()).treasuryBalance();
+            }
+        }
+        return total;
     }
 
     private static String latestAuditDetail(WarAuditLogSavedData audit, UUID warId) {

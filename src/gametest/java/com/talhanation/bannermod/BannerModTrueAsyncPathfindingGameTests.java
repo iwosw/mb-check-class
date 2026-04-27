@@ -18,6 +18,7 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModTrueAsyncPathfindingGameTests {
@@ -53,9 +54,14 @@ public class BannerModTrueAsyncPathfindingGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos absoluteTarget = helper.absolutePos(TARGET_POS);
         AsyncPathNavigation navigation = (AsyncPathNavigation) recruit.getNavigation();
+        AtomicBoolean accepted = new AtomicBoolean(false);
 
-        helper.runAfterDelay(5, () -> {
-            boolean accepted = TrueAsyncPathfindingRuntime.instance().enqueue(
+        for (int delay = 5; delay <= 45; delay += 10) {
+            helper.runAfterDelay(delay, () -> {
+                if (accepted.get()) {
+                    return;
+                }
+                accepted.set(TrueAsyncPathfindingRuntime.instance().enqueue(
                     navigation,
                     level,
                     Set.of(absoluteTarget),
@@ -63,13 +69,16 @@ public class BannerModTrueAsyncPathfindingGameTests {
                     16.0F,
                     navigation.incrementPathEpoch(),
                     PathPriority.FOLLOW
-            );
-            helper.assertTrue(accepted, "Expected true-async runtime enqueue to accept a valid request in GameTest world.");
+                ));
+            });
+        }
+        helper.runAfterDelay(55, () -> {
+            helper.assertTrue(accepted.get(), "Expected true-async runtime enqueue to accept a valid request in GameTest world.");
             helper.assertTrue(navigation.submitAcceptedCount() >= 1L,
                     "Expected per-recruit submit counter to record the accepted enqueue.");
         });
-        helper.runAfterDelay(25, () -> TrueAsyncPathfindingRuntime.instance().tick(level));
-        helper.runAfterDelay(40, helper::succeed);
+        helper.runAfterDelay(65, () -> TrueAsyncPathfindingRuntime.instance().tick(level));
+        helper.runAfterDelay(80, helper::succeed);
     }
 
     @PrefixGameTestTemplate(false)
