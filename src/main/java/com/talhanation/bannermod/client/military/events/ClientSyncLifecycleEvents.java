@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.events;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.war.client.WarClientState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -13,10 +14,12 @@ public class ClientSyncLifecycleEvents {
     @SubscribeEvent
     public static void onClientLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         ClientManager.resetSynchronizedState();
+        WarClientState.clear();
     }
 
     @SubscribeEvent
     public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientManager.resetSynchronizedState();
+        WarClientState.clear();
     }
 }

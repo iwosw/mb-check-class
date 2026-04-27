@@ -48,6 +48,7 @@ public class WarListScreen extends Screen {
     private int guiTop;
     private int scrollOffset = 0;
     private List<WarDeclarationRecord> wars = List.of();
+    private int observedWarStateVersion = -1;
     @Nullable
     private WarDeclarationRecord selected;
 
@@ -69,14 +70,6 @@ public class WarListScreen extends Screen {
         super.init();
         this.guiLeft = (this.width - W) / 2;
         this.guiTop = (this.height - H) / 2;
-        this.wars = new ArrayList<>(WarClientState.wars());
-        if (this.selected != null) {
-            this.selected = WarClientState.wars().stream()
-                    .filter(w -> w.id().equals(this.selected.id()))
-                    .findFirst()
-                    .orElse(null);
-        }
-
         int detailX = guiLeft + 200;
         int detailY = guiTop + H - 60;
 
@@ -105,7 +98,15 @@ public class WarListScreen extends Screen {
         addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
 
-        updateButtonsState();
+        refresh();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (observedWarStateVersion != WarClientState.version()) {
+            refresh();
+        }
     }
 
     private void placeSiegeHere() {
@@ -125,6 +126,9 @@ public class WarListScreen extends Screen {
         if (selected != null) {
             this.selected = wars.stream().filter(w -> w.id().equals(selected.id())).findFirst().orElse(null);
         }
+        int maxScroll = Math.max(0, wars.size() - LIST_VISIBLE);
+        this.scrollOffset = clamp(this.scrollOffset, 0, maxScroll);
+        this.observedWarStateVersion = WarClientState.version();
         updateButtonsState();
     }
 
@@ -222,7 +226,8 @@ public class WarListScreen extends Screen {
         }
 
         if (wars.isEmpty()) {
-            graphics.drawCenteredString(font, "No active wars", listX + listW / 2, listY + listH / 2 - 4, 0xAAAAAA);
+            String empty = WarClientState.hasSnapshot() ? "No active wars" : "Waiting for server war sync";
+            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + listH / 2 - 4, 0xAAAAAA);
         }
     }
 

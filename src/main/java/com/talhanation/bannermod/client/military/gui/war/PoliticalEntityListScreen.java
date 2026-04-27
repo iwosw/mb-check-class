@@ -35,6 +35,7 @@ public class PoliticalEntityListScreen extends Screen {
     private int guiTop;
     private int scrollOffset;
     private List<PoliticalEntityRecord> entities = List.of();
+    private int observedWarStateVersion = -1;
     @Nullable
     private PoliticalEntityRecord selected;
     @Nullable
@@ -58,10 +59,6 @@ public class PoliticalEntityListScreen extends Screen {
         super.init();
         this.guiLeft = (this.width - W) / 2;
         this.guiTop = (this.height - H) / 2;
-        this.entities = new ArrayList<>(WarClientState.entities());
-        if (this.selected != null) {
-            this.selected = WarClientState.entityById(this.selected.id());
-        }
         addRenderableWidget(Button.builder(Component.literal("Create"), btn -> openCreateDialog())
                 .bounds(guiLeft + 8, guiTop + H - 24, 60, 18).build());
         this.renameButton = addRenderableWidget(Button.builder(Component.literal("Rename"), btn -> openRenameDialog())
@@ -81,7 +78,15 @@ public class PoliticalEntityListScreen extends Screen {
                 .bounds(guiLeft + W - 172, guiTop + H - 44, 80, 18).build());
         addRenderableWidget(Button.builder(Component.literal("Back"), btn -> onClose())
                 .bounds(guiLeft + W - 86, guiTop + H - 24, 80, 18).build());
-        updateLeaderButtons();
+        refresh();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (observedWarStateVersion != WarClientState.version()) {
+            refresh();
+        }
     }
 
     private void refresh() {
@@ -89,6 +94,8 @@ public class PoliticalEntityListScreen extends Screen {
         if (this.selected != null) {
             this.selected = WarClientState.entityById(this.selected.id());
         }
+        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, Math.max(0, entities.size() - LIST_VISIBLE)));
+        this.observedWarStateVersion = WarClientState.version();
         updateLeaderButtons();
     }
 
@@ -234,7 +241,8 @@ public class PoliticalEntityListScreen extends Screen {
             graphics.drawString(font, font.plainSubstrByWidth(" " + displayName(entity), listW - 76), listX + 76, rowY + 4, 0xFFFFFF, false);
         }
         if (entities.isEmpty()) {
-            graphics.drawCenteredString(font, "No states yet", listX + listW / 2, listY + 62, 0xAAAAAA);
+            String empty = WarClientState.hasSnapshot() ? "No states yet" : "Waiting for server state sync";
+            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + 62, 0xAAAAAA);
         }
     }
 
