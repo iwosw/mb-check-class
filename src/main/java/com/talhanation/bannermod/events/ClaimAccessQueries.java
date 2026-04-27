@@ -3,9 +3,11 @@ package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 
@@ -16,6 +18,7 @@ final class ClaimAccessQueries {
 
     static RecruitsClaim getClaim(RecruitsClaimManager claimManager, LevelAccessor level, BlockPos pos) {
         if (claimManager == null) return null;
+        if (!(level instanceof ServerLevel serverLevel) || serverLevel.dimension() != Level.OVERWORLD) return null;
         ChunkAccess access = level.getChunk(pos);
         return claimManager.getClaim(access.getPos());
     }
