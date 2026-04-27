@@ -148,18 +148,27 @@ public class RecruitsClaimManager {
     }
 
     public void broadcastClaimsToAll(ServerLevel level) {
+        MessageToClientUpdateClaims message = createFullClaimsSyncMessage();
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
-                    new MessageToClientUpdateClaims(
-                            this.getAllClaims(),
-                            RecruitsServerConfig.ClaimingCost.get(),
-                            RecruitsServerConfig.ChunkCost.get(),
-                            RecruitsServerConfig.CascadeThePriceOfClaims.get(),
-                            RecruitsServerConfig.AllowClaiming.get(),
-                            RecruitsServerConfig.FogOfWarEnabled.get(),
-                            getRecruitCurrency()
-                    ));
+            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), message);
         }
+    }
+
+    public void sendClaimsToPlayer(ServerPlayer player) {
+        if (player == null) return;
+        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), createFullClaimsSyncMessage());
+    }
+
+    private MessageToClientUpdateClaims createFullClaimsSyncMessage() {
+        return new MessageToClientUpdateClaims(
+                this.getAllClaims(),
+                RecruitsServerConfig.ClaimingCost.get(),
+                RecruitsServerConfig.ChunkCost.get(),
+                RecruitsServerConfig.CascadeThePriceOfClaims.get(),
+                RecruitsServerConfig.AllowClaiming.get(),
+                RecruitsServerConfig.FogOfWarEnabled.get(),
+                getRecruitCurrency()
+        );
     }
 
     private static ItemStack getRecruitCurrency() {
