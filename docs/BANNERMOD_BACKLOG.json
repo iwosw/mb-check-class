@@ -427,8 +427,8 @@
     {
       "id": "UI-004",
       "title": "Server-authoritative atomic claim editing UX",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "World-map claim UI mutates local claim objects optimistically and sends payment/update/delete separately. Server rejection can follow a charge or leave the map briefly showing unconfirmed state.",
       "scope": [
         "Replace create/add/remove/delete/edit flows with intent packets validated and charged atomically server-side.",
@@ -441,11 +441,17 @@
         "Denial reasons are visible in the world-map UI."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Added MessageClaimIntent for server-authoritative ADD_CHUNK, REMOVE_CHUNK, and DELETE flows. Server validates claiming enabled, Overworld, claim existence, edit authority, distance, occupancy/max-size, and payment before mutation; currency is charged only after validation. World-map add/remove/delete no longer mutates ClientManager claim state optimistically and waits for authoritative sync/broadcast; server sends accepted/denied chat feedback with reasons. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "WorldMapClaimController.claimArea/claimChunk and WorldMapClaimMenuActions.removeSelectedChunk/deleteSelectedClaim mutate/send client-authored claim state.",
         "MessageUpdateClaim consumes full claim NBT server-side."
-      ]
+      ],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "UI-005",
