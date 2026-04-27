@@ -14,6 +14,7 @@ buildscript {
 plugins {
     id 'com.matthewprenger.cursegradle' version '1.4.0'
     id 'com.github.johnrengelman.shadow' version '7.1.0'
+    id 'jacoco'
 }
 
 apply plugin: 'net.minecraftforge.gradle'
@@ -205,6 +206,45 @@ reobf {
 
 test {
     useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+jacoco {
+    toolVersion = '0.8.11'
+}
+
+jacocoTestReport {
+    dependsOn test
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, include: [
+            'com/talhanation/bannermod/settlement/**',
+            'com/talhanation/bannermod/shared/authority/**',
+            'com/talhanation/bannermod/war/cooldown/**'
+        ], exclude: [
+            'com/talhanation/bannermod/settlement/civilian/**',
+            'com/talhanation/bannermod/settlement/bootstrap/**',
+            'com/talhanation/bannermod/settlement/prefab/**',
+            'com/talhanation/bannermod/settlement/validation/**',
+            'com/talhanation/bannermod/settlement/building/**',
+            'com/talhanation/bannermod/settlement/workorder/publisher/**'
+        ])
+    }))
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    classDirectories.setFrom(tasks.named('jacocoTestReport').get().classDirectories)
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80
+            }
+        }
+    }
 }
 
 tasks.register('verifyBuildStage') {
@@ -223,6 +263,21 @@ tasks.register('verifyGameTestStage') {
     group = 'verification'
     description = 'Runs the game test stage used by check'
     dependsOn tasks.named('runGameTestServer')
+}
+
+tasks.register('verifyGameTestScenarioCoverage') {
+    group = 'verification'
+    description = 'Checks that GameTest scenario inventory stays in the 70-80 scenario coverage band.'
+    doLast {
+        int count = 0
+        fileTree('src/gametest/java').matching { include '**/*.java' }.each { file ->
+            count += (file.text =~ /@GameTest\b/).count
+        }
+        if (count < 70) {
+            throw new GradleException("GameTest scenario coverage below target: ${count}/70")
+        }
+        println "GameTest scenario coverage inventory: ${count} scenarios (target 70-80)."
+    }
 }
 
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {
