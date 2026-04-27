@@ -19,6 +19,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -68,7 +69,7 @@ public class WarListScreen extends Screen {
     private Button closeBtn;
 
     public WarListScreen(@Nullable Screen parent) {
-        super(Component.literal("Wars"));
+        super(text("gui.bannermod.war_list.title"));
         this.parent = parent;
     }
 
@@ -80,31 +81,31 @@ public class WarListScreen extends Screen {
         int detailX = guiLeft + 200;
         int detailY = guiTop + H - 60;
 
-        openAttackerBtn = Button.builder(Component.literal("Attacker info"), btn -> openEntity(selected != null ? selected.attackerPoliticalEntityId() : null))
+        openAttackerBtn = Button.builder(text("gui.bannermod.war_list.attacker_info"), btn -> openEntity(selected != null ? selected.attackerPoliticalEntityId() : null))
                 .bounds(detailX, detailY, 80, 18).build();
-        openDefenderBtn = Button.builder(Component.literal("Defender info"), btn -> openEntity(selected != null ? selected.defenderPoliticalEntityId() : null))
+        openDefenderBtn = Button.builder(text("gui.bannermod.war_list.defender_info"), btn -> openEntity(selected != null ? selected.defenderPoliticalEntityId() : null))
                 .bounds(detailX + 88, detailY, 80, 18).build();
-        statesBtn = Button.builder(Component.literal("States"), btn -> this.minecraft.setScreen(new PoliticalEntityListScreen(this)))
+        statesBtn = Button.builder(text("gui.bannermod.war_list.states"), btn -> this.minecraft.setScreen(new PoliticalEntityListScreen(this)))
                 .bounds(detailX, detailY + 22, 80, 18).build();
-        placeSiegeBtn = Button.builder(Component.literal("Place siege here"), btn -> placeSiegeHere())
+        placeSiegeBtn = Button.builder(text("gui.bannermod.war_list.place_siege"), btn -> placeSiegeHere())
                 .bounds(detailX, detailY + 44, 80, 18).build();
-        refreshBtn = Button.builder(Component.literal("Refresh"), btn -> refresh())
+        refreshBtn = Button.builder(text("gui.bannermod.common.refresh"), btn -> refresh())
                 .bounds(detailX + 88, detailY + 22, 80, 18).build();
-        closeBtn = Button.builder(Component.literal("Close"), btn -> onClose())
+        closeBtn = Button.builder(text("gui.bannermod.common.close"), btn -> onClose())
                 .bounds(detailX + 88, detailY + 44, 80, 18).build();
 
         int alliesY = guiTop + LIST_TOP_OFFSET + LIST_VISIBLE * ROW_H + 4;
-        alliesBtn = Button.builder(Component.literal("Allies for selected war"), btn -> openAllies())
+        alliesBtn = Button.builder(text("gui.bannermod.war_list.allies"), btn -> openAllies())
                 .bounds(guiLeft + 8, alliesY, 184, 18).build();
-        declareBtn = Button.builder(Component.literal("Declare war"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)))
+        declareBtn = Button.builder(text("gui.bannermod.war_list.declare"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)))
                 .bounds(guiLeft + 8, alliesY + 22, 184, 18).build();
-        cancelWarBtn = Button.builder(Component.literal("Cancel war"), btn -> sendOutcome(MessageResolveWarOutcome.Action.CANCEL))
+        cancelWarBtn = Button.builder(text("gui.bannermod.war_list.cancel"), btn -> sendOutcome(MessageResolveWarOutcome.Action.CANCEL))
                 .bounds(detailX, detailY - 46, 80, 18).build();
-        occupyBtn = Button.builder(Component.literal("Occupy here"), btn -> sendOutcome(MessageResolveWarOutcome.Action.OCCUPY))
+        occupyBtn = Button.builder(text("gui.bannermod.war_list.occupy"), btn -> sendOutcome(MessageResolveWarOutcome.Action.OCCUPY))
                 .bounds(detailX + 88, detailY - 46, 80, 18).build();
-        annexBtn = Button.builder(Component.literal("Annex here"), btn -> sendOutcome(MessageResolveWarOutcome.Action.ANNEX))
+        annexBtn = Button.builder(text("gui.bannermod.war_list.annex"), btn -> sendOutcome(MessageResolveWarOutcome.Action.ANNEX))
                 .bounds(detailX, detailY - 24, 80, 18).build();
-        tributeLockedBtn = Button.builder(Component.literal("Tribute: op only"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE))
+        tributeLockedBtn = Button.builder(text("gui.bannermod.war_list.tribute_locked"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE))
                 .bounds(detailX + 88, detailY - 24, 80, 18).build();
 
         addRenderableWidget(openAttackerBtn);
@@ -167,34 +168,51 @@ public class WarListScreen extends Screen {
     private void updateButtonsState() {
         boolean has = selected != null;
         openAttackerBtn.active = has;
+        openAttackerBtn.setTooltip(has ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.select_war")));
         openDefenderBtn.active = has;
+        openDefenderBtn.setTooltip(has ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.select_war")));
         if (placeSiegeBtn != null) {
             placeSiegeBtn.active = has && leaderSideOf(selected) != null
                     && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
+            placeSiegeBtn.setTooltip(placeSiegeBtn.active ? null : Tooltip.create(has
+                    ? text("gui.bannermod.war_list.tooltip.active_leader_required")
+                    : text("gui.bannermod.war_list.tooltip.select_war")));
         }
         if (alliesBtn != null) {
             alliesBtn.active = has;
+            alliesBtn.setTooltip(has ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.select_war")));
         }
         if (declareBtn != null) {
             declareBtn.active = WarClientState.entities().stream().anyMatch(entity -> {
                 Player player = Minecraft.getInstance().player;
                 return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity) && entity.status().canDeclareOffensiveWar();
             });
+            declareBtn.setTooltip(declareBtn.active ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.no_declarer")));
         }
         boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
         boolean attackerLeader = has && canLocalPlayerActFor(selected.attackerPoliticalEntityId());
         if (cancelWarBtn != null) {
             cancelWarBtn.active = live && attackerLeader;
+            cancelWarBtn.setTooltip(cancelWarBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
         }
         if (occupyBtn != null) {
             occupyBtn.active = live && attackerLeader;
+            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
         }
         if (annexBtn != null) {
             annexBtn.active = live && attackerLeader;
+            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
         }
         if (tributeLockedBtn != null) {
             tributeLockedBtn.active = false;
+            tributeLockedBtn.setTooltip(Tooltip.create(text("gui.bannermod.war_list.tooltip.op_only")));
         }
+    }
+
+    private static Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar) {
+        if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
+        if (!liveWar) return text("gui.bannermod.war_list.tooltip.war_closed");
+        return text("gui.bannermod.war_list.tooltip.attacker_leader_required");
     }
 
     @Nullable
@@ -223,7 +241,7 @@ public class WarListScreen extends Screen {
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
 
         int titleY = guiTop + 6;
-        graphics.drawCenteredString(font, "Active Wars (" + wars.size() + ")", guiLeft + W / 2, titleY, 0xFFFFFF);
+        graphics.drawCenteredString(font, text("gui.bannermod.war_list.active_wars", wars.size()).getString(), guiLeft + W / 2, titleY, 0xFFFFFF);
 
         renderBattleWindowBanner(graphics);
         renderList(graphics, mouseX, mouseY);
@@ -267,12 +285,14 @@ public class WarListScreen extends Screen {
 
             String attackerName = entityName(war.attackerPoliticalEntityId());
             String defenderName = entityName(war.defenderPoliticalEntityId());
-            String label = " " + attackerName + " → " + defenderName;
+            String label = text("gui.bannermod.war_list.row", attackerName, defenderName).getString();
             graphics.drawString(font, font.plainSubstrByWidth(label, listW - 80), listX + 80, rowY + 4, 0xFFFFFF, false);
         }
 
         if (wars.isEmpty()) {
-            String empty = WarClientState.hasSnapshot() ? "No active wars" : "Waiting for server war sync";
+            String empty = text(WarClientState.hasSnapshot()
+                    ? "gui.bannermod.war_list.empty"
+                    : "gui.bannermod.war_list.waiting_sync").getString();
             graphics.drawCenteredString(font, empty, listX + listW / 2, listY + listH / 2 - 4, 0xAAAAAA);
         }
     }
@@ -282,32 +302,32 @@ public class WarListScreen extends Screen {
         int y = guiTop + DETAIL_TOP_OFFSET;
         int w = W - 200 - 8;
 
-        graphics.drawString(font, "Detail", x, y, 0xFFFFFF, false);
+        graphics.drawString(font, text("gui.bannermod.war_list.detail"), x, y, 0xFFFFFF, false);
         if (selected == null) {
-            graphics.drawString(font, "Select a war.", x, y + 14, 0xAAAAAA, false);
-            graphics.drawString(font, "Outcome buttons unlock for the attacking leader.", x, y + 28, 0x777777, false);
+            graphics.drawString(font, text("gui.bannermod.war_list.select_war"), x, y + 14, 0xAAAAAA, false);
+            graphics.drawString(font, text("gui.bannermod.war_list.outcome_hint"), x, y + 28, 0x777777, false);
             return;
         }
 
         WarDeclarationRecord war = selected;
         int line = 0;
         String[] body = {
-                "Attacker: " + entityName(war.attackerPoliticalEntityId()),
-                "Defender: " + entityName(war.defenderPoliticalEntityId()),
-                "State: " + war.state().name(),
-                "Goal: " + war.goalType().name(),
-                "Casus belli: " + (war.casusBelli().isEmpty() ? "(none)" : war.casusBelli()),
-                "Declared: t=" + war.declaredAtGameTime(),
-                "Earliest: t=" + war.earliestActivationGameTime(),
-                "Allies attacker: " + war.attackerAllyIds().size(),
-                "Allies defender: " + war.defenderAllyIds().size(),
-                "Targets: " + war.targetPositions().size(),
-                "Occupations: " + occupationSummary(war.id()),
-                "Sieges: " + activeSiegeCount(war.id()),
-                "Revolts: " + revoltSummary(war.id()),
-                "Outcome UI: cancel / occupy / annex for attacker leader",
-                "Locked: tribute / forced peace / vassalize / demilitarize are op-only",
-                "Id: " + shortId(war.id())
+                text("gui.bannermod.war_list.detail.attacker", entityName(war.attackerPoliticalEntityId())).getString(),
+                text("gui.bannermod.war_list.detail.defender", entityName(war.defenderPoliticalEntityId())).getString(),
+                text("gui.bannermod.war_list.detail.state", war.state().name()).getString(),
+                text("gui.bannermod.war_list.detail.goal", war.goalType().name()).getString(),
+                text("gui.bannermod.war_list.detail.casus", war.casusBelli().isEmpty() ? text("gui.bannermod.common.none").getString() : war.casusBelli()).getString(),
+                text("gui.bannermod.war_list.detail.declared", war.declaredAtGameTime()).getString(),
+                text("gui.bannermod.war_list.detail.earliest", war.earliestActivationGameTime()).getString(),
+                text("gui.bannermod.war_list.detail.attacker_allies", war.attackerAllyIds().size()).getString(),
+                text("gui.bannermod.war_list.detail.defender_allies", war.defenderAllyIds().size()).getString(),
+                text("gui.bannermod.war_list.detail.targets", war.targetPositions().size()).getString(),
+                text("gui.bannermod.war_list.detail.occupations", occupationSummary(war.id())).getString(),
+                text("gui.bannermod.war_list.detail.sieges", activeSiegeCount(war.id())).getString(),
+                text("gui.bannermod.war_list.detail.revolts", revoltSummary(war.id())).getString(),
+                text("gui.bannermod.war_list.detail.outcome_ui").getString(),
+                text("gui.bannermod.war_list.detail.locked").getString(),
+                text("gui.bannermod.war_list.detail.id", shortId(war.id())).getString()
         };
         for (String s : body) {
             graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, 0xFFFFFF, false);
@@ -318,9 +338,8 @@ public class WarListScreen extends Screen {
                 continue;
             }
             String side = entityName(siege.sidePoliticalEntityId());
-            String pos = siege.pos() == null ? "?" : siege.pos().toShortString();
-            String radius = " r=" + siege.radius() + " blocks";
-            graphics.drawString(font, font.plainSubstrByWidth("Standard: " + side + " @ " + pos + radius, w),
+            String pos = siege.pos() == null ? text("gui.bannermod.common.unknown").getString() : siege.pos().toShortString();
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.war_list.standard", side, pos, siege.radius()).getString(), w),
                     x, y + 14 + line * 11, 0xFFAAFFAA, false);
             line++;
             if (line >= 18) {
@@ -329,13 +348,11 @@ public class WarListScreen extends Screen {
         }
         for (OccupationRecord occupation : WarClientState.occupationsForWar(war.id())) {
             String firstChunk = occupation.chunks().isEmpty()
-                    ? "chunk ?"
-                    : "chunk " + occupation.chunks().get(0).x + "," + occupation.chunks().get(0).z;
+                    ? text("gui.bannermod.war_list.chunk_unknown").getString()
+                    : text("gui.bannermod.war_list.chunk", occupation.chunks().get(0).x, occupation.chunks().get(0).z).getString();
             String suffix = occupation.chunks().size() > 1 ? " +" + (occupation.chunks().size() - 1) : "";
             graphics.drawString(font,
-                    font.plainSubstrByWidth("Occupation: " + entityName(occupation.occupierEntityId())
-                            + " controls " + firstChunk + suffix
-                            + " tax=t" + occupation.lastTaxedAtGameTime(), w),
+                    font.plainSubstrByWidth(text("gui.bannermod.war_list.occupation", entityName(occupation.occupierEntityId()), firstChunk, suffix, occupation.lastTaxedAtGameTime()).getString(), w),
                     x, y + 14 + line * 11, 0xFFFFDD88, false);
             line++;
             if (line >= 18) {
@@ -344,9 +361,9 @@ public class WarListScreen extends Screen {
         }
         for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
             String label = switch (revolt.state()) {
-                case PENDING -> "Pending revolt";
-                case SUCCESS -> "Revolt won";
-                case FAILED -> "Revolt failed";
+                case PENDING -> text("gui.bannermod.war_list.revolt.pending").getString();
+                case SUCCESS -> text("gui.bannermod.war_list.revolt.success").getString();
+                case FAILED -> text("gui.bannermod.war_list.revolt.failed").getString();
             };
             int color = switch (revolt.state()) {
                 case PENDING -> 0xFFFFFF55;
@@ -356,10 +373,10 @@ public class WarListScreen extends Screen {
             String rebel = entityName(revolt.rebelEntityId());
             String objective = objectiveLabel(revolt);
             String when = revolt.state() == RevoltState.PENDING
-                    ? " sched=t" + revolt.scheduledAtGameTime()
-                    : " resolved=t" + revolt.resolvedAtGameTime();
+                    ? text("gui.bannermod.war_list.revolt.scheduled", revolt.scheduledAtGameTime()).getString()
+                    : text("gui.bannermod.war_list.revolt.resolved", revolt.resolvedAtGameTime()).getString();
             graphics.drawString(font,
-                    font.plainSubstrByWidth(label + ": " + rebel + " @ " + objective + when, w),
+                    font.plainSubstrByWidth(text("gui.bannermod.war_list.revolt.line", label, rebel, objective, when).getString(), w),
                     x, y + 14 + line * 11, color, false);
             line++;
             if (line >= 18) {
@@ -368,14 +385,18 @@ public class WarListScreen extends Screen {
         }
     }
 
+    private static Component text(String key, Object... args) {
+        return Component.translatable(key, args);
+    }
+
     private String occupationSummary(UUID warId) {
         List<OccupationRecord> records = WarClientState.occupationsForWar(warId);
-        if (records.isEmpty()) return "(none)";
+        if (records.isEmpty()) return text("gui.bannermod.common.none").getString();
         int chunks = 0;
         for (OccupationRecord record : records) {
             chunks += record.chunks().size();
         }
-        return records.size() + " records / " + chunks + " chunks";
+        return text("gui.bannermod.war_list.occupation_summary", records.size(), chunks).getString();
     }
 
     private String revoltSummary(UUID warId) {
@@ -389,15 +410,15 @@ public class WarListScreen extends Screen {
                 case FAILED -> failed++;
             }
         }
-        if (pending == 0 && success == 0 && failed == 0) return "(none)";
-        return "pending=" + pending + " won=" + success + " failed=" + failed;
+        if (pending == 0 && success == 0 && failed == 0) return text("gui.bannermod.common.none").getString();
+        return text("gui.bannermod.war_list.revolt.summary", pending, success, failed).getString();
     }
 
-    private static String objectiveLabel(RevoltRecord revolt) {
+    private String objectiveLabel(RevoltRecord revolt) {
         OccupationRecord occupation = WarClientState.occupationById(revolt.occupationId());
-        if (occupation == null || occupation.chunks().isEmpty()) return "(unknown)";
+        if (occupation == null || occupation.chunks().isEmpty()) return text("gui.bannermod.common.unknown").getString();
         ChunkPos chunk = occupation.chunks().get(0);
-        return "chunk " + chunk.x + "," + chunk.z;
+        return text("gui.bannermod.war_list.chunk", chunk.x, chunk.z).getString();
     }
 
     private int activeSiegeCount(UUID warId) {
@@ -409,7 +430,7 @@ public class WarListScreen extends Screen {
     }
 
     private String entityName(UUID id) {
-        if (id == null) return "(unknown)";
+        if (id == null) return text("gui.bannermod.common.unknown").getString();
         PoliticalEntityRecord entity = WarClientState.entityById(id);
         if (entity == null) return shortId(id);
         return entity.name().isBlank() ? shortId(id) : entity.name();
