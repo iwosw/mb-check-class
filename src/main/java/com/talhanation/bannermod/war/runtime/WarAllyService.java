@@ -36,6 +36,9 @@ public final class WarAllyService {
         INVITE_WAR_MISMATCH;
 
         public String token() {
+            if (this == NOT_LEADER) {
+                return PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED;
+            }
             return name().toLowerCase(java.util.Locale.ROOT);
         }
     }
@@ -62,7 +65,7 @@ public final class WarAllyService {
         UUID sideEntityId = war.mainSideEntityId(side);
         Optional<PoliticalEntityRecord> sideOpt = registry.byId(sideEntityId);
         if (sideOpt.isEmpty()) return InviteResult.of(Outcome.SIDE_NOT_FOUND);
-        if (!PoliticalEntityAuthority.isLeaderOrOp(actor, sideOpt.get())) return InviteResult.of(Outcome.NOT_LEADER);
+        if (!PoliticalEntityAuthority.canAct(actor, sideOpt.get())) return InviteResult.of(Outcome.NOT_LEADER);
 
         Optional<PoliticalEntityRecord> inviteeOpt = inviteeEntityId == null
                 ? Optional.empty()
@@ -112,7 +115,7 @@ public final class WarAllyService {
         UUID sideEntityId = warOpt.get().mainSideEntityId(invite.side());
         Optional<PoliticalEntityRecord> sideOpt = registry.byId(sideEntityId);
         if (sideOpt.isEmpty()) return InviteResult.of(Outcome.SIDE_NOT_FOUND);
-        if (!PoliticalEntityAuthority.isLeaderOrOp(actor, sideOpt.get())) return InviteResult.of(Outcome.NOT_LEADER);
+        if (!PoliticalEntityAuthority.canAct(actor, sideOpt.get())) return InviteResult.of(Outcome.NOT_LEADER);
 
         invites.remove(invite.id());
         appendAudit(level, invite.warId(), "ALLY_INVITE_CANCELLED",
@@ -145,7 +148,7 @@ public final class WarAllyService {
         PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
         Optional<PoliticalEntityRecord> inviteeOpt = registry.byId(invite.inviteePoliticalEntityId());
         if (inviteeOpt.isEmpty()) return InviteResult.of(Outcome.INVITEE_UNKNOWN);
-        if (!PoliticalEntityAuthority.isLeaderOrOp(actor, inviteeOpt.get())) {
+        if (!PoliticalEntityAuthority.canAct(actor, inviteeOpt.get())) {
             return InviteResult.of(Outcome.NOT_LEADER);
         }
 

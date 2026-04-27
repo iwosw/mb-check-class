@@ -98,8 +98,8 @@ public final class PoliticalRegistryCommands {
                                           BlockPos overridePos) throws CommandSyntaxException {
         String token = StringArgumentType.getString(context, "entity");
         PoliticalEntityRecord record = WarCommandSupport.requireEntity(context, token);
-        if (!WarCommandSupport.isLeaderOrOp(context, record)) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
+        if (!WarCommandSupport.canAct(context, record)) {
+            throw WarCommandSupport.ERR_NOT_AUTHORIZED.create();
         }
         BlockPos pos = overridePos;
         if (pos == null) {
@@ -124,8 +124,8 @@ public final class PoliticalRegistryCommands {
         String token = StringArgumentType.getString(context, "entity");
         String statusToken = StringArgumentType.getString(context, "status");
         PoliticalEntityRecord record = WarCommandSupport.requireEntity(context, token);
-        if (!WarCommandSupport.isLeaderOrOp(context, record)) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
+        if (!WarCommandSupport.canAct(context, record)) {
+            throw WarCommandSupport.ERR_NOT_AUTHORIZED.create();
         }
         PoliticalEntityStatus status;
         try {
@@ -224,8 +224,8 @@ public final class PoliticalRegistryCommands {
             context.getSource().sendFailure(Component.literal("Occupied entity record missing."));
             return 0;
         }
-        if (!WarCommandSupport.isLeaderOrOp(context, rebel.get())) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
+        if (!WarCommandSupport.canAct(context, rebel.get())) {
+            throw WarCommandSupport.ERR_NOT_AUTHORIZED.create();
         }
         RevoltRuntime revolts = WarRuntimeContext.revolts(level);
         Optional<RevoltRecord> scheduled = revolts.schedule(

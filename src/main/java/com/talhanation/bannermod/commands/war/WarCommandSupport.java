@@ -4,6 +4,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.talhanation.bannermod.war.WarRuntimeContext;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
@@ -19,6 +20,8 @@ public final class WarCommandSupport {
             new SimpleCommandExceptionType(Component.literal("War declaration not found."));
     public static final SimpleCommandExceptionType ERR_NOT_LEADER =
             new SimpleCommandExceptionType(Component.literal("Only the political entity leader (or an op) can do that."));
+    public static final SimpleCommandExceptionType ERR_NOT_AUTHORIZED =
+            new SimpleCommandExceptionType(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
 
     private WarCommandSupport() {
     }
@@ -46,13 +49,27 @@ public final class WarCommandSupport {
     }
 
     public static boolean isLeaderOrOp(CommandContext<CommandSourceStack> context, PoliticalEntityRecord record) {
+        return canAct(context, record);
+    }
+
+    public static boolean canAct(CommandContext<CommandSourceStack> context, PoliticalEntityRecord record) {
         if (context.getSource().hasPermission(2)) {
             return true;
         }
         java.util.UUID actor = context.getSource().getEntity() == null
                 ? null
                 : context.getSource().getEntity().getUUID();
-        return actor != null && actor.equals(record.leaderUuid());
+        return PoliticalEntityAuthority.canAct(actor, false, record);
+    }
+
+    public static boolean isStrictLeaderOrOp(CommandContext<CommandSourceStack> context, PoliticalEntityRecord record) {
+        if (context.getSource().hasPermission(2)) {
+            return true;
+        }
+        java.util.UUID actor = context.getSource().getEntity() == null
+                ? null
+                : context.getSource().getEntity().getUUID();
+        return PoliticalEntityAuthority.isLeaderOrOp(actor, false, record);
     }
 
     public static void reply(CommandContext<CommandSourceStack> context, String message) {

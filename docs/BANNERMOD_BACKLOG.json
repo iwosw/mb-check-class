@@ -367,7 +367,7 @@
     {
       "id": "SEC-005",
       "title": "Unified political authority policy",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Government-aware authority exists, but mutation packets, claim editing, and UI enablement use different leader/co-leader/op checks. That makes republic and monarchy authority inconsistent in multiplayer.",
       "scope": [
@@ -381,12 +381,18 @@
         "Denial messages explain whether failure is role, government form, or op permission."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Unified shared political authority around PoliticalEntityAuthority.canAct for command, packet, and War Room UI paths. Commands now delegate shared actions through WarCommandSupport.canAct; political mutation packets for rename/capital/color/charter use canAct; claim edit uses canAct; ally invite/response/cancel, siege placement, declaration, and legal outcome UI use canAct. Government-form changes and co-leader list management remain strict leader/op via isLeaderOrOp with leader-only denial. UI enablement now mirrors shared authority for republic co-leaders while monarchy keeps co-leaders locked. Added PoliticalEntityAuthorityTest coverage for republic co-leader shared authority and strict leader-only policy parity. Updated player guides and politics docs. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava and focused ./gradlew test --tests com.talhanation.bannermod.war.registry.PoliticalEntityAuthorityTest (both BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "PoliticalEntityAuthority.canAct is government-aware.",
         "Some mutation packets use leader-only isLeaderOrOp.",
         "MessageUpdateClaim.canEditClaim permits co-leaders directly."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "UI-003",

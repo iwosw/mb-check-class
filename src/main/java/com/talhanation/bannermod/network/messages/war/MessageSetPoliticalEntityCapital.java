@@ -63,8 +63,8 @@ public class MessageSetPoliticalEntityCapital implements Message<MessageSetPolit
             return;
         }
         PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
-            player.sendSystemMessage(Component.literal("Only the political entity leader (or an op) can do that."));
+        if (!PoliticalEntityAuthority.canAct(player, record)) {
+            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
             return;
         }
         BlockPos pos = this.usePlayerPos ? player.blockPosition() : this.capital;

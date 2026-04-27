@@ -4,6 +4,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.war.client.WarClientState;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.BattleWindowClock;
 import com.talhanation.bannermod.war.runtime.BattleWindowDisplay;
@@ -177,11 +178,11 @@ public class WarListScreen extends Screen {
         if (declareBtn != null) {
             declareBtn.active = WarClientState.entities().stream().anyMatch(entity -> {
                 Player player = Minecraft.getInstance().player;
-                return player != null && player.getUUID().equals(entity.leaderUuid()) && entity.status().canDeclareOffensiveWar();
+                return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity) && entity.status().canDeclareOffensiveWar();
             });
         }
         boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
-        boolean attackerLeader = has && isLocalAttackerLeader(selected);
+        boolean attackerLeader = has && canLocalPlayerActFor(selected.attackerPoliticalEntityId());
         if (cancelWarBtn != null) {
             cancelWarBtn.active = live && attackerLeader;
         }
@@ -196,31 +197,23 @@ public class WarListScreen extends Screen {
         }
     }
 
-    private boolean isLocalAttackerLeader(@Nullable WarDeclarationRecord war) {
-        if (war == null) return false;
-        Player player = Minecraft.getInstance().player;
-        if (player == null) return false;
-        return isLeaderOf(war.attackerPoliticalEntityId(), player.getUUID());
-    }
-
     @Nullable
     private UUID leaderSideOf(@Nullable WarDeclarationRecord war) {
         if (war == null) return null;
         Player player = Minecraft.getInstance().player;
         if (player == null) return null;
-        UUID local = player.getUUID();
         UUID attacker = war.attackerPoliticalEntityId();
         UUID defender = war.defenderPoliticalEntityId();
-        if (attacker != null && isLeaderOf(attacker, local)) return attacker;
-        if (defender != null && isLeaderOf(defender, local)) return defender;
+        if (attacker != null && canLocalPlayerActFor(attacker)) return attacker;
+        if (defender != null && canLocalPlayerActFor(defender)) return defender;
         return null;
     }
 
-    private static boolean isLeaderOf(UUID entityId, UUID playerUuid) {
+    private static boolean canLocalPlayerActFor(UUID entityId) {
         PoliticalEntityRecord entity = WarClientState.entityById(entityId);
         if (entity == null) return false;
-        UUID leader = entity.leaderUuid();
-        return leader != null && leader.equals(playerUuid);
+        Player player = Minecraft.getInstance().player;
+        return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity);
     }
 
     @Override

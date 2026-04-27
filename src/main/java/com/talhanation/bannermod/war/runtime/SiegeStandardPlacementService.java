@@ -82,7 +82,7 @@ public final class SiegeStandardPlacementService {
         if (!war.involves(side.id())) {
             return Outcome.SIDE_NOT_PARTICIPANT;
         }
-        if (!PoliticalEntityAuthority.isLeaderOrOp(actor, side)) {
+        if (!PoliticalEntityAuthority.canAct(actor, side)) {
             return Outcome.NOT_LEADER;
         }
         return Outcome.OK;
@@ -138,7 +138,7 @@ public final class SiegeStandardPlacementService {
             case WAR_CLOSED -> "War is closed; cannot place a siege standard.";
             case SIDE_NOT_FOUND -> "Side not found.";
             case SIDE_NOT_PARTICIPANT -> "Side is not a participant of this war.";
-            case NOT_LEADER -> "Only the political entity leader (or an op) can do that.";
+            case NOT_LEADER -> PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED;
             case MISSING_POSITION -> "No placement position available.";
             case RUNTIME_REJECTED -> "Failed to place siege standard.";
         };
