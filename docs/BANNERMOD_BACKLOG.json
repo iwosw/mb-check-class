@@ -1187,7 +1187,7 @@
     {
       "id": "SETTLEMENT-012",
       "title": "Validated buildings feed settlement snapshots and progression",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Manual validation registers ValidatedBuildingRecord data, but BannerModSettlementService.collectBuildings currently builds settlement snapshots from live AbstractWorkAreaEntity records. That means manually validated houses, storage, markets, and other buildings can be invisible to capacity, home assignment, growth scoring, and political promotion even after validation succeeds.",
       "scope": [
@@ -1201,13 +1201,19 @@
         "Snapshot tests cover manual-only, prefab-only, and overlapping manual-plus-prefab building cases."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Merged valid manual building records into settlement snapshot building records with live-work-area overlap dedupe. Manual houses contribute resident capacity, validated storage contributes stockpile containers/slots and storage profile, and manual workplace buildings map into profile/workplace-slot seeds. Added unit coverage in BannerModSettlementServiceTest. Verified with ctx log -- ./gradlew -Dnet.minecraftforge.gradle.check.certs=false test --tests com.talhanation.bannermod.settlement.BannerModSettlementServiceTest --tests com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapServiceTest and ctx log -- ./gradlew compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SETTLEMENT-013",
       "title": "Survival free-citizen source for vacancy professions",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The intended flow says free CitizenEntity instances occupy vacancies and convert into workers or recruits, but the normal settlement bootstrap and villager growth paths spawn workers directly, while docs say spawn eggs are not the normal survival flow. Without a reliable survival source of free citizens, vacancy-based professions and barracks recruitment can be unreachable or unclear.",
       "scope": [
@@ -1222,8 +1228,14 @@
         "Players can see why no citizens are available when vacancies exist but remain unfilled."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Starter-fort bootstrap now spawns four free CitizenEntity instances for vacancy professions, exposes bootstrap feedback for available free citizens and empty-vacancy causes, and guides explain the survival citizen source and vacancy flow. Verified with targeted settlement/bootstrap unit tests and compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "UI-008",
