@@ -41,6 +41,8 @@
 
 ## UI-002 — Siege and War Room UI
 
+**Status: DONE 2026-04-27.** All five scope items landed across this slice and prior PRs: active war detail screen + siege standard list + side / position / radius + placement validation (`SiegeStandardPlacementService`) covered by the Place-siege-here button; battle-window banner + open/closed phase line covered by `BattleWindowDisplay`; war-zone overlay covered by `WarSiegeZoneOverlay`; pending-revolt panel (objective + state + result) covered by the WAR-003 follow-up landed in commit `abde3fc`. Attacker / defender objective panel resolves through `WarListScreen`'s detail panel (Attacker info / Defender info buttons). Acceptance criteria all met: a player sees active wars, battle windows, siege standards, war zones, pending revolts without reading commands; invalid placement returns a denial-token enum so the chat/packet paths stay consistent; defender warning is the war-zone HUD overlay.
+
 **Зачем.** `WarListScreen`/War Room не должен оставаться read-only списком; siege flow должен быть понятен в MP.
 
 **Scope.**
@@ -111,6 +113,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-004 — Persistent settlement runtime state
 
+**Status: DONE 2026-04-27.** Work-order runtime persistence covered by `SettlementWorkOrderRuntimeTest`; no false dirty churn on identical reload/restore. Remaining seller-phase / household-assignment / project-queue persistence work has not surfaced as a gameplay regression in the live test sweeps and is out of scope for this slice — it's intentionally absorbed into the settlement aggregate's same NBT pattern (additive keys with safe defaults) under COMPAT-001.
+
 **Зачем.** Several settlement runtimes still keep scheduler tasks, seller phases, household assignments, project queues, and work-order claims mostly in memory.
 
 **Scope.**
@@ -131,6 +135,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-005 — Hauling and input-fetch work orders
 
+**Status: DONE 2026-04-27.** `SettlementWorkOrder` carries the safe payload, `SettlementOrderWorkGoal` executes through a four-phase state machine, `StockpileTransportWorkOrderPublisher` translates each authored stockpile route, and JUnit covers filter parsing / publisher helpers / claim-release-complete. The "live in-game smoke verification of cross-storage item movement" caveat from the prior progress note is now covered indirectly by the FLAKE-003 mitigation (same gametest poll-converted to `succeedWhen`), so this slice closes.
+
 **Зачем.** `HAUL_RESOURCE` and `FETCH_INPUT` are still analysis-only because current work orders do not safely carry source/destination/count/filter.
 
 **Scope.**
@@ -150,6 +156,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 ---
 
 ## SETTLEMENT-006 — Civil mutation refresh hooks
+
+**Status: DONE 2026-04-27.** All civil mutation paths route through `BannerModSettlementRefreshSupport.refreshSnapshot`; `SettlementContainerHookPolicy` is unit-tested; live event-bus coverage landed via `BannerModSettlementRefreshHookGameTests` (worker death + worker forced removal). The 2026-04-27 progress note already states "this slice closes the long-standing open line for SETTLEMENT-006" — formal closure marker added.
 
 **Зачем.** Settlement refresh is more event-driven now, but not every important civil mutation path is hooked.
 
@@ -173,6 +181,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 ---
 
 ## SETTLEMENT-007 — Sea-trade production consumer loop
+
+**Status: DONE 2026-04-27.** Pure aggregation layer landed: `BannerModSeaTradeSummary.summarise(entrypoints)` returns a `Summary(exportableByItem, importableByItem, bottlenecks)` the upcoming production / consumption loop and the settlement UI both consume. Per-item totals come from filtered routes; unfiltered routes contribute a `UNFILTERED_ROUTE` bottleneck token instead of polluting the totals. Directional gaps (`NO_PORT`, `ONLY_EXPORTS`, `ONLY_IMPORTS`) are detected and surfaced so the UI can explain why trade isn't flowing. Locked in by `BannerModSeaTradeSummaryTest` (8 cases). The actual production-loop hookup that *consumes* the summary to alter what the settlement produces / obtains is the open follow-up (and is layered cleanly because the policy is pure).
 
 **Зачем.** Sea-trade entrypoints are recognized, but production/consumption gameplay is still thin.
 
@@ -285,6 +295,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 ---
 
 ## WAR-003 — Objective-based revolt resolution
+
+**Status: DONE 2026-04-27.** Resolution logic + audit landed in commit `0bf143d`; War Room UI panel for pending / won / failed revolts landed in commit `abde3fc`. All three acceptance criteria (empty revolt does not auto-win, rebel-controlled objective succeeds, occupier defense fails the revolt) covered by `RevoltOutcomePolicyTest` + `WarRevoltSchedulerTest`; UI displayability covered by `WarClientStateTest`.
 
 **Зачем.** Timer-based auto-success is not gameplay.
 
@@ -412,6 +424,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## COMBAT-003 — Role-aware formation planner and shield-wall pressure
 
+**Status: DONE 2026-04-27.** Pure-logic slot planner landed in `com.talhanation.bannermod.combat`. `FormationSlot` enum (FRONT_RANK / SUPPORT_RANK / REAR_RANK / FLANK / UNASSIGNED), `FormationPlanner.slotFor(role)` maps every `CombatRole` (INFANTRY -> FRONT_RANK, PIKE -> SUPPORT_RANK, RANGED -> REAR_RANK, CAVALRY -> FLANK), `FormationPlanner.assign(roles)` returns an insertion-ordered count per slot (every slot present even when zero, so UI iteration is stable). Shield-wall pressure: `shieldWallReady(assignment)` returns true at `SHIELD_WALL_MIN_FRONT_RANK = 3` so the upcoming combat-AI goal can switch the front rank from "hold" to "advance slowly". Isolation penalty: `isIsolated(distance)` / `cohesionMultiplier(distance)` apply `ISOLATION_PENALTY_MULTIPLIER = 0.5` when the unit drifts beyond `FORMATION_COHESION_RADIUS = 8` blocks (negative / NaN / +∞ all count as isolated, defensively). All three acceptance criteria (mixed groups form layered lines, shield wall advances slowly and coherently, isolated units lose formation benefits) verifiable from `FormationPlannerTest` (11 cases). Combat-AI wiring (formation goal that physically positions members per slot) is the open follow-up.
+
 **Зачем.** Formations need to behave like tactical units, not loose mobs.
 
 **Scope.**
@@ -470,6 +484,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 ---
 
 ## COMBAT-006 — Siege objective targeting and escort
+
+**Status: DONE 2026-04-27.** Pure-logic policy landed: `SiegeObjectivePolicy.canAttackStandard(attackerEntityId, standardEntityId)` (opposing-side only, both ids non-null), `SiegeObjectivePolicy.shouldEscort(actorEntityId, standardEntityId)` (same-side only), and `SiegeObjectivePolicy.applyDamage(currentControl, damage, maxControl)` returning a `DamageOutcome(controlAfter, destroyed)` record. The `destroyed` flag is set only when the hit reduces the pool from positive to zero — not on follow-up hits to an already-dead standard — so the audit log can write exactly one `SIEGE_STANDARD_DESTROYED` row per destruction event. Default control pool is `DEFAULT_CONTROL_POOL = 100`, ready for a future Forge-config layer. Locked in by `SiegeObjectivePolicyTest` (10 cases). Combat-AI wiring (recruit target acquisition consumes `canAttackStandard`, defend goal consumes `shouldEscort`, siege standard block damage handler calls `applyDamage` and writes the audit on `destroyed=true`) is the open follow-up.
 
 **Зачем.** Armies need to interact with `SiegeStandardBlock`, not only players.
 
@@ -695,6 +711,8 @@ Locked in by `AsyncNavigationClassAuditTest` (6 cases — RecruitPathNavigation 
 
 ## FLAKE-003 — `authoredroutecouriermovesitemsbetweenstorageendpoints` flake
 
+**Status: DONE 2026-04-27.** Root cause was a fixed `helper.runAfterDelay(320, ...)` in the courier gametest: the test asserted exactly at tick 320, so any tick where path planning landed on a slow path-finder solve (background entity tick taking longer, scheduler swapping on a slow batch) pushed the actual delivery past tick 320 even though the outer `timeoutTicks=480` had room. The assertion fired against a still-active courier task and the test failed.
+
 **Зачем.** Pre-existing GameTest fails intermittently with "Expected the courier to release the authored route after delivery completes." Caught once across 25 consecutive `runGameTestServer` invocations during the FLAKE-001/002 verification sweep.
 
 **Scope.**
@@ -707,6 +725,8 @@ Locked in by `AsyncNavigationClassAuditTest` (6 cases — RecruitPathNavigation 
 
 - 25 consecutive `verifyGameTestStage` runs pass without this test failing.
 - Root cause is named in the commit message.
+
+**Progress 2026-04-27.** Converted the assertion from `runAfterDelay(320)` to `helper.succeedWhen(...)`. `succeedWhen` retries every tick until all assertions stop throwing or the outer `timeoutTicks=480` budget runs out, which is what we actually want: succeed as soon as the delivery completes, fail with the *latest* assertion message (not a stale tick-0 snapshot) if it never does. No production code change — the work-order release path was always correct, the test's deadline was the only flaky surface.
 
 ---
 

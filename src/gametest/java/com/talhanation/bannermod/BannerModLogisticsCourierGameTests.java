@@ -28,7 +28,13 @@ import java.util.List;
 public class BannerModLogisticsCourierGameTests {
 
     @PrefixGameTestTemplate(false)
-    @GameTest(template = "harness_empty", timeoutTicks = 480)
+    // 800-tick (40-second) outer budget: the original 480 sometimes was not enough on a
+    // background-loaded gametest server because the courier path-finder's solve time scales
+    // with how many other entities tick on the same tick. The poll-based `succeedWhen` below
+    // exits the moment the delivery actually completes, so a generous outer budget only
+    // matters when something is genuinely wrong — at which point we want the assertion
+    // message, not a timeout.
+    @GameTest(template = "harness_empty", timeoutTicks = 800)
     public static void authoredRouteCourierMovesItemsBetweenStorageEndpoints(GameTestHelper helper) {
         BannerModLogisticsRuntime.resetForTests();
         ServerLevel level = helper.getLevel();
@@ -63,22 +69,29 @@ public class BannerModLogisticsCourierGameTests {
                 .orElseThrow();
         courier.setActiveCourierTask(task);
 
-        helper.runAfterDelay(320, () -> {
+        // Poll-based completion check. The previous fixed-tick `runAfterDelay(320)` sometimes
+        // missed the deadline when path planning happened to land on a slow tick — the
+        // `timeoutTicks=480` outer deadline gave enough room overall but not 320 ticks
+        // exactly. `succeedWhen` retries every tick until the assertions stop throwing or
+        // the outer timeout fires, which is what we actually want: succeed as soon as the
+        // delivery completes, fail with the *latest* assertion message if it never does.
+        helper.succeedWhen(() -> {
+            helper.assertTrue(sourceChest.getItem(0).isEmpty(),
+                    "Expected the courier route to remove the reserved planks from the source chest.");
+            helper.assertTrue(destinationChest.getItem(0).getCount() == 8 && destinationChest.getItem(0).is(Items.OAK_PLANKS),
+                    "Expected the courier route to deliver the reserved planks into the destination chest.");
+            helper.assertFalse(courier.hasActiveCourierTask(),
+                    "Expected the courier to release the authored route after delivery completes.");
+            helper.assertTrue(BannerModLogisticsRuntime.service().getReservation(task.reservation().reservationId()) == null,
+                    "Expected the courier reservation to be released from the shared logistics runtime after delivery completes.");
             List<BannerModSeaTradeEntrypoint> seaEntrypoints = BannerModLogisticsRuntime.listSeaTradeEntrypoints(
                     List.of(sourceStorage, destinationStorage, staleStorage)
             );
-            helper.assertTrue(sourceChest.getItem(0).isEmpty(), "Expected the courier route to remove the reserved planks from the source chest.");
-            helper.assertTrue(destinationChest.getItem(0).getCount() == 8 && destinationChest.getItem(0).is(Items.OAK_PLANKS),
-                    "Expected the courier route to deliver the reserved planks into the destination chest.");
-            helper.assertFalse(courier.hasActiveCourierTask(), "Expected the courier to release the authored route after delivery completes.");
-            helper.assertTrue(BannerModLogisticsRuntime.service().getReservation(task.reservation().reservationId()) == null,
-                    "Expected the courier reservation to be released from the shared logistics runtime after delivery completes.");
             helper.assertTrue(seaEntrypoints.size() == 1, "Expected only live port-backed routes to publish sea-trade entrypoints.");
             helper.assertTrue(seaEntrypoints.get(0).direction() == BannerModSeaTradeDirection.EXPORT,
                     "Expected the destination port route to publish an export sea-trade entrypoint.");
             helper.assertTrue(seaEntrypoints.get(0).portStorageAreaId().equals(destinationStorage.getUUID()),
                     "Expected the published sea-trade entrypoint to point at the destination port storage.");
-            helper.succeed();
         });
     }
 
