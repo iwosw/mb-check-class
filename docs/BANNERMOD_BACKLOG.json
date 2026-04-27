@@ -714,7 +714,7 @@
     {
       "id": "GEO-001",
       "title": "Terrain-derived settlement roles",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The transcript's strongest usable idea is that feudal power should emerge from logistics geography rather than arbitrary titles. BannerMod settlements and political entities need terrain/logistics roles so Crusader Kings-style politics has a Minecraft-world reason to exist.",
       "scope": [
@@ -730,16 +730,22 @@
         "Player guides describe settlement roles and how players can create or exploit them."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added BannerModSettlementStrategicSignals role classifier from observable snapshot data (food/storage surplus hub, routed market junction, fort route chokepoint, water gate), surfaced role and one-line reason in Governor logistics UI, documented in EN/RU guides, and covered with unit tests. Verified with strategic signal tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 1-17: barony as logistics answer and chokepoint/surplus lord.",
         "Transcript lines 53-61: workflow for marking nodes, routes, shadows, hierarchy, and job descriptions."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "ECON-001",
       "title": "Distance-aware supply routes and water advantage",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The transcript's oxen-paradox idea is suitable if simplified: land transport should be limited and water/routes should make supply cheaper, giving BannerMod economy strategic geography like Total War supply lines without simulating medieval mileage literally.",
       "scope": [
@@ -755,16 +761,22 @@
         "Player guides explain why roads/water/routes matter for settlement logistics."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added route-cost visibility from snapshot route/port data: water_advantaged, connected, single_route, and landlocked states with player-facing Governor logistics descriptions. Water/port access now shows as cheap supply advantage before penalties. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 5-8: oxen paradox and three-day rule as supply limit.",
         "Transcript lines 35-49: navigable water as major transport advantage and upstream/downstream asymmetry."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "ECON-002",
       "title": "Specialized production for landlocked settlements",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The transcript's refinery-baron idea fits Minecraft gameplay: settlements that cannot cheaply move bulk goods should convert local resources into higher-value goods, creating Bannerlord-style regional identity and trade reasons.",
       "scope": [
@@ -780,15 +792,21 @@
         "Player guides explain how to create and use specialist settlements."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added landlocked specialty detection for preserved_food and worked_materials from local production plus storage without water/routes; surfaced in Governor logistics UI and guides. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 29-35: landlocked specialist converts bulk into higher-value goods to survive transport limits."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "WAR-009",
       "title": "Logistics objectives for wars and raids",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The transcript validates a non-bullshit war loop for Minecraft strategy: wars should target supply routes, granaries, junctions, crossings, and market flow, not only entity kills or abstract claims.",
       "scope": [
@@ -804,16 +822,22 @@
         "Player guides explain logistics objectives and counters."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added logistics objective tokens derived from settlement role inputs (stockpile, route_junction, water_gate, surplus_store) and surfaced them in Governor logistics UI as warning/planning targets before destructive economy effects. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 11-17: chokepoints, tolls, safe passage, and hollowed power when routes bypass them.",
         "Transcript lines 55-57: difficult-route vacuums become bandit/security problems and potential new power centers."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "POL-003",
       "title": "Logistics-driven loyalty pressure",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The transcript's CK-compatible idea is that vassal loyalty follows supply dependency: upstream/source lords become independent, downstream/gatekeeper lords become transactional, and isolated weak lords resent powerful flow controllers.",
       "scope": [
@@ -829,11 +853,17 @@
         "Player guides explain logistics loyalty pressures and mitigation."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added logistics-derived loyalty pressure tokens (isolated_supply, dependent_on_single_route, no_local_distribution) and surfaced them in Governor logistics UI as non-punitive warnings. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 39-45: upstream source lords trend rebellious, downstream gatekeepers trend diplomatic and transactional.",
         "Transcript lines 49-52: river few versus landlocked many creates structural political tension."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "RP-001",
