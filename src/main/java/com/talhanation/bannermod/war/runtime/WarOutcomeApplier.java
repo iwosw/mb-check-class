@@ -9,6 +9,7 @@ import com.talhanation.bannermod.war.cooldown.WarCooldownKind;
 import com.talhanation.bannermod.war.cooldown.WarCooldownRuntime;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 
 import javax.annotation.Nullable;
@@ -27,6 +28,8 @@ public final class WarOutcomeApplier {
     private final WarCooldownRuntime cooldowns;
     private final long lostTerritoryImmunityTicks;
     @Nullable
+    private final ServerLevel level;
+    @Nullable
     private final BannerModTreasuryManager treasury;
     @Nullable
     private final RecruitsClaimManager claimManager;
@@ -37,7 +40,7 @@ public final class WarOutcomeApplier {
                              OccupationRuntime occupations,
                              DemilitarizationRuntime demilitarizations,
                              PoliticalRegistryRuntime registry) {
-        this(declarations, sieges, audit, occupations, demilitarizations, registry, null, 0L, null, null);
+        this(declarations, sieges, audit, occupations, demilitarizations, registry, null, 0L, null, null, null);
     }
 
     public WarOutcomeApplier(WarDeclarationRuntime declarations,
@@ -49,7 +52,7 @@ public final class WarOutcomeApplier {
                              @Nullable WarCooldownRuntime cooldowns,
                              long lostTerritoryImmunityTicks) {
         this(declarations, sieges, audit, occupations, demilitarizations, registry,
-                cooldowns, lostTerritoryImmunityTicks, null, null);
+                cooldowns, lostTerritoryImmunityTicks, null, null, null);
     }
 
     public WarOutcomeApplier(WarDeclarationRuntime declarations,
@@ -62,6 +65,21 @@ public final class WarOutcomeApplier {
                              long lostTerritoryImmunityTicks,
                              @Nullable BannerModTreasuryManager treasury,
                              @Nullable RecruitsClaimManager claimManager) {
+        this(declarations, sieges, audit, occupations, demilitarizations, registry,
+                cooldowns, lostTerritoryImmunityTicks, null, treasury, claimManager);
+    }
+
+    public WarOutcomeApplier(WarDeclarationRuntime declarations,
+                             SiegeStandardRuntime sieges,
+                             WarAuditLogSavedData audit,
+                             OccupationRuntime occupations,
+                             DemilitarizationRuntime demilitarizations,
+                             PoliticalRegistryRuntime registry,
+                             @Nullable WarCooldownRuntime cooldowns,
+                             long lostTerritoryImmunityTicks,
+                             @Nullable ServerLevel level,
+                             @Nullable BannerModTreasuryManager treasury,
+                             @Nullable RecruitsClaimManager claimManager) {
         this.declarations = declarations;
         this.sieges = sieges;
         this.audit = audit;
@@ -70,6 +88,7 @@ public final class WarOutcomeApplier {
         this.registry = registry;
         this.cooldowns = cooldowns;
         this.lostTerritoryImmunityTicks = Math.max(0L, lostTerritoryImmunityTicks);
+        this.level = level;
         this.treasury = treasury;
         this.claimManager = claimManager;
     }
@@ -374,7 +393,8 @@ public final class WarOutcomeApplier {
     }
 
     private void clearSieges(UUID warId) {
-        for (SiegeStandardRecord record : sieges.forWar(warId)) {
+        for (SiegeStandardRecord record : List.copyOf(sieges.forWar(warId))) {
+            SiegeStandardPlacementService.removeVisibleStandard(level, record);
             sieges.remove(record.id());
         }
     }

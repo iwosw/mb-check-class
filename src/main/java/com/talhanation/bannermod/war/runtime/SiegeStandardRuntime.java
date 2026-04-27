@@ -29,6 +29,9 @@ public class SiegeStandardRuntime {
         if (warId == null || sidePoliticalEntityId == null || pos == null) {
             return Optional.empty();
         }
+        if (byPos(pos).isPresent()) {
+            return Optional.empty();
+        }
         SiegeStandardRecord record = new SiegeStandardRecord(
                 UUID.randomUUID(),
                 warId,

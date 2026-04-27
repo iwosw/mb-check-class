@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.war.runtime;
 
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -87,6 +89,30 @@ class SiegeStandardRuntimeTest {
         assertEquals(record.id(), runtime.byPos(new BlockPos(5, 64, 5)).orElseThrow().id());
         assertTrue(runtime.byPos(new BlockPos(99, 64, 99)).isEmpty());
         assertTrue(runtime.byPos(null).isEmpty());
+    }
+
+    @Test
+    void placeRejectsDuplicatePosition() {
+        SiegeStandardRuntime runtime = new SiegeStandardRuntime();
+        BlockPos pos = new BlockPos(5, 64, 5);
+        assertTrue(runtime.place(UUID.randomUUID(), UUID.randomUUID(), pos, 16, 0L).isPresent());
+        assertTrue(runtime.place(UUID.randomUUID(), UUID.randomUUID(), pos, 16, 1L).isEmpty());
+        assertEquals(1, runtime.all().size());
+    }
+
+    @Test
+    void claimSiegeCheckUsesRadiusOverlap() {
+        RecruitsClaim claim = new RecruitsClaim("test", UUID.randomUUID());
+        claim.addChunk(new ChunkPos(0, 0));
+        SiegeStandardRecord overlapping = new SiegeStandardRecord(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                new BlockPos(24, 64, 8), 9, 0L);
+        SiegeStandardRecord outside = new SiegeStandardRecord(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                new BlockPos(40, 64, 8), 8, 0L);
+
+        assertTrue(WarSiegeQueries.claimIntersectsSiegeRadius(claim, overlapping));
+        assertFalse(WarSiegeQueries.claimIntersectsSiegeRadius(claim, outside));
     }
 
     @Test

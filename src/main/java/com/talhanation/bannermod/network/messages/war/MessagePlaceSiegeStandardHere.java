@@ -44,7 +44,7 @@ public class MessagePlaceSiegeStandardHere implements Message<MessagePlaceSiegeS
         if (player == null || this.warId == null || this.sideId == null) {
             return;
         }
-        ServerLevel level = player.serverLevel().getServer().overworld();
+        ServerLevel level = player.serverLevel();
         if (level == null) {
             return;
         }

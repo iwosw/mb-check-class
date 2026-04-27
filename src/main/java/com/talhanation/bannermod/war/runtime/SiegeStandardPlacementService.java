@@ -10,6 +10,8 @@ import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import javax.annotation.Nullable;
@@ -37,6 +39,8 @@ public final class SiegeStandardPlacementService {
         SIDE_NOT_PARTICIPANT,
         NOT_LEADER,
         MISSING_POSITION,
+        UNSUPPORTED_DIMENSION,
+        DUPLICATE_POSITION,
         RUNTIME_REJECTED
     }
 
@@ -64,6 +68,9 @@ public final class SiegeStandardPlacementService {
                                    @Nullable UUID sideId) {
         if (level == null || warId == null || sideId == null) {
             return Outcome.WAR_NOT_FOUND;
+        }
+        if (level.dimension() != Level.OVERWORLD) {
+            return Outcome.UNSUPPORTED_DIMENSION;
         }
         Optional<WarDeclarationRecord> warOpt = WarRuntimeContext.declarations(level).byId(warId);
         if (warOpt.isEmpty()) {
@@ -112,6 +119,9 @@ public final class SiegeStandardPlacementService {
         }
         int radius = requestedRadius > 0 ? requestedRadius : WarServerConfig.DefaultSiegeRadius.get();
         SiegeStandardRuntime runtime = WarRuntimeContext.sieges(level);
+        if (runtime.byPos(placePos).isPresent()) {
+            return Result.of(Outcome.DUPLICATE_POSITION);
+        }
         long gameTime = level.getGameTime();
         Optional<SiegeStandardRecord> placed = runtime.place(warId, sideId, placePos, radius, gameTime);
         if (placed.isEmpty()) {
@@ -130,6 +140,17 @@ public final class SiegeStandardPlacementService {
         return Result.success(record);
     }
 
+    public static boolean removeVisibleStandard(ServerLevel level, SiegeStandardRecord record) {
+        if (level == null || record == null || record.pos() == null) {
+            return false;
+        }
+        if (!level.getBlockState(record.pos()).is(ModWarBlocks.SIEGE_STANDARD.get())) {
+            return false;
+        }
+        level.setBlockAndUpdate(record.pos(), Blocks.AIR.defaultBlockState());
+        return true;
+    }
+
     /** English summary suitable for chat/system-message feedback. */
     public static String describe(Outcome outcome) {
         return switch (outcome) {
@@ -140,6 +161,8 @@ public final class SiegeStandardPlacementService {
             case SIDE_NOT_PARTICIPANT -> "Side is not a participant of this war.";
             case NOT_LEADER -> PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED;
             case MISSING_POSITION -> "No placement position available.";
+            case UNSUPPORTED_DIMENSION -> "Siege standards can only be placed in the Overworld.";
+            case DUPLICATE_POSITION -> "A siege standard already exists at that position.";
             case RUNTIME_REJECTED -> "Failed to place siege standard.";
         };
     }
