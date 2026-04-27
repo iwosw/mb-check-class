@@ -307,7 +307,7 @@
     {
       "id": "SEC-004",
       "title": "Dimension-aware claim protection",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Claim protection currently keys lookups by chunk position while events can run in any dimension, so identical X/Z chunks in Nether or End can inherit Overworld claim permissions.",
       "scope": [
@@ -321,12 +321,18 @@
         "Tests cover same chunk coordinates in two dimensions."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "ClaimAccessQueries now returns persisted claims only for ServerLevel Level.OVERWORLD; other dimensions are treated as outside the claim system instead of looking up by shared ChunkPos. Added BannerModClaimProtectionGameTests.overworldClaimDoesNotProtectMatchingNetherCoordinates covering hostile Overworld denial and matching Nether X/Z non-denial. Updated player guides to document Overworld-only claim protection. Verified ./gradlew compileJava and ./gradlew compileGameTestJava."
+        }
+      ],
       "evidence": [
         "ClaimEvents loads/saves the manager from Overworld.",
         "ClaimAccessQueries looks up by ChunkPos.",
         "RecruitsClaimManager keys claims by ChunkPos."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SEC-005",
