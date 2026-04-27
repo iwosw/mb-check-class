@@ -6,13 +6,12 @@ import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
 import com.talhanation.bannermod.war.runtime.OccupationRecord;
 import com.talhanation.bannermod.war.runtime.RevoltRecord;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
+import com.talhanation.bannermod.war.runtime.WarSiegeQueries;
 import com.talhanation.bannermod.war.runtime.WarAllyInviteRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.level.ChunkPos;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -226,9 +225,7 @@ public final class WarClientState {
         if (activeWarIds.isEmpty()) return false;
         for (SiegeStandardRecord siege : sieges) {
             if (!activeWarIds.contains(siege.warId())) continue;
-            BlockPos pos = siege.pos();
-            if (pos == null) continue;
-            if (claim.containsChunk(new ChunkPos(pos))) {
+            if (WarSiegeQueries.claimIntersectsSiegeRadius(claim, siege)) {
                 return true;
             }
         }

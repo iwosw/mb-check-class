@@ -873,7 +873,7 @@
     {
       "id": "SIEGE-001",
       "title": "Remove siege-standard blocks when outcomes clear sieges",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War outcomes clear runtime siege records but leave placed siege-standard blocks in the world, causing visible objectives to diverge from war state.",
       "scope": [
@@ -885,15 +885,21 @@
         "A focused test or deterministic verification covers outcome siege cleanup."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarOutcomeApplier created through WarRuntimeContext now carries ServerLevel and clearSieges removes visible siege_standard blocks via SiegeStandardPlacementService.removeVisibleStandard before removing runtime records; command removal uses the same helper. Applies to cancel/white peace/tribute/occupy/annex/vassalize/demilitarize paths that call clearSieges. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/WarOutcomeApplier.java:376"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SIEGE-002",
       "title": "Prevent duplicate siege standards at one position",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "SiegeStandardRuntime creates a new record for every placement while the world can only bind one block entity at a position, allowing runtime/block desync.",
       "scope": [
@@ -905,15 +911,21 @@
         "Command and UI paths return clear feedback for duplicate or replacement behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "SiegeStandardRuntime.place now rejects duplicate BlockPos records; SiegeStandardPlacementService reports DUPLICATE_POSITION before block placement for command and UI paths. Added SiegeStandardRuntimeTest.placeRejectsDuplicatePosition. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/SiegeStandardRuntime.java:24"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SIEGE-003",
       "title": "Make siege placement dimension-safe",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The War Room siege placement packet always targets the Overworld while using the sender position, so a player in another dimension can place an Overworld standard at copied coordinates.",
       "scope": [
@@ -925,15 +937,21 @@
         "Tests cover Overworld and non-Overworld placement behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "MessagePlaceSiegeStandardHere now passes the sender's actual ServerLevel, and SiegeStandardPlacementService enforces Overworld-only placement for both packet and command callers with clear UNSUPPORTED_DIMENSION feedback. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/network/messages/war/MessagePlaceSiegeStandardHere.java:47"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SIEGE-004",
       "title": "Fix siege HUD war label",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The siege HUD looks up a political entity by war UUID, so it falls back to short UUIDs instead of showing a recognizable war label.",
       "scope": [
@@ -946,15 +964,21 @@
         "Guide wording matches the actual HUD label."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarSiegeZoneOverlay now renders war labels as attacker vs defender entity names instead of looking up an entity by war UUID; short UUID fallback only remains inside entityName when side names are unavailable. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/client/military/hud/WarSiegeZoneOverlay.java:94"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SIEGE-005",
       "title": "Align under-siege claim semantics with siege radius",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "HUD/zone logic uses radius containment, but claim under-siege checks only test the standard block chunk, making settlement effects narrower than the visible siege zone.",
       "scope": [
@@ -966,11 +990,17 @@
         "Tests cover a standard just outside a claim whose radius overlaps it."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarSiegeQueries exposes claimIntersectsSiegeRadius and both server WarSiegeQueries.isClaimUnderSiege and client WarClientState.isClaimUnderSiege use it, aligning semantics with HUD radius containment. Added radius-overlap unit coverage for a standard outside the claim chunk whose radius overlaps the claim. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/WarSiegeQueries.java",
         "src/main/java/com/talhanation/bannermod/war/client/WarClientState.java"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "MSM-001",

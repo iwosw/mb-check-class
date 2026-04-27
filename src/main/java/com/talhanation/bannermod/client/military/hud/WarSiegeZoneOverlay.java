@@ -94,9 +94,14 @@ public final class WarSiegeZoneOverlay {
         return new SiegeContext(
                 best,
                 bestWar.state(),
-                entityName(bestWar.id()),
+                warName(bestWar),
                 entityName(best.sidePoliticalEntityId())
         );
+    }
+
+    private static String warName(WarDeclarationRecord war) {
+        if (war == null) return "?";
+        return entityName(war.attackerPoliticalEntityId()) + " vs " + entityName(war.defenderPoliticalEntityId());
     }
 
     @Nullable

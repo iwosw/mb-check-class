@@ -2,7 +2,6 @@ package com.talhanation.bannermod.war.runtime;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.war.WarRuntimeContext;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 
@@ -37,16 +36,35 @@ public final class WarSiegeQueries {
             if (!activeWarIds.contains(record.warId())) {
                 continue;
             }
-            BlockPos pos = record.pos();
-            if (pos == null) {
-                continue;
-            }
-            ChunkPos standardChunk = new ChunkPos(pos);
-            if (claim.containsChunk(standardChunk)) {
+            if (claimIntersectsSiegeRadius(claim, record)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static boolean claimIntersectsSiegeRadius(RecruitsClaim claim, SiegeStandardRecord record) {
+        if (claim == null || record == null || record.pos() == null) {
+            return false;
+        }
+        double radiusSqr = (double) record.radius() * (double) record.radius();
+        double x = record.pos().getX() + 0.5D;
+        double z = record.pos().getZ() + 0.5D;
+        for (ChunkPos chunk : claim.getClaimedChunks()) {
+            if (chunk == null) continue;
+            double closestX = clamp(x, chunk.getMinBlockX(), chunk.getMaxBlockX() + 1.0D);
+            double closestZ = clamp(z, chunk.getMinBlockZ(), chunk.getMaxBlockZ() + 1.0D);
+            double dx = x - closestX;
+            double dz = z - closestZ;
+            if (dx * dx + dz * dz <= radiusSqr) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private static Collection<UUID> activeWarIds(ServerLevel level) {
