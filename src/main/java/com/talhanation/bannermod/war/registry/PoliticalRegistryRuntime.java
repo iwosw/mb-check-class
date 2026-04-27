@@ -129,6 +129,35 @@ public class PoliticalRegistryRuntime {
         return true;
     }
 
+    public boolean addCoLeader(UUID id, UUID coLeaderUuid) {
+        PoliticalEntityRecord record = recordsById.get(id);
+        if (record == null || coLeaderUuid == null || coLeaderUuid.equals(record.leaderUuid())) {
+            return false;
+        }
+        List<UUID> coLeaders = new ArrayList<>(record.coLeaderUuids());
+        if (coLeaders.contains(coLeaderUuid)) {
+            return false;
+        }
+        coLeaders.add(coLeaderUuid);
+        recordsById.put(id, record.withCoLeaders(coLeaders));
+        dirtyListener.run();
+        return true;
+    }
+
+    public boolean removeCoLeader(UUID id, UUID coLeaderUuid) {
+        PoliticalEntityRecord record = recordsById.get(id);
+        if (record == null || coLeaderUuid == null) {
+            return false;
+        }
+        List<UUID> coLeaders = new ArrayList<>(record.coLeaderUuids());
+        if (!coLeaders.remove(coLeaderUuid)) {
+            return false;
+        }
+        recordsById.put(id, record.withCoLeaders(coLeaders));
+        dirtyListener.run();
+        return true;
+    }
+
     /**
      * Update the political entity's color string. Validation runs through
      * {@link PoliticalRegistryValidation#validateColor}; on invalid input the runtime is
