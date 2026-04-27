@@ -34,16 +34,25 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @OnlyIn(Dist.CLIENT)
 public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
     private static final double STRUCTURE_PREVIEW_MAX_DISTANCE_SQR = 64.0D * 64.0D;
+    private static final double STRUCTURE_PREVIEW_FULL_DETAIL_DISTANCE_SQR = 24.0D * 24.0D;
+    private static final int STRUCTURE_PREVIEW_CACHE_ENTRIES = 8;
+    private static final int STRUCTURE_PREVIEW_FAR_BLOCK_BUDGET = 512;
+    private static final int STRUCTURE_PREVIEW_FAR_BLOCK_ENTITY_BUDGET = 16;
 
-    private UUID cachedPreviewArea;
-    private CompoundTag cachedPreviewNbt;
-    private List<ScannedBlock> cachedPreviewStructure = List.of();
+    private final Map<PreviewCacheKey, List<ScannedBlock>> previewStructureCache = new LinkedHashMap<>(STRUCTURE_PREVIEW_CACHE_ENTRIES, 0.75F, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<PreviewCacheKey, List<ScannedBlock>> eldest) {
+            return size() > STRUCTURE_PREVIEW_CACHE_ENTRIES;
+        }
+    };
     private final Map<BlockState, ModelData> previewModelDataCache = new HashMap<>();
     private static boolean renderStructurePreviews = true;
 
@@ -64,16 +73,18 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
 
     @Override
     public boolean shouldRender(AbstractWorkAreaEntity entity, Frustum frustum, double camX, double camY, double camZ) {
+        boolean visible = super.shouldRender(entity, frustum, camX, camY, camZ);
         if (entity instanceof BuildArea buildArea) {
             Player player = Minecraft.getInstance().player;
             if (renderStructurePreviews
+                    && visible
                     && player != null
                     && entity.canPlayerSee(player)
                     && player.distanceToSqr(buildArea) <= STRUCTURE_PREVIEW_MAX_DISTANCE_SQR) {
                 return true;
             }
         }
-        return super.shouldRender(entity, frustum, camX, camY, camZ);
+        return visible;
     }
     //ItemEntityRenderer
     @Override
@@ -85,15 +96,16 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
         if(!abstractWorkAreaEntity.canPlayerSee(player)) return;
 
         if(abstractWorkAreaEntity instanceof BuildArea buildArea){
-            if (player.distanceToSqr(buildArea) <= STRUCTURE_PREVIEW_MAX_DISTANCE_SQR) {
-                renderStructurePreview(poseStack, bufferSource, buildArea);
+            double distanceSqr = player.distanceToSqr(buildArea);
+            if (distanceSqr <= STRUCTURE_PREVIEW_MAX_DISTANCE_SQR) {
+                renderStructurePreview(poseStack, bufferSource, buildArea, distanceSqr);
             } else {
                 RuntimeProfilingCounters.increment("build_preview.skipped.distance");
             }
         }
     }
 
-    private void renderStructurePreview(PoseStack poseStack, MultiBufferSource bufferSource, BuildArea buildArea) {
+    private void renderStructurePreview(PoseStack poseStack, MultiBufferSource bufferSource, BuildArea buildArea, double distanceSqr) {
         CompoundTag nbt = buildArea.getStructureNBT();
         if (nbt == null || nbt.isEmpty()) {
             RuntimeProfilingCounters.increment("build_preview.skipped.empty_nbt");
@@ -117,11 +129,20 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
 
         Minecraft mc = Minecraft.getInstance();
         BlockRenderDispatcher dispatcher = mc.getBlockRenderer();
+        boolean fullDetail = distanceSqr <= STRUCTURE_PREVIEW_FULL_DETAIL_DISTANCE_SQR;
+        int blockBudget = fullDetail ? Integer.MAX_VALUE : STRUCTURE_PREVIEW_FAR_BLOCK_BUDGET;
+        int blockEntityBudget = fullDetail ? Integer.MAX_VALUE : STRUCTURE_PREVIEW_FAR_BLOCK_ENTITY_BUDGET;
+        int renderedBlocks = 0;
+        int renderedBlockEntities = 0;
 
         poseStack.pushPose();
 
         for (ScannedBlock scannedBlock : structure) {
             RuntimeProfilingCounters.increment("build_preview.blocks_considered");
+            if (renderedBlocks >= blockBudget) {
+                RuntimeProfilingCounters.increment("build_preview.skipped.block_budget");
+                break;
+            }
             BlockPos relPos = scannedBlock.relativePos();
             int relX = relPos.getX();
             int relY = relPos.getY();
@@ -160,7 +181,12 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
                 poseStack.translate(dx, dy, dz);
                 dispatcher.renderSingleBlock(rotatedState, poseStack, bufferSource, 0xF000F0, OverlayTexture.NO_OVERLAY, modelData, renderType);
                 poseStack.popPose();
+                renderedBlocks++;
             } else if (rotatedState.getBlock() instanceof EntityBlock entityBlock) {
+                if (renderedBlockEntities >= blockEntityBudget) {
+                    RuntimeProfilingCounters.increment("build_preview.skipped.block_entity_budget");
+                    continue;
+                }
                 BlockEntity be = entityBlock.newBlockEntity(worldPos, rotatedState);
                 if (be != null) {
                     if (mc.level != null) be.setLevel(mc.level);
@@ -172,6 +198,8 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
                         poseStack.translate(dx, dy, dz);
                         renderer.render(be, 0f, poseStack, bufferSource, 0xF000F0, OverlayTexture.NO_OVERLAY);
                         poseStack.popPose();
+                        renderedBlocks++;
+                        renderedBlockEntities++;
                     }
                 }
             }
@@ -181,16 +209,24 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
     }
 
     private List<ScannedBlock> getCachedPreviewStructure(BuildArea buildArea, CompoundTag nbt) {
-        if (buildArea.getUUID().equals(cachedPreviewArea) && nbt == cachedPreviewNbt) {
-            return cachedPreviewStructure;
+        PreviewCacheKey key = new PreviewCacheKey(buildArea.getUUID(), System.identityHashCode(nbt));
+        List<ScannedBlock> cached = previewStructureCache.get(key);
+        if (cached != null) {
+            RuntimeProfilingCounters.increment("build_preview.parse_cache_hits");
+            return cached;
         }
 
-        cachedPreviewArea = buildArea.getUUID();
-        cachedPreviewNbt = nbt;
-        cachedPreviewStructure = StructureManager.parseStructureFromNBT(nbt);
+        List<ScannedBlock> parsed = StructureManager.parseStructureFromNBT(nbt);
+        previewStructureCache.put(key, parsed);
         RuntimeProfilingCounters.increment("build_preview.parse_cache_misses");
-        RuntimeProfilingCounters.add("build_preview.blocks_parsed", cachedPreviewStructure.size());
-        return cachedPreviewStructure;
+        RuntimeProfilingCounters.add("build_preview.blocks_parsed", parsed.size());
+        return parsed;
+    }
+
+    private record PreviewCacheKey(UUID areaId, int nbtIdentity) {
+        private PreviewCacheKey {
+            Objects.requireNonNull(areaId, "areaId");
+        }
     }
 
 }

@@ -684,7 +684,7 @@
     {
       "id": "PERF-008",
       "title": "Cap and cache Build Area preview rendering",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Structure previews can render every scanned block of every nearby visible BuildArea every frame, and the cache is single-preview only. Large prefabs or multiple nearby areas can spike client frame time.",
       "scope": [
@@ -698,12 +698,18 @@
         "Preview remains accurate near the player."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Implemented bounded 8-entry BuildArea preview structure cache, frustum-gated preview rendering, far-distance per-frame block and block-entity budgets, and profiling counters for cache hits/misses and budget skips. Verified with ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "WorkerAreaRenderer.render iterates visible areas.",
         "renderStructurePreview loops scanned blocks and may create block entities.",
         "getCachedPreviewStructure stores only one preview structure."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "GEO-001",
