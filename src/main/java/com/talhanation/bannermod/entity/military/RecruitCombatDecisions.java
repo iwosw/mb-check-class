@@ -33,12 +33,13 @@ final class RecruitCombatDecisions {
     static boolean shouldAttackOnNeutral(AbstractRecruitEntity recruit, LivingEntity target) {
         if (isMonster(target) || isAttackingOwnerOrSelf(recruit, target)) return true;
         if (target instanceof Villager) return false;
-        return RecruitEvents.isEnemy(recruit.getTeam(), target.getTeam());
+        return RecruitEvents.isEnemy(recruit, target);
     }
 
     static boolean shouldAttackOnAggressive(AbstractRecruitEntity recruit, LivingEntity target) {
         if (target instanceof Villager) return false;
-        return (target instanceof AbstractRecruitEntity || target instanceof Player) && (RecruitEvents.isNeutral(recruit.getTeam(), target.getTeam()) || RecruitEvents.isEnemy(recruit.getTeam(), target.getTeam()));
+        return (target instanceof AbstractRecruitEntity || target instanceof Player)
+                && (RecruitEvents.isNeutral(recruit.getTeam(), target.getTeam()) || RecruitEvents.isEnemy(recruit, target));
     }
 
     static boolean doHurtTarget(AbstractRecruitEntity recruit, @NotNull Entity entity) {
