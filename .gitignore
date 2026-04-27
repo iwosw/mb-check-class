@@ -3,6 +3,7 @@ build/
 run/
 logs/
 bin/
+!tools/ai-context-proxy/bin/
 .analysis/
 .classpath
 .factorypath
