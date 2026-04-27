@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
@@ -44,7 +46,8 @@ public class MessageBackToMountEntity implements Message<MessageBackToMountEntit
                     player.getBoundingBox().inflate(100)
             );
         }
-        recruits.forEach((recruit) -> CommandEvents.onMountButton(uuid, recruit, null, group));
+        CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
+                player.level().getGameTime(), CommandIntentPriority.HIGH, false, null, group, true), recruits);
     }
 
     public MessageBackToMountEntity fromBytes(FriendlyByteBuf buf) {

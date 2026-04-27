@@ -115,4 +115,15 @@ public sealed interface CommandIntent {
     ) implements CommandIntent {
         @Override public CommandIntentType type() { return CommandIntentType.COMBAT_STANCE; }
     }
+
+    record SiegeMachine(
+            long issuedAtGameTime,
+            int priority,
+            boolean queueMode,
+            UUID mountUuid,
+            UUID groupUuid,
+            boolean returnToKnownMount
+    ) implements CommandIntent {
+        @Override public CommandIntentType type() { return CommandIntentType.SIEGE_MACHINE; }
+    }
 }
