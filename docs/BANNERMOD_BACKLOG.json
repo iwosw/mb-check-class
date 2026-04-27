@@ -214,7 +214,7 @@
     {
       "id": "COMMAND-001",
       "title": "Recruit command acknowledgement and queue feedback",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The unified command pipeline supports queueing and logging, but normal command UI sends immediate commands and gives little feedback about affected units, overwritten orders, empty selections, or queue state.",
       "scope": [
@@ -228,13 +228,19 @@
         "Queue mode is either available with visible pending orders or intentionally disabled in UI."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "CommandIntentDispatcher now emits server-side chat acknowledgements for every unified command path: rejected no eligible recruits, accepted immediate recruit count, replaced queued-order count, queued modified recruit count, and pending order count for queueMode. Existing command UI keeps immediate mode (queue modifier remains hidden/disabled in UI because MessageMovement and command-screen paths send queueMode=false), while queued paths still expose pending counts if invoked. Player guides EN/RU updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "CommandIntentDispatcher supports queued vs immediate dispatch.",
         "CommandIntentLog is debug/in-memory only.",
         "MessageMovement sends queueMode=false.",
         "CommandScreen sends commands without accepted/queued/replaced feedback."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SEC-001",
