@@ -184,7 +184,7 @@
     {
       "id": "POL-002",
       "title": "Co-leader management flow",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Political records persist co-leaders and government forms, but normal players have no clear add/remove co-leader flow, making republic/shared-authority gameplay hard to use.",
       "scope": [
@@ -198,12 +198,18 @@
         "UI clearly shows who has authority and why."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "PoliticalEntityRecord now supports co-leader list replacement and PoliticalRegistryRuntime can add/remove co-leaders with dirty persistence. War Room state UI exposes Add co-leader / Remove co dialogs using player UUIDs, shows co-leader short IDs and whether Republic or Monarchy authority is active, and MessageUpdateCoLeader enforces leader/op management through PoliticalEntityAuthority.isLeaderOrOp. Existing PoliticalEntityAuthority.canAct remains the government-form-aware policy: Republic shares authority with co-leaders, Monarchy keeps them listed but locked. Player guides EN/RU and politics warfare docs updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "PoliticalEntityRecord stores coLeaderUuids and governmentForm.",
         "PoliticalRegistryRuntime has mutators for name/status/capital/form/color/charter but no co-leader mutator.",
         "Politics docs mention co-leaders without a management path."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "COMMAND-001",

@@ -72,6 +72,12 @@ public record PoliticalEntityRecord(
                 newForm == null ? governmentForm : newForm);
     }
 
+    public PoliticalEntityRecord withCoLeaders(List<UUID> newCoLeaders) {
+        return new PoliticalEntityRecord(id, name, status, leaderUuid,
+                newCoLeaders == null ? coLeaderUuids : newCoLeaders,
+                capitalPos, color, charter, ideology, homeRegion, createdAtGameTime, governmentForm);
+    }
+
     public PoliticalEntityRecord withColor(String newColor) {
         return new PoliticalEntityRecord(id, name, status, leaderUuid, coLeaderUuids, capitalPos,
                 newColor == null ? color : newColor,

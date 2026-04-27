@@ -15,6 +15,7 @@ import com.talhanation.bannermod.network.messages.war.MessageCancelAllyInvite;
 import com.talhanation.bannermod.network.messages.war.MessageDeclareWar;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
+import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
@@ -192,6 +193,7 @@ public class BannerModNetworkBootstrap {
         MessageSetPoliticalEntityCharter.class,
         MessageDeclareWar.class,
         MessageResolveWarOutcome.class,
+        MessageUpdateCoLeader.class,
     };
 
     private BannerModNetworkBootstrap() {

@@ -27,6 +27,7 @@ Politics, claims, war declarations, allies, siege standards, occupations, and ou
 
 - Claims can belong to a political entity UUID.
 - A player is treated as a political member if they are leader or co-leader of an entity.
+- War Room state UI lets leaders add or remove co-leaders by player UUID; monarchy still lists co-leaders but keeps authority leader-only, while republic shares authority through `PoliticalEntityAuthority.canAct`.
 - Settlement bootstrap uses this membership to create the first claim.
 - Claim editing allows owners, political leaders/co-leaders, or creative permission-level-2 admins.
 - Claim overlap with other claims is rejected.

@@ -52,7 +52,7 @@ State management is driven by slash commands:
 - `/bannermod state setcapital <entity> [pos]` — set the capital. Without `pos` it uses the caller's position.
 - `/bannermod state status <entity> <status>` — change status (`SETTLEMENT`, `STATE`, `VASSAL`, `PEACEFUL`). Promotion to `STATE` requires the settlement to register a starter fort or town hall, storage, and market — otherwise the command returns `infrastructure_insufficient`.
 
-The same actions (Create / Rename / Capital here / Government form toggle) live in the War Room (`U`). The `→ Republic` / `→ Monarchy` button is leader-only and switches government form:
+The same actions (Create / Rename / Capital here / Government form toggle) live in the War Room (`U`). Leaders can also use `Add co-leader` / `Remove co` with a player UUID; the state detail panel shows the current co-leaders and whether their authority is active. The `→ Republic` / `→ Monarchy` button is leader-only and switches government form:
 
 - `MONARCHY`: leader-only authority for key decisions.
 - `REPUBLIC`: co-leaders also gain authority for some actions (status, capital).
