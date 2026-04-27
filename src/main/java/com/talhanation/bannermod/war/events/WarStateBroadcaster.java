@@ -7,6 +7,8 @@ import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
+import com.talhanation.bannermod.war.runtime.OccupationRecord;
+import com.talhanation.bannermod.war.runtime.RevoltRecord;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarAllyInviteRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
@@ -78,12 +80,14 @@ public class WarStateBroadcaster {
         Collection<SiegeStandardRecord> sieges = WarRuntimeContext.sieges(level).all();
         BattleWindowSchedule schedule = resolveSchedule();
         Collection<WarAllyInviteRecord> invites = WarRuntimeContext.allyInvites(level).all();
-        int hash = stateHash(entities, wars, sieges, schedule, invites);
+        Collection<OccupationRecord> occupations = WarRuntimeContext.occupations(level).all();
+        Collection<RevoltRecord> revolts = WarRuntimeContext.revolts(level).all();
+        int hash = stateHash(entities, wars, sieges, schedule, invites, occupations, revolts);
         if (primed && hash == lastHash) return;
         lastHash = hash;
         primed = true;
 
-        CompoundTag payload = WarClientState.encode(entities, wars, sieges, schedule, invites);
+        CompoundTag payload = WarClientState.encode(entities, wars, sieges, schedule, invites, occupations, revolts);
         BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.ALL.noArg(),
                 new MessageToClientUpdateWarState(payload));
     }
@@ -94,7 +98,9 @@ public class WarStateBroadcaster {
                 WarRuntimeContext.declarations(level).all(),
                 WarRuntimeContext.sieges(level).all(),
                 resolveSchedule(),
-                WarRuntimeContext.allyInvites(level).all()
+                WarRuntimeContext.allyInvites(level).all(),
+                WarRuntimeContext.occupations(level).all(),
+                WarRuntimeContext.revolts(level).all()
         );
         BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new MessageToClientUpdateWarState(payload));
@@ -112,7 +118,9 @@ public class WarStateBroadcaster {
                                  Collection<WarDeclarationRecord> wars,
                                  Collection<SiegeStandardRecord> sieges,
                                  BattleWindowSchedule schedule,
-                                 Collection<WarAllyInviteRecord> invites) {
+                                 Collection<WarAllyInviteRecord> invites,
+                                 Collection<OccupationRecord> occupations,
+                                 Collection<RevoltRecord> revolts) {
         int result = 1;
         for (PoliticalEntityRecord entity : entities) {
             result = 31 * result + entity.toTag().hashCode();
@@ -128,6 +136,12 @@ public class WarStateBroadcaster {
         }
         for (WarAllyInviteRecord invite : invites) {
             result = 31 * result + invite.toTag().hashCode();
+        }
+        for (OccupationRecord occupation : occupations) {
+            result = 31 * result + occupation.toTag().hashCode();
+        }
+        for (RevoltRecord revolt : revolts) {
+            result = 31 * result + revolt.toTag().hashCode();
         }
         return result;
     }
