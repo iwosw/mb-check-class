@@ -97,7 +97,17 @@ public final class TrueAsyncPathfindingRuntime {
             RuntimeProfilingCounters.increment(METRICS_PREFIX + ".coarse_cache.miss");
         }
 
-        SnapshotBuildResult buildResult = snapshotBuilder.build(level, snapshotRequest);
+        if (!activeScheduler.canAccept(priority)) {
+            RuntimeProfilingCounters.increment(METRICS_PREFIX + ".fallback.scheduler_rejected_before_snapshot");
+            return false;
+        }
+
+        SnapshotBuildResult buildResult = snapshotBuilder.build(
+                level,
+                snapshotRequest,
+                RecruitsServerConfig.AsyncPathfindingSnapshotBudgetNanos.get()
+        );
+        RuntimeProfilingCounters.add(METRICS_PREFIX + ".snapshot.build_nanos", buildResult.buildNanos());
         if (buildResult.status() != SnapshotStatus.OK) {
             RuntimeProfilingCounters.increment(METRICS_PREFIX + ".snapshot.reject." + buildResult.status().name().toLowerCase());
             return false;

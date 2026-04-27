@@ -32,9 +32,11 @@ class AsyncPathSchedulerTest {
 
         try (AsyncPathScheduler scheduler = new AsyncPathScheduler(slowSolver, 1, 1, caps)) {
             boolean first = scheduler.submit(request(PathPriority.WORK, 1L), openRegion(), CancellationToken.NONE);
+            boolean canAcceptAfterFirst = scheduler.canAccept(PathPriority.WORK);
             boolean second = scheduler.submit(request(PathPriority.WORK, 2L), openRegion(), CancellationToken.NONE);
 
             assertTrue(first);
+            assertFalse(canAcceptAfterFirst);
             assertFalse(second);
         }
     }
@@ -57,9 +59,13 @@ class AsyncPathSchedulerTest {
 
         try (AsyncPathScheduler scheduler = new AsyncPathScheduler(slowSolver, 1, 8, caps)) {
             boolean first = scheduler.submit(request(PathPriority.WORK, 1L), openRegion(), CancellationToken.NONE);
+            boolean canAcceptWorkAfterFirst = scheduler.canAccept(PathPriority.WORK);
+            boolean canAcceptCombatAfterFirst = scheduler.canAccept(PathPriority.COMBAT);
             boolean second = scheduler.submit(request(PathPriority.WORK, 2L), openRegion(), CancellationToken.NONE);
 
             assertTrue(first);
+            assertFalse(canAcceptWorkAfterFirst);
+            assertTrue(canAcceptCombatAfterFirst);
             assertFalse(second);
         }
     }
