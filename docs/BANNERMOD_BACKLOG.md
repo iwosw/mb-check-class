@@ -299,6 +299,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Rebel-controlled objective succeeds.
 - Occupier defense can fail the revolt.
 
+**Progress 2026-04-27.** Resolution logic landed; the UI panel is left open for a follow-up. New `RevoltOutcomePolicy.evaluate(rebelCount, occupierCount)` is the pure outcome rule: empty objective stays `PENDING` (revolt re-evaluates on the next window pass instead of silently flipping ownership), rebel-only presence -> `SUCCESS`, any defender presence -> `FAILED` (defender holds the objective; mixed-presence tiebreak is intentionally biased toward the defender). New `ObjectivePresenceProbe` interface is the seam the scheduler queries for actor counts at the objective chunk; tests pass deterministic fakes, production wires `ServerLevelObjectivePresenceProbe`, which walks live entities in the chunk's full build-height AABB and resolves each player + recruit-owner UUID through `PoliticalMembership.entityIdFor(...)`. `WarRevoltScheduler.tick(revolts, occupations, applier, probe, gameTime, windowOpen)` now looks up the underlying `OccupationRecord`, picks its first chunk as the objective, runs the policy, and applies SUCCESS (existing `removeOccupationOnRevoltSuccess` path), FAILED (`REVOLT_FAILED;rebelPresence=N;occupierPresence=M` audit; occupation stays), or `REVOLT_FAILED_NO_OCCUPATION` if the underlying occupation was removed externally between schedule and resolution. `WarRevoltAutoResolver` updated to construct the production probe from the level's political registry and pass it through. Locked in by `RevoltOutcomePolicyTest` (4 cases) and the rewritten `WarRevoltSchedulerTest` (9 cases — closed window, not-due, empty PENDING, rebel SUCCESS, occupier-only FAILED, contested-defender-tiebreak FAILED, no-occupation FAILED, resolved skip, null-probe short-circuit). UI panel for pending revolt / window / objective / result is the remaining open work — tracked under UI-002.
+
 ---
 
 ## WAR-004 — Cooldowns and immunity cleanup
@@ -686,6 +688,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## FLAKE-004 — `claimspawncreatesoneworkerthenrespectscooldown` flake
 
+**Status: DONE 2026-04-27.** Same Forge `ConfigValue` cache issue as FLAKE-001 — the three Phase-30 worker-spawn tests in `BannerModWorkerBirthAndSettlementSpawnGameTests` shared a `ConfigSnapshot` capture/restore wrapper that read tunables via `.get()` (cached value) and re-applied them via `.set()` (no-op against the cache). Whichever test triggered the first `.get()` won, every later `.set()` call became silent for production reads, and `claimSpawnCreatesOneWorkerThenRespectsCooldown` was the test that lost when the cache happened to hold a default that disabled `WorkerBirthEnabled` or set `SettlementSpawnCooldownDays` to a value the test didn't expect.
+
 **Зачем.** Pre-existing GameTest fails intermittently with "Expected friendly claim autonomous spawning to create one worker through the runtime seam." Caught once across 25 consecutive `runGameTestServer` invocations during the FLAKE-001/002 verification sweep.
 
 **Scope.**
@@ -698,3 +702,5 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 - 25 consecutive `verifyGameTestStage` runs pass without this test failing.
 - Root cause is named in the commit message.
+
+**Progress 2026-04-27.** All five Phase-30 tunables (`WorkerBirthEnabled`, `ClaimBasedSettlementSpawnEnabled`, `SettlementSpawnMinimumVillagers`, `SettlementSpawnWorkerCap`, `SettlementSpawnCooldownDays`) switched from `WorkersServerConfig.X.set(value)` to the `WorkersServerConfig.setTestOverride(WorkersServerConfig.X, value)` seam introduced for FLAKE-001. The `ConfigSnapshot` capture/restore record is gone — overrides are cleared per-test in `finally` blocks, which is sufficient because production reads only consult overrides that were explicitly set.
