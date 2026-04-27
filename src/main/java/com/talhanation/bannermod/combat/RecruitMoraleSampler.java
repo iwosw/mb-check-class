@@ -2,11 +2,13 @@ package com.talhanation.bannermod.combat;
 
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -54,30 +56,45 @@ public final class RecruitMoraleSampler {
             return new MoraleSnapshot(1, 0, 0, false, 0, 0, false);
         }
 
+        UUID ownerUuid = recruit.getOwnerUUID();
+        Vec3 center = recruit.position();
+
+        // Friendlies come from the per-owner index — chunk-pruned distance check, no
+        // entity-class scan. Owned recruits are guaranteed to be in the index because
+        // RecruitIndexEvents.onJoin / onLeave drive the membership directly.
         int squadSize = 1;
         int nearbyAlly = 0;
-        int hostiles = 0;
         boolean commanderPresent = false;
-
-        UUID ownerUuid = recruit.getOwnerUUID();
-        AABB box = recruit.getBoundingBox().inflate(NEIGHBOURHOOD_RADIUS);
-        for (LivingEntity neighbour : level.getEntitiesOfClass(LivingEntity.class, box)) {
-            if (neighbour == recruit || !neighbour.isAlive()) {
-                continue;
+        if (ownerUuid != null) {
+            List<AbstractRecruitEntity> friendlies = RecruitIndex.instance()
+                    .ownerInRange(level, ownerUuid, center, NEIGHBOURHOOD_RADIUS);
+            if (friendlies != null) {
+                for (AbstractRecruitEntity ally : friendlies) {
+                    if (ally == recruit || !ally.isAlive()) continue;
+                    squadSize++;
+                    nearbyAlly++;
+                    if (!commanderPresent && ally instanceof AbstractLeaderEntity
+                            && CommanderAuraPolicy.isAuraActive(
+                                    List.of(CommanderAura.at(ownerUuid, ally.getX(), ally.getY(), ally.getZ())),
+                                    ownerUuid,
+                                    center.x, center.y, center.z)) {
+                        commanderPresent = true;
+                    }
+                }
             }
+        }
+
+        // Hostile counting still requires a level scan because hostiles include vanilla
+        // mobs / players / non-recruit entities that no per-owner index covers. Restrict
+        // to LivingEntity in the inflated AABB and let canAttack() decide.
+        int hostiles = 0;
+        AABB box = recruit.getBoundingBox().inflate(NEIGHBOURHOOD_RADIUS);
+        for (LivingEntity neighbour : level.getEntitiesOfClass(LivingEntity.class, box,
+                e -> e != recruit && e.isAlive())) {
             if (neighbour instanceof AbstractRecruitEntity other
                     && ownerUuid != null
-                    && Objects.equals(other.getOwnerUUID(), ownerUuid)) {
-                squadSize++;
-                nearbyAlly++;
-                if (other instanceof AbstractLeaderEntity
-                        && CommanderAuraPolicy.isAuraActive(
-                                java.util.List.of(CommanderAura.at(ownerUuid, other.getX(), other.getY(), other.getZ())),
-                                ownerUuid,
-                                recruit.getX(), recruit.getY(), recruit.getZ())) {
-                    commanderPresent = true;
-                }
-                continue;
+                    && ownerUuid.equals(other.getOwnerUUID())) {
+                continue; // already counted via the index, do not double-count.
             }
             if (recruit.canAttack(neighbour)) {
                 hostiles++;
