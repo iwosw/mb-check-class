@@ -4,6 +4,7 @@ import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
 import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.cooldown.WarCooldownPolicy;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.rp.WarDeclarationFormatter;
@@ -29,8 +30,8 @@ public final class WarDeclarationService {
                                  PoliticalEntityRecord defender,
                                  WarGoalType goal,
                                  String casusBelli) {
-        if (!operator && (actorUuid == null || !actorUuid.equals(attacker.leaderUuid()))) {
-            return Result.denied(Component.literal("Only the political entity leader (or an op) can do that."));
+        if (!PoliticalEntityAuthority.canAct(actorUuid, operator, attacker)) {
+            return Result.denied(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
         }
         if (!attacker.status().canDeclareOffensiveWar()) {
             return Result.denied(Component.literal(

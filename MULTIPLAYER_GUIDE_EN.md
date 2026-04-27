@@ -55,7 +55,7 @@ State management is driven by slash commands:
 The same actions (Create / Rename / Capital here / Government form toggle) live in the War Room (`U`). Leaders can also use `Add co-leader` / `Remove co` with a player UUID; the state detail panel shows the current co-leaders and whether their authority is active. The `→ Republic` / `→ Monarchy` button is leader-only and switches government form:
 
 - `MONARCHY`: leader-only authority for key decisions.
-- `REPUBLIC`: co-leaders also gain authority for some actions (status, capital).
+- `REPUBLIC`: co-leaders also gain authority for shared political actions such as status, capital, color, charter, claim editing, ally invites, siege placement, and legal war outcomes.
 
 ## Promoting A Settlement Into A State
 

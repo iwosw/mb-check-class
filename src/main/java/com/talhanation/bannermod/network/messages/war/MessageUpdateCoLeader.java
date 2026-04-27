@@ -49,7 +49,7 @@ public class MessageUpdateCoLeader implements Message<MessageUpdateCoLeader> {
         }
         PoliticalEntityRecord record = recordOpt.get();
         if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
-            player.sendSystemMessage(Component.literal("Only the political entity leader (or an op) can manage co-leaders."));
+            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_LEADER_ONLY));
             return;
         }
         boolean changed = this.add

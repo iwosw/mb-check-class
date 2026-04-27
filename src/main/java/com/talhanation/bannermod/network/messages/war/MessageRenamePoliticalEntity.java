@@ -19,7 +19,7 @@ import java.util.UUID;
 /**
  * Client → server: leader (or op) renames an existing political entity.
  *
- * <p>Authority is enforced server-side via {@link PoliticalEntityAuthority#isLeaderOrOp};
+ * <p>Authority is enforced server-side via {@link PoliticalEntityAuthority#canAct};
  * the client may render the rename button only when locally believed legal, but the server
  * never trusts that.</p>
  */
@@ -58,8 +58,8 @@ public class MessageRenamePoliticalEntity implements Message<MessageRenamePoliti
             return;
         }
         PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
-            player.sendSystemMessage(Component.literal("Only the political entity leader (or an op) can do that."));
+        if (!PoliticalEntityAuthority.canAct(player, record)) {
+            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
             return;
         }
         PoliticalRegistryValidation.Result validation = registry.canRename(this.entityId, this.newName);

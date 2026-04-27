@@ -5,13 +5,10 @@ import net.minecraft.server.level.ServerPlayer;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-/**
- * Centralised leader-or-op authority check for political-entity mutations.
- *
- * <p>Mirrors the slash-command authority gate in {@code WarCommandSupport.isLeaderOrOp} so
- * client→server packets and command paths share one source of truth.</p>
- */
+/** Centralized political authority checks for command, packet, and UI paths. */
 public final class PoliticalEntityAuthority {
+    public static final String DENIAL_NOT_AUTHORIZED = "Only the political entity leader, an authorized republic co-leader, or an op can do that.";
+    public static final String DENIAL_LEADER_ONLY = "Only the political entity leader (or an op) can do that.";
 
     private PoliticalEntityAuthority() {
     }

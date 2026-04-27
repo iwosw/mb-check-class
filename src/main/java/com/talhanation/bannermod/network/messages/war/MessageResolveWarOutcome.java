@@ -70,8 +70,8 @@ public class MessageResolveWarOutcome implements Message<MessageResolveWarOutcom
             player.sendSystemMessage(Component.literal("Tribute outcomes are op-only."));
             return;
         }
-        if (!player.hasPermissions(2) && (attacker.isEmpty() || !player.getUUID().equals(attacker.get().leaderUuid()))) {
-            player.sendSystemMessage(Component.literal("Only the attacking political entity leader (or an op) can do that."));
+        if (attacker.isEmpty() || !com.talhanation.bannermod.war.registry.PoliticalEntityAuthority.canAct(player, attacker.get())) {
+            player.sendSystemMessage(Component.literal(com.talhanation.bannermod.war.registry.PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
             return;
         }
 

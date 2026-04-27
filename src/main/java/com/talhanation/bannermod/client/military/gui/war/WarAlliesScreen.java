@@ -5,6 +5,7 @@ import com.talhanation.bannermod.network.messages.war.MessageCancelAllyInvite;
 import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
 import com.talhanation.bannermod.network.messages.war.MessageRespondAllyInvite;
 import com.talhanation.bannermod.war.client.WarClientState;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.WarAllyInviteRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
@@ -283,8 +284,7 @@ public class WarAlliesScreen extends Screen {
         if (entityId == null || playerUuid == null) return false;
         PoliticalEntityRecord entity = WarClientState.entityById(entityId);
         if (entity == null) return false;
-        UUID leader = entity.leaderUuid();
-        return leader != null && leader.equals(playerUuid);
+        return PoliticalEntityAuthority.canAct(playerUuid, false, entity);
     }
 
     /** Either a confirmed ally row or a pending invite row. */

@@ -10,6 +10,7 @@ import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityC
 import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.GovernmentForm;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
@@ -213,12 +214,13 @@ public class PoliticalEntityListScreen extends Screen {
     }
 
     private void updateLeaderButtons() {
+        boolean canAct = canLocalPlayerAct(this.selected);
         boolean leader = isLocalPlayerLeader(this.selected);
         if (this.renameButton != null) {
-            this.renameButton.active = leader;
+            this.renameButton.active = canAct;
         }
         if (this.setCapitalButton != null) {
-            this.setCapitalButton.active = leader;
+            this.setCapitalButton.active = canAct;
         }
         if (this.toggleFormButton != null) {
             this.toggleFormButton.active = leader;
@@ -230,10 +232,10 @@ public class PoliticalEntityListScreen extends Screen {
             }
         }
         if (this.setColorButton != null) {
-            this.setColorButton.active = leader;
+            this.setColorButton.active = canAct;
         }
         if (this.setCharterButton != null) {
-            this.setCharterButton.active = leader;
+            this.setCharterButton.active = canAct;
         }
         if (this.addCoLeaderButton != null) {
             this.addCoLeaderButton.active = leader;
@@ -249,6 +251,11 @@ public class PoliticalEntityListScreen extends Screen {
         if (player == null) return false;
         UUID leader = entity.leaderUuid();
         return leader != null && leader.equals(player.getUUID());
+    }
+
+    private static boolean canLocalPlayerAct(@Nullable PoliticalEntityRecord entity) {
+        Player player = Minecraft.getInstance().player;
+        return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity);
     }
 
     @Override

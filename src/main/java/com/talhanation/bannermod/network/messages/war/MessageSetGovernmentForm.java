@@ -60,7 +60,7 @@ public class MessageSetGovernmentForm implements Message<MessageSetGovernmentFor
         PoliticalEntityRecord record = recordOpt.get();
         if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
             // Government-form changes are leader-only; co-leaders can't reshape the regime.
-            player.sendSystemMessage(Component.literal("Only the political entity leader (or an op) can do that."));
+            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_LEADER_ONLY));
             return;
         }
         GovernmentForm form = decodeForm(this.formOrdinal);
