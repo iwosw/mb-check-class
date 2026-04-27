@@ -54,6 +54,8 @@ final class RecruitRuntimeLoop {
             RecruitIndex.instance().onRecruitTick(recruit);
             com.talhanation.bannermod.combat.RecruitMoraleService.tick(
                     recruit, serverLevel, serverLevel.getGameTime());
+            com.talhanation.bannermod.combat.CavalryChargeService.tick(
+                    recruit, serverLevel.getGameTime());
         }
         if (recruit.despawnTimer > 0) {
             recruit.despawnTimer--;

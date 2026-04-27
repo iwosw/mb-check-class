@@ -23,6 +23,7 @@ public final class RecruitIndexEvents {
         RecruitIndex.instance().onEntityLeave(event.getEntity());
         if (event.getEntity() instanceof AbstractRecruitEntity recruit) {
             com.talhanation.bannermod.combat.RecruitMoraleService.invalidate(recruit.getUUID());
+            com.talhanation.bannermod.combat.CavalryChargeService.invalidate(recruit.getUUID());
         }
     }
 
