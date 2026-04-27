@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
+import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.BattleWindowClock;
@@ -57,6 +58,10 @@ public class WarListScreen extends Screen {
     private Button placeSiegeBtn;
     private Button alliesBtn;
     private Button declareBtn;
+    private Button cancelWarBtn;
+    private Button occupyBtn;
+    private Button annexBtn;
+    private Button tributeLockedBtn;
     private Button statesBtn;
     private Button refreshBtn;
     private Button closeBtn;
@@ -92,6 +97,14 @@ public class WarListScreen extends Screen {
                 .bounds(guiLeft + 8, alliesY, 184, 18).build();
         declareBtn = Button.builder(Component.literal("Declare war"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)))
                 .bounds(guiLeft + 8, alliesY + 22, 184, 18).build();
+        cancelWarBtn = Button.builder(Component.literal("Cancel war"), btn -> sendOutcome(MessageResolveWarOutcome.Action.CANCEL))
+                .bounds(detailX, detailY - 46, 80, 18).build();
+        occupyBtn = Button.builder(Component.literal("Occupy here"), btn -> sendOutcome(MessageResolveWarOutcome.Action.OCCUPY))
+                .bounds(detailX + 88, detailY - 46, 80, 18).build();
+        annexBtn = Button.builder(Component.literal("Annex here"), btn -> sendOutcome(MessageResolveWarOutcome.Action.ANNEX))
+                .bounds(detailX, detailY - 24, 80, 18).build();
+        tributeLockedBtn = Button.builder(Component.literal("Tribute: op only"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE))
+                .bounds(detailX + 88, detailY - 24, 80, 18).build();
 
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
@@ -99,6 +112,10 @@ public class WarListScreen extends Screen {
         addRenderableWidget(placeSiegeBtn);
         addRenderableWidget(alliesBtn);
         addRenderableWidget(declareBtn);
+        addRenderableWidget(cancelWarBtn);
+        addRenderableWidget(occupyBtn);
+        addRenderableWidget(annexBtn);
+        addRenderableWidget(tributeLockedBtn);
         addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
 
@@ -118,6 +135,11 @@ public class WarListScreen extends Screen {
         if (selected == null || sideId == null) return;
         BannerModMain.SIMPLE_CHANNEL.sendToServer(
                 new MessagePlaceSiegeStandardHere(selected.id(), sideId, 0));
+    }
+
+    private void sendOutcome(MessageResolveWarOutcome.Action action) {
+        if (selected == null) return;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageResolveWarOutcome(selected.id(), action));
     }
 
     private void openAllies() {
@@ -158,6 +180,27 @@ public class WarListScreen extends Screen {
                 return player != null && player.getUUID().equals(entity.leaderUuid()) && entity.status().canDeclareOffensiveWar();
             });
         }
+        boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
+        boolean attackerLeader = has && isLocalAttackerLeader(selected);
+        if (cancelWarBtn != null) {
+            cancelWarBtn.active = live && attackerLeader;
+        }
+        if (occupyBtn != null) {
+            occupyBtn.active = live && attackerLeader;
+        }
+        if (annexBtn != null) {
+            annexBtn.active = live && attackerLeader;
+        }
+        if (tributeLockedBtn != null) {
+            tributeLockedBtn.active = false;
+        }
+    }
+
+    private boolean isLocalAttackerLeader(@Nullable WarDeclarationRecord war) {
+        if (war == null) return false;
+        Player player = Minecraft.getInstance().player;
+        if (player == null) return false;
+        return isLeaderOf(war.attackerPoliticalEntityId(), player.getUUID());
     }
 
     @Nullable
@@ -249,6 +292,7 @@ public class WarListScreen extends Screen {
         graphics.drawString(font, "Detail", x, y, 0xFFFFFF, false);
         if (selected == null) {
             graphics.drawString(font, "Select a war.", x, y + 14, 0xAAAAAA, false);
+            graphics.drawString(font, "Outcome buttons unlock for the attacking leader.", x, y + 28, 0x777777, false);
             return;
         }
 
@@ -268,6 +312,8 @@ public class WarListScreen extends Screen {
                 "Occupations: " + occupationSummary(war.id()),
                 "Sieges: " + activeSiegeCount(war.id()),
                 "Revolts: " + revoltSummary(war.id()),
+                "Outcome UI: cancel / occupy / annex for attacker leader",
+                "Locked: tribute / forced peace / vassalize / demilitarize are op-only",
                 "Id: " + shortId(war.id())
         };
         for (String s : body) {
