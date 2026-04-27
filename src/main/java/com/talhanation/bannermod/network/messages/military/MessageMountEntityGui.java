@@ -1,6 +1,9 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
@@ -39,14 +42,15 @@ public class MessageMountEntityGui implements Message<MessageMountEntityGui> {
 
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 32.0D * 32.0D);
         if (recruit != null) {
-            this.mount(recruit);
+            this.mount(player, recruit);
         }
     }
 
     @SuppressWarnings({"all"})
-    private void mount(AbstractRecruitEntity recruit) {
+    private void mount(ServerPlayer player, AbstractRecruitEntity recruit) {
         if (this.back && recruit.getMountUUID() != null) {
-            recruit.shouldMount(true, recruit.getMountUUID());
+            CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
+                    player.level().getGameTime(), CommandIntentPriority.HIGH, false, null, null, true), List.of(recruit));
         } else if (recruit.getVehicle() == null) {
             List<Entity> list = recruit.getCommandSenderWorld().getEntitiesOfClass(
                     Entity.class,
@@ -72,7 +76,8 @@ public class MessageMountEntityGui implements Message<MessageMountEntityGui> {
                 return;
             }
 
-            recruit.shouldMount(true, horse.getUUID());
+            CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
+                    player.level().getGameTime(), CommandIntentPriority.HIGH, false, horse.getUUID(), null, false), List.of(recruit));
         }
     }
 

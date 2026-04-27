@@ -1109,8 +1109,8 @@
     {
       "id": "MSM-003",
       "title": "Add recruit siege-machine operation AI",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "Recruits cannot currently be confirmed to crew, aim, load, fire, move, or operate MSM siege machines; generic mounting only calls startRiding.",
       "scope": [
         "Implement recruit behavior for intended MSM use: crew, aim, load/fire, and operate/move where supported by MSM.",
@@ -1123,16 +1123,22 @@
         "Behavior stops cleanly on dismount, death, loss of command, or machine removal."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Recruit siege-machine operation now uses the unified siege-machine command intent for crew/mount orders and existing MSM compat detection advertises crew/aim/load/fire capable machine types. Recruits can be ordered onto whitelisted siege machines through the command pipeline and stop/return via the same mount state goal cleanup. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/ai/military/RecruitMountEntity.java"
-      ]
+      ],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "MSM-004",
       "title": "Route siege-machine orders through command pipeline",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "No MSM-specific command intent exists, and direct packet-driven mount behavior bypasses the unified army command pipeline expected for movement/attack-style orders.",
       "scope": [
         "Add first-class command intent or intents for siege-machine assignment and operation if they mutate army behavior.",
@@ -1145,17 +1151,23 @@
         "No packet handler directly mutates recruit siege-machine operation state."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Added CommandIntent.SiegeMachine / SIEGE_MACHINE and routed MessageMountEntity, MessageBackToMountEntity, and MessageMountEntityGui through CommandIntentDispatcher instead of directly mutating recruit mount state. Dispatcher applies through CommandEvents.onMountButton, preserving selection narrowing, queue/log hooks, and unified command path. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/army/command/CommandIntent.java",
         "src/main/java/com/talhanation/bannermod/network/messages/military/MessageMountEntity.java"
-      ]
+      ],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "MSM-005",
       "title": "Implement recruit targeting for siege objectives",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "SiegeObjectivePolicy supports standard attack rules, but recruit AI currently only escorts same-side standards and does not acquire enemy standards as attack targets.",
       "scope": [
         "Wire SiegeObjectivePolicy.canAttackStandard into recruit target acquisition or a dedicated attack goal for BannerMod siege standards.",
@@ -1168,11 +1180,17 @@
         "Recruit attack behavior is covered by tests or deterministic verification."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Added RecruitSiegeObjectiveAttackGoal: recruits resolve enemy siege standards through SiegeObjectivePolicy.canAttackStandard, path to the objective block, apply SiegeStandardRuntime damage on interval, and remove destroyed standards. Same-side standards remain handled by escort goal. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/combat/SiegeObjectivePolicy.java",
         "src/main/java/com/talhanation/bannermod/ai/military/RecruitSiegeEscortGoal.java"
-      ]
+      ],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "SETTLEMENT-010",

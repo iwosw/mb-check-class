@@ -148,6 +148,11 @@ public final class CommandIntentDispatcher {
                 CommandEvents.onCombatStanceCommand(
                         player.getUUID(), recruit, stanceChange.stance(), stanceChange.groupUuid());
             }
+        } else if (intent instanceof CommandIntent.SiegeMachine siegeMachine) {
+            for (AbstractRecruitEntity recruit : safeActors) {
+                CommandEvents.onMountButton(
+                        player.getUUID(), recruit, siegeMachine.returnToKnownMount() ? null : siegeMachine.mountUuid(), siegeMachine.groupUuid());
+            }
         }
     }
 }
