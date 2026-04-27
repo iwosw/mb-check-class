@@ -42,19 +42,27 @@ Before treating a task as starting from a clean baseline, run `ctx status`. Prio
 
 ## Backlog hygiene
 
-- `docs/BANNERMOD_BACKLOG.md` is the single canonical backlog. When you add a new task, write the section in full: `## <ID> — <Title>`, **Зачем**, **Scope** (concrete deliverables), **Acceptance** (verifiable success criteria). Skipping any of these makes the task invisible to future sessions.
-- **DONE = every Acceptance bullet is observably satisfied right now.** Closing a task is a binary check against the existing Acceptance list, not a judgement call. Read each Acceptance bullet line by line; if any one of them describes gameplay-observable behaviour you cannot demonstrate from the current code (e.g. "units rout when outnumbered"), the task stays OPEN even when supporting infrastructure landed. A pure-logic / policy slice that the AI hookup will later consume is **never** enough to close a task whose Acceptance speaks about in-game behaviour — record it as `**Progress <YYYY-MM-DD>.**` and explicitly call out which Acceptance bullets are not yet met.
-- When a task is finished, mark it closed by inserting a `**Status: DONE <YYYY-MM-DD>.**` line at the top of its section (right under the heading) and keeping the existing scope/acceptance/progress paragraphs in place as the historical record. **The Status: DONE line is mandatory** — a closed task without that exact-format line is invisible to the `awk '/^## /{...}'` audit the next session will run, and to the human reading the file. Never silently delete a closed task.
-- Open tasks have no `Status:` line; in-progress slices use a `**Progress <YYYY-MM-DD>.**` paragraph at the bottom of the section. Multiple Progress paragraphs from different sessions stack chronologically — never edit or remove a prior session's Progress paragraph; append a new one instead.
-- Before claiming a closure in chat to the user, run `awk '/^## /{section=$0; getline blank; getline line; if (line ~ /Status: DONE/) print section " -> DONE"; else print section " -> OPEN"}' docs/BANNERMOD_BACKLOG.md` against the file and confirm the section actually shows DONE. The summary you give the user must match what the file contains, not what you intended to write.
+- `docs/BANNERMOD_BACKLOG.json` is the single canonical backlog. `docs/BANNERMOD_BACKLOG.md` is only a pointer and must not contain task data.
+- Use `tools/backlog` for normal backlog work instead of reading or dumping the JSON directly: `tools/backlog batch --limit 5`, `tools/backlog show <ID>`, `tools/backlog list --status open`, `tools/backlog validate`.
+- When adding a task, use `tools/backlog add <ID> <title> --why ... --scope ... --acceptance ...`. Every task must include `id`, `title`, `why`, concrete scope deliverables, and verifiable acceptance checks.
+- **DONE = every acceptance item is observably satisfied right now.** Closing a task is a binary check against the existing acceptance list, not a judgement call. If any acceptance item describes gameplay-observable behaviour you cannot demonstrate from current code, the task stays open even when supporting infrastructure landed.
+- Before marking a task done, verify your own implementation against every acceptance item. Record the exact verification result with `tools/backlog done <ID> --verification "..."`; if verification cannot be run, record what blocked it instead of pretending it passed.
+- If a backlog task changes UI, changes gameplay mechanics, or adds player-facing mechanics that a non-technical player must know, update `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md` in the same slice before marking the task done.
+- For partial work, use `tools/backlog progress <ID> "..."` and explicitly call out which acceptance items are not yet met. Append progress; do not rewrite history.
+- Before claiming a closure in chat, run `tools/backlog validate` and `tools/backlog show <ID>` and ensure the task status and verification match what you are about to say.
 
 ## Contribution flow
 
 - Read `docs/STATUS.md` before picking up brownfield work.
 - Use `docs/CONTRIBUTING.md` as the contribution flow for code, tests, docs, and commits.
-- Use `docs/BANNERMOD_BACKLOG.md` as the canonical active backlog.
+- Use `tools/backlog` to inspect and update the canonical active backlog (`docs/BANNERMOD_BACKLOG.json`).
 - Put module documentation under `docs/`; keep root player guides split as `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md`.
 - The local context multitool is documented in `tools/ai-context-proxy/README.md` and summarized in `docs/TOOLS.md`.
+
+## Minecraft UI design
+
+- For Minecraft GUI/HUD work, invoke `/minecraft-ui-design` or read `.agents/skills/minecraft-ui-design/SKILL.md` and apply that contract.
+- UI must be Minecraft-native, minimal, readable, server-authoritative for gameplay mutations, localized, and checked for overlap with hotbar/chat/crosshair/boss bars/existing BannerMod overlays.
 
 ## Army command pipeline
 
