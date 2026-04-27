@@ -16,6 +16,11 @@ import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementService;
 import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
+import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
+import com.talhanation.bannermod.settlement.BannerModSettlementDesiredGoodSeed;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderExecutionReceipt;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderStatus;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -94,10 +99,12 @@ final class RecruitGovernorWorkflow {
                 ? BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, recruit.blockPosition(), recruit.getTeam() == null ? null : recruit.getTeam().getName())
                 : BannerModSettlementBinding.resolveSettlementStatus(claim, claim.getCenter() == null ? new ChunkPos(recruit.blockPosition()) : claim.getCenter(), claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString());
         java.util.List<String> recommendations = snapshot == null ? java.util.List.of() : new java.util.ArrayList<>(snapshot.recommendationTokens());
+        java.util.List<String> logisticsLines = java.util.List.of("No settlement logistics snapshot");
         if (claim != null && recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
             BannerModSettlementSnapshot settlementSnapshot = BannerModSettlementManager.get(serverLevel).getSnapshot(claim.getUUID());
             if (settlementSnapshot != null) {
                 recommendations.addAll(settlementSnapshot.tradeRouteHandoffSeed().seaTradeStatusLines());
+                logisticsLines = buildLogisticsLines(serverLevel, settlementSnapshot);
             }
         }
 
@@ -117,8 +124,45 @@ final class RecruitGovernorWorkflow {
                 snapshot == null ? 0 : snapshot.lastTreasuryNet(),
                 snapshot == null ? 0 : snapshot.projectedTreasuryBalance(),
                 snapshot == null ? java.util.List.of() : snapshot.incidentTokens(),
-                recommendations
+                recommendations,
+                logisticsLines
         ));
+    }
+
+    private static java.util.List<String> buildLogisticsLines(ServerLevel serverLevel, BannerModSettlementSnapshot settlementSnapshot) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        SettlementWorkOrderRuntime runtime = BannerModSettlementOrchestrator.workOrderRuntime(serverLevel);
+        int pending = runtime == null ? 0 : runtime.countForClaim(settlementSnapshot.claimUuid(), SettlementWorkOrderStatus.PENDING);
+        int claimed = runtime == null ? 0 : runtime.countForClaim(settlementSnapshot.claimUuid(), SettlementWorkOrderStatus.CLAIMED);
+        int completed = 0;
+        if (runtime != null) {
+            for (SettlementWorkOrderExecutionReceipt receipt : runtime.recentCompletions()) {
+                if (settlementSnapshot.claimUuid().equals(receipt.claimUuid())) {
+                    completed++;
+                }
+            }
+        }
+        lines.add("Work orders: pending " + pending + ", claimed " + claimed + ", completed " + completed);
+        lines.add("Blocked: " + settlementSnapshot.supplySignalState().shortageSignalCount() + " shortages / " + settlementSnapshot.supplySignalState().shortageUnitCount() + " units");
+        lines.add("Stockpile: " + settlementSnapshot.stockpileSummary().containerCount() + " containers, " + settlementSnapshot.stockpileSummary().slotCapacity() + " slots");
+        lines.add("Storage routes: " + settlementSnapshot.stockpileSummary().routedStorageCount() + " routed, " + settlementSnapshot.stockpileSummary().portEntrypointCount() + " ports");
+        java.util.List<BannerModSettlementDesiredGoodSeed> desiredGoods = settlementSnapshot.desiredGoodsSeed().desiredGoods();
+        if (desiredGoods.isEmpty()) {
+            lines.add("Missing goods: none signaled");
+        } else {
+            java.util.List<String> goods = new java.util.ArrayList<>();
+            for (int i = 0; i < Math.min(3, desiredGoods.size()); i++) {
+                BannerModSettlementDesiredGoodSeed desiredGood = desiredGoods.get(i);
+                goods.add(desiredGood.desiredGoodId() + " x" + desiredGood.driverCount());
+            }
+            lines.add("Missing goods: " + String.join(", ", goods));
+        }
+        if (!settlementSnapshot.projectCandidateSeed().candidateId().equals("none")) {
+            lines.add("Project: " + settlementSnapshot.projectCandidateSeed().candidateId() + " priority " + settlementSnapshot.projectCandidateSeed().priority());
+        } else {
+            lines.add("Project: none queued");
+        }
+        return lines;
     }
 
     static void updateGovernorPolicy(ServerPlayer player, AbstractRecruitEntity recruit, BannerModGovernorPolicy policy, int value) {

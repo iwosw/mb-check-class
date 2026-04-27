@@ -84,7 +84,7 @@ Citizens can fill building vacancies and convert into workers or recruits when t
 
 The worker command screen (`X`) supports simple group orders: follow, guard, move to position, stop.
 
-Governors expose the settlement's status, citizen count, taxes, incidents, recommendations, treasury data, and policy buttons. Promote an eligible owned recruit from its inventory when it has enough experience and is tied to a friendly claimed settlement.
+Governors expose the settlement's status, citizen count, taxes, incidents, treasury data, policy buttons, and a read-only logistics panel. Use the logistics panel to check pending, claimed, and recently completed work orders, shortage blockers, stockpile capacity, missing goods, and the current project hint before digging through logs. Promote an eligible owned recruit from its inventory when it has enough experience and is tied to a friendly claimed settlement.
 
 ## Storage, Markets, And Trade
 
