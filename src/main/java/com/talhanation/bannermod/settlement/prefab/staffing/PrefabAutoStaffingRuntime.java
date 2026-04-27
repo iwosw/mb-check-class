@@ -13,12 +13,19 @@ import com.talhanation.bannermod.settlement.prefab.BuildingPrefabProfession;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabRegistry;
 import com.talhanation.bannermod.settlement.prefab.PrefabBuildAreaTracker;
 import com.talhanation.bannermod.settlement.prefab.impl.BarracksPrefab;
+import com.talhanation.bannermod.settlement.prefab.impl.FarmPrefab;
+import com.talhanation.bannermod.settlement.prefab.impl.LumberCampPrefab;
+import com.talhanation.bannermod.settlement.prefab.impl.MinePrefab;
+import com.talhanation.bannermod.settlement.building.BuildingType;
+import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -79,6 +86,26 @@ public final class PrefabAutoStaffingRuntime {
 
         AbstractWorkAreaEntity workArea = findEmbeddedWorkArea(level, buildArea);
         registerVacancy(buildArea, prefabId, profession, workArea);
+    }
+
+    public static void registerValidatedBuildingVacancy(ValidatedBuildingRecord record) {
+        if (record == null || record.state() != com.talhanation.bannermod.settlement.building.BuildingValidationState.VALID) {
+            return;
+        }
+        BuildingPrefabProfession profession = professionForManualBuilding(record.type());
+        int slots = vacancySlotsForManualBuilding(record.type());
+        if (profession == BuildingPrefabProfession.NONE || slots <= 0) {
+            return;
+        }
+        VACANCIES.put(record.buildingId(), new VacancyRecord(record.buildingId(), profession, slots, record.anchorPos()));
+    }
+
+    public static String describeManualVacancy(BuildingType type) {
+        BuildingPrefabProfession profession = professionForManualBuilding(type);
+        int slots = vacancySlotsForManualBuilding(type);
+        return profession == BuildingPrefabProfession.NONE || slots <= 0
+                ? "Vacancy: none"
+                : "Vacancy: " + profession.name() + " x" + slots;
     }
 
     /**
@@ -161,7 +188,7 @@ public final class PrefabAutoStaffingRuntime {
         if (slots <= 0) {
             return;
         }
-        VACANCIES.put(anchorUuid, new VacancyRecord(anchorUuid, profession, slots));
+        VACANCIES.put(anchorUuid, new VacancyRecord(anchorUuid, profession, slots, buildArea.blockPosition()));
     }
 
     public static void assignCitizenToNearestVacancy(ServerLevel level, CitizenEntity citizen) {
@@ -175,14 +202,13 @@ public final class PrefabAutoStaffingRuntime {
         double bestDistanceSqr = Double.POSITIVE_INFINITY;
         for (VacancyRecord vacancy : VACANCIES.values()) {
             Entity anchor = level.getEntity(vacancy.anchorUuid());
-            if (anchor == null || !anchor.isAlive()) {
-                continue;
-            }
             int freeSlots = vacancy.totalSlots() - currentOccupancy(level, vacancy.anchorUuid());
             if (freeSlots <= 0) {
                 continue;
             }
-            double distSqr = citizen.distanceToSqr(anchor);
+            double distSqr = anchor != null && anchor.isAlive()
+                    ? citizen.distanceToSqr(anchor)
+                    : citizen.distanceToSqr(Vec3.atCenterOf(vacancy.anchorPos()));
             if (distSqr > VACANCY_ASSIGN_RADIUS_SQR) {
                 continue;
             }
@@ -210,6 +236,12 @@ public final class PrefabAutoStaffingRuntime {
         VacancyRecord vacancy = VACANCIES.get(anchorUuid);
         int totalSlots = vacancy == null ? 1 : vacancy.totalSlots();
         return currentOccupancy(level, anchorUuid, convertingCitizenUuid) < totalSlots;
+    }
+
+    @Nullable
+    public static BlockPos conversionAnchorPosition(UUID anchorUuid) {
+        VacancyRecord vacancy = anchorUuid == null ? null : VACANCIES.get(anchorUuid);
+        return vacancy == null ? null : vacancy.anchorPos();
     }
 
     private static int currentOccupancy(ServerLevel level, UUID anchorUuid) {
@@ -272,7 +304,7 @@ public final class PrefabAutoStaffingRuntime {
         return occupancy;
     }
 
-    private static int vacancySlotsFor(ResourceLocation prefabId, BuildingPrefabProfession profession) {
+    static int vacancySlotsFor(ResourceLocation prefabId, BuildingPrefabProfession profession) {
         if (profession == null || profession == BuildingPrefabProfession.NONE) {
             return 0;
         }
@@ -284,6 +316,33 @@ public final class PrefabAutoStaffingRuntime {
             return 1;
         }
         return BarracksPrefab.ID.equals(prefabId) ? 4 : 1;
+    }
+
+    public static BuildingPrefabProfession professionForManualBuilding(BuildingType type) {
+        if (type == null) {
+            return BuildingPrefabProfession.NONE;
+        }
+        return switch (type) {
+            case FARM -> BuildingPrefabProfession.FARMER;
+            case MINE -> BuildingPrefabProfession.MINER;
+            case LUMBER_CAMP -> BuildingPrefabProfession.LUMBERJACK;
+            case ARCHITECT_WORKSHOP -> BuildingPrefabProfession.BUILDER;
+            default -> BuildingPrefabProfession.NONE;
+        };
+    }
+
+    public static int vacancySlotsForManualBuilding(BuildingType type) {
+        BuildingPrefabProfession profession = professionForManualBuilding(type);
+        if (type == BuildingType.FARM) {
+            return vacancySlotsFor(FarmPrefab.ID, profession);
+        }
+        if (type == BuildingType.MINE) {
+            return vacancySlotsFor(MinePrefab.ID, profession);
+        }
+        if (type == BuildingType.LUMBER_CAMP) {
+            return vacancySlotsFor(LumberCampPrefab.ID, profession);
+        }
+        return profession == BuildingPrefabProfession.NONE ? 0 : 1;
     }
 
     private static CitizenProfession toCitizenProfession(BuildingPrefabProfession profession) {
@@ -307,7 +366,7 @@ public final class PrefabAutoStaffingRuntime {
         };
     }
 
-    private record VacancyRecord(UUID anchorUuid, BuildingPrefabProfession profession, int totalSlots) {
+    private record VacancyRecord(UUID anchorUuid, BuildingPrefabProfession profession, int totalSlots, BlockPos anchorPos) {
     }
 
     private record OccupancySnapshot(net.minecraft.resources.ResourceKey<Level> dimension, long gameTime, Map<UUID, Integer> occupancyByAnchor) {

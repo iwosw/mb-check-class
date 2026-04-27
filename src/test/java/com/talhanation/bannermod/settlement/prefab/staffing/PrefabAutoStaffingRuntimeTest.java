@@ -1,6 +1,10 @@
 package com.talhanation.bannermod.settlement.prefab.staffing;
 
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabProfession;
+import com.talhanation.bannermod.settlement.prefab.impl.FarmPrefab;
+import com.talhanation.bannermod.settlement.prefab.impl.LumberCampPrefab;
+import com.talhanation.bannermod.settlement.prefab.impl.MinePrefab;
+import com.talhanation.bannermod.settlement.building.BuildingType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -93,5 +97,24 @@ class PrefabAutoStaffingRuntimeTest {
     void onBuildAreaCompletedWithNullArgsDoesNotExplode() {
         // Both null-level and null-buildArea must be tolerated by the guard clause.
         PrefabAutoStaffingRuntime.onBuildAreaCompleted(null, null);
+    }
+
+    @Test
+    void manualValidatedWorkplacesDeclareVacancyProfessions() {
+        assertTrue(PrefabAutoStaffingRuntime.professionForManualBuilding(BuildingType.FARM) == BuildingPrefabProfession.FARMER);
+        assertTrue(PrefabAutoStaffingRuntime.professionForManualBuilding(BuildingType.MINE) == BuildingPrefabProfession.MINER);
+        assertTrue(PrefabAutoStaffingRuntime.professionForManualBuilding(BuildingType.LUMBER_CAMP) == BuildingPrefabProfession.LUMBERJACK);
+        assertTrue(PrefabAutoStaffingRuntime.professionForManualBuilding(BuildingType.ARCHITECT_WORKSHOP) == BuildingPrefabProfession.BUILDER);
+        assertTrue(PrefabAutoStaffingRuntime.professionForManualBuilding(BuildingType.STORAGE) == BuildingPrefabProfession.NONE);
+    }
+
+    @Test
+    void manualValidatedWorkplaceSlotsMatchEquivalentPrefabs() {
+        assertTrue(PrefabAutoStaffingRuntime.vacancySlotsForManualBuilding(BuildingType.FARM)
+                == PrefabAutoStaffingRuntime.vacancySlotsFor(FarmPrefab.ID, BuildingPrefabProfession.FARMER));
+        assertTrue(PrefabAutoStaffingRuntime.vacancySlotsForManualBuilding(BuildingType.MINE)
+                == PrefabAutoStaffingRuntime.vacancySlotsFor(MinePrefab.ID, BuildingPrefabProfession.MINER));
+        assertTrue(PrefabAutoStaffingRuntime.vacancySlotsForManualBuilding(BuildingType.LUMBER_CAMP)
+                == PrefabAutoStaffingRuntime.vacancySlotsFor(LumberCampPrefab.ID, BuildingPrefabProfession.LUMBERJACK));
     }
 }

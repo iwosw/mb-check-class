@@ -134,7 +134,14 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
             return;
         }
         Entity boundWorkArea = ((net.minecraft.server.level.ServerLevel) this.level()).getEntity(boundWorkAreaUuid);
-        if (boundWorkArea == null || this.distanceToSqr(boundWorkArea) > 9.0D) {
+        BlockPos manualAnchor = boundWorkArea == null ? PrefabAutoStaffingRuntime.conversionAnchorPosition(boundWorkAreaUuid) : null;
+        if (boundWorkArea == null && manualAnchor == null) {
+            return;
+        }
+        double anchorDistanceSqr = boundWorkArea != null
+                ? this.distanceToSqr(boundWorkArea)
+                : this.distanceToSqr(Vec3.atCenterOf(manualAnchor));
+        if (anchorDistanceSqr > 9.0D) {
             return;
         }
         if (!PrefabAutoStaffingRuntime.hasConversionSlot((net.minecraft.server.level.ServerLevel) this.level(), boundWorkAreaUuid, this.getUUID())) {
