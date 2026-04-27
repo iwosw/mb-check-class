@@ -406,6 +406,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Units near commander hold longer than isolated units.
 - Aura does not buff enemies/neutral units.
 
+**Progress 2026-04-27.** Pure-logic aura resolution landed alongside `MoralePolicy`. New `CommanderAura(politicalEntityId, x, y, z)` is the lightweight descriptor; `CommanderAuraPolicy.isAuraActive(commanders, squadPoliticalEntityId, x, y, z)` is the policy entry-point that the upcoming combat-AI hookup will call to populate `MoraleSnapshot.commanderPresent`. Two rules: (a) the commander's political entity must equal the squad's political entity (both non-null) — auras never project to enemies / neutral squads / unaffiliated commanders; (b) squared 3D distance <= squared aura radius (squared comparison avoids the sqrt cost on every tick). Default radius is `DEFAULT_AURA_RADIUS_BLOCKS = 16.0`, exposed as a public constant for a future Forge-config layer; an explicit-radius overload lets tests exercise edge cases without globals. Locked in by `CommanderAuraPolicyTest` (10 cases — same-faction in-range / out-of-range / hostile-to-friendly / null-political-entity on either side / multi-commander list returns first match / empty/null list / boundary-inclusive / 3D distance check / zero-or-negative radius covers only the commander's square). Combat-AI wiring (recruit-formation neighbourhood feeds `commanderPresent` from this policy) is the open follow-up under COMBAT-001.
+
 ---
 
 ## COMBAT-003 — Role-aware formation planner and shield-wall pressure
