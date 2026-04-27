@@ -82,6 +82,8 @@ Settlements have internal work orders. Some order state already survives server 
 
 Build Area screens show scan/build status at the bottom. Invalid names, empty scans, oversized dimensions, missing structure data, or server-side NBT/bounds rejection produce a visible reason; Build and creative Place requests also report accepted/rejected state in chat.
 
+Storage Area route fields use an explicit `Apply route` button. The screen validates destination UUID, item-id filters, count, and priority before sending, normalizes valid values, and shows the current destination/blocked reason without relying on close-to-save.
+
 Citizens can fill building vacancies and convert into workers or recruits when they reach the assigned building anchor. Default autonomous growth can add settlement workers over time, but manual validation and prefab completion are still adjacent flows: if a building does not seem to create vacancies, check whether it was registered through the flow that supports that profile.
 
 The worker command screen (`X`) supports simple group orders: follow, guard, move to position, stop.

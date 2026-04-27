@@ -4,7 +4,9 @@ import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateStorageArea;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsAuthoringState;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -28,6 +30,7 @@ public class StorageAreaScreen extends WorkAreaScreen {
     private static final Component TEXT_ROUTE_FILTER = Component.literal("Route filter item ids");
     private static final Component TEXT_ROUTE_COUNT = Component.literal("Route count");
     private static final Component TEXT_ROUTE_PRIORITY = Component.literal("Route priority");
+    private static final Component TEXT_APPLY_ROUTE = Component.literal("Apply route");
     private static final Component TEXT_PORT_ENTRYPOINT = Component.literal("Port entrypoint");
     private static final Component TEXT_ROUTE_BLOCKED = Component.literal("Blocked state");
     public final StorageArea storageArea;
@@ -61,6 +64,8 @@ public class StorageAreaScreen extends WorkAreaScreen {
     public String routeCount;
     public String routePriority;
     public boolean portEntrypoint;
+    private String routeStatus = "Route changes apply only when you press Apply route.";
+    private int routeStatusColor = 0xFFAAAAAA;
     public StorageAreaScreen(StorageArea storageArea, Player player) {
         super(storageArea.getCustomName(), storageArea, player);
         this.storageArea = storageArea;
@@ -142,6 +147,10 @@ public class StorageAreaScreen extends WorkAreaScreen {
                 }
         );
         addRenderableWidget(portEntrypointCheckBox);
+
+        addRenderableWidget(Button.builder(TEXT_APPLY_ROUTE, button -> applyRoute())
+                .bounds(routeFieldX, routeFieldY + 96, routeFieldWidth, checkBoxHeight)
+                .build());
 
         this.minersCheckBox = new RecruitsCheckBox(checkBoxX, 10 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_MINERS,
                 this.miners,
@@ -268,6 +277,34 @@ public class StorageAreaScreen extends WorkAreaScreen {
         ));
     }
 
+    private void applyRoute() {
+        try {
+            BannerModLogisticsAuthoringState parsed = BannerModLogisticsAuthoringState.parse(
+                    this.routeDestination, this.routeFilter, this.routeCount, this.routePriority);
+            this.routeDestination = parsed.destinationText();
+            this.routeFilter = parsed.filterText();
+            this.routeCount = parsed.requestedCountText();
+            this.routePriority = parsed.priorityText();
+            if (this.routeDestinationEditBox != null) this.routeDestinationEditBox.setValue(this.routeDestination);
+            if (this.routeFilterEditBox != null) this.routeFilterEditBox.setValue(this.routeFilter);
+            if (this.routeCountEditBox != null) this.routeCountEditBox.setValue(this.routeCount);
+            if (this.routePriorityEditBox != null) this.routePriorityEditBox.setValue(this.routePriority);
+            this.routeStatus = parsed.destinationStorageAreaId() == null
+                    ? "Route disabled: no destination selected."
+                    : "Route valid: destination " + shortId(parsed.destinationStorageAreaId()) + ", count " + parsed.requestedCount() + ", " + parsed.priority().name() + ".";
+            this.routeStatusColor = parsed.destinationStorageAreaId() == null ? 0xFFFFFF88 : 0xFFAAFFAA;
+            sendMessage();
+        } catch (IllegalArgumentException exception) {
+            this.routeStatus = exception.getMessage();
+            this.routeStatusColor = 0xFFFF8888;
+        }
+    }
+
+    private static String shortId(java.util.UUID uuid) {
+        String value = uuid.toString();
+        return value.substring(0, Math.min(8, value.length()));
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
@@ -278,15 +315,16 @@ public class StorageAreaScreen extends WorkAreaScreen {
         guiGraphics.drawString(font, TEXT_ROUTE_COUNT, labelX, labelY + 48, 4210752, false);
         guiGraphics.drawString(font, TEXT_ROUTE_PRIORITY, labelX + 80, labelY + 48, 4210752, false);
         guiGraphics.drawString(font, TEXT_ROUTE_BLOCKED, labelX, labelY + 100, 4210752, false);
-        guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedReasonToken().isBlank() ? "none" : this.storageArea.getRouteBlockedReasonToken()), labelX, labelY + 112, 4210752, false);
+        guiGraphics.drawString(font, Component.literal("Destination: " + (this.routeDestination == null || this.routeDestination.isBlank() ? "none" : this.routeDestination)), labelX, labelY + 112, 4210752, false);
+        guiGraphics.drawString(font, Component.literal(this.routeStatus), labelX, labelY + 124, this.routeStatusColor, false);
+        guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedReasonToken().isBlank() ? "Blocked: none" : "Blocked: " + this.storageArea.getRouteBlockedReasonToken()), labelX, labelY + 136, 4210752, false);
         if (!this.storageArea.getRouteBlockedMessage().isBlank()) {
-            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 124, 4210752, false);
+            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 148, 4210752, false);
         }
     }
 
     @Override
     public void onClose() {
         super.onClose();
-        sendMessage();
     }
 }

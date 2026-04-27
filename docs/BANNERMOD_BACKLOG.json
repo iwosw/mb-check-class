@@ -479,7 +479,7 @@
     {
       "id": "UI-006",
       "title": "Storage route authoring UX and validation display",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Storage route setup exposes raw UUID/filter/count/priority fields and saves on close/toggles; parse failures are chat-only, which is brittle for non-technical players.",
       "scope": [
@@ -493,11 +493,17 @@
         "A player can pick or confirm a destination without manually typing a UUID."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "StorageAreaScreen now has explicit Apply route action instead of close-to-save for route fields. Apply route validates with BannerModLogisticsAuthoringState.parse before send, highlights destination UUID/filter/count/priority errors inline, normalizes valid values, shows current destination summary and route blocked state in the screen, and lets players confirm an existing destination without retyping it. Server-side MessageUpdateStorageArea still rejects parse failures with the same parser and visible system-message reason. Player guides EN/RU updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "StorageAreaScreen builds raw text fields and sends on close/toggle.",
         "MessageUpdateStorageArea parses updates and reports failures outside the screen flow."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "UI-007",
