@@ -2,6 +2,7 @@ package com.talhanation.bannermod.war.events;
 
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.config.WarServerConfig;
+import com.talhanation.bannermod.war.runtime.ServerLevelObjectivePresenceProbe;
 import com.talhanation.bannermod.war.runtime.WarRevoltScheduler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -47,7 +48,9 @@ public class WarRevoltAutoResolver {
         }
         WarRevoltScheduler.tick(
                 WarRuntimeContext.revolts(overworld),
+                WarRuntimeContext.occupations(overworld),
                 WarRuntimeContext.applierFor(overworld),
+                new ServerLevelObjectivePresenceProbe(overworld, WarRuntimeContext.registry(overworld)),
                 overworld.getGameTime(),
                 true
         );
