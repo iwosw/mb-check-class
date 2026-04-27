@@ -6,9 +6,13 @@ import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.BattleWindowClock;
 import com.talhanation.bannermod.war.runtime.BattleWindowDisplay;
+import com.talhanation.bannermod.war.runtime.OccupationRecord;
+import com.talhanation.bannermod.war.runtime.RevoltRecord;
+import com.talhanation.bannermod.war.runtime.RevoltState;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import com.talhanation.bannermod.war.runtime.WarState;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -247,6 +251,7 @@ public class WarListScreen extends Screen {
                 "Allies defender: " + war.defenderAllyIds().size(),
                 "Targets: " + war.targetPositions().size(),
                 "Sieges: " + activeSiegeCount(war.id()),
+                "Revolts: " + revoltSummary(war.id()),
                 "Id: " + shortId(war.id())
         };
         for (String s : body) {
@@ -263,10 +268,56 @@ public class WarListScreen extends Screen {
             graphics.drawString(font, font.plainSubstrByWidth("Standard: " + side + " @ " + pos + radius, w),
                     x, y + 14 + line * 11, 0xFFAAFFAA, false);
             line++;
-            if (line >= 14) {
+            if (line >= 18) {
+                return;
+            }
+        }
+        for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
+            String label = switch (revolt.state()) {
+                case PENDING -> "Pending revolt";
+                case SUCCESS -> "Revolt won";
+                case FAILED -> "Revolt failed";
+            };
+            int color = switch (revolt.state()) {
+                case PENDING -> 0xFFFFFF55;
+                case SUCCESS -> 0xFFAAFFAA;
+                case FAILED -> 0xFFFF8888;
+            };
+            String rebel = entityName(revolt.rebelEntityId());
+            String objective = objectiveLabel(revolt);
+            String when = revolt.state() == RevoltState.PENDING
+                    ? " sched=t" + revolt.scheduledAtGameTime()
+                    : " resolved=t" + revolt.resolvedAtGameTime();
+            graphics.drawString(font,
+                    font.plainSubstrByWidth(label + ": " + rebel + " @ " + objective + when, w),
+                    x, y + 14 + line * 11, color, false);
+            line++;
+            if (line >= 18) {
                 break;
             }
         }
+    }
+
+    private String revoltSummary(UUID warId) {
+        int pending = 0;
+        int success = 0;
+        int failed = 0;
+        for (RevoltRecord revolt : WarClientState.revoltsForWar(warId)) {
+            switch (revolt.state()) {
+                case PENDING -> pending++;
+                case SUCCESS -> success++;
+                case FAILED -> failed++;
+            }
+        }
+        if (pending == 0 && success == 0 && failed == 0) return "(none)";
+        return "pending=" + pending + " won=" + success + " failed=" + failed;
+    }
+
+    private static String objectiveLabel(RevoltRecord revolt) {
+        OccupationRecord occupation = WarClientState.occupationById(revolt.occupationId());
+        if (occupation == null || occupation.chunks().isEmpty()) return "(unknown)";
+        ChunkPos chunk = occupation.chunks().get(0);
+        return "chunk " + chunk.x + "," + chunk.z;
     }
 
     private int activeSiegeCount(UUID warId) {

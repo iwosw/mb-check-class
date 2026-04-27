@@ -6,6 +6,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WorkersServerConfig {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
@@ -465,7 +467,35 @@ public class WorkersServerConfig {
         }
     }
 
+    // GameTest seam. Forge's ConfigValue.get() caches the first value it reads from the backing
+    // child config and never invalidates that cache when set() is called afterwards (see
+    // ForgeConfigSpec.ConfigValue#cachedValue). That makes parallel/sequential gametests that
+    // each call WorkersServerConfig.X.set(value) race: whichever test triggered the first get()
+    // wins, every subsequent test sees the cached value regardless of its own set() call. To
+    // keep production reads cheap we layer test overrides on top of the cached spec read instead
+    // of touching ConfigValue itself.
+    private static final Map<ForgeConfigSpec.ConfigValue<?>, Object> TEST_OVERRIDES = new ConcurrentHashMap<>();
+
+    public static <T> void setTestOverride(ForgeConfigSpec.ConfigValue<T> value, T override) {
+        if (value == null) {
+            return;
+        }
+        if (override == null) {
+            TEST_OVERRIDES.remove(value);
+        } else {
+            TEST_OVERRIDES.put(value, override);
+        }
+    }
+
+    public static void clearAllTestOverrides() {
+        TEST_OVERRIDES.clear();
+    }
+
     private static boolean resolveBoolean(ForgeConfigSpec.BooleanValue value, boolean fallback) {
+        Object override = TEST_OVERRIDES.get(value);
+        if (override instanceof Boolean booleanOverride) {
+            return booleanOverride;
+        }
         try {
             return value.get();
         } catch (IllegalStateException exception) {
@@ -474,6 +504,10 @@ public class WorkersServerConfig {
     }
 
     private static int resolveInt(ForgeConfigSpec.IntValue value, int fallback) {
+        Object override = TEST_OVERRIDES.get(value);
+        if (override instanceof Integer intOverride) {
+            return intOverride;
+        }
         try {
             return value.get();
         } catch (IllegalStateException exception) {
@@ -482,6 +516,10 @@ public class WorkersServerConfig {
     }
 
     private static long resolveLong(ForgeConfigSpec.LongValue value, long fallback) {
+        Object override = TEST_OVERRIDES.get(value);
+        if (override instanceof Long longOverride) {
+            return longOverride;
+        }
         try {
             return value.get();
         } catch (IllegalStateException exception) {
@@ -490,6 +528,10 @@ public class WorkersServerConfig {
     }
 
     private static double resolveDouble(ForgeConfigSpec.DoubleValue value, double fallback) {
+        Object override = TEST_OVERRIDES.get(value);
+        if (override instanceof Double doubleOverride) {
+            return doubleOverride;
+        }
         try {
             return value.get();
         } catch (IllegalStateException exception) {

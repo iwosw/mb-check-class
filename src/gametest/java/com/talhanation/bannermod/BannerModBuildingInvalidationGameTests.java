@@ -40,7 +40,7 @@ public class BannerModBuildingInvalidationGameTests {
     @GameTest(template = "harness_empty")
     public static void failingHouseRevalidationBecomesDegradedWithinGrace(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        WorkersServerConfig.SettlementHouseGraceTicks.set(24_000L);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementHouseGraceTicks, 24_000L);
 
         UUID buildingId = UUID.randomUUID();
         ValidatedBuildingRegistryData registry = ValidatedBuildingRegistryData.get(level);
@@ -58,7 +58,7 @@ public class BannerModBuildingInvalidationGameTests {
     @GameTest(template = "harness_empty")
     public static void failingHouseRevalidationBecomesInvalidAfterGrace(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        WorkersServerConfig.SettlementHouseGraceTicks.set(1L);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementHouseGraceTicks, 1L);
 
         UUID buildingId = UUID.randomUUID();
         long now = level.getGameTime();
@@ -77,7 +77,7 @@ public class BannerModBuildingInvalidationGameTests {
     @GameTest(template = "harness_empty")
     public static void failingFortRevalidationBecomesSuspendedBeforeGrace(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        WorkersServerConfig.SettlementFortGraceTicks.set(24_000L);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementFortGraceTicks, 24_000L);
 
         UUID buildingId = UUID.randomUUID();
         long now = level.getGameTime();
@@ -96,7 +96,7 @@ public class BannerModBuildingInvalidationGameTests {
     @GameTest(template = "harness_empty")
     public static void failingFortExplosionRevalidationBecomesInvalidAfterExplosionGrace(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        WorkersServerConfig.SettlementFortExplosionGraceTicks.set(1L);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementFortExplosionGraceTicks, 1L);
 
         UUID buildingId = UUID.randomUUID();
         long now = level.getGameTime();
@@ -115,7 +115,7 @@ public class BannerModBuildingInvalidationGameTests {
     @GameTest(template = "harness_empty")
     public static void invalidationQueueRespectsBatchDrainLimit(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        WorkersServerConfig.SettlementHouseGraceTicks.set(24_000L);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementHouseGraceTicks, 24_000L);
 
         UUID buildingIdA = UUID.randomUUID();
         UUID buildingIdB = UUID.randomUUID();
@@ -149,7 +149,7 @@ public class BannerModBuildingInvalidationGameTests {
     @GameTest(template = "harness_empty")
     public static void repairedHouseRevalidationReturnsToValid(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        WorkersServerConfig.SettlementHouseGraceTicks.set(24_000L);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementHouseGraceTicks, 24_000L);
 
         BlockPos origin = new BlockPos(1, 2, 1);
         buildValidHouse(level, origin);

@@ -3,6 +3,8 @@ package com.talhanation.bannermod.war.client;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
+import com.talhanation.bannermod.war.runtime.OccupationRecord;
+import com.talhanation.bannermod.war.runtime.RevoltRecord;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarAllyInviteRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
@@ -34,13 +36,18 @@ public final class WarClientState {
     public static final String NBT_SIEGES = "Sieges";
     public static final String NBT_SCHEDULE = "Schedule";
     public static final String NBT_ALLY_INVITES = "AllyInvites";
+    public static final String NBT_OCCUPATIONS = "Occupations";
+    public static final String NBT_REVOLTS = "Revolts";
 
     private static List<PoliticalEntityRecord> entities = List.of();
     private static List<WarDeclarationRecord> wars = List.of();
     private static List<SiegeStandardRecord> sieges = List.of();
     private static BattleWindowSchedule schedule = new BattleWindowSchedule(List.of());
     private static List<WarAllyInviteRecord> allyInvites = List.of();
+    private static List<OccupationRecord> occupations = List.of();
+    private static List<RevoltRecord> revolts = List.of();
     private static Map<UUID, PoliticalEntityRecord> entitiesById = Map.of();
+    private static Map<UUID, OccupationRecord> occupationsById = Map.of();
     private static int version = 0;
 
     private WarClientState() {
@@ -75,6 +82,30 @@ public final class WarClientState {
         return matches;
     }
 
+    public static List<OccupationRecord> occupations() {
+        return occupations;
+    }
+
+    public static List<RevoltRecord> revolts() {
+        return revolts;
+    }
+
+    public static List<RevoltRecord> revoltsForWar(UUID warId) {
+        if (warId == null) return List.of();
+        List<RevoltRecord> matches = new ArrayList<>();
+        for (RevoltRecord revolt : revolts) {
+            OccupationRecord occupation = occupationsById.get(revolt.occupationId());
+            if (occupation != null && warId.equals(occupation.warId())) {
+                matches.add(revolt);
+            }
+        }
+        return matches;
+    }
+
+    public static OccupationRecord occupationById(UUID id) {
+        return occupationsById.get(id);
+    }
+
     public static PoliticalEntityRecord entityById(UUID id) {
         return entitiesById.get(id);
     }
@@ -89,7 +120,10 @@ public final class WarClientState {
         sieges = List.of();
         schedule = new BattleWindowSchedule(List.of());
         allyInvites = List.of();
+        occupations = List.of();
+        revolts = List.of();
         entitiesById = Map.of();
+        occupationsById = Map.of();
         version++;
     }
 
@@ -103,11 +137,18 @@ public final class WarClientState {
         sieges = decodeSieges(tag.getList(NBT_SIEGES, Tag.TAG_COMPOUND));
         schedule = BattleWindowSchedule.fromListTag(tag.getList(NBT_SCHEDULE, Tag.TAG_COMPOUND));
         allyInvites = decodeAllyInvites(tag.getList(NBT_ALLY_INVITES, Tag.TAG_COMPOUND));
+        occupations = decodeOccupations(tag.getList(NBT_OCCUPATIONS, Tag.TAG_COMPOUND));
+        revolts = decodeRevolts(tag.getList(NBT_REVOLTS, Tag.TAG_COMPOUND));
         Map<UUID, PoliticalEntityRecord> byId = new HashMap<>();
         for (PoliticalEntityRecord entity : entities) {
             byId.put(entity.id(), entity);
         }
         entitiesById = Map.copyOf(byId);
+        Map<UUID, OccupationRecord> occById = new HashMap<>();
+        for (OccupationRecord occupation : occupations) {
+            occById.put(occupation.id(), occupation);
+        }
+        occupationsById = Map.copyOf(occById);
         version++;
     }
 
@@ -115,7 +156,9 @@ public final class WarClientState {
                                      Iterable<WarDeclarationRecord> warSrc,
                                      Iterable<SiegeStandardRecord> siegeSrc,
                                      BattleWindowSchedule scheduleSrc,
-                                     Iterable<WarAllyInviteRecord> allyInviteSrc) {
+                                     Iterable<WarAllyInviteRecord> allyInviteSrc,
+                                     Iterable<OccupationRecord> occupationSrc,
+                                     Iterable<RevoltRecord> revoltSrc) {
         CompoundTag tag = new CompoundTag();
         ListTag entitiesTag = new ListTag();
         for (PoliticalEntityRecord entity : entitySrc) entitiesTag.add(entity.toTag());
@@ -135,6 +178,20 @@ public final class WarClientState {
                 if (invite != null) invitesTag.add(invite.toTag());
             }
             tag.put(NBT_ALLY_INVITES, invitesTag);
+        }
+        if (occupationSrc != null) {
+            ListTag occupationsTag = new ListTag();
+            for (OccupationRecord occupation : occupationSrc) {
+                if (occupation != null) occupationsTag.add(occupation.toTag());
+            }
+            tag.put(NBT_OCCUPATIONS, occupationsTag);
+        }
+        if (revoltSrc != null) {
+            ListTag revoltsTag = new ListTag();
+            for (RevoltRecord revolt : revoltSrc) {
+                if (revolt != null) revoltsTag.add(revolt.toTag());
+            }
+            tag.put(NBT_REVOLTS, revoltsTag);
         }
         return tag;
     }
@@ -190,6 +247,24 @@ public final class WarClientState {
         for (int i = 0; i < list.size(); i++) {
             WarAllyInviteRecord record = WarAllyInviteRecord.fromTag(list.getCompound(i));
             if (record != null) result.add(record);
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<OccupationRecord> decodeOccupations(ListTag list) {
+        if (list == null || list.isEmpty()) return List.of();
+        List<OccupationRecord> result = new ArrayList<>(list.size());
+        for (int i = 0; i < list.size(); i++) {
+            result.add(OccupationRecord.fromTag(list.getCompound(i)));
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<RevoltRecord> decodeRevolts(ListTag list) {
+        if (list == null || list.isEmpty()) return List.of();
+        List<RevoltRecord> result = new ArrayList<>(list.size());
+        for (int i = 0; i < list.size(); i++) {
+            result.add(RevoltRecord.fromTag(list.getCompound(i)));
         }
         return List.copyOf(result);
     }

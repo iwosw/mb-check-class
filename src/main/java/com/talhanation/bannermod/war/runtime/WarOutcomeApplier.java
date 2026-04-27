@@ -333,6 +333,46 @@ public final class WarOutcomeApplier {
         return removed;
     }
 
+    /**
+     * Audits a revolt that the objective probe resolved against the rebels. The occupation
+     * stays in place (the defender held the objective). Counts are recorded so the audit
+     * trail and any post-hoc UI can show the contest outcome.
+     */
+    public void recordRevoltFailure(RevoltRecord revolt,
+                                    OccupationRecord occupation,
+                                    long gameTime,
+                                    int rebelPresence,
+                                    int occupierPresence) {
+        if (revolt == null || occupation == null) {
+            return;
+        }
+        audit.append(occupation.warId(), "REVOLT_FAILED",
+                "occupation=" + occupation.id()
+                        + ";revolt=" + revolt.id()
+                        + ";rebel=" + revolt.rebelEntityId()
+                        + ";occupier=" + revolt.occupierEntityId()
+                        + ";rebelPresence=" + Math.max(0, rebelPresence)
+                        + ";occupierPresence=" + Math.max(0, occupierPresence),
+                gameTime);
+    }
+
+    /**
+     * Audits a revolt that came due against an occupation that was already removed (manual
+     * admin override, double-resolution race, etc.). Keeps the audit log honest about why
+     * the revolt no longer applies without flipping any new state.
+     */
+    public void recordRevoltFailureWithoutOccupation(RevoltRecord revolt, long gameTime) {
+        if (revolt == null) {
+            return;
+        }
+        audit.append(null, "REVOLT_FAILED_NO_OCCUPATION",
+                "revolt=" + revolt.id()
+                        + ";occupation=" + revolt.occupationId()
+                        + ";rebel=" + revolt.rebelEntityId()
+                        + ";occupier=" + revolt.occupierEntityId(),
+                gameTime);
+    }
+
     private void clearSieges(UUID warId) {
         for (SiegeStandardRecord record : sieges.forWar(warId)) {
             sieges.remove(record.id());
