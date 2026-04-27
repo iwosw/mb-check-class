@@ -508,7 +508,7 @@
     {
       "id": "UI-007",
       "title": "Accessibility and localization pass for active screens",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-27",
       "why": "Several active screens use hardcoded English literals and custom widgets with empty narration hooks, reducing localization quality and accessibility.",
       "scope": [
@@ -521,7 +521,12 @@
         "Screen readers announce dropdown values/options and static status widgets.",
         "Disabled action buttons explain why they are unavailable."
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-27",
+          "text": "Partial batch: localized WarListScreen and PoliticalEntityListScreen active text to en_us/ru_ru keys; added disabled-action tooltips for war/state actions; added non-empty narration for DropDownMenu, BlackShowingTextField, and ItemWithLabelWidget. Verified with ./gradlew compileJava. Remaining acceptance not closed: broader build/storage screen localization pass still needs audit."
+        }
+      ],
       "verification": [],
       "evidence": [
         "WarListScreen and PoliticalEntityListScreen use button/render literals.",
