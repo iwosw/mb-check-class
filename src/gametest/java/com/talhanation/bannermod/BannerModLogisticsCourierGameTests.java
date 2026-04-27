@@ -28,7 +28,13 @@ import java.util.List;
 public class BannerModLogisticsCourierGameTests {
 
     @PrefixGameTestTemplate(false)
-    @GameTest(template = "harness_empty", timeoutTicks = 480)
+    // 800-tick (40-second) outer budget: the original 480 sometimes was not enough on a
+    // background-loaded gametest server because the courier path-finder's solve time scales
+    // with how many other entities tick on the same tick. The poll-based `succeedWhen` below
+    // exits the moment the delivery actually completes, so a generous outer budget only
+    // matters when something is genuinely wrong — at which point we want the assertion
+    // message, not a timeout.
+    @GameTest(template = "harness_empty", timeoutTicks = 800)
     public static void authoredRouteCourierMovesItemsBetweenStorageEndpoints(GameTestHelper helper) {
         BannerModLogisticsRuntime.resetForTests();
         ServerLevel level = helper.getLevel();
