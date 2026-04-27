@@ -53,6 +53,10 @@ public final class RecruitsCommandGameTestSupport {
 
     public static void prepareForCommand(AbstractRecruitEntity recruit, UUID groupId) {
         recruit.setGroupUUID(groupId);
+        if (recruit.getOwnerUUID() != null) {
+            recruit.setIsOwned(true);
+        }
+        recruit.setListen(true);
         recruit.setFollowState(0);
         recruit.isInFormation = false;
         recruit.setShouldBlock(false);

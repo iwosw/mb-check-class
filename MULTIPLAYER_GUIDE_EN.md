@@ -92,6 +92,45 @@ Governors expose the settlement's status, citizen count, taxes, incidents, treas
 
 The logistics panel also labels the settlement's strategic role and route cost. Farms plus storage can make a surplus hub, market plus routes can make a junction market, fort plus route storage can make a chokepoint fort, and ports/water access become a water gate. Landlocked settlements with food or material production may show a specialty such as preserved food or worked materials. These labels are warnings and planning hints first: they expose logistics objectives and loyalty pressure before applying destructive penalties.
 
+### Code-backed settlement mechanics reference
+
+The settlement stack is not a single magic block. It is a pipeline of records and snapshots:
+
+- `SettlementSurveyorToolItem` stores the current validation session on the item: selected mode, selected zone role, anchor, pending corner, and marked zones.
+- `SurveyorMode` values are `BOOTSTRAP_FORT`, `HOUSE`, `FARM`, `MINE`, `LUMBER_CAMP`, `SMITHY`, `STORAGE`, `ARCHITECT_BUILDER`, and `INSPECT_EXISTING`.
+- `ZoneRole` values are `AUTHORITY_POINT`, `INTERIOR`, `SLEEPING`, `WORK_ZONE`, `FORT_PERIMETER`, `ENTRANCE`, `STORAGE`, and `PREFAB_FOOTPRINT`.
+- `SettlementSurveyorService` validates the session. `STARTER_FORT` bootstraps a settlement; every other building needs an existing settlement at the anchor or claim.
+- Valid manual buildings are saved as `ValidatedBuildingRecord` entries. Valid records are merged into settlement snapshots with live work areas, while overlapping live work areas are deduped.
+- A settlement snapshot drives resident capacity, workplace slots, stockpile summary, market state, desired goods, project candidates, trade-route handoff, supply signals, strategic role labels, and promotion checks.
+
+Practical implication: if a mechanic is not visible in the governor/logistics panel, first check whether the building exists in the settlement snapshot. Use surveyor inspect mode on the anchor, re-register with the wand if needed, and make sure the building is inside the correct claim.
+
+### Building and vacancy reference
+
+- `HOUSE`: adds resident capacity. It does not create a worker job by itself.
+- `STORAGE`: adds stockpile building count, container count, slot capacity, and storage type hints. It is one of the requirements for state promotion.
+- `FARM`: creates a farmer vacancy and contributes to food-production role signals.
+- `MINE`: creates a miner vacancy and contributes to material-production role signals.
+- `LUMBER_CAMP`: creates a lumberjack vacancy and contributes to material-production role signals.
+- `ARCHITECT_WORKSHOP`: creates a builder vacancy and contributes to construction/project signals.
+- `SMITHY`: contributes material-production infrastructure; use it as part of a developed material settlement.
+- `STARTER_FORT`: founding and promotion infrastructure. It must have the required authority/interior zones.
+
+Prefab professions also exist for `MERCHANT`, `FISHERMAN`, `ANIMAL_FARMER`, `SHEPHERD`, and recruit roles (`RECRUIT_SWORDSMAN`, `RECRUIT_ARCHER`, `RECRUIT_PIKEMAN`, `RECRUIT_CROSSBOW`, `RECRUIT_CAVALRY`). Those are prefab/staffing declarations; the settlement still needs valid ownership, vacancies, and available citizens.
+
+### Settlement life-cycle checklist
+
+1. Claim land in the Overworld.
+2. Create or join a state.
+3. Validate a starter fort with `AUTHORITY_POINT` and `INTERIOR` zones.
+4. Confirm bootstrap chat success and free citizen count.
+5. Register storage so stockpile and route state can appear.
+6. Register farm or other production so desired goods and worker jobs have a source.
+7. Register market to unlock market state and state promotion.
+8. Add homes if population pressure appears.
+9. Use the governor logistics panel to read shortage blockers, project hints, role labels, route costs, and loyalty pressure.
+10. Promote the political entity only after fort/town hall, storage, and market are present.
+
 ## Storage, Markets, And Trade
 
 A `Storage Area` lets the settlement know where resources live. A `Market Area` plugs the settlement into the economy: merchants can open stalls and the settlement records what is sold and for which currency.
@@ -134,6 +173,29 @@ Battle tips:
 - ranged units need room behind the front line — the `LINE_HOLD` / `SHIELD_WALL` leash automatically pulls them back.
 
 You can set per-unit stances from the recruit's inventory (`RecruitInventoryScreen`); group stances live in the command screen. Recruit commands now report chat acknowledgements: accepted recruit count for immediate orders, rejected empty/no-eligible selections, replaced queued orders, or pending order counts when a queued command path is used.
+
+### Recruit command pipeline details
+
+Server-side military commands are normalized into `CommandIntent` records before they reach legacy command services. This matters because selection narrowing, queue mode, priority, and audit/logging hooks all live in the unified command path.
+
+- `Movement`: move, hold, follow, regroup, wander, come-to-me, patrol, move-to-position, formation forward/back. Movement states are numeric internally: `0` hold, `1` follow, `2` regroup, `3` wander, `4` come-to-me, `5` patrol, `6` move-to-position, `7/8` formation forward/back.
+- `Face`: rotate the selected formation without moving.
+- `Attack`: group attack command.
+- `StrategicFire`: ranged fire on/off.
+- `Aggro`: passive, neutral, aggressive, raid-like behavior.
+- `CombatStanceChange`: `LOOSE`, `LINE_HOLD`, `SHIELD_WALL`.
+- `SiegeMachine`: mount/return-to-mount/siege-machine crew orders.
+
+Formation is server-authoritative. The saved formation lives on the player and is read server-side; client packets should not invent formation indices. If you never opened the formation UI, formation `0` means per-recruit fallback behavior is expected.
+
+### Combat behavior in practice
+
+- `PASSIVE`: recruit should not initiate attacks.
+- `NEUTRAL`: attacks hostile living things and entities attacking owner/self.
+- `AGGRESSIVE`: attacks enemy players and recruits on sight.
+- `RAID`: broad hostile behavior; use carefully in multiplayer.
+- Same political side is protected by political relations and friendly-fire checks.
+- Recruits treat active political wars as the supported diplomacy model; old hidden team treaties are not the player-facing model.
 
 ## War Room (`U`)
 
@@ -209,6 +271,17 @@ To place a siege standard:
 4. Stand at the spot where you want to plant the standard and click `Place siege here`. Or use the slash form: `/bannermod siege place <warId> <side> [pos] [radius]`.
 
 The default radius is configured in `WarServerConfig` (`DefaultSiegeRadius`, 64 blocks). The standard is not just a placeholder block: `SiegeStandardBlockEntity` syncs the owner (`warId` + `sidePoliticalEntityId`) to the client, and `SiegeStandardBlockEntityRenderer` paints a small political-color cap on top using the side's color.
+
+What happens around a siege standard:
+
+- The server records the standard in `SiegeStandardRuntime` with war id, side political id, position, radius, placed tick, control pool, and max control pool.
+- The default control pool is 100. Damage is clamped and applied through `SiegeObjectivePolicy.applyDamage`; when it reaches zero, the standard is destroyed/removed.
+- Same-side recruits use the siege escort goal: if idle and too far from a friendly standard, they drift back toward it.
+- Enemy-side recruits use the siege objective attack goal: they can path to enemy standards, look at them, and apply periodic objective damage.
+- The strategic logistics panel can name related war objectives: stockpile, route junction, water gate, and surplus store. These tell both sides what is worth attacking or defending.
+- Player PvP rules are stricter than recruit objective logic: player war damage requires an active/in-siege war, open battle window, and registered participants.
+
+Good siege placement is not cosmetic. Put standards where a defender must care: route junctions, stockpiles, bridges, ports, market gates, surplus farms, or a chokepoint fort. A random field standard may create a zone, but it will not pressure the settlement economy.
 
 Listing standards:
 

@@ -53,20 +53,22 @@ public class BannerModTrueAsyncPathfindingGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos absoluteTarget = helper.absolutePos(TARGET_POS);
         AsyncPathNavigation navigation = (AsyncPathNavigation) recruit.getNavigation();
-        boolean accepted = TrueAsyncPathfindingRuntime.instance().enqueue(
-                navigation,
-                level,
-                Set.of(absoluteTarget),
-                1,
-                16.0F,
-                navigation.incrementPathEpoch(),
-                PathPriority.FOLLOW
-        );
-        helper.assertTrue(accepted, "Expected true-async runtime enqueue to accept a valid request in GameTest world.");
-        helper.assertTrue(navigation.submitAcceptedCount() >= 1L,
-                "Expected per-recruit submit counter to record the accepted enqueue.");
 
-        helper.runAfterDelay(20, () -> TrueAsyncPathfindingRuntime.instance().tick(level));
+        helper.runAfterDelay(5, () -> {
+            boolean accepted = TrueAsyncPathfindingRuntime.instance().enqueue(
+                    navigation,
+                    level,
+                    Set.of(absoluteTarget),
+                    1,
+                    16.0F,
+                    navigation.incrementPathEpoch(),
+                    PathPriority.FOLLOW
+            );
+            helper.assertTrue(accepted, "Expected true-async runtime enqueue to accept a valid request in GameTest world.");
+            helper.assertTrue(navigation.submitAcceptedCount() >= 1L,
+                    "Expected per-recruit submit counter to record the accepted enqueue.");
+        });
+        helper.runAfterDelay(25, () -> TrueAsyncPathfindingRuntime.instance().tick(level));
         helper.runAfterDelay(40, helper::succeed);
     }
 
@@ -79,19 +81,23 @@ public class BannerModTrueAsyncPathfindingGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos absoluteTarget = helper.absolutePos(TARGET_POS);
         AsyncPathNavigation navigation = (AsyncPathNavigation) recruit.getNavigation();
-        long epoch = navigation.incrementPathEpoch();
-        boolean accepted = TrueAsyncPathfindingRuntime.instance().enqueue(
-                navigation,
-                level,
-                Set.of(absoluteTarget),
-                1,
-                16.0F,
-                epoch,
-                PathPriority.FOLLOW
-        );
-        helper.assertTrue(accepted, "Expected true-async runtime enqueue to accept request before discard scenario.");
+        final long[] epoch = new long[1];
 
-        helper.runAfterDelay(8, recruit::discard);
+        helper.runAfterDelay(5, () -> {
+            epoch[0] = navigation.incrementPathEpoch();
+            boolean accepted = TrueAsyncPathfindingRuntime.instance().enqueue(
+                    navigation,
+                    level,
+                    Set.of(absoluteTarget),
+                    1,
+                    16.0F,
+                    epoch[0],
+                    PathPriority.FOLLOW
+            );
+            helper.assertTrue(accepted, "Expected true-async runtime enqueue to accept request before discard scenario.");
+        });
+
+        helper.runAfterDelay(12, recruit::discard);
         // Synthesize a result for this recruit and feed it into the committer directly via the
         // test seam. This bypasses AsyncPathScheduler so the test is deterministic regardless of
         // whether the async solver finishes inside the empty harness world's tick budget — what
@@ -108,7 +114,7 @@ public class BannerModTrueAsyncPathfindingGameTests {
             PathResult synthetic = new PathResult(
                     recruit.getUUID(),
                     /* requestId */ 0L,
-                    epoch,
+                    epoch[0],
                     PathResultStatus.SUCCESS,
                     /* nodes */ List.of(),
                     /* reached */ false,
@@ -137,6 +143,7 @@ public class BannerModTrueAsyncPathfindingGameTests {
         RecruitsServerConfig.UseTrueAsyncPathfinding.set(enabled);
         RecruitsServerConfig.AsyncPathfindingWorkerThreads.set(1);
         RecruitsServerConfig.AsyncPathfindingMaxQueuedJobs.set(64);
+        RecruitsServerConfig.AsyncPathfindingSnapshotBudgetNanos.set(50_000_000);
         RecruitsServerConfig.AsyncPathfindingCommitBudgetNanos.set(2_000_000);
         RecruitsServerConfig.AsyncPathfindingSolveDeadlineMillis.set(150);
         RecruitsServerConfig.AsyncPathfindingPerMobThrottleTicks.set(0);

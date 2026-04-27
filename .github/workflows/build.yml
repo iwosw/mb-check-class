@@ -42,5 +42,14 @@ jobs:
           restore-keys: |
             forgegradle-${{ runner.os }}-
 
+      - name: Unit tests and coverage
+        run: ./gradlew -Dnet.minecraftforge.gradle.check.certs=false test jacocoTestCoverageVerification --stacktrace --warning-mode=summary
+
+      - name: GameTest scenario coverage
+        run: ./gradlew -Dnet.minecraftforge.gradle.check.certs=false compileGametestJava verifyGameTestScenarioCoverage --stacktrace --warning-mode=summary
+
+      - name: GameTest runtime
+        run: ./gradlew -Dnet.minecraftforge.gradle.check.certs=false runGameTestServer --stacktrace --warning-mode=summary
+
       - name: Build
-        run: ./gradlew build --stacktrace --warning-mode=summary
+        run: ./gradlew verifyBuildStage --stacktrace --warning-mode=summary

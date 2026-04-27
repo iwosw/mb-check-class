@@ -8,14 +8,14 @@ loaderVersion="[47,)" #mandatory This is typically bumped every Minecraft versio
 
 modId="bannermod"
 
-version='1.14.3'
+version='1'
 
 displayName="BannerMod"
 
 logoFile="logo.png"
 
-credits="talhanation, kaiserroman"
-authors="talhanation, kaiserroman"
+credits="kaiserroman, Mr-Artillery"
+authors="kaiserroman, Mr-Artillery"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
