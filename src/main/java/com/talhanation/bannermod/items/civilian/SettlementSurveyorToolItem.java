@@ -123,6 +123,12 @@ public class SettlementSurveyorToolItem extends Item {
                 .withStyle(ChatFormatting.DARK_GRAY));
         tooltip.add(Component.translatable("bannermod.surveyor.tooltip.shift")
                 .withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.founding_1")
+                .withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.founding_2")
+                .withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.founding_3")
+                .withStyle(ChatFormatting.YELLOW));
     }
 
     private static ValidationSession getOrCreateSession(Player player, ItemStack stack) {

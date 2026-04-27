@@ -7,6 +7,7 @@ import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityStatus;
 import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.GovernmentForm;
@@ -55,6 +56,8 @@ public class PoliticalEntityListScreen extends Screen {
     private Button addCoLeaderButton;
     @Nullable
     private Button removeCoLeaderButton;
+    @Nullable
+    private Button promoteStateButton;
 
     public PoliticalEntityListScreen(@Nullable Screen parent) {
         super(text("gui.bannermod.states.title"));
@@ -85,6 +88,8 @@ public class PoliticalEntityListScreen extends Screen {
                 .bounds(guiLeft + 156, guiTop + H - 44, 96, 18).build());
         this.removeCoLeaderButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.remove_co_leader"), btn -> openCoLeaderDialog(false))
                 .bounds(guiLeft + 256, guiTop + H - 44, 86, 18).build());
+        this.promoteStateButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.promote_state"), btn -> promoteToState())
+                .bounds(guiLeft + 346, guiTop + H - 44, 96, 18).build());
         addRenderableWidget(Button.builder(text("gui.bannermod.common.refresh"), btn -> refresh())
                 .bounds(guiLeft + W - 172, guiTop + H - 64, 80, 18).build());
         addRenderableWidget(Button.builder(text("gui.bannermod.common.back"), btn -> onClose())
@@ -143,6 +148,11 @@ public class PoliticalEntityListScreen extends Screen {
                 ? GovernmentForm.REPUBLIC
                 : GovernmentForm.MONARCHY;
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetGovernmentForm(this.selected.id(), next));
+    }
+
+    private void promoteToState() {
+        if (selected == null) return;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetPoliticalEntityStatus(selected.id(), PoliticalEntityStatus.STATE));
     }
 
     private void openColorDialog() {
@@ -256,6 +266,11 @@ public class PoliticalEntityListScreen extends Screen {
                     : (this.selected == null ? selectState : needLeader);
             this.removeCoLeaderButton.setTooltip(this.removeCoLeaderButton.active ? null : Tooltip.create(tooltip));
         }
+        if (this.promoteStateButton != null) {
+            boolean canPromote = canAct && this.selected != null && this.selected.status() != PoliticalEntityStatus.STATE;
+            this.promoteStateButton.active = canPromote;
+            this.promoteStateButton.setTooltip(canPromote ? Tooltip.create(text("gui.bannermod.states.tooltip.promote_state")) : Tooltip.create(this.selected == null ? selectState : needAuthority));
+        }
     }
 
     private static boolean isLocalPlayerLeader(@Nullable PoliticalEntityRecord entity) {
@@ -334,6 +349,12 @@ public class PoliticalEntityListScreen extends Screen {
         for (int i = 0; i < lines.length; i++) {
             graphics.drawString(font, font.plainSubstrByWidth(lines[i], w), x, y + 14 + i * 12, 0xFFFFFF, false);
         }
+        int reqY = y + 14 + lines.length * 12 + 6;
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirements").getString(), w), x, reqY, 0xFFD77A, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_fort").getString(), w), x, reqY + 12, 0xAAAAAA, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_storage").getString(), w), x, reqY + 24, 0xAAAAAA, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_market").getString(), w), x, reqY + 36, 0xAAAAAA, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.server_checked").getString(), w), x, reqY + 48, 0x888888, false);
     }
 
     private static Component text(String key, Object... args) {

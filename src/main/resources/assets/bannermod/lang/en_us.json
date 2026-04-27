@@ -1539,6 +1539,12 @@
   "gui.bannermod.states.help.settlement": "Settlement = place",
   "gui.bannermod.states.help.state": "State = political side",
   "gui.bannermod.states.invalid_uuid": "Invalid UUID.",
+  "gui.bannermod.states.progression.requirement_fort": "- starter fort or town hall",
+  "gui.bannermod.states.progression.requirement_market": "- market",
+  "gui.bannermod.states.progression.requirement_storage": "- storage",
+  "gui.bannermod.states.progression.requirements": "State promotion requires:",
+  "gui.bannermod.states.progression.server_checked": "Server reply names missing requirements.",
+  "gui.bannermod.states.promote_state": "Promote STATE",
   "gui.bannermod.states.remove_co_leader": "Remove co",
   "gui.bannermod.states.rename": "Rename",
   "gui.bannermod.states.select_state": "Select a state.",
@@ -1549,8 +1555,12 @@
   "gui.bannermod.states.tooltip.need_authority": "You need authority over the selected state.",
   "gui.bannermod.states.tooltip.need_leader": "Only the state leader can use this action.",
   "gui.bannermod.states.tooltip.no_co_leaders": "This state has no co-leaders to remove.",
+  "gui.bannermod.states.tooltip.promote_state": "Request server-checked promotion to STATE.",
   "gui.bannermod.states.tooltip.select_state": "Select a state first.",
   "gui.bannermod.states.waiting_sync": "Waiting for server state sync"
-  ,"gui.bannermod.inv.tooltip.siege_engineer_disabled": "Siege-Engineer promotion is not implemented yet.",
+  ,"bannermod.surveyor.tooltip.founding_1": "Founding: create/join a state first.",
+  "bannermod.surveyor.tooltip.founding_2": "Build Starter Fort: anchor + AUTHORITY_POINT + INTERIOR zones.",
+  "bannermod.surveyor.tooltip.founding_3": "Right-click air to validate; then expand with Building Placement Wand.",
+  "gui.bannermod.inv.tooltip.siege_engineer_disabled": "Siege-Engineer promotion is not implemented yet.",
   "chat.bannermod.promote.unsupported_profession": "That promotion is not supported yet."
 }
