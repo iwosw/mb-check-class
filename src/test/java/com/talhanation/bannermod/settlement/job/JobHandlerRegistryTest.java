@@ -9,6 +9,11 @@ import com.talhanation.bannermod.settlement.BannerModSettlementResidentRuntimeRo
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentScheduleSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentServiceContract;
 import com.talhanation.bannermod.settlement.BannerModSettlementServiceActorState;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrder;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderStatus;
+import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
@@ -139,6 +144,62 @@ class JobHandlerRegistryTest {
         );
 
         assertFalse(harvest.canHandle(ctx));
+    }
+
+    @Test
+    void harvestHandlerClaimsHaulResourceOrderForFloatingLaborResident() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        BannerModSettlementResidentRecord resident = sampleProjectedWorker();
+        UUID claimUuid = UUID.randomUUID();
+        UUID buildingUuid = resident.boundWorkAreaUuid();
+        SettlementWorkOrder published = runtime.publish(SettlementWorkOrder.pendingTransport(
+                claimUuid,
+                buildingUuid,
+                SettlementWorkOrderType.HAUL_RESOURCE,
+                new BlockPos(5, 64, 5),
+                new BlockPos(10, 64, 10),
+                "minecraft:wheat",
+                32,
+                70,
+                100L
+        )).orElseThrow();
+        JobExecutionContext ctx = new JobExecutionContext(
+                resident, 200L, UUID.randomUUID(), buildingUuid, runtime);
+
+        JobExecutionResult result = new HarvestJobHandler().runOneStep(ctx);
+
+        assertEquals(JobExecutionResult.COMPLETED, result);
+        SettlementWorkOrder afterClaim = runtime.find(published.orderUuid()).orElseThrow();
+        assertEquals(SettlementWorkOrderStatus.CLAIMED, afterClaim.status());
+        assertEquals(resident.residentUuid(), afterClaim.claimedByResidentUuid());
+    }
+
+    @Test
+    void harvestHandlerClaimsFetchInputOrderForFloatingLaborResident() {
+        SettlementWorkOrderRuntime runtime = new SettlementWorkOrderRuntime();
+        BannerModSettlementResidentRecord resident = sampleProjectedWorker();
+        UUID claimUuid = UUID.randomUUID();
+        UUID buildingUuid = resident.boundWorkAreaUuid();
+        SettlementWorkOrder published = runtime.publish(SettlementWorkOrder.pendingTransport(
+                claimUuid,
+                buildingUuid,
+                SettlementWorkOrderType.FETCH_INPUT,
+                new BlockPos(2, 64, 2),
+                new BlockPos(7, 64, 7),
+                "minecraft:wheat_seeds",
+                16,
+                70,
+                100L
+        )).orElseThrow();
+        JobExecutionContext ctx = new JobExecutionContext(
+                resident, 200L, UUID.randomUUID(), buildingUuid, runtime);
+
+        JobExecutionResult result = new HarvestJobHandler().runOneStep(ctx);
+
+        assertEquals(JobExecutionResult.COMPLETED, result);
+        SettlementWorkOrder afterClaim = runtime.find(published.orderUuid()).orElseThrow();
+        assertEquals(SettlementWorkOrderStatus.CLAIMED, afterClaim.status());
+        assertEquals(resident.residentUuid(), afterClaim.claimedByResidentUuid());
     }
 
     @Test
