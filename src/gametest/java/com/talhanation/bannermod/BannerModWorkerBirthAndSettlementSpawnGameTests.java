@@ -29,7 +29,6 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void friendlyClaimBirthCreatesOwnedSettlementWorker(GameTestHelper helper) {
-        ConfigSnapshot config = ConfigSnapshot.capture();
         configurePhase30ForTests();
 
         try {
@@ -50,7 +49,7 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, worker.blockPosition(), FRIENDLY_TEAM_ID).status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                     "Expected the live shared settlement binding seam to remain FRIENDLY_CLAIM for the spawned worker");
         } finally {
-            config.restore();
+            clearPhase30TestOverrides();
         }
 
         helper.succeed();
@@ -59,7 +58,6 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void claimSpawnCreatesOneWorkerThenRespectsCooldown(GameTestHelper helper) {
-        ConfigSnapshot config = ConfigSnapshot.capture();
         configurePhase30ForTests();
 
         try {
@@ -81,7 +79,7 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, claim.getCenter().getWorldPosition(), FRIENDLY_TEAM_ID + "_cooldown").status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                     "Expected the cooldown-bounded spawn scenario to stay rooted in a friendly claim binding");
         } finally {
-            config.restore();
+            clearPhase30TestOverrides();
         }
 
         helper.succeed();
@@ -90,7 +88,6 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void hostileOrUnclaimedSettlementsNeverCreateWorkers(GameTestHelper helper) {
-        ConfigSnapshot config = ConfigSnapshot.capture();
         configurePhase30ForTests();
 
         try {
@@ -122,42 +119,29 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             helper.assertTrue(unclaimedBinding.status() == BannerModSettlementBinding.Status.UNCLAIMED,
                     "Expected the live settlement binding seam to report UNCLAIMED for a claimless settlement spawn attempt");
         } finally {
-            config.restore();
+            clearPhase30TestOverrides();
         }
 
         helper.succeed();
     }
 
+    // Forge's ConfigValue caches the first .get() result and never invalidates that cache when
+    // .set() is called afterwards (see WorkersServerConfig#TEST_OVERRIDES). Use the override
+    // seam so each test's expected Phase-30 config applies regardless of the order or any
+    // sibling test's prior .set()/.get() pattern.
     private static void configurePhase30ForTests() {
-        WorkersServerConfig.WorkerBirthEnabled.set(true);
-        WorkersServerConfig.ClaimBasedSettlementSpawnEnabled.set(true);
-        WorkersServerConfig.SettlementSpawnMinimumVillagers.set(1);
-        WorkersServerConfig.SettlementSpawnWorkerCap.set(8);
-        WorkersServerConfig.SettlementSpawnCooldownDays.set(1);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.WorkerBirthEnabled, true);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.ClaimBasedSettlementSpawnEnabled, true);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementSpawnMinimumVillagers, 1);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementSpawnWorkerCap, 8);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementSpawnCooldownDays, 1);
     }
 
-    private record ConfigSnapshot(boolean workerBirthEnabled,
-                                  boolean claimBasedSettlementSpawnEnabled,
-                                  int minimumVillagers,
-                                  int workerCap,
-                                  int cooldownDays) {
-
-        static ConfigSnapshot capture() {
-            return new ConfigSnapshot(
-                    WorkersServerConfig.WorkerBirthEnabled.get(),
-                    WorkersServerConfig.ClaimBasedSettlementSpawnEnabled.get(),
-                    WorkersServerConfig.SettlementSpawnMinimumVillagers.get(),
-                    WorkersServerConfig.SettlementSpawnWorkerCap.get(),
-                    WorkersServerConfig.SettlementSpawnCooldownDays.get()
-            );
-        }
-
-        void restore() {
-            WorkersServerConfig.WorkerBirthEnabled.set(workerBirthEnabled);
-            WorkersServerConfig.ClaimBasedSettlementSpawnEnabled.set(claimBasedSettlementSpawnEnabled);
-            WorkersServerConfig.SettlementSpawnMinimumVillagers.set(minimumVillagers);
-            WorkersServerConfig.SettlementSpawnWorkerCap.set(workerCap);
-            WorkersServerConfig.SettlementSpawnCooldownDays.set(cooldownDays);
-        }
+    private static void clearPhase30TestOverrides() {
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.WorkerBirthEnabled, null);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.ClaimBasedSettlementSpawnEnabled, null);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementSpawnMinimumVillagers, null);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementSpawnWorkerCap, null);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.SettlementSpawnCooldownDays, null);
     }
 }
