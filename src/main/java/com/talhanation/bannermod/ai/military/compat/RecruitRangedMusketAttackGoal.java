@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.ai.military.compat;
 
 import com.talhanation.bannermod.compat.*;
+import com.talhanation.bannermod.compat.musketmod.*;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
 import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;

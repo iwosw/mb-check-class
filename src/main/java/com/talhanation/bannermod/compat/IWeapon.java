@@ -7,7 +7,7 @@ import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-
+//interface for all weapons in compat
 public interface IWeapon {
     Item getWeapon();
     double getMoveSpeedAmp();
