@@ -47,6 +47,10 @@ final class RecruitRuntimeLoop {
     }
 
     static void tick(AbstractRecruitEntity recruit) {
+        if (recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            com.talhanation.bannermod.combat.RecruitMoraleService.tick(
+                    recruit, serverLevel, serverLevel.getGameTime());
+        }
         if (recruit.despawnTimer > 0) {
             recruit.despawnTimer--;
         }
