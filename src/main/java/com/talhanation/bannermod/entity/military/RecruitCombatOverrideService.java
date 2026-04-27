@@ -330,10 +330,16 @@ final class RecruitCombatOverrideService {
         }
         recruit.lastProtectTargetPropagationTick = tick;
 
-        for (AbstractRecruitEntity nearbyRecruit : recruit.getCommandSenderWorld().getEntitiesOfClass(
-                AbstractRecruitEntity.class,
-                recruit.getBoundingBox().inflate(32D)
-        )) {
+        java.util.List<AbstractRecruitEntity> nearby = RecruitIndex.instance().allInBox(
+                recruit.getCommandSenderWorld(),
+                recruit.getBoundingBox().inflate(32D),
+                true);
+        if (nearby == null) {
+            nearby = recruit.getCommandSenderWorld().getEntitiesOfClass(
+                    AbstractRecruitEntity.class,
+                    recruit.getBoundingBox().inflate(32D));
+        }
+        for (AbstractRecruitEntity nearbyRecruit : nearby) {
             if (nearbyRecruit.getUUID().equals(nearbyRecruit.getProtectUUID()) && nearbyRecruit.isAlive() && !nearbyRecruit.equals(attacker)) {
                 nearbyRecruit.assignReactiveCombatTarget(attacker);
             }

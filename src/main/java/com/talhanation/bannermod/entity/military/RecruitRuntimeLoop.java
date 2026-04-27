@@ -48,6 +48,10 @@ final class RecruitRuntimeLoop {
 
     static void tick(AbstractRecruitEntity recruit) {
         if (recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            // Keep the chunk-keyed bucket in sync as recruits cross chunk borders. Vanilla
+            // does not raise an entity-changed-chunk event, so RecruitIndex resyncs lazily
+            // on the recruit tick — one map lookup per recruit, free in practice.
+            RecruitIndex.instance().onRecruitTick(recruit);
             com.talhanation.bannermod.combat.RecruitMoraleService.tick(
                     recruit, serverLevel, serverLevel.getGameTime());
         }
