@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BannerModSettlementOrchestratorTest {
@@ -172,6 +173,27 @@ class BannerModSettlementOrchestratorTest {
         assertEquals(BannerModSettlementBuildingProfileSeed.MARKET, queuedProjects.get(0).profileSeed());
     }
 
+    @Test
+    void batchSnapshotOrderIsSortedOncePerMaintenanceCycle() {
+        UUID first = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        UUID second = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        UUID third = UUID.fromString("00000000-0000-0000-0000-000000000003");
+        BannerModSettlementManager manager = new BannerModSettlementManager();
+        BannerModSettlementSnapshot base = settlementSnapshot(DAY_TICK, false);
+        manager.putSnapshot(withClaim(base, third));
+        manager.putSnapshot(withClaim(base, first));
+        BannerModSettlementOrchestrator.LevelRuntimeState state = BannerModSettlementOrchestrator.detachedStateForTests(JobHandlerRegistry.defaults());
+
+        List<UUID> firstBatchOrder = state.snapshotOrderForBatch(manager, 0);
+        manager.putSnapshot(withClaim(base, second));
+        List<UUID> secondBatchOrder = state.snapshotOrderForBatch(manager, 1);
+
+        assertEquals(List.of(first, third), firstBatchOrder);
+        assertSame(firstBatchOrder, secondBatchOrder, "later batches in the same cycle should reuse the cached order");
+        List<UUID> nextCycleOrder = state.snapshotOrderForBatch(manager, 0);
+        assertEquals(List.of(first, second, third), nextCycleOrder);
+    }
+
     private static BannerModSettlementSnapshot settlementSnapshot(long gameTime, boolean includeSellerDispatch) {
         BannerModSettlementResidentServiceContract serviceContract = new BannerModSettlementResidentServiceContract(
                 BannerModSettlementServiceActorState.LOCAL_BUILDING_SERVICE,
@@ -252,6 +274,30 @@ class BannerModSettlementOrchestratorTest {
                 BannerModSettlementSupplySignalState.empty(),
                 List.of(resident),
                 List.of(home, market)
+        );
+    }
+
+    private static BannerModSettlementSnapshot withClaim(BannerModSettlementSnapshot base, UUID claimUuid) {
+        return new BannerModSettlementSnapshot(
+                claimUuid,
+                base.anchorChunkX(),
+                base.anchorChunkZ(),
+                base.settlementFactionId(),
+                base.lastRefreshedTick(),
+                base.residentCapacity(),
+                base.workplaceCapacity(),
+                base.assignedWorkerCount(),
+                base.assignedResidentCount(),
+                base.unassignedWorkerCount(),
+                base.missingWorkAreaAssignmentCount(),
+                base.stockpileSummary(),
+                base.marketState(),
+                base.desiredGoodsSeed(),
+                base.projectCandidateSeed(),
+                base.tradeRouteHandoffSeed(),
+                base.supplySignalState(),
+                base.residents(),
+                base.buildings()
         );
     }
 
