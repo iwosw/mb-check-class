@@ -450,7 +450,7 @@
     {
       "id": "UI-005",
       "title": "Build Area authoring validation and feedback",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Build Area scan/build flow relies on client-side structure scanning and sends structure data to the server, while player feedback for invalid scans, bounds, materials, or build-start rejection is thin.",
       "scope": [
@@ -464,11 +464,17 @@
         "Server enforces dimensions and NBT limits even if the client sends malformed data."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "BuildAreaScreen now shows status text for scan/load/build/place flows, rejects short scan names, invalid dimensions, missing structure data, and empty scans before send, disables Build/Place without a non-empty structure, and surfaces required-material guidance before normal builds. MessageUpdateBuildArea now enforces server-side dimension bounds, required build structure NBT, matching structure dimensions, non-empty block lists, and block count <= bounds before mutating or starting builds, with accepted/rejected system messages. Player guides EN/RU updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "BuildAreaScreen.performClientScan and button handlers scan/send structure data.",
         "MessageUpdateBuildArea accepts update payloads server-side."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "UI-006",

@@ -55,6 +55,8 @@ public class BuildAreaScreen extends WorkAreaScreen {
     public int areaDepthSize;
     public List< ItemStack> requiredItems = new ArrayList<>();
     public DisplayTextItemScrollDropDownMenu requiredItemsDropDownMenu;
+    private String statusText = "Ready.";
+    private int statusColor = 0xFFAAAAAA;
     public BuildAreaScreen(BuildArea buildArea, Player player) {
         super(buildArea.getCustomName(), buildArea, player);
         this.buildArea = buildArea;
@@ -259,8 +261,11 @@ public class BuildAreaScreen extends WorkAreaScreen {
                                 this.structureNBT = tag;
                                 this.structure    = StructureManager.parseStructureFromNBT(tag);
                                 this.setStructure(this.structure, this.structureNBT);
+                                setStatus("Loaded structure: " + (this.structure == null ? 0 : this.structure.size()) + " block(s).", 0xFFAAFFAA);
                                 checkBuildButtonActive();
                                 this.setButtons();
+                            } else {
+                                setStatus("Load rejected: scan file could not be read.", 0xFFFF8888);
                             }
                         }
                 );
@@ -268,6 +273,8 @@ public class BuildAreaScreen extends WorkAreaScreen {
 
                 buildButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y + 182, buttonWidth, buttonHeight, Component.literal("Build"),
                         btn -> {
+                            if (!validateStructureForBuild(false)) return;
+                            setStatus("Build request sent. Required blocks are listed at right.", 0xFFAAFFAA);
                             WorkersRuntime.channel().sendToServer(new MessageUpdateBuildArea(this.buildArea.getUUID(), areaWidthSize, areaHeightSize, areaDepthSize, this.structureNBT, true, false));
                         }
                 ));
@@ -275,6 +282,8 @@ public class BuildAreaScreen extends WorkAreaScreen {
                 if(player.isCreative()){
                     placeButton = addRenderableWidget(new ExtendedButton(x - buttonWidth/2 + buttonWidth, y + 182, buttonWidth, buttonHeight, Component.literal("Place"),
                             btn -> {
+                                if (!validateStructureForBuild(true)) return;
+                                setStatus("Creative place request sent.", 0xFFAAFFAA);
                                 WorkersRuntime.channel().sendToServer(new MessageUpdateBuildArea(this.buildArea.getUUID(), areaWidthSize, areaHeightSize, areaDepthSize, this.structureNBT, true, true));
                             }
                     ));
@@ -339,7 +348,7 @@ public class BuildAreaScreen extends WorkAreaScreen {
     private void checkBuildButtonActive() {
         if(this.buildButton == null) return;
 
-        this.buildButton.active = this.structure != null;
+        this.buildButton.active = this.structure != null && !this.structure.isEmpty();
         if(placeButton != null) this.placeButton.active = this.buildButton.active;
     }
 
@@ -352,10 +361,53 @@ public class BuildAreaScreen extends WorkAreaScreen {
     private void performClientScan() {
         Level level = Minecraft.getInstance().level;
         if (level == null) return;
+        if (this.scanNameEditBox == null || this.scanNameEditBox.getValue().trim().length() < 3) {
+            setStatus("Scan rejected: name must be at least 3 characters.", 0xFFFF8888);
+            return;
+        }
+        if (!dimensionsValid()) {
+            setStatus("Scan rejected: dimensions must stay between 3 and 32.", 0xFFFF8888);
+            return;
+        }
 
         this.structureNBT = StructureManager.scanStructure(level, this.buildArea, this.scanNameEditBox.getValue());
         this.structure = StructureManager.parseStructureFromNBT(structureNBT);
         this.structurePreview.setStructure(structure, structureNBT);
+        if (this.structure == null || this.structure.isEmpty()) {
+            setStatus("Scan found no buildable blocks.", 0xFFFF8888);
+        } else {
+            setStatus("Scan accepted: " + this.structure.size() + " block(s).", 0xFFAAFFAA);
+        }
+    }
+
+    private boolean validateStructureForBuild(boolean creativePlace) {
+        if (!dimensionsValid()) {
+            setStatus("Build rejected: dimensions must stay between 3 and 32.", 0xFFFF8888);
+            return false;
+        }
+        if (this.structureNBT == null || this.structureNBT.isEmpty() || !this.structureNBT.contains("blocks", Tag.TAG_LIST)) {
+            setStatus("Build rejected: scan or load a structure first.", 0xFFFF8888);
+            return false;
+        }
+        if (this.structure == null || this.structure.isEmpty()) {
+            setStatus("Build rejected: structure has no blocks.", 0xFFFF8888);
+            return false;
+        }
+        if (!creativePlace && this.requiredItems != null && !this.requiredItems.isEmpty()) {
+            setStatus("Build ready: gather required blocks listed at right.", 0xFFFFFF88);
+        }
+        return true;
+    }
+
+    private boolean dimensionsValid() {
+        return areaWidthSize >= 3 && areaWidthSize <= 32
+                && areaHeightSize >= 3 && areaHeightSize <= 32
+                && areaDepthSize >= 3 && areaDepthSize <= 32;
+    }
+
+    private void setStatus(String statusText, int color) {
+        this.statusText = statusText == null ? "" : statusText;
+        this.statusColor = color;
     }
 
     @Override
@@ -393,6 +445,7 @@ public class BuildAreaScreen extends WorkAreaScreen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        guiGraphics.drawString(this.font, this.statusText, x - 100, y + 210, this.statusColor, false);
     }
 
     @Override

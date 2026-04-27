@@ -80,6 +80,8 @@ Important checks:
 
 Settlements have internal work orders. Some order state already survives server reloads, including worker claims. Transport orders (`HAUL_RESOURCE`/`FETCH_INPUT`) carry source, destination, resource filter, and item count. Workers can claim, complete, cancel, or release jobs back to the settlement if abandoned.
 
+Build Area screens show scan/build status at the bottom. Invalid names, empty scans, oversized dimensions, missing structure data, or server-side NBT/bounds rejection produce a visible reason; Build and creative Place requests also report accepted/rejected state in chat.
+
 Citizens can fill building vacancies and convert into workers or recruits when they reach the assigned building anchor. Default autonomous growth can add settlement workers over time, but manual validation and prefab completion are still adjacent flows: if a building does not seem to create vacancies, check whether it was registered through the flow that supports that profile.
 
 The worker command screen (`X`) supports simple group orders: follow, guard, move to position, stop.
