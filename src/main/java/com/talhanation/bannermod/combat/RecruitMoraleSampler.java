@@ -42,9 +42,11 @@ public final class RecruitMoraleSampler {
     public static final double MODERATE_HP_FRACTION = 0.50D;
 
     /**
-     * Recent-damage event count emitted when {@code hurtTime > 0} this tick. The policy's
-     * SUSTAINED_FIRE_THRESHOLD is 6 events, so a single hurtTime hit alone never trips
-     * suppression — it has to coincide with outnumbered / casualties pressure to matter.
+     * Legacy single-tick event-value constant, kept for callers that want to know what one
+     * raw hurt-tick contributes. The live sampler now reads
+     * {@link RecruitMoraleService#recentDamageEventCount(java.util.UUID, long)} instead so
+     * the SUSTAINED_FIRE token actually trips after enough hits land within the suppression
+     * window, rather than capping at 1 per snapshot.
      */
     public static final int HURT_TICK_EVENT_VALUE = 1;
 
@@ -102,7 +104,12 @@ public final class RecruitMoraleSampler {
         }
 
         int casualtiesProxy = casualtiesFromHpFraction(recruit, squadSize);
-        int recentDamage = recruit.hurtTime > 0 ? HURT_TICK_EVENT_VALUE : 0;
+        // Suppression: read the rolling damage-event count maintained by RecruitMoraleService
+        // off the recruit's hurt() hook, instead of mapping a single hurtTime tick to a 1.
+        // The window expires automatically once SUPPRESSION_WINDOW_TICKS pass without a hit,
+        // so leaving the line of fire clears the suppression token on its own.
+        int recentDamage = RecruitMoraleService.recentDamageEventCount(
+                recruit.getUUID(), level.getGameTime());
         boolean isolated = nearbyAlly == 0;
         return new MoraleSnapshot(
                 squadSize,

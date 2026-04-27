@@ -74,6 +74,14 @@ final class RecruitCombatDecisions {
         if (chargeMultiplier != 1.0D) {
             damage = (float) (damage * chargeMultiplier);
         }
+        // COMBAT-001: shaken hit-rate dampening. A SHAKEN squad still swings but at reduced
+        // effectiveness — the rout goal handles full disengagement separately, so a routed
+        // recruit is not in this code path. Multiplier resolves to 1.0 for STEADY/ROUTED.
+        double moraleMultiplier = com.talhanation.bannermod.combat.RecruitMoraleService
+                .attackMultiplierFor(recruit);
+        if (moraleMultiplier != 1.0D) {
+            damage = (float) (damage * moraleMultiplier);
+        }
         boolean flag = entity.hurt(recruit.damageSources().mobAttack(recruit), damage);
         if (flag) {
             recruit.doEnchantDamageEffects(recruit, entity);
