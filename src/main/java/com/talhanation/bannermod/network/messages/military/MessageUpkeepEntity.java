@@ -36,8 +36,9 @@ public class MessageUpkeepEntity implements Message<MessageUpkeepEntity> {
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
+        UUID actorUuid = authorizedPlayerUuid(player.getUUID(), this.player_uuid);
         List<AbstractRecruitEntity> recruits = this.group == null
-                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.player_uuid, player.position(), 100.0D)
+                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), actorUuid, player.position(), 100.0D)
                 : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
         if (recruits == null) {
             RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
@@ -46,7 +47,11 @@ public class MessageUpkeepEntity implements Message<MessageUpkeepEntity> {
                     player.getBoundingBox().inflate(100)
             );
         }
-        recruits.forEach(recruit -> CommandEvents.onUpkeepCommand(player_uuid, recruit, group, true, target, null));
+        recruits.forEach(recruit -> CommandEvents.onUpkeepCommand(actorUuid, recruit, group, true, target, null));
+    }
+
+    static UUID authorizedPlayerUuid(UUID senderUuid, UUID ignoredWireUuid) {
+        return senderUuid;
     }
 
     public MessageUpkeepEntity fromBytes(FriendlyByteBuf buf) {

@@ -64,9 +64,7 @@ public final class AsyncPathScheduler implements AutoCloseable {
             RuntimeProfilingCounters.increment(METRICS_PREFIX + ".submit.rejected.max_queue");
             return false;
         }
-        long samePriorityQueued = outstandingByPriority.get(request.priority()).sum();
-        int limit = perPriorityBackpressure.getOrDefault(request.priority(), maxQueuedJobs);
-        if (samePriorityQueued >= limit) {
+        if (!canAcceptPriority(request.priority())) {
             RuntimeProfilingCounters.increment(METRICS_PREFIX + ".submit.rejected.priority_cap");
             return false;
         }
@@ -81,6 +79,17 @@ public final class AsyncPathScheduler implements AutoCloseable {
         RuntimeProfilingCounters.increment(METRICS_PREFIX + ".submit.accepted");
         dispatch();
         return true;
+    }
+
+    public boolean canAccept(PathPriority priority) {
+        return outstandingJobs.sum() < maxQueuedJobs && canAcceptPriority(priority);
+    }
+
+    private boolean canAcceptPriority(PathPriority priority) {
+        PathPriority safePriority = priority == null ? PathPriority.FOLLOW : priority;
+        long samePriorityQueued = outstandingByPriority.get(safePriority).sum();
+        int limit = perPriorityBackpressure.getOrDefault(safePriority, maxQueuedJobs);
+        return samePriorityQueued < limit;
     }
 
     public List<PathResult> pollCompleted(int maxResults) {

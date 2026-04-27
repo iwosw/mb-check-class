@@ -95,13 +95,16 @@ This repository wires the tool into common agent entrypoints:
 - `AGENTS.md` tells opencode/Codex-style agents to use `ctx` first.
 - `CLAUDE.md` tells Claude Code to use `ctx` first.
 - `.cursor/rules/ai-context-proxy.mdc` applies the same policy in Cursor.
-- `.cursorrules` covers older Cursor rule loading.
 - `.github/copilot-instructions.md` covers GitHub Copilot Chat.
 - `GEMINI.md` covers Gemini-style agents.
 - `.windsurf/rules/ai-context-proxy.md` covers Windsurf-style agents.
 - `.claude/settings.local.json` registers a Claude Code `PreToolUse` hook for Bash.
 
 The Claude hook blocks common raw context dumps through `cat`, `sed`, `find`, `rg`, and `grep`, and points the agent at the equivalent `ctx` command. It is intentionally a nudge, not a security boundary.
+
+Backlog access is intentionally routed through `tools/backlog` rather than direct `docs/BANNERMOD_BACKLOG.json` reads. The same Claude Bash hook blocks direct backlog JSON access and points agents at bounded commands such as `tools/backlog batch --limit 5`.
+
+Additional agent guardrails live under `tools/agent-hooks/`, `.codex/config.toml`, and `.opencode/plugins/`. They reuse the same policy where supported by the host agent: bounded backlog access and context-proxy-first repository inspection.
 
 ## Cache
 

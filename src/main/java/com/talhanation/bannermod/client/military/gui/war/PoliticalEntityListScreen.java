@@ -7,6 +7,7 @@ import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
+import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.GovernmentForm;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
@@ -35,6 +36,7 @@ public class PoliticalEntityListScreen extends Screen {
     private int guiTop;
     private int scrollOffset;
     private List<PoliticalEntityRecord> entities = List.of();
+    private int observedWarStateVersion = -1;
     @Nullable
     private PoliticalEntityRecord selected;
     @Nullable
@@ -47,6 +49,10 @@ public class PoliticalEntityListScreen extends Screen {
     private Button setColorButton;
     @Nullable
     private Button setCharterButton;
+    @Nullable
+    private Button addCoLeaderButton;
+    @Nullable
+    private Button removeCoLeaderButton;
 
     public PoliticalEntityListScreen(@Nullable Screen parent) {
         super(Component.literal("States"));
@@ -58,10 +64,6 @@ public class PoliticalEntityListScreen extends Screen {
         super.init();
         this.guiLeft = (this.width - W) / 2;
         this.guiTop = (this.height - H) / 2;
-        this.entities = new ArrayList<>(WarClientState.entities());
-        if (this.selected != null) {
-            this.selected = WarClientState.entityById(this.selected.id());
-        }
         addRenderableWidget(Button.builder(Component.literal("Create"), btn -> openCreateDialog())
                 .bounds(guiLeft + 8, guiTop + H - 24, 60, 18).build());
         this.renameButton = addRenderableWidget(Button.builder(Component.literal("Rename"), btn -> openRenameDialog())
@@ -77,11 +79,23 @@ public class PoliticalEntityListScreen extends Screen {
                 .bounds(guiLeft + 8, guiTop + H - 44, 60, 18).build());
         this.setCharterButton = addRenderableWidget(Button.builder(Component.literal("Charter"), btn -> openCharterDialog())
                 .bounds(guiLeft + 72, guiTop + H - 44, 80, 18).build());
+        this.addCoLeaderButton = addRenderableWidget(Button.builder(Component.literal("Add co-leader"), btn -> openCoLeaderDialog(true))
+                .bounds(guiLeft + 156, guiTop + H - 44, 96, 18).build());
+        this.removeCoLeaderButton = addRenderableWidget(Button.builder(Component.literal("Remove co"), btn -> openCoLeaderDialog(false))
+                .bounds(guiLeft + 256, guiTop + H - 44, 86, 18).build());
         addRenderableWidget(Button.builder(Component.literal("Refresh"), btn -> refresh())
-                .bounds(guiLeft + W - 172, guiTop + H - 44, 80, 18).build());
+                .bounds(guiLeft + W - 172, guiTop + H - 64, 80, 18).build());
         addRenderableWidget(Button.builder(Component.literal("Back"), btn -> onClose())
                 .bounds(guiLeft + W - 86, guiTop + H - 24, 80, 18).build());
-        updateLeaderButtons();
+        refresh();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (observedWarStateVersion != WarClientState.version()) {
+            refresh();
+        }
     }
 
     private void refresh() {
@@ -89,6 +103,8 @@ public class PoliticalEntityListScreen extends Screen {
         if (this.selected != null) {
             this.selected = WarClientState.entityById(this.selected.id());
         }
+        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, Math.max(0, entities.size() - LIST_VISIBLE)));
+        this.observedWarStateVersion = WarClientState.version();
         updateLeaderButtons();
     }
 
@@ -156,6 +172,20 @@ public class PoliticalEntityListScreen extends Screen {
         ));
     }
 
+    private void openCoLeaderDialog(boolean add) {
+        if (this.selected == null) return;
+        UUID id = this.selected.id();
+        Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
+                this,
+                add ? "Add co-leader" : "Remove co-leader",
+                "Player UUID:",
+                "",
+                value -> sendCoLeader(id, value, add),
+                36,
+                false
+        ));
+    }
+
     private void sendColor(UUID entityId, String newColor) {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetPoliticalEntityColor(entityId, newColor));
     }
@@ -170,6 +200,16 @@ public class PoliticalEntityListScreen extends Screen {
 
     private void sendRename(UUID entityId, String newName) {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRenamePoliticalEntity(entityId, newName));
+    }
+
+    private void sendCoLeader(UUID entityId, String coLeaderUuidText, boolean add) {
+        try {
+            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateCoLeader(entityId, UUID.fromString(coLeaderUuidText), add));
+        } catch (IllegalArgumentException ignored) {
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(Component.literal("Invalid UUID."), false);
+            }
+        }
     }
 
     private void updateLeaderButtons() {
@@ -194,6 +234,12 @@ public class PoliticalEntityListScreen extends Screen {
         }
         if (this.setCharterButton != null) {
             this.setCharterButton.active = leader;
+        }
+        if (this.addCoLeaderButton != null) {
+            this.addCoLeaderButton.active = leader;
+        }
+        if (this.removeCoLeaderButton != null) {
+            this.removeCoLeaderButton.active = leader && this.selected != null && !this.selected.coLeaderUuids().isEmpty();
         }
     }
 
@@ -234,7 +280,8 @@ public class PoliticalEntityListScreen extends Screen {
             graphics.drawString(font, font.plainSubstrByWidth(" " + displayName(entity), listW - 76), listX + 76, rowY + 4, 0xFFFFFF, false);
         }
         if (entities.isEmpty()) {
-            graphics.drawCenteredString(font, "No states yet", listX + listW / 2, listY + 62, 0xAAAAAA);
+            String empty = WarClientState.hasSnapshot() ? "No states yet" : "Waiting for server state sync";
+            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + 62, 0xAAAAAA);
         }
     }
 
@@ -256,7 +303,8 @@ public class PoliticalEntityListScreen extends Screen {
                 "Government: " + selected.governmentForm().name()
                         + (selected.governmentForm().coLeadersShareAuthority() ? " (co-leaders share authority)" : " (leader sole authority)"),
                 "Leader: " + shortId(selected.leaderUuid()),
-                "Co-leaders: " + selected.coLeaderUuids().size(),
+                "Co-leaders: " + coLeaderSummary(selected),
+                "Co-leader authority: " + (selected.governmentForm().coLeadersShareAuthority() ? "active in republic" : "listed, monarchy locked"),
                 "Capital: " + (selected.capitalPos() == null ? "(none)" : selected.capitalPos().toShortString()),
                 "Color: " + (selected.color().isBlank() ? "(none)" : selected.color()),
                 "Region: " + (selected.homeRegion().isBlank() ? "(none)" : selected.homeRegion()),
@@ -265,6 +313,18 @@ public class PoliticalEntityListScreen extends Screen {
         for (int i = 0; i < lines.length; i++) {
             graphics.drawString(font, font.plainSubstrByWidth(lines[i], w), x, y + 14 + i * 12, 0xFFFFFF, false);
         }
+    }
+
+    private String coLeaderSummary(PoliticalEntityRecord entity) {
+        if (entity.coLeaderUuids().isEmpty()) {
+            return "none";
+        }
+        List<String> ids = new ArrayList<>();
+        for (int i = 0; i < Math.min(3, entity.coLeaderUuids().size()); i++) {
+            ids.add(shortId(entity.coLeaderUuids().get(i)));
+        }
+        String suffix = entity.coLeaderUuids().size() > ids.size() ? " +" + (entity.coLeaderUuids().size() - ids.size()) : "";
+        return String.join(", ", ids) + suffix;
     }
 
     private static int involvedWarCount(PoliticalEntityRecord entity) {

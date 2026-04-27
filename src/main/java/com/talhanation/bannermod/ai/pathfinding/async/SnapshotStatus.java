@@ -5,5 +5,6 @@ public enum SnapshotStatus {
     REGION_TOO_LARGE,
     UNLOADED_CHUNK,
     ENTITY_GONE,
-    UNSUPPORTED_AGENT
+    UNSUPPORTED_AGENT,
+    BUDGET_EXCEEDED
 }

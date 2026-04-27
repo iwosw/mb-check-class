@@ -82,6 +82,18 @@ class RegionSnapshotBuilderTest {
         assertEquals(7, result.region().movementCostAt(0, 0, 0));
     }
 
+    @Test
+    void returnsBudgetExceededWhenSnapshotWorkPassesBudget() {
+        RegionSnapshotBuilder builder = new RegionSnapshotBuilder();
+        PathRequestSnapshot request = validRequest(16.0F, 0.6D, 1.8D);
+        FakeWorldAccess access = new FakeWorldAccess(true, true, List.of(), (byte) 0, 5L);
+
+        SnapshotBuildResult result = builder.buildWithAccess(request, access, 1L);
+
+        assertEquals(SnapshotStatus.BUDGET_EXCEEDED, result.status());
+        assertTrue(result.region().invalidRegion());
+    }
+
     private static PathRequestSnapshot validRequest(float maxDistance, double width, double height) {
         return new PathRequestSnapshot(
                 UUID.randomUUID(),
@@ -116,16 +128,22 @@ class RegionSnapshotBuilderTest {
         private final boolean chunksLoaded;
         private final List<DynamicObstacleSnapshot> obstacles;
         private final byte fillFlag;
+        private final long buildDelayMillis;
 
         private FakeWorldAccess(boolean entityAlive, boolean chunksLoaded, List<DynamicObstacleSnapshot> obstacles) {
             this(entityAlive, chunksLoaded, obstacles, (byte) 0);
         }
 
         private FakeWorldAccess(boolean entityAlive, boolean chunksLoaded, List<DynamicObstacleSnapshot> obstacles, byte fillFlag) {
+            this(entityAlive, chunksLoaded, obstacles, fillFlag, 0L);
+        }
+
+        private FakeWorldAccess(boolean entityAlive, boolean chunksLoaded, List<DynamicObstacleSnapshot> obstacles, byte fillFlag, long buildDelayMillis) {
             this.entityAlive = entityAlive;
             this.chunksLoaded = chunksLoaded;
             this.obstacles = obstacles;
             this.fillFlag = fillFlag;
+            this.buildDelayMillis = buildDelayMillis;
         }
 
         @Override
@@ -140,6 +158,13 @@ class RegionSnapshotBuilderTest {
 
         @Override
         public byte[] buildCellFlags(RegionSnapshotBuilder.Bounds bounds) {
+            if (buildDelayMillis > 0L) {
+                try {
+                    Thread.sleep(buildDelayMillis);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                }
+            }
             int sizeX = bounds.maxX() - bounds.minX() + 1;
             int sizeY = bounds.maxY() - bounds.minY() + 1;
             int sizeZ = bounds.maxZ() - bounds.minZ() + 1;

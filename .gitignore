@@ -5,6 +5,8 @@ logs/
 bin/
 !tools/ai-context-proxy/bin/
 .analysis/
+__pycache__/
+*.py[cod]
 .classpath
 .factorypath
 .project

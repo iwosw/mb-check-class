@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,6 +52,7 @@ class WarClientStateTest {
 
         WarClientState.applyFromNbt(payload);
 
+        assertTrue(WarClientState.hasSnapshot());
         assertEquals(2, WarClientState.occupations().size());
         assertEquals(1, WarClientState.revolts().size());
         OccupationRecord roundTripped = WarClientState.occupationById(occA);
@@ -150,8 +152,21 @@ class WarClientStateTest {
 
         WarClientState.clear();
 
+        assertFalse(WarClientState.hasSnapshot());
         assertTrue(WarClientState.occupations().isEmpty());
         assertTrue(WarClientState.revolts().isEmpty());
+    }
+
+    @Test
+    void nullSnapshotClearsSyncReadyFlag() {
+        WarClientState.applyFromNbt(new CompoundTag());
+        assertTrue(WarClientState.hasSnapshot());
+
+        WarClientState.applyFromNbt(null);
+
+        assertFalse(WarClientState.hasSnapshot());
+        assertTrue(WarClientState.entities().isEmpty());
+        assertTrue(WarClientState.wars().isEmpty());
     }
 
     @Test

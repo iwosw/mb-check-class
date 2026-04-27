@@ -27,6 +27,7 @@ Politics, claims, war declarations, allies, siege standards, occupations, and ou
 
 - Claims can belong to a political entity UUID.
 - A player is treated as a political member if they are leader or co-leader of an entity.
+- War Room state UI lets leaders add or remove co-leaders by player UUID; monarchy still lists co-leaders but keeps authority leader-only, while republic shares authority through `PoliticalEntityAuthority.canAct`.
 - Settlement bootstrap uses this membership to create the first claim.
 - Claim editing allows owners, political leaders/co-leaders, or creative permission-level-2 admins.
 - Claim overlap with other claims is rejected.
@@ -34,8 +35,9 @@ Politics, claims, war declarations, allies, siege standards, occupations, and ou
 
 ## War Declaration Commands
 
-- Current UI coverage starts after a war exists. The current code has no declare-war button in `WarListScreen`; declaring a new war uses the command path.
-- Declare: `/war declare <attacker> <defender> <goal> [casusBelli]`.
+- War Room exposes a declare-war wizard in `WarListScreen`; it reuses the same server-side validation and cooldown denial reasons as the command path.
+- War Room also exposes an outcome panel: attacking leaders can cancel, occupy the current chunk, or annex the current chunk; tribute and forced peace/vassalize/demilitarize remain visibly op-only.
+- Declare command remains available: `/war declare <attacker> <defender> <goal> [casusBelli]`.
 - Info: `/war info <warId>`.
 - List: `/war list`.
 - Cancel: `/war cancel <warId>`.

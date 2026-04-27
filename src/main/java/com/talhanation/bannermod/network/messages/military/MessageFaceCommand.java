@@ -54,7 +54,8 @@ public class MessageFaceCommand implements Message<MessageFaceCommand> {
         } else {
             list.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
         }
-        list.removeIf(recruit -> !recruit.isEffectedByCommand(this.player_uuid, this.group));
+        UUID actorUuid = authorizedPlayerUuid(sender.getUUID(), this.player_uuid);
+        list.removeIf(recruit -> !recruit.isEffectedByCommand(actorUuid, this.group));
 
         long gameTime = sender.getCommandSenderWorld().getGameTime();
         CommandIntent intent = new CommandIntent.Face(
@@ -65,6 +66,10 @@ public class MessageFaceCommand implements Message<MessageFaceCommand> {
                 this.tight
         );
         CommandIntentDispatcher.dispatch(sender, intent, list);
+    }
+
+    static UUID authorizedPlayerUuid(UUID senderUuid, UUID ignoredWireUuid) {
+        return senderUuid;
     }
 
     public MessageFaceCommand fromBytes(FriendlyByteBuf buf) {

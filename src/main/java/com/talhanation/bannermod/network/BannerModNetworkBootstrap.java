@@ -12,12 +12,15 @@ import com.talhanation.bannermod.network.messages.civilian.*;
 
 // War network messages (warfare-RP runtime sync)
 import com.talhanation.bannermod.network.messages.war.MessageCancelAllyInvite;
+import com.talhanation.bannermod.network.messages.war.MessageDeclareWar;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
+import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
+import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.network.messages.war.MessageRespondAllyInvite;
 import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
@@ -188,6 +191,9 @@ public class BannerModNetworkBootstrap {
         MessageCancelAllyInvite.class,
         MessageSetPoliticalEntityColor.class,
         MessageSetPoliticalEntityCharter.class,
+        MessageDeclareWar.class,
+        MessageResolveWarOutcome.class,
+        MessageUpdateCoLeader.class,
     };
 
     private BannerModNetworkBootstrap() {

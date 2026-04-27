@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
@@ -19,6 +20,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class MessageAssignGroupToCompanion implements Message<MessageAssignGroupToCompanion> {
@@ -38,17 +40,18 @@ public class MessageAssignGroupToCompanion implements Message<MessageAssignGroup
     }
 
     public void executeServerSide(NetworkEvent.Context context) {
-        ServerPlayer serverPlayer =  context.getSender();
+        ServerPlayer serverPlayer =  Objects.requireNonNull(context.getSender());
         ServerLevel serverLevel =  serverPlayer.serverLevel();
 
         Entity entity = serverLevel.getEntity(this.companionUUID);
         if (!(entity instanceof AbstractLeaderEntity companionEntity)
-                || !serverPlayer.getBoundingBox().inflate(100).intersects(companionEntity.getBoundingBox())) {
+                || !serverPlayer.getBoundingBox().inflate(100).intersects(companionEntity.getBoundingBox())
+                || !canAssignCompanionGroup(serverPlayer, companionEntity)) {
             return;
         }
 
 
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(companionEntity.getGroup());
+        RecruitsGroup group = RecruitCommandAuthority.ownedGroup(serverPlayer, companionEntity.getGroup());
         if(group == null) return;
 
         List<AbstractRecruitEntity> recruits = RecruitIndex.instance().groupMembersInRange(
@@ -72,6 +75,11 @@ public class MessageAssignGroupToCompanion implements Message<MessageAssignGroup
             }
         }
 
+        list.removeIf(recruit -> !RecruitCommandAuthority.canDirectlyControl(serverPlayer, recruit));
+        if (list.isEmpty()) {
+            return;
+        }
+
         for (AbstractRecruitEntity recruit : list) {
             ICompanion.assignToLeaderCompanion(companionEntity, recruit);
         }
@@ -81,6 +89,11 @@ public class MessageAssignGroupToCompanion implements Message<MessageAssignGroup
         companionEntity.setGroupUUID(group.getUUID());
 
         RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
+    }
+
+    static boolean canAssignCompanionGroup(ServerPlayer player, AbstractLeaderEntity companionEntity) {
+        return RecruitCommandAuthority.canDirectlyControl(player, companionEntity)
+                && RecruitCommandAuthority.ownedGroup(player, companionEntity == null ? null : companionEntity.getGroup()) != null;
     }
 
     public MessageAssignGroupToCompanion fromBytes(FriendlyByteBuf buf) {

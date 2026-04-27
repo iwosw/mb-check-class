@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
@@ -183,6 +184,45 @@ public class BannerModClaimProtectionGameTests {
 
         helper.assertTrue(attackEvent.isCanceled(),
                 "Expected hostile direct attacks against entities inside a friendly claim to be denied outside siege state");
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void overworldClaimDoesNotProtectMatchingNetherCoordinates(GameTestHelper helper) {
+        ServerLevel overworld = helper.getLevel();
+        ServerLevel nether = overworld.getServer().getLevel(Level.NETHER);
+        helper.assertTrue(nether != null, "Expected Nether level to exist for dimension-aware claim protection test");
+        BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+        ServerPlayer owner = createPlayer(overworld, claimPos, FRIENDLY_OWNER_UUID, "claim-owner", FRIENDLY_TEAM_ID);
+        ServerPlayer overworldHostile = createPlayer(overworld, helper.absolutePos(new BlockPos(3, 2, 2)), HOSTILE_PLAYER_UUID, "claim-hostile", HOSTILE_TEAM_ID);
+        ServerPlayer netherHostile = createPlayer(nether, claimPos, HOSTILE_PLAYER_UUID, "claim-hostile-nether", HOSTILE_TEAM_ID);
+
+        BannerModDedicatedServerGameTestSupport.seedClaim(overworld, claimPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
+        overworld.setBlockAndUpdate(claimPos, Blocks.CRAFTING_TABLE.defaultBlockState());
+        nether.setBlockAndUpdate(claimPos, Blocks.CRAFTING_TABLE.defaultBlockState());
+
+        PlayerInteractEvent.RightClickBlock overworldUse = new PlayerInteractEvent.RightClickBlock(
+                overworldHostile,
+                InteractionHand.MAIN_HAND,
+                claimPos,
+                BlockHitResult.miss(Vec3.atCenterOf(claimPos), net.minecraft.core.Direction.NORTH, claimPos)
+        );
+        PlayerInteractEvent.RightClickBlock netherUse = new PlayerInteractEvent.RightClickBlock(
+                netherHostile,
+                InteractionHand.MAIN_HAND,
+                claimPos,
+                BlockHitResult.miss(Vec3.atCenterOf(claimPos), net.minecraft.core.Direction.NORTH, claimPos)
+        );
+
+        com.talhanation.bannermod.events.ClaimEvents claimEvents = new com.talhanation.bannermod.events.ClaimEvents();
+        claimEvents.onBlockInteract(overworldUse);
+        claimEvents.onBlockInteract(netherUse);
+
+        helper.assertTrue(overworldUse.isCanceled(),
+                "Expected hostile Overworld interaction inside the protected claim to be denied");
+        helper.assertFalse(netherUse.isCanceled(),
+                "Expected matching Nether X/Z interaction to ignore the Overworld claim");
         helper.succeed();
     }
 

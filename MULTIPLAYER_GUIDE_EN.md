@@ -1,5 +1,7 @@
 # BannerMod Multiplayer Guide
 
+Last updated: 2026-04-27.
+
 BannerMod adds settlements, workers, armies, political states, and wars. This guide is written for regular server players, not for developers.
 
 Main rule: land, settlement, workers, recruits, and political state must agree on ownership. If ownership diverges, the game can stop settlement work or reject an action.
@@ -28,13 +30,13 @@ Rebind in `Options → Controls → Key Binds → BannerMod / Workers`. Defaults
 
 ## First 10 Minutes (no admin tools)
 
-1. Pick a place for your base and claim at least one chunk. Open the map with `M`, right-click the chunk you want, choose `Claim chunk`. Claim cost and currency are server-defined (`AllowClaiming` must be true) and shown in the menu itself.
+1. Pick a place for your base and claim at least one chunk in the Overworld. Open the map with `M`, right-click the chunk you want, choose `Claim chunk`. Claim cost and currency are server-defined (`AllowClaiming` must be true) and shown in the menu itself. Claim protection is Overworld-only; matching Nether or End X/Z chunks are not protected by Overworld claims.
 2. Create a state so your claim has a side: type `/bannermod state create <name>` in chat (e.g. `/bannermod state create Karl-City`). You become its leader. Inspect with `/bannermod state info <id-fragment>` or open the War Room (`U`) and click `States`.
-3. Craft `Settlement Surveyor Tool` and `Building Placement Wand`. Both items are added by the mod and are how you validate your starter fort and register buildings. The surveyor recipe is 2 sticks, 2 oak planks and 1 iron ingot in a stairs-shaped pattern. The wand is registered the same way and can be obtained in creative or via server datapacks.
-4. Place a `Starter Fort` — the keystone building, no settlement spawns without one. Surround it with the prefab requirements, then use the `Settlement Surveyor Tool`: right-click the anchor block, then right-click corners of each required zone. Shift+right-click cycles surveyor mode; shift+right-click on a block cycles the zone role (`INTERIOR`, `EXTERIOR`, ...). When the session is filled, right-click in the air without shift to validate the fort.
-5. After a successful starter-fort validation the settlement bootstraps automatically: a `SettlementRecord` is created, a starter claim is added if needed, and starter residents spawn near the anchor.
-6. For other buildings use the `Building Placement Wand`. The wand has 3 modes: `PLACE` (place a prefab), `VALIDATE` (verify what's already built), `REGISTER` (register the building with the settlement). Shift+right-click in the air cycles mode. Right-click a block to mark a corner of the validation/registration area.
-7. Mark work areas: farm, storage, market, mine, lumber yard, build site. Outline them with the wand the same way (pick a prefab or freeform area, mark corners, register).
+3. Craft `Settlement Surveyor Tool` and `Building Placement Wand`. Both items are added by the mod and are how you validate your starter fort and register buildings. The surveyor recipe is 2 sticks, 2 oak planks and 1 iron ingot in a stairs-shaped pattern. The wand recipe is one gold block over one stick.
+4. Place a `Starter Fort` — the keystone building, no settlement spawns without one. Build it manually or use a prefab, then use the `Settlement Surveyor Tool`: right-click the anchor block, then right-click corners of each required zone. Shift+right-click cycles surveyor mode; shift+right-click on a block cycles the zone role (`AUTHORITY_POINT`, `INTERIOR`, `EXTERIOR`, ...). The starter fort must include `AUTHORITY_POINT` and `INTERIOR`; the anchor should be inside the authority area. When the session is filled, right-click in the air without shift to validate the fort.
+5. After a successful starter-fort validation the settlement bootstraps automatically: a `SettlementRecord` is created, a starter claim is added if needed, and starter citizens/workers spawn near the anchor (farmer, miner, lumberjack, builder).
+6. For other buildings use the `Building Placement Wand`. The wand has 3 modes: `PLACE` (place a prefab), `VALIDATE` (verify what's already built), `REGISTER` (register the building with the settlement). Shift+right-click in the air cycles mode. Right-click a block to mark a corner of the validation/registration area. Manual farm, mine, lumber camp, and architect workshop validation now shows the profession vacancy it creates.
+7. Mark work areas: farm, storage, market, mine, lumber yard, build site. Outline them with the wand the same way (pick a prefab or freeform area, mark corners, register). Nearby unassigned citizens can fill validated workplace vacancies like prefab vacancies.
 8. Configure workers: right-click a worker to open its inventory and assign a profession or task, or open the worker command screen with `X` and issue group orders.
 9. If you recruit soldiers, keep food and payment in your inventory. Issue orders with `R` (command screen): movement, formation, stance, aggression. Press `R` near a single recruit to assign per-unit tasks from its inventory.
 
@@ -50,7 +52,7 @@ State management is driven by slash commands:
 - `/bannermod state setcapital <entity> [pos]` — set the capital. Without `pos` it uses the caller's position.
 - `/bannermod state status <entity> <status>` — change status (`SETTLEMENT`, `STATE`, `VASSAL`, `PEACEFUL`). Promotion to `STATE` requires the settlement to register a starter fort or town hall, storage, and market — otherwise the command returns `infrastructure_insufficient`.
 
-The same actions (Create / Rename / Capital here / Government form toggle) live in the War Room (`U`). The `→ Republic` / `→ Monarchy` button is leader-only and switches government form:
+The same actions (Create / Rename / Capital here / Government form toggle) live in the War Room (`U`). Leaders can also use `Add co-leader` / `Remove co` with a player UUID; the state detail panel shows the current co-leaders and whether their authority is active. The `→ Republic` / `→ Monarchy` button is leader-only and switches government form:
 
 - `MONARCHY`: leader-only authority for key decisions.
 - `REPUBLIC`: co-leaders also gain authority for some actions (status, capital).
@@ -67,7 +69,7 @@ If promotion is denied with a reason like `infrastructure_insufficient`, place a
 
 ## Workers And Residents
 
-Workers choose jobs through registered buildings and work areas. Storage, markets, farms, mines, and build areas give the settlement different capabilities.
+Workers choose jobs through registered buildings and work areas. Storage, markets, farms, mines, homes, barracks, and build areas give the settlement different capabilities.
 
 Important checks:
 
@@ -76,9 +78,13 @@ Important checks:
 - the settlement must see the registered building or work area;
 - if a claim is captured, removed, or becomes mismatched, work can stop.
 
-Settlements have internal work orders. Some order state already survives server reloads, including worker claims. Transport orders (`HAUL_RESOURCE`/`FETCH_INPUT`) carry source, destination, resource filter, and item count.
+Settlements have internal work orders. Some order state already survives server reloads, including worker claims. Transport orders (`HAUL_RESOURCE`/`FETCH_INPUT`) carry source, destination, resource filter, and item count. Workers can claim, complete, cancel, or release jobs back to the settlement if abandoned.
+
+Citizens can fill building vacancies and convert into workers or recruits when they reach the assigned building anchor. Default autonomous growth can add settlement workers over time, but manual validation and prefab completion are still adjacent flows: if a building does not seem to create vacancies, check whether it was registered through the flow that supports that profile.
 
 The worker command screen (`X`) supports simple group orders: follow, guard, move to position, stop.
+
+Governors expose the settlement's status, citizen count, taxes, incidents, treasury data, policy buttons, and a read-only logistics panel. Use the logistics panel to check pending, claimed, and recently completed work orders, shortage blockers, stockpile capacity, missing goods, and the current project hint before digging through logs. Promote an eligible owned recruit from its inventory when it has enough experience and is tied to a friendly claimed settlement.
 
 ## Storage, Markets, And Trade
 
@@ -93,7 +99,7 @@ If the settlement lacks resources, check:
 - a source of goods exists;
 - trade is not blocked by war, ownership, or server configuration.
 
-Port or sea-entry points can affect the settlement's trade hints — the snapshot stores `tradeRouteSeed` and `seaEntrypoint` for later economy slices.
+Port or sea-entry points can affect the settlement's trade hints — the snapshot stores `tradeRouteSeed` and `seaEntrypoint` for later economy slices. Sea trade is not a complete player-facing loop yet.
 
 ## Recruits And Armies
 
@@ -130,9 +136,13 @@ War Room is the main in-game UI for war and politics:
 - **Battle window banner**: top of the screen shows the current battle-window phase ("OPEN FRI 19:00-20:30 — closes in 45m" / "CLOSED — next SUN 18:00-19:30 in 1d 22h"). Green = open, gray = closed. The schedule is server-configured (`BattleWindows` in `bannermod-war-server.toml`) and synced to the client automatically.
 - **Active wars list** on the left: each war shows state (`DECLARED`/`ACTIVE`/`IN_SIEGE_WINDOW`/`RESOLVED`/`CANCELLED`), attacker, defender.
 - **Detail panel** on the right: attacker, defender, war state, goal type, casus belli, declaration time, allies, target positions, siege standards.
-- Buttons: `Attacker info` / `Defender info` (open `PoliticalEntityInfoScreen`), `States` (state list), `Place siege here` (drop a siege standard at your current position), `Refresh`, `Close`.
+- Buttons: `Attacker info` / `Defender info` (open `PoliticalEntityInfoScreen`), `States` (state list), `Declare war`, `Cancel war`, `Occupy here`, `Annex here`, `Tribute: op only`, `Place siege here` (drop a siege standard at your current position), `Refresh`, `Close`.
 
 `Place siege here` is enabled only when you are the leader of one of the war's sides and the war is not `RESOLVED`/`CANCELLED`. It sends `MessagePlaceSiegeStandardHere`, and the server validates against the same rules as `/bannermod siege place`.
+
+`Declare war` opens a small War Room wizard where a state leader picks attacker, defender, goal, and optional casus belli text. The server still applies the same validation and cooldown denial reasons as `/bannermod war declare`, and the command remains available.
+
+War outcome buttons are server-authoritative. `Cancel war`, `Occupy here`, and `Annex here` unlock for the attacking state leader on live wars and report success or denial in chat. `Tribute: op only` is visibly locked for normal leaders; forced tribute/peace/vassalization/demilitarization remain admin outcomes.
 
 When you stand inside the radius of a siege standard belonging to an active war, an additional HUD banner shows the war name, owning side, and current war state.
 

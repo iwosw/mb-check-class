@@ -18,6 +18,7 @@ import com.talhanation.bannermod.persistence.military.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -90,8 +91,8 @@ public class ClaimEvents {
     public void onPlayerJoin(EntityJoinLevelEvent event){
         if(event.getLevel().isClientSide()) return;
 
-        if(event.getEntity() instanceof Player){
-            recruitsClaimManager.broadcastClaimsToAll(server.overworld());
+        if(event.getEntity() instanceof ServerPlayer player){
+            recruitsClaimManager.sendClaimsToPlayer(player);
         }
     }
 
