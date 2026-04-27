@@ -35,6 +35,7 @@ Politics, claims, war declarations, allies, siege standards, occupations, and ou
 ## War Declaration Commands
 
 - War Room exposes a declare-war wizard in `WarListScreen`; it reuses the same server-side validation and cooldown denial reasons as the command path.
+- War Room also exposes an outcome panel: attacking leaders can cancel, occupy the current chunk, or annex the current chunk; tribute and forced peace/vassalize/demilitarize remain visibly op-only.
 - Declare command remains available: `/war declare <attacker> <defender> <goal> [casusBelli]`.
 - Info: `/war info <warId>`.
 - List: `/war list`.

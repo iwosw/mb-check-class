@@ -95,7 +95,7 @@
     {
       "id": "WAR-008",
       "title": "Player-facing war outcome negotiation UI",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War resolution actions exist, but cancel/peace/tribute/vassalize/demilitarize/occupy/annex are command-driven and partly admin-gated, so normal leaders lack a clear surrender, peace, or outcome flow.",
       "scope": [
@@ -109,11 +109,17 @@
         "Tribute, occupation, and annex success or denial is visible in War Room."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarListScreen now exposes outcome controls for selected live wars: attacker-leader Cancel war, Occupy here, Annex here, plus visible Tribute op-only lock. MessageResolveWarOutcome validates server-side authority, keeps tribute op-only, applies WarOutcomeApplier cancel/occupy/annex/tribute paths, sends chat success/denial messages, broadcasts notices, and immediately syncs the updated war snapshot to the acting player. Player guides EN/RU and politics warfare docs updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "WarDeclarationCommands exposes outcome commands and gates several behind permission level 2.",
         "WarListScreen renders selected war details but no outcome controls."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SETTLEMENT-008",
