@@ -97,6 +97,12 @@ public class DefaultBuildingValidator implements BuildingValidator {
         if (result.valid() || building.type() != BuildingType.HOUSE) {
             return result;
         }
+        // Recovery is meant to repair a previously-validated house whose zones became stale;
+        // a record with no zones at all (e.g. test fixture or corrupted persistence) has nothing
+        // to repair, so latching onto any nearby bed in the world would be a false positive.
+        if (building.zones().isEmpty()) {
+            return result;
+        }
 
         BuildingValidationRequest recoveredHouseRequest = tryRecoverHouseRequest(level, building);
         if (recoveredHouseRequest == null) {

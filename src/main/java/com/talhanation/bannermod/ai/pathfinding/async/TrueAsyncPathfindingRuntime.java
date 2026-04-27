@@ -143,6 +143,23 @@ public final class TrueAsyncPathfindingRuntime {
         return committer.commit(results, this::resolveCommitTarget, this::removeCommitTarget, results.size());
     }
 
+    /**
+     * Test-only seam. Re-registers a pending commit target without going through the scheduler,
+     * so a GameTest can drive {@link #commitForTesting(List)} after the production auto-tick
+     * has already polled and committed the real solver result (and therefore removed the
+     * original pending entry). Production code never calls this.
+     */
+    public void registerPendingTargetForTesting(AsyncPathNavigation navigation,
+                                                long requestId,
+                                                int reachRange,
+                                                BlockPos primaryTarget) {
+        Objects.requireNonNull(navigation, "navigation");
+        pendingTargets.put(
+                navigation.getMobUuid(),
+                new PendingCommitTarget(navigation, requestId, reachRange, null, null, primaryTarget)
+        );
+    }
+
     public void shutdown() {
         AsyncPathScheduler activeScheduler = scheduler;
         scheduler = null;

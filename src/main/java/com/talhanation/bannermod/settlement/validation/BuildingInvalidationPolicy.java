@@ -12,7 +12,13 @@ public final class BuildingInvalidationPolicy {
     public static BuildingValidationState stateForFailedRevalidation(ValidatedBuildingRecord record,
                                                                      BuildingInvalidationReason reason,
                                                                      long nowGameTime) {
-        long failedSince = record.invalidSinceGameTime() != 0L ? record.invalidSinceGameTime() : nowGameTime;
+        // invalidSinceGameTime() == 0L is the sentinel for "this record is VALID — no invalid
+        // window in effect", but a record's state is the authoritative answer. Using state lets
+        // 0L be a real game time when the record is already non-VALID (e.g. when nowGameTime is
+        // small and prior code stamped invalidSinceGameTime at the moment of first failure).
+        long failedSince = record.state() == BuildingValidationState.VALID
+                ? nowGameTime
+                : record.invalidSinceGameTime();
         long elapsed = Math.max(0L, nowGameTime - failedSince);
         long graceTicks = graceTicks(record.type(), reason);
 

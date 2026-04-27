@@ -1,0 +1,986 @@
+#!/usr/bin/env python3
+"""Compact repository context views for coding agents.
+
+Safety-oriented version:
+- streams command/search/diff output instead of capturing unbounded stdout
+- avoids expensive git diff --stat by default
+- omits untracked files from status unless requested
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+from collections import Counter, defaultdict, deque
+from pathlib import Path
+
+
+ROOT = Path.cwd()
+CACHE_DIR = ROOT / ".analysis" / "ai-context-proxy"
+CACHE_VERSION = 4
+RAW_LINE_LIMIT = 150
+EXACT_LINE_LIMIT = 120
+SYMBOL_LINE_LIMIT = 160
+SEARCH_MATCH_LIMIT = 40
+SEARCH_HARD_MATCH_LIMIT = 4000
+COMMAND_CHAR_LIMIT = 12000
+LOG_TAIL_LIMIT = 40
+LOG_HARD_RUNTIME_SECONDS = 900
+RAW_PRINT_CHAR_LIMIT = 12000
+DIFF_SAMPLE_LIMIT = 40
+IGNORED_DIRS = {
+    ".git",
+    ".gradle",
+    ".analysis",
+    "build",
+    "bin",
+    "run",
+    "run_gametest",
+    "node_modules",
+    "target",
+}
+
+
+CLASS_RE = re.compile(r"^\s*(?:(?:public|protected|private|abstract|final|static|sealed|non-sealed)\s+)*\s*(class|interface|enum|record)\s+([A-Za-z_$][\w$]*)")
+FIELD_RE = re.compile(
+    r"^\s*(public|protected|private)\s+(?:static\s+)?(?:final\s+)?([\w$<>\[\].?,\s]+?)\s+([A-Za-z_$][\w$]*)\s*(?:=|;)"
+)
+METHOD_RE = re.compile(
+    r"^\s*(public|protected|private)\s+(?:static\s+)?(?:final\s+)?(?:synchronized\s+)?(?:<[^>]+>\s+)?([\w$<>\[\].?,\s]+?)\s+([A-Za-z_$][\w$]*)\s*\(([^;{}]*)\)\s*(?:throws\s+[^{]+)?\s*\{?\s*$"
+)
+CTOR_RE = re.compile(
+    r"^\s*(public|protected|private)\s+([A-Za-z_$][\w$]*)\s*\(([^;{}]*)\)\s*(?:throws\s+[^{]+)?\s*\{?\s*$"
+)
+TODO_RE = re.compile(r"TODO|FIXME|HACK|XXX")
+CALL_RE = re.compile(r"\b([A-Za-z_$][\w$]*)\s*\(")
+LOG_NOISE_RE = re.compile(
+    r"ModLauncher running|LaunchServiceHandler|ForgeRegistry|REGISTRIES|ObjectHolderRegistry|"
+    r"MixinGradle|Writing refmap|Writing searge mappings|Deprecated Gradle features|UP-TO-DATE|"
+    r"Download .* mappings|Found existing cache|Starting Gradle Daemon",
+    re.I,
+)
+
+
+def fail(message: str, code: int = 1) -> None:
+    print(f"error: {message}", file=sys.stderr)
+    raise SystemExit(code)
+
+
+def resolve_path(raw: str) -> Path:
+    path = Path(raw)
+    if not path.is_absolute():
+        path = ROOT / path
+    try:
+        path.resolve().relative_to(ROOT.resolve())
+    except ValueError:
+        fail(f"path is outside repository: {raw}")
+    return path
+
+
+def resolve_paths(raw_paths: list[str] | None) -> list[Path]:
+    if not raw_paths:
+        return [ROOT]
+    return [resolve_path(raw) for raw in raw_paths]
+
+
+def rel(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(ROOT.resolve()))
+    except ValueError:
+        return str(path)
+
+
+def read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        fail(str(exc))
+
+
+def split_lines(path: Path) -> list[str]:
+    return read_text(path).splitlines()
+
+
+def cache_path(path: Path) -> Path:
+    key = hashlib.sha256(str(path.resolve()).encode("utf-8")).hexdigest()
+    return CACHE_DIR / f"{key}.json"
+
+
+def load_cached(path: Path) -> dict | None:
+    entry_path = cache_path(path)
+    if not entry_path.exists():
+        return None
+    try:
+        entry = json.loads(entry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    stat = path.stat()
+    if entry.get("version") != CACHE_VERSION:
+        return None
+    if entry.get("mtime_ns") != stat.st_mtime_ns or entry.get("size") != stat.st_size:
+        return None
+    return entry.get("summary")
+
+
+def store_cached(path: Path, summary: dict) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    stat = path.stat()
+    entry = {
+        "path": rel(path),
+        "version": CACHE_VERSION,
+        "mtime_ns": stat.st_mtime_ns,
+        "size": stat.st_size,
+        "summary": summary,
+    }
+    cache_path(path).write_text(json.dumps(entry, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def strip_line_comment(line: str) -> str:
+    return line.split("//", 1)[0]
+
+
+def brace_end(lines: list[str], start_index: int) -> int:
+    depth = 0
+    seen_open = False
+    for index in range(start_index, len(lines)):
+        line = strip_line_comment(lines[index])
+        depth += line.count("{")
+        if "{" in line:
+            seen_open = True
+        depth -= line.count("}")
+        if seen_open and depth <= 0:
+            return index + 1
+    return start_index + 1
+
+
+def compact_params(params: str) -> str:
+    params = " ".join(params.split())
+    return params
+
+
+def collect_java_signature(lines: list[str], start_index: int) -> str:
+    parts: list[str] = []
+    for index in range(start_index, min(len(lines), start_index + 12)):
+        stripped = lines[index].strip()
+        parts.append(stripped)
+        combined = " ".join(parts)
+        if "{" in combined or ";" in combined:
+            break
+    return " ".join(" ".join(parts).split())
+
+
+def method_calls(lines: list[str]) -> list[str]:
+    ignored = {"if", "for", "while", "switch", "catch", "return", "throw", "new", "super", "this", "try"}
+    calls: list[str] = []
+    seen: set[str] = set()
+    for line in lines[1:]:
+        for name in CALL_RE.findall(line):
+            if name in ignored or name in seen:
+                continue
+            seen.add(name)
+            calls.append(name)
+            if len(calls) >= 8:
+                return calls
+    return calls
+
+
+def summarize_java(path: Path) -> dict:
+    cached = load_cached(path)
+    if cached:
+        return cached
+
+    lines = split_lines(path)
+    package = None
+    imports: list[str] = []
+    classes: list[dict] = []
+    fields: list[dict] = []
+    methods: list[dict] = []
+    todos: list[dict] = []
+
+    for number, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if stripped.startswith("package "):
+            package = stripped.removeprefix("package ").rstrip(";")
+        elif stripped.startswith("import "):
+            imports.append(stripped.removeprefix("import ").rstrip(";"))
+
+        class_match = CLASS_RE.match(line)
+        if class_match:
+            classes.append({"kind": class_match.group(1), "name": class_match.group(2), "line": number})
+
+        field_match = FIELD_RE.match(line)
+        if field_match and "(" not in line:
+            fields.append({
+                "visibility": field_match.group(1),
+                "type": " ".join(field_match.group(2).split()),
+                "name": field_match.group(3),
+                "line": number,
+            })
+
+        method_match = None
+        ctor_match = None
+        if re.match(r"^(public|protected|private)\b", stripped):
+            signature = collect_java_signature(lines, number - 1)
+            method_match = METHOD_RE.match(signature)
+            ctor_match = CTOR_RE.match(signature)
+        if method_match:
+            end = brace_end(lines, number - 1)
+            methods.append({
+                "visibility": method_match.group(1),
+                "return": " ".join(method_match.group(2).split()),
+                "name": method_match.group(3),
+                "params": compact_params(method_match.group(4)),
+                "start": number,
+                "end": end,
+                "calls": method_calls(lines[number - 1 : end]),
+            })
+        elif ctor_match and classes and ctor_match.group(2) in {item["name"] for item in classes}:
+            end = brace_end(lines, number - 1)
+            methods.append({
+                "visibility": ctor_match.group(1),
+                "return": "<ctor>",
+                "name": ctor_match.group(2),
+                "params": compact_params(ctor_match.group(3)),
+                "start": number,
+                "end": end,
+                "calls": method_calls(lines[number - 1 : end]),
+            })
+
+        if TODO_RE.search(line):
+            todos.append({"line": number, "text": stripped[:160]})
+
+    summary = {
+        "path": rel(path),
+        "language": "java",
+        "lines": len(lines),
+        "package": package,
+        "imports": imports,
+        "classes": classes,
+        "fields": fields,
+        "methods": methods,
+        "todos": todos,
+    }
+    store_cached(path, summary)
+    return summary
+
+
+def summarize_generic(path: Path) -> dict:
+    lines = split_lines(path)
+    todos = [{"line": number, "text": line.strip()[:160]} for number, line in enumerate(lines, 1) if TODO_RE.search(line)]
+    headings = []
+    if path.suffix.lower() in {".md", ".markdown"}:
+        headings = [
+            {"line": number, "text": line.strip()[:160]}
+            for number, line in enumerate(lines, 1)
+            if line.lstrip().startswith("#")
+        ][:40]
+    return {
+        "path": rel(path),
+        "language": path.suffix.lstrip(".") or "text",
+        "lines": len(lines),
+        "todos": todos,
+        "headings": headings,
+    }
+
+
+def summarize_file(path: Path) -> dict:
+    if path.suffix == ".java":
+        return summarize_java(path)
+    return summarize_generic(path)
+
+
+def print_file_summary(summary: dict) -> None:
+    print(f"File: {summary['path']}")
+    print(f"Language: {summary.get('language', 'text')}")
+    print(f"Lines: {summary['lines']}")
+
+    if summary.get("package"):
+        print(f"Package: {summary['package']}")
+    if summary.get("classes"):
+        print("\nTypes:")
+        for item in summary["classes"]:
+            print(f"- {item['kind']} {item['name']} @L{item['line']}")
+    if summary.get("imports"):
+        imports = summary["imports"]
+        print(f"\nImports: {len(imports)}")
+        for item in imports[:20]:
+            print(f"- {item}")
+        if len(imports) > 20:
+            print(f"- ... {len(imports) - 20} more")
+    if summary.get("fields"):
+        print("\nFields:")
+        for item in summary["fields"][:60]:
+            print(f"- {item['visibility']} {item['type']} {item['name']} @L{item['line']}")
+        if len(summary["fields"]) > 60:
+            print(f"- ... {len(summary['fields']) - 60} more")
+    if summary.get("methods"):
+        print("\nMethods:")
+        for item in summary["methods"]:
+            signature = f"{item['name']}({item['params']})"
+            calls = f" calls={','.join(item['calls'])}" if item.get("calls") else ""
+            print(f"- {item['visibility']} {item['return']} {signature} @L{item['start']}-{item['end']}{calls}")
+    if summary.get("headings"):
+        print("\nHeadings:")
+        for item in summary["headings"]:
+            print(f"- L{item['line']}: {item['text']}")
+    if summary.get("todos"):
+        print("\nTODO/FIXME:")
+        for item in summary["todos"][:30]:
+            print(f"- L{item['line']}: {item['text']}")
+    print("\nUse exact ranges before editing:")
+    print(f"- ctx exact {summary['path']} <start> <end>")
+    if summary.get("methods"):
+        print(f"- ctx symbol {summary['path']} <method-or-type-name>")
+
+
+def print_numbered(lines: list[str], start_line: int) -> None:
+    for offset, line in enumerate(lines, start=start_line):
+        print(f"{offset}: {line}")
+
+
+def cmd_file(args: argparse.Namespace) -> None:
+    path = resolve_path(args.path)
+    if not path.exists() or not path.is_file():
+        fail(f"not a file: {args.path}")
+    lines = split_lines(path)
+    if args.raw or len(lines) <= RAW_LINE_LIMIT:
+        print_numbered(lines, 1)
+        return
+    print_file_summary(summarize_file(path))
+
+
+def cmd_exact(args: argparse.Namespace) -> None:
+    path = resolve_path(args.path)
+    if not path.exists() or not path.is_file():
+        fail(f"not a file: {args.path}")
+    start = max(1, args.start)
+    end = max(start, args.end)
+    if not args.force and end - start + 1 > EXACT_LINE_LIMIT:
+        fail(f"exact range is {end - start + 1} lines; limit is {EXACT_LINE_LIMIT}. Use --force if needed.")
+    lines = split_lines(path)
+    print_numbered(lines[start - 1 : end], start)
+
+
+def cmd_symbols(args: argparse.Namespace) -> None:
+    path = resolve_path(args.path)
+    if path.suffix != ".java":
+        print_file_summary(summarize_file(path))
+        return
+    summary = summarize_java(path)
+    print(f"Symbols: {summary['path']}")
+    for item in summary.get("classes", []):
+        print(f"- type {item['name']} @L{item['line']}")
+    for item in summary.get("fields", []):
+        print(f"- field {item['name']} @L{item['line']}")
+    for item in summary.get("methods", []):
+        print(f"- method {item['name']}({item['params']}) @L{item['start']}-{item['end']}")
+
+
+def cmd_symbol(args: argparse.Namespace) -> None:
+    path = resolve_path(args.path)
+    summary = summarize_file(path)
+    name = args.name
+    candidates = []
+    for item in summary.get("methods", []):
+        if item["name"] == name:
+            candidates.append(item)
+    for item in summary.get("classes", []):
+        if item["name"] == name:
+            start = item["line"]
+            end = brace_end(split_lines(path), start - 1)
+            candidates.append({"name": name, "start": start, "end": end})
+    if not candidates:
+        fail(f"symbol not found in {args.path}: {name}")
+    item = candidates[0]
+    extra = 20 if args.context else 0
+    start = max(1, item["start"] - extra)
+    end = item["end"] + extra
+    if not args.force and end - start + 1 > SYMBOL_LINE_LIMIT:
+        print(f"Symbol {name} spans L{item['start']}-{item['end']} ({item['end'] - item['start'] + 1} lines).")
+        print(f"Use: ctx exact {summary['path']} {item['start']} {item['end']} --force")
+        return
+    lines = split_lines(path)
+    print_numbered(lines[start - 1 : min(end, len(lines))], start)
+
+
+def iter_repo_files(roots: list[Path] | None = None) -> list[Path]:
+    files: list[Path] = []
+    for root in roots or [ROOT]:
+        if root.is_file():
+            files.append(root)
+            continue
+        if not root.exists() or not root.is_dir():
+            fail(f"not a file or directory: {rel(root)}")
+        for base, dirs, names in os.walk(root):
+            dirs[:] = [directory for directory in dirs if directory not in IGNORED_DIRS]
+            base_path = Path(base)
+            for name in names:
+                path = base_path / name
+                if path.is_file():
+                    files.append(path)
+    return files
+
+
+def cmd_repo_map(args: argparse.Namespace) -> None:
+    roots = resolve_paths(args.paths)
+    files = iter_repo_files(roots)
+    by_ext = Counter(path.suffix or "<none>" for path in files)
+    print("# Repo Map")
+    scope = ", ".join(rel(path) for path in roots)
+    print(f"Root: {ROOT}")
+    if scope != ".":
+        print(f"Scope: {scope}")
+    print(f"Files indexed: {len(files)}")
+    print("\nExtensions:")
+    for ext, count in by_ext.most_common(20):
+        print(f"- {ext}: {count}")
+
+    print("\nTop-level directories:")
+    top = Counter(rel(path).split(os.sep, 1)[0] for path in files)
+    for directory, count in top.most_common(30):
+        print(f"- {directory}: {count}")
+
+    java_files = [path for path in files if path.suffix == ".java"]
+    print("\nJava package roots:")
+    packages = Counter()
+    for path in java_files:
+        text = read_text(path)
+        match = re.search(r"^package\s+([^;]+);", text, flags=re.MULTILINE)
+        if match:
+            parts = match.group(1).split(".")
+            packages[".".join(parts[:4])] += 1
+    for package, count in packages.most_common(25):
+        print(f"- {package}: {count}")
+
+
+def build_rg_command(args: argparse.Namespace) -> list[str]:
+    command = [
+        "rg",
+        "--line-number",
+        "--no-heading",
+        "--max-filesize",
+        "2M",
+        "--max-count",
+        "20",
+    ]
+    for directory in sorted(IGNORED_DIRS):
+        command.extend(["--glob", f"!**/{directory}/**"])
+    command.append(args.pattern)
+    for path in args.paths:
+        command.append(path)
+    return command
+
+
+def cmd_search(args: argparse.Namespace) -> None:
+    command = build_rg_command(args)
+    process = subprocess.Popen(
+        command,
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        errors="replace",
+        bufsize=1,
+    )
+    assert process.stdout is not None
+    rows: list[str] = []
+    by_file: defaultdict[str, list[str]] = defaultdict(list)
+    total = 0
+    truncated = False
+
+    for raw_line in process.stdout:
+        line = raw_line.rstrip("\n")
+        if not line.strip():
+            continue
+        total += 1
+        if args.full and len(rows) < SEARCH_HARD_MATCH_LIMIT:
+            rows.append(line)
+        else:
+            path, _, rest = line.partition(":")
+            if len(by_file[path]) < 3:
+                by_file[path].append(rest[:180])
+        if total >= SEARCH_HARD_MATCH_LIMIT:
+            truncated = True
+            process.kill()
+            break
+
+    stderr = ""
+    if process.stderr is not None:
+        try:
+            stderr = process.stderr.read()
+        except Exception:
+            stderr = ""
+    returncode = process.wait()
+    if returncode not in (0, 1, -9) and not truncated:
+        sys.stderr.write(stderr)
+        raise SystemExit(returncode)
+
+    if args.full and total <= SEARCH_MATCH_LIMIT:
+        for line in rows:
+            print(line)
+        print(f"\nMatches: {total}")
+        return
+
+    if not args.full and total <= SEARCH_MATCH_LIMIT:
+        # For small results, print samples reconstructed from grouped data.
+        printed = 0
+        for path, samples in by_file.items():
+            for sample in samples:
+                print(f"{path}:{sample}")
+                printed += 1
+        print(f"\nMatches: {total}")
+        return
+
+    if args.full:
+        for line in rows[:SEARCH_HARD_MATCH_LIMIT]:
+            print(line)
+        if truncated:
+            print(f"\n... search truncated at {SEARCH_HARD_MATCH_LIMIT} matches ...")
+        print(f"\nMatches seen: {total}")
+        return
+
+    print(f"Found {total}{'+' if truncated else ''} matches in {len(by_file)} files. Showing grouped summary.")
+    print("\nTop files:")
+    for path, matches in sorted(by_file.items(), key=lambda item: len(item[1]), reverse=True)[:20]:
+        print(f"- {path}: >= {len(matches)} sample(s)")
+        print(f"  sample: {matches[0]}")
+    if truncated:
+        print(f"\nSearch truncated at {SEARCH_HARD_MATCH_LIMIT} matches.")
+    print("\nNarrow with:")
+    print(f"- ctx search {args.pattern!r} <path...>")
+    print("- ctx file <path>")
+    print("- ctx symbol <path> <symbol>")
+    print("- ctx search --full <pattern> <path...>")
+
+
+def format_command(argv: list[str]) -> str:
+    return " ".join(argv)
+
+
+def format_duration(seconds: float) -> str:
+    if seconds < 10:
+        return f"{seconds:.1f}s"
+    return f"{seconds:.0f}s"
+
+
+def normalize_warning(line: str) -> str:
+    stripped = line.strip()
+    match = re.search(r"warning:\s*(.*)", stripped, re.I)
+    if match:
+        message = match.group(1).strip()
+    elif re.search(r"\bwarning\b", stripped, re.I):
+        message = re.sub(r"^.*?\bwarning\b[:\s-]*", "", stripped, flags=re.I).strip()
+    else:
+        return ""
+    message = re.sub(r"^\[[^\]]+\]\s*", "", message)
+    message = re.sub(r"\s+", " ", message)
+    return message[:180] or "warning"
+
+
+def warning_samples(samples: list[str]) -> list[str]:
+    compact = []
+    seen = set()
+    for sample in samples:
+        match = re.search(r"([^\s:]+\.\w+):(\d+)", sample)
+        item = f"{Path(match.group(1)).name}:{match.group(2)}" if match else sample[:120]
+        if item in seen:
+            continue
+        seen.add(item)
+        compact.append(item)
+    return compact
+
+
+def cmd_log(args: argparse.Namespace) -> None:
+    if not args.argv:
+        fail("missing command after --")
+
+    started = time.monotonic()
+    process = subprocess.Popen(
+        args.argv,
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        errors="replace",
+    )
+    assert process.stdout is not None
+
+    total_lines = 0
+    total_chars = 0
+    printed_raw_chars = 0
+    build_lines: list[str] = []
+    task_summary: list[str] = []
+    errors: list[str] = []
+    project_frames: list[str] = []
+    warning_groups: dict[str, list[str]] = defaultdict(list)
+    tail = deque(maxlen=LOG_TAIL_LIMIT)
+    killed_for_timeout = False
+
+    try:
+        for raw_line in process.stdout:
+            if time.monotonic() - started > LOG_HARD_RUNTIME_SECONDS:
+                process.kill()
+                killed_for_timeout = True
+                break
+
+            total_lines += 1
+            total_chars += len(raw_line)
+            line = raw_line.rstrip("\n")
+
+            if args.raw:
+                if printed_raw_chars < RAW_PRINT_CHAR_LIMIT:
+                    print(line)
+                    printed_raw_chars += len(raw_line)
+                continue
+
+            if args.verbose:
+                if printed_raw_chars < COMMAND_CHAR_LIMIT:
+                    print(line)
+                    printed_raw_chars += len(raw_line)
+                continue
+
+            if LOG_NOISE_RE.search(line):
+                continue
+            if line.strip():
+                tail.append(line)
+            if re.search(r"BUILD (SUCCESSFUL|FAILED)", line):
+                build_lines.append(line)
+            if re.search(r"\d+ actionable tasks:", line):
+                task_summary.append(line)
+            if "warning" in line.lower():
+                key = normalize_warning(line)
+                if key and len(warning_groups[key]) < 3:
+                    warning_groups[key].append(line.strip())
+            if "com.talhanation.bannermod" in line and len(project_frames) < 80:
+                project_frames.append(line)
+            if re.search(r"\b(error|exception|failed|failure|caused by)\b", line, re.I) and len(errors) < 80:
+                errors.append(line)
+    finally:
+        try:
+            process.stdout.close()
+        except Exception:
+            pass
+
+    returncode = process.wait()
+    duration = time.monotonic() - started
+
+    if args.raw or args.verbose:
+        if printed_raw_chars >= (RAW_PRINT_CHAR_LIMIT if args.raw else COMMAND_CHAR_LIMIT):
+            print("\n... output truncated ...")
+        if killed_for_timeout:
+            print(f"\nCommand killed after {LOG_HARD_RUNTIME_SECONDS}s")
+            raise SystemExit(124)
+        if returncode != 0:
+            print(f"\nCommand exited with status {returncode}")
+        raise SystemExit(returncode)
+
+    kept = [
+        f"COMMAND: {format_command(args.argv)}",
+        f"STATUS: {'TIMEOUT' if killed_for_timeout else ('SUCCESS' if returncode == 0 else 'FAILED')} ({124 if killed_for_timeout else returncode})",
+        f"DURATION: {format_duration(duration)}",
+        f"RAW LOG SEEN: {total_lines} lines, {total_chars} chars",
+    ]
+
+    if build_lines or task_summary:
+        kept.append("\nGradle summary:")
+        kept.extend((build_lines + task_summary)[-6:])
+
+    if warning_groups:
+        kept.append("\nWarnings:")
+        for key, samples in sorted(warning_groups.items(), key=lambda item: len(item[1]), reverse=True)[:10]:
+            kept.append(f"- {len(samples)} sample(s): {key}")
+            for sample in warning_samples(samples)[:3]:
+                kept.append(f"  sample: {sample}")
+
+    if killed_for_timeout or returncode != 0:
+        if errors:
+            kept.append("\nRelevant errors:")
+            kept.extend(errors[:80])
+        if project_frames:
+            kept.append("\nProject stack frames:")
+            kept.extend(project_frames[:80])
+        if tail:
+            kept.append(f"\nLast {len(tail)} meaningful lines:")
+            kept.extend(list(tail))
+    elif tail and not build_lines and not task_summary:
+        kept.append("\nOutput summary:")
+        kept.extend(list(tail)[-12:])
+
+    print("\n".join(kept).rstrip())
+    if killed_for_timeout:
+        print(f"\nCommand killed after {LOG_HARD_RUNTIME_SECONDS}s")
+        raise SystemExit(124)
+    if returncode != 0:
+        print(f"\nCommand exited with status {returncode}")
+    raise SystemExit(returncode)
+
+
+def run_git_lines(command: list[str], timeout: int = 30, hard_line_limit: int = 5000) -> tuple[int, list[str], str, bool]:
+    try:
+        process = subprocess.Popen(
+            command,
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            errors="replace",
+            bufsize=1,
+        )
+    except OSError as exc:
+        fail(str(exc))
+    assert process.stdout is not None
+    started = time.monotonic()
+    lines: list[str] = []
+    truncated = False
+    while True:
+        if time.monotonic() - started > timeout:
+            process.kill()
+            stderr = process.stderr.read() if process.stderr else ""
+            return 124, lines, stderr, True
+        line = process.stdout.readline()
+        if not line:
+            break
+        if len(lines) < hard_line_limit:
+            lines.append(line.rstrip("\n"))
+        else:
+            truncated = True
+            process.kill()
+            break
+    stderr = process.stderr.read() if process.stderr else ""
+    returncode = process.wait()
+    return returncode, lines, stderr, truncated
+
+
+def status_kind(line: str) -> str:
+    code = line[:2]
+    if code == "??":
+        return "untracked"
+    if "R" in code:
+        return "renamed"
+    if "D" in code:
+        return "deleted"
+    if "A" in code:
+        return "added"
+    if "M" in code:
+        return "modified"
+    return "other"
+
+
+def status_area(line: str) -> str:
+    path = line[3:] if len(line) >= 3 else line
+    if " -> " in path:
+        path = path.rsplit(" -> ", 1)[1]
+    parts = path.split("/")
+    if len(parts) >= 4 and parts[0] == "src":
+        return "/".join(parts[:5]) if len(parts) >= 5 else "/".join(parts)
+    if len(parts) >= 2:
+        return "/".join(parts[:2])
+    return path
+
+
+def cmd_status(args: argparse.Namespace) -> None:
+    command = ["git", "status", "--porcelain=v1"]
+    if not args.untracked:
+        command.append("--untracked-files=no")
+    returncode, rows, stderr, truncated = run_git_lines(command, timeout=30, hard_line_limit=5000)
+    if returncode not in (0, -9) and not truncated:
+        sys.stderr.write(stderr)
+        raise SystemExit(returncode)
+
+    if args.full:
+        for line in rows[:5000]:
+            print(line)
+        if truncated:
+            print("\n... status truncated ...")
+        if not rows:
+            print("Git status: clean")
+        return
+
+    counts = Counter(status_kind(line) for line in rows)
+    print("Git status:")
+    if not rows:
+        print("- clean")
+        return
+    for kind in ("modified", "added", "deleted", "renamed", "untracked", "other"):
+        if counts[kind]:
+            print(f"- {kind}: {counts[kind]} files")
+    if truncated:
+        print("- output truncated")
+
+    areas = Counter(status_area(line) for line in rows)
+    print("\nTop changed areas:")
+    for area, count in areas.most_common(10):
+        print(f"- {area}: {count}")
+    if not args.untracked:
+        print("\nUntracked files omitted. Use `ctx status --untracked` if needed.")
+    print("Use `ctx status --full` for capped full list.")
+
+
+def cmd_diff(args: argparse.Namespace) -> None:
+    if args.full and not args.paths:
+        fail("refusing full repository diff. Use `ctx diff --full -- <path>` or plain `ctx diff`.")
+
+    if args.full:
+        command = ["git", "diff"]
+        if args.staged:
+            command.append("--cached")
+        command.append("--")
+        command.extend(args.paths)
+        stream_capped_command(command, label="Full diff", timeout=60, char_limit=COMMAND_CHAR_LIMIT)
+        return
+
+    # Default intentionally avoids expensive `git diff --stat`.
+    command = ["git", "diff", "--name-status"]
+    if args.staged:
+        command.append("--cached")
+    if args.paths:
+        command.append("--")
+        command.extend(args.paths)
+    returncode, rows, stderr, truncated = run_git_lines(command, timeout=30, hard_line_limit=5000)
+    if returncode not in (0, -9) and not truncated:
+        sys.stderr.write(stderr)
+        raise SystemExit(returncode)
+
+    print("Git diff summary:")
+    if not rows:
+        print("No diff.")
+        return
+    counts = Counter(status_kind(line) for line in rows)
+    for kind in ("modified", "added", "deleted", "renamed", "untracked", "other"):
+        if counts[kind]:
+            print(f"- {kind}: {counts[kind]} files")
+    if truncated:
+        print("- output truncated")
+
+    areas = Counter(status_area(f"   {line.split(maxsplit=1)[1] if len(line.split(maxsplit=1)) > 1 else line}") for line in rows)
+    print("\nTop changed areas:")
+    for area, count in areas.most_common(10):
+        print(f"- {area}: {count}")
+
+    print("\nSample changed files:")
+    for line in rows[:DIFF_SAMPLE_LIMIT]:
+        print(f"- {line}")
+    if len(rows) > DIFF_SAMPLE_LIMIT or truncated:
+        remaining = max(0, len(rows) - DIFF_SAMPLE_LIMIT)
+        print(f"- ... {remaining}{'+' if truncated else ''} more")
+
+    print("\nDefault diff avoids expensive `git diff --stat`.")
+    print("Use `ctx diff --full -- <path>` for capped full patch of one explicit path.")
+
+
+def stream_capped_command(command: list[str], label: str, timeout: int, char_limit: int) -> None:
+    process = subprocess.Popen(
+        command,
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        errors="replace",
+        bufsize=1,
+    )
+    assert process.stdout is not None
+    started = time.monotonic()
+    printed = 0
+    truncated = False
+    timed_out = False
+    print(f"{label}:")
+    for line in process.stdout:
+        if time.monotonic() - started > timeout:
+            process.kill()
+            timed_out = True
+            break
+        if printed + len(line) <= char_limit:
+            print(line, end="")
+            printed += len(line)
+        else:
+            truncated = True
+            process.kill()
+            break
+    stderr = process.stderr.read() if process.stderr else ""
+    returncode = process.wait()
+    if truncated:
+        print(f"\n... output truncated at {char_limit} chars ...")
+    if timed_out:
+        print(f"\n... command timed out after {timeout}s ...")
+        raise SystemExit(124)
+    if returncode != 0 and not truncated:
+        sys.stderr.write(stderr)
+        raise SystemExit(returncode)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="ctx", description="Compact context proxy for coding agents")
+    sub = parser.add_subparsers(dest="subcommand", required=True)
+
+    file_parser = sub.add_parser("file", help="Print a file or compact summary for large files")
+    file_parser.add_argument("path")
+    file_parser.add_argument("--raw", action="store_true", help="print raw file even when large")
+    file_parser.set_defaults(func=cmd_file)
+
+    exact_parser = sub.add_parser("exact", help="Print an exact line range")
+    exact_parser.add_argument("path")
+    exact_parser.add_argument("start", type=int)
+    exact_parser.add_argument("end", type=int)
+    exact_parser.add_argument("--force", action="store_true")
+    exact_parser.set_defaults(func=cmd_exact)
+
+    symbols_parser = sub.add_parser("symbols", help="List file symbols")
+    symbols_parser.add_argument("path")
+    symbols_parser.set_defaults(func=cmd_symbols)
+
+    symbol_parser = sub.add_parser("symbol", help="Print exact code for a named Java symbol")
+    symbol_parser.add_argument("path")
+    symbol_parser.add_argument("name")
+    symbol_parser.add_argument("--context", action="store_true", help="include 20 lines around the symbol")
+    symbol_parser.add_argument("--force", action="store_true")
+    symbol_parser.set_defaults(func=cmd_symbol)
+
+    repo_parser = sub.add_parser("repo-map", help="Print a compact repository map")
+    repo_parser.add_argument("paths", nargs="*", help="optional file/directory scopes")
+    repo_parser.set_defaults(func=cmd_repo_map)
+
+    search_parser = sub.add_parser("search", help="Run ripgrep with match compression")
+    search_parser.add_argument("--full", action="store_true", help="print every match, capped")
+    search_parser.add_argument("pattern")
+    search_parser.add_argument("paths", nargs="*", help="optional file/directory scopes")
+    search_parser.set_defaults(func=cmd_search)
+
+    log_parser = sub.add_parser("log", help="Run a command and compact noisy output")
+    log_parser.add_argument("--verbose", action="store_true", help="stream raw-ish output capped at 12k chars")
+    log_parser.add_argument("--raw", action="store_true", help="print raw command output capped at 12k chars")
+    log_parser.add_argument("argv", nargs=argparse.REMAINDER)
+    log_parser.set_defaults(func=cmd_log)
+
+    status_parser = sub.add_parser("status", help="Print compact git status")
+    status_parser.add_argument("--full", action="store_true", help="print capped full porcelain status")
+    status_parser.add_argument("--untracked", action="store_true", help="include untracked files")
+    status_parser.set_defaults(func=cmd_status)
+
+    diff_parser = sub.add_parser("diff", help="Print compact git diff summary")
+    diff_parser.add_argument("--staged", action="store_true", help="show staged diff")
+    diff_parser.add_argument("--full", action="store_true", help="print capped full git diff for explicit paths only")
+    diff_parser.add_argument("paths", nargs="*", help="optional path scopes")
+    diff_parser.set_defaults(func=cmd_diff)
+
+    return parser
+
+
+def main() -> None:
+    parser = build_parser()
+    args = parser.parse_args()
+    if getattr(args, "subcommand", None) == "log" and args.argv and args.argv[0] == "--":
+        args.argv = args.argv[1:]
+    if getattr(args, "subcommand", None) == "diff" and args.paths and args.paths[0] == "--":
+        args.paths = args.paths[1:]
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

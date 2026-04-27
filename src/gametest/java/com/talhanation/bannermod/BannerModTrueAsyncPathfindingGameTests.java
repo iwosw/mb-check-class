@@ -98,6 +98,13 @@ public class BannerModTrueAsyncPathfindingGameTests {
         // we want to prove is that the COMMITTER recognises the entity-gone state and charges
         // the per-recruit discard counter, not that the solver runs.
         helper.runAfterDelay(20, () -> {
+            // Re-register the pending target before the synthetic commit: production auto-tick
+            // (RecruitWorldLifecycleService → TrueAsyncPathfindingRuntime.tick) may have already
+            // polled and committed the real solver result, which removes the entry placed by
+            // enqueue. Without re-registering, resolveCommitTarget would return null without
+            // bumping the per-recruit entity-gone counter and the assertion below would race.
+            TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(
+                    navigation, /* requestId */ 0L, /* reachRange */ 1, absoluteTarget);
             PathResult synthetic = new PathResult(
                     recruit.getUUID(),
                     /* requestId */ 0L,
