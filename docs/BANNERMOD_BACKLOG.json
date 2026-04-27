@@ -1177,8 +1177,8 @@
     {
       "id": "SETTLEMENT-010",
       "title": "In-game settlement founding onboarding",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "The code supports a multi-step founding path, but a player must already know to create a political state, craft the surveyor, set anchor and zones, validate in air, and then use a separate wand for later prefab work. docs/STATUS.md explicitly calls full settlement onboarding incomplete.",
       "scope": [
         "Add player-facing founding guidance covering political state creation, starter fort requirements, surveyor mode/role workflow, validation-in-air, claim bootstrap rules, and next steps after success.",
@@ -1191,8 +1191,14 @@
         "The in-game guidance names the correct tools and interactions without requiring source or docs."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Settlement Surveyor tooltip now gives in-game founding sequence: create/join state, build Starter Fort with anchor plus AUTHORITY_POINT and INTERIOR zones, validate with right-click air, then expand with Building Placement Wand. Existing validation/bootstrap messages cover missing settlement, invalid fort, town too close, claim authority, and bootstrap success/failure. Updated EN/RU localization. Verified with compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "SETTLEMENT-011",
@@ -1328,8 +1334,8 @@
     {
       "id": "POL-004",
       "title": "Player-facing settlement-to-state progression",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "PoliticalStatePromotionPolicy gates command-side promotion from settlement to state on starter fort or town hall plus storage and market, but the active War Room state UI only exposes create/rename/capital/form/color/charter actions. Players cannot discover or complete the faction progression loop from settlement infrastructure to political status in UI.",
       "scope": [
         "Add a player-facing promotion/status flow that shows current political entity status, required settlement infrastructure, and missing requirements.",
@@ -1343,8 +1349,14 @@
         "Command and UI promotion checks agree on requirements and authority."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "War Room state detail panel now shows state-promotion requirements and a Promote STATE action. The action sends a server-authoritative status request using PoliticalStatePromotionPolicy, reusing command-side requirements and returning accepted/denied chat feedback including missing infrastructure. Updated EN/RU localization. Verified with compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }

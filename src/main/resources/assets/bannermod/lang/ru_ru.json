@@ -1449,6 +1449,12 @@
   "gui.bannermod.states.help.settlement": "Поселение = место",
   "gui.bannermod.states.help.state": "Государство = политическая сторона",
   "gui.bannermod.states.invalid_uuid": "Недопустимый UUID.",
+  "gui.bannermod.states.progression.requirement_fort": "- стартовый форт или ратуша",
+  "gui.bannermod.states.progression.requirement_market": "- рынок",
+  "gui.bannermod.states.progression.requirement_storage": "- склад",
+  "gui.bannermod.states.progression.requirements": "Для повышения до STATE нужно:",
+  "gui.bannermod.states.progression.server_checked": "Серверный ответ назовет недостающие требования.",
+  "gui.bannermod.states.promote_state": "Повысить STATE",
   "gui.bannermod.states.remove_co_leader": "Убрать со-лидера",
   "gui.bannermod.states.rename": "Переименовать",
   "gui.bannermod.states.select_state": "Выберите государство.",
@@ -1459,8 +1465,12 @@
   "gui.bannermod.states.tooltip.need_authority": "Нужно право управлять выбранным государством.",
   "gui.bannermod.states.tooltip.need_leader": "Это действие доступно только лидеру государства.",
   "gui.bannermod.states.tooltip.no_co_leaders": "У этого государства нет со-лидеров для удаления.",
+  "gui.bannermod.states.tooltip.promote_state": "Запросить серверную проверку и повышение до STATE.",
   "gui.bannermod.states.tooltip.select_state": "Сначала выберите государство.",
   "gui.bannermod.states.waiting_sync": "Ожидание синхронизации государств с сервером"
-  ,"gui.bannermod.inv.tooltip.siege_engineer_disabled": "Повышение до осадного инженера пока не реализовано.",
+  ,"bannermod.surveyor.tooltip.founding_1": "Основание: сначала создай или вступи в государство.",
+  "bannermod.surveyor.tooltip.founding_2": "Построй Starter Fort: якорь + зоны AUTHORITY_POINT и INTERIOR.",
+  "bannermod.surveyor.tooltip.founding_3": "ПКМ в воздухе валидирует; дальше расширяйся Building Placement Wand.",
+  "gui.bannermod.inv.tooltip.siege_engineer_disabled": "Повышение до осадного инженера пока не реализовано.",
   "chat.bannermod.promote.unsupported_profession": "Это повышение пока не поддерживается."
 }

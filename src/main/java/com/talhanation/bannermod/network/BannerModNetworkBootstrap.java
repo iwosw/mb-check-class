@@ -24,6 +24,7 @@ import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.network.messages.war.MessageRespondAllyInvite;
 import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityStatus;
 import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
 
 /**
@@ -194,6 +195,7 @@ public class BannerModNetworkBootstrap {
         MessageDeclareWar.class,
         MessageResolveWarOutcome.class,
         MessageUpdateCoLeader.class,
+        MessageSetPoliticalEntityStatus.class,
     };
 
     private BannerModNetworkBootstrap() {
