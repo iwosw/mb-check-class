@@ -483,7 +483,7 @@
     {
       "id": "PERF-003",
       "title": "Budget true-async pathfinding snapshot work",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "True async pathfinding can still spend server-thread time building region snapshots before scheduler admission/backpressure, so large path bursts may scan/copy regions even when work is later rejected.",
       "scope": [
@@ -497,17 +497,23 @@
         "Profiling counters expose budget hits and pre-build rejections."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "TrueAsyncPathfindingRuntime now calls AsyncPathScheduler.canAccept(priority) before RegionSnapshotBuilder.build, so requests rejected by queue/priority capacity return before snapshot capture and increment pathfinding.true_async.runtime.fallback.scheduler_rejected_before_snapshot. RegionSnapshotBuilder now accepts AsyncPathfindingSnapshotBudgetNanos, checks budget after cell flags and dynamic obstacle capture, and returns BUDGET_EXCEEDED without scheduler submit. Runtime records snapshot.build_nanos and existing snapshot.reject.<status> counters include budget_exceeded. AsyncPathSchedulerTest covers canAccept global/priority caps; RegionSnapshotBuilderTest covers budget-exceeded rejection. Verified ./gradlew compileJava and focused async pathfinding unit tests."
+        }
+      ],
       "evidence": [
         "TrueAsyncPathfindingRuntime.enqueue builds snapshots before async scheduling decisions.",
         "RegionSnapshotBuilder.captureDynamicObstacles scans regions.",
         "Config exposes AsyncPathfindingSnapshotBudgetNanos."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "PERF-004",
       "title": "Dirty/incremental war-state sync",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War sync polls every second by converting full war, political, siege, invite, occupation, revolt, and schedule state to NBT for hashing, then sends full snapshots on change. Idle servers pay serialization cost for no gameplay change.",
       "scope": [
@@ -521,12 +527,18 @@
         "Changed state still reaches logged-in clients promptly."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarStateBroadcaster no longer computes a per-second full-record NBT hash. Client-visible war SavedData dirty listeners now also bump WarSyncDirtyTracker; broadcaster checks that version each second and returns without encoding or sending when unchanged. Snapshot payloads are cached by dirty version and reused for login/full broadcast until the next dirty mark. Removed old stateHash serialization path. Verified ./gradlew compileJava, ./gradlew test --tests com.talhanation.bannermod.war.events.WarSyncDirtyTrackerTest, and ctx search confirmed stateHash/toTag().hashCode polling removal."
+        }
+      ],
       "evidence": [
         "WarStateBroadcaster.onServerTick computes stateHash.",
         "stateHash serializes all records.",
         "WarClientState.encode produces the full client mirror payload."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "PERF-005",

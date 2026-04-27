@@ -25,10 +25,20 @@ public final class RegionSnapshotBuilder {
         return buildWithAccess(request, new ServerLevelWorldAccess(level));
     }
 
+    public SnapshotBuildResult build(ServerLevel level, PathRequestSnapshot request, long budgetNanos) {
+        Objects.requireNonNull(level, "level");
+        return buildWithAccess(request, new ServerLevelWorldAccess(level), budgetNanos);
+    }
+
     SnapshotBuildResult buildWithAccess(PathRequestSnapshot request, WorldAccess access) {
+        return buildWithAccess(request, access, Long.MAX_VALUE);
+    }
+
+    SnapshotBuildResult buildWithAccess(PathRequestSnapshot request, WorldAccess access, long budgetNanos) {
         Objects.requireNonNull(request, "request");
         Objects.requireNonNull(access, "access");
         long startedAt = System.nanoTime();
+        long budget = budgetNanos <= 0L ? Long.MAX_VALUE : budgetNanos;
 
         if (!access.isEntityAlive(request.entityUuid())) {
             return fail(request, SnapshotStatus.ENTITY_GONE, startedAt);
@@ -49,7 +59,13 @@ public final class RegionSnapshotBuilder {
         int sizeY = bounds.maxY - bounds.minY + 1;
         int sizeZ = bounds.maxZ - bounds.minZ + 1;
         byte[] flags = access.buildCellFlags(bounds);
+        if (System.nanoTime() - startedAt > budget) {
+            return fail(request, SnapshotStatus.BUDGET_EXCEEDED, startedAt);
+        }
         List<DynamicObstacleSnapshot> dynamicObstacles = access.captureDynamicObstacles(bounds, request.entityUuid());
+        if (System.nanoTime() - startedAt > budget) {
+            return fail(request, SnapshotStatus.BUDGET_EXCEEDED, startedAt);
+        }
 
         RegionSnapshot region = new RegionSnapshot(
                 new BlockPos(bounds.minX, bounds.minY, bounds.minZ),

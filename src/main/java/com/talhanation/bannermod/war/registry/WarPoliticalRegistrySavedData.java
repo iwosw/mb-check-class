@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.war.registry;
 
+import com.talhanation.bannermod.war.events.WarSyncDirtyTracker;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
@@ -16,7 +17,12 @@ public class WarPoliticalRegistrySavedData extends SavedData {
 
     private WarPoliticalRegistrySavedData(PoliticalRegistryRuntime runtime) {
         this.runtime = runtime;
-        this.runtime.setDirtyListener(this::setDirty);
+        this.runtime.setDirtyListener(this::markDirty);
+    }
+
+    private void markDirty() {
+        setDirty();
+        WarSyncDirtyTracker.markDirty();
     }
 
     public static WarPoliticalRegistrySavedData get(ServerLevel level) {
