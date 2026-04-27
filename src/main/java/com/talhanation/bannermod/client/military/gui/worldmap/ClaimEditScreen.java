@@ -146,7 +146,6 @@ public class ClaimEditScreen extends RecruitsScreenBase {
                 button -> {
                     this.claim.setName(editNameBox.getValue());
                     this.claim.setPlayer(playerInfo);
-                    this.claim.setOwnerPoliticalEntityId(null);
                     this.claim.setBlockInteractionAllowed(this.allowBlockInteracting);
                     this.claim.setBlockPlacementAllowed(this.allowBlockPlacing);
                     this.claim.setBlockBreakingAllowed(this.allowBlockBreaking);

@@ -36,7 +36,7 @@ public class SettlementSurveyorToolItem extends Item {
             if (!level.isClientSide) {
                 ValidationSession session = SurveyorSessionCodec.read(stack);
                 if (session == null) {
-                    player.sendSystemMessage(Component.literal("No survey session. Mark an anchor first.").withStyle(ChatFormatting.RED));
+                    player.sendSystemMessage(Component.translatable("bannermod.surveyor.no_session").withStyle(ChatFormatting.RED));
                     return InteractionResultHolder.sidedSuccess(stack, false);
                 }
                 if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
@@ -49,7 +49,7 @@ public class SettlementSurveyorToolItem extends Item {
             ValidationSession session = getOrCreateSession(player, stack);
             SurveyorMode nextMode = nextMode(session.mode());
             SurveyorSessionCodec.write(stack, session.withMode(nextMode));
-            player.sendSystemMessage(Component.literal("Surveyor mode: " + nextMode.name()).withStyle(ChatFormatting.GOLD));
+            player.sendSystemMessage(Component.translatable("bannermod.surveyor.mode", modeLabel(nextMode)).withStyle(ChatFormatting.GOLD));
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
@@ -67,7 +67,7 @@ public class SettlementSurveyorToolItem extends Item {
         if (player.isShiftKeyDown()) {
             if (!level.isClientSide) {
                 ZoneRole nextRole = cycleSelectedRole(stack);
-                player.sendSystemMessage(Component.literal("Survey marker role: " + nextRole.name()).withStyle(ChatFormatting.YELLOW));
+                player.sendSystemMessage(Component.translatable("bannermod.surveyor.role", roleLabel(nextRole)).withStyle(ChatFormatting.YELLOW));
             }
             return InteractionResult.SUCCESS;
         }
@@ -79,14 +79,14 @@ public class SettlementSurveyorToolItem extends Item {
         ValidationSession session = getOrCreateSession(player, stack);
         if (session.anchorPos().equals(BlockPos.ZERO)) {
             SurveyorSessionCodec.write(stack, session.withAnchor(clicked));
-            player.sendSystemMessage(Component.literal("Survey anchor set: " + clicked.toShortString()).withStyle(ChatFormatting.AQUA));
+            player.sendSystemMessage(Component.translatable("bannermod.surveyor.anchor_set", clicked.toShortString()).withStyle(ChatFormatting.AQUA));
             return InteractionResult.SUCCESS;
         }
 
         CompoundTag tag = stack.getOrCreateTag();
         if (!tag.contains(TAG_PENDING_CORNER)) {
             tag.putLong(TAG_PENDING_CORNER, clicked.asLong());
-            player.sendSystemMessage(Component.literal("Zone corner A set: " + clicked.toShortString()).withStyle(ChatFormatting.AQUA));
+            player.sendSystemMessage(Component.translatable("bannermod.surveyor.corner_a", clicked.toShortString()).withStyle(ChatFormatting.AQUA));
             return InteractionResult.SUCCESS;
         }
 
@@ -95,7 +95,7 @@ public class SettlementSurveyorToolItem extends Item {
         ZoneRole role = selectedRole(stack);
         ValidationSession updated = session.upsertSelection(role, cornerA, clicked, clicked);
         SurveyorSessionCodec.write(stack, updated);
-        player.sendSystemMessage(Component.literal("Zone " + role.name() + " captured.").withStyle(ChatFormatting.GREEN));
+        player.sendSystemMessage(Component.translatable("bannermod.surveyor.zone_captured", roleLabel(role)).withStyle(ChatFormatting.GREEN));
         return InteractionResult.SUCCESS;
     }
 
@@ -104,8 +104,21 @@ public class SettlementSurveyorToolItem extends Item {
         super.appendHoverText(stack, level, tooltip, flag);
         ValidationSession session = SurveyorSessionCodec.read(stack);
         SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
-        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.mode", mode.name())
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.mode", modeLabel(mode))
                 .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.role", roleLabel(selectedRole(stack)))
+                .withStyle(ChatFormatting.GRAY));
+        if (session != null) {
+            tooltip.add(Component.translatable("bannermod.surveyor.tooltip.anchor", session.anchorPos().equals(BlockPos.ZERO) ? "-" : session.anchorPos().toShortString())
+                    .withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("bannermod.surveyor.tooltip.zones", session.selections().size())
+                    .withStyle(ChatFormatting.GRAY));
+        }
+        CompoundTag tag = stack.getTag();
+        if (tag != null && tag.contains(TAG_PENDING_CORNER)) {
+            tooltip.add(Component.translatable("bannermod.surveyor.tooltip.pending", BlockPos.of(tag.getLong(TAG_PENDING_CORNER)).toShortString())
+                    .withStyle(ChatFormatting.GOLD));
+        }
         tooltip.add(Component.translatable("bannermod.surveyor.tooltip.use")
                 .withStyle(ChatFormatting.DARK_GRAY));
         tooltip.add(Component.translatable("bannermod.surveyor.tooltip.shift")
@@ -146,5 +159,13 @@ public class SettlementSurveyorToolItem extends Item {
         } catch (IllegalArgumentException ex) {
             return ZoneRole.INTERIOR;
         }
+    }
+
+    private static Component modeLabel(SurveyorMode mode) {
+        return Component.translatable("bannermod.surveyor.mode." + mode.name().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    private static Component roleLabel(ZoneRole role) {
+        return Component.translatable("bannermod.surveyor.role." + role.name().toLowerCase(java.util.Locale.ROOT));
     }
 }
