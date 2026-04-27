@@ -675,7 +675,15 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
             return false;
         } else {
             amt = RecruitCombatOverrideService.prepareIncomingDamage(this, dmg, amt);
-            return super.hurt(dmg, amt);
+            boolean applied = super.hurt(dmg, amt);
+            // COMBAT-001: feed the suppression accumulator only on landed damage. Blocked /
+            // shielded hits and zero-damage events do not count toward SUSTAINED_FIRE — the
+            // recruit only feels the pressure that actually reaches it.
+            if (applied && amt > 0.0F && this.level() instanceof ServerLevel sl) {
+                com.talhanation.bannermod.combat.RecruitMoraleService.recordDamageTaken(
+                        this, sl.getGameTime());
+            }
+            return applied;
         }
     }
 

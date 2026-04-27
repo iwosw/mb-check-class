@@ -40,6 +40,14 @@ public final class RecruitMoraleService {
     /** Once a squad routs, it disengages for 200 ticks (10 seconds) before re-evaluation. */
     public static final long ROUT_WINDOW_TICKS = 200L;
 
+    /**
+     * Sliding-window length (ticks) used by the suppression accumulator. A damage event
+     * older than {@code gameTime - SUPPRESSION_WINDOW_TICKS} is treated as no longer
+     * contributing to the SUSTAINED_FIRE token. 60 ticks (3 seconds) matches the gameplay
+     * intent of "sustained fire" — multiple hits within a short burst, not a slow trickle.
+     */
+    public static final long SUPPRESSION_WINDOW_TICKS = 60L;
+
     private static final Map<UUID, Entry> STATE = new ConcurrentHashMap<>();
 
     private RecruitMoraleService() {
@@ -49,11 +57,18 @@ public final class RecruitMoraleService {
      * Per-recruit timeline entry. {@code lastState} is the previous evaluation result so the
      * service can detect transitions; {@code routEndTick} is the absolute game-tick at which
      * the rout window expires (0 means "not currently routed").
+     *
+     * <p>{@code damageWindowStartTick} / {@code damageEventsInWindow} drive the suppression
+     * accumulator: the window auto-resets when a new event arrives more than
+     * {@link #SUPPRESSION_WINDOW_TICKS} after the window started, so a slow trickle of one hit
+     * every few seconds never trips SUSTAINED_FIRE.</p>
      */
     public static final class Entry {
         public MoraleState lastState = MoraleState.STEADY;
         public long routEndTick;
         public long lastEvaluationTick = Long.MIN_VALUE;
+        public long damageWindowStartTick = Long.MIN_VALUE;
+        public int damageEventsInWindow;
     }
 
     public static Entry stateFor(UUID recruitUuid) {
@@ -65,6 +80,65 @@ public final class RecruitMoraleService {
         if (recruit == null) return false;
         Entry entry = STATE.get(recruit.getUUID());
         return entry != null && entry.routEndTick > gameTime;
+    }
+
+    /**
+     * Last evaluated {@link MoraleState} for the recruit, or {@link MoraleState#STEADY} if no
+     * entry exists yet (no evaluation tick has run for this recruit). The damage path reads
+     * this to apply {@link MoralePolicy#attackMultiplierFor(MoraleState)} on outgoing hits.
+     */
+    public static MoraleState lastStateOf(AbstractRecruitEntity recruit) {
+        if (recruit == null) return MoraleState.STEADY;
+        Entry entry = STATE.get(recruit.getUUID());
+        return entry == null ? MoraleState.STEADY : entry.lastState;
+    }
+
+    /** Outgoing-damage multiplier the recruit damage path should apply this swing. */
+    public static double attackMultiplierFor(AbstractRecruitEntity recruit) {
+        return MoralePolicy.attackMultiplierFor(lastStateOf(recruit));
+    }
+
+    /**
+     * Record one damage-taken event against the recruit's suppression window. Idempotent
+     * within a single tick (callers must not re-record the same hit). The window auto-resets
+     * when a new event arrives more than {@link #SUPPRESSION_WINDOW_TICKS} after
+     * {@code damageWindowStartTick}; otherwise the event count is incremented.
+     */
+    public static void recordDamageTaken(UUID recruitUuid, long gameTime) {
+        if (recruitUuid == null) return;
+        Entry entry = stateFor(recruitUuid);
+        // Open a fresh window on the first event (the Long.MIN_VALUE sentinel would
+        // otherwise overflow under subtraction), or whenever the previous window has
+        // expired. Otherwise accumulate inside the still-open window.
+        if (entry.damageEventsInWindow == 0
+                || gameTime - entry.damageWindowStartTick > SUPPRESSION_WINDOW_TICKS) {
+            entry.damageWindowStartTick = gameTime;
+            entry.damageEventsInWindow = 1;
+        } else {
+            entry.damageEventsInWindow++;
+        }
+    }
+
+    /** Convenience overload used from the entity hurt() hook. */
+    public static void recordDamageTaken(AbstractRecruitEntity recruit, long gameTime) {
+        if (recruit != null) {
+            recordDamageTaken(recruit.getUUID(), gameTime);
+        }
+    }
+
+    /**
+     * Number of damage events recorded within the still-open suppression window at
+     * {@code gameTime}. Returns 0 once the window has expired so a stale window never
+     * keeps tripping SUSTAINED_FIRE after the actor walks out of the line of fire.
+     */
+    public static int recentDamageEventCount(UUID recruitUuid, long gameTime) {
+        if (recruitUuid == null) return 0;
+        Entry entry = STATE.get(recruitUuid);
+        if (entry == null || entry.damageEventsInWindow == 0) return 0;
+        if (gameTime - entry.damageWindowStartTick > SUPPRESSION_WINDOW_TICKS) {
+            return 0;
+        }
+        return entry.damageEventsInWindow;
     }
 
     /** Drop the recruit's entry. Called from the entity-leave hook. */

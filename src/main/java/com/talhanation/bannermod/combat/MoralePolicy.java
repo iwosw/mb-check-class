@@ -41,7 +41,25 @@ public final class MoralePolicy {
     /** Pressure threshold at which the squad becomes shaken. */
     private static final int SHAKEN_PRESSURE_THRESHOLD = 2;
 
+    /**
+     * Outgoing-damage multiplier applied to a SHAKEN squad's melee/ranged hits. The "shaken
+     * hit-rate dampening" half of COMBAT-001 acceptance — a squad under pressure that has not
+     * routed yet still fights, but visibly worse than a steady squad. Tunable; a future
+     * Forge-config layer can override.
+     */
+    public static final double SHAKEN_ATTACK_DAMPING_MULTIPLIER = 0.7D;
+
     private MoralePolicy() {
+    }
+
+    /**
+     * Damage multiplier the combat-AI hookup applies to a recruit's outgoing hit based on its
+     * current {@link MoraleState}. STEADY and ROUTED both return 1.0 (rout disengages
+     * separately via the rout goal, so a routed recruit is not swinging anyway). Returns
+     * {@link #SHAKEN_ATTACK_DAMPING_MULTIPLIER} for SHAKEN.
+     */
+    public static double attackMultiplierFor(MoraleState state) {
+        return state == MoraleState.SHAKEN ? SHAKEN_ATTACK_DAMPING_MULTIPLIER : 1.0D;
     }
 
     public static MoraleAssessment evaluate(MoraleSnapshot snapshot) {
