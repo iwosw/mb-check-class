@@ -479,6 +479,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## PERF-001 — Async navigation audit for every custom mob
 
+**Status: DONE 2026-04-27.** Audit pass; the entire BannerMod custom-mob hierarchy already routes through `AsyncPathNavigation`. No "sync vanilla navigation in a custom mob" gap remains.
+
 **Зачем.** MP-scale fights/settlements need non-blocking navigation for all custom mobs, not just some recruits.
 
 **Scope.**
@@ -491,6 +493,18 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 - No custom mob uses expensive sync pathing without explicit reason.
 - Compile/test coverage or documented verification for navigation class selection.
+
+**Audit 2026-04-27.** Inheritance walk over `src/main/java/com/talhanation/bannermod/entity/**` plus the navigation classes under `src/main/java/com/talhanation/bannermod/ai/{pathfinding,civilian,military}/**`:
+
+- `AsyncPathfinderMob` is the root of the BannerMod entity hierarchy (`AbstractInventoryEntity` extends it). Its default `createNavigation` returns `AsyncGroundPathNavigation`, which extends the async `AsyncPathNavigation` base. Every `AbstractInventoryEntity` subclass therefore inherits an async navigation: `AbstractCitizenEntity`, all 14 recruit subtypes (RecruitEntity, RecruitShieldmanEntity, BowmanEntity, CrossBowmanEntity, NomadEntity, ScoutEntity, MessengerEntity, CaptainEntity, CommanderEntity, HorsemanEntity, AssassinEntity, AssassinLeaderEntity, VillagerNobleEntity, AbstractStrategicFireRecruitEntity), and every worker subtype (FarmerEntity, FishermanEntity, MinerEntity, BuilderEntity, LumberjackEntity, AnimalFarmerEntity, MerchantEntity).
+- `AbstractRecruitEntity.createNavigation` overrides the default with `RecruitPathNavigation`, which itself extends `AsyncGroundPathNavigation`. The recruit nav internally toggles `AsyncPathfinder` vs sync `PathFinder` based on `RecruitsServerConfig.UseAsyncPathfinding`, but the navigation object itself is always async-driven through `AsyncPathNavigation`.
+- The Forge-mixin'd `MobMixin#createNavigation` swaps an `AbstractHorse`'s nav for `RecruitsHorsePathNavigation` (also `extends AsyncGroundPathNavigation`) when the horse is being ridden by a recruit.
+- `CaptainEntity#getNavigation` swaps in `SailorPathNavigation` (`extends AsyncWaterBoundPathNavigation extends AsyncPathNavigation`) when the captain is riding a `Boat`.
+- `CitizenEntity` overrides `createNavigation` to return `AsyncGroundPathNavigation`. (Same default the parent already provides — kept for clarity.)
+- `AbstractWorkerEntity.createNavigation` would have returned the sync `DebugSyncWorkerPathNavigation`, but the override is **commented out** in source with a `// TODO ONLY TO TEST NODE EVALUATOR` note. Workers therefore inherit the recruit nav via `AbstractChunkLoaderEntity → BowmanEntity → … → AbstractRecruitEntity`. The debug class stays in-tree as a node-evaluator development seam; the new audit lock test asserts it remains explicitly sync so a future reader does not mistake it for the production worker navigation.
+- `FishingBobberEntity` (Projectile) and `AbstractWorkAreaEntity` (Entity) have no `PathNavigation` — they don't navigate.
+
+Locked in by `AsyncNavigationClassAuditTest` (6 cases — RecruitPathNavigation / RecruitsHorsePathNavigation / SailorPathNavigation / AsyncGroundPathNavigation / AsyncWaterBoundPathNavigation are async; DebugSyncWorkerPathNavigation is explicitly sync). A future regression that, say, makes a recruit subclass return `new GroundPathNavigation(...)` directly will still slip past this lock — the lock asserts class hierarchy, not call-site behaviour. That gap can be closed later with a reflective entity-instantiation test if one becomes worthwhile; today the cost would be high (Forge bootstrap + entity registry init in a unit-test JVM) and the audit is already explicit about the inheritance chain.
 
 ---
 
