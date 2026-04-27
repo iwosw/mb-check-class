@@ -22,6 +22,7 @@ Last updated: 2026-04-26.
 - Leader group and companion group assignment packet paths now require direct recruit control and owned groups before mutating leader/group state.
 - Claim protection is explicitly Overworld-only; Nether/End chunks at matching X/Z no longer inherit Overworld claim permissions.
 - War/state client mirrors clear on login/logout, expose sync-pending state, and open War Room/state screens refresh automatically when snapshots change.
+- Player login now sends full claim state only to the joining player; remaining full-claim broadcasts build one sync packet per event instead of one per recipient.
 - GameTests are being hardened around claim worker growth, dedicated-server ownership, player cycle, settlement degradation, and upkeep currency sourcing.
 
 ## Known Open Areas

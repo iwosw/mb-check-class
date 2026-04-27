@@ -531,7 +531,7 @@
     {
       "id": "PERF-005",
       "title": "Avoid full claim-list rebroadcast on login",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "A player join broadcasts the full claim list to all players, serializing the entire claim set per recipient. This scales with claims times online players for a single login.",
       "scope": [
@@ -545,12 +545,18 @@
         "Claim mutation still updates clients that need the changed state."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "ClaimEvents.onPlayerJoin now calls RecruitsClaimManager.sendClaimsToPlayer for the joining ServerPlayer only instead of broadcastClaimsToAll. RecruitsClaimManager.broadcastClaimsToAll now creates one MessageToClientUpdateClaims per full-sync event before looping recipients, so RecruitsClaim.toNBT(list) runs once per broadcast event instead of once per player. Targeted single-claim mutation updates still use broadcastClaimUpdateTo unchanged. Verified ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "ClaimEvents.onPlayerJoin calls full broadcast.",
         "RecruitsClaimManager.broadcastClaimsToAll sends full state to every player.",
         "MessageToClientUpdateClaims serializes all claims."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "PERF-006",
