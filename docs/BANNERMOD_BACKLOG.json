@@ -507,7 +507,7 @@
     {
       "id": "PERF-004",
       "title": "Dirty/incremental war-state sync",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War sync polls every second by converting full war, political, siege, invite, occupation, revolt, and schedule state to NBT for hashing, then sends full snapshots on change. Idle servers pay serialization cost for no gameplay change.",
       "scope": [
@@ -521,12 +521,18 @@
         "Changed state still reaches logged-in clients promptly."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarStateBroadcaster no longer computes a per-second full-record NBT hash. Client-visible war SavedData dirty listeners now also bump WarSyncDirtyTracker; broadcaster checks that version each second and returns without encoding or sending when unchanged. Snapshot payloads are cached by dirty version and reused for login/full broadcast until the next dirty mark. Removed old stateHash serialization path. Verified ./gradlew compileJava, ./gradlew test --tests com.talhanation.bannermod.war.events.WarSyncDirtyTrackerTest, and ctx search confirmed stateHash/toTag().hashCode polling removal."
+        }
+      ],
       "evidence": [
         "WarStateBroadcaster.onServerTick computes stateHash.",
         "stateHash serializes all records.",
         "WarClientState.encode produces the full client mirror payload."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "PERF-005",

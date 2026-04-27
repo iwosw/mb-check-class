@@ -23,6 +23,7 @@ Last updated: 2026-04-26.
 - Claim protection is explicitly Overworld-only; Nether/End chunks at matching X/Z no longer inherit Overworld claim permissions.
 - War/state client mirrors clear on login/logout, expose sync-pending state, and open War Room/state screens refresh automatically when snapshots change.
 - Player login now sends full claim state only to the joining player; remaining full-claim broadcasts build one sync packet per event instead of one per recipient.
+- War-state sync now uses dirty/version tracking and cached payloads instead of serializing all war records every idle second for hash polling.
 - GameTests are being hardened around claim worker growth, dedicated-server ownership, player cycle, settlement degradation, and upkeep currency sourcing.
 
 ## Known Open Areas
