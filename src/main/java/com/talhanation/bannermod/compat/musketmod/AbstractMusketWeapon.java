@@ -1,13 +1,12 @@
 package com.talhanation.bannermod.compat.musketmod;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.compat.IWeapon;
+import com.talhanation.bannermod.compat.weapon.IGunWeapon;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -17,9 +16,9 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-//general realization iweapon for musket mod
+// general realization IGunWeapon for musket mod
 
-public abstract class AbstractMusketWeapon implements IWeapon {
+public abstract class AbstractMusketWeapon implements IGunWeapon {
 
     public AbstractMusketWeapon() {
         MusketModReflection.init();
@@ -100,11 +99,6 @@ public abstract class AbstractMusketWeapon implements IWeapon {
     }
 
     @Override
-    public AbstractArrow getProjectileArrow(LivingEntity shooter) {
-        return null;
-    }
-
-    @Override
     @Nullable
     public AbstractHurtingProjectile shoot(LivingEntity shooter, AbstractHurtingProjectile projectile, double x, double y, double z) {
         if (!shooter.getCommandSenderWorld().isClientSide() && MusketModReflection.hasMusketMod) {
@@ -144,11 +138,6 @@ public abstract class AbstractMusketWeapon implements IWeapon {
     }
 
     @Override
-    public AbstractArrow shootArrow(LivingEntity shooter, AbstractArrow projectile, double x, double y, double z) {
-        return null;
-    }
-
-    @Override
     @Nullable
     public SoundEvent getShootSound() {
         if (!MusketModReflection.hasMusketMod) return null;
@@ -176,22 +165,7 @@ public abstract class AbstractMusketWeapon implements IWeapon {
     }
 
     @Override
-    public boolean isGun() {
-        return true;
-    }
-
-    @Override
     public boolean canMelee() {
-        return false;
-    }
-
-    @Override
-    public boolean isBow() {
-        return false;
-    }
-
-    @Override
-    public boolean isCrossBow() {
         return false;
     }
 

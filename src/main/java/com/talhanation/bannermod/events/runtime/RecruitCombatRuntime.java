@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.events.runtime;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.compat.IWeapon;
+import com.talhanation.bannermod.compat.musketmod.MusketModWeaponHelper;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
@@ -133,7 +133,7 @@ public final class RecruitCombatRuntime {
         if (BannerModMain.isMusketModLoaded) {
             Entity sourceEntity = event.getSource().getEntity();
             AbstractRecruitEntity owner = RecruitEntityAccess.asRecruit(sourceEntity);
-            if (owner != null && IWeapon.isMusketModWeapon(owner.getMainHandItem())) {
+            if (owner != null && MusketModWeaponHelper.isMusketModWeapon(owner.getMainHandItem())) {
                 LivingEntity impactEntity = event.getEntity();
                 if (!canAttack(owner, impactEntity)) {
                     event.setCanceled(true);
