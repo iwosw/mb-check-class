@@ -69,6 +69,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-001 — First 10 minutes onboarding
 
+**Status: DONE 2026-04-27.**
+
 **Зачем.** Новый игрок должен понять старт: fort/town hall, surveyor, wand, citizens, professions.
 
 **Scope.**
@@ -86,6 +88,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Citizens показывают профессию, назначение и проблему, если работы нет.
 
 **Progress 2026-04-27.** First-touch tool guidance improved without changing the underlying placement flow. `SettlementSurveyorToolItem` now exposes tooltip lines for current survey mode, normal right-click flow (anchor -> zone corners), and Shift-right-click mode/role cycling; `BuildingPlacementWandItem` now exposes normal right-click and Shift-right-click behavior alongside the existing mode / selected prefab / tap-count lines. English and Russian localization keys were added. This helps the starter-fort / surveyor / wand portion of the first-10-minutes flow, but the slice remains open until citizen profession state and invalid-building causes are surfaced in a full onboarding path.
+
+**Progress 2026-04-27.** Closed by adding direct worker inspection UI on right-click: workers now report profession, assignment (`unassigned`, `missing work area`, or concrete work-area type), and last idle/blocked problem token. Existing surveyor/wand validation feedback already surfaces invalid-building causes; together with the prior tool guidance this satisfies the first-10-minutes onboarding Acceptance without adding a separate tutorial framework.
 
 ---
 
@@ -196,6 +200,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## SETTLEMENT-007 — Sea-trade production consumer loop
 
+**Status: DONE 2026-04-27.**
+
 **Зачем.** Sea-trade entrypoints are recognized, but production/consumption gameplay is still thin.
 
 **Scope.**
@@ -212,6 +218,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 **Progress 2026-04-26.** Existing settlement snapshot trade-route/sea-entrypoint hints are documented for players; no new production consumer loop landed in this slice.
 
 **Progress 2026-04-27.** Pure aggregation layer landed: `BannerModSeaTradeSummary.summarise(entrypoints)` returns a `Summary(exportableByItem, importableByItem, bottlenecks)` value record. Filtered routes contribute their `requestedCount` to every item their filter names; unfiltered (`isAny`) routes contribute a `UNFILTERED_ROUTE` bottleneck token instead of polluting per-item totals. Directional gaps surface as `NO_PORT`, `ONLY_EXPORTS`, or `ONLY_IMPORTS`. Locked in by `BannerModSeaTradeSummaryTest` (8 cases). **Neither acceptance criterion is met** by this slice alone — "sea trade changes what settlement can produce/obtain" needs the production-loop hookup to consume the summary; "UI explains trade bottlenecks and benefits" needs a settlement UI surface to render the bottleneck tokens. The aggregation layer is the prerequisite both consumers will build on.
+
+**Progress 2026-04-27.** Closed by consuming the summary in `BannerModSettlementService`: imports/exports now seed `sea_import:<item>` and `sea_export:<item>` desired goods, supply coverage resolves against route totals, and `BannerModSettlementTradeRouteHandoffSeed` persists player-facing benefit/bottleneck lines. Governor screen recommendations append those lines, so the settlement UI explains sea-trade benefits and bottlenecks through the existing packet/screen path.
 
 ---
 
@@ -448,6 +456,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 
 ## COMBAT-003 — Role-aware formation planner and shield-wall pressure
 
+**Status: DONE 2026-04-27.**
+
 **Зачем.** Formations need to behave like tactical units, not loose mobs.
 
 **Scope.**
@@ -465,6 +475,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Isolated units lose formation benefits.
 
 **Progress 2026-04-27.** Pure-logic slot planner landed in `com.talhanation.bannermod.combat`. `FormationSlot` enum (FRONT_RANK / SUPPORT_RANK / REAR_RANK / FLANK / UNASSIGNED), `FormationPlanner.slotFor(role)` maps every `CombatRole` (INFANTRY -> FRONT_RANK, PIKE -> SUPPORT_RANK, RANGED -> REAR_RANK, CAVALRY -> FLANK), `FormationPlanner.assign(roles)` returns an insertion-ordered count per slot. `shieldWallReady(assignment)` returns true at `SHIELD_WALL_MIN_FRONT_RANK = 3` for the upcoming "advance slowly" toggle. `isIsolated(distance)` / `cohesionMultiplier(distance)` apply `ISOLATION_PENALTY_MULTIPLIER = 0.5` beyond `FORMATION_COHESION_RADIUS = 8` blocks. Locked in by `FormationPlannerTest` (11 cases). **None of the three acceptance criteria are observably met by this slice** — they all require the combat-AI formation goal that physically positions members per slot, which is the open follow-up.
+
+**Progress 2026-04-27.** Closed by wiring role-aware physical line slots into line formations: infantry/shields front, pikes support, ranged rear, cavalry flanks. Shield-wall recruits now use reduced hold-position movement speed, and recruits isolated from their registered formation slot lose line/shield-wall mitigation instead of keeping formation benefits.
 
 ---
 
@@ -586,6 +598,8 @@ Locked in by `AsyncNavigationClassAuditTest` (6 cases — RecruitPathNavigation 
 - Large recruit crowds have measured render improvement.
 - Close-range readability is preserved.
 - Optimization is backed by profiling evidence, not guesswork.
+
+**Progress 2026-04-27.** Added `recruit.render` to the debug profiling summary so crowd-impostor counters are visible in `/recruits debugManager profiling`. The impostor path now records normal-render skips, query result count, impostor candidates, frustum-culls, rendered impostors, and impostor render nanoseconds. Task remains OPEN until a real client profiling run records before/after crowd improvement and near-range readability.
 
 ---
 
