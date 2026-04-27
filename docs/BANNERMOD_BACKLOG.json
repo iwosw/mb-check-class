@@ -112,7 +112,7 @@
     {
       "id": "SETTLEMENT-008",
       "title": "Manual validated buildings create gameplay vacancies",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Docs present manual building validation as a normal survival growth path, but auto-staffing vacancies are registered from prefab BuildArea completion, making manual validated workplaces feel inert compared with prefabs.",
       "scope": [
@@ -126,12 +126,18 @@
         "Prefab and manual paths share tests for vacancy registration parity."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Implemented manual validated building vacancies for supported workplace types (farm, mine, lumber camp, architect workshop): validation registers vacancies from ValidatedBuildingRecord; citizen assignment/conversion can use non-entity manual anchors; validation and inspection show vacancy output. Added prefab/manual parity unit coverage. Verified with ./gradlew compileJava and ./gradlew test --tests com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntimeTest."
+        }
+      ],
       "evidence": [
         "docs/GAMEPLAY_FLOW_EN.md describes manual validation and profession buildings.",
         "docs/CITIZENS_PROFESSIONS_RECRUITS_EN.md notes manual validated buildings and prefab vacancies are not equivalent.",
         "PrefabAutoStaffingRuntime.onBuildAreaCompleted registers vacancies only after prefab completion."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SETTLEMENT-009",
@@ -209,7 +215,7 @@
     {
       "id": "SEC-001",
       "title": "Server-authorize claim deletion packets",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Claim deletion must be server-authoritative. A packet path that trusts client-authored claim data can delete or broadcast state without proving sender ownership, dimension, political authority, or op/admin status.",
       "scope": [
@@ -223,11 +229,17 @@
         "Malformed or missing sender packets reject cleanly without crash or mutation."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "MessageDeleteClaim now rejects null senders, disabled claiming, non-Overworld senders, missing managers, malformed/missing UUID payloads, unknown claim UUIDs, and unauthorized actors. It resolves the persisted server-side claim by UUID and removes that object only after shared ClaimPacketAuthority allows owner, political leader/co-leader, or admin. Added ClaimPacketAuthorityTest covering non-owner denial, owner success, admin success, political leader/co-leader success, and malformed inputs. Verified with ./gradlew compileJava and ./gradlew test --tests com.talhanation.bannermod.network.messages.military.ClaimPacketAuthorityTest."
+        }
+      ],
       "evidence": [
         "MessageDeleteClaim deletes from client-supplied claim data.",
         "MessageUpdateClaim has a guarded canEditClaim path that can be reused or unified."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SEC-002",
