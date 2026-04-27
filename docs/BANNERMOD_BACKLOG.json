@@ -853,7 +853,7 @@
     {
       "id": "DOC-001",
       "title": "Update revolt documentation for objective-based resolution",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Runtime revolt resolution is objective-presence based, but UAT documentation still describes the behavior as timer-only/not objective-driven.",
       "scope": [
@@ -864,11 +864,17 @@
         "No current docs claim implemented revolts are only timer-based or not objective-driven."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "docs/UAT_RUNBOOK.md revolt section now describes objective-presence resolution: rebel-only success, defender/occupier-present failure, and empty objective remaining pending. Verified stale timer-only/not-objective wording is absent via ctx search and code compiles with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/WarRevoltScheduler.java",
         "docs/UAT_RUNBOOK.md"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SIEGE-001",
@@ -1033,7 +1039,7 @@
     {
       "id": "MSM-002",
       "title": "Add explicit Medieval Siege Machines compatibility adapter",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Current MSM integration only detects mod presence; there is no optional API/entity adapter for supported machine capabilities.",
       "scope": [
@@ -1046,11 +1052,17 @@
         "Unsupported MSM machines are ignored safely without hard dependency crashes."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "MedievalSiegeMachinesCompat now exposes a no-hard-dependency detectedMachines adapter that scans known MSM/legacy entity ids through ForgeRegistries and reports supported operations (crew seat, aim, load, fire) while ignoring missing entities safely. Build without MSM verified with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/compat/MedievalSiegeMachinesCompat.java",
         "build.gradle"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "MSM-003",
