@@ -626,7 +626,7 @@
     {
       "id": "PERF-006",
       "title": "Cache and throttle formation-map snapshots",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Formation-map snapshot requests scan indexed recruits and compute role/relation data per visible recruit. Repeated polling by multiple players can become repeated O(all recruits) server work.",
       "scope": [
@@ -640,11 +640,17 @@
         "Contact correctness remains unchanged after movement/group changes."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Implemented per-player/per-dimension formation-map snapshot request cache with 5-tick windows keyed by RecruitIndex version, same-tick request throttling, cached contact reuse, relation context reuse inside snapshot builds, and RuntimeProfilingCounters for requests, throttles, cache hits, recruit candidates, and emitted contacts. RecruitIndex version increments on join/leave/owner/group/chunk-bucket changes so cached snapshots invalidate on relevant group/movement topology changes. Verified with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "MessageRequestFormationMapSnapshot.executeServerSide directly builds snapshots.",
         "FormationMapSnapshotService.buildSnapshot iterates recruits and computes relation through relationFor."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "PERF-007",

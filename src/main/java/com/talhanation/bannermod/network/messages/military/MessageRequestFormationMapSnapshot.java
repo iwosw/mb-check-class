@@ -22,9 +22,11 @@ public class MessageRequestFormationMapSnapshot implements Message<MessageReques
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer sender = context.getSender();
         if (sender == null) return;
+        FormationMapSnapshotService.SnapshotRequestResult result = FormationMapSnapshotService.requestSnapshot(sender);
+        if (result.throttled()) return;
         BannerModMain.SIMPLE_CHANNEL.send(
                 PacketDistributor.PLAYER.with(() -> sender),
-                new MessageToClientUpdateFormationMapSnapshot(FormationMapSnapshotService.buildSnapshot(sender))
+                new MessageToClientUpdateFormationMapSnapshot(result.contacts())
         );
     }
 
