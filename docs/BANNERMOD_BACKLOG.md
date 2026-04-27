@@ -465,6 +465,8 @@ The War Room now also ships a battle-window banner. `WarServerConfig.resolveSche
 - Archers/crossbows prefer rear positions.
 - They fallback when cavalry/melee breaks through.
 
+**Progress 2026-04-27.** Pure-logic spacing policy landed in `com.talhanation.bannermod.combat`. New `RangedAction` (STAY / FALLBACK / LATERAL_SHIFT) is the movement intent the upcoming combat-AI hookup will read. `RangedSpacingPolicy.decide(distanceToNearestEnemyMelee, distanceToOwnMeleeLineFront, firingLaneBlockedByAlly)` evaluates three rules in priority order: enemy melee inside `ENEMY_FALLBACK_RADIUS = 6.0` -> FALLBACK (acceptance: "fallback when cavalry/melee breaks through"); own melee line collapsed inside `FRIENDLY_BACKLINE_BUFFER = 4.0` -> FALLBACK (re-establish rear-rank); ally occluding firing cone -> LATERAL_SHIFT; otherwise STAY (acceptance: "archers prefer rear positions"). FALLBACK supersedes LATERAL_SHIFT so the unit never sidesteps when retreating is the only safe move. Defensive sanitization treats negative / NaN distances as POSITIVE_INFINITY so a buggy caller cannot accidentally lock the unit into permanent fallback. Locked in by `RangedSpacingPolicyTest` (9 cases — well-spaced STAY, close-enemy FALLBACK, boundary distance is not "close", friendly-line collapse FALLBACK, lane-blocked LATERAL_SHIFT, enemy-fallback beats lateral, friendly-fallback beats lateral, infinity distances act as no constraint, negative / NaN distances act as no constraint). Combat-AI wiring (snapping ranged goals to consume the action via the existing path navigation) is the open follow-up.
+
 ---
 
 ## COMBAT-006 — Siege objective targeting and escort
