@@ -127,7 +127,7 @@ Battle tips:
 - pikes get an anti-cavalry bonus in `BRACE` (knockback resistance +0.5, ×0.7 incoming cavalry damage);
 - ranged units need room behind the front line — the `LINE_HOLD` / `SHIELD_WALL` leash automatically pulls them back.
 
-You can set per-unit stances from the recruit's inventory (`RecruitInventoryScreen`); group stances live in the command screen.
+You can set per-unit stances from the recruit's inventory (`RecruitInventoryScreen`); group stances live in the command screen. Recruit commands now report chat acknowledgements: accepted recruit count for immediate orders, rejected empty/no-eligible selections, replaced queued orders, or pending order counts when a queued command path is used.
 
 ## War Room (`U`)
 
