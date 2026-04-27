@@ -12,5 +12,6 @@ run_gametest/
 recruits/
 workers/
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 progress
 .planning_legacy_*
