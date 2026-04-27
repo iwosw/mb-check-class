@@ -82,7 +82,12 @@ public final class SettlementBootstrapService {
         registry.put(settlement);
 
         int spawnedWorkers = spawnStarterCitizens(level, authorityPos, claim);
-        return BootstrapResult.success("Settlement bootstrapped. Starter citizens spawned: " + spawnedWorkers, settlement);
+        return BootstrapResult.success(starterWorkerReadinessMessage(spawnedWorkers), settlement);
+    }
+
+    static String starterWorkerReadinessMessage(int spawnedWorkers) {
+        return "Settlement bootstrapped. Starter workers spawned: " + spawnedWorkers
+                + ". Ready: farmer has a starter crop area. Waiting: miner needs a mine, lumberjack needs a lumber camp, builder needs an architect workshop/build area. Free citizens spawn separately from worker jobs.";
     }
 
     public static BootstrapResult bootstrapSettlement(ServerLevel level,
