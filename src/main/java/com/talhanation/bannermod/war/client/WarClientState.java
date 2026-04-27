@@ -49,6 +49,7 @@ public final class WarClientState {
     private static Map<UUID, PoliticalEntityRecord> entitiesById = Map.of();
     private static Map<UUID, OccupationRecord> occupationsById = Map.of();
     private static int version = 0;
+    private static boolean hasSnapshot = false;
 
     private WarClientState() {
     }
@@ -125,6 +126,10 @@ public final class WarClientState {
         return version;
     }
 
+    public static boolean hasSnapshot() {
+        return hasSnapshot;
+    }
+
     public static void clear() {
         entities = List.of();
         wars = List.of();
@@ -135,6 +140,7 @@ public final class WarClientState {
         revolts = List.of();
         entitiesById = Map.of();
         occupationsById = Map.of();
+        hasSnapshot = false;
         version++;
     }
 
@@ -160,6 +166,7 @@ public final class WarClientState {
             occById.put(occupation.id(), occupation);
         }
         occupationsById = Map.copyOf(occById);
+        hasSnapshot = true;
         version++;
     }
 
