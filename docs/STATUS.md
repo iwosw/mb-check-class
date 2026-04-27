@@ -19,6 +19,7 @@ Last updated: 2026-04-26.
 - Manual validated farm, mine, lumber camp, and architect workshop buildings now create citizen profession vacancies and show the vacancy output during validation/inspection.
 - Claim deletion packets now resolve and delete only persisted server-side claims after the same owner/co-leader/admin authority check used by claim updates.
 - Face, ranged-fire, and upkeep military packets now use the real server sender UUID for authority instead of client-supplied owner UUID fields.
+- Leader group and companion group assignment packet paths now require direct recruit control and owned groups before mutating leader/group state.
 - GameTests are being hardened around claim worker growth, dedicated-server ownership, player cycle, settlement degradation, and upkeep currency sourcing.
 
 ## Known Open Areas

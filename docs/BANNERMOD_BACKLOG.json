@@ -273,7 +273,7 @@
     {
       "id": "SEC-003",
       "title": "Close group and leader assignment authority gaps",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Group leadership and companion assignment mutate recruit/group state; proximity checks are not enough protection in multiplayer if the sender does not own or control the target recruit/group.",
       "scope": [
@@ -292,11 +292,17 @@
           "text": "Added authority gates to MessageSetLeaderGroup and MessageAssignGroupToCompanion: target leaders must pass RecruitCommandAuthority.canDirectlyControl, assigned groups must be owned via RecruitCommandAuthority.ownedGroup, and companion assignment filters recruits through canDirectlyControl before mutating leader/group state. Verified ./gradlew compileJava. Not closing yet because backlog acceptance requires server tests for cross-player denial and owner success."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "MessageSetLeaderGroup and MessageAssignGroupToCompanion now require RecruitCommandAuthority.canDirectlyControl for target leaders, RecruitCommandAuthority.ownedGroup for group assignment, and filter companion-assigned recruits through canDirectlyControl before mutation. Added GroupAssignmentAuthorityGameTests covering outsider denial and owner success for leader group assignment and companion group assignment. Verified ./gradlew compileJava and ./gradlew compileGameTestJava."
+        }
+      ],
       "evidence": [
         "MessageSetLeaderGroup and MessageAssignGroupToCompanion mutate state after weak or partial checks.",
         "MessageGroup shows a safer owned-group pattern."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SEC-004",
