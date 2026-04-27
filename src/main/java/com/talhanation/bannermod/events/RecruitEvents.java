@@ -87,8 +87,14 @@ public class RecruitEvents {
             return;
         }
 
+        if (!entitiesByProfession.containsKey(profession)) {
+            player.sendSystemMessage(Component.translatable("chat.bannermod.promote.unsupported_profession"));
+            return;
+        }
+
         EntityType<? extends AbstractRecruitEntity> companionType = entitiesByProfession.get(profession);
         if (companionType == null) {
+            player.sendSystemMessage(Component.translatable("chat.bannermod.promote.unsupported_profession"));
             return;
         }
         AbstractRecruitEntity abstractRecruit = companionType.create(recruit.getCommandSenderWorld());

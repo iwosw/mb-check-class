@@ -1005,7 +1005,7 @@
     {
       "id": "MSM-001",
       "title": "Fix Siege-Engineer promotion contract",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The client enables Siege-Engineer promotion when MSM is loaded, but server promotion mapping has no profession 5 and silently returns.",
       "scope": [
@@ -1018,11 +1018,17 @@
         "RecruitEvents.entitiesByProfession and PromoteScreen agree on profession id 5 behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Disabled the Siege-Engineer promotion button regardless of MSM loaded state because no profession 5 recruit mapping exists yet; added disabled tooltip and server-side unsupported-profession feedback for unmapped promotion ids so client/server agree that profession 5 is unavailable until implemented. Verified with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/client/military/gui/PromoteScreen.java:119",
         "src/main/java/com/talhanation/bannermod/events/RecruitEvents.java:66"
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "MSM-002",
@@ -1198,7 +1204,7 @@
     {
       "id": "UI-008",
       "title": "Settlement surveyor tool feedback and localization",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "SettlementSurveyorToolItem is the core UI for founding and manual validation, but it uses hardcoded English literals, cryptic enum names for modes/roles, no preview of captured zones, and no compact checklist before validation. This makes the main settlement loop difficult even when mechanics work.",
       "scope": [
@@ -1212,13 +1218,19 @@
         "After validation, the player sees whether a fort bootstrapped a settlement, a building was registered, or which requirement blocked success."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "SettlementSurveyorToolItem now uses localized readable mode/role labels and localized feedback for missing session, mode/role cycling, anchor, corner, and zone capture. Tooltip now shows mode, marker role, anchor, captured zone count, and pending corner. SurveyorFeedbackFormatter separates validation blockers, warnings, and pass summary through localized messages. Added en_us and ru_ru keys. Verified with ./gradlew compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "SEC-006",
       "title": "Preserve political ownership when editing claims",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "ClaimEditScreen.save mutates the local claim and calls claim.setOwnerPoliticalEntityId(null) before MessageUpdateClaim. Editing a settlement claim can silently strip the political owner, breaking settlement faction binding and later worker/faction logic even if the edit only changed name or permissions.",
       "scope": [
@@ -1232,8 +1244,14 @@
         "Any denied ownership transfer gives a visible server-side reason and does not mutate the client map as accepted."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "ClaimEditScreen no longer clears ownerPoliticalEntityId before sending MessageUpdateClaim; server MessageUpdateClaim already preserves existing political owner/player/admin fields for non-admin edits. Verified with ./gradlew compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "POL-004",
