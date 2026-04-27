@@ -1322,5 +1322,13 @@
   "description.recruits.peaceTreaty": "При принятии этого договора\nобе фракции не смогут атаковать\nдруг друга на протяжении действия.",
   "chat.recruits.text.messenger_target_player_not_accepted": "%s: Я прибыл, но %s не принял наше мирное предложение.",
   "chat.recruits.text.messenger_info_to_target_treaty": "%s: У меня важное предложение от %s",
-  "key.bannermod.war_room_key": "Открыть экран войн"
+  "key.bannermod.war_room_key": "Открыть экран войн",
+  "item.bannermod.building_placement_wand": "Жезл размещения зданий",
+  "bannermod.prefab.wand.tooltip.mode": "Режим: %s",
+  "bannermod.prefab.wand.tooltip.use": "ПКМ: использовать текущий режим.",
+  "bannermod.prefab.wand.tooltip.shift": "Shift+ПКМ: сменить режим или сбросить точки.",
+  "item.bannermod.settlement_surveyor_tool": "Инструмент землемера поселения",
+  "bannermod.surveyor.tooltip.mode": "Режим замера: %s",
+  "bannermod.surveyor.tooltip.use": "ПКМ по блокам: якорь, затем углы зоны.",
+  "bannermod.surveyor.tooltip.shift": "Shift+ПКМ: сменить роль маркера или режим замера."
 }

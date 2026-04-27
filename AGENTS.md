@@ -71,8 +71,10 @@ After coding, provide:
 
 10. Backlog hygiene
 - `docs/BANNERMOD_BACKLOG.md` is the single canonical backlog. When you add a new task, write the section in full: `## <ID> — <Title>`, **Зачем**, **Scope** (concrete deliverables), **Acceptance** (verifiable success criteria). Skipping any of these makes the task invisible to future sessions.
-- When a task is finished, mark it closed by inserting a `**Status: DONE <YYYY-MM-DD>.**` line at the top of its section (right under the heading) and keeping the existing scope/acceptance/progress paragraphs in place as the historical record. Never silently delete a closed task.
-- Open tasks have no `Status:` line; in-progress slices use a `**Progress <YYYY-MM-DD>.**` paragraph at the bottom of the section.
+- **DONE = every Acceptance bullet is observably satisfied right now.** Closing a task is a binary check against the existing Acceptance list, not a judgement call. Read each Acceptance bullet line by line; if any one of them describes gameplay-observable behaviour you cannot demonstrate from the current code (e.g. "units rout when outnumbered"), the task stays OPEN even when supporting infrastructure landed. A pure-logic / policy slice that the AI hookup will later consume is **never** enough to close a task whose Acceptance speaks about in-game behaviour — record it as `**Progress <YYYY-MM-DD>.**` and explicitly call out which Acceptance bullets are not yet met.
+- When a task is finished, mark it closed by inserting a `**Status: DONE <YYYY-MM-DD>.**` line at the top of its section (right under the heading) and keeping the existing scope/acceptance/progress paragraphs in place as the historical record. **The Status: DONE line is mandatory** — a closed task without that exact-format line is invisible to the `awk '/^## /{...}'` audit the next session will run, and to the human reading the file. Never silently delete a closed task.
+- Open tasks have no `Status:` line; in-progress slices use a `**Progress <YYYY-MM-DD>.**` paragraph at the bottom of the section. Multiple Progress paragraphs from different sessions stack chronologically — never edit or remove a prior session's Progress paragraph; append a new one instead.
+- Before claiming a closure in chat to the user, run `awk '/^## /{section=$0; getline blank; getline line; if (line ~ /Status: DONE/) print section " -> DONE"; else print section " -> OPEN"}' docs/BANNERMOD_BACKLOG.md` against the file and confirm the section actually shows DONE. The summary you give the user must match what the file contains, not what you intended to write.
 
 11. Contribution flow
 - Read `docs/STATUS.md` before picking up brownfield work.
@@ -80,6 +82,16 @@ After coding, provide:
 - Use `docs/BANNERMOD_BACKLOG.md` as the canonical active backlog.
 - Put module documentation under `docs/`; keep root player guides split as `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md`.
 - The local context multitool is documented in `tools/ai-context-proxy/README.md` and summarized in `docs/TOOLS.md`.
+
+12. Army command pipeline
+All server-side movement / face / attack / aggro / stance / strategic-fire commands for recruits MUST flow through the unified pipeline. Bypassing it (e.g. calling `recruit.setMovePos(...)` directly from a packet handler) breaks queueing, priority, and the `CommandIntentLog` audit trail.
+
+- **Entry point:** build a `CommandIntent` (record types in `army/command/CommandIntent.java`) and call `CommandIntentDispatcher.dispatch(player, intent, actors)`. The dispatcher handles selection narrowing, queue vs immediate, and routing to `CommandEvents`.
+- **`CommandIntent.Movement` signature:** `(long issuedAtGameTime, int priority, boolean queueMode, int movementState, int formation, boolean tight, @Nullable Vec3 targetPos)`. `priority` is an `int` from `CommandIntentPriority` constants (`LOW=1`, `NORMAL=3`, `HIGH=5`, `IMMEDIATE=10`) — not an enum.
+- **`movementState` semantics** (see `MovementFormationCommandService.onMovementCommand`): `0` hold, `1` follow, `2` regroup, `3` wander, `4` come-to-me, `5` patrol, `6` move-to-pos, `7`/`8` formation forward/back. Formation pipeline only triggers when `formation != 0 && movementState ∈ {2, 4, 6, 7, 8}`; otherwise falls through to per-recruit move.
+- **Formation is server-authoritative.** Player's saved formation lives in `Player.PERSISTED_NBT_TAG → "Formation"`. Read it on the server with `CommandEvents.getSavedFormation(player)` — do not pass formation indices from the client unless the UI is explicitly picking one. Hardcoding a non-zero formation in a packet silently rebinds the group.
+- **Explicit target positions:** when the move target arrives via network (world-map click, etc.) instead of `player.pick(...)`, use the 6-arg overload `CommandEvents.onMovementCommand(player, recruits, state, formation, tight, Vec3)` — the underlying `MovementFormationCommandService` short-circuits the hit-result lookup when `explicitTargetPos != null`.
+- **Verifying a wiring change:** `./gradlew compileJava` via `ctx log` is the cheap gate. For runtime verification of formation behavior, save a formation in the command screen, then exercise the command path; `formation == 0` means the player never opened the formation UI and the per-recruit fallback is the correct path.
 
 <!-- GSD:project-start source:.planning/PROJECT.md -->
 ## Project

@@ -3,7 +3,7 @@
 
 **BannerMod Merge Workspace**
 
-This workspace is the realized merged runtime of the Forge mods historically living in `recruits/` and `workers/`. The active root build, runtime, and planning context are unified under `bannermod`; ongoing work is stabilization, architecture cleanup, and gameplay repair without losing historical context.
+This workspace is the realized merged runtime of the Forge mods historically living in `recruits/` and `workers/`. The active root build, runtime, and planning context are already unified under `bannermod`; ongoing work is stabilization, architecture cleanup, and gameplay repair without losing historical context.
 
 **Current merge stance:** active code lives under root `src/**`. `recruits/` and `workers/` remain on disk as archive/reference trees only unless a root doc explicitly points to them.
 <!-- GSD:project-end -->

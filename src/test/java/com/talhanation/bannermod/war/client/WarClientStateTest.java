@@ -96,6 +96,30 @@ class WarClientStateTest {
     }
 
     @Test
+    void occupationsForWarFiltersDirectlyByWarId() {
+        UUID warA = UUID.randomUUID();
+        UUID warB = UUID.randomUUID();
+        OccupationRecord occupationA = new OccupationRecord(UUID.randomUUID(), warA, UUID.randomUUID(), UUID.randomUUID(),
+                List.of(new ChunkPos(0, 0)), 100L, 140L);
+        OccupationRecord occupationB = new OccupationRecord(UUID.randomUUID(), warB, UUID.randomUUID(), UUID.randomUUID(),
+                List.of(new ChunkPos(1, 1)), 100L, 140L);
+
+        WarClientState.applyFromNbt(WarClientState.encode(
+                List.of(), List.of(), List.of(),
+                new BattleWindowSchedule(List.of()),
+                List.of(),
+                List.of(occupationA, occupationB),
+                List.of()
+        ));
+
+        List<OccupationRecord> warAOccupations = WarClientState.occupationsForWar(warA);
+
+        assertEquals(1, warAOccupations.size());
+        assertEquals(occupationA.id(), warAOccupations.get(0).id());
+        assertTrue(WarClientState.occupationsForWar(null).isEmpty());
+    }
+
+    @Test
     void revoltsForUnknownWarIsEmpty() {
         WarClientState.applyFromNbt(WarClientState.encode(
                 List.of(), List.of(), List.of(),

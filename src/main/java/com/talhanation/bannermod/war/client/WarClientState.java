@@ -86,6 +86,17 @@ public final class WarClientState {
         return occupations;
     }
 
+    public static List<OccupationRecord> occupationsForWar(UUID warId) {
+        if (warId == null) return List.of();
+        List<OccupationRecord> result = new ArrayList<>();
+        for (OccupationRecord occupation : occupations) {
+            if (warId.equals(occupation.warId())) {
+                result.add(occupation);
+            }
+        }
+        return List.copyOf(result);
+    }
+
     public static List<RevoltRecord> revolts() {
         return revolts;
     }

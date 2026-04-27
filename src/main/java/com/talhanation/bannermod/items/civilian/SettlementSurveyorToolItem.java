@@ -14,8 +14,12 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+
+import javax.annotation.Nullable;
+import java.util.List;
 
 public class SettlementSurveyorToolItem extends Item {
     private static final String TAG_PENDING_CORNER = "bannermod:settlement_survey_pending_corner";
@@ -93,6 +97,19 @@ public class SettlementSurveyorToolItem extends Item {
         SurveyorSessionCodec.write(stack, updated);
         player.sendSystemMessage(Component.literal("Zone " + role.name() + " captured.").withStyle(ChatFormatting.GREEN));
         return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, level, tooltip, flag);
+        ValidationSession session = SurveyorSessionCodec.read(stack);
+        SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.mode", mode.name())
+                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.use")
+                .withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("bannermod.surveyor.tooltip.shift")
+                .withStyle(ChatFormatting.DARK_GRAY));
     }
 
     private static ValidationSession getOrCreateSession(Player player, ItemStack stack) {

@@ -223,6 +223,10 @@ public class BuildingPlacementWandItem extends Item {
                         Component.translatable(modeTranslation(mode) + ".label"))
                 .withStyle(ChatFormatting.GRAY);
         tooltip.add(modeLine);
+        tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.use")
+                .withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.shift")
+                .withStyle(ChatFormatting.DARK_GRAY));
         String selected = readSelectedPrefab(stack);
         if (selected != null && !selected.isEmpty()) {
             tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.selected", selected)

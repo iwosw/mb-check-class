@@ -250,6 +250,7 @@ public class WarListScreen extends Screen {
                 "Allies attacker: " + war.attackerAllyIds().size(),
                 "Allies defender: " + war.defenderAllyIds().size(),
                 "Targets: " + war.targetPositions().size(),
+                "Occupations: " + occupationSummary(war.id()),
                 "Sieges: " + activeSiegeCount(war.id()),
                 "Revolts: " + revoltSummary(war.id()),
                 "Id: " + shortId(war.id())
@@ -267,6 +268,21 @@ public class WarListScreen extends Screen {
             String radius = " r=" + siege.radius() + " blocks";
             graphics.drawString(font, font.plainSubstrByWidth("Standard: " + side + " @ " + pos + radius, w),
                     x, y + 14 + line * 11, 0xFFAAFFAA, false);
+            line++;
+            if (line >= 18) {
+                return;
+            }
+        }
+        for (OccupationRecord occupation : WarClientState.occupationsForWar(war.id())) {
+            String firstChunk = occupation.chunks().isEmpty()
+                    ? "chunk ?"
+                    : "chunk " + occupation.chunks().get(0).x + "," + occupation.chunks().get(0).z;
+            String suffix = occupation.chunks().size() > 1 ? " +" + (occupation.chunks().size() - 1) : "";
+            graphics.drawString(font,
+                    font.plainSubstrByWidth("Occupation: " + entityName(occupation.occupierEntityId())
+                            + " controls " + firstChunk + suffix
+                            + " tax=t" + occupation.lastTaxedAtGameTime(), w),
+                    x, y + 14 + line * 11, 0xFFFFDD88, false);
             line++;
             if (line >= 18) {
                 return;
@@ -296,6 +312,16 @@ public class WarListScreen extends Screen {
                 break;
             }
         }
+    }
+
+    private String occupationSummary(UUID warId) {
+        List<OccupationRecord> records = WarClientState.occupationsForWar(warId);
+        if (records.isEmpty()) return "(none)";
+        int chunks = 0;
+        for (OccupationRecord record : records) {
+            chunks += record.chunks().size();
+        }
+        return records.size() + " records / " + chunks + " chunks";
     }
 
     private String revoltSummary(UUID warId) {
