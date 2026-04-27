@@ -15,6 +15,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementService;
+import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -92,6 +93,13 @@ final class RecruitGovernorWorkflow {
         BannerModSettlementBinding.Binding binding = claim == null
                 ? BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, recruit.blockPosition(), recruit.getTeam() == null ? null : recruit.getTeam().getName())
                 : BannerModSettlementBinding.resolveSettlementStatus(claim, claim.getCenter() == null ? new ChunkPos(recruit.blockPosition()) : claim.getCenter(), claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString());
+        java.util.List<String> recommendations = snapshot == null ? java.util.List.of() : new java.util.ArrayList<>(snapshot.recommendationTokens());
+        if (claim != null && recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            BannerModSettlementSnapshot settlementSnapshot = BannerModSettlementManager.get(serverLevel).getSnapshot(claim.getUUID());
+            if (settlementSnapshot != null) {
+                recommendations.addAll(settlementSnapshot.tradeRouteHandoffSeed().seaTradeStatusLines());
+            }
+        }
 
         BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateGovernorScreen(
                 recruit.getUUID(),
@@ -109,7 +117,7 @@ final class RecruitGovernorWorkflow {
                 snapshot == null ? 0 : snapshot.lastTreasuryNet(),
                 snapshot == null ? 0 : snapshot.projectedTreasuryBalance(),
                 snapshot == null ? java.util.List.of() : snapshot.incidentTokens(),
-                snapshot == null ? java.util.List.of() : snapshot.recommendationTokens()
+                recommendations
         ));
     }
 

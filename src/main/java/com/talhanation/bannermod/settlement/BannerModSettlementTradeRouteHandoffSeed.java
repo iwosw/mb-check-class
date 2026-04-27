@@ -2,6 +2,7 @@ package com.talhanation.bannermod.settlement;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 
 import java.util.ArrayList;
@@ -15,7 +16,8 @@ public record BannerModSettlementTradeRouteHandoffSeed(
         int activeReservationCount,
         int reservedUnitCount,
         List<BannerModSettlementDesiredGoodSeed> desiredGoods,
-        List<BannerModSettlementSellerDispatchRecord> sellerDispatches
+        List<BannerModSettlementSellerDispatchRecord> sellerDispatches,
+        List<String> seaTradeStatusLines
 ) {
     public BannerModSettlementTradeRouteHandoffSeed {
         sellerDispatchCount = Math.max(0, sellerDispatchCount);
@@ -26,6 +28,7 @@ public record BannerModSettlementTradeRouteHandoffSeed(
         reservedUnitCount = Math.max(0, reservedUnitCount);
         desiredGoods = List.copyOf(desiredGoods == null ? List.of() : desiredGoods);
         sellerDispatches = List.copyOf(sellerDispatches == null ? List.of() : sellerDispatches);
+        seaTradeStatusLines = List.copyOf(seaTradeStatusLines == null ? List.of() : seaTradeStatusLines);
     }
 
     public CompoundTag toTag() {
@@ -48,6 +51,12 @@ public record BannerModSettlementTradeRouteHandoffSeed(
             sellerDispatchList.add(sellerDispatch.toTag());
         }
         tag.put("SellerDispatches", sellerDispatchList);
+
+        ListTag seaTradeStatusList = new ListTag();
+        for (String line : this.seaTradeStatusLines) {
+            seaTradeStatusList.add(StringTag.valueOf(line));
+        }
+        tag.put("SeaTradeStatusLines", seaTradeStatusList);
         return tag;
     }
 
@@ -60,12 +69,13 @@ public record BannerModSettlementTradeRouteHandoffSeed(
                 tag.getInt("ActiveReservationCount"),
                 tag.getInt("ReservedUnitCount"),
                 readDesiredGoods(tag.getList("DesiredGoods", Tag.TAG_COMPOUND)),
-                readSellerDispatches(tag.getList("SellerDispatches", Tag.TAG_COMPOUND))
+                readSellerDispatches(tag.getList("SellerDispatches", Tag.TAG_COMPOUND)),
+                readStrings(tag.getList("SeaTradeStatusLines", Tag.TAG_STRING))
         );
     }
 
     public static BannerModSettlementTradeRouteHandoffSeed empty() {
-        return new BannerModSettlementTradeRouteHandoffSeed(0, 0, 0, 0, 0, 0, List.of(), List.of());
+        return new BannerModSettlementTradeRouteHandoffSeed(0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of());
     }
 
     private static List<BannerModSettlementDesiredGoodSeed> readDesiredGoods(ListTag list) {
@@ -82,5 +92,13 @@ public record BannerModSettlementTradeRouteHandoffSeed(
             sellerDispatches.add(BannerModSettlementSellerDispatchRecord.fromTag((CompoundTag) entry));
         }
         return sellerDispatches;
+    }
+
+    private static List<String> readStrings(ListTag list) {
+        List<String> values = new ArrayList<>();
+        for (Tag entry : list) {
+            values.add(entry.getAsString());
+        }
+        return values;
     }
 }

@@ -14,6 +14,7 @@ import com.talhanation.bannermod.shared.logistics.BannerModLogisticsReservation;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeEntrypoint;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeSummary;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -138,6 +139,7 @@ public final class BannerModSettlementService {
         BannerModSettlementMarketState marketState = collectMarketState(level, claim);
         List<StorageArea> storageAreas = collectStorageAreas(level, claim);
         List<BannerModSeaTradeEntrypoint> liveSeaTradeEntrypoints = collectLiveSeaTradeEntrypoints(storageAreas);
+        BannerModSeaTradeSummary.Summary seaTradeSummary = BannerModSeaTradeSummary.summarise(liveSeaTradeEntrypoints);
         ReservationSignalSeed reservationSignalSeed = summarizeReservationSignalSeed(
                 buildings,
                 collectLocalLogisticsRoutes(storageAreas),
@@ -154,7 +156,7 @@ public final class BannerModSettlementService {
         marketState = applySellerDispatchSeed(marketState, residents, buildings);
         residents = applyResidentJobTargetSelectionSeeds(residents, marketState);
         BannerModSettlementStockpileSummary stockpileSummary = summarizeStockpiles(buildings, liveSeaTradeEntrypoints);
-        BannerModSettlementDesiredGoodsSeed desiredGoodsSeed = summarizeDesiredGoods(buildings, stockpileSummary, marketState);
+        BannerModSettlementDesiredGoodsSeed desiredGoodsSeed = summarizeDesiredGoods(buildings, stockpileSummary, marketState, seaTradeSummary);
         BannerModSettlementProjectCandidateSeed projectCandidateSeed = summarizeProjectCandidate(
                 buildings,
                 stockpileSummary,
@@ -163,8 +165,8 @@ public final class BannerModSettlementService {
                 governorSnapshot != null && governorSnapshot.governorRecruitUuid() != null,
                 settlementFactionId != null && !settlementFactionId.isBlank()
         );
-        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed);
-        BannerModSettlementSupplySignalState supplySignalState = summarizeSupplySignals(desiredGoodsSeed, stockpileSummary, marketState, residents, buildings, reservationSignalSeed);
+        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed, seaTradeSummary);
+        BannerModSettlementSupplySignalState supplySignalState = summarizeSupplySignals(desiredGoodsSeed, stockpileSummary, marketState, residents, buildings, reservationSignalSeed, seaTradeSummary);
         int residentCapacity = 0;
         int workplaceCapacity = 0;
         int assignedWorkerCount = 0;
@@ -622,8 +624,15 @@ public final class BannerModSettlementService {
     }
 
     static BannerModSettlementDesiredGoodsSeed summarizeDesiredGoods(List<BannerModSettlementBuildingRecord> buildings,
-                                                                     BannerModSettlementStockpileSummary stockpileSummary,
-                                                                     BannerModSettlementMarketState marketState) {
+                                                                      BannerModSettlementStockpileSummary stockpileSummary,
+                                                                      BannerModSettlementMarketState marketState) {
+        return summarizeDesiredGoods(buildings, stockpileSummary, marketState, BannerModSeaTradeSummary.summarise(List.of()));
+    }
+
+    static BannerModSettlementDesiredGoodsSeed summarizeDesiredGoods(List<BannerModSettlementBuildingRecord> buildings,
+                                                                      BannerModSettlementStockpileSummary stockpileSummary,
+                                                                      BannerModSettlementMarketState marketState,
+                                                                      BannerModSeaTradeSummary.Summary seaTradeSummary) {
         Map<String, Integer> desiredGoods = new LinkedHashMap<>();
         for (BannerModSettlementBuildingRecord building : buildings) {
             String desiredGoodId = switch (building.buildingProfileSeed()) {
@@ -640,6 +649,12 @@ public final class BannerModSettlementService {
         }
         addDesiredGoodDriver(desiredGoods, "market_goods", marketState.marketCount());
         addDesiredGoodDriver(desiredGoods, "trade_stock", marketState.openMarketCount());
+        for (Map.Entry<ResourceLocation, Integer> entry : seaTradeSummary.importableByItem().entrySet()) {
+            addDesiredGoodDriver(desiredGoods, "sea_import:" + entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry<ResourceLocation, Integer> entry : seaTradeSummary.exportableByItem().entrySet()) {
+            addDesiredGoodDriver(desiredGoods, "sea_export:" + entry.getKey(), entry.getValue());
+        }
 
         List<BannerModSettlementDesiredGoodSeed> desiredGoodSeeds = new ArrayList<>(desiredGoods.size());
         for (Map.Entry<String, Integer> entry : desiredGoods.entrySet()) {
@@ -649,9 +664,17 @@ public final class BannerModSettlementService {
     }
 
     static BannerModSettlementTradeRouteHandoffSeed summarizeTradeRouteHandoffSeed(BannerModSettlementStockpileSummary stockpileSummary,
-                                                                                    BannerModSettlementMarketState marketState,
-                                                                                    BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
-                                                                                    ReservationSignalSeed reservationSignalSeed) {
+                                                                                     BannerModSettlementMarketState marketState,
+                                                                                     BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
+                                                                                     ReservationSignalSeed reservationSignalSeed) {
+        return summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed, BannerModSeaTradeSummary.summarise(List.of()));
+    }
+
+    static BannerModSettlementTradeRouteHandoffSeed summarizeTradeRouteHandoffSeed(BannerModSettlementStockpileSummary stockpileSummary,
+                                                                                     BannerModSettlementMarketState marketState,
+                                                                                     BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
+                                                                                     ReservationSignalSeed reservationSignalSeed,
+                                                                                     BannerModSeaTradeSummary.Summary seaTradeSummary) {
         return new BannerModSettlementTradeRouteHandoffSeed(
                 marketState.sellerDispatchCount(),
                 marketState.readySellerDispatchCount(),
@@ -660,16 +683,27 @@ public final class BannerModSettlementService {
                 reservationSignalSeed.activeReservationCount(),
                 reservationSignalSeed.reservedUnitCount(),
                 desiredGoodsSeed.desiredGoods(),
-                marketState.sellerDispatches()
+                marketState.sellerDispatches(),
+                seaTradeStatusLines(seaTradeSummary)
         );
     }
 
     static BannerModSettlementSupplySignalState summarizeSupplySignals(BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
-                                                                       BannerModSettlementStockpileSummary stockpileSummary,
-                                                                       BannerModSettlementMarketState marketState,
-                                                                       List<BannerModSettlementResidentRecord> residents,
-                                                                       List<BannerModSettlementBuildingRecord> buildings,
-                                                                       ReservationSignalSeed reservationSignalSeed) {
+                                                                        BannerModSettlementStockpileSummary stockpileSummary,
+                                                                        BannerModSettlementMarketState marketState,
+                                                                        List<BannerModSettlementResidentRecord> residents,
+                                                                        List<BannerModSettlementBuildingRecord> buildings,
+                                                                        ReservationSignalSeed reservationSignalSeed) {
+        return summarizeSupplySignals(desiredGoodsSeed, stockpileSummary, marketState, residents, buildings, reservationSignalSeed, BannerModSeaTradeSummary.summarise(List.of()));
+    }
+
+    static BannerModSettlementSupplySignalState summarizeSupplySignals(BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
+                                                                        BannerModSettlementStockpileSummary stockpileSummary,
+                                                                        BannerModSettlementMarketState marketState,
+                                                                        List<BannerModSettlementResidentRecord> residents,
+                                                                        List<BannerModSettlementBuildingRecord> buildings,
+                                                                        ReservationSignalSeed reservationSignalSeed,
+                                                                        BannerModSeaTradeSummary.Summary seaTradeSummary) {
         if (desiredGoodsSeed.desiredGoods().isEmpty()) {
             return BannerModSettlementSupplySignalState.empty();
         }
@@ -703,7 +737,7 @@ public final class BannerModSettlementService {
         int shortageUnitCount = 0;
         int reservationHintUnitCount = 0;
         for (BannerModSettlementDesiredGoodSeed desiredGood : desiredGoodsSeed.desiredGoods()) {
-            int coverageUnits = resolveSupplyCoverageUnits(desiredGood.desiredGoodId(), stockpileSummary, marketState, serviceCoverageByGood);
+            int coverageUnits = resolveSupplyCoverageUnits(desiredGood.desiredGoodId(), stockpileSummary, marketState, serviceCoverageByGood, seaTradeSummary);
             int shortageUnits = Math.max(0, desiredGood.driverCount() - coverageUnits);
             int reservationHintUnits = reservationSignalSeed.reservationHintUnitsByGood().getOrDefault(desiredGood.desiredGoodId(), 0);
             if (shortageUnits > 0) {
@@ -976,12 +1010,28 @@ public final class BannerModSettlementService {
     }
 
     private static int resolveSupplyCoverageUnits(String goodId,
-                                                  BannerModSettlementStockpileSummary stockpileSummary,
-                                                  BannerModSettlementMarketState marketState,
-                                                  Map<String, Integer> serviceCoverageByGood) {
+                                                   BannerModSettlementStockpileSummary stockpileSummary,
+                                                   BannerModSettlementMarketState marketState,
+                                                   Map<String, Integer> serviceCoverageByGood) {
+        return resolveSupplyCoverageUnits(goodId, stockpileSummary, marketState, serviceCoverageByGood, BannerModSeaTradeSummary.summarise(List.of()));
+    }
+
+    private static int resolveSupplyCoverageUnits(String goodId,
+                                                   BannerModSettlementStockpileSummary stockpileSummary,
+                                                   BannerModSettlementMarketState marketState,
+                                                   Map<String, Integer> serviceCoverageByGood,
+                                                   BannerModSeaTradeSummary.Summary seaTradeSummary) {
         int coverageUnits = serviceCoverageByGood.getOrDefault(goodId, 0);
         if (goodId == null || goodId.isBlank()) {
             return coverageUnits;
+        }
+        if (goodId.startsWith("sea_import:")) {
+            ResourceLocation itemId = ResourceLocation.tryParse(goodId.substring("sea_import:".length()));
+            return coverageUnits + BannerModSeaTradeSummary.totalImportableCount(seaTradeSummary, itemId);
+        }
+        if (goodId.startsWith("sea_export:")) {
+            ResourceLocation itemId = ResourceLocation.tryParse(goodId.substring("sea_export:".length()));
+            return coverageUnits + BannerModSeaTradeSummary.totalExportableCount(seaTradeSummary, itemId);
         }
         if (goodId.startsWith("storage_type:")) {
             String storageTypeId = goodId.substring("storage_type:".length());
@@ -995,6 +1045,20 @@ public final class BannerModSettlementService {
             case "trade_stock" -> coverageUnits + marketState.openMarketCount() + stockpileSummary.portEntrypointCount();
             default -> coverageUnits;
         };
+    }
+
+    private static List<String> seaTradeStatusLines(BannerModSeaTradeSummary.Summary seaTradeSummary) {
+        List<String> lines = new ArrayList<>();
+        for (Map.Entry<ResourceLocation, Integer> entry : seaTradeSummary.importableByItem().entrySet()) {
+            lines.add("Sea import benefit: " + entry.getKey() + " x" + entry.getValue());
+        }
+        for (Map.Entry<ResourceLocation, Integer> entry : seaTradeSummary.exportableByItem().entrySet()) {
+            lines.add("Sea export benefit: " + entry.getKey() + " x" + entry.getValue());
+        }
+        for (String bottleneck : seaTradeSummary.bottlenecks()) {
+            lines.add("Sea trade bottleneck: " + bottleneck.toLowerCase(Locale.ROOT));
+        }
+        return lines;
     }
 
     private static String desiredGoodIdForProfile(BannerModSettlementBuildingProfileSeed profileSeed) {
