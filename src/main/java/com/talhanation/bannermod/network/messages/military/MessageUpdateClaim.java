@@ -45,9 +45,13 @@ public class MessageUpdateClaim implements Message<MessageUpdateClaim> {
 
         ServerLevel level = (ServerLevel) sender.getCommandSenderWorld();
         RecruitsClaim existingClaim = getExistingClaim(updatedClaim);
-        boolean isAdmin = sender.isCreative() && sender.hasPermissions(2);
+        boolean isAdmin = isAdmin(sender);
         if (existingClaim == null && !isAdmin) return;
-        if (existingClaim != null && !isAdmin && !canEditClaim(sender, existingClaim)) return;
+        if (existingClaim != null && !ClaimPacketAuthority.canEditClaim(
+                sender.getUUID(),
+                isAdmin,
+                existingClaim,
+                resolvePoliticalOwner(sender, existingClaim))) return;
         if (!isAdmin && overlapsOtherClaim(updatedClaim, existingClaim)) return;
 
         if (existingClaim != null && !isAdmin) {
@@ -63,27 +67,31 @@ public class MessageUpdateClaim implements Message<MessageUpdateClaim> {
         ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, updatedClaim);
     }
 
-    private static RecruitsClaim getExistingClaim(RecruitsClaim updatedClaim) {
+    static RecruitsClaim getExistingClaim(RecruitsClaim updatedClaim) {
         if (updatedClaim == null || ClaimEvents.recruitsClaimManager == null) return null;
+        return getExistingClaim(updatedClaim.getUUID());
+    }
+
+    static RecruitsClaim getExistingClaim(UUID claimUuid) {
+        if (claimUuid == null || ClaimEvents.recruitsClaimManager == null) return null;
         for (RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()) {
-            if (claim.getUUID().equals(updatedClaim.getUUID())) {
+            if (claim.getUUID().equals(claimUuid)) {
                 return claim;
             }
         }
         return null;
     }
 
-    private static boolean canEditClaim(ServerPlayer sender, RecruitsClaim existingClaim) {
-        if (existingClaim.getPlayerInfo() != null && sender.getUUID().equals(existingClaim.getPlayerInfo().getUUID())) {
-            return true;
-        }
+    static boolean isAdmin(ServerPlayer sender) {
+        return sender != null && sender.isCreative() && sender.hasPermissions(2);
+    }
+
+    static PoliticalEntityRecord resolvePoliticalOwner(ServerPlayer sender, RecruitsClaim existingClaim) {
+        if (sender == null || existingClaim == null) return null;
         UUID politicalEntityId = existingClaim.getOwnerPoliticalEntityId();
-        if (politicalEntityId == null) return false;
+        if (politicalEntityId == null) return null;
         PoliticalRegistryRuntime registry = WarRuntimeContext.registry((ServerLevel) sender.getCommandSenderWorld());
-        PoliticalEntityRecord owner = registry.byId(politicalEntityId).orElse(null);
-        if (owner == null) return false;
-        UUID senderUuid = sender.getUUID();
-        return senderUuid.equals(owner.leaderUuid()) || owner.coLeaderUuids().contains(senderUuid);
+        return registry.byId(politicalEntityId).orElse(null);
     }
 
     private static boolean overlapsOtherClaim(RecruitsClaim updatedClaim, RecruitsClaim existingClaim) {
