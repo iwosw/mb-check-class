@@ -649,7 +649,7 @@
     {
       "id": "PERF-007",
       "title": "Stable batched settlement-orchestrator iteration",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Settlement orchestration is batched, but each batch recreates and sorts the full snapshot list before processing its slice. Large settlement counts pay O(n log n) setup on every batch tick.",
       "scope": [
@@ -663,11 +663,17 @@
         "Existing processed/total/completed counters remain meaningful."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Implemented per-level cached sorted settlement UUID order for orchestrator batches, rebuilt only when a maintenance cycle starts at startIndex <= 0. Batch processing keeps deterministic UUID order, retrieves current snapshots by UUID, and preserves BatchResult start/next/total/completed counters. Verified with ./gradlew test --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest and ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "ClaimEvents drives settlement orchestration batches.",
         "BannerModSettlementOrchestrator.tickBatch rebuilds and sorts snapshot collections while processing slices."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "PERF-008",
