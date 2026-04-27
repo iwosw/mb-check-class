@@ -93,7 +93,7 @@ public class BannerModDedicatedServerAuthorityGameTests {
         BannerModDedicatedServerGameTestSupport.assignDetachedOwnership(cropArea, OFFLINE_OWNER_UUID, OFFLINE_OWNER_NAME);
         cropArea.setTeamStringID(OFFLINE_OWNER_TEAM_ID);
         BannerModDedicatedServerGameTestSupport.seedClaim(level, helper.absolutePos(RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS), OFFLINE_OWNER_TEAM_ID, OFFLINE_OWNER_UUID, OFFLINE_OWNER_NAME);
-        worker.currentCropArea = cropArea;
+        worker.setCurrentWorkArea(cropArea);
         cropArea.setBeingWorkedOn(true);
 
         helper.assertTrue(cropArea.canWorkHere(worker),

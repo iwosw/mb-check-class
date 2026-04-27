@@ -62,9 +62,14 @@ final class WorkerSettlementSpawnRuntime {
         }
 
         long now = level.getGameTime();
+        // The candidate villager is, by construction, a member of the claim's villager pool
+        // about to be promoted; mirror the birth path's Math.max(1, ...) so a not-yet-indexed
+        // freshly-spawned candidate cannot wedge the rule into INSUFFICIENT_VILLAGERS.
+        int villagerCount = Math.max(1,
+                WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, Villager.class));
         WorkerSettlementSpawnRules.Decision decision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(
                 WorkerSettlementClaimPolicy.resolveSettlementBinding(villager, claim),
-                WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, Villager.class),
+                villagerCount,
                 WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, AbstractWorkerEntity.class),
                 isSettlementSpawnOnCooldown(claim, now),
                 WorkersServerConfig.workerSettlementSpawnRuleConfig()

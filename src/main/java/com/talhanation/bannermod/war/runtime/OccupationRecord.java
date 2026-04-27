@@ -14,10 +14,26 @@ public record OccupationRecord(
         UUID occupierEntityId,
         UUID occupiedEntityId,
         List<ChunkPos> chunks,
-        long startedAtGameTime
+        long startedAtGameTime,
+        long lastTaxedAtGameTime
 ) {
     public OccupationRecord {
         chunks = chunks == null ? List.of() : List.copyOf(chunks);
+    }
+
+    public OccupationRecord(UUID id,
+                            UUID warId,
+                            UUID occupierEntityId,
+                            UUID occupiedEntityId,
+                            List<ChunkPos> chunks,
+                            long startedAtGameTime) {
+        this(id, warId, occupierEntityId, occupiedEntityId, chunks,
+                startedAtGameTime, startedAtGameTime);
+    }
+
+    public OccupationRecord withLastTaxedAtGameTime(long value) {
+        return new OccupationRecord(id, warId, occupierEntityId, occupiedEntityId,
+                chunks, startedAtGameTime, value);
     }
 
     public CompoundTag toTag() {
@@ -32,6 +48,7 @@ public record OccupationRecord(
         }
         tag.put("Chunks", new LongArrayTag(packed));
         tag.putLong("StartedAtGameTime", startedAtGameTime);
+        tag.putLong("LastTaxedAtGameTime", lastTaxedAtGameTime);
         return tag;
     }
 
@@ -41,13 +58,18 @@ public record OccupationRecord(
         for (long pack : packed) {
             chunks.add(new ChunkPos(pack));
         }
+        long startedAt = tag.getLong("StartedAtGameTime");
+        long lastTaxed = tag.contains("LastTaxedAtGameTime")
+                ? tag.getLong("LastTaxedAtGameTime")
+                : startedAt;
         return new OccupationRecord(
                 tag.getUUID("Id"),
                 tag.getUUID("WarId"),
                 tag.getUUID("Occupier"),
                 tag.getUUID("Occupied"),
                 chunks,
-                tag.getLong("StartedAtGameTime")
+                startedAt,
+                lastTaxed
         );
     }
 }

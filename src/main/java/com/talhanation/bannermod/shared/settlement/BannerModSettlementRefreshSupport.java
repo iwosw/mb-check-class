@@ -10,6 +10,9 @@ import net.minecraft.server.level.ServerLevel;
 import javax.annotation.Nullable;
 
 public final class BannerModSettlementRefreshSupport {
+    private static final java.util.concurrent.atomic.AtomicLong INVOCATIONS =
+            new java.util.concurrent.atomic.AtomicLong();
+
     private BannerModSettlementRefreshSupport() {
     }
 
@@ -17,6 +20,7 @@ public final class BannerModSettlementRefreshSupport {
         if (level == null || pos == null || ClaimEvents.recruitsClaimManager == null) {
             return;
         }
+        INVOCATIONS.incrementAndGet();
         BannerModSettlementService.refreshClaimAt(
                 level,
                 ClaimEvents.recruitsClaimManager,
@@ -24,6 +28,16 @@ public final class BannerModSettlementRefreshSupport {
                 BannerModGovernorManager.get(level),
                 pos
         );
+    }
+
+    /**
+     * Test observability seam — total number of {@link #refreshSnapshot} calls that passed
+     * the null-guards and reached the underlying service. GameTests use this to assert that
+     * the {@code SettlementMutationRefreshEvents} subscriber actually invoked the refresh
+     * pipeline in response to a civil mutation. Production code does not consult this value.
+     */
+    public static long invocationCount() {
+        return INVOCATIONS.get();
     }
 
     public static void refreshTransition(ServerLevel level,

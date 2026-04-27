@@ -47,6 +47,8 @@ public abstract class AsyncPathNavigation extends PathNavigation {
     private int deferredPathReachRange;
     private float deferredPathFollowRange;
     private final AtomicLong pathEpoch = new AtomicLong();
+    private final AtomicLong submitAcceptedCount = new AtomicLong();
+    private final AtomicLong commitDiscardEntityGoneCount = new AtomicLong();
     private long lastTrueAsyncRequestGameTime = Long.MIN_VALUE;
 
     public AsyncPathNavigation(PathfinderMob p_26515_, Level p_26516_) {
@@ -191,6 +193,38 @@ public abstract class AsyncPathNavigation extends PathNavigation {
         return this.pathEpoch.get();
     }
 
+    /**
+     * Per-instance count of how many true-async path submissions this navigation has had
+     * accepted by the runtime. Mirrors the global metric counter but is isolated per mob so
+     * GameTests can assert "this recruit submitted N requests" without racing against
+     * concurrent unrelated tests sharing the global counter map.
+     */
+    public long submitAcceptedCount() {
+        return this.submitAcceptedCount.get();
+    }
+
+    /**
+     * Per-instance count of {@code commit.discard.entity_gone} events charged against this
+     * navigation. Same isolation rationale as {@link #submitAcceptedCount()}.
+     */
+    public long commitDiscardEntityGoneCount() {
+        return this.commitDiscardEntityGoneCount.get();
+    }
+
+    /** Called by {@code TrueAsyncPathfindingRuntime} when an enqueue is accepted. */
+    public void recordSubmitAccepted() {
+        this.submitAcceptedCount.incrementAndGet();
+    }
+
+    /**
+     * Bumped from the {@code shouldAcceptAsyncResult} entity-gone discard branch and from
+     * {@code TrueAsyncPathfindingRuntime.resolveCommitTarget} when the pending target is
+     * removed because the mob is no longer alive/loaded. Public so the runtime can call it.
+     */
+    public void recordCommitDiscardEntityGone() {
+        this.commitDiscardEntityGoneCount.incrementAndGet();
+    }
+
     public UUID getMobUuid() {
         return this.mob.getUUID();
     }
@@ -296,6 +330,7 @@ public abstract class AsyncPathNavigation extends PathNavigation {
         }
         if (this.mob.isRemoved() || !this.mob.isAlive()) {
             RuntimeProfilingCounters.increment("pathfinding.true_async.commit.discard.entity_gone");
+            this.recordCommitDiscardEntityGone();
             return false;
         }
         return true;

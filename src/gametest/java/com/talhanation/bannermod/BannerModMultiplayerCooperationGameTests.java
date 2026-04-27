@@ -133,7 +133,7 @@ public class BannerModMultiplayerCooperationGameTests {
                 owner,
                 RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS
         );
-        worker.currentCropArea = cropArea;
+        worker.setCurrentWorkArea(cropArea);
         cropArea.setBeingWorkedOn(true);
 
         BannerModDedicatedServerGameTestSupport.joinTeam(level, TEAM_ID, owner, ally, worker);

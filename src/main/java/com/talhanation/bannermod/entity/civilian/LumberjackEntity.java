@@ -4,7 +4,6 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.LumberjackWorkGoal;
-import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -31,7 +30,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class LumberjackEntity extends AbstractWorkerEntity{
-    public LumberArea currentLumberArea;
     public LumberjackEntity(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
     }
@@ -100,8 +98,9 @@ public class LumberjackEntity extends AbstractWorkerEntity{
             int items = countMatchingItems(stack -> stack.getItem() instanceof AxeItem);
             return items <= 1;
         }
-        if(currentLumberArea != null && itemStack.is(currentLumberArea.getSaplingStack().getItem())) {
-            int items = countMatchingStacks(stack -> stack.is(currentLumberArea.getSaplingStack().getItem()));
+        LumberArea lumberArea = getCurrentLumberArea();
+        if(lumberArea != null && itemStack.is(lumberArea.getSaplingStack().getItem())) {
+            int items = countMatchingStacks(stack -> stack.is(lumberArea.getSaplingStack().getItem()));
             return items <= 1;
         }
 
@@ -120,13 +119,8 @@ public class LumberjackEntity extends AbstractWorkerEntity{
         return super.wantsToPickUp(itemStack);
     }
 
-    @Override
-    public AbstractWorkAreaEntity getCurrentWorkArea() {
-        return currentLumberArea;
-    }
-
-    @Override
-    protected void clearCurrentWorkAreaForRecovery() {
-        this.currentLumberArea = null;
+    @Nullable
+    public LumberArea getCurrentLumberArea() {
+        return getCurrentWorkArea() instanceof LumberArea la ? la : null;
     }
 }

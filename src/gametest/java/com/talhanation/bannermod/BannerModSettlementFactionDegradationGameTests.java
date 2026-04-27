@@ -125,7 +125,7 @@ public class BannerModSettlementFactionDegradationGameTests {
         cropArea.setTeamStringID(OWNER_TEAM_ID);
         FarmerEntity worker = BannerModGameTestSupport.spawnOwnedFarmer(helper, owner, workAreaPos.offset(2, 0, 0));
         BannerModDedicatedServerGameTestSupport.joinTeam(level, OWNER_TEAM_ID, worker);
-        worker.currentCropArea = cropArea;
+        worker.setCurrentWorkArea(cropArea);
         cropArea.setBeingWorkedOn(true);
 
         helper.assertTrue(resolveBinding(cropArea, OWNER_TEAM_ID).status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,

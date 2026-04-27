@@ -28,7 +28,7 @@ public class BannerModCitizenWorkerGameTests {
                 player,
                 RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS
         );
-        worker.currentCropArea = cropArea;
+        worker.setCurrentWorkArea(cropArea);
         cropArea.setBeingWorkedOn(true);
 
         CompoundTag saved = BannerModDedicatedServerGameTestSupport.saveEntity(worker);

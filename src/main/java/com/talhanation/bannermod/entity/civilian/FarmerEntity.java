@@ -5,7 +5,6 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.FarmerWorkGoal;
-import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -34,7 +33,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public class FarmerEntity extends AbstractWorkerEntity{
-    public CropArea currentCropArea;
     public static final Set<Block> TILLABLES = ImmutableSet.of(
             Blocks.DIRT,
             Blocks.ROOTED_DIRT,
@@ -117,8 +115,9 @@ public class FarmerEntity extends AbstractWorkerEntity{
             return items <= 1;
         }
 
-        if(currentCropArea != null) {
-            ItemStack crop = currentCropArea.getSeedStack();
+        CropArea cropArea = getCurrentCropArea();
+        if(cropArea != null) {
+            ItemStack crop = cropArea.getSeedStack();
             if(ItemStack.isSameItem(crop, itemStack)){
                 int items = countMatchingStacks(stack -> crop.is(stack.getItem()));
                 return items <= 1;
@@ -137,12 +136,8 @@ public class FarmerEntity extends AbstractWorkerEntity{
         return super.wantsToPickUp(itemStack);
     }
 
-    public AbstractWorkAreaEntity getCurrentWorkArea(){
-        return currentCropArea;
-    }
-
-    @Override
-    protected void clearCurrentWorkAreaForRecovery() {
-        this.currentCropArea = null;
+    @Nullable
+    public CropArea getCurrentCropArea() {
+        return getCurrentWorkArea() instanceof CropArea ca ? ca : null;
     }
 }

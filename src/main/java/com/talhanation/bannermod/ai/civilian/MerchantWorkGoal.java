@@ -51,9 +51,10 @@ public class MerchantWorkGoal extends Goal {
 
     @Override
     public void stop() {
-        if (merchant.currentMarketArea != null) {
-            merchant.currentMarketArea.setBeingWorkedOn(false);
-            merchant.currentMarketArea = null;
+        MarketArea market = merchant.getCurrentMarketArea();
+        if (market != null) {
+            market.setBeingWorkedOn(false);
+            merchant.setCurrentWorkArea(null);
             merchant.setCurrentMarketName("");
         }
         merchant.getNavigation().stop();
@@ -72,7 +73,7 @@ public class MerchantWorkGoal extends Goal {
 
         switch (state) {
             case SELECT_WORK_AREA -> {
-                if (merchant.currentMarketArea != null) {
+                if (merchant.getCurrentMarketArea() != null) {
                     setState(State.WALK_TO_CENTER);
                     return;
                 }
@@ -86,7 +87,7 @@ public class MerchantWorkGoal extends Goal {
                     return;
                 }
 
-                merchant.currentMarketArea = found;
+                merchant.setCurrentWorkArea(found);
                 merchant.clearWorkStatus();
                 found.setBeingWorkedOn(true);
                 found.setTime(0);
@@ -96,13 +97,13 @@ public class MerchantWorkGoal extends Goal {
             }
 
             case WALK_TO_CENTER -> {
-                if (moveToPosition(BlockPos.containing(merchant.currentMarketArea.getArea().getCenter()), 3)) return;
+                if (moveToPosition(BlockPos.containing(merchant.getCurrentMarketArea().getArea().getCenter()), 3)) return;
                 merchant.getNavigation().stop();
                 setState(State.WORKING);
             }
 
             case WORKING -> {
-                if (!merchant.currentMarketArea.isOpen()) {
+                if (!merchant.getCurrentMarketArea().isOpen()) {
                     merchant.reportIdleReason("merchant_market_closed", Component.literal(merchant.getName().getString() + ": My market is currently closed."));
                     leaveCurrentArea();
                     setState(State.SELECT_WORK_AREA);
@@ -119,24 +120,26 @@ public class MerchantWorkGoal extends Goal {
                     merchant.getLookControl().setLookAt(nearby, 30, 30);
                 }
                 else {
-                    merchant.setYRot(merchant.currentMarketArea.getFacing().getOpposite().toYRot());
+                    merchant.setYRot(merchant.getCurrentMarketArea().getFacing().getOpposite().toYRot());
                 }
 
-                merchant.setCurrentMarketName(merchant.currentMarketArea.getMarketName());
+                merchant.setCurrentMarketName(merchant.getCurrentMarketArea().getMarketName());
             }
         }
     }
 
     private void leaveCurrentArea() {
-        if (merchant.currentMarketArea != null) {
-            merchant.currentMarketArea.setBeingWorkedOn(false);
-            merchant.currentMarketArea = null;
+        MarketArea market = merchant.getCurrentMarketArea();
+        if (market != null) {
+            market.setBeingWorkedOn(false);
+            merchant.setCurrentWorkArea(null);
             merchant.setCurrentMarketName("");
         }
     }
 
     private boolean isCurrentAreaGone() {
-        return merchant.currentMarketArea == null || merchant.currentMarketArea.isRemoved();
+        MarketArea market = merchant.getCurrentMarketArea();
+        return market == null || market.isRemoved();
     }
 
 

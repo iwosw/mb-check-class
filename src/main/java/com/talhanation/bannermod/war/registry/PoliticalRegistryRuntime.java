@@ -129,6 +129,53 @@ public class PoliticalRegistryRuntime {
         return true;
     }
 
+    /**
+     * Update the political entity's color string. Validation runs through
+     * {@link PoliticalRegistryValidation#validateColor}; on invalid input the runtime is
+     * unchanged and {@code false} is returned. Identical color is a successful no-op so the
+     * UI can re-issue safely without spurious dirty churn.
+     */
+    public boolean updateColor(UUID id, String newColor) {
+        PoliticalEntityRecord record = recordsById.get(id);
+        if (record == null) {
+            return false;
+        }
+        PoliticalRegistryValidation.Result validation = PoliticalRegistryValidation.validateColor(newColor);
+        if (!validation.valid()) {
+            return false;
+        }
+        String normalized = PoliticalRegistryValidation.normalizeColor(newColor);
+        if (normalized.equals(record.color())) {
+            return true;
+        }
+        recordsById.put(id, record.withColor(normalized));
+        dirtyListener.run();
+        return true;
+    }
+
+    /**
+     * Update the charter free-text. Validation runs through
+     * {@link PoliticalRegistryValidation#validateCharter} (length cap only). Identical charter
+     * is a no-op.
+     */
+    public boolean updateCharter(UUID id, String newCharter) {
+        PoliticalEntityRecord record = recordsById.get(id);
+        if (record == null) {
+            return false;
+        }
+        PoliticalRegistryValidation.Result validation = PoliticalRegistryValidation.validateCharter(newCharter);
+        if (!validation.valid()) {
+            return false;
+        }
+        String normalized = PoliticalRegistryValidation.normalizeCharter(newCharter);
+        if (normalized.equals(record.charter())) {
+            return true;
+        }
+        recordsById.put(id, record.withCharter(normalized));
+        dirtyListener.run();
+        return true;
+    }
+
     public Optional<PoliticalEntityRecord> byNameOrIdFragment(String token) {
         if (token == null || token.isBlank()) {
             return Optional.empty();

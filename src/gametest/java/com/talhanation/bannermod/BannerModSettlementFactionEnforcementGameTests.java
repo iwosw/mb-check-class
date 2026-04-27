@@ -51,7 +51,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             CropArea cropArea = findCropArea(level, workAreaPos);
             FarmerEntity worker = BannerModGameTestSupport.spawnOwnedFarmer(helper, owner, new BlockPos(4, 2, 2));
             BannerModDedicatedServerGameTestSupport.joinTeam(level, FRIENDLY_TEAM_ID, worker);
-            worker.currentCropArea = cropArea;
+            worker.setCurrentWorkArea(cropArea);
 
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
                     ClaimEvents.recruitsClaimManager,

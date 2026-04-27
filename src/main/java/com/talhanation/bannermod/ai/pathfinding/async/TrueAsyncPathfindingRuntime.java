@@ -111,6 +111,7 @@ public final class TrueAsyncPathfindingRuntime {
 
         pendingTargets.put(snapshotRequest.entityUuid(), new PendingCommitTarget(navigation, requestId, reachRange, coarseKey, snapshotRequest, primaryTarget));
         RuntimeProfilingCounters.increment(METRICS_PREFIX + ".submit.accepted");
+        navigation.recordSubmitAccepted();
         return true;
     }
 
@@ -132,6 +133,16 @@ public final class TrueAsyncPathfindingRuntime {
         }
     }
 
+    /**
+     * Test-only seam. Bypasses {@code AsyncPathScheduler} so GameTests can deterministically
+     * exercise the commit pipeline without depending on the async solver finishing in time
+     * for a test's tick budget. Production code never calls this — only the gametest sources.
+     */
+    public PathCommitter.CommitSummary commitForTesting(List<PathResult> results) {
+        Objects.requireNonNull(results, "results");
+        return committer.commit(results, this::resolveCommitTarget, this::removeCommitTarget, results.size());
+    }
+
     public void shutdown() {
         AsyncPathScheduler activeScheduler = scheduler;
         scheduler = null;
@@ -147,6 +158,10 @@ public final class TrueAsyncPathfindingRuntime {
             return null;
         }
         if (!target.navigation().isTrueAsyncCommitTargetAlive()) {
+            // Charge the discard to this navigation's per-instance counter so GameTests can
+            // assert "this recruit lost a commit because its entity was gone" without racing
+            // against unrelated parallel tests on the global RuntimeProfilingCounters map.
+            target.navigation().recordCommitDiscardEntityGone();
             pendingTargets.remove(entityUuid, target);
             return null;
         }
@@ -195,7 +210,14 @@ public final class TrueAsyncPathfindingRuntime {
 
         @Override
         public boolean isAliveAndLoaded() {
-            return navigation.isTrueAsyncCommitTargetAlive();
+            boolean alive = navigation.isTrueAsyncCommitTargetAlive();
+            if (!alive) {
+                // Charge the per-instance discard counter here too — covers the race window
+                // between resolveCommitTarget (saw the entity alive) and PathCommitter's
+                // own second isAliveAndLoaded() check, where the entity died in between.
+                navigation.recordCommitDiscardEntityGone();
+            }
+            return alive;
         }
 
         @Override

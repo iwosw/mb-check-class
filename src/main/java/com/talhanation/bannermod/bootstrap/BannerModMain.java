@@ -146,6 +146,7 @@ public class BannerModMain {
         MinecraftForge.EVENT_BUS.register(new WarPvpEvents());
         MinecraftForge.EVENT_BUS.register(new WarRevoltAutoResolver());
         MinecraftForge.EVENT_BUS.register(new WarStateBroadcaster());
+        MinecraftForge.EVENT_BUS.register(new com.talhanation.bannermod.war.events.WarOccupationTaxTicker());
         MinecraftForge.EVENT_BUS.register(new SettlementMutationRefreshEvents());
         if (MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers()) {
             // Legacy recruits/workers update checkers target retired mod ids and stay disabled

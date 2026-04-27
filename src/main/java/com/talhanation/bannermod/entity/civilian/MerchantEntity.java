@@ -6,7 +6,6 @@ import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.MerchantWorkGoal;
-import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
@@ -65,7 +64,6 @@ public class MerchantEntity extends AbstractWorkerEntity {
             (!item.hasPickUpDelay() && item.isAlive() && getInventory().canAddItem(item.getItem()) && this.wantsToPickUp(item.getItem()));
 
     public boolean needsNewTrades;
-    public MarketArea currentMarketArea;
 
     public MerchantEntity(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
@@ -121,12 +119,14 @@ public class MerchantEntity extends AbstractWorkerEntity {
         this.goalSelector.addGoal(3, new MerchantWorkGoal(this));
     }
 
-    @Override
-    public AbstractWorkAreaEntity getCurrentWorkArea() { return currentMarketArea; }
+    @Nullable
+    public MarketArea getCurrentMarketArea() {
+        return getCurrentWorkArea() instanceof MarketArea ma ? ma : null;
+    }
 
     @Override
     protected void clearCurrentWorkAreaForRecovery() {
-        this.currentMarketArea = null;
+        super.clearCurrentWorkAreaForRecovery();
         this.setCurrentMarketName("");
     }
 
@@ -418,8 +418,9 @@ public class MerchantEntity extends AbstractWorkerEntity {
 
     private boolean canAddItemToMerchant(ItemStack itemStack){
         boolean can;
-        if(this.currentMarketArea != null) {
-            can = this.currentMarketArea.canAddItem(itemStack);
+        MarketArea market = getCurrentMarketArea();
+        if(market != null) {
+            can = market.canAddItem(itemStack);
         }
         else{
             can = this.getInventory().canAddItem(itemStack);
@@ -429,8 +430,9 @@ public class MerchantEntity extends AbstractWorkerEntity {
     }
 
     private void shrinkMerchantItemStack(ItemStack itemStack, int amount, boolean allowDamagedCurrency) {
-        if(this.currentMarketArea != null) {
-            this.currentMarketArea.shrinkItemFromContainers(itemStack, amount, allowDamagedCurrency);
+        MarketArea market = getCurrentMarketArea();
+        if(market != null) {
+            market.shrinkItemFromContainers(itemStack, amount, allowDamagedCurrency);
         }
         else{
             int toRemove = amount;
@@ -446,8 +448,9 @@ public class MerchantEntity extends AbstractWorkerEntity {
     }
     private int countMerchantItemStack(ItemStack itemStack, boolean allowDamaged) {
         int x = 0;
-        if(this.currentMarketArea != null) {
-            x = this.currentMarketArea.countItemInContainers(itemStack, allowDamaged);
+        MarketArea market = getCurrentMarketArea();
+        if(market != null) {
+            x = market.countItemInContainers(itemStack, allowDamaged);
         }
         else{
             for (int i = 0; i < this.getInventory().getContainerSize(); i++) {
@@ -463,8 +466,9 @@ public class MerchantEntity extends AbstractWorkerEntity {
     }
 
     private void addItemToMerchant(ItemStack itemStack, int amount) {
-        if(this.currentMarketArea != null) {
-            this.currentMarketArea.depositItemToContainers(itemStack, amount);
+        MarketArea market = getCurrentMarketArea();
+        if(market != null) {
+            market.depositItemToContainers(itemStack, amount);
         }
         else{
             addItemWithMaxStackCount(this.getInventory(), itemStack, amount);
@@ -542,7 +546,8 @@ public class MerchantEntity extends AbstractWorkerEntity {
     }
 
     private void refreshSettlementSnapshot() {
-        if (!(this.level() instanceof ServerLevel serverLevel) || this.currentMarketArea == null || ClaimEvents.recruitsClaimManager == null) {
+        MarketArea market = getCurrentMarketArea();
+        if (!(this.level() instanceof ServerLevel serverLevel) || market == null || ClaimEvents.recruitsClaimManager == null) {
             return;
         }
         BannerModSettlementService.refreshClaimAt(
@@ -550,7 +555,7 @@ public class MerchantEntity extends AbstractWorkerEntity {
                 ClaimEvents.recruitsClaimManager,
                 BannerModSettlementManager.get(serverLevel),
                 BannerModGovernorManager.get(serverLevel),
-                this.currentMarketArea.blockPosition()
+                market.blockPosition()
         );
     }
 

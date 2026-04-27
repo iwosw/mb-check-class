@@ -74,7 +74,7 @@ public class MinerWorkGoal extends Goal {
 
         if(checkPlaceTorch()) return;
 
-        if(state != State.SELECT_WORK_AREA && this.minerEntity.currentMiningArea == null){
+        if(state != State.SELECT_WORK_AREA && this.minerEntity.getCurrentMiningArea() == null){
             this.blockPos = null;
             setState(State.SELECT_WORK_AREA);
             return;
@@ -99,33 +99,33 @@ public class MinerWorkGoal extends Goal {
         if(minerEntity.tickCount % 5 != 0) return;
         switch(state){
             case SELECT_WORK_AREA ->{
-                if(minerEntity.currentMiningArea != null) setState(State.MOVE_TO_WORK_AREA);
+                if(minerEntity.getCurrentMiningArea() != null) setState(State.MOVE_TO_WORK_AREA);
 
                 if(minerEntity.tickCount - lastAreaSearchTick < AREA_SEARCH_COOLDOWN_TICKS) return;
                 lastAreaSearchTick = minerEntity.tickCount;
 
-                List<MiningArea> areas = getAvailableWorkAreasByPriority((ServerLevel) minerEntity.getCommandSenderWorld(), minerEntity, minerEntity.currentMiningArea);
+                List<MiningArea> areas = getAvailableWorkAreasByPriority((ServerLevel) minerEntity.getCommandSenderWorld(), minerEntity, minerEntity.getCurrentMiningArea());
 
                 if (!areas.isEmpty()) {
-                    minerEntity.currentMiningArea = areas.get(0);
+                    minerEntity.setCurrentWorkArea(areas.get(0));
                 }
 
-                if(minerEntity.currentMiningArea == null) {
+                if(minerEntity.getCurrentMiningArea() == null) {
                     minerEntity.reportIdleReason("miner_no_area", Component.literal(minerEntity.getName().getString() + ": Waiting for a mining area."));
                     return;
                 }
 
                 minerEntity.clearWorkStatus();
-                minerEntity.currentMiningArea.setBeingWorkedOn(true);
-                this.minerEntity.currentMiningArea.setTime(0);
-                this.minerEntity.currentMiningArea.resetPatternProgress();
+                minerEntity.getCurrentMiningArea().setBeingWorkedOn(true);
+                this.minerEntity.getCurrentMiningArea().setTime(0);
+                this.minerEntity.getCurrentMiningArea().resetPatternProgress();
                 workDone = false;
                 setState(State.MOVE_TO_WORK_AREA);
             }
 
             case MOVE_TO_WORK_AREA ->{
                 this.blockPos = null;
-                if(this.moveToPosition(minerEntity.currentMiningArea.getOnPos(), 70)) return;
+                if(this.moveToPosition(minerEntity.getCurrentMiningArea().getOnPos(), 70)) return;
 
                 setState(State.PREPARE_CLOSE_FLOOR);
             }
@@ -133,11 +133,11 @@ public class MinerWorkGoal extends Goal {
             case PREPARE_MINING -> {
                 this.blockPos = null;
 
-                if(this.minerEntity.currentMiningArea.stackToBreak.isEmpty()){
-                    this.minerEntity.currentMiningArea.scanBreakArea();
+                if(this.minerEntity.getCurrentMiningArea().stackToBreak.isEmpty()){
+                    this.minerEntity.getCurrentMiningArea().scanBreakArea();
                 }
 
-                this.stackToBreak = this.minerEntity.currentMiningArea.stackToBreak;
+                this.stackToBreak = this.minerEntity.getCurrentMiningArea().stackToBreak;
 
                 if(stackToBreak.isEmpty()){
                     setState(State.PREPARE_MINE_WALLS);
@@ -169,9 +169,9 @@ public class MinerWorkGoal extends Goal {
             }
 
             case PREPARE_MINE_WALLS -> {
-                this.minerEntity.currentMiningArea.scanForOresOnWalls();
+                this.minerEntity.getCurrentMiningArea().scanForOresOnWalls();
 
-                this.stackToBreak = minerEntity.currentMiningArea.stackToBreak;
+                this.stackToBreak = minerEntity.getCurrentMiningArea().stackToBreak;
                 if(stackToBreak.isEmpty()){
                     setState(State.CHECK);
                     return;
@@ -192,16 +192,16 @@ public class MinerWorkGoal extends Goal {
             }
 
             case PREPARE_CLOSE_FLOOR -> {
-                if(!this.minerEntity.currentMiningArea.getCloseFloor()){
+                if(!this.minerEntity.getCurrentMiningArea().getCloseFloor()){
                     setState(State.PREPARE_MINING);
                     return;
                 }
 
-                if(minerEntity.currentMiningArea.stackToPlace.isEmpty()){
-                    this.minerEntity.currentMiningArea.scanFloorArea();
+                if(minerEntity.getCurrentMiningArea().stackToPlace.isEmpty()){
+                    this.minerEntity.getCurrentMiningArea().scanFloorArea();
                 }
 
-                this.stackToPlace = minerEntity.currentMiningArea.stackToPlace;
+                this.stackToPlace = minerEntity.getCurrentMiningArea().stackToPlace;
 
                 if(stackToPlace.isEmpty()){
                     setState(State.PREPARE_MINING);
@@ -212,7 +212,7 @@ public class MinerWorkGoal extends Goal {
             }
 
             case CLOSE_FLOOR -> {
-                if(!this.minerEntity.currentMiningArea.getCloseFloor()){
+                if(!this.minerEntity.getCurrentMiningArea().getCloseFloor()){
                     setState(State.PREPARE_MINING);
                     return;
                 }
@@ -225,13 +225,13 @@ public class MinerWorkGoal extends Goal {
             }
 
             case CHECK -> {
-                this.minerEntity.currentMiningArea.scanBreakArea();
-                this.stackToBreak = this.minerEntity.currentMiningArea.stackToBreak;
+                this.minerEntity.getCurrentMiningArea().scanBreakArea();
+                this.stackToBreak = this.minerEntity.getCurrentMiningArea().stackToBreak;
 
                 if(stackToBreak.isEmpty()){
-                    if (this.minerEntity.currentMiningArea.getMiningMode() == MiningArea.MiningMode.TUNNEL
-                            || this.minerEntity.currentMiningArea.getMiningMode() == MiningArea.MiningMode.BRANCH) {
-                        if (this.minerEntity.currentMiningArea.advancePatternSegment()) {
+                    if (this.minerEntity.getCurrentMiningArea().getMiningMode() == MiningArea.MiningMode.TUNNEL
+                            || this.minerEntity.getCurrentMiningArea().getMiningMode() == MiningArea.MiningMode.BRANCH) {
+                        if (this.minerEntity.getCurrentMiningArea().advancePatternSegment()) {
                             setState(State.PREPARE_CLOSE_FLOOR);
                             return;
                         }
@@ -244,10 +244,10 @@ public class MinerWorkGoal extends Goal {
             }
 
             case DONE -> {
-                this.minerEntity.currentMiningArea.setDone(true);
+                this.minerEntity.getCurrentMiningArea().setDone(true);
 
                 blockPos = null;
-                minerEntity.currentMiningArea = null;
+                minerEntity.setCurrentWorkArea(null);
                 this.start();
                 minerEntity.clearWorkStatus();
 
@@ -294,9 +294,10 @@ public class MinerWorkGoal extends Goal {
     }
 
     private boolean isMiningAreaAvailable() {
-        if(minerEntity.currentMiningArea == null || !minerEntity.currentMiningArea.isRemoved()) return true;
+        MiningArea area = minerEntity.getCurrentMiningArea();
+        if(area == null || !area.isRemoved()) return true;
         else {
-            minerEntity.currentMiningArea = null;
+            minerEntity.setCurrentWorkArea(null);
         }
         return false;
     }
