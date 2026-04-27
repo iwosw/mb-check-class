@@ -30,4 +30,12 @@ public class WorkerControlStatus {
         kind = null;
         reasonToken = null;
     }
+
+    public Kind kind() {
+        return kind;
+    }
+
+    public String reasonToken() {
+        return reasonToken;
+    }
 }

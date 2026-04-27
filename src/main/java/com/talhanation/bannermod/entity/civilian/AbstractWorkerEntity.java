@@ -132,6 +132,43 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
         this.controlAccess.clearWorkStatus();
     }
 
+    @Override
+    public InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
+        if (!this.level().isClientSide() && hand == InteractionHand.MAIN_HAND) {
+            sendWorkerInspection(player);
+            return InteractionResult.SUCCESS;
+        }
+        return super.mobInteract(player, hand);
+    }
+
+    private void sendWorkerInspection(Player player) {
+        player.sendSystemMessage(Component.literal("Worker: " + this.getName().getString()));
+        player.sendSystemMessage(Component.literal("Profession: " + workerProfessionLabel()));
+        player.sendSystemMessage(Component.literal("Assignment: " + workerAssignmentLabel()));
+        player.sendSystemMessage(Component.literal("Problem: " + workerProblemLabel()));
+    }
+
+    private String workerProfessionLabel() {
+        String path = EntityType.getKey(this.getType()).getPath();
+        return path.replace('_', ' ');
+    }
+
+    private String workerAssignmentLabel() {
+        AbstractWorkAreaEntity workArea = this.getCurrentWorkArea();
+        if (workArea != null) {
+            return EntityType.getKey(workArea.getType()).toString();
+        }
+        return this.getBoundWorkAreaUUID() == null ? "unassigned" : "missing work area";
+    }
+
+    private String workerProblemLabel() {
+        WorkerControlStatus status = this.controlAccess.workStatus();
+        if (status.kind() == null || status.reasonToken() == null || status.reasonToken().isBlank()) {
+            return "none reported";
+        }
+        return status.kind().name().toLowerCase(Locale.ROOT) + ": " + status.reasonToken();
+    }
+
     WorkerCourierService courierService() {
         return this.courierService;
     }
