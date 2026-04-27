@@ -28,6 +28,10 @@ final class WorkerStatusRuntime {
         this.worker.clearPendingStorageComplaint();
     }
 
+    WorkerControlStatus workStatus() {
+        return this.workStatus;
+    }
+
     void resetRecoveredControlState() {
         AbstractWorkAreaEntity workArea = this.worker.getCurrentWorkArea();
         if (workArea != null) {

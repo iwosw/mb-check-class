@@ -76,6 +76,7 @@ class BannerModSettlementGrowthManagerTest {
         BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = new BannerModSettlementTradeRouteHandoffSeed(
                 1, 1, 0, 0, 2, 12,
                 List.of(new BannerModSettlementDesiredGoodSeed("market_goods", 0)),
+                List.of(),
                 List.of()
         );
         BannerModSettlementSupplySignalState supplySignalState = new BannerModSettlementSupplySignalState(

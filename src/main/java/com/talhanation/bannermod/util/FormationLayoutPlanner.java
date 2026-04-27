@@ -2,13 +2,18 @@ package com.talhanation.bannermod.util;
 
 import com.talhanation.bannermod.ai.military.FormationSlotRegistry;
 import com.talhanation.bannermod.ai.military.FormationTargetSelectionController;
+import com.talhanation.bannermod.combat.CombatRole;
+import com.talhanation.bannermod.combat.FormationPlanner;
+import com.talhanation.bannermod.combat.RecruitRoleResolver;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 final class FormationLayoutPlanner {
@@ -78,6 +83,57 @@ final class FormationLayoutPlanner {
             recruit.formationPos = i;
             registerSlotOwnership(recruit, i, holdPos);
         }
+    }
+
+    static void applyRoleAwareLineSlots(List<AbstractRecruitEntity> recruits, Vec3 targetPos, float ownerRot, double spacing) {
+        Map<com.talhanation.bannermod.combat.FormationSlot, List<AbstractRecruitEntity>> bySlot = new EnumMap<>(com.talhanation.bannermod.combat.FormationSlot.class);
+        for (AbstractRecruitEntity recruit : recruits) {
+            CombatRole role = RecruitRoleResolver.roleOf(recruit);
+            bySlot.computeIfAbsent(FormationPlanner.slotFor(role), ignored -> new ArrayList<>()).add(recruit);
+        }
+
+        Vec3 forward = FormationPatternBuilder.forwardFromYaw(ownerRot).normalize();
+        Vec3 right = new Vec3(-forward.z, 0.0D, forward.x).normalize();
+        int slotIndex = 0;
+        slotIndex = applyRoleRow(bySlot.get(com.talhanation.bannermod.combat.FormationSlot.FRONT_RANK), targetPos, right, forward, 0.0D, spacing, ownerRot, slotIndex);
+        slotIndex = applyRoleRow(bySlot.get(com.talhanation.bannermod.combat.FormationSlot.SUPPORT_RANK), targetPos, right, forward, -spacing, spacing, ownerRot, slotIndex);
+        slotIndex = applyRoleRow(bySlot.get(com.talhanation.bannermod.combat.FormationSlot.REAR_RANK), targetPos, right, forward, -spacing * 2.0D, spacing * 1.5D, ownerRot, slotIndex);
+        List<AbstractRecruitEntity> flank = bySlot.get(com.talhanation.bannermod.combat.FormationSlot.FLANK);
+        if (flank != null) {
+            double wingOffset = Math.max(spacing * 2.0D, (recruits.size() / 2.0D + 1.0D) * spacing);
+            for (int i = 0; i < flank.size(); i++) {
+                double side = i % 2 == 0 ? -1.0D : 1.0D;
+                double depth = -spacing * (i / 2);
+                Vec3 pos = targetPos.add(right.scale(side * wingOffset)).add(forward.scale(depth));
+                applySpecificSlot(flank.get(i), pos, ownerRot, slotIndex++);
+            }
+        }
+    }
+
+    private static int applyRoleRow(List<AbstractRecruitEntity> recruits, Vec3 targetPos, Vec3 right, Vec3 forward, double depth, double spacing, float ownerRot, int slotIndex) {
+        if (recruits == null || recruits.isEmpty()) {
+            return slotIndex;
+        }
+        double center = (recruits.size() - 1) / 2.0D;
+        for (int i = 0; i < recruits.size(); i++) {
+            Vec3 pos = targetPos.add(right.scale((i - center) * spacing)).add(forward.scale(depth));
+            applySpecificSlot(recruits.get(i), pos, ownerRot, slotIndex++);
+        }
+        return slotIndex;
+    }
+
+    private static void applySpecificSlot(AbstractRecruitEntity recruit, Vec3 slotPosition, float ownerRot, int slotIndex) {
+        BlockPos blockPos = FormationUtils.getPositionOrSurface(
+                recruit.getCommandSenderWorld(),
+                new BlockPos((int) slotPosition.x, (int) slotPosition.y, (int) slotPosition.z)
+        );
+        Vec3 holdPos = new Vec3(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        recruit.setHoldPos(holdPos);
+        recruit.ownerRot = ownerRot;
+        recruit.setFollowState(3);
+        recruit.isInFormation = true;
+        recruit.formationPos = slotIndex;
+        registerSlotOwnership(recruit, slotIndex, holdPos);
     }
 
     private static void registerSlotOwnership(AbstractRecruitEntity recruit, int slotIndex, Vec3 holdPos) {

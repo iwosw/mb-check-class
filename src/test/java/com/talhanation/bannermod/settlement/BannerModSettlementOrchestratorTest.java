@@ -151,6 +151,7 @@ class BannerModSettlementOrchestratorTest {
                         2,
                         12,
                         List.of(new BannerModSettlementDesiredGoodSeed("market_goods", 0)),
+                        List.of(),
                         List.of()
                 ),
                 new BannerModSettlementSupplySignalState(

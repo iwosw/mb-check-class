@@ -71,7 +71,8 @@ class BannerModSettlementManagerTest {
                                 new BannerModSettlementDesiredGoodSeed("market_goods", 1),
                                 new BannerModSettlementDesiredGoodSeed("storage_type:merchants", 1)
                         ),
-                        List.of(new BannerModSettlementSellerDispatchRecord(workerUuid, workAreaUuid, "Harbor Square", BannerModSettlementSellerDispatchState.READY))
+                        List.of(new BannerModSettlementSellerDispatchRecord(workerUuid, workAreaUuid, "Harbor Square", BannerModSettlementSellerDispatchState.READY)),
+                        List.of()
                 ),
                 new BannerModSettlementSupplySignalState(
                         3,

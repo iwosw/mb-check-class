@@ -50,21 +50,12 @@ public class FormationUtils {
     }
 
     public static void lineUpFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos, double spacingMultiplier) {
-        FormationLayoutPlanner.assignAndApplySlots(
-                recruits,
-                FormationPatternBuilder.buildLineUpPositions(recruits, targetPos, player.getYRot(), spacingMultiplier),
-                null,
-                false
-        );
+        FormationLayoutPlanner.applyRoleAwareLineSlots(recruits, targetPos, player.getYRot(), spacing * spacingMultiplier);
     }
 
     public static void lineFormation(Vec3 forward, List<AbstractRecruitEntity> recruits, Vec3 targetPos, int maxInRow, double spacing) {
-        FormationLayoutPlanner.assignAndApplySlots(
-                recruits,
-                FormationPatternBuilder.buildLinePositions(recruits, forward, targetPos, maxInRow, spacing),
-                null,
-                false
-        );
+        float ownerRot = (float) Math.toDegrees(Math.atan2(-forward.x, forward.z));
+        FormationLayoutPlanner.applyRoleAwareLineSlots(recruits, targetPos, ownerRot, spacing);
     }
 
     public static void squareFormation(Player player, List<AbstractRecruitEntity> recruits, Vec3 targetPos) {

@@ -56,7 +56,7 @@ public class RecruitHoldPosGoal extends Goal {
             if(distance >= 0.3) {
                 if (--this.timeToRecalcPath <= 0) {
                     this.timeToRecalcPath = this.recruit.getVehicle() != null ? this.adjustedTickDelay(5) : this.adjustedTickDelay(10);
-                    this.recruit.getNavigation().moveTo(pos.x(), pos.y(), pos.z(), this.recruit.moveSpeed);
+                    this.recruit.getNavigation().moveTo(pos.x(), pos.y(), pos.z(), formationMoveSpeed());
                 }
 
                 if (recruit.horizontalCollision || recruit.minorHorizontalCollision) {
@@ -71,7 +71,7 @@ public class RecruitHoldPosGoal extends Goal {
                     this.formationFallbackCooldown = this.adjustedTickDelay(20);
                     Vec3 fallbackPos = this.recruit.getHoldPos();
                     if (fallbackPos != null) {
-                        this.recruit.getNavigation().moveTo(fallbackPos.x(), fallbackPos.y(), fallbackPos.z(), this.recruit.moveSpeed);
+                        this.recruit.getNavigation().moveTo(fallbackPos.x(), fallbackPos.y(), fallbackPos.z(), formationMoveSpeed());
                     }
                 }
             } else{
@@ -98,8 +98,15 @@ public class RecruitHoldPosGoal extends Goal {
             this.recruit.lastFormationGapFillTick = this.recruit.tickCount;
             Vec3 newHold = this.recruit.getHoldPos();
             if (newHold != null) {
-                this.recruit.getNavigation().moveTo(newHold.x(), newHold.y(), newHold.z(), this.recruit.moveSpeed);
+                this.recruit.getNavigation().moveTo(newHold.x(), newHold.y(), newHold.z(), formationMoveSpeed());
             }
         }
+    }
+
+    private double formationMoveSpeed() {
+        if (this.recruit.isInFormation && this.recruit.getCombatStance() == CombatStance.SHIELD_WALL) {
+            return this.recruit.moveSpeed * 0.55D;
+        }
+        return this.recruit.moveSpeed;
     }
 }

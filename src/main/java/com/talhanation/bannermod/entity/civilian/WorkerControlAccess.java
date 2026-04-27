@@ -68,6 +68,10 @@ final class WorkerControlAccess {
         this.statusRuntime.clearWorkStatus();
     }
 
+    WorkerControlStatus workStatus() {
+        return this.statusRuntime.workStatus();
+    }
+
     void resetRecoveredControlState() {
         this.statusRuntime.resetRecoveredControlState();
     }
