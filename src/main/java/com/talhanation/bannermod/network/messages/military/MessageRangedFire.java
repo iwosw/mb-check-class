@@ -35,8 +35,8 @@ public class MessageRangedFire implements Message<MessageRangedFire> {
     }
 
     public void executeServerSide(NetworkEvent.Context context) {
-        ServerPlayer serverPlayer = context.getSender();
         ServerPlayer sender = Objects.requireNonNull(context.getSender());
+        UUID actorUuid = authorizedPlayerUuid(sender.getUUID(), this.player);
         AABB commandBox = sender.getBoundingBox().inflate(100);
         List<AbstractRecruitEntity> list = RecruitIndex.instance().groupInRange(
                 sender.getCommandSenderWorld(),
@@ -51,9 +51,14 @@ public class MessageRangedFire implements Message<MessageRangedFire> {
             list.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
         }
         for (AbstractRecruitEntity recruits : list) {
-                CommandEvents.onRangedFireCommand(serverPlayer, this.player, recruits, group, should);
+                CommandEvents.onRangedFireCommand(sender, actorUuid, recruits, group, should);
         }
     }
+
+    static UUID authorizedPlayerUuid(UUID senderUuid, UUID ignoredWireUuid) {
+        return senderUuid;
+    }
+
     public MessageRangedFire fromBytes(FriendlyByteBuf buf) {
         this.player = buf.readUUID();
         this.group = buf.readUUID();

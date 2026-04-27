@@ -1,0 +1,33 @@
+package com.talhanation.bannermod.network.messages.military;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class MilitaryPacketActorIdentityTest {
+    @Test
+    void faceCommandIgnoresSpoofedWireUuid() {
+        UUID sender = UUID.randomUUID();
+        UUID spoofed = UUID.randomUUID();
+
+        assertEquals(sender, MessageFaceCommand.authorizedPlayerUuid(sender, spoofed));
+    }
+
+    @Test
+    void rangedFireIgnoresSpoofedWireUuid() {
+        UUID sender = UUID.randomUUID();
+        UUID spoofed = UUID.randomUUID();
+
+        assertEquals(sender, MessageRangedFire.authorizedPlayerUuid(sender, spoofed));
+    }
+
+    @Test
+    void upkeepIgnoresSpoofedWireUuid() {
+        UUID sender = UUID.randomUUID();
+        UUID spoofed = UUID.randomUUID();
+
+        assertEquals(sender, MessageUpkeepEntity.authorizedPlayerUuid(sender, spoofed));
+    }
+}

@@ -11,6 +11,7 @@ import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.building.BuildingValidationState;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRegistryData;
+import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -77,9 +78,11 @@ public final class SettlementSurveyorService {
                 0L
         );
         ValidatedBuildingRegistryData.get(level).registerBuilding(record);
+        PrefabAutoStaffingRuntime.registerValidatedBuildingVacancy(record);
         player.sendSystemMessage(Component.literal(
                 "Building validated: " + type.name() + " (capacity " + result.capacity() + ", quality " + result.qualityScore() + ")")
                 .withStyle(ChatFormatting.GREEN));
+        player.sendSystemMessage(Component.literal(PrefabAutoStaffingRuntime.describeManualVacancy(type)).withStyle(ChatFormatting.YELLOW));
     }
 
     private static SettlementRecord settlementForAnchor(ServerLevel level, ValidationSession session) {
@@ -116,5 +119,6 @@ public final class SettlementSurveyorService {
         player.sendSystemMessage(Component.literal("State: " + record.state().name()
                 + " | Capacity: " + record.capacity()
                 + " | Quality: " + record.qualityScore()).withStyle(ChatFormatting.YELLOW));
+        player.sendSystemMessage(Component.literal(PrefabAutoStaffingRuntime.describeManualVacancy(record.type())).withStyle(ChatFormatting.YELLOW));
     }
 }
