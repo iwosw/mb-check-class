@@ -361,7 +361,7 @@
     {
       "id": "UI-003",
       "title": "War UI client mirror freshness",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War/state UI reads from a client mirror that can survive login/logout and screens often copy snapshots on init/manual refresh, so players can see stale political or war data after server/world changes.",
       "scope": [
@@ -375,12 +375,18 @@
         "Stale selections are disabled or cleared safely."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Client login/logout now clears WarClientState alongside ClientManager state. WarClientState exposes hasSnapshot(), clears it on clear/null snapshots, and sets it on authoritative NBT apply. WarListScreen and PoliticalEntityListScreen track WarClientState.version(), auto-refresh open lists/selections/buttons on tick, clamp scroll, clear stale selections, and show sync-pending empty text before the first snapshot. Verified ./gradlew compileJava and ./gradlew test --tests com.talhanation.bannermod.war.client.WarClientStateTest."
+        }
+      ],
       "evidence": [
         "WarClientState has clear() and version().",
         "ClientSyncLifecycleEvents has login/logout hooks.",
         "WarListScreen snapshots state in init()/manual refresh()."
-      ]
+      ],
+      "doneDate": "2026-04-27"
     },
     {
       "id": "UI-004",
