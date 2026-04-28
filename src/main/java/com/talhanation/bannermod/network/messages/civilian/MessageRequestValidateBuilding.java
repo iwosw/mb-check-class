@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 /**
  * Client → server request to validate a player-built structure.
@@ -38,7 +38,7 @@ public class MessageRequestValidateBuilding implements BannerModMessage<MessageR
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null) {
             return;

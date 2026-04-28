@@ -8,7 +8,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +30,7 @@ public class MessageScoutTask implements BannerModMessage<MessageScoutTask> {
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         dispatchToServer(Objects.requireNonNull(context.getSender()), this.recruit, this.state);
     }
 

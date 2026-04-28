@@ -17,8 +17,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -56,7 +56,7 @@ public class MessageHireFromNobleVillager implements BannerModMessage<MessageHir
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         ServerLevel serverLevel = player.serverLevel();
         Entity nobleEntity = serverLevel.getEntity(this.nobleUUID);
@@ -91,7 +91,7 @@ public class MessageHireFromNobleVillager implements BannerModMessage<MessageHir
 
         String stringID = player.getTeam() != null ? player.getTeam().getName() : "";
         boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringID, player.getUUID());
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> player), new MessageToClientUpdateHireState(canHire));
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> player), new MessageToClientUpdateHireState(canHire));
     }
     public void createRecruit(ServerLevel serverLevel, Villager villager, VillagerNobleEntity villagerNoble, Player player, RecruitsGroup group){
         String string = resource.toString();

@@ -21,8 +21,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.scores.Team;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 final class RecruitInteractionService {
@@ -86,7 +86,7 @@ final class RecruitInteractionService {
 
     static void openGUI(AbstractRecruitEntity recruit, Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            NetworkHooks.openScreen(serverPlayer, new MenuProvider() {
+            BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
                 @Override
                 public @NotNull Component getDisplayName() {
                     return recruit.getName();
@@ -104,7 +104,7 @@ final class RecruitInteractionService {
 
     static void openDebugScreen(AbstractRecruitEntity recruit, Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            NetworkHooks.openScreen(serverPlayer, new MenuProvider() {
+            BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
                 @Override
                 public @NotNull Component getDisplayName() {
                     return recruit.getName();
@@ -126,8 +126,8 @@ final class RecruitInteractionService {
             Team ownerTeam = player.getTeam();
             String stringId = ownerTeam != null ? ownerTeam.getName() : "";
             boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID());
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientUpdateHireState(canHire));
-            NetworkHooks.openScreen(serverPlayer, new MenuProvider() {
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientUpdateHireState(canHire));
+            BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
                 @Override
                 public @NotNull Component getDisplayName() {
                     return recruit.getName();

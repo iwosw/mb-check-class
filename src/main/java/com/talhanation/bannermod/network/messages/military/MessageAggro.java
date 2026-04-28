@@ -11,7 +11,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class MessageAggro implements BannerModMessage<MessageAggro> {
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
 
         double boundBoxInflateModifier = fromGui ? 16.0D : 100.0D;

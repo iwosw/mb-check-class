@@ -12,7 +12,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +37,7 @@ public class MessageAttack implements BannerModMessage<MessageAttack> {
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
         dispatchToServer(serverPlayer, this.playerUuid, this.group);
     }

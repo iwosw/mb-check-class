@@ -8,7 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 /**
  * Client → server request to place a prefab building at a target position.
@@ -36,7 +36,7 @@ public class MessageRequestPlaceBuilding implements BannerModMessage<MessageRequ
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null) {
             return;

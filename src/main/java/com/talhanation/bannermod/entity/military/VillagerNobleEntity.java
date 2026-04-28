@@ -32,7 +32,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -178,8 +178,8 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
         String stringID = player.getTeam() != null ? player.getTeam().getName() : "";
 
         boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringID, player.getUUID());
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenNobleTradeScreen(this));
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenNobleTradeScreen(this));
     }
     public void addXpLevel(int level){
         super.addXpLevel(level);

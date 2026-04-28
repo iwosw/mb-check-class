@@ -1,15 +1,15 @@
-package net.minecraftforge.network;
+package com.talhanation.bannermod.network.compat;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.function.Supplier;
 
-public final class PacketDistributor {
+public final class BannerModPacketDistributor {
     public static final PlayerTarget PLAYER = new PlayerTarget();
     public static final AllTarget ALL = new AllTarget();
 
-    private PacketDistributor() {
+    private BannerModPacketDistributor() {
     }
 
     public sealed interface Target permits PlayerPacketTarget, AllPacketTarget {

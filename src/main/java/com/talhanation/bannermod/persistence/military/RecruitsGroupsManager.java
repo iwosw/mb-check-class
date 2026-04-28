@@ -6,7 +6,7 @@ import com.talhanation.bannermod.network.messages.military.MessageToClientUpdate
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -191,7 +191,7 @@ public class RecruitsGroupsManager {
     public void broadCastGroupsToPlayer(Player player) {
         if (player == null) return;
 
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
                 new MessageToClientUpdateGroups(
                         RecruitsGroup.listToNbt(getPlayerGroupsForClient(player))
                 ));

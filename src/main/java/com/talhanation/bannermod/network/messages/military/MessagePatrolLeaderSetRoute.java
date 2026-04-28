@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -54,7 +54,7 @@ public class MessagePatrolLeaderSetRoute implements BannerModMessage<MessagePatr
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         dispatchToServer(player, this.recruit, this.routeId, this.waypoints, this.waitSeconds);
     }

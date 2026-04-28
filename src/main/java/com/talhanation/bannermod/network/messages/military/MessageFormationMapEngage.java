@@ -15,7 +15,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +74,7 @@ public class MessageFormationMapEngage implements BannerModMessage<MessageFormat
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer sender = context.getSender();
         if (sender == null || target == null || actorContactId == null || mode == null) return;
 

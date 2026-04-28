@@ -9,8 +9,8 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -29,7 +29,7 @@ public class MessagePatrolLeaderRemoveWayPoint implements BannerModMessage<Messa
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.worker);
         if (entity instanceof AbstractLeaderEntity leader
@@ -43,7 +43,7 @@ public class MessagePatrolLeaderRemoveWayPoint implements BannerModMessage<Messa
         if (!leaderEntity.WAYPOINTS.isEmpty()) leaderEntity.WAYPOINTS.pop();
         if (!leaderEntity.WAYPOINT_ITEMS.isEmpty()) leaderEntity.WAYPOINT_ITEMS.pop();
 
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateLeaderScreen(leaderEntity.WAYPOINTS, leaderEntity.WAYPOINT_ITEMS, leaderEntity.getArmySize()));
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateLeaderScreen(leaderEntity.WAYPOINTS, leaderEntity.WAYPOINT_ITEMS, leaderEntity.getArmySize()));
     }
 
     public MessagePatrolLeaderRemoveWayPoint fromBytes(FriendlyByteBuf buf) {

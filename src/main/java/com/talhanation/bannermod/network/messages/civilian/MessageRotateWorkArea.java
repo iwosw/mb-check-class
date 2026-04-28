@@ -6,7 +6,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.UUID;
 
@@ -28,7 +28,7 @@ public class MessageRotateWorkArea implements BannerModMessage<MessageRotateWork
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null) return;
 

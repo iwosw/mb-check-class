@@ -6,7 +6,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 /**
  * Server → Client: delivers a transferred route to the receiving player.
@@ -28,7 +28,7 @@ public class MessageToClientReceiveRoute implements BannerModMessage<MessageToCl
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RecruitsRoute route = decodeRouteForClient(routeNBT);
         if (route == null) return;
         ClientManager.saveRoute(route);

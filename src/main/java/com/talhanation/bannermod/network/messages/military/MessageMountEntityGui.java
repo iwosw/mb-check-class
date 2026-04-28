@@ -15,7 +15,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.neoforged.neoforge.common.extensions.IEntityExtension;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.*;
 import java.util.function.Function;
@@ -37,7 +37,7 @@ public class MessageMountEntityGui implements BannerModMessage<MessageMountEntit
     }
 
     @SuppressWarnings({"all"})
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
 
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 32.0D * 32.0D);

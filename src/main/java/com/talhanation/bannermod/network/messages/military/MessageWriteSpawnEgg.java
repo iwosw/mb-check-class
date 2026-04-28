@@ -13,7 +13,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -33,7 +33,7 @@ public class MessageWriteSpawnEgg implements BannerModMessage<MessageWriteSpawnE
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.recruit);
         if (entity instanceof CitizenEntity citizenEntity && citizenEntity.distanceToSqr(player) <= 64.0D * 64.0D) {

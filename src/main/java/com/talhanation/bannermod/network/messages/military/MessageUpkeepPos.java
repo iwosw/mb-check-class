@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +34,7 @@ public class MessageUpkeepPos implements BannerModMessage<MessageUpkeepPos> {
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         dispatchToServer(player, this.player, this.group, this.pos);
     }

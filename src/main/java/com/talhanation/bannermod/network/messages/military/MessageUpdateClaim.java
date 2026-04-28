@@ -14,7 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.UUID;
 
@@ -35,7 +35,7 @@ public class MessageUpdateClaim implements BannerModMessage<MessageUpdateClaim> 
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         ServerPlayer sender = context.getSender();
         if (sender == null) return;
         RecruitsClaim updatedClaim = RecruitsClaim.fromNBT(this.claimNBT);

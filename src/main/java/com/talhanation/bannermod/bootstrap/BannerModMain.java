@@ -41,7 +41,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.network.simple.SimpleChannel;
+import com.talhanation.bannermod.network.compat.BannerModChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,7 +49,7 @@ import org.apache.logging.log4j.Logger;
 public class BannerModMain {
     public static final String MOD_ID = "bannermod";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-    public static SimpleChannel SIMPLE_CHANNEL;
+    public static BannerModChannel SIMPLE_CHANNEL;
 
     // Compat booleans
     public static boolean isMusketModLoaded;

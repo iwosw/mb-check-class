@@ -7,7 +7,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -32,7 +32,7 @@ public class MessageOpenPromoteScreen implements BannerModMessage<MessageOpenPro
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         if (!player.getUUID().equals(this.player)) {
             return;

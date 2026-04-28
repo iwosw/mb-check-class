@@ -70,8 +70,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.Tags;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;

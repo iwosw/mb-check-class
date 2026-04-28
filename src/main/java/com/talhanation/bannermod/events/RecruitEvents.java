@@ -50,7 +50,7 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
-import net.minecraftforge.network.NetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -110,7 +110,7 @@ public class RecruitEvents {
 
     public static void openPromoteScreen(Player player, AbstractRecruitEntity recruit) {
         if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+            BannerModNetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
                 @Override
                 public @NotNull Component getDisplayName() {
                     return recruit.getName();

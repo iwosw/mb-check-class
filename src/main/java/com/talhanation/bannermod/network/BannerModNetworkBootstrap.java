@@ -4,7 +4,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import de.maxhenkel.corelib.CommonRegistry;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.minecraftforge.network.simple.SimpleChannel;
+import com.talhanation.bannermod.network.compat.BannerModChannel;
 
 // Military network messages (migrated from recruits.network.*)
 import com.talhanation.bannermod.network.messages.military.*;
@@ -30,7 +30,7 @@ import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityS
 import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
 
 /**
- * Owns the single shared SimpleChannel for the merged bannermod runtime.
+ * Owns the single shared BannerModChannel for the merged bannermod runtime.
  *
  * Military packets are registered at indices [0..MILITARY_MESSAGES.length) and
  * civilian packets at [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length).
@@ -227,8 +227,8 @@ public class BannerModNetworkBootstrap {
         }
     }
 
-    public static SimpleChannel createSharedChannel() {
-        SimpleChannel channel = new SimpleChannel();
+    public static BannerModChannel createSharedChannel() {
+        BannerModChannel channel = new BannerModChannel();
         com.talhanation.bannermod.bootstrap.WorkersRuntime.bindChannel(channel);
         return channel;
     }

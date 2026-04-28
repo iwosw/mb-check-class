@@ -11,7 +11,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 public class MessageToClientOpenMessengerAnswerScreen implements BannerModMessage<MessageToClientOpenMessengerAnswerScreen> {
 
@@ -35,7 +35,7 @@ public class MessageToClientOpenMessengerAnswerScreen implements BannerModMessag
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         Player player = Minecraft.getInstance().player;
         if (player != null
                 && player.level().getEntity(this.entityId) instanceof MessengerEntity messenger

@@ -6,8 +6,8 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -36,13 +36,13 @@ public class MessageTransferRoute implements BannerModMessage<MessageTransferRou
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer sender = Objects.requireNonNull(context.getSender());
         if (!isRouteTransferPayloadValid(targetPlayerUUID, routeNBT)) return;
 
         ServerPlayer target = sender.getServer().getPlayerList().getPlayer(targetPlayerUUID);
         if (target == null) return;
-        SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> target),
+        SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> target),
                 new MessageToClientReceiveRoute(routeNBT));
     }
 

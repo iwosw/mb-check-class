@@ -15,7 +15,7 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 /**
  * Server-authoritative broadcaster for the warfare-RP runtime snapshot.
@@ -77,13 +77,13 @@ public class WarStateBroadcaster {
         primed = true;
 
         CompoundTag payload = snapshotPayload(level, version);
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.ALL.noArg(),
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.ALL.noArg(),
                 new MessageToClientUpdateWarState(payload));
     }
 
     private void sendSnapshotTo(ServerPlayer player, ServerLevel level) {
         CompoundTag payload = snapshotPayload(level, WarSyncDirtyTracker.version());
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                 new MessageToClientUpdateWarState(payload));
     }
 

@@ -6,7 +6,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 public class MessageToClientUpdateConfig implements BannerModMessage<MessageToClientUpdateConfig> {
     private boolean allowWorkAreaOnlyInFactionClaim;
@@ -24,7 +24,7 @@ public class MessageToClientUpdateConfig implements BannerModMessage<MessageToCl
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         WorkersClientManager.configValueWorkAreaOnlyInFactionClaim = this.allowWorkAreaOnlyInFactionClaim;
     }
 

@@ -7,7 +7,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.simple.SimpleChannel;
+import com.talhanation.bannermod.network.compat.BannerModChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +22,7 @@ public final class WorkersRuntime {
     public static final String LEGACY_MOD_ID = "workers";
     public static final String ACTIVE_ASSET_NAMESPACE = "bannermod";
     private static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-    private static SimpleChannel simpleChannel;
+    private static BannerModChannel simpleChannel;
 
     private WorkersRuntime() {
     }
@@ -111,11 +111,11 @@ public final class WorkersRuntime {
         return mergedAssetId("structures/workers");
     }
 
-    public static void bindChannel(SimpleChannel channel) {
+    public static void bindChannel(BannerModChannel channel) {
         simpleChannel = channel;
     }
 
-    public static SimpleChannel channel() {
+    public static BannerModChannel channel() {
         return Objects.requireNonNull(simpleChannel, "Workers shared channel is not initialized yet");
     }
 

@@ -16,7 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -151,13 +151,13 @@ public class RecruitsClaimManager {
     public void broadcastClaimsToAll(ServerLevel level) {
         MessageToClientUpdateClaims message = createFullClaimsSyncMessage();
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), message);
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player), message);
         }
     }
 
     public void sendClaimsToPlayer(ServerPlayer player) {
         if (player == null) return;
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), createFullClaimsSyncMessage());
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player), createFullClaimsSyncMessage());
     }
 
     private MessageToClientUpdateClaims createFullClaimsSyncMessage() {
@@ -184,7 +184,7 @@ public class RecruitsClaimManager {
         if (claim == null || players == null || players.isEmpty()) return;
 
         for (ServerPlayer player : players) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientUpdateClaim(claim));
         }
     }

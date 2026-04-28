@@ -6,7 +6,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 
 public class MessageToClientUpdateMessengerScreen implements BannerModMessage<MessageToClientUpdateMessengerScreen> {
@@ -29,7 +29,7 @@ public class MessageToClientUpdateMessengerScreen implements BannerModMessage<Me
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         //MessengerScreen.message = this.message;
 
         if(nbt != null){
