@@ -1,9 +1,10 @@
 package com.talhanation.bannermod.client.military.gui.widgets;
 
-import com.mojang.blaze3d.systems.RenderSystem; 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
@@ -34,7 +35,6 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
     private int maxVisibleOptions; // Maximum number of options visible at once
     private boolean isScrolling = false; // Whether the scrollbar is being dragged
     private int scrollbarWidth = 6; // Width of the scrollbar
-    private int scrollbarHandleHeight; // Height of the scrollbar handle
     public boolean canSelect = true;
     public ScrollDropDownMenu(T selectedOption, int x, int y, int width, int height, List<T> options, Function<T, String> optionTextGetter, Consumer<T> onSelect) {
         super(x, y, width, height, Component.literal(""));
@@ -43,8 +43,7 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
         this.onSelect = onSelect;
         this.optionTextGetter = optionTextGetter;
         this.optionHeight = height;
-        this.maxVisibleOptions = Math.min(5, options.size()); // Adjust based on your needs
-        this.scrollbarHandleHeight = Math.max(10, (int) ((float) maxVisibleOptions / options.size() * (height * maxVisibleOptions)));
+        this.maxVisibleOptions = Math.min(5, options.size());
     }
 
     @Override
@@ -60,15 +59,17 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
         guiGraphics.drawCenteredString(Minecraft.getInstance().font, getSelectedText(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, displayColor);
 
         if (isOpen) {
-            int dropdownHeight = maxVisibleOptions * optionHeight;
+            int visibleOptions = getVisibleOptionCount();
+            if (visibleOptions <= 0) {
+                return;
+            }
+
+            int dropdownHeight = visibleOptions * optionHeight;
             guiGraphics.fill(this.getX(), this.getY() + this.height, this.getX() + this.width, this.getY() + this.height + dropdownHeight, bgFill);
 
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0, 0, 500); // Ensure the dropdown renders above other elements
-            RenderSystem.enableScissor((int) (this.getX() * Minecraft.getInstance().getWindow().getGuiScale()),
-                    (int) (Minecraft.getInstance().getWindow().getHeight() - (this.getY() + this.height + dropdownHeight) * Minecraft.getInstance().getWindow().getGuiScale()),
-                    (int) (this.width * Minecraft.getInstance().getWindow().getGuiScale()),
-                    (int) (dropdownHeight * Minecraft.getInstance().getWindow().getGuiScale()));
+            GuiWidgetBounds.enableScissor(this.getX(), this.getY() + this.height, this.width, dropdownHeight);
 
             for (int i = 0; i < options.size(); i++) {
                 int optionY = this.getY() + this.height + (i - scrollOffset) * optionHeight;
@@ -87,10 +88,10 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
 
 
             // Render the scrollbar
-            if (options.size() > maxVisibleOptions) {
+            if (options.size() > visibleOptions) {
                 int scrollbarX = this.getX() + this.width - scrollbarWidth;
                 int scrollbarY = this.getY() + this.height + (int) ((float) scrollOffset / options.size() * dropdownHeight);
-                int scrollbarHeight = (int) ((float) maxVisibleOptions / options.size() * dropdownHeight);
+                int scrollbarHeight = Math.max(10, (int) ((float) visibleOptions / options.size() * dropdownHeight));
 
                 // Scrollbar background
                 guiGraphics.fill(scrollbarX, this.getY() + this.height, scrollbarX + scrollbarWidth, this.getY() + this.height + dropdownHeight, scrollbarColor);
@@ -150,10 +151,15 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
 
         // Handle scrollbar dragging
         if (isScrolling) {
-            int dropdownHeight = maxVisibleOptions * optionHeight;
+            int visibleOptions = getVisibleOptionCount();
+            if (visibleOptions <= 0) {
+                return;
+            }
+
+            int dropdownHeight = visibleOptions * optionHeight;
             int scrollbarY = (int) mouseY - (this.getY() + this.height);
             scrollOffset = (int) ((float) scrollbarY / dropdownHeight * options.size());
-            scrollOffset = Math.max(0, Math.min(scrollOffset, options.size() - maxVisibleOptions));
+            scrollOffset = GuiWidgetBounds.clampScrollOffset(scrollOffset, options.size(), visibleOptions);
         }
     }
 
@@ -163,7 +169,7 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
 
         if (isOpen) {
             scrollOffset -= (int) delta;
-            scrollOffset = Math.max(0, Math.min(scrollOffset, options.size() - maxVisibleOptions));
+            scrollOffset = GuiWidgetBounds.clampScrollOffset(scrollOffset, options.size(), getVisibleOptionCount());
             return true;
         }
         return false;
@@ -181,18 +187,18 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
     }
 
     private boolean isMouseOverScrollbar(int mouseX, int mouseY) {
-        if (!isOpen || options.size() <= maxVisibleOptions) return false;
+        int visibleOptions = getVisibleOptionCount();
+        if (!isOpen || options.size() <= visibleOptions || visibleOptions <= 0) return false;
 
         int scrollbarX = this.getX() + this.width - scrollbarWidth;
         int scrollbarY = this.getY() + this.height;
-        int scrollbarHeight = maxVisibleOptions * optionHeight;
+        int scrollbarHeight = visibleOptions * optionHeight;
 
-        return mouseX >= scrollbarX && mouseX <= scrollbarX + scrollbarWidth &&
-                mouseY >= scrollbarY && mouseY <= scrollbarY + scrollbarHeight;
+        return GuiWidgetBounds.contains(scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, mouseX, mouseY);
     }
 
     private boolean isMouseOverDisplay(int mouseX, int mouseY) {
-        return mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height;
+        return GuiWidgetBounds.contains(this.getX(), this.getY(), this.width, this.height, mouseX, mouseY);
     }
 
     private boolean isMouseOverDropdown(int mouseX, int mouseY) {
@@ -201,13 +207,13 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
         int dropdownStartX = this.getX();
         int dropdownStartY = this.getY() + this.height;
         int dropdownEndX = dropdownStartX + this.width;
-        int dropdownEndY = dropdownStartY + maxVisibleOptions * optionHeight;
+        int dropdownEndY = dropdownStartY + getVisibleOptionCount() * optionHeight;
 
-        return mouseX >= dropdownStartX && mouseX <= dropdownEndX && mouseY >= dropdownStartY && mouseY <= dropdownEndY;
+        return GuiWidgetBounds.contains(dropdownStartX, dropdownStartY, dropdownEndX - dropdownStartX, dropdownEndY - dropdownStartY, mouseX, mouseY);
     }
 
     private boolean isMouseOverOption(int mouseX, int mouseY, int optionY) {
-        return mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= optionY && mouseY <= optionY + optionHeight;
+        return GuiWidgetBounds.contains(this.getX(), optionY, this.width, optionHeight, mouseX, mouseY);
     }
 
     public boolean isMouseOver(double x, double y) {
@@ -215,8 +221,12 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput p_259858_) {
-
+    protected void updateWidgetNarration(NarrationElementOutput narration) {
+        narration.add(NarratedElementType.TITLE, Component.translatable(
+                "gui.bannermod.widget.dropdown.narration", getSelectedText(), options.size()));
+        if (isOpen) {
+            narration.add(NarratedElementType.USAGE, Component.translatable("gui.bannermod.widget.dropdown.open"));
+        }
     }
 
     private void selectOption(T option) {
@@ -227,6 +237,10 @@ public class ScrollDropDownMenu<T> extends AbstractWidget {
 
     private String getSelectedText() {
         return selectedOption != null ? optionTextGetter.apply(selectedOption) : "";
+    }
+
+    private int getVisibleOptionCount() {
+        return GuiWidgetBounds.visibleRowsBelow(this.getY() + this.height, optionHeight, maxVisibleOptions);
     }
 
     public void setBgFill(int bgFill) {
