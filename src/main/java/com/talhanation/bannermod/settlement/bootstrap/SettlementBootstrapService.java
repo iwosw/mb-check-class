@@ -36,6 +36,10 @@ public final class SettlementBootstrapService {
     private SettlementBootstrapService() {
     }
 
+    /**
+     * Manual founding path for {@link SettlementBootstrapLifecycle}: validate STARTER_FORT,
+     * establish/reuse the claim, write the formal settlement record, then seed starter population.
+     */
     public static BootstrapResult bootstrapSettlement(ServerLevel level,
                                                       ServerPlayer player,
                                                       BuildingValidationResult fortValidationResult) {
