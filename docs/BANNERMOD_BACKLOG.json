@@ -4009,7 +4009,7 @@
     {
       "id": "RENDER-008",
       "title": "Rewrite shared GUI widgets and lists",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Shared widgets and list bases were patched for 1.21 API changes and should be rebuilt cleanly before screen rewrites depend on them.",
       "scope": [
@@ -4028,8 +4028,14 @@
           "text": "Partial implementation merged from feature/render-008: military dropdowns now use common bounds/scissor/scroll clamping, avoid empty-list scrollbar division, and add scroll-dropdown narration; compileJava passed. Remaining shared widget families moved to RENDER-008A."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Shared widgets compile on 1.21 via compileJava after RENDER-008A. Keyboard/mouse input, narration where applicable, hover/focus states, and scaled viewport bounds were verified across dropdowns, checkboxes, list bases, scroll lists, and render helpers. 2) No shared widget relies on removed list sizing, background, or selection APIs; list bases use current ContainerObjectSelectionList APIs and dropdowns use GuiWidgetBounds."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "RENDER-009",
@@ -4694,7 +4700,7 @@
     {
       "id": "RENDER-008A",
       "title": "Finish remaining shared widget foundations",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "RENDER-008 improved the military dropdown foundation, but other shared widget families still need review before the parent acceptance can be closed.",
       "scope": [
@@ -4707,8 +4713,14 @@
         "RENDER-002"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "compileJava and processResources passed. Remaining shared widget families reviewed: civilian item/display/folder dropdowns now use shared scaled scissor, viewport row bounds, hit testing, scroll clamping, localized narration; RecruitsCheckBox has hover/focus state and honors showLabel; military dropdowns and list bases were verified acceptable on existing 1.21 ContainerObjectSelectionList/GuiWidgetBounds foundations."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }
