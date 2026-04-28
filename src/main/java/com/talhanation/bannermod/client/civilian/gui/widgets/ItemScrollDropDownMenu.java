@@ -254,8 +254,8 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
     }
 
     protected void updateWidgetNarration(NarrationElementOutput narration) {
-        narration.add(NarratedElementType.TITLE, this.selectedOption.getHoverName());
-        narration.add(NarratedElementType.USAGE, Component.literal(this.options.size() + " options"));
+        narration.add(NarratedElementType.TITLE, Component.translatable(
+                "gui.bannermod.widget.dropdown.narration", this.selectedOption.getHoverName(), this.options.size()));
     }
 
     private int getVisibleOptionCount() {

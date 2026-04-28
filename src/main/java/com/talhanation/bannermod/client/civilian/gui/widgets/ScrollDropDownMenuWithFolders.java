@@ -320,10 +320,10 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
     @Override
     protected void updateWidgetNarration(NarrationElementOutput out) {
         String headerText = currentRelativePath.toString().isEmpty()
-                ? "Select Template"
+                ? Component.translatable("gui.bannermod.widget.dropdown.template_root").getString()
                 : currentRelativePath.toString().replace('\\', '/');
-        out.add(NarratedElementType.TITLE, Component.literal(headerText));
-        out.add(NarratedElementType.USAGE, Component.literal(entries.size() + " entries"));
+        out.add(NarratedElementType.TITLE, Component.translatable(
+                "gui.bannermod.widget.dropdown.folder_narration", headerText, entries.size()));
     }
 
     private int getVisibleOptionCount() {
