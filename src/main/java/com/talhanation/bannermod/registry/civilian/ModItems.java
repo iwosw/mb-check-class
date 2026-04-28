@@ -3,6 +3,7 @@ package com.talhanation.bannermod.registry.civilian;
 import com.google.common.collect.Lists;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.items.civilian.BannerModAlmanacItem;
 import com.talhanation.bannermod.items.civilian.BuildingPlacementWandItem;
 import com.talhanation.bannermod.items.civilian.SettlementSurveyorToolItem;
 import com.talhanation.bannermod.items.civilian.WorkersSpawnEgg;
@@ -31,6 +32,7 @@ public class ModItems {
     public static final RegistryObject<SpawnEggItem> FISHERMAN_SPAWN_EGG = createSpawnEggItem("fisherman", ModEntityTypes.FISHERMAN, 16755200, 16777045);
     public static final RegistryObject<SpawnEggItem> ANIMAL_FARMER_SPAWN_EGG = createSpawnEggItem("animal_farmer", ModEntityTypes.ANIMAL_FARMER, 16755200, 16777045);
 
+    public static final RegistryObject<Item> BANNERMOD_ALMANAC = ITEMS.register("banner_almanac", () -> new BannerModAlmanacItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> BUILDING_PLACEMENT_WAND = ITEMS.register("building_placement_wand", () -> new BuildingPlacementWandItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> SETTLEMENT_SURVEYOR_TOOL = ITEMS.register("settlement_surveyor_tool", () -> new SettlementSurveyorToolItem(new Item.Properties().stacksTo(1)));
 
