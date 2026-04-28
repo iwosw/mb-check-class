@@ -5,6 +5,7 @@ import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenListBase;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -103,6 +104,11 @@ public class PlayersList extends ListScreenListBase<RecruitsPlayerEntry> {
 
     public boolean isEmpty() {
         return children().isEmpty();
+    }
+
+    @Nullable
+    public RecruitsPlayerEntry getPlayerEntryAtPosition(double x, double y) {
+        return this.getEntryAtPosition(x, y);
     }
 
     public int size(){
