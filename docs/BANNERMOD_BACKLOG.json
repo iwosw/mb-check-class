@@ -3339,7 +3339,7 @@
     {
       "id": "PORT-013",
       "title": "Migrate NeoForge common, dist, and bootstrap APIs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "After PORT-005, compileJava is blocked before entity inventory migration by remaining Forge common helpers, dist markers, FML lifecycle/config imports, and bootstrap wiring.",
       "scope": [
@@ -3352,8 +3352,14 @@
         "PORT-005"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Targeted source searches for net.minecraftforge.common, net.minecraftforge.api.distmarker, and net.minecraftforge.fml returned zero matches. compileJava still reaches Java compilation and now fails on remaining PORT-008 network/SimpleChannel payload APIs, PORT-007 registry/component APIs, PORT-006 inventory/capability APIs, plus BlockPathTypes pathfinding rename outside this slice."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }
