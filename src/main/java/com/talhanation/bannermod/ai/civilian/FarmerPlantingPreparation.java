@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.ai.civilian;
 
+import net.minecraft.world.Container;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -8,6 +9,7 @@ import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.neoforged.neoforge.common.SpecialPlantable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FarmerPlantingPreparation {
@@ -18,8 +20,12 @@ public class FarmerPlantingPreparation {
         MISSING
     }
 
-    public static ItemStack resolveSeedTemplate(ItemStack configuredSeed, List<ItemStack> inventory) {
-        Item resolvedItem = resolveSeedItem(configuredSeed.isEmpty() ? null : configuredSeed.getItem(), inventory.stream().map(ItemStack::getItem).toList());
+    public static ItemStack resolveSeedTemplate(ItemStack configuredSeed, Container inventory) {
+        List<Item> inventoryItems = new ArrayList<>();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            inventoryItems.add(inventory.getItem(i).getItem());
+        }
+        Item resolvedItem = resolveSeedItem(configuredSeed.isEmpty() ? null : configuredSeed.getItem(), inventoryItems);
         if (resolvedItem == null) {
             return ItemStack.EMPTY;
         }
@@ -28,7 +34,8 @@ public class FarmerPlantingPreparation {
             return configuredSeed.copyWithCount(1);
         }
 
-        for (ItemStack stack : inventory) {
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
             if (!stack.isEmpty() && stack.getItem() == resolvedItem) {
                 return stack.copyWithCount(1);
             }

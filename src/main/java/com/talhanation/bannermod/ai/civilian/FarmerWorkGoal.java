@@ -193,7 +193,7 @@ public class FarmerWorkGoal extends Goal {
                     return;
                 }
 
-                ItemStack seedTemplate = FarmerPlantingPreparation.resolveSeedTemplate(this.farmer.getCurrentCropArea().getSeedStack(), this.farmer.getInventory().items);
+                ItemStack seedTemplate = FarmerPlantingPreparation.resolveSeedTemplate(this.farmer.getCurrentCropArea().getSeedStack(), this.farmer.getInventory());
                 if(!seedTemplate.isEmpty() && this.farmer.getCurrentCropArea().getSeedStack().isEmpty()){
                     this.farmer.getCurrentCropArea().setSeedStack(seedTemplate);
                     this.farmer.getCurrentCropArea().updateType();
@@ -208,10 +208,10 @@ public class FarmerWorkGoal extends Goal {
                     return;
                 }
 
-                ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
+                ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameComponents(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
                 if(seedFromInv == null){
                     ItemStack seedStack = this.farmer.getCurrentCropArea().getSeedStack();
-                    farmer.requestRequiredItem(new NeededItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, seedStack),  stackToPlant.size(), true),
+                    farmer.requestRequiredItem(new NeededItem(itemStack -> ItemStack.isSameItemSameComponents(itemStack, seedStack),  stackToPlant.size(), true),
                             "farmer_missing_seeds",
                             Component.literal(farmer.getName().getString() + ": I need more seeds for this field."));
                     this.blockPos = null;
@@ -308,7 +308,7 @@ public class FarmerWorkGoal extends Goal {
         if(positions != null){
             ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> itemStack.is(this.farmer.getCurrentCropArea().getSeedStack().getItem()));
             if(seedFromInv == null){
-                seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
+                seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameComponents(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
             }
             if(seedFromInv == null){
                 setState(State.PREPARE_PLANT_SEEDS);

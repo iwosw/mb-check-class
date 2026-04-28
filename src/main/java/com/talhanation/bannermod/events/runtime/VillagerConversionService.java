@@ -95,7 +95,8 @@ public final class VillagerConversionService {
     }
 
     private static void copyVillagerInventory(Villager villager, AbstractRecruitEntity recruit) {
-        for (ItemStack itemStack : villager.getInventory().items) {
+        for (int i = 0; i < villager.getInventory().getContainerSize(); i++) {
+            ItemStack itemStack = villager.getInventory().getItem(i);
             recruit.getInventory().addItem(itemStack);
         }
     }
