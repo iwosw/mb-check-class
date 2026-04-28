@@ -4,7 +4,7 @@ import com.talhanation.bannermod.compat.BetterCombatWeaponAttributes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 /**
  * Stage 3.A: per-item reach tag.
@@ -41,7 +41,7 @@ public final class WeaponReach {
         if (item == null) {
             return 0.0D;
         }
-        ResourceLocation key = ForgeRegistries.ITEMS.getKey(item);
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
         if (key == null) {
             // Unregistered items fall back to the description-id heuristic so
             // tests / mods with quirky registration still pick up the tag.

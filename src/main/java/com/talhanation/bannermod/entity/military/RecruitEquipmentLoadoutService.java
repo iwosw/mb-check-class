@@ -1,10 +1,10 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.util.RegistryLookup;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +34,7 @@ final class RecruitEquipmentLoadoutService {
     }
 
     private static void equipSlot(AbstractRecruitEntity recruit, EquipmentSlot slot, String itemId) {
-        Optional<Holder<Item>> itemHolder = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(itemId));
+        Optional<? extends Holder<Item>> itemHolder = RegistryLookup.itemHolder(ResourceLocation.tryParse(itemId));
         itemHolder.ifPresent(holder -> recruit.setItemSlot(slot, holder.value().getDefaultInstance()));
     }
 }

@@ -4,7 +4,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.fml.ModList;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -43,7 +43,7 @@ public final class MedievalSiegeMachinesCompat {
     private static void detectNamespace(String namespace, Map<ResourceLocation, Set<Operation>> machines) {
         for (String path : KNOWN_MACHINE_PATHS) {
             ResourceLocation id = new ResourceLocation(namespace, path);
-            EntityType<?> type = ForgeRegistries.ENTITY_TYPES.getValue(id);
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
             if (type != null) {
                 machines.put(id, EnumSet.of(Operation.CREW_SEAT, Operation.AIM, Operation.LOAD, Operation.FIRE));
             }

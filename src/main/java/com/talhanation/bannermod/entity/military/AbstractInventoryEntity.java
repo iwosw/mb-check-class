@@ -5,6 +5,7 @@ import com.talhanation.bannermod.compat.Corpse;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.inventory.military.RecruitSimpleContainer;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
+import com.talhanation.bannermod.util.RegistryLookup;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -24,7 +25,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -629,7 +629,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
 
     private static ItemStack getRecruitCurrency() {
         String currencyId = RecruitsServerConfig.RecruitCurrency.get();
-        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(currencyId))
+        return RegistryLookup.itemHolder(ResourceLocation.tryParse(currencyId))
                 .map(Holder::value)
                 .map(Item::getDefaultInstance)
                 .orElseGet(Items.EMERALD::getDefaultInstance);

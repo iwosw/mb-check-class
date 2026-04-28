@@ -5,7 +5,7 @@ import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -90,7 +90,7 @@ interface RecruitUpkeepAccess {
     }
 
     default boolean canEatItemStack(ItemStack stack) {
-        ResourceLocation location = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation location = BuiltInRegistries.ITEM.getKey(stack.getItem());
         if (RecruitsServerConfig.FoodBlackList.get().contains(location.toString())) {
             return false;
         }

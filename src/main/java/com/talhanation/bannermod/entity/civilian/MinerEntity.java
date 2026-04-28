@@ -25,7 +25,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.common.Tags;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -117,7 +117,7 @@ public class MinerEntity extends AbstractWorkerEntity{
         return super.wantsToKeep(itemStack);
     }
     public boolean wantsToPickUp(ItemStack itemStack) {
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(itemStack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
         if(id == null) return false;
 
         if(WorkersServerConfig.MINER_PICKUP.contains(id.toString())) return true;
@@ -149,7 +149,7 @@ public class MinerEntity extends AbstractWorkerEntity{
     }
 
     public boolean shouldIgnoreBlock(BlockState blockState) {
-        ResourceLocation id = ForgeRegistries.BLOCKS.getKey(blockState.getBlock());
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(blockState.getBlock());
         if(id == null) return false;
         return (WorkersServerConfig.MINER_IGNORE.contains(id.toString()) || !canBreakBlock(blockState));
     }

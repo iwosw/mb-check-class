@@ -12,8 +12,9 @@ import com.talhanation.bannermod.inventory.civilian.MerchantAddEditTradeContaine
 import com.talhanation.bannermod.inventory.civilian.MerchantTradeContainer;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.registries.Registries;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,20 +29,19 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModMenuTypes {
     private static final Logger logger = LogManager.getLogger(BannerModMain.MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES =
-            DeferredRegister.create(ForgeRegistries.MENU_TYPES, BannerModMain.MOD_ID);
+            DeferredRegister.create(Registries.MENU, BannerModMain.MOD_ID);
 
     public static void registerMenus() {
         registerMenu(MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE.get(), MerchantAddEditTradeScreen::new);
         registerMenu(MERCHANT_TRADE_CONTAINER_TYPE.get(), MerchantTradeScreen::new);
     }
 
-    public static final RegistryObject<MenuType<MerchantAddEditTradeContainer>> MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE =
+    public static final DeferredHolder<MenuType<?>, MenuType<MerchantAddEditTradeContainer>> MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE =
             MENU_TYPES.register("merchant_add_edit_trade_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 MerchantEntity merchant = (MerchantEntity) getRecruitByUUID(inv.player, data.readUUID());
                 CompoundTag nbt = data.readNbt();
@@ -52,7 +52,7 @@ public class ModMenuTypes {
                 return new MerchantAddEditTradeContainer(windowId, merchant, inv, trade);
             }));
 
-    public static final RegistryObject<MenuType<MerchantTradeContainer>> MERCHANT_TRADE_CONTAINER_TYPE =
+    public static final DeferredHolder<MenuType<?>, MenuType<MerchantTradeContainer>> MERCHANT_TRADE_CONTAINER_TYPE =
             MENU_TYPES.register("merchant_trade_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 MerchantEntity merchant = (MerchantEntity) getRecruitByUUID(inv.player, data.readUUID());
                 if (merchant == null) {

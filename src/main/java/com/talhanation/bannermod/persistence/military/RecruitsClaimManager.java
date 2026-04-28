@@ -7,6 +7,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateClaim;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateClaims;
+import com.talhanation.bannermod.util.RegistryLookup;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -16,7 +17,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -174,7 +174,7 @@ public class RecruitsClaimManager {
 
     private static ItemStack getRecruitCurrency() {
         String currencyId = RecruitsServerConfig.RecruitCurrency.get();
-        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(currencyId))
+        return RegistryLookup.itemHolder(ResourceLocation.tryParse(currencyId))
                 .map(Holder::value)
                 .map(Item::getDefaultInstance)
                 .orElseGet(Items.EMERALD::getDefaultInstance);
