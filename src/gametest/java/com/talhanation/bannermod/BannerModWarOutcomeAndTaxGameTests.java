@@ -24,7 +24,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,12 +70,12 @@ public class BannerModWarOutcomeAndTaxGameTests {
     public static void occupationTaxAccrualMovesTreasuryAndAuditsThroughLiveRuntime(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         Setup setup = setupAttackerDefender(helper, level, "tax");
-        UUID attackerClaimOwnerId = UUID.nameUUIDFromBytes((setup.warId + ":tax:attacker").getBytes(StandardCharsets.UTF_8));
-        UUID defenderClaimOwnerId = UUID.nameUUIDFromBytes((setup.warId + ":tax:defender").getBytes(StandardCharsets.UTF_8));
+        UUID attackerClaimOwnerId = setup.attackerEntityId;
+        UUID defenderClaimOwnerId = setup.defenderEntityId;
         setup.attackerClaim.setOwnerPoliticalEntityId(attackerClaimOwnerId);
         setup.defenderClaim.setOwnerPoliticalEntityId(defenderClaimOwnerId);
-        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, setup.attackerClaim);
-        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, setup.defenderClaim);
+        ClaimEvents.recruitsClaimManager.testInsertClaim(setup.attackerClaim);
+        ClaimEvents.recruitsClaimManager.testInsertClaim(setup.defenderClaim);
         seedTreasury(level, setup.defenderClaim, 100);
         // Ensure the occupier has a destination ledger.
         seedTreasury(level, setup.attackerClaim, 0);
@@ -93,12 +92,12 @@ public class BannerModWarOutcomeAndTaxGameTests {
         long tickAtAccrue = placedAt + 15L;
 
         BannerModTreasuryManager treasury = BannerModTreasuryManager.get(level);
-        int defenderBalanceBeforeTax = treasuryBalanceForEntity(level, defenderClaimOwnerId);
-        int attackerBalanceBeforeTax = treasuryBalanceForEntity(level, attackerClaimOwnerId);
+        int defenderBalanceBeforeTax = treasury.getLedger(setup.defenderClaim.getUUID()).treasuryBalance();
+        int attackerBalanceBeforeTax = treasury.getLedger(setup.attackerClaim.getUUID()).treasuryBalance();
         WarRuntimeContext.taxRuntime(level).accrue(5, intervalTicks, tickAtAccrue);
 
-        int defenderBalanceAfterTax = treasuryBalanceForEntity(level, defenderClaimOwnerId);
-        int attackerBalanceAfterTax = treasuryBalanceForEntity(level, attackerClaimOwnerId);
+        int defenderBalanceAfterTax = treasury.getLedger(setup.defenderClaim.getUUID()).treasuryBalance();
+        int attackerBalanceAfterTax = treasury.getLedger(setup.attackerClaim.getUUID()).treasuryBalance();
         helper.assertTrue(defenderBalanceBeforeTax - defenderBalanceAfterTax >= 5,
                 "Expected defender claim treasury debited by at least 5 after one tax cycle, got before="
                         + defenderBalanceBeforeTax + " after=" + defenderBalanceAfterTax);
@@ -116,9 +115,9 @@ public class BannerModWarOutcomeAndTaxGameTests {
         // Second accrue at the same logical tick is inside the next interval window — no-op.
         int paidAuditCountBefore = auditCount(WarRuntimeContext.audit(level), setup.warId, "OCCUPATION_TAX_PAID");
         WarRuntimeContext.taxRuntime(level).accrue(5, intervalTicks, tickAtAccrue);
-        helper.assertTrue(treasuryBalanceForEntity(level, defenderClaimOwnerId) == defenderBalanceAfterTax,
+        helper.assertTrue(treasury.getLedger(setup.defenderClaim.getUUID()).treasuryBalance() == defenderBalanceAfterTax,
                 "Expected idempotent second accrue to leave defender balance untouched");
-        helper.assertTrue(treasuryBalanceForEntity(level, attackerClaimOwnerId) == attackerBalanceAfterTax,
+        helper.assertTrue(treasury.getLedger(setup.attackerClaim.getUUID()).treasuryBalance() == attackerBalanceAfterTax,
                 "Expected idempotent second accrue to leave attacker balance untouched");
         helper.assertTrue(auditCount(WarRuntimeContext.audit(level), setup.warId, "OCCUPATION_TAX_PAID") == paidAuditCountBefore,
                 "Expected idempotent second accrue to add zero new paid audit entries for this war");

@@ -58,11 +58,7 @@ public final class OccupationTaxRuntime {
             occupations.updateLastTaxedAt(record.id(), due.advanceTo());
             return;
         }
-        int paid = transferOccupationTax(
-                record.occupiedEntityId(),
-                record.occupierEntityId(),
-                requested,
-                currentTick);
+        int paid = transferOccupationTax(record, requested, currentTick);
         int defaulted = requested - paid;
 
         // Always advance the timestamp so the next interval is metered from this cycle —
@@ -88,8 +84,9 @@ public final class OccupationTaxRuntime {
         }
     }
 
-    private int transferOccupationTax(UUID occupiedEntityId, UUID occupierEntityId,
-                                      int requested, long currentTick) {
+    private int transferOccupationTax(OccupationRecord record, int requested, long currentTick) {
+        UUID occupiedEntityId = record.occupiedEntityId();
+        UUID occupierEntityId = record.occupierEntityId();
         if (treasury == null || claimManager == null
                 || requested <= 0 || occupiedEntityId == null || occupierEntityId == null) {
             return 0;
@@ -108,8 +105,11 @@ public final class OccupationTaxRuntime {
         }
         int remaining = requested;
         int transferred = 0;
-        for (RecruitsClaim claim : claimManager.getAllClaims()) {
+        java.util.Set<UUID> debitedClaimIds = new java.util.HashSet<>();
+        for (ChunkPos chunk : record.chunks()) {
             if (remaining <= 0) break;
+            RecruitsClaim claim = claimManager.getClaim(chunk);
+            if (claim == null || claim.getUUID() == null || !debitedClaimIds.add(claim.getUUID())) continue;
             if (!occupiedEntityId.equals(claim.getOwnerPoliticalEntityId())) continue;
             BannerModTreasuryLedgerSnapshot ledger = treasury.getLedger(claim.getUUID());
             if (ledger == null) continue;
