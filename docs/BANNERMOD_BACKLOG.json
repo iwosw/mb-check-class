@@ -1381,6 +1381,27 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-28"
+    },
+    {
+      "id": "QA-001",
+      "title": "Audit/fix backlog closure gaps for surveyor onboarding and starter workers",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Recent done tasks UI-008 and SETTLEMENT-011 leave observable holes: surveyor validation still shows raw enum names and starter-worker acceptance is only covered by a string test, not actual worker readiness state.",
+      "scope": [
+        "1) Localize/humanize surveyor validation type labels in success/failure feedback. 2) Add focused verification for starter worker readiness that exercises real bootstrap assignments/waiting reasons rather than only checking a message string. 3) Re-review affected guides/backlog verification after fixes."
+      ],
+      "acceptance": [
+        "1) Surveyor validation messages show human-readable localized building type names instead of raw enum constants. 2) Tests verify actual starter worker readiness/waiting behavior, not just the bootstrap message text. 3) Backlog status/verification for the affected area reflects the true implementation state."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Localized surveyor validation type labels to human-readable EN/RU strings via file.jarVersion-backed surveyor formatter keys. Acceptance 1 is addressed in code; acceptance 2 remains open because starter-worker verification is still only a message-string unit test, and acceptance 3 remains open until the affected backlog items are re-reviewed/updated."
+        }
+      ],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
