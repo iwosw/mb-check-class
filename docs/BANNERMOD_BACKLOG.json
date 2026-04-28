@@ -3500,7 +3500,7 @@
     {
       "id": "PORT-019",
       "title": "Remove Forge network compatibility shims",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-008 incorrectly hid networking migration behind local net.minecraftforge.network compatibility classes, leaving Forge namespace in active source.",
       "scope": [
@@ -3513,8 +3513,14 @@
         "PORT-008"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Removed active net.minecraftforge.network shim namespace and migrated call sites to com.talhanation.bannermod.network.compat adapters backed by NeoForge payload APIs. Verified ctx search 'net\\.minecraftforge\\.network|package net\\.minecraftforge\\.network' src/main/java returns 0. compileJava reports only existing mixin/pathfinding/DistExecutor blockers and no Forge network namespace errors. MessageMovement remains server-context driven and routes through RecruitCommandTargetResolver, CommandIntentDispatcher, and CommandEvents.onMovementCommand."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }
