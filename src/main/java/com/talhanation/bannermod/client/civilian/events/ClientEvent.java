@@ -10,8 +10,8 @@ import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.client.civilian.render.WorkerHumanRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -38,7 +38,7 @@ public class ClientEvent {
         // Config read is deferred into the provider lambda — `provider.create(ctx)` runs in
         // `EntityRenderDispatcher.onResourceManagerReload`, AFTER `FMLClientSetupEvent` / `ModConfigEvent.Loading`,
         // so `RecruitsClientConfig.CLIENT` is loaded by the time `.get()` is invoked. Reading at
-        // RegisterRenderers time would trip `ForgeConfigSpec$ConfigValue.get` precondition (#21-UAT gap).
+        // RegisterRenderers time would trip `ModConfigSpec$ConfigValue.get` precondition (#21-UAT gap).
         net.minecraft.client.renderer.entity.EntityRendererProvider<com.talhanation.bannermod.entity.military.AbstractRecruitEntity> workerProvider =
                 ctx -> RecruitsClientConfig.RecruitsLookLikeVillagers.get()
                         ? new WorkerVillagerRenderer(ctx)

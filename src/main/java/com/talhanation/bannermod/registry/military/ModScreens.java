@@ -15,7 +15,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -45,7 +45,7 @@ public class ModScreens {
     }
 
     public static final RegistryObject<MenuType<RecruitInventoryMenu>> RECRUIT_CONTAINER_TYPE =
-        MENU_TYPES.register("recruit_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+        MENU_TYPES.register("recruit_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
             try {
                 UUID workerId = data.readUUID();
                 logger.info("{} is opening hire container for {}", inv.player.getDisplayName().getString(), workerId);
@@ -66,7 +66,7 @@ public class ModScreens {
     }));
 
     public static final RegistryObject<MenuType<CommandMenu>> COMMAND_CONTAINER_TYPE =
-        MENU_TYPES.register("command_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+        MENU_TYPES.register("command_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
             try {
                 UUID player_uuid = inv.player.getUUID();
                 logger.info("{} is opening command container for {}", inv.player.getDisplayName().getString(), player_uuid);
@@ -86,7 +86,7 @@ public class ModScreens {
             }
     }));
     public static final RegistryObject<MenuType<AssassinLeaderMenu>> ASSASSIN_CONTAINER_TYPE =
-        MENU_TYPES.register("assassin_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+        MENU_TYPES.register("assassin_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
             try {
                 UUID workerId = data.readUUID();
                 AssassinLeaderEntity rec = getAssassinByUUID(inv.player, workerId);
@@ -106,7 +106,7 @@ public class ModScreens {
     }));
 
     public static final RegistryObject<MenuType<RecruitHireMenu>> HIRE_CONTAINER_TYPE =
-            MENU_TYPES.register("hire_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("hire_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 try {
                     UUID workerId = data.readUUID();
                     Player playerEntity = inv.player;
@@ -127,7 +127,7 @@ public class ModScreens {
             }));
 
     public static final RegistryObject<MenuType<DebugInvMenu>> DEBUG_CONTAINER_TYPE =
-            MENU_TYPES.register("debug_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("debug_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 try {
                     UUID workerId = data.readUUID();
                     Player playerEntity = inv.player;
@@ -148,7 +148,7 @@ public class ModScreens {
             }));
 
     public static final RegistryObject<MenuType<DisbandContainer>> DISBAND =
-            MENU_TYPES.register("disband_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("disband_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 try {
                     UUID workerId = data.readUUID();
                     Player playerEntity = inv.player;
@@ -165,7 +165,7 @@ public class ModScreens {
             }));
 
     public static final RegistryObject<MenuType<PromoteContainer>> PROMOTE =
-            MENU_TYPES.register("promote_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("promote_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 try {
                     UUID workerId = data.readUUID();
                     Player playerEntity = inv.player;
@@ -182,7 +182,7 @@ public class ModScreens {
             }));
 
     public static final RegistryObject<MenuType<PatrolLeaderContainer>> PATROL_LEADER =
-            MENU_TYPES.register("patrol_leader_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("patrol_leader_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 try {
                     UUID workerId = data.readUUID();
                     Player playerEntity = inv.player;
@@ -199,7 +199,7 @@ public class ModScreens {
             }));
 
     public static final RegistryObject<MenuType<GovernorContainer>> GOVERNOR =
-            MENU_TYPES.register("governor_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("governor_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 try {
                     UUID workerId = data.readUUID();
                     Player playerEntity = inv.player;

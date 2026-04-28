@@ -18,11 +18,11 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import net.minecraftforge.client.gui.widget.ExtendedButton;
-import net.minecraftforge.common.ForgeMod;
 import org.lwjgl.glfw.GLFW;
 
 
@@ -270,7 +270,7 @@ public class DebugInvScreen extends ScreenBase<DebugInvMenu> {
         int maxHealth = Mth.ceil(recruit.getMaxHealth());
         int moral = Mth.ceil(recruit.getMorale());
 
-        double attackReach = recruit.getAttributeValue(ForgeMod.ENTITY_REACH.get());
+        double attackReach = recruit.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
         double attackSpeed = recruit.getAttributeValue(Attributes.ATTACK_SPEED);
         double attackDamage = recruit.getAttackDamage();
         DecimalFormat decimalformat = new DecimalFormat("##.#");

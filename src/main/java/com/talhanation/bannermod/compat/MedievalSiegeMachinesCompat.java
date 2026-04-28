@@ -3,7 +3,7 @@ package com.talhanation.bannermod.compat;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.EnumSet;

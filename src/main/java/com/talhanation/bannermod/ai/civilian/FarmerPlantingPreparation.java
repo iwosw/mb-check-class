@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
-import net.minecraftforge.common.IPlantable;
+import net.neoforged.neoforge.common.SpecialPlantable;
 
 import java.util.List;
 
@@ -76,7 +76,7 @@ public class FarmerPlantingPreparation {
                     || blockItem.getBlock() instanceof SweetBerryBushBlock;
         }
 
-        return item instanceof IPlantable;
+        return item instanceof SpecialPlantable;
     }
 
     private FarmerPlantingPreparation() {
