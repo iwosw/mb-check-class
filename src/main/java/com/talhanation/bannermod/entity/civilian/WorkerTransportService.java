@@ -3,6 +3,7 @@ package com.talhanation.bannermod.entity.civilian;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.shared.logistics.BannerModCourierTask;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -72,20 +73,56 @@ final class WorkerTransportService {
         }
     }
 
-    private boolean isSupportedCourierRoute(ServerLevel level, @Nullable BannerModCourierTask task) {
+    Component inspectionMessage() {
+        if (!(this.worker.level() instanceof ServerLevel level)) {
+            return Component.translatable("chat.bannermod.workers.transport.unavailable");
+        }
+
+        BannerModCourierTask task = this.worker.getActiveCourierTask();
         if (task == null) {
-            return false;
+            return Component.translatable("chat.bannermod.workers.transport.inactive");
+        }
+
+        String unsupportedReason = unsupportedCourierRouteReason(level, task);
+        if (unsupportedReason != null) {
+            return Component.translatable(unsupportedReason);
+        }
+
+        Entity vehicle = this.worker.getVehicle();
+        if (this.worker.isPassenger() && isApprovedTransport(vehicle) && isOwnerCompatible(vehicle)) {
+            return Component.translatable("chat.bannermod.workers.transport.mounted", vehicle.getDisplayName());
+        }
+        if (this.worker.isPassenger()) {
+            return Component.translatable("chat.bannermod.workers.transport.fallback_lost", vehicle == null ? Component.translatable("chat.bannermod.workers.transport.unknown") : vehicle.getDisplayName());
+        }
+        if (this.remountCooldown > 0) {
+            return Component.translatable("chat.bannermod.workers.transport.fallback_remounting");
+        }
+        return Component.translatable("chat.bannermod.workers.transport.fallback_no_mount");
+    }
+
+    private boolean isSupportedCourierRoute(ServerLevel level, @Nullable BannerModCourierTask task) {
+        return unsupportedCourierRouteReason(level, task) == null;
+    }
+
+    @Nullable
+    private String unsupportedCourierRouteReason(ServerLevel level, @Nullable BannerModCourierTask task) {
+        if (task == null) {
+            return "chat.bannermod.workers.transport.inactive";
         }
 
         StorageArea source = resolveStorage(level, task.route().source().storageAreaId());
         StorageArea destination = resolveStorage(level, task.route().destination().storageAreaId());
         if (source == null || destination == null || source.isRemoved() || destination.isRemoved()) {
-            return false;
+            return "chat.bannermod.workers.transport.fallback_storage_missing";
         }
 
         Vec3 sourcePos = source.position();
         Vec3 destinationPos = destination.position();
-        return sourcePos.subtract(destinationPos).horizontalDistanceSqr() >= MIN_SUPPORTED_ROUTE_DISTANCE_SQR;
+        if (sourcePos.subtract(destinationPos).horizontalDistanceSqr() < MIN_SUPPORTED_ROUTE_DISTANCE_SQR) {
+            return "chat.bannermod.workers.transport.fallback_short_route";
+        }
+        return null;
     }
 
     @Nullable
