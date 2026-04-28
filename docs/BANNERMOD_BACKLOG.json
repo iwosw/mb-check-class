@@ -3442,7 +3442,7 @@
     {
       "id": "PORT-016",
       "title": "Port projectile and ranged combat APIs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-009 compile exposes projectile and ranged combat API changes after earlier port blockers are removed.",
       "scope": [
@@ -3455,8 +3455,14 @@
         "PORT-015"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) compileJava reached Java compilation and reported no projectile, arrow, ranged combat, BowmanEntity, CrossbowWeapon, ProjectileUtil, or old enchantment API errors after the port; 2) remaining compileJava failures are unrelated mixin/pathfinding port blockers (BlockPathTypes and mixin target mappings); 3) focused search found no old getMobArrow/customArrow/POWER_ARROWS/PUNCH_ARROWS/FLAMING_ARROWS/INFINITY_ARROWS usages in active ranged code."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-017",
@@ -3552,7 +3558,7 @@
     {
       "id": "PORT-021",
       "title": "Remove remaining Forge server lifecycle hooks",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT audit found active source still referencing net.minecraftforge.server.ServerLifecycleHooks after the NeoForge migration.",
       "scope": [
@@ -3565,8 +3571,14 @@
         "PORT-020"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) ctx search net\\.minecraftforge over src/main/java and src/main/resources returned zero matches; 2) remaining ServerLifecycleHooks references now resolve to net.neoforged.neoforge.server.ServerLifecycleHooks; 3) filtered compileJava output reported no net.minecraftforge, ServerLifecycleHooks, WorkersVillagerEvents, or RecruitsClaimManager errors, with remaining compile failures unrelated mixin/pathfinding port blockers."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }
