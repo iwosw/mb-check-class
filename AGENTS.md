@@ -86,6 +86,8 @@ After coding, provide:
 - Use `tools/backlog` to inspect and update the canonical active backlog (`docs/BANNERMOD_BACKLOG.json`).
 - Put module documentation under `docs/`; keep root player guides split as `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md`.
 - The local context multitool is documented in `tools/ai-context-proxy/README.md` and summarized in `docs/TOOLS.md`.
+- If the user invokes `/backlog-execute [N]`, treat it as an execution command, not a planning request: default `N=5`, run `tools/backlog ready N`, pick that batch as the active queue, and begin execution under the backlog dependency, worktree, feature-branch, and finish-or-split rules.
+- For `/backlog-execute [N]` with parallel subagents, create one dedicated worktree and one dedicated feature branch per task before any edits. For dependency chains, complete the first task and branch the dependent task from the updated tip of the first task branch.
 
 12. Minecraft UI design
 - For Minecraft GUI/HUD work, load and apply the repo skill `minecraft-ui-design` from `.agents/skills/minecraft-ui-design/SKILL.md`.

@@ -1,16 +1,21 @@
 {
-  "schema": 1,
+  "schema": 2,
   "canonical": true,
   "description": "Ordered BannerMod unfinished-work backlog. Use tools/backlog.py instead of reading this file directly during normal agent work.",
   "rules": [
     "This JSON file is the single canonical backlog; docs/BANNERMOD_BACKLOG.md is only a human-facing pointer.",
     "Use tools/backlog.py batch/list/show to inspect work instead of dumping the whole JSON file into context.",
-    "Every task must include id, title, status, why, scope, acceptance, and updated date.",
+    "Every task must include id, title, status, why, scope, acceptance, dependencies, and updated date.",
     "DONE means every acceptance item is observably satisfied in the current codebase, not merely supported by a lower-level policy or partial slice.",
     "Before marking a task done, run the relevant verification and record the result in verification. If a check cannot be run, record why.",
     "If a task changes UI, changes gameplay mechanics, or adds player-facing mechanics, update both MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md before marking it done.",
     "Append progress entries instead of rewriting history. Keep old evidence and progress unless it is factually wrong.",
-    "Add new work as an open task with concrete deliverables and verifiable acceptance checks. Do not add vague reminders."
+    "Add new work as an open task with concrete deliverables, explicit dependencies, and verifiable acceptance checks. Do not add vague reminders.",
+    "Dependencies must be explicit. Use an empty list when a task has no blockers; otherwise list the blocking task ids so work can be parallelized safely.",
+    "Use tools/backlog ready <N> as the main dependency-safe pickup queue for parallel work.",
+    "Once a task is taken into active execution, the executor must either finish it to acceptance or split the remaining scope into concrete child tasks and rewire the parent dependencies. Do not leave oversized half-done work parked in in_progress.",
+    "Parallel subagent execution must use one dedicated git worktree and one dedicated feature branch per task. Merge subagent work only after reviewing the exact diff and confirming the implementation satisfies the task acceptance without unrelated edits.",
+    "For dependency chains, complete the first task, then branch the dependent task from the updated tip of the first task branch, and continue step by step rather than branching dependent work from a stale base."
   ],
   "tasks": [
     {
@@ -39,7 +44,8 @@
       "verification": [],
       "evidence": [
         "Recruit render profiling summary includes recruit.render counters."
-      ]
+      ],
+      "dependencies": []
     },
     {
       "id": "PORT-001",
@@ -60,13 +66,14 @@
       ],
       "progress": [],
       "verification": [],
-      "evidence": []
+      "evidence": [],
+      "dependencies": []
     },
     {
       "id": "WAR-007",
       "title": "War Room declare-war wizard",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "War Room is now the political/war hub, but starting a war still requires /war declare, so the player-facing warfare loop falls back to chat commands at the most important step.",
       "scope": [
         "Add a War Room action flow to pick attacker, defender, war goal, and optional casus belli text.",
@@ -90,13 +97,17 @@
         "docs/POLITICS_WARFARE_EN.md documents declaration through /war declare.",
         "WarDeclarationCommands contains the command-only declaration path."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "UI-003",
+        "SEC-005"
+      ]
     },
     {
       "id": "WAR-008",
       "title": "Player-facing war outcome negotiation UI",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "War resolution actions exist, but cancel/peace/tribute/vassalize/demilitarize/occupy/annex are command-driven and partly admin-gated, so normal leaders lack a clear surrender, peace, or outcome flow.",
       "scope": [
         "Add a War Room outcome panel for legal leader actions: cancel, peace offer, tribute request, occupation, or other rules-approved outcomes.",
@@ -119,7 +130,11 @@
         "WarDeclarationCommands exposes outcome commands and gates several behind permission level 2.",
         "WarListScreen renders selected war details but no outcome controls."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "WAR-007",
+        "SEC-005"
+      ]
     },
     {
       "id": "SETTLEMENT-008",
@@ -149,7 +164,8 @@
         "docs/CITIZENS_PROFESSIONS_RECRUITS_EN.md notes manual validated buildings and prefab vacancies are not equivalent.",
         "PrefabAutoStaffingRuntime.onBuildAreaCompleted registers vacancies only after prefab completion."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SETTLEMENT-009",
@@ -179,13 +195,14 @@
         "BannerModGovernorSnapshot carries rollups/tokens.",
         "GovernorScreen renders taxes, incidents, recommendations, and policy labels but not logistics/work-order detail."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "POL-002",
       "title": "Co-leader management flow",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "Political records persist co-leaders and government forms, but normal players have no clear add/remove co-leader flow, making republic/shared-authority gameplay hard to use.",
       "scope": [
         "Add leader-authorized co-leader invite/add/remove actions.",
@@ -209,7 +226,10 @@
         "PoliticalRegistryRuntime has mutators for name/status/capital/form/color/charter but no co-leader mutator.",
         "Politics docs mention co-leaders without a management path."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SEC-005"
+      ]
     },
     {
       "id": "COMMAND-001",
@@ -240,7 +260,8 @@
         "MessageMovement sends queueMode=false.",
         "CommandScreen sends commands without accepted/queued/replaced feedback."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-001",
@@ -269,7 +290,8 @@
         "MessageDeleteClaim deletes from client-supplied claim data.",
         "MessageUpdateClaim has a guarded canEditClaim path that can be reused or unified."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-002",
@@ -298,7 +320,8 @@
         "MessageFaceCommand, MessageRangedFire, and MessageUpkeepEntity use client-provided UUIDs.",
         "CommandIntentDispatcher assumes caller supplied already-authorized actors."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-003",
@@ -332,7 +355,8 @@
         "MessageSetLeaderGroup and MessageAssignGroupToCompanion mutate state after weak or partial checks.",
         "MessageGroup shows a safer owned-group pattern."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-004",
@@ -362,7 +386,8 @@
         "ClaimAccessQueries looks up by ChunkPos.",
         "RecruitsClaimManager keys claims by ChunkPos."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-005",
@@ -392,7 +417,8 @@
         "Some mutation packets use leader-only isLeaderOrOp.",
         "MessageUpdateClaim.canEditClaim permits co-leaders directly."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-003",
@@ -422,7 +448,8 @@
         "ClientSyncLifecycleEvents has login/logout hooks.",
         "WarListScreen snapshots state in init()/manual refresh()."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-004",
@@ -451,7 +478,13 @@
         "WorldMapClaimController.claimArea/claimChunk and WorldMapClaimMenuActions.removeSelectedChunk/deleteSelectedClaim mutate/send client-authored claim state.",
         "MessageUpdateClaim consumes full claim NBT server-side."
       ],
-      "doneDate": "2026-04-28"
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "SEC-001",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006"
+      ]
     },
     {
       "id": "UI-005",
@@ -480,7 +513,8 @@
         "BuildAreaScreen.performClientScan and button handlers scan/send structure data.",
         "MessageUpdateBuildArea accepts update payloads server-side."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-006",
@@ -509,13 +543,14 @@
         "StorageAreaScreen builds raw text fields and sends on close/toggle.",
         "MessageUpdateStorageArea parses updates and reports failures outside the screen flow."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-007",
       "title": "Accessibility and localization pass for active screens",
       "status": "in_progress",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "Several active screens use hardcoded English literals and custom widgets with empty narration hooks, reducing localization quality and accessibility.",
       "scope": [
         "Move hardcoded active UI strings in war/state/build/storage screens to language keys.",
@@ -537,6 +572,13 @@
       "evidence": [
         "WarListScreen and PoliticalEntityListScreen use button/render literals.",
         "DropDownMenu, BlackShowingTextField, and ItemWithLabelWidget have empty narration overrides."
+      ],
+      "dependencies": [
+        "UI-003",
+        "UI-005",
+        "UI-006",
+        "WAR-007",
+        "WAR-008"
       ]
     },
     {
@@ -567,7 +609,8 @@
         "RegionSnapshotBuilder.captureDynamicObstacles scans regions.",
         "Config exposes AsyncPathfindingSnapshotBudgetNanos."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-004",
@@ -597,7 +640,8 @@
         "stateHash serializes all records.",
         "WarClientState.encode produces the full client mirror payload."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-005",
@@ -627,7 +671,8 @@
         "RecruitsClaimManager.broadcastClaimsToAll sends full state to every player.",
         "MessageToClientUpdateClaims serializes all claims."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-006",
@@ -656,7 +701,8 @@
         "MessageRequestFormationMapSnapshot.executeServerSide directly builds snapshots.",
         "FormationMapSnapshotService.buildSnapshot iterates recruits and computes relation through relationFor."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-007",
@@ -685,7 +731,8 @@
         "ClaimEvents drives settlement orchestration batches.",
         "BannerModSettlementOrchestrator.tickBatch rebuilds and sorts snapshot collections while processing slices."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-008",
@@ -715,7 +762,8 @@
         "renderStructurePreview loops scanned blocks and may create block entities.",
         "getCachedPreviewStructure stores only one preview structure."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "GEO-001",
@@ -746,7 +794,8 @@
         "Transcript lines 1-17: barony as logistics answer and chokepoint/surplus lord.",
         "Transcript lines 53-61: workflow for marking nodes, routes, shadows, hierarchy, and job descriptions."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "ECON-001",
@@ -777,13 +826,14 @@
         "Transcript lines 5-8: oxen paradox and three-day rule as supply limit.",
         "Transcript lines 35-49: navigable water as major transport advantage and upstream/downstream asymmetry."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "ECON-002",
       "title": "Specialized production for landlocked settlements",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "The transcript's refinery-baron idea fits Minecraft gameplay: settlements that cannot cheaply move bulk goods should convert local resources into higher-value goods, creating Bannerlord-style regional identity and trade reasons.",
       "scope": [
         "Define a small set of specialist settlement outputs from existing resources/buildings, such as grain to ale, wool to cloth, milk to cheese, ore to tools, or timber to worked goods.",
@@ -807,13 +857,17 @@
       "evidence": [
         "Transcript lines 29-35: landlocked specialist converts bulk into higher-value goods to survive transport limits."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "GEO-001",
+        "ECON-001"
+      ]
     },
     {
       "id": "WAR-009",
       "title": "Logistics objectives for wars and raids",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "The transcript validates a non-bullshit war loop for Minecraft strategy: wars should target supply routes, granaries, junctions, crossings, and market flow, not only entity kills or abstract claims.",
       "scope": [
         "Add war objective types or raid hooks for disrupting settlement logistics nodes such as granaries, roads, junction markets, river gates, or chokepoint forts.",
@@ -838,13 +892,19 @@
         "Transcript lines 11-17: chokepoints, tolls, safe passage, and hollowed power when routes bypass them.",
         "Transcript lines 55-57: difficult-route vacuums become bandit/security problems and potential new power centers."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "GEO-001",
+        "ECON-001",
+        "ECON-002",
+        "SETTLEMENT-009"
+      ]
     },
     {
       "id": "POL-003",
       "title": "Logistics-driven loyalty pressure",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "The transcript's CK-compatible idea is that vassal loyalty follows supply dependency: upstream/source lords become independent, downstream/gatekeeper lords become transactional, and isolated weak lords resent powerful flow controllers.",
       "scope": [
         "Add non-destructive loyalty pressure signals derived from settlement role, route dependency, isolation, and supply disruption.",
@@ -869,7 +929,13 @@
         "Transcript lines 39-45: upstream source lords trend rebellious, downstream gatekeepers trend diplomatic and transactional.",
         "Transcript lines 49-52: river few versus landlocked many creates structural political tension."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "GEO-001",
+        "ECON-001",
+        "ECON-002",
+        "WAR-009"
+      ]
     },
     {
       "id": "RP-001",
@@ -896,7 +962,8 @@
         "src/main/java/com/talhanation/bannermod/events/runtime/RecruitDiplomacyPolicy.java",
         "src/main/java/com/talhanation/bannermod/combat/RecruitCombatDecisions.java"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "DOC-001",
@@ -922,7 +989,8 @@
         "src/main/java/com/talhanation/bannermod/war/runtime/WarRevoltScheduler.java",
         "docs/UAT_RUNBOOK.md"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-001",
@@ -948,7 +1016,8 @@
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/WarOutcomeApplier.java:376"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-002",
@@ -974,7 +1043,8 @@
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/SiegeStandardRuntime.java:24"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-003",
@@ -1000,13 +1070,14 @@
       "evidence": [
         "src/main/java/com/talhanation/bannermod/network/messages/war/MessagePlaceSiegeStandardHere.java:47"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-004",
       "title": "Fix siege HUD war label",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "The siege HUD looks up a political entity by war UUID, so it falls back to short UUIDs instead of showing a recognizable war label.",
       "scope": [
         "Render attacker-vs-defender names or another real war label in the siege HUD.",
@@ -1027,7 +1098,10 @@
       "evidence": [
         "src/main/java/com/talhanation/bannermod/client/military/hud/WarSiegeZoneOverlay.java:94"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "UI-003"
+      ]
     },
     {
       "id": "SIEGE-005",
@@ -1054,7 +1128,8 @@
         "src/main/java/com/talhanation/bannermod/war/runtime/WarSiegeQueries.java",
         "src/main/java/com/talhanation/bannermod/war/client/WarClientState.java"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "MSM-001",
@@ -1082,7 +1157,8 @@
         "src/main/java/com/talhanation/bannermod/client/military/gui/PromoteScreen.java:119",
         "src/main/java/com/talhanation/bannermod/events/RecruitEvents.java:66"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "MSM-002",
@@ -1110,7 +1186,8 @@
         "src/main/java/com/talhanation/bannermod/compat/MedievalSiegeMachinesCompat.java",
         "build.gradle"
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "MSM-003",
@@ -1138,7 +1215,11 @@
       "evidence": [
         "src/main/java/com/talhanation/bannermod/ai/military/RecruitMountEntity.java"
       ],
-      "doneDate": "2026-04-28"
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "MSM-001",
+        "MSM-002"
+      ]
     },
     {
       "id": "MSM-004",
@@ -1167,7 +1248,12 @@
         "src/main/java/com/talhanation/bannermod/army/command/CommandIntent.java",
         "src/main/java/com/talhanation/bannermod/network/messages/military/MessageMountEntity.java"
       ],
-      "doneDate": "2026-04-28"
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "MSM-002",
+        "MSM-003",
+        "COMMAND-001"
+      ]
     },
     {
       "id": "MSM-005",
@@ -1196,7 +1282,11 @@
         "src/main/java/com/talhanation/bannermod/combat/SiegeObjectivePolicy.java",
         "src/main/java/com/talhanation/bannermod/ai/military/RecruitSiegeEscortGoal.java"
       ],
-      "doneDate": "2026-04-28"
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "MSM-003",
+        "SIEGE-005"
+      ]
     },
     {
       "id": "SETTLEMENT-010",
@@ -1222,7 +1312,10 @@
         }
       ],
       "evidence": [],
-      "doneDate": "2026-04-28"
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "UI-008"
+      ]
     },
     {
       "id": "SETTLEMENT-011",
@@ -1248,13 +1341,14 @@
         }
       ],
       "evidence": [],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SETTLEMENT-012",
       "title": "Validated buildings feed settlement snapshots and progression",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "Manual validation registers ValidatedBuildingRecord data, but BannerModSettlementService.collectBuildings currently builds settlement snapshots from live AbstractWorkAreaEntity records. That means manually validated houses, storage, markets, and other buildings can be invisible to capacity, home assignment, growth scoring, and political promotion even after validation succeeds.",
       "scope": [
         "Merge valid ValidatedBuildingRecord entries for a settlement into BannerModSettlementSnapshot building records alongside live work areas.",
@@ -1274,13 +1368,16 @@
         }
       ],
       "evidence": [],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SETTLEMENT-008"
+      ]
     },
     {
       "id": "SETTLEMENT-013",
       "title": "Survival free-citizen source for vacancy professions",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "The intended flow says free CitizenEntity instances occupy vacancies and convert into workers or recruits, but the normal settlement bootstrap and villager growth paths spawn workers directly, while docs say spawn eggs are not the normal survival flow. Without a reliable survival source of free citizens, vacancy-based professions and barracks recruitment can be unreachable or unclear.",
       "scope": [
         "Define and implement the normal survival source for unassigned CitizenEntity population in settlements.",
@@ -1301,7 +1398,11 @@
         }
       ],
       "evidence": [],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SETTLEMENT-008",
+        "SETTLEMENT-012"
+      ]
     },
     {
       "id": "UI-008",
@@ -1327,13 +1428,14 @@
         }
       ],
       "evidence": [],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-006",
       "title": "Preserve political ownership when editing claims",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "ClaimEditScreen.save mutates the local claim and calls claim.setOwnerPoliticalEntityId(null) before MessageUpdateClaim. Editing a settlement claim can silently strip the political owner, breaking settlement faction binding and later worker/faction logic even if the edit only changed name or permissions.",
       "scope": [
         "Ensure claim edit packets preserve existing ownerPoliticalEntityId unless the server-side action is explicitly transferring ownership.",
@@ -1353,7 +1455,10 @@
         }
       ],
       "evidence": [],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SEC-005"
+      ]
     },
     {
       "id": "POL-004",
@@ -1380,7 +1485,13 @@
         }
       ],
       "evidence": [],
-      "doneDate": "2026-04-28"
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "POL-002",
+        "SETTLEMENT-010",
+        "SETTLEMENT-012",
+        "SEC-005"
+      ]
     },
     {
       "id": "QA-001",
@@ -1400,6 +1511,1024 @@
           "text": "Localized surveyor validation type labels to human-readable EN/RU strings via file.jarVersion-backed surveyor formatter keys. Acceptance 1 is addressed in code; acceptance 2 remains open because starter-worker verification is still only a message-string unit test, and acceptance 3 remains open until the affected backlog items are re-reviewed/updated."
         }
       ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UI-008",
+        "SETTLEMENT-011"
+      ]
+    },
+    {
+      "id": "AUTH-001",
+      "title": "Harden recruit ownership transfer packet authority",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "MessageAssignRecruitToPlayer currently allows client-driven ownership reassignment without proving direct control or admin authority, which is a critical server-authority break.",
+      "scope": [
+        "Server-side recruit transfer handling must resolve the real sender, require explicit ownership or approved override authority, reject spoofed target owners, and cover the live packet path with focused verification."
+      ],
+      "acceptance": [
+        "Recruit ownership transfer is rejected unless the sender has explicit server-authorized control; spoofed transfer attempts leave ownership unchanged; focused tests exercise both allowed and denied packet flows."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "ARMY-001",
+      "title": "Complete queued CommandIntent parity for all command variants",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The queue runtime currently executes only a subset of intent variants, so queued stance and siege-machine commands can be accepted yet never applied.",
+      "scope": [
+        "CommandIntentQueueRuntime must execute every supported intent variant or reject unsupported variants before queueing, and queue behavior must stay aligned with immediate command behavior."
+      ],
+      "acceptance": [
+        "Every queueable intent kind either executes correctly from the queue or is explicitly rejected before enqueue; tests prove parity for movement, face, attack, aggro, stance, strategic fire, and siege-machine flows."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "AUTH-002",
+      "title": "Harden group ownership transfer packet authority",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "MessageAssignGroupToPlayer trusts client-supplied owner data and can rewrite group ownership and member owners without any server authorization.",
+      "scope": [
+        "Group transfer must validate the real sender, require ownership or approved override authority for the group and all mutated members, derive the new owner from trusted server state, and verify behavior through the real packet path."
+      ],
+      "acceptance": [
+        "Unauthorized group transfer packets are rejected; authorized transfers update both group and member ownership consistently; focused tests cover spoofed and valid group transfer scenarios."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "ARMY-002",
+      "title": "Normalize movement-state contract across intent docs and execution",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "CommandIntent documents movementState values that do not match MovementFormationCommandService semantics, creating a latent integration and maintenance hazard.",
+      "scope": [
+        "Movement-state meaning must be defined once, aligned across intent comments, packet translators, UI selectors, and execution services, and verified against live server behavior."
+      ],
+      "acceptance": [
+        "Movement-state constants and documentation match runtime semantics everywhere they are consumed; no packet or UI path relies on stale state numbering; focused tests cover representative state mappings."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "AUTH-004",
+      "title": "Harden work-area owner reassignment against spoofing",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "MessageUpdateOwner trusts arbitrary client-supplied player identity and can orphan work areas by clearing team state when the claimed owner is offline or fake.",
+      "scope": [
+        "Work-area owner mutation must resolve trusted target identity server-side, preserve or recompute team linkage safely, reject nonexistent owners, and verify both authorized and denied flows."
+      ],
+      "acceptance": [
+        "Spoofed or nonexistent owner updates are rejected; valid owner changes preserve consistent team metadata; focused tests cover owner reassignment and offline-edge handling."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "AUTH-003",
+      "title": "Server-authorize world-map teleport and fix safe-height correction",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "World-map teleport is currently gated only by client UI and the low-Y fallback is broken, allowing unauthorized teleports and unsafe target correction.",
+      "scope": [
+        "The server teleport packet must enforce admin or approved authority, reject unprivileged callers, and correct invalid heightmap results using working server-side safety logic."
+      ],
+      "acceptance": [
+        "Non-authorized teleport packets are denied server-side; authorized teleports land on a validated safe position; tests cover both denial and low-height correction cases."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "AUTH-005",
+      "title": "Define and enforce nation and team command authority semantics",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Command authority currently mixes owner and scoreboard-team checks while the nation-leader path is effectively a dead stub, leaving intended command hierarchy unclear and partially unimplemented.",
+      "scope": [
+        "The command hierarchy must have explicit supported authority roles, remove dead paths or implement them fully, and apply the same rules across recruit command packets, UI affordances, and tests."
+      ],
+      "acceptance": [
+        "Command authority rules are documented in code and enforced consistently across command entry points; dead nation-authority branches are removed or implemented; verification covers owner, teammate, and nation-level cases."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "ARMY-003",
+      "title": "Persist player army command preferences across clone and respawn",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Formation, active groups, and related command preferences appear to initialize on login only, risking silent resets across death or player clone events.",
+      "scope": [
+        "Player army command preference persistence must survive clone and respawn correctly, and any intended non-persistent command state must be documented explicitly."
+      ],
+      "acceptance": [
+        "Saved formation and active-group preferences survive player clone and respawn when intended; non-persistent fields are explicitly excluded by design; tests cover login, clone, and reload behavior."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "SYNC-001",
+      "title": "Add settlement client snapshot sync for player-facing UIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Settlement intelligence is mostly server-side today, leaving governor and related UIs dependent on ad hoc requests and thin placeholder states instead of a coherent client mirror.",
+      "scope": [
+        "Player-facing settlement and governor screens need a clear synced snapshot contract, client mirror, refresh triggers, and waiting or stale-state UX for data arrival."
+      ],
+      "acceptance": [
+        "Relevant settlement UIs render from a coherent synced snapshot with explicit loading or stale states; data refreshes propagate without reopening screens; focused verification covers login, open-screen, and mutation refresh paths."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "UX-001",
+      "title": "Restore worker command hotkey and opening flow",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The worker command hotkey is defined and documented but not actually handled by client input, leaving a promised control surface non-functional.",
+      "scope": [
+        "The worker command key path must open the intended screen reliably, avoid conflicting input behavior, and be verified against both keybinding registration and the live opening flow."
+      ],
+      "acceptance": [
+        "The documented worker command hotkey opens the worker command UI in-game; conflicting or duplicate bindings are resolved intentionally; focused verification covers registration and real key handling."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "UX-002",
+      "title": "Finish claim-area flow and route and waypoint discoverability",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The world map advertises claim-area and route or waypoint interactions, but some affordances are incomplete or weakly explained, which makes the flow feel broken or hidden.",
+      "scope": [
+        "Claim-area functionality must either be fully implemented or removed from player UI, and route or waypoint flows need discoverable in-game affordances, explanations, and guide coverage."
+      ],
+      "acceptance": [
+        "Every visible world-map action is functional or intentionally absent; players can discover route and waypoint flows in-game without external docs; verification covers claim-area, waypoint, and route interactions."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "UX-003",
+      "title": "Add disabled-reason and loading-state UX across critical screens",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "War, claim, governor, and work-area screens often hide unavailable actions or show thin failure states, forcing players to infer authority, sync, or range problems from chat or silence.",
+      "scope": [
+        "Critical screens must surface why actions are unavailable, distinguish waiting-for-sync from empty state, and show consistent loading and stale-data feedback."
+      ],
+      "acceptance": [
+        "Disabled actions explain why they are unavailable; waiting-for-sync, empty, and stale states are visually distinct on the main war, claim, governor, and work-area screens; focused verification covers representative denial and loading cases."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UI-003",
+        "UI-004",
+        "UI-005",
+        "UI-006",
+        "SYNC-001"
+      ]
+    },
+    {
+      "id": "UX-004",
+      "title": "Remove raw UUID and internal-value leakage from player UI",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Politics, war, claim, and governor screens still expose raw UUID fragments, enum internals, and hardcoded English that read like debug surfaces rather than shipped player UI.",
+      "scope": [
+        "Player-facing screens must render localized labels, human-readable identities, and interpreted state text instead of raw internal values across the active war, politics, claim, and governor surfaces."
+      ],
+      "acceptance": [
+        "Target screens no longer expose raw UUIDs, enum internals, or hardcoded English for normal player flows; visible text comes from lang keys and player-friendly formatting; verification covers the main war and governance screens."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UI-007"
+      ]
+    },
+    {
+      "id": "UX-005",
+      "title": "Ship full in-game settlement onboarding",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "New-player settlement setup still depends too heavily on markdown docs and transient chat instructions for surveyor, starter fort, wand, citizens, and professions.",
+      "scope": [
+        "Settlement onboarding must be understandable from in-game tooltips, screens, guided feedback, and stateful prompts from first claim through staffed starter buildings and professions."
+      ],
+      "acceptance": [
+        "A new player can found a starter settlement, register buildings, understand staffing, and reach first profession loops using in-game guidance alone; verification covers the full onboarding path step by step."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-005",
+        "QA-001"
+      ]
+    },
+    {
+      "id": "UX-006",
+      "title": "Add player UI for revolts and remaining war outcomes",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Revolts and several war outcomes are still primarily command or admin flows, leaving a major strategy surface without coherent in-game UI for normal players.",
+      "scope": [
+        "War Room or related screens must support player-facing revolt interaction, remaining outcome selection, tribute-related flows, and clear authority feedback for those actions."
+      ],
+      "acceptance": [
+        "Normal player war flows for revolts and supported outcomes can be completed through in-game UI with clear authority and cooldown feedback; verification covers declare, occupy, revolt, and remaining outcome interactions."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UX-007",
+        "UX-008",
+        "UX-009"
+      ]
+    },
+    {
+      "id": "GAME-001",
+      "title": "Replace noop settlement project bridge with live build execution",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Settlement projects currently fall back to a noop build-area resolver in important paths, so project logic can exist without driving real construction work in the world.",
+      "scope": [
+        "Settlement projects must bind to real build areas or equivalent world execution paths, publish actionable work, and reflect progress through actual building activity instead of placeholder records."
+      ],
+      "acceptance": [
+        "Active settlement projects create real executable construction work in-world; project progress reflects actual build execution rather than noop placeholders; focused verification covers project creation, assignment, and completion."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "GAME-002",
+      "title": "Turn sea-trade summaries into a real production and consumption loop",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Sea trade is currently represented mostly as summary math and recommendation text, not a materially meaningful production and consumption gameplay system.",
+      "scope": [
+        "Sea trade must consume and produce real goods or equivalent transport state, interact with settlement logistics, and expose player-visible bottlenecks and results through gameplay rather than hints alone."
+      ],
+      "acceptance": [
+        "Sea-trade routes affect real goods flow and settlement state; players can observe production, transport, and consumption consequences; verification covers at least one end-to-end sea-trade loop."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "SHIPS-001",
+        "SHIPS-002",
+        "SHIPS-003"
+      ]
+    },
+    {
+      "id": "GAME-003",
+      "title": "Materialize occupation, revolt, tribute, and tax consequences",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Occupation, revolt, tribute, and tax systems rely heavily on records and ledgers today, which weakens immersion and leaves strategic outcomes underrepresented in the world.",
+      "scope": [
+        "These war-economy systems need stronger world and UI consequences such as visible control state, material obligations, objective pressure, and player-readable ongoing effects beyond hidden saved records."
+      ],
+      "acceptance": [
+        "Occupation, revolt, tribute, and tax states produce observable ongoing effects in world play and player UI; the main consequences are no longer hidden behind abstract records alone; verification covers both state transition and observable aftermath."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-006",
+        "GAME-007",
+        "GAME-008"
+      ]
+    },
+    {
+      "id": "GAME-004",
+      "title": "Give claims stronger in-world representation and boundary feedback",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Claims strongly affect permissions but remain mostly abstract chunk records plus overlays, leaving territory control under-materialized in the world itself.",
+      "scope": [
+        "Claims need stronger in-world boundary or authority feedback, clearer ownership cues, and interaction feedback that makes protected space legible without relying only on the map screen."
+      ],
+      "acceptance": [
+        "Players can perceive claim boundaries or authority state from normal world play; common protected-space interactions provide clear in-world feedback; verification covers friendly, hostile, and unclaimed territory reads."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "GAME-005",
+      "title": "Unify settlement bootstrap paths",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Surveyor-based starter founding and automatic claim worker bootstrap currently look like partially separate onboarding systems, which risks contradictory world state and player expectations.",
+      "scope": [
+        "Settlement bootstrap must have one coherent lifecycle from claim through starter structures, workers, citizens, and formal settlement records, with explicit rules for auto-bootstrap versus manual founding."
+      ],
+      "acceptance": [
+        "Manual and automatic bootstrap paths converge on the same settlement lifecycle and data model; players and code no longer see contradictory startup states; verification covers both entry paths and their resulting records."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "ARCH-001",
+      "title": "Split RecruitEvents into smaller runtime services",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "RecruitEvents currently acts as a multi-responsibility runtime hub for lifecycle, sync, patrol, combat hooks, and server tick behavior, which makes changes risky and obscures invariants.",
+      "scope": [
+        "RecruitEvents must be decomposed into narrower services with explicit responsibilities and stable seams for lifecycle, sync, patrol, and combat integration while preserving behavior."
+      ],
+      "acceptance": [
+        "Recruit runtime responsibilities are separated into smaller units with clear ownership and no behavior regression; core recruit flows still pass existing verification after the split."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-005",
+        "ARMY-001",
+        "ARMY-003"
+      ]
+    },
+    {
+      "id": "ARCH-002",
+      "title": "Split ClaimEvents into claim, protection, queue, and settlement services",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "ClaimEvents currently mixes claim manager lifecycle, protection hooks, command queue ticking, and governor or settlement heartbeat orchestration in one oversized event surface.",
+      "scope": [
+        "ClaimEvents must be broken into smaller services with explicit ownership of protection, claim runtime, command queue advancement, and settlement heartbeat responsibilities."
+      ],
+      "acceptance": [
+        "Claim-related runtime concerns are separated into smaller services with stable event registration and preserved behavior; verification covers claim protection, queue ticking, and settlement heartbeat flows."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-003",
+        "TEST-003"
+      ]
+    },
+    {
+      "id": "ARCH-003",
+      "title": "Decompose settlement snapshot and orchestration services",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "BannerModSettlementService and BannerModSettlementOrchestrator each aggregate too many responsibilities, making settlement behavior hard to reason about, test, and evolve safely.",
+      "scope": [
+        "Settlement snapshot building, logistics derivation, staffing, project planning, home assignment, seller dispatch, and job orchestration must be split into smaller bounded services with explicit contracts."
+      ],
+      "acceptance": [
+        "Settlement runtime responsibilities are decomposed into smaller services with clear inputs and outputs; behavior stays equivalent or intentionally improved; focused tests cover the extracted seams."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-001",
+        "GAME-002",
+        "GAME-005",
+        "SYNC-001"
+      ]
+    },
+    {
+      "id": "ARCH-004",
+      "title": "Modularize packet registration beyond the giant network bootstrap",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "BannerModNetworkBootstrap carries a large order-sensitive shared packet catalog, which is hard to audit for authority, maintain safely, or evolve by subsystem.",
+      "scope": [
+        "Packet registration must be split into modular catalogs or equivalent subsystem registrations with explicit ownership, stable IDs, and easier authority review."
+      ],
+      "acceptance": [
+        "Network registration is organized by subsystem with preserved wire compatibility where required; packet ownership and authority review become tractable; verification proves the active packet set still registers and works."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-001",
+        "AUTH-002",
+        "AUTH-003",
+        "AUTH-004",
+        "AUTH-005"
+      ]
+    },
+    {
+      "id": "ARCH-005",
+      "title": "Remove dead bootstrap and merge-residue runtime shims",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "BannerModLifecycle, WorkersSubsystem, update-checker stubs, and similar merge leftovers add noise and false seams without carrying live runtime value.",
+      "scope": [
+        "Dead bootstrap helpers, update-checker stubs, and obsolete merge shims must be removed or collapsed into the real runtime entrypoints, with any still-needed behavior kept in one obvious place."
+      ],
+      "acceptance": [
+        "Dead bootstrap or update-checker residue no longer exists in the active runtime tree unless it has a demonstrated live purpose; build and runtime entrypoints remain clear after cleanup."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "ARCH-006",
+      "title": "Retire legacy worker current-area assignment state",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Live worker AI still carries legacy current-area style assignment state instead of treating validated-building records as the clear authoritative assignment source.",
+      "scope": [
+        "Worker assignment and work-goal selection must move toward one authoritative assignment model backed by validated-building or equivalent canonical records, removing redundant legacy state."
+      ],
+      "acceptance": [
+        "Worker assignment uses one authoritative source of truth; redundant legacy current-area state is removed or reduced to a derived cache; verification covers assignment, reload, and job execution behavior."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-005"
+      ]
+    },
+    {
+      "id": "ARCH-007",
+      "title": "Reduce global static runtime managers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Global statics for runtime managers and channels increase coupling, complicate testing, and hide lifecycle assumptions across claims, recruits, and client mirrors.",
+      "scope": [
+        "Runtime manager access should move behind clearer lifecycle-bound seams or service accessors, reducing mutable global state where it is not strictly required by Forge integration."
+      ],
+      "acceptance": [
+        "Critical runtime managers are no longer reached through unnecessary mutable globals; lifecycle ownership is explicit; representative tests or verification prove the new access seams behave correctly."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "ARCH-001",
+        "ARCH-002",
+        "ARCH-003",
+        "ARCH-004",
+        "ARCH-005",
+        "ARCH-006"
+      ]
+    },
+    {
+      "id": "TEST-001",
+      "title": "Add authority GameTests for transfer and admin packets",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Critical authority gaps were found in recruit transfer, group transfer, world-map teleport, and work-area owner packets, and those live packet paths currently lack focused scenario coverage.",
+      "scope": [
+        "Dedicated-server GameTests must exercise allowed and denied flows for recruit transfer, group transfer, teleport, and work-area owner packets using real sender identity and multiplayer authority conditions."
+      ],
+      "acceptance": [
+        "Each targeted packet has focused tests that fail on spoofed or unauthorized use and pass for legitimate authority; the tests run through the real server packet path, not only helper methods."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-001",
+        "AUTH-002",
+        "AUTH-003",
+        "AUTH-004",
+        "AUTH-005"
+      ]
+    },
+    {
+      "id": "TEST-002",
+      "title": "Add end-to-end tests for formation command pipeline",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The saved-formation command path and queued-intent execution rules are central gameplay flows but currently lack clear end-to-end coverage for parity and persistence.",
+      "scope": [
+        "Tests must exercise packet to intent to dispatcher to execution behavior for formation-aware movement and related queued commands, including saved formation preferences and queue parity."
+      ],
+      "acceptance": [
+        "Formation-aware command flows are covered end to end for immediate and queued behavior; saved formation preferences are verified across reload or clone scenarios where intended; representative failure cases are covered."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "ARMY-001",
+        "ARMY-002",
+        "ARMY-003",
+        "AUTH-005"
+      ]
+    },
+    {
+      "id": "TEST-003",
+      "title": "Add GameTests for claim intent mutation and deletion",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Claim intent add, remove, and delete behavior is a core authority and world-state flow, yet current coverage is much thinner than the live gameplay risk warrants.",
+      "scope": [
+        "GameTests must cover successful and denied claim add, remove, and delete flows, currency charging, distance checks, Overworld-only rules, and persistence-visible outcomes."
+      ],
+      "acceptance": [
+        "Claim mutation flows are covered by real GameTests for both success and denial paths; tests observe resulting claim state rather than packet registration alone."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "TEST-004",
+      "title": "Add live packet-path tests for face, ranged-fire, and upkeep commands",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Face, ranged-fire, and upkeep command families were hardened previously but still lack strong live packet-path coverage compared with movement and stance commands.",
+      "scope": [
+        "Focused tests must drive the real server packet handlers for face, ranged-fire, and upkeep behavior, asserting authority, state mutation, and denial paths."
+      ],
+      "acceptance": [
+        "Face, ranged-fire, and upkeep packet flows each have real packet-path coverage for valid and invalid senders; tests assert resulting recruit behavior or rejection clearly."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "TEST-005",
+      "title": "Add regression coverage for critical UI gating and sync states",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Key player-facing regressions such as missing hotkeys, waiting-for-sync confusion, and hidden action gating currently slip through because almost no automated coverage targets those logic surfaces.",
+      "scope": [
+        "Introduce focused automated coverage for keybinding handling, visible action gating, waiting-for-sync state selection, and other non-render logic behind critical screens."
+      ],
+      "acceptance": [
+        "The worker hotkey, world-map gating, war sync-state selection, and similar critical UI logic surfaces are covered by automated tests or equivalent deterministic verification; regressions in those paths fail fast."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UX-001",
+        "UX-002",
+        "UX-003",
+        "UX-004",
+        "SYNC-001"
+      ]
+    },
+    {
+      "id": "TEST-006",
+      "title": "Replace count-only GameTest theater with meaningful quality gates",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The current scenario-count task measures quantity rather than scenario value and is not wired into the main verification path, which weakens confidence in a green build.",
+      "scope": [
+        "Verification gates must reward meaningful scenario coverage, wire the right checks into the main build path, and remove or demote count-only theater that does not reflect gameplay risk."
+      ],
+      "acceptance": [
+        "Check or equivalent verification fails when critical scenario coverage or focused high-risk suites are missing, not merely when an arbitrary count changes; the quality gate behavior is documented and exercised."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "TEST-001",
+        "TEST-002",
+        "TEST-003",
+        "TEST-004",
+        "TEST-005"
+      ]
+    },
+    {
+      "id": "DOC-003",
+      "title": "Reconcile status and backlog narrative with live runtime",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Current status and review docs describe several war and governance systems as still pending even though active code already ships parts of them, which distorts planning and review baselines.",
+      "scope": [
+        "Project status documentation and backlog metadata must be updated to reflect what is actually live, what is partial, and what remains missing, using code and verification as the source of truth."
+      ],
+      "acceptance": [
+        "STATUS and related planning narrative no longer contradict shipped runtime behavior for allies, occupations, revolts, siege AI, and related systems; verification cites the live code paths used to justify each status line."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "DOC-004",
+      "title": "Refresh player guides and almanac for shipped mechanics",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Root player guides and the almanac are stale on zone roles, revolt behavior, occupation tax, battle-window HUD, and other player-facing mechanics, which breaks the documented gameplay contract.",
+      "scope": [
+        "The English and Russian multiplayer guides plus the almanac must match current mechanics, HUD surfaces, and supported commands or UI, and stale nonexistent concepts must be removed."
+      ],
+      "acceptance": [
+        "Player guides and almanac match the live behavior for current settlement, war, revolt, occupation, HUD, and zone-role mechanics; nonexistent concepts are removed; verification cross-checks docs against active code and screens."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UX-005",
+        "UX-006",
+        "GAME-003",
+        "GAME-004",
+        "GAME-005",
+        "SHIPS-003",
+        "MERCH-002",
+        "BOOM-004"
+      ]
+    },
+    {
+      "id": "PERF-009",
+      "title": "Adaptive runtime budgets under TPS pressure",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Several server and client subsystems already use static budgets or throttles, but a fixed budget still overcommits work when TPS drops and underutilizes headroom when the server recovers.",
+      "scope": [
+        "Introduce an adaptive budget policy that reacts to measured TPS or tick pressure for expensive systems such as async-path snapshot capture, formation-map snapshots, preview rendering, and settlement orchestration where appropriate. Add hysteresis and floor or ceiling rules so the budget does not oscillate violently."
+      ],
+      "acceptance": [
+        "When TPS or tick pressure drops below the configured threshold, targeted subsystems reduce their optional work budget instead of holding static throughput; when the server recovers, budgets rise gradually without oscillation; profiling or deterministic verification shows the adaptive policy changing runtime budgets under load."
+      ],
+      "dependencies": [
+        "PERF-003",
+        "PERF-006",
+        "PERF-007",
+        "PERF-008"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "BOOM-001",
+      "title": "Make recruits fire Medieval Boomsticks projectiles and ammo",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Recruits can currently equip and use Medieval Boomsticks weapons, but the live attack path still falls back to arrow-style projectile behavior instead of using the mod's bullet or firearm semantics, which breaks both balance and fantasy.",
+      "scope": [
+        "Add an explicit compatibility path for Medieval Boomsticks ranged weapons so recruit attacks spawn the correct projectile type, consume the correct ammo, and respect the mod's firearm timing or reload semantics where exposed. Keep unsupported weapons on a safe fallback path instead of silently pretending bullets are arrows."
+      ],
+      "acceptance": [
+        "A recruit using a supported Medieval Boomsticks firearm fires the mod-correct projectile rather than an arrow; ammo consumption and no-ammo denial follow the firearm's intended rules; deterministic verification or focused tests cover at least one supported firearm and one unsupported edge case."
+      ],
+      "dependencies": [
+        "BOOM-002",
+        "BOOM-003",
+        "BOOM-004"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-001",
+      "title": "Add Small Ships compatibility layer for sea-trade carriers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Sea trade cannot become a materially convincing gameplay loop if route execution remains abstract while the mod already targets visible logistics and the Small Ships mod provides suitable vessel entities.",
+      "scope": [
+        "Add an optional compatibility layer that detects supported Small Ships vessel types and exposes the operations BannerMod needs for trade carriers, such as spawn or reserve, assign route owner, move between ports, and survive absence of the mod without crashes."
+      ],
+      "acceptance": [
+        "BannerMod starts and runs without Small Ships installed; with Small Ships installed, supported vessel types are detected and exposed as candidate sea-trade carriers; deterministic verification proves the compat layer can create or bind at least one supported carrier safely."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-002",
+      "title": "Execute sea-trade routes through Small Ships cargo movement",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Even with ship detection, sea trade stays fake unless goods actually move through vessel-backed route execution between ports, stockpiles, or settlements.",
+      "scope": [
+        "Implement ship-backed sea-trade route execution with cargo loading, travel state, arrival, unloading, and failure handling tied into settlement logistics and player-visible route feedback. Reuse existing goods or stockpile systems where possible instead of creating a parallel economy."
+      ],
+      "acceptance": [
+        "At least one sea-trade route can load goods onto a Small Ships carrier, travel, unload at the destination, and update settlement or stockpile state visibly; route failure and missing-ship states are surfaced clearly; focused verification covers one end-to-end carrier trip."
+      ],
+      "dependencies": [
+        "SHIPS-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "MERCH-001",
+      "title": "Mount merchants and land couriers with faster transport",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Merchant and courier loops currently leave obvious movement efficiency on the table; equipping long-haul traders with horses or other supported transport is a direct way to improve both realism and logistics throughput.",
+      "scope": [
+        "Define when merchants or other long-haul civilian carriers may use horses or supported transport, how mounts are acquired or assigned, and how mounted travel integrates with existing route, inventory, and safety logic. Keep behavior server-authoritative and degrade safely when no mount is available."
+      ],
+      "acceptance": [
+        "An eligible merchant or courier can use an approved mount or transport for faster travel on supported routes; inventory, ownership, and dismount or failure behavior remain consistent; verification covers mounted and unmounted fallback behavior."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "BOOM-002",
+      "title": "Map supported Medieval Boomsticks firearms and ammo for recruits",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Before recruit firearm combat can behave correctly, BannerMod needs an explicit compatibility map for which Medieval Boomsticks weapons are supported, which ammo they consume, and what fallback behavior is legal for unsupported items.",
+      "scope": [
+        "Detect supported Medieval Boomsticks firearm items and their ammo contracts through a compatibility layer or adapter usable by recruit combat code. Define safe fallback rules for unsupported or partially supported items instead of silently treating them like bows."
+      ],
+      "acceptance": [
+        "BannerMod can distinguish supported and unsupported Medieval Boomsticks firearms for recruit use; supported firearms resolve the correct ammo contract; unsupported weapons follow an explicit fallback or denial path rather than hidden bow semantics."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "BOOM-003",
+      "title": "Route recruit firearm attacks through Boomsticks projectile and reload semantics",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Medieval Boomsticks projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
+      "scope": [
+        "Integrate supported Medieval Boomsticks firearms into recruit attack execution so projectile spawn, reload cadence, ammo checks, and no-ammo denial use the mod's firearm rules where exposed. Preserve safe server-authoritative fallback for unsupported edge cases."
+      ],
+      "acceptance": [
+        "A recruit firing a supported Medieval Boomsticks firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
+      ],
+      "dependencies": [
+        "BOOM-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "BOOM-004",
+      "title": "Expose recruit firearm compatibility and ammo state in player feedback",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Players need to understand whether a recruit firearm is truly supported, has valid ammo, or is falling back, otherwise Boomsticks integration will look randomly broken even after the runtime path is fixed.",
+      "scope": [
+        "Add player-facing feedback for supported firearm status, missing ammo, and unsupported weapon fallback in the relevant recruit inventory, command, or combat feedback surfaces. Keep the messages localized and server-authoritative."
+      ],
+      "acceptance": [
+        "Players can tell when a recruit firearm is supported, missing ammo, or unsupported through in-game feedback rather than guesswork; visible text is localized; deterministic verification covers supported and unsupported loadout feedback."
+      ],
+      "dependencies": [
+        "BOOM-002",
+        "BOOM-003"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-003",
+      "title": "Show sea-trade carrier route state and failure reasons",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Ship-backed sea trade will still feel opaque if players cannot see which carrier is assigned, whether it is loading, traveling, blocked, or failed, and why a route is stalled.",
+      "scope": [
+        "Add player-facing route state for ship-backed sea trade, including carrier assignment, cargo progress, transit state, and actionable failure reasons in the relevant settlement, logistics, or trade UI surfaces."
+      ],
+      "acceptance": [
+        "Players can inspect a ship-backed route and see carrier assignment, current phase, and failure or stall reason; route state updates when the carrier progresses or fails; localized verification covers at least one successful and one blocked route."
+      ],
+      "dependencies": [
+        "SHIPS-001",
+        "SHIPS-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "MERCH-002",
+      "title": "Expose mounted merchant and courier transport state and fallback reasons",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "If merchants or couriers gain mounts or other transport but the player cannot see when transport is active, unavailable, or lost, the realism gain turns into debugging noise.",
+      "scope": [
+        "Add player-facing visibility for merchant or courier transport assignment, mounted status, and fallback reasons when no mount or vehicle is available, preserving localized and server-authoritative feedback."
+      ],
+      "acceptance": [
+        "Players can tell whether a merchant or courier is mounted, why it is unmounted, and what fallback route behavior is active; feedback updates as transport is assigned or lost; verification covers mounted and fallback cases."
+      ],
+      "dependencies": [
+        "MERCH-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-006",
+      "title": "Materialize occupation control as visible world and authority state",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Occupation remains too ledger-like unless players can see which territory is under occupation and what control restrictions or obligations are active in moment-to-moment play.",
+      "scope": [
+        "Add visible occupation state and ongoing authority consequences to claims, settlements, or relevant world interactions so occupied control is not only a saved record. Keep the first implementation readable and deterministic rather than decorative."
+      ],
+      "acceptance": [
+        "Players can observe when a territory is occupied through world or UI state and can understand at least one concrete control consequence of occupation; verification covers occupation start, active occupied state, and clearing the state."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-007",
+      "title": "Materialize tribute and tax obligations beyond hidden ledgers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Tribute and tax systems remain abstract if their effects are only numeric ledger mutations with no player-readable obligation flow or visible consequence in settlements and war.",
+      "scope": [
+        "Surface tribute and tax obligations as ongoing gameplay-visible state, including what is owed, whether it is being paid, and what failure means for the affected side, while reusing existing treasury or stockpile systems where possible."
+      ],
+      "acceptance": [
+        "Players can see tribute or tax obligations and whether they are being satisfied; non-payment has a visible consequence path instead of only silent ledger drift; verification covers active obligation, payment, and failure states."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-008",
+      "title": "Materialize revolt pressure and aftermath for players",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Revolt state is hard to reason about if it only lives in schedules and records; players need to see why revolt pressure exists, what objective state matters, and what aftermath follows success or failure.",
+      "scope": [
+        "Add player-readable revolt pressure, objective status, and aftermath feedback through War Room, claim or settlement state, or world cues so revolt progression is legible before and after resolution."
+      ],
+      "acceptance": [
+        "Players can see why a revolt is pending or progressing, what objective or pressure state matters, and what changed after success or failure; verification covers one pending and one resolved revolt flow."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-007",
+      "title": "Add War Room revolt interaction flow",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "A player-facing revolt system is still incomplete until War Room exposes the actual revolt interactions instead of only passive text or slash-command knowledge.",
+      "scope": [
+        "Add the relevant revolt interaction flow to War Room or the equivalent screen, including action availability, pending-state display, and server-authoritative feedback."
+      ],
+      "acceptance": [
+        "A player can inspect and perform the supported revolt interaction flow through UI rather than chat commands; availability and denial feedback are clear; verification covers one allowed and one denied revolt interaction."
+      ],
+      "dependencies": [
+        "GAME-008",
+        "AUTH-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-008",
+      "title": "Add UI for tribute and remaining war outcome selection",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "War outcome UX remains incomplete while tribute-related and remaining supported outcome choices are still partly command-shaped or admin-shaped instead of coherent in-screen interactions.",
+      "scope": [
+        "Extend War Room or outcome panels so supported tribute and remaining outcome choices are selectable in UI with clear authority, cooldown, and denial feedback."
+      ],
+      "acceptance": [
+        "Players can complete supported tribute or remaining outcome choices through UI with clear accepted and denied feedback; unsupported or admin-only paths remain visibly locked; verification covers at least one tribute or remaining outcome selection path."
+      ],
+      "dependencies": [
+        "GAME-007",
+        "AUTH-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-009",
+      "title": "Explain war authority and cooldown denials in-screen",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "War interactions are still too opaque if denial reasons only reach chat or are inferred from disabled controls without an explicit why, especially for leadership, co-leader, cooldown, and government-form restrictions.",
+      "scope": [
+        "Surface explicit in-screen denial reasons for war declaration, outcome, ally, and revolt actions where authority or cooldown rules block the player. Reuse existing server-authoritative policy text where possible."
+      ],
+      "acceptance": [
+        "Players can see why a war-related action is denied without relying only on chat spam; leadership, co-leader, cooldown, and government-form denials are distinguishable; verification covers representative denial reasons across the main war actions."
+      ],
+      "dependencies": [
+        "AUTH-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PROC-001",
+      "title": "Add task worktree and branch bootstrap helper",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The process now requires one worktree and one feature branch per parallel task, but there is no dedicated helper to create dependency-aware task workspaces consistently, which invites human error.",
+      "scope": [
+        "Add a tooling path that bootstraps a task-specific worktree and feature branch from the correct dependency-aware base branch, with clear handling for independent tasks versus dependency chains."
+      ],
+      "acceptance": [
+        "A contributor can create a task worktree and feature branch from the correct base using one documented helper flow; dependency chains branch from the updated parent branch tip rather than a stale base; verification covers an independent task and a dependency-chain task."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PROC-002",
+      "title": "Add backlog helper for finish-or-split parent task rewiring",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The process now requires executors to either finish a task or split it into child tasks immediately, but that parent or child rewiring flow is still manual and easy to do inconsistently.",
+      "scope": [
+        "Add a helper flow or command for creating child tasks and rewiring the parent dependencies and progress note when a large task must be split during execution."
+      ],
+      "acceptance": [
+        "A contributor can split an oversized task into concrete child tasks and rewire the parent dependency graph through one documented helper flow; the parent progress note captures what landed and what moved into children; verification covers one sample split workflow."
+      ],
+      "dependencies": [
+        "PROC-001"
+      ],
+      "progress": [],
       "verification": [],
       "evidence": []
     }

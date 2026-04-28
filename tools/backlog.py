@@ -21,7 +21,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 BACKLOG_PATH = ROOT / "docs" / "BANNERMOD_BACKLOG.json"
 VALID_STATUSES = {"open", "in_progress", "done"}
-REQUIRED_TASK_FIELDS = ("id", "title", "status", "why", "scope", "acceptance", "updated")
+SCHEMA_VERSION = 2
+REQUIRED_TASK_FIELDS = ("id", "title", "status", "why", "scope", "acceptance", "dependencies", "updated")
 TASK_ID_RE = re.compile(r"^[A-Z][A-Z0-9]+-[0-9]+[A-Z0-9-]*$")
 MAX_BACKLOG_BYTES = 5 * 1024 * 1024
 MAX_BATCH_LIMIT = 50
@@ -41,6 +42,13 @@ def main() -> int:
     p_batch.add_argument("--offset", type=int, default=0, help="Skip matching tasks")
     p_batch.add_argument("--json", action="store_true", help="Print machine-readable JSON")
 
+    p_ready = sub.add_parser("ready", help="Print N open tasks whose dependencies are already done")
+    p_ready.add_argument("limit", type=int, help="Maximum tasks to print")
+    p_ready.add_argument("--offset", type=int, default=0, help="Skip matching tasks")
+    p_ready.add_argument("--prefix", help="ID prefix filter, e.g. UI or PERF")
+    p_ready.add_argument("--query", help="Case-insensitive text filter over id/title/why")
+    p_ready.add_argument("--json", action="store_true", help="Print machine-readable JSON")
+
     p_show = sub.add_parser("show", help="Show one full task")
     p_show.add_argument("id", help="Task id")
     p_show.add_argument("--json", action="store_true", help="Print machine-readable JSON")
@@ -51,6 +59,7 @@ def main() -> int:
     p_add.add_argument("--why", required=True, help="Why this task exists")
     p_add.add_argument("--scope", action="append", required=True, help="Concrete deliverable; repeatable")
     p_add.add_argument("--acceptance", action="append", required=True, help="Verifiable acceptance item; repeatable")
+    p_add.add_argument("--depends-on", action="append", default=[], help="Task id dependency; repeatable")
     p_add.add_argument("--evidence", action="append", default=[], help="Evidence reference; repeatable")
     p_add.add_argument("--dry-run", action="store_true", help="Validate and preview without writing")
 
@@ -58,6 +67,10 @@ def main() -> int:
     p_progress.add_argument("id", help="Task id")
     p_progress.add_argument("text", help="Progress text")
     p_progress.add_argument("--date", default=today(), help="Progress date")
+
+    p_set_deps = sub.add_parser("set-deps", help="Replace one task's dependency list")
+    p_set_deps.add_argument("id", help="Task id")
+    p_set_deps.add_argument("--depends-on", action="append", default=[], help="Task id dependency; repeatable")
 
     p_done = sub.add_parser("done", help="Mark a task done after verification")
     p_done.add_argument("id", help="Task id")
@@ -67,6 +80,8 @@ def main() -> int:
     p_validate = sub.add_parser("validate", help="Validate backlog structure")
     p_validate.add_argument("--json", action="store_true", help="Print machine-readable JSON")
 
+    sub.add_parser("migrate-schema2", help="Upgrade schema 1 backlog to schema 2 dependencies format")
+
     args = parser.parse_args()
     path = Path(args.file)
     data = load(path)
@@ -75,16 +90,22 @@ def main() -> int:
         return cmd_list(data, args)
     if args.command == "batch":
         return cmd_batch(data, args)
+    if args.command == "ready":
+        return cmd_ready(data, args)
     if args.command == "show":
         return cmd_show(data, args)
     if args.command == "add":
         return cmd_add(path, data, args)
     if args.command == "progress":
         return cmd_progress(path, data, args)
+    if args.command == "set-deps":
+        return cmd_set_deps(path, data, args)
     if args.command == "done":
         return cmd_done(path, data, args)
     if args.command == "validate":
         return cmd_validate(data, args)
+    if args.command == "migrate-schema2":
+        return cmd_migrate_schema2(path, data)
 
     parser.error(f"unknown command: {args.command}")
     return 2
@@ -94,6 +115,7 @@ def add_common_filters(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--status", choices=sorted(VALID_STATUSES), default="open", help="Task status filter")
     parser.add_argument("--prefix", help="ID prefix filter, e.g. UI or PERF")
     parser.add_argument("--query", help="Case-insensitive text filter over id/title/why")
+    parser.add_argument("--ready", action="store_true", help="Only show tasks whose dependencies are all done")
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -157,6 +179,8 @@ def matching(data: dict[str, Any], args: argparse.Namespace) -> list[dict[str, A
         haystack = " ".join(str(task.get(k, "")) for k in ("id", "title", "why")).lower()
         if query and query not in haystack:
             continue
+        if args.ready and open_dependency_ids(data, task):
+            continue
         result.append(task)
     return result
 
@@ -186,6 +210,25 @@ def cmd_batch(data: dict[str, Any], args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ready(data: dict[str, Any], args: argparse.Namespace) -> int:
+    if args.limit < 1:
+        raise SystemExit("limit must be at least 1")
+    if args.limit > MAX_BATCH_LIMIT:
+        raise SystemExit(f"limit must be <= {MAX_BATCH_LIMIT}")
+    if args.offset < 0:
+        raise SystemExit("--offset must be >= 0")
+    selected = ready_tasks(data, args.prefix, args.query)[args.offset : args.offset + args.limit]
+    if args.json:
+        print(json.dumps(selected, indent=2, ensure_ascii=False))
+        return 0
+    for task in selected:
+        print_task(task, compact=False)
+        print()
+    if not selected:
+        print("No ready tasks.")
+    return 0
+
+
 def cmd_show(data: dict[str, Any], args: argparse.Namespace) -> int:
     task = find_task(data, args.id)
     if args.json:
@@ -193,6 +236,25 @@ def cmd_show(data: dict[str, Any], args: argparse.Namespace) -> int:
     else:
         print_task(task, compact=False)
     return 0
+
+
+def ready_tasks(data: dict[str, Any], prefix: str | None, query: str | None) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    wanted_prefix = (prefix or "").upper()
+    wanted_query = (query or "").lower()
+    for task in tasks(data):
+        if task.get("status") != "open":
+            continue
+        task_id = str(task.get("id", ""))
+        if wanted_prefix and not task_id.upper().startswith(wanted_prefix):
+            continue
+        haystack = " ".join(str(task.get(k, "")) for k in ("id", "title", "why")).lower()
+        if wanted_query and wanted_query not in haystack:
+            continue
+        if open_dependency_ids(data, task):
+            continue
+        result.append(task)
+    return result
 
 
 def cmd_add(path: Path, data: dict[str, Any], args: argparse.Namespace) -> int:
@@ -207,6 +269,7 @@ def cmd_add(path: Path, data: dict[str, Any], args: argparse.Namespace) -> int:
         "why": required_text(args.why, "why"),
         "scope": clean_list(args.scope, "scope"),
         "acceptance": clean_list(args.acceptance, "acceptance"),
+        "dependencies": clean_optional_task_ids(args.depends_on, "depends-on"),
         "progress": [],
         "verification": [],
         "evidence": clean_optional_list(args.evidence, "evidence"),
@@ -235,14 +298,72 @@ def cmd_progress(path: Path, data: dict[str, Any], args: argparse.Namespace) -> 
     return 0
 
 
+def cmd_set_deps(path: Path, data: dict[str, Any], args: argparse.Namespace) -> int:
+    task = find_task(data, args.id)
+    task_id = str(task.get("id", "")).upper()
+    dependencies = clean_optional_task_ids(args.depends_on, "depends-on")
+    if task_id in dependencies:
+        raise SystemExit(f"{task_id} cannot depend on itself")
+    task["dependencies"] = dependencies
+    task["updated"] = today()
+    save(path, data)
+    if dependencies:
+        print(f"Updated dependencies for {task_id}: {', '.join(dependencies)}")
+    else:
+        print(f"Updated dependencies for {task_id}: none")
+    return 0
+
+
 def cmd_done(path: Path, data: dict[str, Any], args: argparse.Namespace) -> int:
     task = find_task(data, args.id)
+    blocked_by = open_dependency_ids(data, task)
+    if blocked_by:
+        raise SystemExit(
+            f"cannot mark {task['id']} done; unresolved dependencies: {', '.join(blocked_by)}"
+        )
     task["status"] = "done"
     task["doneDate"] = args.date
     task["updated"] = args.date
     task.setdefault("verification", []).append({"date": args.date, "result": args.verification})
     save(path, data)
     print(f"Marked {task['id']} done")
+    return 0
+
+
+def cmd_migrate_schema2(path: Path, data: dict[str, Any]) -> int:
+    schema = data.get("schema")
+    if schema not in (1, SCHEMA_VERSION):
+        raise SystemExit(f"unsupported schema for migration: {schema!r}")
+    data["schema"] = SCHEMA_VERSION
+    rules = list(data.get("rules") or [])
+    if not rules:
+        rules = [
+            "This JSON file is the single canonical backlog; docs/BANNERMOD_BACKLOG.md is only a human-facing pointer.",
+            "Use tools/backlog.py batch/list/show to inspect work instead of dumping the whole JSON file into context.",
+            "Every task must include id, title, status, why, scope, acceptance, dependencies, and updated date.",
+            "DONE means every acceptance item is observably satisfied in the current codebase, not merely supported by a lower-level policy or partial slice.",
+            "Before marking a task done, run the relevant verification and record the result in verification. If a check cannot be run, record why.",
+            "If a task changes UI, changes gameplay mechanics, or adds player-facing mechanics, update both MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md before marking it done.",
+            "Append progress entries instead of rewriting history. Keep old evidence and progress unless it is factually wrong.",
+            "Add new work as an open task with concrete deliverables, explicit dependencies, and verifiable acceptance checks. Do not add vague reminders.",
+        ]
+    else:
+        rules = [
+            "Every task must include id, title, status, why, scope, acceptance, dependencies, and updated date."
+            if rule == "Every task must include id, title, status, why, scope, acceptance, and updated date."
+            else "Add new work as an open task with concrete deliverables, explicit dependencies, and verifiable acceptance checks. Do not add vague reminders."
+            if rule == "Add new work as an open task with concrete deliverables and verifiable acceptance checks. Do not add vague reminders."
+            else rule
+            for rule in rules
+        ]
+        dependency_rule = "Dependencies must be explicit. Use an empty list when a task has no blockers; otherwise list the blocking task ids so work can be parallelized safely."
+        if dependency_rule not in rules:
+            rules.append(dependency_rule)
+    data["rules"] = rules
+    for task in tasks(data):
+        task.setdefault("dependencies", [])
+    save(path, data)
+    print(f"Migrated backlog to schema {SCHEMA_VERSION}")
     return 0
 
 
@@ -271,11 +392,13 @@ def validate_or_exit(data: dict[str, Any]) -> None:
 def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     seen: set[str] = set()
-    if data.get("schema") != 1:
-        errors.append("schema must be 1")
+    all_tasks = tasks(data)
+    if data.get("schema") != SCHEMA_VERSION:
+        errors.append(f"schema must be {SCHEMA_VERSION}")
     if not isinstance(data.get("rules"), list) or not data.get("rules"):
         errors.append("rules must be a non-empty list")
-    for index, task in enumerate(tasks(data), start=1):
+    task_map: dict[str, dict[str, Any]] = {}
+    for index, task in enumerate(all_tasks, start=1):
         if not isinstance(task, dict):
             errors.append(f"task #{index} must be an object")
             continue
@@ -288,6 +411,7 @@ def validate(data: dict[str, Any]) -> list[str]:
         if task_id in seen:
             errors.append(f"duplicate task id: {task_id}")
         seen.add(task_id)
+        task_map[task_id] = task
         if task.get("status") not in VALID_STATUSES:
             errors.append(f"{task_id} has invalid status {task.get('status')!r}")
         for field in ("title", "why", "updated"):
@@ -298,11 +422,36 @@ def validate(data: dict[str, Any]) -> list[str]:
             value = task.get(field)
             if not isinstance(value, list) or not value or not all(isinstance(item, str) and item.strip() for item in value):
                 errors.append(f"{task_id} must have non-empty string list {field}")
+        dependencies = task.get("dependencies")
+        if not isinstance(dependencies, list) or not all(isinstance(item, str) and item.strip() for item in dependencies):
+            errors.append(f"{task_id} must have string list dependencies")
+        else:
+            normalized_dependencies: list[str] = []
+            for dep in dependencies:
+                dep_id = dep.strip().upper()
+                if not TASK_ID_RE.match(dep_id):
+                    errors.append(f"{task_id} has invalid dependency id {dep!r}")
+                    continue
+                if dep_id == task_id:
+                    errors.append(f"{task_id} cannot depend on itself")
+                if dep_id in normalized_dependencies:
+                    errors.append(f"{task_id} lists duplicate dependency {dep_id}")
+                normalized_dependencies.append(dep_id)
         for field in ("progress", "verification", "evidence"):
             if field in task and not isinstance(task[field], list):
                 errors.append(f"{task_id} {field} must be a list")
         if task.get("status") == "done" and not task.get("verification"):
             errors.append(f"{task_id} is done but has no verification entry")
+    for task_id, task in task_map.items():
+        for dep_id in dependency_list(task):
+            if dep_id not in task_map:
+                errors.append(f"{task_id} depends on missing task {dep_id}")
+        if task.get("status") == "done":
+            blocked_by = [dep_id for dep_id in dependency_list(task) if task_map.get(dep_id, {}).get("status") != "done"]
+            if blocked_by:
+                errors.append(f"{task_id} is done but has unresolved dependencies: {', '.join(blocked_by)}")
+    for cycle in find_dependency_cycles(task_map):
+        errors.append(f"dependency cycle detected: {' -> '.join(cycle)}")
     return errors
 
 
@@ -334,11 +483,70 @@ def clean_optional_list(values: list[str], field: str) -> list[str]:
     return cleaned
 
 
+def clean_optional_task_ids(values: list[str], field: str) -> list[str]:
+    cleaned = clean_optional_list(values, field)
+    normalized = [normalize_task_id(item) for item in cleaned]
+    if len(set(normalized)) != len(normalized):
+        raise SystemExit(f"{field} contains duplicate task ids")
+    return normalized
+
+
+def dependency_list(task: dict[str, Any]) -> list[str]:
+    return [str(item).strip().upper() for item in task.get("dependencies", []) if str(item).strip()]
+
+
+def open_dependency_ids(data: dict[str, Any], task: dict[str, Any]) -> list[str]:
+    task_by_id = {str(item.get("id", "")).upper(): item for item in tasks(data)}
+    blocked_by: list[str] = []
+    for dep_id in dependency_list(task):
+        dep = task_by_id.get(dep_id)
+        if dep is None or dep.get("status") != "done":
+            blocked_by.append(dep_id)
+    return blocked_by
+
+
+def find_dependency_cycles(task_map: dict[str, dict[str, Any]]) -> list[list[str]]:
+    cycles: list[list[str]] = []
+    state: dict[str, int] = {}
+    stack: list[str] = []
+
+    def visit(task_id: str) -> None:
+        marker = state.get(task_id, 0)
+        if marker == 1:
+            if task_id in stack:
+                start = stack.index(task_id)
+                cycles.append(stack[start:] + [task_id])
+            return
+        if marker == 2:
+            return
+        state[task_id] = 1
+        stack.append(task_id)
+        for dep_id in dependency_list(task_map[task_id]):
+            if dep_id in task_map:
+                visit(dep_id)
+        stack.pop()
+        state[task_id] = 2
+
+    for task_id in task_map:
+        visit(task_id)
+
+    unique_cycles: list[list[str]] = []
+    seen_keys: set[tuple[str, ...]] = set()
+    for cycle in cycles:
+        key = tuple(cycle)
+        if key not in seen_keys:
+            seen_keys.add(key)
+            unique_cycles.append(cycle)
+    return unique_cycles
+
+
 def print_task(task: dict[str, Any], compact: bool) -> None:
     print(f"{task['id']} [{task['status']}] {task['title']}")
     if compact:
         return
     print(f"Updated: {task.get('updated', 'unknown')}")
+    dependencies = dependency_list(task)
+    print(f"Dependencies: {', '.join(dependencies) if dependencies else 'none'}")
     print(f"Why: {task.get('why', '')}")
     print("Scope:")
     for item in task.get("scope", []):
