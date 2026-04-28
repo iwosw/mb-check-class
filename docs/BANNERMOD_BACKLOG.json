@@ -4104,7 +4104,7 @@
     {
       "id": "RENDER-011",
       "title": "Rewrite world-map route rendering",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-29",
       "why": "World-map rendering and route editing contain custom drawing, popup, scroll, and line logic that should be rebuilt on the new render/UI layer.",
       "scope": [
@@ -4123,8 +4123,14 @@
           "text": "Code merged from feature/render-011: world-map route drawing now uses owned WorldMapRenderPrimitives/current GuiGraphics and VertexConsumer APIs; compileJava and processResources passed; MessageFormationMapMoveOrder still dispatches through CommandIntentDispatcher by code inspection. Remaining runtime UI preservation moved to RENDER-011A."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "World-map route UI compiles; WorldMapRouteUiVerificationTest passed from RENDER-011A, covering route display primitives, waypoint edit/name popup wiring, scroll/zoom behavior, selection state, and command dispatch through CommandIntentDispatcher; compileJava and processResources passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-012",
@@ -4769,7 +4775,7 @@
     {
       "id": "RENDER-011A",
       "title": "Verify world-map route UI runtime behavior",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-29",
       "why": "RENDER-011 code compiles and command dispatch was code-reviewed, but preserving route display, waypoint popups, scroll/zoom, and selection state needs an observable client smoke check.",
       "scope": [
@@ -4782,8 +4788,14 @@
         "RENDER-008"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Headless task worktree could not run interactive client smoke; added automated non-production verification in commit 441f660. WorldMapRouteUiVerificationTest passed and covers route primitives, waypoint hit/insert logic, route/name waypoint popup wiring, scroll/zoom anchoring, selection state, and MessageFormationMapMoveOrder -> CommandIntentDispatcher dispatch. compileJava and processResources passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     }
   ]
 }
