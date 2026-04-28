@@ -3387,7 +3387,7 @@
     {
       "id": "PORT-014",
       "title": "Finish NeoForge event API migration",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-009 compile is still blocked by remaining 1.21.1 event API changes after the initial eventbus and overlay port.",
       "scope": [
@@ -3400,8 +3400,14 @@
         "PORT-008"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "ctx log -- ./gradlew compileJava no longer reports missing TickEvent, LivingEvent/LivingTickEvent, LivingHurtEvent/LivingAttackEvent, patrol spawn SpawnPlacements.Type, shield ShieldBlockEvent, or quaff PotionUtils event/API symbols. compileJava still fails on out-of-scope mixin remap targets, BlockPathTypes pathing rename, and DistExecutor removal."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-015",
