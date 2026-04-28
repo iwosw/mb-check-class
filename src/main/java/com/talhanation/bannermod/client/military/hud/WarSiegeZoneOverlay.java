@@ -7,15 +7,17 @@ import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import com.talhanation.bannermod.war.runtime.WarState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.common.EventBusSubscriber;
 
@@ -31,31 +33,28 @@ import java.util.UUID;
  */
 @EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class WarSiegeZoneOverlay {
+    private static final ResourceLocation SIEGE_ZONE_LAYER = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "siege_zone");
 
     private WarSiegeZoneOverlay() {
     }
 
     @SubscribeEvent
-    public static void registerOverlays(RegisterGuiOverlaysEvent event) {
+    public static void registerOverlays(RegisterGuiLayersEvent event) {
         event.registerAbove(
-                VanillaGuiOverlay.HOTBAR.id(),
-                "bannermod_siege_zone",
+                VanillaGuiLayers.HOTBAR,
+                SIEGE_ZONE_LAYER,
                 WarSiegeZoneOverlay::render
         );
     }
 
-    private static void render(net.minecraftforge.client.gui.overlay.ForgeGui gui,
-                               GuiGraphics graphics,
-                               float partialTick,
-                               int screenWidth,
-                               int screenHeight) {
+    private static void render(GuiGraphics graphics, DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null || mc.options.hideGui) return;
         LocalPlayer player = mc.player;
         if (player == null) return;
         SiegeContext context = nearestActiveSiege(player);
         if (context == null) return;
-        renderBanner(graphics, mc.font, screenWidth, context);
+        renderBanner(graphics, mc.font, mc.getWindow().getGuiScaledWidth(), context);
     }
 
     private static void renderBanner(GuiGraphics graphics, Font font, int screenWidth, SiegeContext context) {
@@ -133,6 +132,6 @@ public final class WarSiegeZoneOverlay {
                                  String sideName) {
     }
 
-    /** Renderer plug used in {@link RegisterGuiOverlaysEvent} (kept as a method ref above). */
-    public static final IGuiOverlay HUD = WarSiegeZoneOverlay::render;
+    /** Renderer plug used in {@link RegisterGuiLayersEvent} (kept as a method ref above). */
+    public static final LayeredDraw.Layer HUD = WarSiegeZoneOverlay::render;
 }

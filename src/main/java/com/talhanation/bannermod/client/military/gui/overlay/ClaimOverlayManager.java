@@ -11,9 +11,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 
@@ -69,7 +70,8 @@ public class ClaimOverlayManager {
     }
 
     @SubscribeEvent
-    public void onRenderGameOverlay(RenderGuiOverlayEvent.Post event) {
+    public void onRenderGameOverlay(RenderGuiLayerEvent.Post event) {
+        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
