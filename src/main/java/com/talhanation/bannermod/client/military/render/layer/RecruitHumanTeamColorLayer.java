@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.render.RecruitRenderProfiling;
 import com.talhanation.bannermod.client.military.render.RecruitRenderLod;
-import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
