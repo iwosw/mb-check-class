@@ -3153,7 +3153,7 @@
     {
       "id": "PORT-005",
       "title": "Migrate NeoForge event and overlay APIs",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-003 compile is blocked by removed or renamed Forge event and client overlay APIs across root src.",
       "scope": [
@@ -3171,8 +3171,14 @@
           "text": "Urgent PORT execution split after verification attempt: compileJava could not reach Java sources because build.gradle still references ForgeGradle fg.deobf. PORT-005 now waits on PORT-010 buildscript cleanup, PORT-011 event/eventbus migration, and PORT-012 HUD overlay migration; after those land, PORT-005 can close against the original event/overlay acceptance."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) PORT-010 removed fg.deobf so compileJava reaches Java source compilation; 2) PORT-011 migrated active Forge event/eventbus/EventBusSubscriber usages and ctx search found zero old Forge event/eventbus/EventBusSubscriber patterns; 3) PORT-012 migrated active HUD overlay hooks and ctx search found zero RenderGuiOverlayEvent, RegisterGuiOverlaysEvent, VanillaGuiOverlay, IGuiOverlay, or ForgeGui symbols. compileJava still fails on later non-PORT-005 Forge common/network/distmarker/FML clusters."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-006",
