@@ -3250,7 +3250,12 @@
       "dependencies": [
         "PORT-007"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Follow-up correction required: PORT-008 landed functional NeoForge payload registration but retained local net.minecraftforge.network compatibility shims. PORT-019 was added to remove those shims and migrate call sites to BannerMod-owned or NeoForge APIs before final compile closure."
+        }
+      ],
       "verification": [
         {
           "date": "2026-04-28",
@@ -3485,7 +3490,27 @@
         "Root ./gradlew compileJava passes on the NeoForge 1.21.1 branch."
       ],
       "dependencies": [
-        "PORT-017"
+        "PORT-017",
+        "PORT-019"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-019",
+      "title": "Remove Forge network compatibility shims",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-008 incorrectly hid networking migration behind local net.minecraftforge.network compatibility classes, leaving Forge namespace in active source.",
+      "scope": [
+        "Delete local net.minecraftforge.network shim classes and migrate imports/call sites to BannerMod-owned adapters or direct NeoForge networking APIs without retaining Forge package names."
+      ],
+      "acceptance": [
+        "Active src contains no net.minecraftforge.network imports or package declarations; packet sending, screen opening, and server sender context still route through NeoForge payload APIs; focused inspection covers MessageMovement authority flow."
+      ],
+      "dependencies": [
+        "PORT-008"
       ],
       "progress": [],
       "verification": [],
