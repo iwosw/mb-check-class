@@ -1,9 +1,9 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
@@ -29,12 +29,21 @@ public class MessageAssignRecruitToPlayer implements Message<MessageAssignRecrui
 
     public void executeServerSide(NetworkEvent.Context context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        ServerLevel serverLevel = (ServerLevel) serverPlayer.getCommandSenderWorld();
 
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruit, 64.0D);
-        if (recruit != null) {
-            recruit.assignToPlayer(newOwner, null);
+        assignRecruitToPlayer(serverPlayer, recruit, newOwner);
+    }
+
+    static boolean assignRecruitToPlayer(ServerPlayer serverPlayer, AbstractRecruitEntity recruit, UUID newOwner) {
+        if (recruit == null || !canTransferRecruit(serverPlayer, recruit)) {
+            return false;
         }
+        recruit.assignToPlayer(newOwner, null);
+        return true;
+    }
+
+    static boolean canTransferRecruit(ServerPlayer serverPlayer, AbstractRecruitEntity recruit) {
+        return RecruitCommandAuthority.canDirectlyControl(serverPlayer, recruit) || serverPlayer.hasPermissions(2);
     }
 
     public MessageAssignRecruitToPlayer fromBytes(FriendlyByteBuf buf) {
