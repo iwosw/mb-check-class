@@ -3,13 +3,13 @@ package com.talhanation.bannermod.client.civilian.gui.structureRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import com.talhanation.bannermod.persistence.civilian.ScannedBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -148,7 +148,7 @@ public class StructurePreviewWidget extends AbstractWidget {
 
         poseStack.pushPose();
         poseStack.translate(areaX - 1, 0, 0);
-        LevelRenderer.renderLineBox(
+        ClientRenderPrimitives.lineBox(
                 poseStack,
                 bufferSource.getBuffer(RenderType.lines()),
                 new AABB(0, 0, 0, 1, 2, 1).inflate(0.01),
@@ -165,7 +165,7 @@ public class StructurePreviewWidget extends AbstractWidget {
                 int relY = entityTag.getInt("y");
                 int relZ = entityTag.getInt("z");
                 poseStack.pushPose();
-                LevelRenderer.renderLineBox(
+                ClientRenderPrimitives.lineBox(
                         poseStack,
                         bufferSource.getBuffer(RenderType.lines()),
                         new AABB(relX, relY, relZ, relX + 1, relY + 2, relZ + 1).inflate(0.01),
@@ -265,4 +265,3 @@ public class StructurePreviewWidget extends AbstractWidget {
         return false;
     }
 }
-
