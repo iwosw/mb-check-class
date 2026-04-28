@@ -19,11 +19,11 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.minecraftforge.network.PacketDistributor;
 
 public class WorkersVillagerEvents {
@@ -52,7 +52,7 @@ public class WorkersVillagerEvents {
     }
 
     @SubscribeEvent
-    public void onVillagerLivingUpdate(LivingEvent.LivingTickEvent event) {
+    public void onVillagerLivingUpdate(EntityTickEvent.Post event) {
         LivingEntity livingEntity = event.getEntity();
         if (!(livingEntity instanceof Villager villager) || villager.level().isClientSide() || !(villager.level() instanceof ServerLevel serverLevel)) {
             return;
@@ -66,11 +66,7 @@ public class WorkersVillagerEvents {
     }
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
-
+    public void onServerTick(ServerTickEvent.Post event) {
         ServerLevel level = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer() == null
                 ? null
                 : net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
