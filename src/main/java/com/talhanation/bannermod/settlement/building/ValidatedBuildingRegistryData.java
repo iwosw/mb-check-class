@@ -3,6 +3,7 @@ package com.talhanation.bannermod.settlement.building;
 import com.talhanation.bannermod.settlement.validation.BuildingValidationResult;
 import com.talhanation.bannermod.settlement.validation.ValidatedBuildingSnapshot;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -24,20 +25,17 @@ import java.util.UUID;
 
 public class ValidatedBuildingRegistryData extends SavedData {
     private static final String FILE_ID = "bannermodValidatedBuildingRegistry";
+    private static final SavedData.Factory<ValidatedBuildingRegistryData> FACTORY = new SavedData.Factory<>(ValidatedBuildingRegistryData::new, ValidatedBuildingRegistryData::load);
 
     private final Map<UUID, ValidatedBuildingRecord> records = new LinkedHashMap<>();
     private final Map<UUID, Map<BuildingType, List<UUID>>> bySettlementType = new HashMap<>();
     private final Map<Long, List<UUID>> byChunk = new HashMap<>();
 
     public static ValidatedBuildingRegistryData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                ValidatedBuildingRegistryData::load,
-                ValidatedBuildingRegistryData::new,
-                FILE_ID
-        );
+        return level.getDataStorage().computeIfAbsent(FACTORY, FILE_ID);
     }
 
-    public static ValidatedBuildingRegistryData load(CompoundTag tag) {
+    public static ValidatedBuildingRegistryData load(CompoundTag tag, HolderLookup.Provider registries) {
         ValidatedBuildingRegistryData data = new ValidatedBuildingRegistryData();
         ListTag recordsTag = tag.getList("Records", Tag.TAG_COMPOUND);
         for (Tag entry : recordsTag) {
@@ -52,7 +50,7 @@ public class ValidatedBuildingRegistryData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag recordsTag = new ListTag();
         for (ValidatedBuildingRecord record : this.records.values()) {
             recordsTag.add(record.toTag());

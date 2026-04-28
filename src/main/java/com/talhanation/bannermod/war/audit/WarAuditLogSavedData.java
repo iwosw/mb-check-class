@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.war.audit;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 public class WarAuditLogSavedData extends SavedData {
     private static final String FILE_ID = "bannermodWarAuditLog";
+    private static final SavedData.Factory<WarAuditLogSavedData> FACTORY = new SavedData.Factory<>(WarAuditLogSavedData::new, WarAuditLogSavedData::load);
 
     private final List<WarAuditEntry> entries = new ArrayList<>();
 
@@ -23,14 +25,10 @@ public class WarAuditLogSavedData extends SavedData {
     }
 
     public static WarAuditLogSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                WarAuditLogSavedData::load,
-                WarAuditLogSavedData::new,
-                FILE_ID
-        );
+        return level.getDataStorage().computeIfAbsent(FACTORY, FILE_ID);
     }
 
-    public static WarAuditLogSavedData load(CompoundTag tag) {
+    public static WarAuditLogSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         List<WarAuditEntry> loaded = new ArrayList<>();
         ListTag list = tag.getList("Entries", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -64,7 +62,7 @@ public class WarAuditLogSavedData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (WarAuditEntry entry : entries) {
             list.add(entry.toTag());
