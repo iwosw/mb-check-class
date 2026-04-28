@@ -3238,7 +3238,7 @@
     {
       "id": "PORT-008",
       "title": "Migrate network packet payload APIs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-003 compile depends on replacing legacy Forge networking assumptions with NeoForge 1.21.1 payload registration and handling APIs.",
       "scope": [
@@ -3251,8 +3251,14 @@
         "PORT-007"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Registered root packets via RegisterPayloadHandlersEvent/PayloadRegistrar and BannerModMessage payload adapter; 2) compileJava no longer reports net.minecraftforge.network, NetworkEvent, SimpleChannel, or PacketDistributor missing-package errors, and remaining failures are mixin remap, TickEvent/event API, pathfinding BlockPathTypes, and DistExecutor clusters; 3) inspected MessageMovement C2S path through IPayloadContext -> context wrapper -> CommandIntent.Movement -> CommandIntentDispatcher.dispatch, with sender authority still resolved from the server context and mismatched client UUIDs rejected by RecruitCommandTargetResolver."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-009",
