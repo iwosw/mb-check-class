@@ -8,7 +8,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,12 +40,12 @@ public interface BannerModMessage<T extends BannerModMessage<T>> extends Message
 
     @Override
     default void executeServerSide(IPayloadContext context) {
-        invokeLegacy("executeServerSide", NetworkEvent.Context.class, new NetworkEvent.Context(context));
+        invokeLegacy("executeServerSide", BannerModNetworkContext.class, new BannerModNetworkContext(context));
     }
 
     @Override
     default void executeClientSide(IPayloadContext context) {
-        invokeLegacy("executeClientSide", NetworkEvent.Context.class, new NetworkEvent.Context(context));
+        invokeLegacy("executeClientSide", BannerModNetworkContext.class, new BannerModNetworkContext(context));
     }
 
     default void invokeLegacy(String methodName, Class<?> parameterType, Object argument) {

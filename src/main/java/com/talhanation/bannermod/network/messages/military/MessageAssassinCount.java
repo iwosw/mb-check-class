@@ -6,7 +6,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -28,7 +28,7 @@ public class MessageAssassinCount implements BannerModMessage<MessageAssassinCou
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.uuid);
         if (entity instanceof AssassinLeaderEntity leader

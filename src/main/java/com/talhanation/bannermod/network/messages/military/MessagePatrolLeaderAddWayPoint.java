@@ -16,8 +16,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.Tags;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -42,7 +42,7 @@ public class MessagePatrolLeaderAddWayPoint implements BannerModMessage<MessageP
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.worker);
         if (entity instanceof AbstractLeaderEntity leader
@@ -63,7 +63,7 @@ public class MessagePatrolLeaderAddWayPoint implements BannerModMessage<MessageP
             player.sendSystemMessage(TEXT_NOT_WATER_WAYPOINT(captain.getName().getString()));
         } else {
             leaderEntity.addWaypoint(pos);
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientUpdateLeaderScreen(leaderEntity.WAYPOINTS, leaderEntity.WAYPOINT_ITEMS, leaderEntity.getArmySize()));
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientUpdateLeaderScreen(leaderEntity.WAYPOINTS, leaderEntity.WAYPOINT_ITEMS, leaderEntity.getArmySize()));
         }
     }
 

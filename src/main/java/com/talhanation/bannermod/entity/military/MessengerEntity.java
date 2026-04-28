@@ -40,7 +40,7 @@ import net.minecraft.world.scores.PlayerTeam;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -204,7 +204,7 @@ public class MessengerEntity extends AbstractChunkLoaderEntity implements ICompa
     public void openAnswerGUI(Player player) {
         if(this.level().isClientSide())return;
         if(player instanceof ServerPlayer serverPlayer && getTargetPlayerInfo() != null){
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientOpenMessengerAnswerScreen(MessengerEntity.this, this.getMessage(), this.getTargetPlayerInfo()));
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientOpenMessengerAnswerScreen(MessengerEntity.this, this.getMessage(), this.getTargetPlayerInfo()));
             this.targetPlayerOpened = true;
         }
     }
@@ -502,7 +502,7 @@ public class MessengerEntity extends AbstractChunkLoaderEntity implements ICompa
             if(ownerTeam != null) target.sendSystemMessage(MESSENGER_ARRIVED_TEAM(this.getOwnerName(), ownerTeam.getDisplayName().getString()));
         }
 
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> target), new MessageToClientSetToast(1, this.getOwnerName()));
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> target), new MessageToClientSetToast(1, this.getOwnerName()));
     }
 
     private MutableComponent PLAYER_NOT_FOUND(){

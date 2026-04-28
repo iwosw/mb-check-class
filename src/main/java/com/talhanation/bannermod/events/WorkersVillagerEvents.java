@@ -24,7 +24,7 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 public class WorkersVillagerEvents {
     @SubscribeEvent
@@ -32,7 +32,7 @@ public class WorkersVillagerEvents {
         if(event.getLevel().isClientSide()) return;
 
         if(event.getEntity() instanceof ServerPlayer player){
-                WorkersRuntime.channel().send(PacketDistributor.PLAYER.with(() -> player),
+                WorkersRuntime.channel().send(BannerModPacketDistributor.PLAYER.with(() -> player),
                         new MessageToClientUpdateConfig(WorkersServerConfig.shouldWorkAreaOnlyBeInFactionClaim()));
         }
     }

@@ -3,7 +3,7 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.UUID;
 
@@ -37,7 +37,7 @@ public class MessageRecruitCount implements BannerModMessage<MessageRecruitCount
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         // Intentional no-op: the original handler body was commented out at introduction.
     }
 

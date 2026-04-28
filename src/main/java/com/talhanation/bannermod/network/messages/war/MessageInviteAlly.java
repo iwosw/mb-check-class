@@ -8,7 +8,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.UUID;
 
@@ -37,7 +37,7 @@ public class MessageInviteAlly implements BannerModMessage<MessageInviteAlly> {
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null || this.warId == null || this.inviteeEntityId == null) return;
         ServerLevel level = player.serverLevel().getServer().overworld();

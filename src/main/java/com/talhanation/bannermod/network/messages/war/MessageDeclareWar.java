@@ -15,8 +15,8 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -43,7 +43,7 @@ public class MessageDeclareWar implements BannerModMessage<MessageDeclareWar> {
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null || this.attackerId == null || this.defenderId == null) {
             return;
@@ -70,7 +70,7 @@ public class MessageDeclareWar implements BannerModMessage<MessageDeclareWar> {
                     WarRuntimeContext.allyInvites(level).all(),
                     WarRuntimeContext.occupations(level).all(),
                     WarRuntimeContext.revolts(level).all());
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientUpdateWarState(payload));
         }
     }

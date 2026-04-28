@@ -9,7 +9,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +37,7 @@ public class MessageFormationFollowMovement implements BannerModMessage<MessageF
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         dispatchToServer(Objects.requireNonNull(context.getSender()), this.player_uuid, this.group, this.formation);
     }
 

@@ -21,7 +21,7 @@ import net.minecraft.world.phys.*;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.minecraftforge.network.NetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -210,7 +210,7 @@ public class CommandEvents {
 
     public static void openCommandScreen(Player player) {
         if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+            BannerModNetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
 
                 @Override
                 public @NotNull Component getDisplayName() {

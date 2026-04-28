@@ -8,7 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 /**
  * Server → client snapshot of warfare-RP state (political entities, active wars, siege standards).
@@ -34,7 +34,7 @@ public class MessageToClientUpdateWarState implements BannerModMessage<MessageTo
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.full_sync.war_state", payload);
         WarClientState.applyFromNbt(payload);
     }

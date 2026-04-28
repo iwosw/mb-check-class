@@ -4,7 +4,7 @@ import com.talhanation.bannermod.client.military.gui.GovernorScreen;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +74,7 @@ public class MessageToClientUpdateGovernorScreen implements BannerModMessage<Mes
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         GovernorScreen.applyUpdate(recruit, settlementStatus, citizenCount, taxesDue, taxesCollected, lastHeartbeatTick,
                 garrisonRecommendation, fortificationRecommendation, garrisonPriority, fortificationPriority, taxPressure,
                 treasuryBalance, lastTreasuryNet, projectedTreasuryBalance,

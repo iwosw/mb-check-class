@@ -36,8 +36,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -628,7 +628,7 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
 
     public void openSpecialGUI(Player player) {
         if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+            BannerModNetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
                 @Override
                 public @NotNull Component getDisplayName() {
                     return AbstractLeaderEntity.this.getName();
@@ -644,7 +644,7 @@ public abstract class AbstractLeaderEntity extends AbstractChunkLoaderEntity imp
         }
 
         if (player instanceof ServerPlayer) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientUpdateLeaderScreen(this.WAYPOINTS, this.WAYPOINT_ITEMS, this.army.getTotalUnits()));
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientUpdateLeaderScreen(this.WAYPOINTS, this.WAYPOINT_ITEMS, this.army.getTotalUnits()));
         }
     }
 }

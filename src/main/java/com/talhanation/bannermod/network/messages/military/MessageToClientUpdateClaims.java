@@ -10,7 +10,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class MessageToClientUpdateClaims implements BannerModMessage<MessageToCl
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.full_sync.claims", claimsListNBT);
         ClientManager.recruitsClaims = RecruitsClaim.getListFromNBT(claimsListNBT);
         ClientManager.markClaimsChanged();

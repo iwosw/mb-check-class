@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 
 public class MessageUpdateGroup implements BannerModMessage<MessageUpdateGroup> {
@@ -29,7 +29,7 @@ public class MessageUpdateGroup implements BannerModMessage<MessageUpdateGroup> 
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         RecruitsGroup updatedGroup = RecruitsGroup.fromNBT(this.groupNBT);
         ServerPlayer serverPLayer = context.getSender();
 

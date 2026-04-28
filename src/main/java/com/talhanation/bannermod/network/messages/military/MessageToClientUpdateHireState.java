@@ -6,7 +6,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 
 public class MessageToClientUpdateHireState implements BannerModMessage<MessageToClientUpdateHireState> {
@@ -25,7 +25,7 @@ public class MessageToClientUpdateHireState implements BannerModMessage<MessageT
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         ClientManager.canPlayerHire = this.canHire;
     }
 

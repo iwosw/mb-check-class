@@ -11,7 +11,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +36,7 @@ public class MessageStrategicFire implements BannerModMessage<MessageStrategicFi
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
         AABB commandBox = serverPlayer.getBoundingBox().inflate(100);
         List<AbstractRecruitEntity> actors = RecruitIndex.instance().groupInRange(

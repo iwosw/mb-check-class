@@ -4,7 +4,7 @@ import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 
 public class MessageToClientUpdateUnitInfo implements BannerModMessage<MessageToClientUpdateUnitInfo> {
@@ -25,7 +25,7 @@ public class MessageToClientUpdateUnitInfo implements BannerModMessage<MessageTo
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         ClientManager.configValueNobleNeedsVillagers = configValueNobleNeedsVillagers;
         ClientManager.availableRecruitsToHire = availableRecruitsToHire;
     }

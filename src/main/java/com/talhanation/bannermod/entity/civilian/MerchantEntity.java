@@ -40,7 +40,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.minecraftforge.network.NetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -223,7 +223,7 @@ public class MerchantEntity extends AbstractWorkerEntity {
     public void openTradeGUI(Player player) {
         this.setTrading(true);
         if (player instanceof ServerPlayer sp) {
-            NetworkHooks.openScreen(sp, new MenuProvider() {
+            BannerModNetworkHooks.openScreen(sp, new MenuProvider() {
                 public @NotNull Component getDisplayName() { return MerchantEntity.this.getName(); }
                 public @NotNull AbstractContainerMenu createMenu(int i, @NotNull Inventory inv, @NotNull Player p) {
                     return new MerchantTradeContainer(i, MerchantEntity.this, inv);
@@ -237,7 +237,7 @@ public class MerchantEntity extends AbstractWorkerEntity {
     public void openAddEditTradeGUI(Player player, WorkersMerchantTrade trade) {
         if (player instanceof ServerPlayer sp) {
             this.setTrading(true);
-            NetworkHooks.openScreen(sp, new MenuProvider() {
+            BannerModNetworkHooks.openScreen(sp, new MenuProvider() {
                 public @NotNull Component getDisplayName() { return Component.literal("trade_edit_screen"); }
                 public @NotNull AbstractContainerMenu createMenu(int i, @NotNull Inventory inv, @NotNull Player p) {
                     return new MerchantAddEditTradeContainer(i, MerchantEntity.this, inv, trade);

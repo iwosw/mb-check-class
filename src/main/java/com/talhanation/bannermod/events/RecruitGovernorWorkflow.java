@@ -30,8 +30,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 final class RecruitGovernorWorkflow {
@@ -74,7 +74,7 @@ final class RecruitGovernorWorkflow {
 
     static void openGovernorScreen(Player player, AbstractRecruitEntity recruit) {
         if (player instanceof ServerPlayer serverPlayer) {
-            NetworkHooks.openScreen(serverPlayer, new MenuProvider() {
+            BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
                 @Override
                 public @NotNull Component getDisplayName() {
                     return Component.literal("Governor");
@@ -109,7 +109,7 @@ final class RecruitGovernorWorkflow {
             }
         }
 
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateGovernorScreen(
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player), new MessageToClientUpdateGovernorScreen(
                 recruit.getUUID(),
                 binding.status().name().toLowerCase(),
                 snapshot == null ? 0 : snapshot.citizenCount(),

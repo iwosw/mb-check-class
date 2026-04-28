@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.migration;
 
 import net.neoforged.bus.api.IEventBus;
-import net.minecraftforge.network.simple.SimpleChannel;
+import com.talhanation.bannermod.network.compat.BannerModChannel;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public final class NetworkBootstrapSeams {
      * Applies ordered packet registrations to an already-created channel.
      */
     public interface ChannelRegistrar {
-        void registerAll(SimpleChannel channel);
+        void registerAll(BannerModChannel channel);
     }
 
     /**

@@ -7,7 +7,7 @@ import com.talhanation.bannermod.network.messages.military.MessageToClientUpdate
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.*;
 
@@ -90,7 +90,7 @@ public class RecruitsPlayerUnitManager {
             factionID = player.getTeam().getName();
         }
 
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> (ServerPlayer) player),
                 new MessageToClientUpdateUnitInfo(
                         RecruitsServerConfig.NobleVillagerNeedsVillagers.get(),
                         getRemainingRecruitSlots(factionID, player.getUUID())

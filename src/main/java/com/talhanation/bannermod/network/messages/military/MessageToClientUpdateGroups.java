@@ -6,7 +6,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +30,7 @@ public class MessageToClientUpdateGroups implements BannerModMessage<MessageToCl
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         List<RecruitsGroup> updated = RecruitsGroup.listFromNbt(this.nbt);
         boolean changed = false;
 

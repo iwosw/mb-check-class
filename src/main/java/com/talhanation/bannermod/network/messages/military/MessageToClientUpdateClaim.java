@@ -11,7 +11,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.NeoForge;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 public class MessageToClientUpdateClaim implements BannerModMessage<MessageToClientUpdateClaim> {
     private CompoundTag claimNBT;
@@ -30,7 +30,7 @@ public class MessageToClientUpdateClaim implements BannerModMessage<MessageToCli
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.single_sync.claim", claimNBT);
         this.updateOrAddClaimFromNBT(claimNBT);
     }

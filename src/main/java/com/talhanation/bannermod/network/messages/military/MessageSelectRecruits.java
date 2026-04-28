@@ -5,7 +5,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -40,7 +40,7 @@ public class MessageSelectRecruits implements BannerModMessage<MessageSelectRecr
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Set<UUID> set = new LinkedHashSet<>(this.recruitUuids);
         if (this.clearFirst || set.isEmpty()) {

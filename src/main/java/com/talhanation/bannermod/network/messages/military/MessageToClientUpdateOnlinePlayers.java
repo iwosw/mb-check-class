@@ -7,7 +7,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class MessageToClientUpdateOnlinePlayers implements BannerModMessage<Mess
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.full_sync.online_players", nbt);
         ClientManager.onlinePlayers = RecruitsPlayerInfo.getListFromNBT(nbt);
         ClientManager.markOnlinePlayersChanged();

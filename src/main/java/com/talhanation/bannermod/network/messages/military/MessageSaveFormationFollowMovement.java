@@ -8,7 +8,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,7 +33,7 @@ public class MessageSaveFormationFollowMovement implements BannerModMessage<Mess
         return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         ServerPlayer sender = context.getSender();
         if (sender == null || !sender.getUUID().equals(player_uuid)) return;
         List<UUID> ownedGroups = RecruitCommandAuthority.filterOwnedGroups(sender, RecruitsGroup.uuidListFromNbt(groups));
