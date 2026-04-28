@@ -2087,7 +2087,7 @@
     {
       "id": "ARCH-005",
       "title": "Remove dead bootstrap and merge-residue runtime shims",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "BannerModLifecycle, WorkersSubsystem, update-checker stubs, and similar merge leftovers add noise and false seams without carrying live runtime value.",
       "scope": [
@@ -2097,9 +2097,15 @@
         "Dead bootstrap or update-checker residue no longer exists in the active runtime tree unless it has a demonstrated live purpose; build and runtime entrypoints remain clear after cleanup."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Dead update-checker stubs and merge cleanup shims were removed from active runtime by merged PRs; 2) stale cleanup policy test no longer exists on master; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
       "evidence": [],
-      "dependencies": []
+      "dependencies": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "ARCH-006",
@@ -2192,7 +2198,7 @@
     {
       "id": "TEST-003",
       "title": "Add GameTests for claim intent mutation and deletion",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Claim intent add, remove, and delete behavior is a core authority and world-state flow, yet current coverage is much thinner than the live gameplay risk warrants.",
       "scope": [
@@ -2202,14 +2208,20 @@
         "Claim mutation flows are covered by real GameTests for both success and denial paths; tests observe resulting claim state rather than packet registration alone."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged GameTests cover successful and denied claim add/remove/delete flows; 2) tests observe claim manager/save-data-visible state, currency charging/no-charge denial, distance denial, and Overworld-only denial; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
       "evidence": [],
-      "dependencies": []
+      "dependencies": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "TEST-004",
       "title": "Add live packet-path tests for face, ranged-fire, and upkeep commands",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Face, ranged-fire, and upkeep command families were hardened previously but still lack strong live packet-path coverage compared with movement and stance commands.",
       "scope": [
@@ -2219,9 +2231,15 @@
         "Face, ranged-fire, and upkeep packet flows each have real packet-path coverage for valid and invalid senders; tests assert resulting recruit behavior or rejection clearly."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged packet-path GameTests cover face, ranged-fire, and upkeep commands; 2) valid owner sender mutates recruit state and spoofed invalid sender is rejected/no-op; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
       "evidence": [],
-      "dependencies": []
+      "dependencies": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "TEST-005",
@@ -2321,7 +2339,7 @@
     {
       "id": "PERF-009",
       "title": "Adaptive runtime budgets under TPS pressure",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Several server and client subsystems already use static budgets or throttles, but a fixed budget still overcommits work when TPS drops and underutilizes headroom when the server recovers.",
       "scope": [
@@ -2337,8 +2355,14 @@
         "PERF-008"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) AdaptiveRuntimeBudgets now reduces optional budgets under tick pressure and recovers gradually with hysteresis/floors/ceilings; 2) merged wiring covers async path, formation-map, settlement revalidation/orchestration optional work; 3) focused task verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "BOOM-001",
@@ -2364,7 +2388,7 @@
     {
       "id": "SHIPS-001",
       "title": "Add Small Ships compatibility layer for sea-trade carriers",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Sea trade cannot become a materially convincing gameplay loop if route execution remains abstract while the mod already targets visible logistics and the Small Ships mod provides suitable vessel entities.",
       "scope": [
@@ -2375,8 +2399,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Optional SmallShipsSeaTradeCompat is merged without compile-time Small Ships dependency; 2) candidate registry ids and reflective carrier binding are covered by focused deterministic tests; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "SHIPS-002",
@@ -2400,7 +2430,7 @@
     {
       "id": "MERCH-001",
       "title": "Mount merchants and land couriers with faster transport",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Merchant and courier loops currently leave obvious movement efficiency on the table; equipping long-haul traders with horses or other supported transport is a direct way to improve both realism and logistics throughput.",
       "scope": [
@@ -2411,13 +2441,19 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged courier transport lets eligible couriers mount approved server-side transport on supported long routes; 2) route ownership/inventory state, dismount, and no-mount fallback are covered; 3) docs/almanac landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "BOOM-002",
       "title": "Map supported Medieval Boomsticks firearms and ammo for recruits",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Before recruit firearm combat can behave correctly, BannerMod needs an explicit compatibility map for which Medieval Boomsticks weapons are supported, which ammo they consume, and what fallback behavior is legal for unsupported items.",
       "scope": [
@@ -2428,8 +2464,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) MedievalBoomsticksCompat now distinguishes supported firearms and resolves cartridge ammo contracts; 2) unsupported musketmod items are denied from hidden bow semantics/fallback; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "BOOM-003",
@@ -2512,7 +2554,7 @@
     {
       "id": "GAME-006",
       "title": "Materialize occupation control as visible world and authority state",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Occupation remains too ledger-like unless players can see which territory is under occupation and what control restrictions or obligations are active in moment-to-moment play.",
       "scope": [
@@ -2523,13 +2565,19 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Occupied claim chunks are visible through localized HUD/War Room state; 2) server policy denies occupied owner manual control while occupier controls the claim and clearing removes state; 3) player docs landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "GAME-007",
       "title": "Materialize tribute and tax obligations beyond hidden ledgers",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Tribute and tax systems remain abstract if their effects are only numeric ledger mutations with no player-readable obligation flow or visible consequence in settlements and war.",
       "scope": [
@@ -2540,13 +2588,19 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Governor UI shows localized collected/due tax obligation and satisfied/unpaid state; 2) heartbeat tests cover paid taxes and siege-blocked unpaid consequences; 3) player docs landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "GAME-008",
       "title": "Materialize revolt pressure and aftermath for players",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Revolt state is hard to reason about if it only lives in schedules and records; players need to see why revolt pressure exists, what objective state matters, and what aftermath follows success or failure.",
       "scope": [
@@ -2557,8 +2611,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) War Room revolt rows show pending pressure, due tick/objective chunk, and resolved success/failure aftermath; 2) revolt scheduler tests cover pending and resolved flows; 3) player docs landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "UX-007",
@@ -2622,7 +2682,7 @@
     {
       "id": "PROC-001",
       "title": "Add task worktree and branch bootstrap helper",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "The process now requires one worktree and one feature branch per parallel task, but there is no dedicated helper to create dependency-aware task workspaces consistently, which invites human error.",
       "scope": [
@@ -2633,8 +2693,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) tools/task-worktree helper and docs landed for independent and dependency-chain task worktrees; 2) dry-run and real temporary worktree checks covered both flows; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PROC-002",
@@ -2658,7 +2724,7 @@
     {
       "id": "PERF-010",
       "title": "Add recruit render profiling counters",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PERF-002 needs profiling evidence before safe crowd-render optimization decisions.",
       "scope": [
@@ -2669,8 +2735,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged recruit.render counters cover renderer totals, base estimate, layers, nameplates, texture/state switches, and pose churn; 2) instrumentation is bounded and client-local; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PERF-011",
@@ -2694,7 +2766,7 @@
     {
       "id": "PORT-002",
       "title": "Prepare NeoForge 1.21.1 build baseline",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-001 must start with a buildable platform baseline before API migration can be verified.",
       "scope": [
@@ -2705,8 +2777,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) NeoForge 1.21.1 build baseline is merged on master; 2) task verification reached Java source API migration errors after dependency resolution, not build metadata or dependency setup; 3) current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-003",
@@ -2749,7 +2827,7 @@
     {
       "id": "ARMY-004",
       "title": "Reject unsupported queued command intents before enqueue",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "ARMY-001 requires unsupported queue variants to fail visibly instead of being accepted and ignored.",
       "scope": [
@@ -2760,8 +2838,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Unsupported queued intents are rejected before enqueue in dispatcher/runtime; 2) focused queue tests prove unsupported queued intents are not silently accepted; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "ARMY-005",
@@ -2785,7 +2869,7 @@
     {
       "id": "AUTH-006",
       "title": "Define canonical recruit command authority roles",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "AUTH-005 needs one documented authority model before packet and UI enforcement can be made consistent.",
       "scope": [
@@ -2796,8 +2880,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) CommandHierarchy is the canonical authority role source for owner, teammate, and admin semantics; 2) dead nation command role branches are removed or explicitly unsupported until server-authoritative nation membership exists; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "AUTH-007",
