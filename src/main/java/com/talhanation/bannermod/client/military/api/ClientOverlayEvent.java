@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.client.military.api;
 
-import com.talhanation.bannermod.client.military.gui.overlay.ClaimOverlayManager;
+import com.talhanation.bannermod.client.military.gui.overlay.HudOverlayCoordinator;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.api.distmarker.Dist;
@@ -16,10 +16,10 @@ public abstract class ClientOverlayEvent extends Event {
 
     @Nullable
     private final RecruitsClaim claim;
-    private final ClaimOverlayManager.OverlayState state;
+    private final HudOverlayCoordinator.OverlayState state;
     private final float alpha;
 
-    protected ClientOverlayEvent(@Nullable RecruitsClaim claim, ClaimOverlayManager.OverlayState state, float alpha) {
+    protected ClientOverlayEvent(@Nullable RecruitsClaim claim, HudOverlayCoordinator.OverlayState state, float alpha) {
         this.claim = claim;
         this.state = state;
         this.alpha = alpha;
@@ -28,7 +28,7 @@ public abstract class ClientOverlayEvent extends Event {
     @Nullable
     public RecruitsClaim getClaim() { return claim; }
 
-    public ClaimOverlayManager.OverlayState getState() { return state; }
+    public HudOverlayCoordinator.OverlayState getState() { return state; }
 
     public float getAlpha() { return alpha; }
 
@@ -38,7 +38,7 @@ public abstract class ClientOverlayEvent extends Event {
 
         public RenderPre(GuiGraphics guiGraphics,
                          @Nullable RecruitsClaim claim,
-                         ClaimOverlayManager.OverlayState state,
+                         HudOverlayCoordinator.OverlayState state,
                          float alpha) {
             super(claim, state, alpha);
             this.guiGraphics = guiGraphics;
@@ -51,7 +51,7 @@ public abstract class ClientOverlayEvent extends Event {
     public static class RenderPost extends ClientOverlayEvent {
         private final GuiGraphics guiGraphics;
 
-        public RenderPost(GuiGraphics guiGraphics, @Nullable RecruitsClaim claim, ClaimOverlayManager.OverlayState state, float alpha) {
+        public RenderPost(GuiGraphics guiGraphics, @Nullable RecruitsClaim claim, HudOverlayCoordinator.OverlayState state, float alpha) {
             super(claim, state, alpha);
             this.guiGraphics = guiGraphics;
         }
@@ -62,18 +62,18 @@ public abstract class ClientOverlayEvent extends Event {
     }
 
     public static class StateChanged extends ClientOverlayEvent implements ICancellableEvent {
-        private final ClaimOverlayManager.OverlayState previousState;
+        private final HudOverlayCoordinator.OverlayState previousState;
 
-        public StateChanged(@Nullable RecruitsClaim claim, ClaimOverlayManager.OverlayState previousState, ClaimOverlayManager.OverlayState newState, float alpha) {
+        public StateChanged(@Nullable RecruitsClaim claim, HudOverlayCoordinator.OverlayState previousState, HudOverlayCoordinator.OverlayState newState, float alpha) {
             super(claim, newState, alpha);
             this.previousState = previousState;
         }
 
-        public ClaimOverlayManager.OverlayState getPreviousState(){
+        public HudOverlayCoordinator.OverlayState getPreviousState(){
             return previousState;
         }
 
-        public ClaimOverlayManager.OverlayState getNewState(){
+        public HudOverlayCoordinator.OverlayState getNewState(){
             return getState();
         }
     }
