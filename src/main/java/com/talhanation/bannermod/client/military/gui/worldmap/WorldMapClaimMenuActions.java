@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 final class WorldMapClaimMenuActions {
     private static final Component TEXT_CLAIM_CHUNK = Component.translatable("gui.recruits.map.claim_chunk");
     private static final Component TEXT_CLAIM_AREA = Component.translatable("gui.recruits.map.claim_area");
+    private static final Component TEXT_CLAIM_AREA_DISABLED = Component.translatable("gui.recruits.map.claim_area_disabled");
     private static final Component TEXT_EDIT_CLAIM = Component.translatable("gui.recruits.map.edit_claim");
     private static final Component TEXT_REMOVE_CHUNK = Component.translatable("gui.recruits.map.remove_chunk");
     private static final Component TEXT_REMOVE_CHUNK_ADMIN = Component.translatable("gui.recruits.map.remove_chunk_admin");
@@ -30,13 +31,7 @@ final class WorldMapClaimMenuActions {
                 "bufferzone, chunk"
         );
 
-        menu.addEntry(TEXT_CLAIM_AREA.getString(),
-                () -> screen.canClaimArea(screen.getClaimArea(screen.selectedChunk))
-                        && screen.getPlayer() != null,
-                WorldMapScreen::claimArea,
-                claimAreaCost,
-                "bufferzone, area"
-        );
+        menu.addDisabledEntry(TEXT_CLAIM_AREA, TEXT_CLAIM_AREA_DISABLED, "bufferzone, area");
 
         menu.addEntry(TEXT_EDIT_CLAIM.getString(),
                 () -> screen.selectedClaim != null

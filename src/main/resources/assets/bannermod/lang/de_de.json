@@ -1311,6 +1311,7 @@
   "gui.recruits.map.diplomacy": "Diplomatie",
   "gui.recruits.map.claim_chunk": "Beanspruche Chunk",
   "gui.recruits.map.claim_area": "Beanspruche Gebiet",
+  "gui.recruits.map.claim_area_disabled": "Gebietsbeanspruchung ist hier deaktiviert. Beanspruche benachbarte Chunks einzeln, damit der Server jede Änderung prüft.",
   "gui.recruits.map.edit_claim": "Bearbeite Gebiet",
   "gui.recruits.map.remove_chunk": "Entferne Chunk",
   "gui.recruits.map.center_map": "Zentriere die Karte",

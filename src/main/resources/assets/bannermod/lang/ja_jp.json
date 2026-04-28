@@ -1102,6 +1102,7 @@
   "gui.recruits.map.diplomacy": "外交",
   "gui.recruits.map.claim_chunk": "チャンクを占有",
   "gui.recruits.map.claim_area": "領域を占有",
+  "gui.recruits.map.claim_area_disabled": "ここでは範囲の一括占有は無効です。サーバーが各編集を検証できるよう、隣接チャンクを1つずつ占有してください。",
   "gui.recruits.map.edit_claim": "領域を設定",
   "gui.recruits.map.remove_chunk": "チャンクを削除",
   "gui.recruits.map.center_map": "マップを中央に",
