@@ -3862,7 +3862,7 @@
     {
       "id": "RENDER-002",
       "title": "Define new render and UI architecture",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "A from-scratch rewrite needs explicit boundaries so the replacement is Minecraft-native and not another patch pile.",
       "scope": [
@@ -3876,8 +3876,14 @@
         "RENDER-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) docs/RENDER-002_RENDER_UI_ARCHITECTURE.md records package boundaries, ownership rules, server-authoritative UI constraints, localization expectations, and selected reference-mod patterns in the embedded progress note and architecture sections. 2) The same document prohibits direct vanilla copy-paste except unavoidable API calls and documents retained references for BannerRenderer.renderPatterns, CustomHeadLayer/SkullBlockRenderer integration, fishing-line math equivalents, RenderSystem/scissor use, and block/entity preview dispatch. 3) tools/backlog validate passed; no production render/UI code or backlog JSON changed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "RENDER-003",
