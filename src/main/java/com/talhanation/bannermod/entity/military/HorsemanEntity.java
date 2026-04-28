@@ -124,7 +124,7 @@ public class HorsemanEntity extends RecruitShieldmanEntity {
     public void aiStep() {
         super.aiStep();
         this.getCommandSenderWorld().getProfiler().push("looting");
-        if (!this.getCommandSenderWorld().isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.getCommandSenderWorld(), this)) {
+        if (!this.getCommandSenderWorld().isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && net.neoforged.neoforge.event.EventHooks.canEntityGrief(this.getCommandSenderWorld(), this)) {
             if (lootScanCooldown-- <= 0) {
                 lootScanCooldown = 4 + this.getRandom().nextInt(4);
 

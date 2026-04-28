@@ -1,6 +1,6 @@
 package com.talhanation.bannermod.migration;
 
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.neoforged.bus.api.IEventBus;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 import java.util.List;

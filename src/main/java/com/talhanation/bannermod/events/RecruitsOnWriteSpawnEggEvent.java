@@ -2,7 +2,7 @@ package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
 public class RecruitsOnWriteSpawnEggEvent extends Event {
     public final AbstractRecruitEntity recruit;
     public final CompoundTag tag;

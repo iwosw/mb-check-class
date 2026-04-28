@@ -3,9 +3,10 @@ package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Forge attribute creation for the single unified {@link CitizenEntity}
@@ -13,7 +14,7 @@ import net.minecraftforge.fml.common.Mod;
  * buffs apply as attribute modifiers via the profession controllers
  * in Cit-03+, not as base-attribute differences.
  */
-@Mod.EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class CitizenAttributeEvent {
 
     private CitizenAttributeEvent() {

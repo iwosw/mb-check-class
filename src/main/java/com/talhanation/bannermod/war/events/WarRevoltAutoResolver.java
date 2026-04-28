@@ -6,9 +6,9 @@ import com.talhanation.bannermod.war.runtime.ServerLevelObjectivePresenceProbe;
 import com.talhanation.bannermod.war.runtime.WarRevoltScheduler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

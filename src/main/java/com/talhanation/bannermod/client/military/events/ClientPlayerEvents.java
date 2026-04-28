@@ -5,9 +5,9 @@ import com.talhanation.bannermod.client.military.gui.worldmap.WorldMapScreen;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 public class ClientPlayerEvents {
     @SubscribeEvent

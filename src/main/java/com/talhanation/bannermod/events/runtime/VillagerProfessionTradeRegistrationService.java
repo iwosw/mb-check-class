@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.ItemLike;
-import net.minecraftforge.event.village.VillagerTradesEvent;
+import net.neoforged.neoforge.event.village.VillagerTradesEvent;
 
 import java.util.List;
 import java.util.Map;

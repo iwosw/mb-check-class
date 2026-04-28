@@ -4,7 +4,8 @@ import com.talhanation.bannermod.war.cooldown.WarCooldownPolicy;
 import com.talhanation.bannermod.war.runtime.BattleWindow;
 import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -12,7 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class WarServerConfig {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ForgeConfigSpec SERVER;

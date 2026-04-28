@@ -5,8 +5,8 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.eventbus.api.Cancelable;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 import javax.annotation.Nullable;
 
@@ -33,8 +33,7 @@ public abstract class ClientOverlayEvent extends Event {
     public float getAlpha() { return alpha; }
 
 
-    @Cancelable
-    public static class RenderPre extends ClientOverlayEvent {
+    public static class RenderPre extends ClientOverlayEvent implements ICancellableEvent {
         private final GuiGraphics guiGraphics;
 
         public RenderPre(GuiGraphics guiGraphics,
@@ -62,8 +61,7 @@ public abstract class ClientOverlayEvent extends Event {
         }
     }
 
-    @Cancelable
-    public static class StateChanged extends ClientOverlayEvent {
+    public static class StateChanged extends ClientOverlayEvent implements ICancellableEvent {
         private final ClaimOverlayManager.OverlayState previousState;
 
         public StateChanged(@Nullable RecruitsClaim claim, ClaimOverlayManager.OverlayState previousState, ClaimOverlayManager.OverlayState newState, float alpha) {

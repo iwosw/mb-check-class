@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.bootstrap;
 
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * Lifecycle event handlers extracted from legacy recruits.Main and workers.WorkersMain.
