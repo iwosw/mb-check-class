@@ -147,6 +147,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
         player.sendSystemMessage(Component.literal("Profession: " + workerProfessionLabel()));
         player.sendSystemMessage(Component.literal("Assignment: " + workerAssignmentLabel()));
         player.sendSystemMessage(Component.literal("Problem: " + workerProblemLabel()));
+        player.sendSystemMessage(Component.translatable("chat.bannermod.workers.transport", this.transportService.inspectionMessage()));
     }
 
     private String workerProfessionLabel() {
