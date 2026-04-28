@@ -3183,7 +3183,7 @@
     {
       "id": "PORT-006",
       "title": "Migrate entity inventory and saved-data APIs",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "PORT-003 compile is blocked by Minecraft 1.21.1 entity equipment, synched data, container, and saved-data API changes.",
       "scope": [
@@ -3193,9 +3193,14 @@
         "compileJava no longer reports entity inventory, equipment, synched-data, item damage, SimpleContainer internals, or saved-data provider API errors."
       ],
       "dependencies": [
-        "PORT-005"
+        "PORT-013"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Urgent PORT ordering update: after PORT-005 closure, compileJava is still masked by Forge common/distmarker/FML bootstrap imports before the entity inventory and saved-data acceptance can be observed. PORT-006 now waits for PORT-013 to clear that front blocker."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -3330,6 +3335,25 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-013",
+      "title": "Migrate NeoForge common, dist, and bootstrap APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "After PORT-005, compileJava is blocked before entity inventory migration by remaining Forge common helpers, dist markers, FML lifecycle/config imports, and bootstrap wiring.",
+      "scope": [
+        "Replace active root Forge common helper imports, dist marker annotations, FML lifecycle/config imports, and central bootstrap event-bus wiring with NeoForge 1.21.1 equivalents while leaving payload networking and registry API rewrites to their dedicated PORT tasks."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing net.minecraftforge.common, net.minecraftforge.api.distmarker, net.minecraftforge.fml lifecycle/config/javafmlmod, or bootstrap-only Forge symbols; remaining errors are ready for PORT-006 inventory/saved-data, PORT-007 registry/components, or PORT-008 network payload work."
+      ],
+      "dependencies": [
+        "PORT-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
