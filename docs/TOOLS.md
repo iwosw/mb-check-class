@@ -29,6 +29,7 @@ tools/backlog show WAR-007
 tools/backlog list --status open
 tools/backlog add UI-008 "Readable title" --why "Why this matters" --scope "Concrete deliverable" --acceptance "Observable success check" --depends-on WAR-007 --dry-run
 tools/backlog set-deps UI-008 --depends-on WAR-007
+tools/backlog split BIG-001 --child-file /tmp/big-001-children.json --progress "landed: initial fix; moved: remaining checks into BIG-001A/BIG-001B; blocks: child tasks" --dry-run
 tools/backlog validate
 ```
 
@@ -45,6 +46,8 @@ Use dependencies only for real blockers. If a task truly cannot complete before 
 `tools/backlog ready <N>` returns the first `N` open tasks whose dependencies are already done, which is the main dependency-safe queue for parallel pickup. `tools/backlog list --ready` and `tools/backlog batch --ready` remain useful for filtered inspection.
 
 Once a task is actively being executed, the executor should either carry it to done with verification or split the remaining scope into child tasks and wire the parent dependencies to those children. Do not leave oversized half-finished work sitting in `in_progress` without an explicit split.
+
+Use `tools/backlog split <PARENT> --child-file <children.json> --progress "..."` for the split path. The child file is a JSON array of task objects with `id`, `title`, `why`, `scope`, `acceptance`, and optional `dependencies` / `evidence`; the command adds the children, replaces the parent dependency list with the child IDs, and appends the parent progress note in one validated write. Add `--dry-run` to preview the split without changing the backlog.
 
 When parallelizing execution with subagents, use one dedicated git worktree and one dedicated feature branch per task. Review the exact diff from each task worktree before merge. For dependency chains, branch the next task from the updated tip of the previous task branch rather than from a stale common base.
 
