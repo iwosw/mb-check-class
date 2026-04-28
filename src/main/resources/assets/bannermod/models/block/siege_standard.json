@@ -1,7 +1,6 @@
 {
   "textures": {
     "particle": "bannermod:block/siege_standard",
-    "cloth": "bannermod:block/siege_standard",
     "pole": "bannermod:block/siege_standard",
     "trim": "bannermod:block/siege_standard"
   },
@@ -40,16 +39,6 @@
         "south": { "uv": [0, 0, 10, 2], "texture": "#trim" },
         "west": { "uv": [0, 0, 2, 2], "texture": "#trim" },
         "east": { "uv": [0, 0, 2, 2], "texture": "#trim" }
-      }
-    },
-    {
-      "from": [3, 6, 6.5],
-      "to": [13, 12, 7.5],
-      "faces": {
-        "north": { "uv": [0, 0, 10, 6], "texture": "#cloth" },
-        "south": { "uv": [0, 0, 10, 6], "texture": "#cloth" },
-        "west": { "uv": [0, 0, 1, 6], "texture": "#cloth" },
-        "east": { "uv": [0, 0, 1, 6], "texture": "#cloth" }
       }
     },
     {

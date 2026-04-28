@@ -6,23 +6,25 @@ import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalColorParser;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.SiegeStandardBlockEntity;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import net.minecraft.world.phys.AABB;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
 
 /**
- * Adds a small political-color cap above the base siege standard block.
+ * Renders the dynamic cloth and political-color cap for a siege standard.
  *
- * <p>The base block model carries the static cloth/pole/trim geometry. This renderer paints a
- * thin colored cuboid above the finial whose colour is derived from the bound side's
- * {@link PoliticalEntityRecord#color()} — defaulting to white when the entity is unknown or
- * the colour string is malformed. The result is a quick at-a-glance "whose standard is this"
- * cue without modifying the static block model.</p>
+ * <p>The block model carries the static pole/trim geometry. The cloth is emitted through the
+ * current banner pattern API so base dye selection and future pattern layers stay on the same
+ * rendering path as item banner previews. The cap remains an at-a-glance political cue.</p>
  */
 public class SiegeStandardBlockEntityRenderer implements BlockEntityRenderer<SiegeStandardBlockEntity> {
 
@@ -30,8 +32,10 @@ public class SiegeStandardBlockEntityRenderer implements BlockEntityRenderer<Sie
             6.0 / 16.0, 18.0 / 16.0, 6.0 / 16.0,
             10.0 / 16.0, 22.0 / 16.0, 10.0 / 16.0
     );
+    private final ModelPart flag;
 
     public SiegeStandardBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {
+        this.flag = ctx.bakeLayer(ModelLayers.BANNER).getChild("flag");
     }
 
     @Override
@@ -43,6 +47,14 @@ public class SiegeStandardBlockEntityRenderer implements BlockEntityRenderer<Sie
                        int packedOverlay) {
         UUID sideId = blockEntity.sidePoliticalEntityId();
         int colorArgb = resolveColor(sideId);
+        DyeColor baseColor = BannerPatternRenderHelper.nearestDyeColor(colorArgb);
+
+        poseStack.pushPose();
+        poseStack.translate(0.5D, 0.84D, 0.53D);
+        poseStack.scale(0.6666667F, -0.6666667F, -0.6666667F);
+        BannerPatternRenderHelper.render(poseStack, buffer, this.flag, packedLight,
+                baseColor, BannerPatternLayers.EMPTY);
+        poseStack.popPose();
 
         VertexConsumer consumer = buffer.getBuffer(RenderType.LINES);
         renderColoredOutline(poseStack, consumer, CAP_BOX, colorArgb);
