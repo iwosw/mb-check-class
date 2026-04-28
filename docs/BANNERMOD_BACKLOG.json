@@ -3153,7 +3153,7 @@
     {
       "id": "PORT-005",
       "title": "Migrate NeoForge event and overlay APIs",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "PORT-003 compile is blocked by removed or renamed Forge event and client overlay APIs across root src.",
       "scope": [
@@ -3163,9 +3163,14 @@
         "compileJava no longer reports missing Forge event, EventBusSubscriber, or RenderGuiOverlayEvent overlay API symbols."
       ],
       "dependencies": [
-        "PORT-002"
+        "PORT-012"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Urgent PORT execution split after verification attempt: compileJava could not reach Java sources because build.gradle still references ForgeGradle fg.deobf. PORT-005 now waits on PORT-010 buildscript cleanup, PORT-011 event/eventbus migration, and PORT-012 HUD overlay migration; after those land, PORT-005 can close against the original event/overlay acceptance."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -3240,6 +3245,63 @@
       ],
       "dependencies": [
         "PORT-008"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-010",
+      "title": "Remove NeoForge buildscript fg.deobf blocker",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-005 cannot even reach Java compilation while build.gradle still uses ForgeGradle fg.deobf dependency helpers.",
+      "scope": [
+        "Replace or remove root build.gradle fg.deobf usages with NeoForge-compatible dependency declarations while preserving declared optional integrations where possible."
+      ],
+      "acceptance": [
+        "./gradlew compileJava reaches Java compilation instead of failing during Gradle evaluation on unknown property fg."
+      ],
+      "dependencies": [
+        "PORT-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-011",
+      "title": "Port NeoForge event bus imports and annotations",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-005 compile is blocked by Forge event, eventbus, and EventBusSubscriber symbols after moving to NeoForge 1.21.1.",
+      "scope": [
+        "Migrate active src Forge event imports, eventbus annotations, and mod event subscriber usages to NeoForge 1.21.1 equivalents without changing event behavior."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing Forge event, eventbus, or EventBusSubscriber symbols."
+      ],
+      "dependencies": [
+        "PORT-010"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-012",
+      "title": "Port NeoForge client HUD overlay hooks",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-005 compile is blocked by removed Forge HUD overlay APIs such as RenderGuiOverlayEvent and VanillaGuiOverlay.",
+      "scope": [
+        "Replace active client HUD overlay registration/render hooks with NeoForge 1.21.1 GUI event or layer APIs while preserving existing overlay visibility and non-overlap behavior."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing RenderGuiOverlayEvent, VanillaGuiOverlay, RegisterGuiOverlaysEvent, or related overlay API symbols."
+      ],
+      "dependencies": [
+        "PORT-011"
       ],
       "progress": [],
       "verification": [],
