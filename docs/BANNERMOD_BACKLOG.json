@@ -3213,7 +3213,7 @@
     {
       "id": "PORT-007",
       "title": "Migrate registries, menus, spawn eggs, and item components",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-003 compile is blocked by registry, menu, spawn egg, and item NBT/component API differences after the NeoForge 1.21.1 move.",
       "scope": [
@@ -3226,8 +3226,14 @@
         "PORT-006"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Migrated active registries, menu holders, spawn egg entity data, almanac written-book data, wand/surveyor custom item data, and ForgeRegistries lookup call sites to NeoForge/vanilla 1.21.1 APIs; 2) targeted searches found zero legacy ForgeRegistries, net.minecraftforge.registries, RegistryObject, IForgeMenuType, ForgeSpawnEggItem, getOrCreateTag, hasTag, or item-stack setTag usages in active source, with remaining getTag matches limited to world-map menu entry labels; 3) compileJava still fails on out-of-scope mixin remap and PORT-008 net.minecraftforge.network/NetworkEvent/SimpleChannel errors."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-008",
