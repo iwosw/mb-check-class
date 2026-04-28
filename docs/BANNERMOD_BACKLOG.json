@@ -51,7 +51,8 @@
       ],
       "dependencies": [
         "PERF-010",
-        "PERF-011"
+        "PERF-011",
+        "VANILLA-013"
       ]
     },
     {
@@ -600,7 +601,8 @@
         "UI-005",
         "UI-006",
         "WAR-007",
-        "WAR-008"
+        "WAR-008",
+        "VANILLA-013"
       ]
     },
     {
@@ -1537,7 +1539,8 @@
       "evidence": [],
       "dependencies": [
         "UI-008",
-        "SETTLEMENT-011"
+        "SETTLEMENT-011",
+        "VANILLA-013"
       ]
     },
     {
@@ -1585,7 +1588,8 @@
       "evidence": [],
       "dependencies": [
         "ARMY-004",
-        "ARMY-005"
+        "ARMY-005",
+        "VANILLA-013"
       ]
     },
     {
@@ -1703,7 +1707,8 @@
       "dependencies": [
         "AUTH-006",
         "AUTH-007",
-        "AUTH-008"
+        "AUTH-008",
+        "VANILLA-013"
       ]
     },
     {
@@ -1752,7 +1757,8 @@
       "dependencies": [
         "SYNC-002",
         "SYNC-003",
-        "SYNC-004"
+        "SYNC-004",
+        "VANILLA-013"
       ]
     },
     {
@@ -1801,7 +1807,8 @@
       "dependencies": [
         "UX-010",
         "UX-011",
-        "UX-012"
+        "UX-012",
+        "VANILLA-013"
       ]
     },
     {
@@ -1824,7 +1831,8 @@
         "UI-004",
         "UI-005",
         "UI-006",
-        "SYNC-001"
+        "SYNC-001",
+        "VANILLA-013"
       ]
     },
     {
@@ -1843,7 +1851,8 @@
       "verification": [],
       "evidence": [],
       "dependencies": [
-        "UI-007"
+        "UI-007",
+        "VANILLA-013"
       ]
     },
     {
@@ -1863,7 +1872,8 @@
       "evidence": [],
       "dependencies": [
         "GAME-005",
-        "QA-001"
+        "QA-001",
+        "VANILLA-013"
       ]
     },
     {
@@ -1884,7 +1894,8 @@
       "dependencies": [
         "UX-007",
         "UX-008",
-        "UX-009"
+        "UX-009",
+        "VANILLA-013"
       ]
     },
     {
@@ -1909,7 +1920,8 @@
       "evidence": [],
       "dependencies": [
         "GAME-009",
-        "GAME-010"
+        "GAME-010",
+        "VANILLA-013"
       ]
     },
     {
@@ -1930,7 +1942,8 @@
       "dependencies": [
         "SHIPS-001",
         "SHIPS-002",
-        "SHIPS-003"
+        "SHIPS-003",
+        "VANILLA-013"
       ]
     },
     {
@@ -1982,7 +1995,8 @@
       "evidence": [],
       "dependencies": [
         "GAME-011",
-        "GAME-012"
+        "GAME-012",
+        "VANILLA-013"
       ]
     },
     {
@@ -2007,7 +2021,8 @@
       "evidence": [],
       "dependencies": [
         "GAME-013",
-        "GAME-014"
+        "GAME-014",
+        "VANILLA-013"
       ]
     },
     {
@@ -2028,7 +2043,8 @@
       "dependencies": [
         "AUTH-005",
         "ARMY-001",
-        "ARMY-003"
+        "ARMY-003",
+        "VANILLA-013"
       ]
     },
     {
@@ -2076,7 +2092,8 @@
         "GAME-001",
         "GAME-002",
         "GAME-005",
-        "SYNC-001"
+        "SYNC-001",
+        "VANILLA-013"
       ]
     },
     {
@@ -2099,7 +2116,8 @@
         "AUTH-002",
         "AUTH-003",
         "AUTH-004",
-        "AUTH-005"
+        "AUTH-005",
+        "VANILLA-013"
       ]
     },
     {
@@ -2141,7 +2159,8 @@
       "verification": [],
       "evidence": [],
       "dependencies": [
-        "GAME-005"
+        "GAME-005",
+        "VANILLA-013"
       ]
     },
     {
@@ -2165,7 +2184,8 @@
         "ARCH-003",
         "ARCH-004",
         "ARCH-005",
-        "ARCH-006"
+        "ARCH-006",
+        "VANILLA-013"
       ]
     },
     {
@@ -2188,7 +2208,8 @@
         "AUTH-002",
         "AUTH-003",
         "AUTH-004",
-        "AUTH-005"
+        "AUTH-005",
+        "VANILLA-013"
       ]
     },
     {
@@ -2210,7 +2231,8 @@
         "ARMY-001",
         "ARMY-002",
         "ARMY-003",
-        "AUTH-005"
+        "AUTH-005",
+        "VANILLA-013"
       ]
     },
     {
@@ -2279,7 +2301,8 @@
         "UX-002",
         "UX-003",
         "UX-004",
-        "SYNC-001"
+        "SYNC-001",
+        "VANILLA-013"
       ]
     },
     {
@@ -2302,7 +2325,8 @@
         "TEST-002",
         "TEST-003",
         "TEST-004",
-        "TEST-005"
+        "TEST-005",
+        "VANILLA-013"
       ]
     },
     {
@@ -2351,7 +2375,8 @@
         "GAME-005",
         "SHIPS-003",
         "MERCH-002",
-        "BOOM-004"
+        "BOOM-004",
+        "VANILLA-013"
       ]
     },
     {
@@ -2397,7 +2422,8 @@
       "dependencies": [
         "BOOM-002",
         "BOOM-003",
-        "BOOM-004"
+        "BOOM-004",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2439,7 +2465,8 @@
         "At least one sea-trade route can load goods onto a Small Ships carrier, travel, unload at the destination, and update settlement or stockpile state visibly; route failure and missing-ship states are surfaced clearly; focused verification covers one end-to-end carrier trip."
       ],
       "dependencies": [
-        "SHIPS-002D"
+        "SHIPS-002D",
+        "VANILLA-013"
       ],
       "progress": [
         {
@@ -2509,7 +2536,8 @@
         "A recruit firing a supported Medieval Boomsticks firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
       ],
       "dependencies": [
-        "BOOM-003A"
+        "BOOM-003A",
+        "VANILLA-013"
       ],
       "progress": [
         {
@@ -2534,7 +2562,8 @@
       ],
       "dependencies": [
         "BOOM-002",
-        "BOOM-003"
+        "BOOM-003",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2554,7 +2583,8 @@
       ],
       "dependencies": [
         "SHIPS-001",
-        "SHIPS-002"
+        "SHIPS-002",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2563,7 +2593,7 @@
     {
       "id": "MERCH-002",
       "title": "Expose mounted merchant and courier transport state and fallback reasons",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "If merchants or couriers gain mounts or other transport but the player cannot see when transport is active, unavailable, or lost, the realism gain turns into debugging noise.",
       "scope": [
@@ -2581,8 +2611,14 @@
           "text": "Implementation merged on feature/backlog-batch-80-wave1 from feature/merch-002: worker inspection now reports mounted status and fallback reasons with EN/RU localization plus guide/almanac updates; compileJava and processResources passed. Remaining acceptance proof moved to MERCH-002A for focused runtime verification of mounted and fallback cases."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Server-side worker inspection reports transport assignment and fallback state through WorkerTransportService.inspectionMessage; localized mounted and fallback messages exist; MERCH-002A verified mounted and no-mount route-on-foot inspection cases via GameTests; ./gradlew verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "GAME-006",
@@ -2667,7 +2703,8 @@
       ],
       "dependencies": [
         "GAME-008",
-        "AUTH-005"
+        "AUTH-005",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2687,7 +2724,8 @@
       ],
       "dependencies": [
         "GAME-007",
-        "AUTH-005"
+        "AUTH-005",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2706,7 +2744,8 @@
         "Players can see why a war-related action is denied without relying only on chat spam; leadership, co-leader, cooldown, and government-form denials are distinguishable; verification covers representative denial reasons across the main war actions."
       ],
       "dependencies": [
-        "AUTH-005"
+        "AUTH-005",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2796,7 +2835,8 @@
         "A before-and-after profiling run shows improved large-crowd recruit rendering while close-range selected recruits remain readable."
       ],
       "dependencies": [
-        "PERF-010"
+        "PERF-010",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2916,7 +2956,8 @@
         "Focused tests prove queue parity with immediate behavior for movement, face, attack, aggro, stance, strategic fire, and siege-machine command flows."
       ],
       "dependencies": [
-        "ARMY-004"
+        "ARMY-004",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2958,7 +2999,8 @@
         "Owner, teammate, admin, and supported or explicitly unsupported nation authority cases behave consistently across command entry points."
       ],
       "dependencies": [
-        "AUTH-006"
+        "AUTH-006",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2977,7 +3019,8 @@
         "Focused verification covers owner, teammate, admin override, and nation-level command authority cases."
       ],
       "dependencies": [
-        "AUTH-007"
+        "AUTH-007",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -2986,7 +3029,7 @@
     {
       "id": "SYNC-002",
       "title": "Define settlement client snapshot contract",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "SYNC-001 needs a stable server-to-client data contract before UI mirrors can be implemented.",
       "scope": [
@@ -2997,8 +3040,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Added BannerModSettlementClientSnapshotContract with typed payload, contract version, stale marker, LOGIN/SCREEN_OPEN/MUTATION_REFRESH triggers, and LOADING/READY/STALE semantics; 2) ./gradlew compileJava passed; 3) tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "SYNC-003",
@@ -3013,7 +3062,8 @@
         "Relevant settlement UIs render from the synced mirror and show explicit loading or stale states without reopening screens."
       ],
       "dependencies": [
-        "SYNC-002"
+        "SYNC-002",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -3032,7 +3082,8 @@
         "Focused tests or GameTests prove login, open-screen, and mutation refresh paths update settlement client snapshots."
       ],
       "dependencies": [
-        "SYNC-003"
+        "SYNC-003",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -3041,7 +3092,7 @@
     {
       "id": "UX-010",
       "title": "Resolve world-map claim-area affordance",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "UX-002 requires every visible world-map action to be functional or intentionally absent.",
       "scope": [
@@ -3052,8 +3103,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Acceptance: world map no longer exposes a broken claim-area action; Claim Area is visible but disabled with localized hover explanation, chunk claiming remains server-authoritative through MessageClaimIntent; compileJava and processResources passed; player guides and almanac updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "UX-011",
@@ -3068,7 +3125,8 @@
         "Players can discover route and waypoint creation/use from localized in-game world-map affordances and explanations."
       ],
       "dependencies": [
-        "UX-010"
+        "UX-010",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -3087,7 +3145,8 @@
         "Verification covers claim-area, waypoint, and route interactions; required guide and almanac updates match the shipped world-map behavior."
       ],
       "dependencies": [
-        "UX-011"
+        "UX-011",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -3105,7 +3164,9 @@
       "acceptance": [
         "Creating a settlement project produces a real build-area or equivalent executable world target rather than a noop placeholder."
       ],
-      "dependencies": [],
+      "dependencies": [
+        "VANILLA-013"
+      ],
       "progress": [],
       "verification": [],
       "evidence": []
@@ -3123,7 +3184,8 @@
         "Project progress advances and completes from real build execution events, with focused verification for creation, assignment, and completion."
       ],
       "dependencies": [
-        "GAME-009"
+        "GAME-009",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -3141,7 +3203,9 @@
       "acceptance": [
         "Players can perceive friendly, hostile, and unclaimed territory state from normal world play through localized cues that avoid HUD/chat overlap."
       ],
-      "dependencies": [],
+      "dependencies": [
+        "VANILLA-013"
+      ],
       "progress": [],
       "verification": [],
       "evidence": []
@@ -3159,7 +3223,8 @@
         "Focused verification covers friendly, hostile, and unclaimed interaction feedback for protected-space actions."
       ],
       "dependencies": [
-        "GAME-011"
+        "GAME-011",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -3168,7 +3233,7 @@
     {
       "id": "GAME-013",
       "title": "Define unified settlement bootstrap lifecycle",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "GAME-005 needs one explicit lifecycle before manual and automatic founding paths can converge safely.",
       "scope": [
@@ -3179,8 +3244,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Acceptance: SettlementBootstrapLifecycle defines the shared claim-to-settlement lifecycle and documents manual founding versus automatic claim seeding without contradictory state assumptions; compileJava passed; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "GAME-014",
@@ -3195,7 +3266,8 @@
         "Focused verification covers both manual and automatic entry paths and shows they converge on the same settlement lifecycle and data model."
       ],
       "dependencies": [
-        "GAME-013"
+        "GAME-013",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -3759,7 +3831,7 @@
     {
       "id": "RENDER-001",
       "title": "Audit render and UI layer rewrite surface",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "The current render/UI layer has accumulated compile-driven 1.21 patches and vanilla-derived fragments; a rewrite needs a bounded inventory before code is replaced.",
       "scope": [
@@ -3772,9 +3844,20 @@
       "dependencies": [
         "PORT-025"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Audit complete in docs/RENDER-001_RENDER_UI_AUDIT.md. Rewrite candidates: recruit/worker/citizen entity renderer stack under client/*/render, vanilla-derived head/bobber/banner snippets, claim/siege HUD overlays, world-map render stack, legacy command/group/player/worker screens, work-area structure preview, and shared dropdown/list/button widgets. Keep candidates: event/registration entry points, server-authoritative packet entry points, localization/assets, client mirror state models, menu/container bindings, and small LOD/profiling helpers unless a rewrite proves them obsolete. References captured: Minecraft/NeoForge renderer and GUI APIs, vanilla CustomHeadLayer/FishingHookRenderer/BannerRenderer patterns, MineColonies worker/request/protection UX wiki pages, Millenaire-like settlement design notes in .planning, Hundred Years Warfare/HYW army-war design input in .planning/STATE.md, Forge GUI/screens docs, ChampionAsh5357 1.20.6->1.21 migration gist, and in-repo War Room/world-map examples. No production render/UI code changed."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Audit-only acceptance satisfied: docs/RENDER-001_RENDER_UI_AUDIT.md inventories active client renderers, HUD overlays, GUI screens, shared widgets, vanilla-derived snippets, kept modules, rewrite boundaries, and concrete reference examples; production render/UI code was not rewritten; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "RENDER-002",
@@ -4290,7 +4373,7 @@
     {
       "id": "PROC-003",
       "title": "Re-sequence backlog after migration-first epics",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Compile fixes, render rewrite, and vanilla-derived gameplay rewrites must run before unrelated UX/gameplay/architecture tasks, but dependency rewiring must preserve existing task dependencies.",
       "scope": [
@@ -4303,9 +4386,20 @@
       "dependencies": [
         "PORT-025"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Rewired open/in-progress non-migration backlog tasks to include VANILLA-013 while preserving their existing dependencies. Exempted migration-chain RENDER/VANILLA tasks, PROC-003 itself, and tasks already closed in this wave."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Rewired open/in-progress non-migration tasks to append VANILLA-013 while preserving their existing dependencies; 2) exempted migration-chain RENDER/VANILLA tasks and tasks already closed in this wave; 3) tools/backlog validate passed; 4) tools/backlog ready 50 now surfaces only RENDER-002 while VANILLA-013 remains open, satisfying the migration-first ready queue."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-026",
@@ -4398,7 +4492,9 @@
       "acceptance": [
         "A supported Medieval Boomsticks firearm used by a recruit is observed spawning the mod-correct projectile, following the intended reload or fire cadence, and denying fire consistently when ammo is unavailable; verification evidence is recorded on BOOM-003."
       ],
-      "dependencies": [],
+      "dependencies": [
+        "VANILLA-013"
+      ],
       "progress": [],
       "verification": [],
       "evidence": []
@@ -4406,7 +4502,7 @@
     {
       "id": "MERCH-002A",
       "title": "Verify worker transport inspection feedback in runtime",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "MERCH-002 implementation adds server-side inspection feedback, but the remaining acceptance proof requires observable mounted and fallback cases in a running world.",
       "scope": [
@@ -4417,8 +4513,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Added BannerModWorkerTransportInspectionGameTests: mounted courier inspection asserts chat.bannermod.workers.transport.mounted; no-approved-mount active courier route asserts chat.bannermod.workers.transport.fallback_no_mount; ./gradlew compileGameTestJava passed; ./gradlew verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "SHIPS-002A",
@@ -4433,7 +4535,8 @@
         "Focused compat tests cover supported carrier type binding plus missing cargo/navigation capability states; runtime code can surface a clear unsupported-carrier reason instead of pretending the route can run."
       ],
       "dependencies": [
-        "SHIPS-001"
+        "SHIPS-001",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -4452,7 +4555,8 @@
         "Focused tests prove state transitions for no carrier, load start, travel pending, arrival ready, unload complete, and failure are deterministic and preserve route identity for settlement feedback."
       ],
       "dependencies": [
-        "SHIPS-002A"
+        "SHIPS-002A",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -4471,7 +4575,8 @@
         "Focused tests or GameTest demonstrate one item-filtered sea route removes goods from a source storage area, keeps them in carrier cargo during travel state, and deposits them at the destination with shortage/full-container failure surfaced."
       ],
       "dependencies": [
-        "SHIPS-002B"
+        "SHIPS-002B",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
@@ -4490,7 +4595,8 @@
         "Settlement feedback shows loading, travelling, unloading, completed, missing-ship, and blocked-cargo states for a route; MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html describe the player-visible sea-trade behavior."
       ],
       "dependencies": [
-        "SHIPS-002C"
+        "SHIPS-002C",
+        "VANILLA-013"
       ],
       "progress": [],
       "verification": [],
