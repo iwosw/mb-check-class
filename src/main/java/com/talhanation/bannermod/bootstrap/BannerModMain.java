@@ -205,6 +205,8 @@ public class BannerModMain {
     private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
             event.accept(com.talhanation.bannermod.registry.citizen.ModCitizenItems.CITIZEN_SPAWN_EGG.get());
+        } else if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
+            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.BANNERMOD_ALMANAC.get());
         }
     }
 }
