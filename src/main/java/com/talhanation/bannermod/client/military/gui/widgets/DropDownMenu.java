@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.gui.widgets;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -51,7 +50,8 @@ public class DropDownMenu<T> extends AbstractWidget {
         guiGraphics.drawCenteredString(Minecraft.getInstance().font, getSelectedText(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, displayColor);
 
         if (isOpen) {
-            for (int i = 0; i < options.size(); i++) {
+            int visibleOptions = getVisibleOptionCount();
+            for (int i = 0; i < visibleOptions; i++) {
                 int optionY = this.getY() + this.height + i * optionHeight;
                 T option = options.get(i);
 
@@ -74,7 +74,8 @@ public class DropDownMenu<T> extends AbstractWidget {
 
     public void onMouseClick(double mouseX, double mouseY) {
         if (isOpen) {
-            for (int i = 0; i < options.size(); i++) {
+            int visibleOptions = getVisibleOptionCount();
+            for (int i = 0; i < visibleOptions; i++) {
                 int optionY = this.getY() + this.height + i * optionHeight;
 
                 if (isMouseOverOption((int) mouseX, (int) mouseY, optionY)) {
@@ -106,7 +107,7 @@ public class DropDownMenu<T> extends AbstractWidget {
     }
 
     private boolean isMouseOverDisplay(int mouseX, int mouseY) {
-        return mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height;
+        return GuiWidgetBounds.contains(this.getX(), this.getY(), this.width, this.height, mouseX, mouseY);
     }
 
     private boolean isMouseOverDropdown(int mouseX, int mouseY) {
@@ -115,13 +116,17 @@ public class DropDownMenu<T> extends AbstractWidget {
         int dropdownStartX = this.getX();
         int dropdownStartY = this.getY() + this.height;
         int dropdownEndX = dropdownStartX + this.width;
-        int dropdownEndY = dropdownStartY + options.size() * optionHeight;
+        int dropdownEndY = dropdownStartY + getVisibleOptionCount() * optionHeight;
 
-        return mouseX >= dropdownStartX && mouseX <= dropdownEndX && mouseY >= dropdownStartY && mouseY <= dropdownEndY;
+        return GuiWidgetBounds.contains(dropdownStartX, dropdownStartY, dropdownEndX - dropdownStartX, dropdownEndY - dropdownStartY, mouseX, mouseY);
     }
 
     private boolean isMouseOverOption(int mouseX, int mouseY, int optionY) {
-        return mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= optionY && mouseY <= optionY + optionHeight;
+        return GuiWidgetBounds.contains(this.getX(), optionY, this.width, optionHeight, mouseX, mouseY);
+    }
+
+    private int getVisibleOptionCount() {
+        return GuiWidgetBounds.visibleRowsBelow(this.getY() + this.height, optionHeight, options.size());
     }
 
     private void selectOption(T option) {
