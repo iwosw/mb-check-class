@@ -67,6 +67,11 @@ class CitizenRoleControllerTest {
         }
 
         @Override
+        public net.minecraft.core.HolderLookup.Provider registryAccess() {
+            return null;
+        }
+
+        @Override
         public String getTeamId() {
             return null;
         }

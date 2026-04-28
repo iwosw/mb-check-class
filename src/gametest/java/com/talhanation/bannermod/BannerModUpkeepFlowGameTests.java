@@ -13,8 +13,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModUpkeepFlowGameTests {
@@ -22,7 +22,7 @@ public class BannerModUpkeepFlowGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void upkeepFlowMovesSameOwnerRecruitFromBlockedToReady(GameTestHelper helper) {
-        Player player = helper.makeMockPlayer();
+        Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         AbstractRecruitEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
                 com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),

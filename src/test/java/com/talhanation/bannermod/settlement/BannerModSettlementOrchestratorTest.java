@@ -317,7 +317,7 @@ class BannerModSettlementOrchestratorTest {
 
         @Override
         public ResourceLocation id() {
-            return new ResourceLocation("bannermod", "test_orchestrator_job");
+            return ResourceLocation.fromNamespaceAndPath("bannermod", "test_orchestrator_job");
         }
 
         @Override

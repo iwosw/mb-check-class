@@ -22,8 +22,8 @@ class BannerModTreasuryManagerTest {
         manager.depositTaxes(claimUuid, new ChunkPos(4, 7), "blueguild", 12, 100L);
         manager.depositTaxes(claimUuid, new ChunkPos(4, 7), "blueguild", 8, 140L);
 
-        CompoundTag persisted = manager.save(new CompoundTag());
-        BannerModTreasuryManager restored = BannerModTreasuryManager.load(persisted);
+        CompoundTag persisted = manager.save(new CompoundTag(), null);
+        BannerModTreasuryManager restored = BannerModTreasuryManager.load(persisted, null);
         BannerModTreasuryLedgerSnapshot ledger = restored.getLedger(claimUuid);
 
         assertNotNull(ledger);
@@ -117,7 +117,7 @@ class BannerModTreasuryManagerTest {
         BannerModTreasuryLedgerSnapshot ledger = BannerModTreasuryLedgerSnapshot.create(claimUuid, new ChunkPos(2, 2), "blueguild");
         BannerModTreasuryManager manager = new BannerModTreasuryManager();
         manager.putLedger(ledger);
-        BannerModTreasuryManager reloaded = BannerModTreasuryManager.load(manager.save(new CompoundTag()));
+        BannerModTreasuryManager reloaded = BannerModTreasuryManager.load(manager.save(new CompoundTag(), null), null);
 
         reloaded.putLedger(ledger);
 

@@ -457,7 +457,7 @@ class SettlementWorkOrderRuntimeTest {
                 SettlementWorkOrderType.MINE_BLOCK, new BlockPos(2, 64, 2), "minecraft:stone", 60, 12L));
         SettlementWorkOrder claimed = source.runtime().claim(CLAIM_A, RESIDENT_A, null, 100L, 20L).orElseThrow();
 
-        SettlementWorkOrderSavedData restored = SettlementWorkOrderSavedData.load(source.save(new CompoundTag()));
+        SettlementWorkOrderSavedData restored = SettlementWorkOrderSavedData.load(source.save(new CompoundTag(), null), null);
 
         assertEquals(source.runtime().snapshot(), restored.runtime().snapshot());
         assertEquals(claimed.orderUuid(), restored.runtime().currentClaim(RESIDENT_A).orElseThrow().orderUuid());

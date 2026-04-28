@@ -7,8 +7,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModCitizenRecruitGameTests {
@@ -16,7 +16,7 @@ public class BannerModCitizenRecruitGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void recruitOwnershipAndFollowStateSurviveCitizenBackedPersistence(GameTestHelper helper) {
-        Player player = helper.makeMockPlayer();
+        Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         AbstractRecruitEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
                 helper,
                 com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),

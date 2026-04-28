@@ -281,7 +281,7 @@ class BannerModSettlementProjectSchedulerTest {
 
         source.runtime().scheduler().submit(claim, project);
 
-        BannerModSettlementProjectSavedData restored = BannerModSettlementProjectSavedData.load(source.save(new CompoundTag()));
+        BannerModSettlementProjectSavedData restored = BannerModSettlementProjectSavedData.load(source.save(new CompoundTag(), null), null);
 
         assertEquals(1, restored.runtime().scheduler().pendingCount(claim));
         assertEquals(project.projectId(), restored.runtime().scheduler().peek(claim).orElseThrow().projectId());

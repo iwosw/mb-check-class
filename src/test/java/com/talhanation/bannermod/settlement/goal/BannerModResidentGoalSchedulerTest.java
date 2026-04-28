@@ -124,7 +124,7 @@ class BannerModResidentGoalSchedulerTest {
 
         Optional<ResidentTask> picked = scheduler.currentTask(id);
         assertTrue(picked.isPresent());
-        assertEquals(new ResourceLocation(BannerModMain.MOD_ID, "test/goal/fallback"), picked.get().goalId(),
+        assertEquals(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "test/goal/fallback"), picked.get().goalId(),
                 "cooling goal should skip until its cooldown expires; fallback picked instead");
     }
 
@@ -139,7 +139,7 @@ class BannerModResidentGoalSchedulerTest {
 
         Optional<ResidentTask> picked = scheduler.currentTask(resident.residentUuid());
         assertTrue(picked.isPresent());
-        assertEquals(new ResourceLocation(BannerModMain.MOD_ID, "test/goal/a"), picked.get().goalId(),
+        assertEquals(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "test/goal/a"), picked.get().goalId(),
                 "tie-break sorts by lexicographic full ID, registration order must not matter");
     }
 
@@ -310,7 +310,7 @@ class BannerModResidentGoalSchedulerTest {
         private final boolean hasCooldown;
 
         FixedDurationTestGoal(String path, int priority, int duration, boolean hasCooldown) {
-            this.id = new ResourceLocation(BannerModMain.MOD_ID, path);
+            this.id = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, path);
             this.priority = priority;
             this.duration = duration;
             this.hasCooldown = hasCooldown;

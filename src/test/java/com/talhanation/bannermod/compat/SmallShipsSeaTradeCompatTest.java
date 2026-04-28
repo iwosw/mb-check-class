@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SmallShipsSeaTradeCompatTest {
 
-    private static final ResourceLocation COG = new ResourceLocation("smallships", "cog");
-    private static final ResourceLocation GALLEY = new ResourceLocation("smallships", "galley");
-    private static final ResourceLocation MINECRAFT_BOAT = new ResourceLocation("minecraft", "boat");
+    private static final ResourceLocation COG = ResourceLocation.fromNamespaceAndPath("smallships", "cog");
+    private static final ResourceLocation GALLEY = ResourceLocation.fromNamespaceAndPath("smallships", "galley");
+    private static final ResourceLocation MINECRAFT_BOAT = ResourceLocation.fromNamespaceAndPath("minecraft", "boat");
 
     @Test
     void absentSmallShipsExposesNoCarrierCandidates() {

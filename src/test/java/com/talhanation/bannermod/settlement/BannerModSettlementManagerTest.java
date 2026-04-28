@@ -98,8 +98,8 @@ class BannerModSettlementManagerTest {
         BannerModSettlementManager manager = new BannerModSettlementManager();
         manager.putSnapshot(original);
 
-        CompoundTag persisted = manager.save(new CompoundTag());
-        BannerModSettlementManager reloaded = BannerModSettlementManager.load(persisted);
+        CompoundTag persisted = manager.save(new CompoundTag(), null);
+        BannerModSettlementManager reloaded = BannerModSettlementManager.load(persisted, null);
         BannerModSettlementSnapshot restored = reloaded.getSnapshot(claim.getUUID());
 
         assertNotNull(restored);
@@ -144,7 +144,7 @@ class BannerModSettlementManagerTest {
         BannerModSettlementSnapshot snapshot = BannerModSettlementSnapshot.create(claim.getUUID(), claim.getCenter(), ownerKey(claim));
         BannerModSettlementManager manager = new BannerModSettlementManager();
         manager.putSnapshot(snapshot);
-        BannerModSettlementManager reloaded = BannerModSettlementManager.load(manager.save(new CompoundTag()));
+        BannerModSettlementManager reloaded = BannerModSettlementManager.load(manager.save(new CompoundTag(), null), null);
 
         reloaded.putSnapshot(snapshot);
 

@@ -56,13 +56,13 @@ class JobHandlerRegistryTest {
     void registerCustomHandlerThenLookupByIdReturnsSameInstance() {
         JobHandlerRegistry registry = new JobHandlerRegistry();
         JobHandler custom = new TestJobHandler(
-                new ResourceLocation("bannermod", "custom_governance"),
+                ResourceLocation.fromNamespaceAndPath("bannermod", "custom_governance"),
                 BannerModSettlementJobHandlerSeed.GOVERNANCE
         );
 
         registry.register(custom);
 
-        assertSame(custom, registry.lookupById(new ResourceLocation("bannermod", "custom_governance")).orElse(null));
+        assertSame(custom, registry.lookupById(ResourceLocation.fromNamespaceAndPath("bannermod", "custom_governance")).orElse(null));
         assertSame(custom, registry.lookup(BannerModSettlementJobHandlerSeed.GOVERNANCE).orElse(null));
     }
 
@@ -70,11 +70,11 @@ class JobHandlerRegistryTest {
     void lastRegistrationWinsForSameSeed() {
         JobHandlerRegistry registry = new JobHandlerRegistry();
         JobHandler first = new TestJobHandler(
-                new ResourceLocation("bannermod", "first"),
+                ResourceLocation.fromNamespaceAndPath("bannermod", "first"),
                 BannerModSettlementJobHandlerSeed.VILLAGE_LIFE
         );
         JobHandler second = new TestJobHandler(
-                new ResourceLocation("bannermod", "second"),
+                ResourceLocation.fromNamespaceAndPath("bannermod", "second"),
                 BannerModSettlementJobHandlerSeed.VILLAGE_LIFE
         );
 
@@ -85,8 +85,8 @@ class JobHandlerRegistryTest {
         assertSame(second, registry.lookup(BannerModSettlementJobHandlerSeed.VILLAGE_LIFE).orElse(null));
         // Both remain reachable by their distinct ids; we do not evict the older handler from
         // the id index because its id was not reused.
-        assertSame(first, registry.lookupById(new ResourceLocation("bannermod", "first")).orElse(null));
-        assertSame(second, registry.lookupById(new ResourceLocation("bannermod", "second")).orElse(null));
+        assertSame(first, registry.lookupById(ResourceLocation.fromNamespaceAndPath("bannermod", "first")).orElse(null));
+        assertSame(second, registry.lookupById(ResourceLocation.fromNamespaceAndPath("bannermod", "second")).orElse(null));
         assertEquals(2, registry.size());
     }
 
@@ -98,7 +98,7 @@ class JobHandlerRegistryTest {
         assertFalse(registry.lookup(BannerModSettlementJobHandlerSeed.NONE).isPresent());
         assertFalse(registry.lookup(null).isPresent());
         assertFalse(registry.lookupById(null).isPresent());
-        assertFalse(registry.lookupById(new ResourceLocation("bannermod", "missing")).isPresent());
+        assertFalse(registry.lookupById(ResourceLocation.fromNamespaceAndPath("bannermod", "missing")).isPresent());
     }
 
     @Test
@@ -204,7 +204,7 @@ class JobHandlerRegistryTest {
 
     @Test
     void jobTaskDefinitionRejectsInvalidValues() {
-        ResourceLocation id = new ResourceLocation("bannermod", "t");
+        ResourceLocation id = ResourceLocation.fromNamespaceAndPath("bannermod", "t");
         BannerModSettlementJobHandlerSeed seed = BannerModSettlementJobHandlerSeed.FLOATING_LABOR_POOL;
 
         JobTaskDefinition ok = new JobTaskDefinition(id, seed, 0, 1, true, false);

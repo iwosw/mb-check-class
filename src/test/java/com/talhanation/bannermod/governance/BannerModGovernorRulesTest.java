@@ -68,8 +68,8 @@ class BannerModGovernorRulesTest {
         BannerModGovernorManager manager = new BannerModGovernorManager();
         manager.putSnapshot(original);
 
-        CompoundTag persisted = manager.save(new CompoundTag());
-        BannerModGovernorManager reloaded = BannerModGovernorManager.load(persisted);
+        CompoundTag persisted = manager.save(new CompoundTag(), null);
+        BannerModGovernorManager reloaded = BannerModGovernorManager.load(persisted, null);
         BannerModGovernorSnapshot restored = reloaded.getSnapshot(claim.getUUID());
 
         assertNotNull(restored);
@@ -102,7 +102,7 @@ class BannerModGovernorRulesTest {
         BannerModGovernorSnapshot snapshot = BannerModGovernorSnapshot.create(claim.getUUID(), claim.getCenter(), ownerKey(claim));
         BannerModGovernorManager manager = new BannerModGovernorManager();
         manager.putSnapshot(snapshot);
-        BannerModGovernorManager reloaded = BannerModGovernorManager.load(manager.save(new CompoundTag()));
+        BannerModGovernorManager reloaded = BannerModGovernorManager.load(manager.save(new CompoundTag(), null), null);
 
         reloaded.putSnapshot(snapshot);
 

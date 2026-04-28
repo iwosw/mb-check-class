@@ -12,9 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BannerModSeaTradeSummaryTest {
 
-    private static final ResourceLocation OAK_PLANKS = new ResourceLocation("minecraft", "oak_planks");
-    private static final ResourceLocation IRON_INGOT = new ResourceLocation("minecraft", "iron_ingot");
-    private static final ResourceLocation WHEAT = new ResourceLocation("minecraft", "wheat");
+    private static final ResourceLocation OAK_PLANKS = ResourceLocation.fromNamespaceAndPath("minecraft", "oak_planks");
+    private static final ResourceLocation IRON_INGOT = ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot");
+    private static final ResourceLocation WHEAT = ResourceLocation.fromNamespaceAndPath("minecraft", "wheat");
 
     private static BannerModSeaTradeEntrypoint entry(BannerModSeaTradeDirection direction,
                                                      ResourceLocation itemId,
