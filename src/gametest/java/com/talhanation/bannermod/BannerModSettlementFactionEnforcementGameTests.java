@@ -36,13 +36,13 @@ public class BannerModSettlementFactionEnforcementGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void friendlyClaimBindingAllowsPlacementAndSettlementOperation(GameTestHelper helper) {
-        boolean originalClaimRestriction = WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.get();
-        WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.set(true);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim, true);
 
         try {
             ServerLevel level = helper.getLevel();
             ServerPlayer owner = createPlayer(helper, level, FRIENDLY_OWNER_UUID, "friendly-owner", FRIENDLY_TEAM_ID);
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
+            clearCropArea(level, workAreaPos);
 
             BannerModDedicatedServerGameTestSupport.seedClaim(level, workAreaPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
             String friendlyPoliticalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(level, FRIENDLY_TEAM_ID);
@@ -68,7 +68,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             helper.assertTrue(cropArea.canWorkHere(worker),
                     "Expected the owned worker to remain operational inside the friendly claim-backed settlement area");
         } finally {
-            WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.set(originalClaimRestriction);
+            WorkersServerConfig.setTestOverride(WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim, null);
         }
 
         helper.succeed();
@@ -77,14 +77,14 @@ public class BannerModSettlementFactionEnforcementGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void hostileClaimDeniesPlacementAndReportsHostileBinding(GameTestHelper helper) {
-        boolean originalClaimRestriction = WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.get();
-        WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.set(true);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim, true);
 
         try {
             ServerLevel level = helper.getLevel();
             ServerPlayer claimOwner = createPlayer(helper, level, FRIENDLY_OWNER_UUID, "claim-owner", FRIENDLY_TEAM_ID);
             ServerPlayer hostilePlayer = createPlayer(helper, level, HOSTILE_PLAYER_UUID, "hostile-player", HOSTILE_TEAM_ID);
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
+            clearCropArea(level, workAreaPos);
 
             BannerModDedicatedServerGameTestSupport.seedClaim(level, workAreaPos, FRIENDLY_TEAM_ID, claimOwner.getUUID(), claimOwner.getScoreboardName());
             String hostilePoliticalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(level, HOSTILE_TEAM_ID);
@@ -103,7 +103,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             helper.assertTrue(binding.status() == BannerModSettlementBinding.Status.HOSTILE_CLAIM,
                     "Expected hostile placement denial to resolve as HOSTILE_CLAIM through the shared settlement binding seam");
         } finally {
-            WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.set(originalClaimRestriction);
+            WorkersServerConfig.setTestOverride(WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim, null);
         }
 
         helper.succeed();
@@ -112,13 +112,13 @@ public class BannerModSettlementFactionEnforcementGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void unclaimedTerritoryDeniesRestrictedPlacementAndReportsUnclaimed(GameTestHelper helper) {
-        boolean originalClaimRestriction = WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.get();
-        WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.set(true);
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim, true);
 
         try {
             ServerLevel level = helper.getLevel();
             ServerPlayer player = createPlayer(helper, level, UNCLAIMED_PLAYER_UUID, "unclaimed-player", FRIENDLY_TEAM_ID);
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
+            clearCropArea(level, workAreaPos);
 
             if (ClaimEvents.recruitsClaimManager != null) {
                 RecruitsClaim existingClaim = ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
@@ -142,7 +142,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             helper.assertTrue(binding.status() == BannerModSettlementBinding.Status.UNCLAIMED,
                     "Expected the shared settlement binding seam to report UNCLAIMED for restricted placement in claimless territory");
         } finally {
-            WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.set(originalClaimRestriction);
+            WorkersServerConfig.setTestOverride(WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim, null);
         }
 
         helper.succeed();
@@ -160,6 +160,13 @@ public class BannerModSettlementFactionEnforcementGameTests {
     private static CropArea findCropArea(ServerLevel level, BlockPos workAreaPos) {
         List<CropArea> cropAreas = level.getEntitiesOfClass(CropArea.class, new AABB(workAreaPos.above()).inflate(1.0D));
         return cropAreas.isEmpty() ? null : cropAreas.get(0);
+    }
+
+    private static void clearCropArea(ServerLevel level, BlockPos workAreaPos) {
+        CropArea existing = findCropArea(level, workAreaPos);
+        if (existing != null) {
+            existing.discard();
+        }
     }
 
     /**

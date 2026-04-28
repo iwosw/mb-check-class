@@ -73,11 +73,13 @@ public class BannerModWarOutcomeAndTaxGameTests {
         seedTreasury(level, setup.defenderClaim, 100);
         // Ensure the occupier has a destination ledger.
         seedTreasury(level, setup.attackerClaim, 0);
+        UUID attackerClaimOwnerId = setup.attackerClaim.getOwnerPoliticalEntityId();
+        UUID defenderClaimOwnerId = setup.defenderClaim.getOwnerPoliticalEntityId();
 
         OccupationRuntime occupations = WarRuntimeContext.occupations(level);
         long placedAt = level.getGameTime();
         OccupationRecord placed = occupations.place(
-                setup.warId, setup.attackerEntityId, setup.defenderEntityId,
+                setup.warId, attackerClaimOwnerId, defenderClaimOwnerId,
                 List.of(new ChunkPos(setup.defenderClaimPos)),
                 placedAt).orElseThrow();
 
@@ -86,12 +88,12 @@ public class BannerModWarOutcomeAndTaxGameTests {
         long tickAtAccrue = placedAt + 15L;
 
         BannerModTreasuryManager treasury = BannerModTreasuryManager.get(level);
-        int defenderBalanceBeforeTax = treasuryBalanceForEntity(level, setup.defenderEntityId);
-        int attackerBalanceBeforeTax = treasuryBalanceForEntity(level, setup.attackerEntityId);
+        int defenderBalanceBeforeTax = treasuryBalanceForEntity(level, defenderClaimOwnerId);
+        int attackerBalanceBeforeTax = treasuryBalanceForEntity(level, attackerClaimOwnerId);
         WarRuntimeContext.taxRuntime(level).accrue(5, intervalTicks, tickAtAccrue);
 
-        int defenderBalanceAfterTax = treasuryBalanceForEntity(level, setup.defenderEntityId);
-        int attackerBalanceAfterTax = treasuryBalanceForEntity(level, setup.attackerEntityId);
+        int defenderBalanceAfterTax = treasuryBalanceForEntity(level, defenderClaimOwnerId);
+        int attackerBalanceAfterTax = treasuryBalanceForEntity(level, attackerClaimOwnerId);
         helper.assertTrue(defenderBalanceBeforeTax - defenderBalanceAfterTax >= 5,
                 "Expected defender claim treasury debited by at least 5 after one tax cycle, got before="
                         + defenderBalanceBeforeTax + " after=" + defenderBalanceAfterTax);
@@ -109,9 +111,9 @@ public class BannerModWarOutcomeAndTaxGameTests {
         // Second accrue at the same logical tick is inside the next interval window — no-op.
         int paidAuditCountBefore = auditCount(WarRuntimeContext.audit(level), setup.warId, "OCCUPATION_TAX_PAID");
         WarRuntimeContext.taxRuntime(level).accrue(5, intervalTicks, tickAtAccrue);
-        helper.assertTrue(treasuryBalanceForEntity(level, setup.defenderEntityId) == defenderBalanceAfterTax,
+        helper.assertTrue(treasuryBalanceForEntity(level, defenderClaimOwnerId) == defenderBalanceAfterTax,
                 "Expected idempotent second accrue to leave defender balance untouched");
-        helper.assertTrue(treasuryBalanceForEntity(level, setup.attackerEntityId) == attackerBalanceAfterTax,
+        helper.assertTrue(treasuryBalanceForEntity(level, attackerClaimOwnerId) == attackerBalanceAfterTax,
                 "Expected idempotent second accrue to leave attacker balance untouched");
         helper.assertTrue(auditCount(WarRuntimeContext.audit(level), setup.warId, "OCCUPATION_TAX_PAID") == paidAuditCountBefore,
                 "Expected idempotent second accrue to add zero new paid audit entries for this war");
