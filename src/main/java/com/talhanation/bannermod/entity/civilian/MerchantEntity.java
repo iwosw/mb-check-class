@@ -39,7 +39,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraftforge.common.ForgeMod;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
@@ -155,11 +155,11 @@ public class MerchantEntity extends AbstractWorkerEntity {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 50.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.3D)
-                .add(ForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D)
                 .add(Attributes.ATTACK_DAMAGE, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
-                .add(ForgeMod.ENTITY_REACH.get(), 0D)
+                .add(Attributes.ENTITY_INTERACTION_RANGE, 0D)
                 .add(Attributes.ATTACK_SPEED);
     }
 

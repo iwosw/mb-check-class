@@ -12,7 +12,7 @@ import com.talhanation.bannermod.inventory.civilian.MerchantAddEditTradeContaine
 import com.talhanation.bannermod.inventory.civilian.MerchantTradeContainer;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +42,7 @@ public class ModMenuTypes {
     }
 
     public static final RegistryObject<MenuType<MerchantAddEditTradeContainer>> MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE =
-            MENU_TYPES.register("merchant_add_edit_trade_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("merchant_add_edit_trade_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 MerchantEntity merchant = (MerchantEntity) getRecruitByUUID(inv.player, data.readUUID());
                 CompoundTag nbt = data.readNbt();
                 if (merchant == null || nbt == null) {
@@ -53,7 +53,7 @@ public class ModMenuTypes {
             }));
 
     public static final RegistryObject<MenuType<MerchantTradeContainer>> MERCHANT_TRADE_CONTAINER_TYPE =
-            MENU_TYPES.register("merchant_trade_container", () -> IForgeMenuType.create((windowId, inv, data) -> {
+            MENU_TYPES.register("merchant_trade_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
                 MerchantEntity merchant = (MerchantEntity) getRecruitByUUID(inv.player, data.readUUID());
                 if (merchant == null) {
                     return null;

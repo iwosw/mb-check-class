@@ -11,7 +11,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.ForgeMod;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.OptionalInt;
@@ -105,8 +105,8 @@ public abstract class AttackUtil {
         }
         double effectiveBase = base + extraReach;
 
-        if(living != null && living.getAttribute(ForgeMod.ENTITY_REACH.get()) != null){
-            double attackReach = living.getAttributeValue(ForgeMod.ENTITY_REACH.get());
+        if(living != null && living.getAttribute(Attributes.ENTITY_INTERACTION_RANGE) != null){
+            double attackReach = living.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
             //Vanilla reach is 10
             //Epic fight mod:
             // reach +1.0 == 18

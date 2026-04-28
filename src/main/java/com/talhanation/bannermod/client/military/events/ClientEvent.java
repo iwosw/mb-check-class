@@ -17,9 +17,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -38,7 +38,7 @@ public class ClientEvent {
     public static void entityRenderersEvent(EntityRenderersEvent.RegisterRenderers event){
         // Config read is deferred into the provider lambda — `provider.create(ctx)` runs in
         // `EntityRenderDispatcher.onResourceManagerReload`, AFTER `ModConfigEvent.Loading`, so
-        // `.get()` is safe. Reading at RegisterRenderers time trips `ForgeConfigSpec$ConfigValue.get`
+        // `.get()` is safe. Reading at RegisterRenderers time trips `ModConfigSpec$ConfigValue.get`
         // precondition (IllegalStateException: Cannot get config value before config is loaded).
         net.minecraft.client.renderer.entity.EntityRendererProvider<com.talhanation.bannermod.entity.military.AbstractRecruitEntity> recruitProvider =
                 ctx -> RecruitsClientConfig.RecruitsLookLikeVillagers.get()

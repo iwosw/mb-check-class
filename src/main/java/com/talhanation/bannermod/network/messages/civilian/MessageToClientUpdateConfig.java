@@ -3,8 +3,8 @@ package com.talhanation.bannermod.network.messages.civilian;
 import com.talhanation.bannermod.client.civilian.WorkersClientManager;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 
 public class MessageToClientUpdateConfig implements Message<MessageToClientUpdateConfig> {

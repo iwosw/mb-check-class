@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.minecraft.world.phys.Vec3;
 
 import net.minecraft.world.scores.PlayerTeam;
@@ -27,7 +27,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 
-public class RecruitsSpawnEgg extends ForgeSpawnEggItem {
+public class RecruitsSpawnEgg extends DeferredSpawnEggItem {
     private final Supplier<? extends EntityType<? extends AbstractRecruitEntity>> entityType;
 
     public RecruitsSpawnEgg(Supplier<? extends EntityType<? extends AbstractRecruitEntity>> entityType, int primaryColor, int secondaryColor, Properties properties) {

@@ -11,7 +11,7 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.api.distmarker.Dist;
+import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;

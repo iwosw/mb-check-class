@@ -6,6 +6,7 @@ import com.talhanation.bannermod.entity.civilian.WorkerBindingResume;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -15,8 +16,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.common.PlantType;
+import net.neoforged.neoforge.common.SpecialPlantable;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -337,9 +337,9 @@ public class FarmerWorkGoal extends Goal {
                 seedFromInv.shrink(1);
                 this.farmer.swing(InteractionHand.MAIN_HAND);
             }
-            else if (seedFromInv.getItem() instanceof IPlantable plantable) {
-                if (plantable.getPlantType(farmer.getCommandSenderWorld(), blockPos) == PlantType.CROP) {
-                    farmer.getCommandSenderWorld().setBlock(blockPos, plantable.getPlant(farmer.getCommandSenderWorld(), blockPos), 3);
+            else if (seedFromInv.getItem() instanceof SpecialPlantable plantable) {
+                if (plantable.canPlacePlantAtPosition(seedFromInv, farmer.getCommandSenderWorld(), blockPos, Direction.UP)) {
+                    plantable.spawnPlantAtPosition(seedFromInv, farmer.getCommandSenderWorld(), blockPos, Direction.UP);
 
                     farmer.getCommandSenderWorld().playSound(null, blockPos.getX(), blockPos.getY(), blockPos.getZ(), SoundEvents.CROP_PLANTED, SoundSource.BLOCKS, 1.0F, 1.0F);
                     seedFromInv.shrink(1);

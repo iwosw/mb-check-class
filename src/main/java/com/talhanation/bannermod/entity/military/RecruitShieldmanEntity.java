@@ -14,7 +14,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraftforge.common.ForgeMod;
+import net.neoforged.neoforge.common.NeoForgeMod;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -44,11 +44,11 @@ public class RecruitShieldmanEntity extends AbstractRecruitEntity{
         return LivingEntity.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 25.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.25D)
-                .add(ForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.2D)
                 .add(Attributes.ATTACK_DAMAGE, 1.0D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
-                .add(ForgeMod.ENTITY_REACH.get(), 0D)
+                .add(Attributes.ENTITY_INTERACTION_RANGE, 0D)
                 .add(Attributes.ATTACK_SPEED);
 
 

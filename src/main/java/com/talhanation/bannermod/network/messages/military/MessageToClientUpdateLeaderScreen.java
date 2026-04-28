@@ -5,7 +5,7 @@ import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
+import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;

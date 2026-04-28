@@ -69,7 +69,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
 import net.neoforged.neoforge.common.NeoForge;
-import net.minecraftforge.common.Tags;
+import net.neoforged.neoforge.common.Tags;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;

@@ -3,7 +3,7 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.client.military.events.RecruitsToastManager;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
+import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import static com.talhanation.bannermod.client.military.events.RecruitsToastManager.*;

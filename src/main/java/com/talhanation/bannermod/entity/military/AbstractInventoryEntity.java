@@ -41,7 +41,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
 
     public RecruitSimpleContainer inventory;
     private int beforeItemSlot = -1;
-    private net.minecraftforge.common.util.LazyOptional<?> itemHandler = null;
+    private net.neoforged.neoforge.common.util.LazyOptional<?> itemHandler = null;
 
     public AbstractInventoryEntity(EntityType<? extends AbstractInventoryEntity> entityType, Level world) {
         super(entityType, world);
@@ -249,7 +249,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
                 }
             }
         }
-        this.itemHandler = net.minecraftforge.common.util.LazyOptional.of(() -> new net.minecraftforge.items.wrapper.InvWrapper(this.inventory));
+        this.itemHandler = net.neoforged.neoforge.common.util.LazyOptional.of(() -> new net.neoforged.neoforge.items.wrapper.InvWrapper(this.inventory));
     }
 
     public void die(DamageSource dmg) {
@@ -360,7 +360,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
                 return EquipmentSlot.MAINHAND;
             }
             else {
-                return itemStack.canPerformAction(net.minecraftforge.common.ToolActions.SHIELD_BLOCK)? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
+                return itemStack.canPerformAction(net.neoforged.neoforge.common.ItemAbilities.SHIELD_BLOCK)? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
             }
         } else {
             return EquipmentSlot.HEAD;
@@ -443,8 +443,8 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
 
     public abstract void openGUI(Player player);
 
-    public <T> net.minecraftforge.common.util.LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.core.Direction facing) {
-        if (this.isAlive() && capability == net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER && itemHandler != null)
+    public <T> net.neoforged.neoforge.common.util.LazyOptional<T> getCapability(net.neoforged.neoforge.capabilities.EntityCapability<T, @Nullable net.minecraft.core.Direction> capability, @Nullable net.minecraft.core.Direction facing) {
+        if (this.isAlive() && capability == net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.ENTITY && itemHandler != null)
             return itemHandler.cast();
         return super.getCapability(capability, facing);
     }
@@ -453,7 +453,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
     public void invalidateCaps() {
         super.invalidateCaps();
         if (itemHandler != null) {
-            net.minecraftforge.common.util.LazyOptional<?> oldHandler = itemHandler;
+            net.neoforged.neoforge.common.util.LazyOptional<?> oldHandler = itemHandler;
             itemHandler = null;
             oldHandler.invalidate();
         }

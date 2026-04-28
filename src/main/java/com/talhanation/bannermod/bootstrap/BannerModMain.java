@@ -28,21 +28,19 @@ import com.talhanation.bannermod.war.events.WarPvpEvents;
 import com.talhanation.bannermod.war.events.WarRevoltAutoResolver;
 import com.talhanation.bannermod.war.events.WarStateBroadcaster;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.simple.SimpleChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,18 +60,16 @@ public class BannerModMain {
     public static boolean isCorpseLoaded;
     public static boolean isRPGZLoaded;
 
-    public BannerModMain() {
-        final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-
+    public BannerModMain(IEventBus modEventBus, Dist dist, ModContainer modContainer) {
         // Register recruits configs (explicit filenames avoid SERVER filename collision in ConfigTracker;
         // default `<modid>-<type>.toml` would make both SERVER specs resolve to `bannermod-server.toml`
         // and throw `Config conflict detected!` at ConfigTracker.trackConfig. See 21-10-PLAN.md.)
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT, "bannermod-recruits-client.toml");
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER, "bannermod-recruits-server.toml");
+        modContainer.registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT, "bannermod-recruits-client.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER, "bannermod-recruits-server.toml");
         // Register workers config
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER, "bannermod-workers-server.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER, "bannermod-workers-server.toml");
         // Register war/RP config — own filename to avoid the SERVER filename collision called out above.
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WarServerConfig.SERVER, "bannermod-war-server.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, WarServerConfig.SERVER, "bannermod-war-server.toml");
 
         // Lifecycle
         modEventBus.addListener(this::setup);
@@ -109,13 +105,11 @@ public class BannerModMain {
         modEventBus.addListener(this::addCreativeTabs);
 
         // Client-side setup
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(BannerModMain.this::clientSetup);
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(
-                    com.talhanation.bannermod.registry.military.ModShortcuts::registerBindings);
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(
-                    com.talhanation.bannermod.registry.civilian.ModShortcuts::registerBindings);
-        });
+        if (dist == Dist.CLIENT) {
+            modEventBus.addListener(BannerModMain.this::clientSetup);
+            modEventBus.addListener(com.talhanation.bannermod.registry.military.ModShortcuts::registerBindings);
+            modEventBus.addListener(com.talhanation.bannermod.registry.civilian.ModShortcuts::registerBindings);
+        }
 
         NeoForge.EVENT_BUS.register(this);
     }

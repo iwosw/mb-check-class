@@ -13,8 +13,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.vehicle.Boat;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.extensions.IForgeEntity;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.common.extensions.IEntityExtension;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.*;

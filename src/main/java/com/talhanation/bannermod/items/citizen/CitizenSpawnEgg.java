@@ -10,7 +10,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 
 import java.util.function.Supplier;
 
@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * it via {@link CitizenEntity#switchProfession(CitizenProfession)} so a
  * picked-up citizen retains their role when re-spawned.
  */
-public class CitizenSpawnEgg extends ForgeSpawnEggItem {
+public class CitizenSpawnEgg extends DeferredSpawnEggItem {
 
     public CitizenSpawnEgg(Supplier<? extends EntityType<? extends CitizenEntity>> entityType,
                            int primaryColor,
