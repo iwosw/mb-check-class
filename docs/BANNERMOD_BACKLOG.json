@@ -1936,7 +1936,7 @@
     {
       "id": "GAME-003",
       "title": "Materialize occupation, revolt, tribute, and tax consequences",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Occupation, revolt, tribute, and tax systems rely heavily on records and ledgers today, which weakens immersion and leaves strategic outcomes underrepresented in the world.",
       "scope": [
@@ -1946,13 +1946,19 @@
         "Occupation, revolt, tribute, and tax states produce observable ongoing effects in world play and player UI; the main consequences are no longer hidden behind abstract records alone; verification covers both state transition and observable aftermath."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) War Room detail now shows localized consequence summaries for occupation/tax, revolt, and tribute states using synced war client state; 2) EN/RU guides and almanac document the player-facing consequence summary; 3) compileJava passed; 4) processResources passed; 5) focused WarOutcomeApplierTest passed; 6) focused OccupationTaxRuntimeTest passed after rerun from a parallel test-results write collision; 7) tools/backlog validate passed."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-006",
         "GAME-007",
         "GAME-008"
-      ]
+      ],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "GAME-004",
@@ -2028,7 +2034,7 @@
     {
       "id": "ARCH-002",
       "title": "Split ClaimEvents into claim, protection, queue, and settlement services",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "ClaimEvents currently mixes claim manager lifecycle, protection hooks, command queue ticking, and governor or settlement heartbeat orchestration in one oversized event surface.",
       "scope": [
@@ -2038,12 +2044,18 @@
         "Claim-related runtime concerns are separated into smaller services with stable event registration and preserved behavior; verification covers claim protection, queue ticking, and settlement heartbeat flows."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) ClaimEvents now delegates claim lifecycle, protection handlers, queue ticking, and settlement heartbeat batching to separate services while preserving stable event registration through BannerModMain; 2) compileJava passed; 3) CommandIntentQueueTest and BannerModGovernorHeartbeatTest passed for queue ticking and heartbeat logic; 4) verifyGameTestStage passed, covering claim protection/GameTest flows."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-003",
         "TEST-003"
-      ]
+      ],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "ARCH-003",
@@ -2417,7 +2429,7 @@
     {
       "id": "SHIPS-002",
       "title": "Execute sea-trade routes through Small Ships cargo movement",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "Even with ship detection, sea trade stays fake unless goods actually move through vessel-backed route execution between ports, stockpiles, or settlements.",
       "scope": [
@@ -2427,9 +2439,14 @@
         "At least one sea-trade route can load goods onto a Small Ships carrier, travel, unload at the destination, and update settlement or stockpile state visibly; route failure and missing-ship states are surfaced clearly; focused verification covers one end-to-end carrier trip."
       ],
       "dependencies": [
-        "SHIPS-001"
+        "SHIPS-002D"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split needed: existing SHIPS-001 layer binds Small Ships carrier identity only; no cargo/navigation capability API is available at compile time and no persisted sea-trade route executor exists. Child chain SHIPS-002A..SHIPS-002D covers compat capabilities, execution state, stockpile cargo movement, and player-visible status/docs."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -2482,7 +2499,7 @@
     {
       "id": "BOOM-003",
       "title": "Route recruit firearm attacks through Boomsticks projectile and reload semantics",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Medieval Boomsticks projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
       "scope": [
@@ -2492,9 +2509,14 @@
         "A recruit firing a supported Medieval Boomsticks firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
       ],
       "dependencies": [
-        "BOOM-002"
+        "BOOM-003A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Implementation merged on feature/backlog-batch-80-wave1 from feature/boom-003: supported recruit firearms invoke Medieval Boomsticks GunItem.mobUse reflectively and use Boomsticks reloadDuration when available; compileJava passed. Remaining acceptance proof moved to BOOM-003A for focused runtime/GameTest firearm combat verification of projectile spawn, reload cadence, and no-ammo denial."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -2541,7 +2563,7 @@
     {
       "id": "MERCH-002",
       "title": "Expose mounted merchant and courier transport state and fallback reasons",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "If merchants or couriers gain mounts or other transport but the player cannot see when transport is active, unavailable, or lost, the realism gain turns into debugging noise.",
       "scope": [
@@ -2551,9 +2573,14 @@
         "Players can tell whether a merchant or courier is mounted, why it is unmounted, and what fallback route behavior is active; feedback updates as transport is assigned or lost; verification covers mounted and fallback cases."
       ],
       "dependencies": [
-        "MERCH-001"
+        "MERCH-002A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Implementation merged on feature/backlog-batch-80-wave1 from feature/merch-002: worker inspection now reports mounted status and fallback reasons with EN/RU localization plus guide/almanac updates; compileJava and processResources passed. Remaining acceptance proof moved to MERCH-002A for focused runtime verification of mounted and fallback cases."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -2711,7 +2738,7 @@
     {
       "id": "PROC-002",
       "title": "Add backlog helper for finish-or-split parent task rewiring",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "The process now requires executors to either finish a task or split it into child tasks immediately, but that parent or child rewiring flow is still manual and easy to do inconsistently.",
       "scope": [
@@ -2724,8 +2751,14 @@
         "PROC-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Acceptance satisfied: tools/backlog split now creates concrete child tasks from a child spec file, rewires the parent dependencies to those child IDs, and appends the required parent progress note in one documented helper flow. Verification: python3 -m py_compile tools/backlog.py passed; tools/backlog split --help passed; temp-file sample split passed with dry-run, real split, assertions for parent in_progress/dependencies/progress note, and temp backlog validate; canonical tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PERF-010",
@@ -4352,6 +4385,116 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-28"
+    },
+    {
+      "id": "BOOM-003A",
+      "title": "Verify Boomsticks recruit firearm combat flow",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "BOOM-003 code now routes supported recruit firearms through Medieval Boomsticks, but the remaining acceptance proof requires an observable firearm combat flow with the optional mod active.",
+      "scope": [
+        "Run or add a focused runtime/GameTest/manual verification path for one supported Medieval Boomsticks firearm covering projectile spawn, reload or fire cadence, and no-ammo denial after the merged BOOM-003 routing."
+      ],
+      "acceptance": [
+        "A supported Medieval Boomsticks firearm used by a recruit is observed spawning the mod-correct projectile, following the intended reload or fire cadence, and denying fire consistently when ammo is unavailable; verification evidence is recorded on BOOM-003."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "MERCH-002A",
+      "title": "Verify worker transport inspection feedback in runtime",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "MERCH-002 implementation adds server-side inspection feedback, but the remaining acceptance proof requires observable mounted and fallback cases in a running world.",
+      "scope": [
+        "Run or add a focused runtime/GameTest/manual verification path for merchant or courier inspection feedback covering mounted transport, lost or unavailable transport fallback, and route-on-foot messaging after the merged MERCH-002 feedback implementation."
+      ],
+      "acceptance": [
+        "Inspecting a mounted merchant or courier shows the mount status; inspecting fallback cases shows why the worker is unmounted and whether the route continues on foot; verification evidence is recorded on MERCH-002."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-002A",
+      "title": "Reflect Small Ships cargo and navigation capabilities",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "SHIPS-002 cannot safely execute vessel-backed sea trade until BannerMod can discover whether a bound Small Ships carrier exposes usable cargo and movement hooks without compile-time Small Ships API access.",
+      "scope": [
+        "Extend the optional Small Ships compatibility layer with reflection-backed capability probes for carrier cargo container access, position/state inspection, and movement or destination support; keep the layer safe when Small Ships is absent or incompatible."
+      ],
+      "acceptance": [
+        "Focused compat tests cover supported carrier type binding plus missing cargo/navigation capability states; runtime code can surface a clear unsupported-carrier reason instead of pretending the route can run."
+      ],
+      "dependencies": [
+        "SHIPS-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-002B",
+      "title": "Persist ship-backed sea-trade route execution state",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Sea-trade execution needs durable route state before cargo movement can survive ticks, reloads, missing ships, and arrivals.",
+      "scope": [
+        "Add a server-side sea-trade execution model that tracks route id, bound carrier id, source and destination storage areas, selected item filter, requested count, cargo count, loading/travelling/unloading/failed states, and clear failure reasons."
+      ],
+      "acceptance": [
+        "Focused tests prove state transitions for no carrier, load start, travel pending, arrival ready, unload complete, and failure are deterministic and preserve route identity for settlement feedback."
+      ],
+      "dependencies": [
+        "SHIPS-002A"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-002C",
+      "title": "Move sea-trade cargo through settlement stockpiles",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The visible route must change real stockpile contents rather than only summarize potential import/export capacity.",
+      "scope": [
+        "Wire sea-trade execution to existing StorageArea containers and TransportContainerExchange so a ship-backed route withdraws matching goods from the source, holds them as carrier cargo, and deposits them at the destination without creating a parallel economy."
+      ],
+      "acceptance": [
+        "Focused tests or GameTest demonstrate one item-filtered sea route removes goods from a source storage area, keeps them in carrier cargo during travel state, and deposits them at the destination with shortage/full-container failure surfaced."
+      ],
+      "dependencies": [
+        "SHIPS-002B"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-002D",
+      "title": "Surface sea-trade route progress and failures to players",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Players need to understand when sea trade is moving goods, waiting for a ship, blocked by cargo capacity, or completed.",
+      "scope": [
+        "Expose ship-backed route status lines through settlement snapshots and update player-facing guides/almanac for the Small Ships sea-trade loop and failure states."
+      ],
+      "acceptance": [
+        "Settlement feedback shows loading, travelling, unloading, completed, missing-ship, and blocked-cargo states for a route; MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html describe the player-visible sea-trade behavior."
+      ],
+      "dependencies": [
+        "SHIPS-002C"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
