@@ -2,14 +2,14 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.RecruitHireScreen;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 
-public class MessageToClientUpdateHireState implements Message<MessageToClientUpdateHireState> {
+public class MessageToClientUpdateHireState implements BannerModMessage<MessageToClientUpdateHireState> {
     public ItemStack currency;
     public boolean canHire;
     public MessageToClientUpdateHireState() {
@@ -20,12 +20,12 @@ public class MessageToClientUpdateHireState implements Message<MessageToClientUp
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         ClientManager.canPlayerHire = this.canHire;
     }
 

@@ -28,22 +28,20 @@ import com.talhanation.bannermod.war.events.WarPvpEvents;
 import com.talhanation.bannermod.war.events.WarRevoltAutoResolver;
 import com.talhanation.bannermod.war.events.WarStateBroadcaster;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import com.talhanation.bannermod.network.compat.BannerModChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -51,7 +49,7 @@ import org.apache.logging.log4j.Logger;
 public class BannerModMain {
     public static final String MOD_ID = "bannermod";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-    public static SimpleChannel SIMPLE_CHANNEL;
+    public static BannerModChannel SIMPLE_CHANNEL;
 
     // Compat booleans
     public static boolean isMusketModLoaded;
@@ -62,21 +60,20 @@ public class BannerModMain {
     public static boolean isCorpseLoaded;
     public static boolean isRPGZLoaded;
 
-    public BannerModMain() {
-        final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-
+    public BannerModMain(IEventBus modEventBus, Dist dist, ModContainer modContainer) {
         // Register recruits configs (explicit filenames avoid SERVER filename collision in ConfigTracker;
         // default `<modid>-<type>.toml` would make both SERVER specs resolve to `bannermod-server.toml`
         // and throw `Config conflict detected!` at ConfigTracker.trackConfig. See 21-10-PLAN.md.)
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT, "bannermod-recruits-client.toml");
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER, "bannermod-recruits-server.toml");
+        modContainer.registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT, "bannermod-recruits-client.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER, "bannermod-recruits-server.toml");
         // Register workers config
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER, "bannermod-workers-server.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER, "bannermod-workers-server.toml");
         // Register war/RP config — own filename to avoid the SERVER filename collision called out above.
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, WarServerConfig.SERVER, "bannermod-war-server.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, WarServerConfig.SERVER, "bannermod-war-server.toml");
 
         // Lifecycle
         modEventBus.addListener(this::setup);
+        modEventBus.addListener(BannerModNetworkBootstrap::registerPayloads);
 
         // Register military deferred registers (from bannermod.registry.military)
         com.talhanation.bannermod.registry.military.ModBlocks.BLOCKS.register(modEventBus);
@@ -109,15 +106,13 @@ public class BannerModMain {
         modEventBus.addListener(this::addCreativeTabs);
 
         // Client-side setup
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(BannerModMain.this::clientSetup);
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(
-                    com.talhanation.bannermod.registry.military.ModShortcuts::registerBindings);
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(
-                    com.talhanation.bannermod.registry.civilian.ModShortcuts::registerBindings);
-        });
+        if (dist == Dist.CLIENT) {
+            modEventBus.addListener(BannerModMain.this::clientSetup);
+            modEventBus.addListener(com.talhanation.bannermod.registry.military.ModShortcuts::registerBindings);
+            modEventBus.addListener(com.talhanation.bannermod.registry.civilian.ModShortcuts::registerBindings);
+        }
 
-        MinecraftForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this);
     }
 
     @SubscribeEvent
@@ -130,26 +125,26 @@ public class BannerModMain {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void setup(final FMLCommonSetupEvent event) {
         // Workers runtime events
-        MinecraftForge.EVENT_BUS.register(new WorkersVillagerEvents());
-        MinecraftForge.EVENT_BUS.register(new WorkersCommandEvents());
+        NeoForge.EVENT_BUS.register(new WorkersVillagerEvents());
+        NeoForge.EVENT_BUS.register(new WorkersCommandEvents());
         // Recruits runtime events — ports the legacy recruits/Main.java registrations into the
         // unified entrypoint. RecruitEvents.onServerStarting is what initializes the static
         // recruitsPlayerUnitManager / recruitsGroupsManager fields read by AbstractRecruitEntity.
         // Without these, right-click-to-hire (and every other recruits-side flow) trips an NPE.
         // See 21-UAT.md gap "Right-clicking a recruit opens the Hire GUI without server-side crash".
-        MinecraftForge.EVENT_BUS.register(new RecruitEvents());
-        MinecraftForge.EVENT_BUS.register(new com.talhanation.bannermod.events.RecruitShieldEvents());
-        MinecraftForge.EVENT_BUS.register(new ClaimEvents());
-        MinecraftForge.EVENT_BUS.register(new CommandEvents());
-        MinecraftForge.EVENT_BUS.register(new DamageEvent());
-        MinecraftForge.EVENT_BUS.register(new PillagerEvents());
-        MinecraftForge.EVENT_BUS.register(new VillagerEvents());
-        MinecraftForge.EVENT_BUS.register(new WarPvpEvents());
-        MinecraftForge.EVENT_BUS.register(new WarRevoltAutoResolver());
-        MinecraftForge.EVENT_BUS.register(new WarStateBroadcaster());
-        MinecraftForge.EVENT_BUS.register(new com.talhanation.bannermod.war.events.WarOccupationTaxTicker());
-        MinecraftForge.EVENT_BUS.register(new SettlementMutationRefreshEvents());
-        MinecraftForge.EVENT_BUS.register(new SettlementWorkOrderClaimReleaseEvents());
+        NeoForge.EVENT_BUS.register(new RecruitEvents());
+        NeoForge.EVENT_BUS.register(new com.talhanation.bannermod.events.RecruitShieldEvents());
+        NeoForge.EVENT_BUS.register(new ClaimEvents());
+        NeoForge.EVENT_BUS.register(new CommandEvents());
+        NeoForge.EVENT_BUS.register(new DamageEvent());
+        NeoForge.EVENT_BUS.register(new PillagerEvents());
+        NeoForge.EVENT_BUS.register(new VillagerEvents());
+        NeoForge.EVENT_BUS.register(new WarPvpEvents());
+        NeoForge.EVENT_BUS.register(new WarRevoltAutoResolver());
+        NeoForge.EVENT_BUS.register(new WarStateBroadcaster());
+        NeoForge.EVENT_BUS.register(new com.talhanation.bannermod.war.events.WarOccupationTaxTicker());
+        NeoForge.EVENT_BUS.register(new SettlementMutationRefreshEvents());
+        NeoForge.EVENT_BUS.register(new SettlementWorkOrderClaimReleaseEvents());
         // Create shared channel; recruits at [0..N), workers at [N..N+M)
         SIMPLE_CHANNEL = BannerModNetworkBootstrap.createSharedChannel();
 
@@ -184,17 +179,17 @@ public class BannerModMain {
         // Worker command screen
         com.talhanation.bannermod.client.military.events.CommandCategoryManager.register(
                 new com.talhanation.bannermod.client.civilian.gui.WorkerCommandScreen());
-        MinecraftForge.EVENT_BUS.register(new ScreenEvents());
+        NeoForge.EVENT_BUS.register(new ScreenEvents());
         // Recruits client-side event handlers — same Phase-21 consolidation defect class
         // as 21-11 (recruits/Main.java was deprecated to a no-op shim and these registrations
         // were not ported into the unified entrypoint). KeyEvents owns the R/U/M hotkey
         // listener that opens Command/Faction/Map screens; ClientPlayerEvents owns
         // client-tick and world-load hooks; ClaimOverlayManager renders the claim HUD.
         // See 21-UAT.md gap "Recruits hotkey screens (Command/Faction/Map) and the claim overlay open in dev client".
-        MinecraftForge.EVENT_BUS.register(new KeyEvents());
-        MinecraftForge.EVENT_BUS.register(new ClientPlayerEvents());
-        MinecraftForge.EVENT_BUS.register(new ClaimOverlayManager());
-        MinecraftForge.EVENT_BUS.register(new BattleWindowHud());
+        NeoForge.EVENT_BUS.register(new KeyEvents());
+        NeoForge.EVENT_BUS.register(new ClientPlayerEvents());
+        NeoForge.EVENT_BUS.register(new ClaimOverlayManager());
+        NeoForge.EVENT_BUS.register(new BattleWindowHud());
     }
 
     private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {

@@ -3,7 +3,7 @@ package com.talhanation.bannermod.compat;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -26,11 +26,11 @@ public final class SmallShipsSeaTradeCompat {
     }
 
     public static List<CarrierCandidate> candidateCarrierTypes() {
-        return candidateCarrierTypes(BannerModMain.isSmallShipsLoaded, ForgeRegistries.ENTITY_TYPES.getKeys());
+        return candidateCarrierTypes(BannerModMain.isSmallShipsLoaded, BuiltInRegistries.ENTITY_TYPE.getKeys());
     }
 
     public static boolean hasBindableCarrierCandidate() {
-        return hasBindableCarrierCandidate(BannerModMain.isSmallShipsLoaded, ForgeRegistries.ENTITY_TYPES.getKeys(), Class::forName);
+        return hasBindableCarrierCandidate(BannerModMain.isSmallShipsLoaded, BuiltInRegistries.ENTITY_TYPE.getKeys(), Class::forName);
     }
 
     static boolean hasBindableCarrierCandidate(boolean smallShipsLoaded,
@@ -54,7 +54,7 @@ public final class SmallShipsSeaTradeCompat {
     public static Optional<BoundCarrier> bindCarrier(@Nullable Entity entity, UUID routeOwnerId) {
         if (entity == null) return Optional.empty();
 
-        ResourceLocation typeId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+        ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
         return bindCarrier(entity, typeId, entity.getUUID(), routeOwnerId, BannerModMain.isSmallShipsLoaded, Class::forName);
     }
 

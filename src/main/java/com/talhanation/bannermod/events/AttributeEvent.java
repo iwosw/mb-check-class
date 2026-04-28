@@ -2,13 +2,14 @@ package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.military.*;
 import com.talhanation.bannermod.registry.military.ModEntityTypes;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.Random;
 
-@Mod.EventBusSubscriber(modid = com.talhanation.bannermod.bootstrap.BannerModMain.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = com.talhanation.bannermod.bootstrap.BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class AttributeEvent {
     protected final Random random = new Random();
 

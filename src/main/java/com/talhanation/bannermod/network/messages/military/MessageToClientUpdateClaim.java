@@ -4,15 +4,16 @@ import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.api.ClientClaimEvent;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.common.NeoForge;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
-public class MessageToClientUpdateClaim implements Message<MessageToClientUpdateClaim> {
+public class MessageToClientUpdateClaim implements BannerModMessage<MessageToClientUpdateClaim> {
     private CompoundTag claimNBT;
 
     public MessageToClientUpdateClaim() {
@@ -23,13 +24,13 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.single_sync.claim", claimNBT);
         this.updateOrAddClaimFromNBT(claimNBT);
     }
@@ -52,14 +53,14 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
 
                 ClientManager.markClaimsChanged();
 
-                MinecraftForge.EVENT_BUS.post(new ClientClaimEvent.DataUpdated(newClaim, isCurrentClaim));
+                NeoForge.EVENT_BUS.post(new ClientClaimEvent.DataUpdated(newClaim, isCurrentClaim));
                 return;
             }
         }
 
         ClientManager.recruitsClaims.add(newClaim);
         ClientManager.markClaimsChanged();
-        MinecraftForge.EVENT_BUS.post(
+        NeoForge.EVENT_BUS.post(
                 new ClientClaimEvent.DataUpdated(newClaim, false));
     }
     @Override

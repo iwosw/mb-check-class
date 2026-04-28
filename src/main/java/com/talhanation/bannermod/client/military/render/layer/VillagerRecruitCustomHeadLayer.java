@@ -17,17 +17,17 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.SkullBlockRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.minecraft.world.level.block.SkullBlock;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Map;
 
@@ -79,13 +79,8 @@ public class VillagerRecruitCustomHeadLayer<T extends LivingEntity, M extends En
                 poseStack.scale(f2, -f2, -f2);
                 poseStack.translate(0.0D, 0.0625D, 0.0D);
 
-                GameProfile gameprofile = null;
-                if (itemstack.hasTag()) {
-                    CompoundTag compoundtag = itemstack.getTag();
-                    if (compoundtag.contains("SkullOwner", 10)) {
-                        gameprofile = NbtUtils.readGameProfile(compoundtag.getCompound("SkullOwner"));
-                    }
-                }
+                ResolvableProfile profile = itemstack.get(DataComponents.PROFILE);
+                GameProfile gameprofile = profile == null ? null : profile.gameProfile();
 
                 poseStack.translate(-0.5D, 0.0D, -0.5D);
                 SkullBlock.Type skullblock$type = ((AbstractSkullBlock) ((BlockItem) item).getBlock()).getType();

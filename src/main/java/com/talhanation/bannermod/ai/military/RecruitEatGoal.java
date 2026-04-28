@@ -98,9 +98,12 @@ public class RecruitEatGoal extends Goal {
     }
 
     private boolean hasFoodInInv(){
-        return recruit.getInventory().items
-                .stream()
-                .anyMatch(item -> recruit.canEatItemStack(item));
+        for (int i = 0; i < recruit.getInventory().getContainerSize(); i++) {
+            if (recruit.canEatItemStack(recruit.getInventory().getItem(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private ItemStack getAndRemoveFoodInInv(){

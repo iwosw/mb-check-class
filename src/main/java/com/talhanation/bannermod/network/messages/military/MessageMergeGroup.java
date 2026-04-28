@@ -3,17 +3,17 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageMergeGroup implements Message<MessageMergeGroup> {
+public class MessageMergeGroup implements BannerModMessage<MessageMergeGroup> {
 
     private UUID groupUUID;
     private UUID mergeUUID;
@@ -26,11 +26,11 @@ public class MessageMergeGroup implements Message<MessageMergeGroup> {
         this.groupUUID = groupUUID;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         RecruitsGroup groupToMerge = RecruitEvents.recruitsGroupsManager.getGroup(mergeUUID);
         RecruitsGroup baseGroup = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);

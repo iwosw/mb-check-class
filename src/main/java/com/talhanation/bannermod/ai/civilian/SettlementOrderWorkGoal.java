@@ -11,6 +11,7 @@ import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderRuntime
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderType;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -31,8 +32,7 @@ import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.common.PlantType;
+import net.neoforged.neoforge.common.SpecialPlantable;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -493,8 +493,8 @@ public final class SettlementOrderWorkGoal extends Goal {
         }
         if (seedStack.getItem() instanceof BlockItem blockItem) {
             level.setBlockAndUpdate(target, blockItem.getBlock().defaultBlockState());
-        } else if (seedStack.getItem() instanceof IPlantable plantable && plantable.getPlantType(level, target) == PlantType.CROP) {
-            level.setBlock(target, plantable.getPlant(level, target), 3);
+        } else if (seedStack.getItem() instanceof SpecialPlantable plantable && plantable.canPlacePlantAtPosition(seedStack, level, target, Direction.UP)) {
+            plantable.spawnPlantAtPosition(seedStack, level, target, Direction.UP);
         } else {
             runtime.release(activeOrder.orderUuid());
             this.activeOrder = null;
@@ -535,7 +535,7 @@ public final class SettlementOrderWorkGoal extends Goal {
         if (itemStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock().defaultBlockState().getBlock() instanceof CropBlock) {
             return true;
         }
-        return itemStack.getItem() instanceof IPlantable plantable && plantable.getPlantType(worker.getCommandSenderWorld(), worker.blockPosition()) == PlantType.CROP;
+        return itemStack.getItem() instanceof SpecialPlantable;
     }
 
     @Override

@@ -3,7 +3,9 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.util.RegistryLookup;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.Holder;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -15,13 +17,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.UUID;
 
-public class MessageClaimIntent implements Message<MessageClaimIntent> {
+public class MessageClaimIntent implements BannerModMessage<MessageClaimIntent> {
     private byte action;
     private UUID claimUuid;
     private long chunkLong;
@@ -36,12 +36,12 @@ public class MessageClaimIntent implements Message<MessageClaimIntent> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         applyServerSide(player, decode(action), claimUuid, new ChunkPos(chunkLong));
     }
@@ -129,7 +129,7 @@ public class MessageClaimIntent implements Message<MessageClaimIntent> {
     }
 
     private static Item currency() {
-        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(RecruitsServerConfig.RecruitCurrency.get()))
+        return RegistryLookup.itemHolder(ResourceLocation.tryParse(RecruitsServerConfig.RecruitCurrency.get()))
                 .map(Holder::value)
                 .orElse(Items.EMERALD);
     }

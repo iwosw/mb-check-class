@@ -1,15 +1,15 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
-public class MessageTeleportPlayer implements Message<MessageTeleportPlayer> {
+public class MessageTeleportPlayer implements BannerModMessage<MessageTeleportPlayer> {
 
     private static final int LOW_HEIGHTMAP_OFFSET = 164;
 
@@ -22,12 +22,12 @@ public class MessageTeleportPlayer implements Message<MessageTeleportPlayer> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
 
         if(player == null)return;

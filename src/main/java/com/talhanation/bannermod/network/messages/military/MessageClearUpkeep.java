@@ -4,17 +4,17 @@ import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageClearUpkeep implements Message<MessageClearUpkeep> {
+public class MessageClearUpkeep implements BannerModMessage<MessageClearUpkeep> {
     private UUID uuid;
     private UUID group;
 
@@ -26,11 +26,11 @@ public class MessageClearUpkeep implements Message<MessageClearUpkeep> {
         this.group = group;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         List<AbstractRecruitEntity> recruits = this.group == null
                 ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)

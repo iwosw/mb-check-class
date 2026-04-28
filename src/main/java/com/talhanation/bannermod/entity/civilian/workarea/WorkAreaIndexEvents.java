@@ -1,17 +1,18 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Forge-bus hooks that keep {@link WorkAreaIndex} populated. Registered statically via
- * {@link Mod.EventBusSubscriber} so no explicit registration call is needed.
+ * {@link EventBusSubscriber} so no explicit registration call is needed.
  */
-@Mod.EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class WorkAreaIndexEvents {
     private WorkAreaIndexEvents() {
     }

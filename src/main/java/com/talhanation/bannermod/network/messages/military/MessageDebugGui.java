@@ -2,17 +2,17 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.DebugEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageDebugGui implements Message<MessageDebugGui> {
+public class MessageDebugGui implements BannerModMessage<MessageDebugGui> {
 
     private int id;
     private UUID uuid;
@@ -27,11 +27,11 @@ public class MessageDebugGui implements Message<MessageDebugGui> {
         this.name = name;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
         if (recruit != null) {

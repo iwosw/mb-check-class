@@ -1,15 +1,15 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.settlement.prefab.player.PlayerBuildingRegistrationService;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
-public class MessageRequestRegisterBuilding implements Message<MessageRequestRegisterBuilding> {
+public class MessageRequestRegisterBuilding implements BannerModMessage<MessageRequestRegisterBuilding> {
     public ResourceLocation prefabId;
     public BlockPos cornerA;
     public BlockPos cornerB;
@@ -32,12 +32,12 @@ public class MessageRequestRegisterBuilding implements Message<MessageRequestReg
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null) {
             return;

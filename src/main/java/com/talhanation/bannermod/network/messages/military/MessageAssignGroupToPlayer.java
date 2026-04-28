@@ -7,15 +7,15 @@ import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-public class MessageAssignGroupToPlayer implements Message<MessageAssignGroupToPlayer> {
+public class MessageAssignGroupToPlayer implements BannerModMessage<MessageAssignGroupToPlayer> {
 
     private UUID owner;
     private CompoundTag tag;
@@ -41,11 +41,11 @@ public class MessageAssignGroupToPlayer implements Message<MessageAssignGroupToP
         this.groupUUID = groupUUID;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         RecruitsPlayerInfo newOwner = RecruitsPlayerInfo.getFromNBT(tag);
         transferGroupToPlayer(player, groupUUID, newOwner);

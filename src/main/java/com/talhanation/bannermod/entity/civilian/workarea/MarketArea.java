@@ -19,8 +19,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.*;
 
@@ -37,12 +37,12 @@ public class MarketArea extends AbstractWorkAreaEntity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(IS_OPEN, true);
-        this.entityData.define(MARKET_NAME, "Market");
-        this.entityData.define(TOTAL_SLOTS, 0);
-        this.entityData.define(FREE_SLOTS, 0);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(IS_OPEN, true);
+        builder.define(MARKET_NAME, "Market");
+        builder.define(TOTAL_SLOTS, 0);
+        builder.define(FREE_SLOTS, 0);
     }
 
     @Override
@@ -155,7 +155,7 @@ public class MarketArea extends AbstractWorkAreaEntity {
                     newStack.setCount(put);
                     container.setItem(i, newStack);
                     remaining -= put;
-                } else if (ItemStack.isSameItemSameTags(slot, stack) && slot.getCount() < slot.getMaxStackSize()) {
+                } else if (ItemStack.isSameItemSameComponents(slot, stack) && slot.getCount() < slot.getMaxStackSize()) {
                     int put = Math.min(remaining, slot.getMaxStackSize() - slot.getCount());
                     slot.grow(put);
                     remaining -= put;
@@ -170,7 +170,7 @@ public class MarketArea extends AbstractWorkAreaEntity {
         for (Container container : containerMap.values()) {
             for(int i = 0; i < container.getContainerSize(); i ++) {
                 ItemStack itemStack = container.getItem(i);
-                if (itemStack.isEmpty() || ItemStack.isSameItemSameTags(itemStack, toAdd) && itemStack.getCount() < itemStack.getMaxStackSize()) {
+                if (itemStack.isEmpty() || ItemStack.isSameItemSameComponents(itemStack, toAdd) && itemStack.getCount() < itemStack.getMaxStackSize()) {
                     flag = true;
                     break;
                 }
@@ -182,7 +182,7 @@ public class MarketArea extends AbstractWorkAreaEntity {
 
     private static boolean itemsMatch(ItemStack a, ItemStack b, boolean allowDamaged) {
         if (allowDamaged) return a.getItem() == b.getItem();
-        return ItemStack.isSameItemSameTags(a, b);
+        return ItemStack.isSameItemSameComponents(a, b);
     }
     @Override
     public boolean canWorkHere(AbstractWorkerEntity worker) {

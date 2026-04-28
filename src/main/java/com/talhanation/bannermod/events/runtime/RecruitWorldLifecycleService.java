@@ -15,8 +15,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityTeleportEvent;
+import net.neoforged.neoforge.event.entity.EntityTeleportEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -71,13 +71,10 @@ public final class RecruitWorldLifecycleService {
         recruits.forEach(recruit -> recruit.teleportTo(targetX, targetY, targetZ));
     }
 
-    public static void tickLevel(TickEvent.LevelTickEvent event,
+    public static void tickLevel(LevelTickEvent.Post event,
                                  Map<ServerLevel, RecruitsPatrolSpawn> recruitPatrols,
                                  Map<ServerLevel, PillagerPatrolSpawn> pillagerPatrols) {
-        if (event.level.isClientSide || !(event.level instanceof ServerLevel serverLevel)) {
-            return;
-        }
-        if (event.phase != TickEvent.Phase.END) {
+        if (event.getLevel().isClientSide || !(event.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
 

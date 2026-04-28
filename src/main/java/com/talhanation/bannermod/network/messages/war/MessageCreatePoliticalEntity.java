@@ -4,13 +4,13 @@ import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Optional;
 
@@ -24,7 +24,7 @@ import java.util.Optional;
  * {@link PoliticalRegistryValidation} so the wire payload cannot bypass duplicate or length
  * rules.</p>
  */
-public class MessageCreatePoliticalEntity implements Message<MessageCreatePoliticalEntity> {
+public class MessageCreatePoliticalEntity implements BannerModMessage<MessageCreatePoliticalEntity> {
 
     private String name;
 
@@ -36,12 +36,12 @@ public class MessageCreatePoliticalEntity implements Message<MessageCreatePoliti
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null) {
             return;

@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.config;
 
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WorkersServerConfig {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     private static final List<String> DEFAULT_SETTLEMENT_WORKER_PROFESSIONS = List.of(
             "farmer",
             "miner",
@@ -18,32 +18,32 @@ public class WorkersServerConfig {
             "builder"
     );
 
-    public static ForgeConfigSpec SERVER;
-    public static ForgeConfigSpec.IntValue FarmerCost;
-    public static ForgeConfigSpec.IntValue LumberjackCost;
-    public static ForgeConfigSpec.IntValue MinerCost;
-    public static ForgeConfigSpec.IntValue BuilderCost;
-    public static ForgeConfigSpec.IntValue MerchantCost;
-    public static ForgeConfigSpec.BooleanValue BuilderActive;
-    public static ForgeConfigSpec.IntValue AnimalPenMaxAnimals;
-    public static ForgeConfigSpec.BooleanValue ShouldWorkAreaOnlyBeInFactionClaim;
-    public static ForgeConfigSpec.BooleanValue WorkerBirthEnabled;
-    public static ForgeConfigSpec.BooleanValue ClaimBasedSettlementSpawnEnabled;
-    public static ForgeConfigSpec.IntValue SettlementSpawnMinimumVillagers;
-    public static ForgeConfigSpec.IntValue SettlementSpawnWorkerCap;
-    public static ForgeConfigSpec.IntValue SettlementSpawnCooldownDays;
-    public static ForgeConfigSpec.IntValue SettlementFortBannerMaxDistance;
-    public static ForgeConfigSpec.LongValue SettlementFortGraceTicks;
-    public static ForgeConfigSpec.LongValue SettlementFortExplosionGraceTicks;
-    public static ForgeConfigSpec.LongValue SettlementHouseGraceTicks;
-    public static ForgeConfigSpec.LongValue SettlementWorkplaceGraceTicks;
-    public static ForgeConfigSpec.IntValue SettlementRevalidationBatchSizePerTick;
-    public static ForgeConfigSpec.ConfigValue<List<? extends String>> SettlementSpawnAllowedProfessions;
-    public static ForgeConfigSpec.BooleanValue EnableClaimWorkerGrowth;
-    public static ForgeConfigSpec.LongValue ClaimWorkerGrowthBaseCooldownTicks;
-    public static ForgeConfigSpec.IntValue ClaimWorkerMaxPerClaim;
-    public static ForgeConfigSpec.ConfigValue<List<? extends String>> ClaimWorkerProfessionPool;
-    public static ForgeConfigSpec.DoubleValue CitizenMilitiaMobilizationChance;
+    public static ModConfigSpec SERVER;
+    public static ModConfigSpec.IntValue FarmerCost;
+    public static ModConfigSpec.IntValue LumberjackCost;
+    public static ModConfigSpec.IntValue MinerCost;
+    public static ModConfigSpec.IntValue BuilderCost;
+    public static ModConfigSpec.IntValue MerchantCost;
+    public static ModConfigSpec.BooleanValue BuilderActive;
+    public static ModConfigSpec.IntValue AnimalPenMaxAnimals;
+    public static ModConfigSpec.BooleanValue ShouldWorkAreaOnlyBeInFactionClaim;
+    public static ModConfigSpec.BooleanValue WorkerBirthEnabled;
+    public static ModConfigSpec.BooleanValue ClaimBasedSettlementSpawnEnabled;
+    public static ModConfigSpec.IntValue SettlementSpawnMinimumVillagers;
+    public static ModConfigSpec.IntValue SettlementSpawnWorkerCap;
+    public static ModConfigSpec.IntValue SettlementSpawnCooldownDays;
+    public static ModConfigSpec.IntValue SettlementFortBannerMaxDistance;
+    public static ModConfigSpec.LongValue SettlementFortGraceTicks;
+    public static ModConfigSpec.LongValue SettlementFortExplosionGraceTicks;
+    public static ModConfigSpec.LongValue SettlementHouseGraceTicks;
+    public static ModConfigSpec.LongValue SettlementWorkplaceGraceTicks;
+    public static ModConfigSpec.IntValue SettlementRevalidationBatchSizePerTick;
+    public static ModConfigSpec.ConfigValue<List<? extends String>> SettlementSpawnAllowedProfessions;
+    public static ModConfigSpec.BooleanValue EnableClaimWorkerGrowth;
+    public static ModConfigSpec.LongValue ClaimWorkerGrowthBaseCooldownTicks;
+    public static ModConfigSpec.IntValue ClaimWorkerMaxPerClaim;
+    public static ModConfigSpec.ConfigValue<List<? extends String>> ClaimWorkerProfessionPool;
+    public static ModConfigSpec.DoubleValue CitizenMilitiaMobilizationChance;
     public static ArrayList<String> FARMER_PICKUP = new ArrayList<>(
             Arrays.asList(
                     "minecraft:wheat",
@@ -473,14 +473,14 @@ public class WorkersServerConfig {
 
     // GameTest seam. Forge's ConfigValue.get() caches the first value it reads from the backing
     // child config and never invalidates that cache when set() is called afterwards (see
-    // ForgeConfigSpec.ConfigValue#cachedValue). That makes parallel/sequential gametests that
+    // ModConfigSpec.ConfigValue#cachedValue). That makes parallel/sequential gametests that
     // each call WorkersServerConfig.X.set(value) race: whichever test triggered the first get()
     // wins, every subsequent test sees the cached value regardless of its own set() call. To
     // keep production reads cheap we layer test overrides on top of the cached spec read instead
     // of touching ConfigValue itself.
-    private static final Map<ForgeConfigSpec.ConfigValue<?>, Object> TEST_OVERRIDES = new ConcurrentHashMap<>();
+    private static final Map<ModConfigSpec.ConfigValue<?>, Object> TEST_OVERRIDES = new ConcurrentHashMap<>();
 
-    public static <T> void setTestOverride(ForgeConfigSpec.ConfigValue<T> value, T override) {
+    public static <T> void setTestOverride(ModConfigSpec.ConfigValue<T> value, T override) {
         if (value == null) {
             return;
         }
@@ -495,7 +495,7 @@ public class WorkersServerConfig {
         TEST_OVERRIDES.clear();
     }
 
-    private static boolean resolveBoolean(ForgeConfigSpec.BooleanValue value, boolean fallback) {
+    private static boolean resolveBoolean(ModConfigSpec.BooleanValue value, boolean fallback) {
         Object override = TEST_OVERRIDES.get(value);
         if (override instanceof Boolean booleanOverride) {
             return booleanOverride;
@@ -507,7 +507,7 @@ public class WorkersServerConfig {
         }
     }
 
-    private static int resolveInt(ForgeConfigSpec.IntValue value, int fallback) {
+    private static int resolveInt(ModConfigSpec.IntValue value, int fallback) {
         Object override = TEST_OVERRIDES.get(value);
         if (override instanceof Integer intOverride) {
             return intOverride;
@@ -519,7 +519,7 @@ public class WorkersServerConfig {
         }
     }
 
-    private static long resolveLong(ForgeConfigSpec.LongValue value, long fallback) {
+    private static long resolveLong(ModConfigSpec.LongValue value, long fallback) {
         Object override = TEST_OVERRIDES.get(value);
         if (override instanceof Long longOverride) {
             return longOverride;
@@ -531,7 +531,7 @@ public class WorkersServerConfig {
         }
     }
 
-    private static double resolveDouble(ForgeConfigSpec.DoubleValue value, double fallback) {
+    private static double resolveDouble(ModConfigSpec.DoubleValue value, double fallback) {
         Object override = TEST_OVERRIDES.get(value);
         if (override instanceof Double doubleOverride) {
             return doubleOverride;

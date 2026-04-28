@@ -3,17 +3,17 @@ package com.talhanation.bannermod.network.messages.civilian;
 import com.talhanation.bannermod.entity.civilian.MerchantAccessControl;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.UUID;
 
-public class MessageUpdateMerchantTrade implements Message<MessageUpdateMerchantTrade> {
+public class MessageUpdateMerchantTrade implements BannerModMessage<MessageUpdateMerchantTrade> {
 
     public UUID merchantUuid;
     public CompoundTag nbt;
@@ -26,11 +26,11 @@ public class MessageUpdateMerchantTrade implements Message<MessageUpdateMerchant
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         ServerPlayer player = context.getSender();
         if(player == null) return;
 

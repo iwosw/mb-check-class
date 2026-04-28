@@ -1,17 +1,17 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessagePatrolLeaderSetPatrollingSpeed implements Message<MessagePatrolLeaderSetPatrollingSpeed> {
+public class MessagePatrolLeaderSetPatrollingSpeed implements BannerModMessage<MessagePatrolLeaderSetPatrollingSpeed> {
 
     private UUID recruit;
     private byte speed; // 0 = SLOW, 1 = NORMAL, 2 = FAST
@@ -23,11 +23,11 @@ public class MessagePatrolLeaderSetPatrollingSpeed implements Message<MessagePat
         this.speed = speed;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.recruit);
         if (entity instanceof AbstractLeaderEntity leader && leader.distanceToSqr(player) <= 100.0D * 100.0D) {

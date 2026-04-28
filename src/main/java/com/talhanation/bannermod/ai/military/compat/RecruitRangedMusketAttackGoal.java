@@ -13,8 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 public class RecruitRangedMusketAttackGoal extends Goal {
     private final CrossBowmanEntity crossBowman;
     private final double speedModifier;
@@ -257,9 +255,8 @@ public class RecruitRangedMusketAttackGoal extends Goal {
             return;
         }
 
-        List<ItemStack> items = this.crossBowman.getInventory().items;
-
-        for (ItemStack stack : items) {
+        for (int i = 0; i < this.crossBowman.getInventory().getContainerSize(); i++) {
+            ItemStack stack = this.crossBowman.getInventory().getItem(i);
             if (MedievalBoomsticksCompat.isAmmo(stack, ammoId)) {
                 stack.shrink(1);
                 break;
@@ -269,7 +266,15 @@ public class RecruitRangedMusketAttackGoal extends Goal {
 
     private boolean canLoad(){
         ResourceLocation ammoId = MedievalBoomsticksCompat.ammoContract(crossBowman.getMainHandItem()).orElse(null);
-        return ammoId != null && this.crossBowman.getInventory().items.stream().anyMatch(itemStack -> MedievalBoomsticksCompat.isAmmo(itemStack, ammoId));
+        if (ammoId == null) {
+            return false;
+        }
+        for (int i = 0; i < this.crossBowman.getInventory().getContainerSize(); i++) {
+            if (MedievalBoomsticksCompat.isAmmo(this.crossBowman.getInventory().getItem(i), ammoId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void checkHands(){

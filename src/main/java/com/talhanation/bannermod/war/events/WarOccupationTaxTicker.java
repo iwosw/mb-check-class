@@ -4,8 +4,8 @@ import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.config.WarServerConfig;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /**
  * Periodic driver for {@link com.talhanation.bannermod.war.runtime.OccupationTaxRuntime}.
@@ -22,8 +22,7 @@ public class WarOccupationTaxTicker {
     private int counter = 0;
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    public void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
         if (server == null) return;
         ServerLevel level = server.overworld();

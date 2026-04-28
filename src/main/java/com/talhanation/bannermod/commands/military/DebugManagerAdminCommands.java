@@ -223,12 +223,12 @@ final class DebugManagerAdminCommands {
         }
 
         BlockPos pos = player.getOnPos();
-        EntityType<?> entityType = recruitsSpawnEgg.getType(handItem.getTag());
+        EntityType<?> entityType = recruitsSpawnEgg.getType(handItem);
         List<AbstractRecruitEntity> recruitEntities = new ArrayList<>();
 
         for (int i = 0; i < amount; i++) {
             Entity entity = entityType.create(serverLevel);
-            CompoundTag entityTag = handItem.getTag();
+            CompoundTag entityTag = RecruitsSpawnEgg.readEntityData(handItem);
             if (entity instanceof AbstractRecruitEntity recruit && entityTag != null) {
                 RecruitsSpawnEgg.fillRecruit(recruit, entityTag, pos);
                 recruitEntities.add(recruit);

@@ -1,15 +1,15 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.events.RecruitsToastManager;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import static com.talhanation.bannermod.client.military.events.RecruitsToastManager.*;
 
 
-public class MessageToClientSetToast implements Message<MessageToClientSetToast> {
+public class MessageToClientSetToast implements BannerModMessage<MessageToClientSetToast> {
 
     private int x;
     private String s;
@@ -23,12 +23,12 @@ public class MessageToClientSetToast implements Message<MessageToClientSetToast>
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         switch (x){
             case 0 -> RecruitsToastManager.setToastForPlayer(Images.LETTER, TOAST_RECRUIT_ASSIGNED_TITLE, TOAST_RECRUIT_ASSIGNED_INFO(s));
             case 1 -> RecruitsToastManager.setToastForPlayer(Images.LETTER, TOAST_MESSENGER_ARRIVED_TITLE, TOAST_MESSENGER_ARRIVED_INFO(s));

@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.ai.civilian;
 
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
@@ -180,7 +181,8 @@ public class StorageDepositRules {
         }
 
         private static String stackKey(ItemStack stack) {
-            return BuiltInRegistries.ITEM.getKey(stack.getItem()) + "|" + Objects.toString(stack.getTag(), "");
+            DataComponentMap components = stack.getComponents();
+            return BuiltInRegistries.ITEM.getKey(stack.getItem()) + "|" + Objects.toString(components, "");
         }
     }
 }

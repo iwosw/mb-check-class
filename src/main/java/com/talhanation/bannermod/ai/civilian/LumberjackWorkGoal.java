@@ -360,7 +360,7 @@ public class LumberjackWorkGoal extends Goal {
             else{
                 saplingFromInv = lumberjack.getMatchingItem(itemStack -> itemStack.is(lumberjack.getCurrentLumberArea().getSaplingStack().getItem()));
                 if(saplingFromInv == null){
-                    lumberjack.addNeededItem(new NeededItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, lumberjack.getCurrentLumberArea().getSaplingStack()),  8, false));
+                    lumberjack.addNeededItem(new NeededItem(itemStack -> ItemStack.isSameItemSameComponents(itemStack, lumberjack.getCurrentLumberArea().getSaplingStack()),  8, false));
                     this.blockPos = null;
                     return false;
                 }

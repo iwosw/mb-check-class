@@ -54,44 +54,44 @@ final class RecruitStateAccess {
     static void ensureAccessorsRegistered() {
     }
 
-    static void defineSynchedData(AbstractRecruitEntity recruit) {
-        recruit.defineStateData(DATA_REMAINING_ANGER_TIME, 0);
-        recruit.defineStateData(GROUP, Optional.empty());
-        recruit.defineStateData(SHOULD_FOLLOW, false);
-        recruit.defineStateData(SHOULD_BLOCK, false);
-        recruit.defineStateData(SHOULD_MOUNT, false);
-        recruit.defineStateData(SHOULD_PROTECT, false);
-        recruit.defineStateData(SHOULD_HOLD_POS, false);
-        recruit.defineStateData(SHOULD_MOVE_POS, false);
-        recruit.defineStateData(FLEEING, false);
-        recruit.defineStateData(STATE, 0);
-        recruit.defineStateData(VARIANT, 0);
-        recruit.defineStateData(XP, 0);
-        recruit.defineStateData(KILLS, 0);
-        recruit.defineStateData(LEVEL, 1);
-        recruit.defineStateData(FOLLOW_STATE, 0);
-        recruit.defineStateData(HOLD_POS, Optional.empty());
-        recruit.defineStateData(UPKEEP_POS, Optional.empty());
-        recruit.defineStateData(MOVE_POS, Optional.empty());
-        recruit.defineStateData(LISTEN, true);
-        recruit.defineStateData(MOUNT_ID, Optional.empty());
-        recruit.defineStateData(PROTECT_ID, Optional.empty());
-        recruit.defineStateData(IS_FOLLOWING, false);
-        recruit.defineStateData(HUNGER, 50F);
-        recruit.defineStateData(MORAL, 50F);
-        recruit.defineStateData(OWNER_ID, Optional.empty());
-        recruit.defineStateData(UPKEEP_ID, Optional.empty());
-        recruit.defineStateData(OWNED, false);
-        recruit.defineStateData(COST, 1);
-        recruit.defineStateData(COLOR, (byte) 0);
-        recruit.defineStateData(BIOME, (byte) 0);
-        recruit.defineStateData(SHOULD_REST, false);
-        recruit.defineStateData(SHOULD_RANGED, true);
-        recruit.defineStateData(COMBAT_STANCE, CombatStance.LOOSE.ordinal());
-        recruit.defineStateData(BETTER_COMBAT_ATTACK_TICKS, 0);
-        recruit.defineStateData(BETTER_COMBAT_ATTACK_DURATION, 0);
-        recruit.defineStateData(BETTER_COMBAT_ATTACK_UPSWING, 0);
-        recruit.defineStateData(BETTER_COMBAT_ATTACK_SHAPE, 0);
+    static void defineSynchedData(SynchedEntityData.Builder builder) {
+        builder.define(DATA_REMAINING_ANGER_TIME, 0);
+        builder.define(GROUP, Optional.empty());
+        builder.define(SHOULD_FOLLOW, false);
+        builder.define(SHOULD_BLOCK, false);
+        builder.define(SHOULD_MOUNT, false);
+        builder.define(SHOULD_PROTECT, false);
+        builder.define(SHOULD_HOLD_POS, false);
+        builder.define(SHOULD_MOVE_POS, false);
+        builder.define(FLEEING, false);
+        builder.define(STATE, 0);
+        builder.define(VARIANT, 0);
+        builder.define(XP, 0);
+        builder.define(KILLS, 0);
+        builder.define(LEVEL, 1);
+        builder.define(FOLLOW_STATE, 0);
+        builder.define(HOLD_POS, Optional.empty());
+        builder.define(UPKEEP_POS, Optional.empty());
+        builder.define(MOVE_POS, Optional.empty());
+        builder.define(LISTEN, true);
+        builder.define(MOUNT_ID, Optional.empty());
+        builder.define(PROTECT_ID, Optional.empty());
+        builder.define(IS_FOLLOWING, false);
+        builder.define(HUNGER, 50F);
+        builder.define(MORAL, 50F);
+        builder.define(OWNER_ID, Optional.empty());
+        builder.define(UPKEEP_ID, Optional.empty());
+        builder.define(OWNED, false);
+        builder.define(COST, 1);
+        builder.define(COLOR, (byte) 0);
+        builder.define(BIOME, (byte) 0);
+        builder.define(SHOULD_REST, false);
+        builder.define(SHOULD_RANGED, true);
+        builder.define(COMBAT_STANCE, CombatStance.LOOSE.ordinal());
+        builder.define(BETTER_COMBAT_ATTACK_TICKS, 0);
+        builder.define(BETTER_COMBAT_ATTACK_DURATION, 0);
+        builder.define(BETTER_COMBAT_ATTACK_UPSWING, 0);
+        builder.define(BETTER_COMBAT_ATTACK_SHAPE, 0);
     }
 
     static int getVariant(AbstractRecruitEntity recruit) { return recruit.getStateData(VARIANT); }

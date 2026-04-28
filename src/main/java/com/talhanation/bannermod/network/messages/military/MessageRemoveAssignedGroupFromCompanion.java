@@ -7,17 +7,17 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.ICompanion;
 import com.talhanation.bannermod.util.RecruitCommanderUtil;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.*;
 
-public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageRemoveAssignedGroupFromCompanion> {
+public class MessageRemoveAssignedGroupFromCompanion implements BannerModMessage<MessageRemoveAssignedGroupFromCompanion> {
 
     private UUID owner;
     private UUID companion;
@@ -30,11 +30,11 @@ public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageR
         this.companion = companion;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer serverPlayer = context.getSender();
         Entity entity = serverPlayer.serverLevel().getEntity(this.companion);
         if (entity instanceof AbstractLeaderEntity companionEntity
@@ -56,7 +56,7 @@ public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageR
             companionEntity.army = null;
             RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
 
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
         }
     }
 

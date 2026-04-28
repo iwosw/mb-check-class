@@ -4,16 +4,16 @@ import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsGroupsManager;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 
-public class MessageUpdateGroup implements Message<MessageUpdateGroup> {
+public class MessageUpdateGroup implements BannerModMessage<MessageUpdateGroup> {
 
     private CompoundTag groupNBT;
 
@@ -25,11 +25,11 @@ public class MessageUpdateGroup implements Message<MessageUpdateGroup> {
         this.groupNBT = group.toNBT();
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         RecruitsGroup updatedGroup = RecruitsGroup.fromNBT(this.groupNBT);
         ServerPlayer serverPLayer = context.getSender();
 

@@ -154,7 +154,7 @@ public class RecruitHumanRenderer extends MobRenderer<AbstractRecruitEntity, Hum
                 return HumanoidModel.ArmPose.CROSSBOW_HOLD;
             }
 
-            HumanoidModel.ArmPose forgeArmPose = net.minecraftforge.client.extensions.common.IClientItemExtensions.of(itemstack).getArmPose(recruit, hand, itemstack);
+            HumanoidModel.ArmPose forgeArmPose = net.neoforged.neoforge.client.extensions.common.IClientItemExtensions.of(itemstack).getArmPose(recruit, hand, itemstack);
             if (forgeArmPose != null) return forgeArmPose;
 
             return HumanoidModel.ArmPose.ITEM;

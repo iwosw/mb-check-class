@@ -3,8 +3,9 @@ package com.talhanation.bannermod.war.config;
 import com.talhanation.bannermod.war.cooldown.WarCooldownPolicy;
 import com.talhanation.bannermod.war.runtime.BattleWindow;
 import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -12,22 +13,22 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class WarServerConfig {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static final ForgeConfigSpec SERVER;
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec SERVER;
 
-    public static final ForgeConfigSpec.BooleanValue RegulatedPvpEnabled;
-    public static final ForgeConfigSpec.ConfigValue<List<String>> BattleWindows;
-    public static final ForgeConfigSpec.IntValue PeaceCooldownDays;
-    public static final ForgeConfigSpec.IntValue DefenderDailyDeclarations;
-    public static final ForgeConfigSpec.IntValue DefaultSiegeRadius;
-    public static final ForgeConfigSpec.IntValue MinDeclarationDelayTicks;
-    public static final ForgeConfigSpec.IntValue LostTerritoryImmunityDays;
-    public static final ForgeConfigSpec.IntValue PeacefulToggleCooldownDays;
-    public static final ForgeConfigSpec.BooleanValue SiegeProtectionAttackersExplosivesOnly;
-    public static final ForgeConfigSpec.IntValue OccupationTaxAmountPerChunk;
-    public static final ForgeConfigSpec.IntValue OccupationTaxIntervalDays;
+    public static final ModConfigSpec.BooleanValue RegulatedPvpEnabled;
+    public static final ModConfigSpec.ConfigValue<List<String>> BattleWindows;
+    public static final ModConfigSpec.IntValue PeaceCooldownDays;
+    public static final ModConfigSpec.IntValue DefenderDailyDeclarations;
+    public static final ModConfigSpec.IntValue DefaultSiegeRadius;
+    public static final ModConfigSpec.IntValue MinDeclarationDelayTicks;
+    public static final ModConfigSpec.IntValue LostTerritoryImmunityDays;
+    public static final ModConfigSpec.IntValue PeacefulToggleCooldownDays;
+    public static final ModConfigSpec.BooleanValue SiegeProtectionAttackersExplosivesOnly;
+    public static final ModConfigSpec.IntValue OccupationTaxAmountPerChunk;
+    public static final ModConfigSpec.IntValue OccupationTaxIntervalDays;
 
     static {
         RegulatedPvpEnabled = BUILDER.comment("""

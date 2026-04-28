@@ -86,9 +86,9 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_PROFESSION, CitizenProfession.NONE.name());
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_PROFESSION, CitizenProfession.NONE.name());
     }
 
     @Override
@@ -275,7 +275,7 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
             moveTag.putInt("Z", move.getZ());
             tag.put("CitizenMovePos", moveTag);
         }
-        tag.put("CitizenInventory", CitizenStateSnapshot.copyInventory(this.state.getInventory()));
+        tag.put("CitizenInventory", CitizenStateSnapshot.copyInventory(this.state.getInventory(), this.registryAccess()));
         CompoundTag flagTag = new CompoundTag();
         for (RuntimeFlag flag : RuntimeFlag.values()) {
             flagTag.putBoolean(flag.name(), this.state.getRuntimeFlag(flag));
@@ -323,7 +323,7 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         }
 
         if (tag.contains("CitizenInventory", Tag.TAG_COMPOUND)) {
-            CitizenStateSnapshot.restoreInventory(this.state.getInventory(), tag.getCompound("CitizenInventory"));
+            CitizenStateSnapshot.restoreInventory(this.state.getInventory(), tag.getCompound("CitizenInventory"), this.registryAccess());
         }
 
         if (tag.contains("CitizenRuntimeFlags", Tag.TAG_COMPOUND)) {

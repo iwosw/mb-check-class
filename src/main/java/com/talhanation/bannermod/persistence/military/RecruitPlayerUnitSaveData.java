@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.persistence.military;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -12,11 +13,12 @@ import java.util.UUID;
 public class RecruitPlayerUnitSaveData extends SavedData {
     public static final Map<UUID, Integer> recruitCountMap = new HashMap<>();
     private static final String DATA_NAME = "recruit_player_unit_data";
+    private static final SavedData.Factory<RecruitPlayerUnitSaveData> FACTORY = new SavedData.Factory<>(RecruitPlayerUnitSaveData::new, RecruitPlayerUnitSaveData::load);
 
     public RecruitPlayerUnitSaveData(){
     }
 
-    public static RecruitPlayerUnitSaveData load(CompoundTag nbt) {
+    public static RecruitPlayerUnitSaveData load(CompoundTag nbt, HolderLookup.Provider registries) {
         RecruitPlayerUnitSaveData data = new RecruitPlayerUnitSaveData();
         recruitCountMap.clear();
         CompoundTag recruitCounts = nbt.getCompound("recruitCounts");
@@ -31,7 +33,7 @@ public class RecruitPlayerUnitSaveData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag nbt) {
+    public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registries) {
         CompoundTag recruitCounts = new CompoundTag();
 
         for (Map.Entry<UUID, Integer> entry : recruitCountMap.entrySet()) {
@@ -57,6 +59,6 @@ public class RecruitPlayerUnitSaveData extends SavedData {
     public static RecruitPlayerUnitSaveData get(ServerLevel level) {
         return level
                 .getDataStorage()
-                .computeIfAbsent(RecruitPlayerUnitSaveData::load, RecruitPlayerUnitSaveData::new, DATA_NAME);
+                .computeIfAbsent(FACTORY, DATA_NAME);
     }
 }

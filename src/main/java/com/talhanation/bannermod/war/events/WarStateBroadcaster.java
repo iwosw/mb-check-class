@@ -10,12 +10,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 /**
  * Server-authoritative broadcaster for the warfare-RP runtime snapshot.
@@ -63,8 +63,7 @@ public class WarStateBroadcaster {
     }
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    public void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
         if (server == null) return;
         ServerLevel level = server.overworld();
@@ -78,13 +77,13 @@ public class WarStateBroadcaster {
         primed = true;
 
         CompoundTag payload = snapshotPayload(level, version);
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.ALL.noArg(),
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.ALL.noArg(),
                 new MessageToClientUpdateWarState(payload));
     }
 
     private void sendSnapshotTo(ServerPlayer player, ServerLevel level) {
         CompoundTag payload = snapshotPayload(level, WarSyncDirtyTracker.version());
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                 new MessageToClientUpdateWarState(payload));
     }
 

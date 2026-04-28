@@ -2,12 +2,13 @@ package com.talhanation.bannermod.network.messages.war;
 
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.war.client.WarClientState;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 /**
  * Server → client snapshot of warfare-RP state (political entities, active wars, siege standards).
@@ -16,7 +17,7 @@ import net.minecraftforge.network.NetworkEvent;
  * {@code SavedData} changes. The payload is a single {@link CompoundTag} so adding new
  * top-level entries (e.g. occupations, demilitarizations) later doesn't break the wire.
  */
-public class MessageToClientUpdateWarState implements Message<MessageToClientUpdateWarState> {
+public class MessageToClientUpdateWarState implements BannerModMessage<MessageToClientUpdateWarState> {
     private CompoundTag payload;
 
     public MessageToClientUpdateWarState() {
@@ -27,13 +28,13 @@ public class MessageToClientUpdateWarState implements Message<MessageToClientUpd
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.full_sync.war_state", payload);
         WarClientState.applyFromNbt(payload);
     }

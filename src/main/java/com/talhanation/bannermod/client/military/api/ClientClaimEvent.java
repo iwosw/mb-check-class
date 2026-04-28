@@ -1,9 +1,9 @@
 package com.talhanation.bannermod.client.military.api;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.Event;
 
 import javax.annotation.Nullable;
 

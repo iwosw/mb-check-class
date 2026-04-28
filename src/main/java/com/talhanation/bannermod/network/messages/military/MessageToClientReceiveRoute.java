@@ -2,17 +2,17 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 /**
  * Server → Client: delivers a transferred route to the receiving player.
  * The client saves it to their local routes directory.
  */
-public class MessageToClientReceiveRoute implements Message<MessageToClientReceiveRoute> {
+public class MessageToClientReceiveRoute implements BannerModMessage<MessageToClientReceiveRoute> {
 
     private CompoundTag routeNBT;
 
@@ -23,12 +23,12 @@ public class MessageToClientReceiveRoute implements Message<MessageToClientRecei
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RecruitsRoute route = decodeRouteForClient(routeNBT);
         if (route == null) return;
         ClientManager.saveRoute(route);

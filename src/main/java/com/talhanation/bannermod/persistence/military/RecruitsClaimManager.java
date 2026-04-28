@@ -1,12 +1,13 @@
 package com.talhanation.bannermod.persistence.military;
 
 import com.talhanation.bannermod.events.ClaimEvent;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateClaim;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateClaims;
+import com.talhanation.bannermod.util.RegistryLookup;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -15,8 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -57,7 +57,8 @@ public class RecruitsClaimManager {
         // ClaimEvent.Updated feuern – cancelable
         boolean isNew = claims.values().stream().noneMatch(c -> c.getUUID().equals(claim.getUUID()));
         ClaimEvent.Updated updateEvent = new ClaimEvent.Updated(claim, level, isNew);
-        if (MinecraftForge.EVENT_BUS.post(updateEvent)) return;
+        NeoForge.EVENT_BUS.post(updateEvent);
+        if (updateEvent.isCanceled()) return;
 
         claims.entrySet().removeIf(entry -> entry.getValue().getUUID().equals(claim.getUUID()));
 
@@ -75,7 +76,7 @@ public class RecruitsClaimManager {
         if (claim != null) {
             // ClaimEvent.Removed feuern
             ServerLevel level = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
-            MinecraftForge.EVENT_BUS.post(new ClaimEvent.Removed(claim, level));
+            NeoForge.EVENT_BUS.post(new ClaimEvent.Removed(claim, level));
 
             claims.entrySet().removeIf(entry -> entry.getValue().equals(claim));
             persistClaims(RecruitsClaimSaveData.get(level));
@@ -150,13 +151,13 @@ public class RecruitsClaimManager {
     public void broadcastClaimsToAll(ServerLevel level) {
         MessageToClientUpdateClaims message = createFullClaimsSyncMessage();
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), message);
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player), message);
         }
     }
 
     public void sendClaimsToPlayer(ServerPlayer player) {
         if (player == null) return;
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), createFullClaimsSyncMessage());
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player), createFullClaimsSyncMessage());
     }
 
     private MessageToClientUpdateClaims createFullClaimsSyncMessage() {
@@ -173,7 +174,7 @@ public class RecruitsClaimManager {
 
     private static ItemStack getRecruitCurrency() {
         String currencyId = RecruitsServerConfig.RecruitCurrency.get();
-        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(currencyId))
+        return RegistryLookup.itemHolder(ResourceLocation.tryParse(currencyId))
                 .map(Holder::value)
                 .map(Item::getDefaultInstance)
                 .orElseGet(Items.EMERALD::getDefaultInstance);
@@ -183,7 +184,7 @@ public class RecruitsClaimManager {
         if (claim == null || players == null || players.isEmpty()) return;
 
         for (ServerPlayer player : players) {
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientUpdateClaim(claim));
         }
     }

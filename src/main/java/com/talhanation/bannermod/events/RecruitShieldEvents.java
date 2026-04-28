@@ -1,8 +1,8 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import net.minecraftforge.event.entity.living.ShieldBlockEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * Stage 2 combat AI: disable vanilla's full-block shield path for recruits so that
@@ -17,7 +17,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public final class RecruitShieldEvents {
 
     @SubscribeEvent
-    public void onRecruitShieldBlock(ShieldBlockEvent event) {
+    public void onRecruitShieldBlock(LivingShieldBlockEvent event) {
         if (event.getEntity() instanceof AbstractRecruitEntity) {
             // Cancelling the event aborts vanilla shield blocking for this hit: damage
             // continues unzeroed and shield durability is not charged. BannerMod then

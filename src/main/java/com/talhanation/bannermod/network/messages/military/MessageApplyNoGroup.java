@@ -3,16 +3,16 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.*;
 
-public class MessageApplyNoGroup implements Message<MessageApplyNoGroup> {
+public class MessageApplyNoGroup implements BannerModMessage<MessageApplyNoGroup> {
 
     private UUID owner;
     private UUID groupID;
@@ -25,11 +25,11 @@ public class MessageApplyNoGroup implements Message<MessageApplyNoGroup> {
         this.groupID = groupID;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         List<AbstractRecruitEntity> recruitList = new ArrayList<>();
 

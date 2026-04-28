@@ -6,6 +6,7 @@ import com.talhanation.bannermod.entity.civilian.WorkerBindingResume;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -15,8 +16,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.common.PlantType;
+import net.neoforged.neoforge.common.SpecialPlantable;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -193,7 +193,7 @@ public class FarmerWorkGoal extends Goal {
                     return;
                 }
 
-                ItemStack seedTemplate = FarmerPlantingPreparation.resolveSeedTemplate(this.farmer.getCurrentCropArea().getSeedStack(), this.farmer.getInventory().items);
+                ItemStack seedTemplate = FarmerPlantingPreparation.resolveSeedTemplate(this.farmer.getCurrentCropArea().getSeedStack(), this.farmer.getInventory());
                 if(!seedTemplate.isEmpty() && this.farmer.getCurrentCropArea().getSeedStack().isEmpty()){
                     this.farmer.getCurrentCropArea().setSeedStack(seedTemplate);
                     this.farmer.getCurrentCropArea().updateType();
@@ -208,10 +208,10 @@ public class FarmerWorkGoal extends Goal {
                     return;
                 }
 
-                ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
+                ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameComponents(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
                 if(seedFromInv == null){
                     ItemStack seedStack = this.farmer.getCurrentCropArea().getSeedStack();
-                    farmer.requestRequiredItem(new NeededItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, seedStack),  stackToPlant.size(), true),
+                    farmer.requestRequiredItem(new NeededItem(itemStack -> ItemStack.isSameItemSameComponents(itemStack, seedStack),  stackToPlant.size(), true),
                             "farmer_missing_seeds",
                             Component.literal(farmer.getName().getString() + ": I need more seeds for this field."));
                     this.blockPos = null;
@@ -308,7 +308,7 @@ public class FarmerWorkGoal extends Goal {
         if(positions != null){
             ItemStack seedFromInv = farmer.getMatchingItem(itemStack -> itemStack.is(this.farmer.getCurrentCropArea().getSeedStack().getItem()));
             if(seedFromInv == null){
-                seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameTags(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
+                seedFromInv = farmer.getMatchingItem(itemStack -> ItemStack.isSameItemSameComponents(itemStack, this.farmer.getCurrentCropArea().getSeedStack()));
             }
             if(seedFromInv == null){
                 setState(State.PREPARE_PLANT_SEEDS);
@@ -337,9 +337,9 @@ public class FarmerWorkGoal extends Goal {
                 seedFromInv.shrink(1);
                 this.farmer.swing(InteractionHand.MAIN_HAND);
             }
-            else if (seedFromInv.getItem() instanceof IPlantable plantable) {
-                if (plantable.getPlantType(farmer.getCommandSenderWorld(), blockPos) == PlantType.CROP) {
-                    farmer.getCommandSenderWorld().setBlock(blockPos, plantable.getPlant(farmer.getCommandSenderWorld(), blockPos), 3);
+            else if (seedFromInv.getItem() instanceof SpecialPlantable plantable) {
+                if (plantable.canPlacePlantAtPosition(seedFromInv, farmer.getCommandSenderWorld(), blockPos, Direction.UP)) {
+                    plantable.spawnPlantAtPosition(seedFromInv, farmer.getCommandSenderWorld(), blockPos, Direction.UP);
 
                     farmer.getCommandSenderWorld().playSound(null, blockPos.getX(), blockPos.getY(), blockPos.getZ(), SoundEvents.CROP_PLANTED, SoundSource.BLOCKS, 1.0F, 1.0F);
                     seedFromInv.shrink(1);

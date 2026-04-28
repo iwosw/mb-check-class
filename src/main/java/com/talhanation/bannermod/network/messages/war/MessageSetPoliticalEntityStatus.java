@@ -7,18 +7,18 @@ import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.registry.PoliticalStatePromotionPolicy;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public class MessageSetPoliticalEntityStatus implements Message<MessageSetPoliticalEntityStatus> {
+public class MessageSetPoliticalEntityStatus implements BannerModMessage<MessageSetPoliticalEntityStatus> {
     private UUID entityId;
     private byte statusOrdinal;
 
@@ -31,12 +31,12 @@ public class MessageSetPoliticalEntityStatus implements Message<MessageSetPoliti
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null || this.entityId == null) {
             return;

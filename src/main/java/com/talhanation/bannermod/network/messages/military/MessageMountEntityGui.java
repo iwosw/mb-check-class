@@ -5,7 +5,8 @@ import com.talhanation.bannermod.army.command.CommandIntent;
 import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
 import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -13,14 +14,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.vehicle.Boat;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.extensions.IForgeEntity;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.common.extensions.IEntityExtension;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.*;
 import java.util.function.Function;
 
-public class MessageMountEntityGui implements Message<MessageMountEntityGui> {
+public class MessageMountEntityGui implements BannerModMessage<MessageMountEntityGui> {
     private UUID recruit;
     private boolean back;
 
@@ -32,12 +32,12 @@ public class MessageMountEntityGui implements Message<MessageMountEntityGui> {
         this.back = back;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @SuppressWarnings({"all"})
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
 
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 32.0D * 32.0D);

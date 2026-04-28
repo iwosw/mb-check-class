@@ -20,8 +20,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.*;
 
@@ -40,16 +40,16 @@ public class StorageArea extends AbstractWorkAreaEntity {
     public StorageArea(EntityType<?> type, Level level) {
         super(type, level);
     }
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(STORAGE_TYPES, 0);
-        this.entityData.define(ROUTE_DESTINATION, "");
-        this.entityData.define(ROUTE_FILTER, "");
-        this.entityData.define(ROUTE_REQUESTED_COUNT, 16);
-        this.entityData.define(ROUTE_PRIORITY, BannerModLogisticsPriority.NORMAL.name());
-        this.entityData.define(PORT_ENTRYPOINT, false);
-        this.entityData.define(ROUTE_BLOCKED_REASON, "");
-        this.entityData.define(ROUTE_BLOCKED_MESSAGE, "");
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(STORAGE_TYPES, 0);
+        builder.define(ROUTE_DESTINATION, "");
+        builder.define(ROUTE_FILTER, "");
+        builder.define(ROUTE_REQUESTED_COUNT, 16);
+        builder.define(ROUTE_PRIORITY, BannerModLogisticsPriority.NORMAL.name());
+        builder.define(PORT_ENTRYPOINT, false);
+        builder.define(ROUTE_BLOCKED_REASON, "");
+        builder.define(ROUTE_BLOCKED_MESSAGE, "");
     }
 
     @Override

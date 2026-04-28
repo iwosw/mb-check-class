@@ -27,7 +27,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeMod;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -46,9 +46,9 @@ public class CaptainEntity extends AbstractLeaderEntity {
         this.smallShipsController = new SmallShipsController(this, world);
         this.smallShipsController.tryMountShip(getVehicle());
     }
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(SAIL_POS, Optional.empty());
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(SAIL_POS, Optional.empty());
     }
     @Override
     protected void registerGoals() {
@@ -121,7 +121,7 @@ public class CaptainEntity extends AbstractLeaderEntity {
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D)
                 .add(Attributes.ATTACK_DAMAGE, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 128.0D)
-                .add(ForgeMod.ENTITY_REACH.get(), 0D)
+                .add(Attributes.ENTITY_INTERACTION_RANGE, 0D)
                 .add(Attributes.ATTACK_SPEED);
     }
 
@@ -378,7 +378,6 @@ public class CaptainEntity extends AbstractLeaderEntity {
         return super.hurt(dmg, amt);
     }
 }
-
 
 
 

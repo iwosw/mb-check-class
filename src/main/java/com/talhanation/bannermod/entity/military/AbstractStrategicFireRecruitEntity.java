@@ -20,10 +20,10 @@ public abstract class AbstractStrategicFireRecruitEntity extends AbstractRecruit
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(STRATEGIC_FIRE_POS, Optional.empty());
-        this.entityData.define(SHOULD_STRATEGIC_FIRE, false);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(STRATEGIC_FIRE_POS, Optional.empty());
+        builder.define(SHOULD_STRATEGIC_FIRE, false);
     }
 
     @Override

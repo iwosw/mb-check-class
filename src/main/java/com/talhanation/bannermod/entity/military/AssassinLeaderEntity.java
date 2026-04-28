@@ -26,7 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraftforge.network.NetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 
 import javax.annotation.Nullable;
 import java.util.function.Predicate;
@@ -111,7 +111,7 @@ public class AssassinLeaderEntity extends AbstractOrderAbleEntity {
         this.navigation.stop();
 
         if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+            BannerModNetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
                 @Override
                 public Component getDisplayName() {
                     return getName();
@@ -144,9 +144,9 @@ public class AssassinLeaderEntity extends AbstractOrderAbleEntity {
 
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(COUNT, 1);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(COUNT, 1);
     }
 
     @Override
@@ -181,7 +181,6 @@ public class AssassinLeaderEntity extends AbstractOrderAbleEntity {
         return RecruitsServerConfig.MaxAssassinCount.get();
     }
 }
-
 
 
 

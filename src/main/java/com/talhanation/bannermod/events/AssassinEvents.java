@@ -1,7 +1,5 @@
 package com.talhanation.bannermod.events;
 
-import java.util.Optional;
-
 public class AssassinEvents {
     /*
     public static void createAssassin(String playerName, int count, Level world) {
@@ -71,7 +69,7 @@ public class AssassinEvents {
         int playerEmeralds = 0;
         String str = RecruitsModConfig.RecruitCurrency.get();
         ItemStack currencyItemStack;
-        Optional<Holder<Item>> holder = ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(str));
+        Optional<Holder<Item>> holder = BuiltInRegistries.ITEM.getHolder(ResourceLocation.tryParse(str));
 
         if (holder.isPresent()){
             currencyItemStack = holder.get().value().getDefaultInstance();

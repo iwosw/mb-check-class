@@ -8,20 +8,20 @@ import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.CommandEvents;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MessageFormationMapMoveOrder implements Message<MessageFormationMapMoveOrder> {
+public class MessageFormationMapMoveOrder implements BannerModMessage<MessageFormationMapMoveOrder> {
     private UUID contactId;
     private UUID groupId;
     private BlockPos target;
@@ -36,12 +36,12 @@ public class MessageFormationMapMoveOrder implements Message<MessageFormationMap
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer sender = context.getSender();
         if (sender == null || target == null || contactId == null) return;
         ServerLevel level = sender.serverLevel();

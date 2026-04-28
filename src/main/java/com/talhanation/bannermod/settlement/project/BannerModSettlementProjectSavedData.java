@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.project;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
@@ -7,6 +8,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 public class BannerModSettlementProjectSavedData extends SavedData {
     private static final String FILE_ID = "bannermodSettlementProjects";
+    private static final SavedData.Factory<BannerModSettlementProjectSavedData> FACTORY = new SavedData.Factory<>(BannerModSettlementProjectSavedData::new, BannerModSettlementProjectSavedData::load);
 
     private final BannerModSettlementProjectRuntime runtime;
 
@@ -23,14 +25,10 @@ public class BannerModSettlementProjectSavedData extends SavedData {
     }
 
     public static BannerModSettlementProjectSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                BannerModSettlementProjectSavedData::load,
-                BannerModSettlementProjectSavedData::new,
-                FILE_ID
-        );
+        return level.getDataStorage().computeIfAbsent(FACTORY, FILE_ID);
     }
 
-    public static BannerModSettlementProjectSavedData load(CompoundTag tag) {
+    public static BannerModSettlementProjectSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         return new BannerModSettlementProjectSavedData(new BannerModSettlementProjectRuntime(
                 BannerModSettlementProjectScheduler.fromTag(tag),
                 new BannerModBuildAreaProjectBridge()
@@ -38,7 +36,7 @@ public class BannerModSettlementProjectSavedData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         CompoundTag runtimeTag = this.runtime.scheduler().toTag();
         tag.put("Queues", runtimeTag.getList("Queues", Tag.TAG_COMPOUND));
         tag.put("Cancellations", runtimeTag.getList("Cancellations", Tag.TAG_COMPOUND));

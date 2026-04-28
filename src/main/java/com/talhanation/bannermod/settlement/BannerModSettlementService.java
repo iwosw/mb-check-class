@@ -27,7 +27,7 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -1283,7 +1283,7 @@ public final class BannerModSettlementService {
     }
 
     private static String resolveBuildingTypeId(AbstractWorkAreaEntity workArea) {
-        ResourceLocation typeKey = ForgeRegistries.ENTITY_TYPES.getKey(workArea.getType());
+        ResourceLocation typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(workArea.getType());
         return typeKey == null ? workArea.getType().toString() : typeKey.toString();
     }
 

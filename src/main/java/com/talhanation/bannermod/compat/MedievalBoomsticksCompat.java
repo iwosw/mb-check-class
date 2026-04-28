@@ -3,7 +3,7 @@ package com.talhanation.bannermod.compat;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Map;
 import java.util.Optional;
@@ -50,7 +50,7 @@ public final class MedievalBoomsticksCompat {
     }
 
     public static ItemStack createAmmoStack(ResourceLocation ammoId, int count) {
-        Item item = ForgeRegistries.ITEMS.getValue(ammoId);
+        Item item = BuiltInRegistries.ITEM.getValue(ammoId);
         if (item == null) {
             return ItemStack.EMPTY;
         }
@@ -74,7 +74,7 @@ public final class MedievalBoomsticksCompat {
             return null;
         }
 
-        return ForgeRegistries.ITEMS.getKey(stack.getItem());
+        return BuiltInRegistries.ITEM.getKey(stack.getItem());
     }
 
     private record FirearmContract(ResourceLocation ammoId, Supplier<IWeapon> weaponFactory) {
