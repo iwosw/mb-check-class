@@ -25,7 +25,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.fml.DistExecutor;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -84,7 +83,7 @@ public class BuildingPlacementWandItem extends Item {
         }
 
         if (level.isClientSide) {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> openSelectionScreen(stack));
+            openSelectionScreen(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
