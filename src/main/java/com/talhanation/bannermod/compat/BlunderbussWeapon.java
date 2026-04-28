@@ -233,6 +233,10 @@ public class BlunderbussWeapon implements IWeapon {
 
     @Override
     public void performRangedAttackIWeapon(AbstractRecruitEntity shooter, double x, double y, double z, float projectileSpeed) {
+        if (MedievalBoomsticksCompat.fireWithBoomsticks(shooter, x, y, z)) {
+            return;
+        }
+
         for(int i = 0; i < 9; i++) {
             AbstractHurtingProjectile projectileEntity = this.getProjectile(shooter);
             double d0 = x - shooter.getX();
