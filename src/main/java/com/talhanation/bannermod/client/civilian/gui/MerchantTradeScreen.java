@@ -1,6 +1,9 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.talhanation.bannermod.client.military.gui.widgets.GuiWidgetBounds;
+import com.talhanation.bannermod.client.military.gui.widgets.ListScreenEntryBase;
+import com.talhanation.bannermod.client.military.gui.widgets.ListScreenListBase;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
@@ -11,10 +14,8 @@ import com.talhanation.bannermod.network.messages.civilian.MessageUpdateMerchant
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateMerchantTrade;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
 import de.maxhenkel.corelib.inventory.ScreenBase;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -96,14 +97,12 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
 
         int listLeft = leftPos + LIST_X;
         int listTop = topPos + LIST_Y;
-        int listBottom = listTop + LIST_H;
         int listWidth = LIST_W;
         int listHeight = LIST_H;
         int itemHeight = 40;
         int itemWidth = LIST_W - 10;
 
-        this.tradeList = new TradeList(Minecraft.getInstance(), listWidth, listHeight, listTop, listBottom, itemHeight, itemWidth);
-        this.tradeList.setX(listLeft);
+        this.tradeList = new TradeList(listWidth, listHeight, listLeft, listTop, itemHeight, itemWidth);
 
         this.loadTrades();
 
@@ -352,10 +351,10 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
 
     int xOffset = 2;
     int yOffset = 2;
-    private class TradeList extends ObjectSelectionList<TradeList.TradeEntry> {
+    private class TradeList extends ListScreenListBase<TradeList.TradeEntry> {
         public int itemWidth;
-        public TradeList(Minecraft mc, int width, int height, int top, int bottom, int itemHeight, int itemWidth) {
-            super(mc, width, height, top, itemHeight);
+        public TradeList(int width, int height, int left, int top, int itemHeight, int itemWidth) {
+            super(width, height, left, top, itemHeight);
             this.itemWidth = itemWidth;
         }
 
@@ -389,7 +388,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
             MerchantTradeScreen.this.onSelected(entry);
         }
 
-        public class TradeEntry extends ObjectSelectionList.Entry<TradeList.TradeEntry> {
+        public class TradeEntry extends ListScreenEntryBase<TradeEntry> {
             private final WorkersMerchantTrade trade;
             public TradeEntry(WorkersMerchantTrade trade) {
                 this.trade = trade;
@@ -434,15 +433,11 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                 guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
 
-                if (!trade.currencyItem.isEmpty()
-                        && mouseX >= item1X && mouseX < item1X + 16
-                        && mouseY >= item1Y && mouseY < item1Y + 16) {
+                if (!trade.currencyItem.isEmpty() && GuiWidgetBounds.contains(item1X, item1Y, 15, 15, mouseX, mouseY)) {
                     MerchantTradeScreen.this.hoveredTooltipStack = trade.currencyItem;
                     MerchantTradeScreen.this.hoveredTooltipX = mouseX;
                     MerchantTradeScreen.this.hoveredTooltipY = mouseY;
-                } else if (!trade.tradeItem.isEmpty()
-                        && mouseX >= item2X && mouseX < item2X + 16
-                        && mouseY >= item2Y && mouseY < item2Y + 16) {
+                } else if (!trade.tradeItem.isEmpty() && GuiWidgetBounds.contains(item2X, item2Y, 15, 15, mouseX, mouseY)) {
                     MerchantTradeScreen.this.hoveredTooltipStack = trade.tradeItem;
                     MerchantTradeScreen.this.hoveredTooltipX = mouseX;
                     MerchantTradeScreen.this.hoveredTooltipY = mouseY;
@@ -457,10 +452,15 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                 return true;
             }
 
-            @Override
             public Component getNarration() {
                 return Component.empty();
             }
+
+            @Override
+            public ListScreenListBase<TradeEntry> getList() {
+                return TradeList.this;
+            }
+
             private int getButtonTextureY(boolean hovered, boolean selected, boolean out) {
                 final int BUTTON_Y_OUT = 46;
                 final int BUTTON_Y_NORMAL = 66;
