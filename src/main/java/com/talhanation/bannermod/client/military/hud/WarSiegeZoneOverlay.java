@@ -33,7 +33,7 @@ import java.util.UUID;
  */
 @EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class WarSiegeZoneOverlay {
-    private static final ResourceLocation SIEGE_ZONE_LAYER = new ResourceLocation(BannerModMain.MOD_ID, "siege_zone");
+    private static final ResourceLocation SIEGE_ZONE_LAYER = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "siege_zone");
 
     private WarSiegeZoneOverlay() {
     }
