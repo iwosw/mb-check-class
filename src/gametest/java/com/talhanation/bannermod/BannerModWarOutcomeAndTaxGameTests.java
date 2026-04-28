@@ -24,6 +24,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,13 +71,13 @@ public class BannerModWarOutcomeAndTaxGameTests {
     public static void occupationTaxAccrualMovesTreasuryAndAuditsThroughLiveRuntime(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         Setup setup = setupAttackerDefender(helper, level, "tax");
+        UUID attackerClaimOwnerId = UUID.nameUUIDFromBytes((setup.warId + ":tax:attacker").getBytes(StandardCharsets.UTF_8));
+        UUID defenderClaimOwnerId = UUID.nameUUIDFromBytes((setup.warId + ":tax:defender").getBytes(StandardCharsets.UTF_8));
+        setup.attackerClaim.setOwnerPoliticalEntityId(attackerClaimOwnerId);
+        setup.defenderClaim.setOwnerPoliticalEntityId(defenderClaimOwnerId);
         seedTreasury(level, setup.defenderClaim, 100);
         // Ensure the occupier has a destination ledger.
         seedTreasury(level, setup.attackerClaim, 0);
-        setup.attackerClaim.setOwnerPoliticalEntityId(setup.attackerEntityId);
-        setup.defenderClaim.setOwnerPoliticalEntityId(setup.defenderEntityId);
-        UUID attackerClaimOwnerId = setup.attackerClaim.getOwnerPoliticalEntityId();
-        UUID defenderClaimOwnerId = setup.defenderClaim.getOwnerPoliticalEntityId();
 
         OccupationRuntime occupations = WarRuntimeContext.occupations(level);
         long placedAt = level.getGameTime();
