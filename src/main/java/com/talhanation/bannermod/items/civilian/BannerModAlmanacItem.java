@@ -13,7 +13,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.world.level.Level;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,14 +35,14 @@ public class BannerModAlmanacItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("item.bannermod.banner_almanac.tooltip.use"));
         tooltip.add(Component.translatable("item.bannermod.banner_almanac.tooltip.scope"));
     }
 
     private static ItemStack createBookStack() {
         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
-        book.setHoverName(Component.translatable("item.bannermod.banner_almanac"));
+        book.set(DataComponents.ITEM_NAME, Component.translatable("item.bannermod.banner_almanac"));
 
         List<Filterable<Component>> pages = new ArrayList<>();
         for (int page = 1; page <= PAGE_COUNT; page++) {

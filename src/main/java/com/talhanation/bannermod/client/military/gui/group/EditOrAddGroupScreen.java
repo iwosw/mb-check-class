@@ -35,7 +35,7 @@ public class EditOrAddGroupScreen extends Screen {
     private int topPos;
     private int imageWidth;
     private int imageHeight;
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/gui_big.png");
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final MutableComponent TEXT_CANCEL = Component.translatable("gui.recruits.groups.cancel");
     private static final MutableComponent TEXT_SAVE = Component.translatable("gui.recruits.groups.save");
     private static final MutableComponent TEXT_ADD = Component.translatable("gui.recruits.groups.add");
@@ -203,7 +203,6 @@ public class EditOrAddGroupScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        groupNameField.tick();
     }
 
     @Override
@@ -230,7 +229,7 @@ public class EditOrAddGroupScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        this.renderBackground(guiGraphics);
+        super.renderBackground(guiGraphics, mouseX, mouseY, delta);
         this.renderBackground(guiGraphics, mouseX, mouseY, delta);
         super.render(guiGraphics, mouseX, mouseY, delta);
         this.renderForeground(guiGraphics, mouseX, mouseY, delta);

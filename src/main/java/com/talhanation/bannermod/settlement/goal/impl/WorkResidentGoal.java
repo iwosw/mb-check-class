@@ -15,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public final class WorkResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/work");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/work");
 
     private static final int WORK_PRIORITY = 60;
     private static final int WORK_DURATION_TICKS = 400;

@@ -31,8 +31,8 @@ public class ModProfessions {
     private static DeferredHolder<VillagerProfession, VillagerProfession> makeProfession(String name, DeferredHolder<PoiType, PoiType> pointOfInterest) {
         logger.info("Registering profession for {} with POI {}", name, pointOfInterest);
         return PROFESSIONS.register(name,
-                () -> new VillagerProfession(name, poi -> poi.get().equals(pointOfInterest.get()),
-                        poi -> poi.get().equals(pointOfInterest.get()), ImmutableSet.of(), ImmutableSet.of(),
+                () -> new VillagerProfession(name, poi -> poi.value().equals(pointOfInterest.get()),
+                        poi -> poi.value().equals(pointOfInterest.get()), ImmutableSet.of(), ImmutableSet.of(),
                         SoundEvents.VILLAGER_CELEBRATE));
     }
 }

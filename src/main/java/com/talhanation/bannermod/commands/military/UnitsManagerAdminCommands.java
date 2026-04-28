@@ -47,7 +47,7 @@ final class UnitsManagerAdminCommands {
     }
 
     private static ServerPlayer getPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        String playerName = ScoreHolderArgument.getName(context, "Player");
+        String playerName = ScoreHolderArgument.getName(context, "Player").getScoreboardName();
         ServerPlayer player = context.getSource().getLevel().getServer().getPlayerList().getPlayerByName(playerName);
         if (player == null) {
             context.getSource().sendFailure(Component.literal("No Player found!").withStyle(ChatFormatting.RED));

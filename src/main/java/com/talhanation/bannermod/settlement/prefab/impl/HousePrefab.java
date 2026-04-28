@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * {@link BuildingPrefabProfession#NONE} as "no worker needed".
  */
 public final class HousePrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "house");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "house");
 
     private static final int WIDTH = 7;
     private static final int HEIGHT = 5;

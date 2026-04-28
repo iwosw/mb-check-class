@@ -2,6 +2,7 @@ package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -94,7 +95,7 @@ interface RecruitUpkeepAccess {
         if (RecruitsServerConfig.FoodBlackList.get().contains(location.toString())) {
             return false;
         }
-        return stack.isEdible();
+        return stack.has(DataComponents.FOOD);
     }
 
     default void checkPayment(Container container) {

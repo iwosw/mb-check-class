@@ -31,5 +31,5 @@ public final class ModCitizenEntityTypes {
                     .setTrackingRange(32)
                     .setShouldReceiveVelocityUpdates(true)
                     .noSummon()
-                    .build(new ResourceLocation(BannerModMain.MOD_ID, "citizen").toString()));
+                    .build(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "citizen").toString()));
 }

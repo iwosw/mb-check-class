@@ -32,6 +32,8 @@ public class RecruitsAdminCommands {
                         .suggests(ScoreHolderArgument.SUGGEST_SCORE_HOLDERS)
                         .executes(context -> RecruitOwnerTeleportHelper.teleportToOwners(
                                 context.getSource().getLevel(),
-                                ScoreHolderArgument.getNamesWithDefaultWildcard(context, "Owner"))));
+                                ScoreHolderArgument.getNamesWithDefaultWildcard(context, "Owner").stream()
+                                        .map(net.minecraft.world.scores.ScoreHolder::getScoreboardName)
+                                        .toList())));
     }
 }

@@ -17,12 +17,12 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.common.ItemAbilities;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class UseShield extends Goal {
     /** Radius (blocks) used to auto-raise shield under SHIELD_WALL stance. */
@@ -34,7 +34,7 @@ public class UseShield extends Goal {
     /** Re-scan interval for mounted charge brace checks (ticks). */
     private static final int BRACE_SCAN_INTERVAL_TICKS = 5;
     /** Stage 4.C: attribute-modifier uuid for the transient brace knockback-resistance boost. */
-    private static final UUID BRACE_KB_RESIST_UUID = UUID.fromString("b7a1c3d2-4e5f-4c9b-8e2a-0b6c4d1f5a21");
+    private static final ResourceLocation BRACE_KB_RESIST_ID = ResourceLocation.fromNamespaceAndPath("bannermod", "brace_kb_resist");
     /** Stage 4.C: extra knockback resistance (ADDITION operand) applied while bracing. */
     private static final double BRACE_KB_RESIST_BONUS = 0.5D;
 
@@ -225,17 +225,16 @@ public class UseShield extends Goal {
         recruit.isBracing = bracing;
         AttributeInstance kbResist = recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
         if (kbResist != null) {
-            AttributeModifier existing = kbResist.getModifier(BRACE_KB_RESIST_UUID);
+            AttributeModifier existing = kbResist.getModifier(BRACE_KB_RESIST_ID);
             if (bracing) {
                 if (existing == null) {
                     kbResist.addTransientModifier(new AttributeModifier(
-                            BRACE_KB_RESIST_UUID,
-                            "bannermod.brace_kb_resist",
+                            BRACE_KB_RESIST_ID,
                             BRACE_KB_RESIST_BONUS,
-                            AttributeModifier.Operation.ADDITION));
+                            AttributeModifier.Operation.ADD_VALUE));
                 }
             } else if (existing != null) {
-                kbResist.removeModifier(BRACE_KB_RESIST_UUID);
+                kbResist.removeModifier(BRACE_KB_RESIST_ID);
             }
         }
         if (bracing) {

@@ -34,16 +34,16 @@ public class RecruitsFormationButton extends ActivateableButton {
     private ResourceLocation getTextureLocation() {
         ResourceLocation location;
         switch (this.formation.getIndex()){
-            default -> location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/none.png");
-            case 1 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/line.png");
-            case 2 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/square.png");
-            case 3 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/triangle.png");
-            case 4 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/hcircle.png");
-            case 5 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/hsquare.png");
-            case 6 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/vform.png");
-            case 7 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/circle.png");
-            case 8 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/movement.png");
-            case 9 ->  location = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/image/square.png");
+            default -> location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/none.png");
+            case 1 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/line.png");
+            case 2 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/square.png");
+            case 3 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/triangle.png");
+            case 4 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/hcircle.png");
+            case 5 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/hsquare.png");
+            case 6 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/vform.png");
+            case 7 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/circle.png");
+            case 8 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/movement.png");
+            case 9 ->  location = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/image/square.png");
         }
         return location;
     }

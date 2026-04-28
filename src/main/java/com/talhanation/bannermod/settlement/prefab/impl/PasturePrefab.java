@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * has a gate opening on the front edge at (5,1,0).
  */
 public final class PasturePrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "pasture");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "pasture");
 
     private static final int WIDTH = 11;
     private static final int HEIGHT = 3;

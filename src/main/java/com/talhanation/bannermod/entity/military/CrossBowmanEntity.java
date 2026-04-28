@@ -18,7 +18,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.CrossbowAttackMob;
-import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -80,7 +79,7 @@ public class CrossBowmanEntity extends AbstractStrategicFireRecruitEntity implem
         return Mob.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.3D)
-                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.05D)
                 .add(Attributes.ATTACK_DAMAGE, 1.5D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D)
@@ -138,12 +137,6 @@ public class CrossBowmanEntity extends AbstractStrategicFireRecruitEntity implem
     @Override
     public double getMeleeStartRange() {
         return 5D;
-    }
-
-    //Pillager
-    @Override
-    public void shootCrossbowProjectile(@NotNull LivingEntity target, @NotNull ItemStack stack, @NotNull Projectile projectile, float f) {
-        this.shootCrossbowProjectile(this, target, projectile, f, 1.6F);
     }
 
     private boolean getChargingCrossbow() {

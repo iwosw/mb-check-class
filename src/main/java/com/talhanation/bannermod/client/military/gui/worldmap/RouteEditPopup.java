@@ -102,7 +102,6 @@ public class RouteEditPopup {
     }
 
     public void tick() {
-        if (visible && nameField != null) nameField.tick();
     }
 
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY) {

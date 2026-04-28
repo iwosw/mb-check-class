@@ -41,7 +41,7 @@ import java.util.function.Supplier;
  */
 public final class SellerResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/seller");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/seller");
 
     /**
      * High enough to outrank WorkResidentGoal (60) so a service actor with a

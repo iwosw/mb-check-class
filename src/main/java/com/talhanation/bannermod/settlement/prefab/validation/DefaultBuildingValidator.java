@@ -14,7 +14,7 @@ import java.util.List;
  * an honest pass/fail even if nobody has written a dedicated ruleset yet.
  */
 public final class DefaultBuildingValidator implements BuildingValidator {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "default");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "default");
 
     @Override
     public ResourceLocation prefabId() {

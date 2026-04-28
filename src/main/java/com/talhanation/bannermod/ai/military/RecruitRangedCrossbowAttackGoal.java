@@ -141,8 +141,6 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
                             if (i >= weapon.getWeaponLoadTime()) {
                                 this.crossBowman.releaseUsingItem();
                                 this.crossBowman.playSound(this.weapon.getLoadSound(), 1.0F, 1.0F / (crossBowman.getRandom().nextFloat() * 0.4F + 0.8F));
-                                CrossbowItem.setCharged(this.crossBowman.getMainHandItem(), true);
-
                                 this.state = State.AIMING;
                             }
                         }
@@ -162,7 +160,6 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
                         case SHOOT -> {
                             if (pos != null) {
                                 this.weapon.performRangedAttackIWeapon(this.crossBowman, pos.getX(), pos.getY(), pos.getZ(), weapon.getProjectileSpeed());
-                                CrossbowItem.setCharged(this.crossBowman.getMainHandItem(), false);
                             }
                             this.state = State.IDLE; //RESUPPLY
                         }
@@ -184,8 +181,6 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
                             if (i >= weapon.getWeaponLoadTime()) {
                                 this.crossBowman.releaseUsingItem();
                                 this.crossBowman.playSound(this.weapon.getLoadSound(), 1.0F, 1.0F / (crossBowman.getRandom().nextFloat() * 0.4F + 0.8F));
-                                CrossbowItem.setCharged(this.crossBowman.getMainHandItem(), true);
-
                                 this.state = State.AIMING;
                             }
                         }
@@ -228,7 +223,6 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
                                     target = savedTarget;
                                 }
 
-                                CrossbowItem.setCharged(this.crossBowman.getMainHandItem(), false);
                             }
                             this.state = State.IDLE;
                         }

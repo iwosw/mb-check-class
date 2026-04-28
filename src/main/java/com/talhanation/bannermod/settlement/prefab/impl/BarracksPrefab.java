@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
  * No embedded work-area entity — barracks uses the auto-staffing hook instead.
  */
 public final class BarracksPrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "barracks");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "barracks");
 
     private static final int WIDTH = 11;
     private static final int HEIGHT = 8;

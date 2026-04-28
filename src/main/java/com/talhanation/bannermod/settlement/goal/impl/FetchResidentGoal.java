@@ -15,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public final class FetchResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/fetch");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/fetch");
 
     private static final int FETCH_PRIORITY = 55;
     private static final int FETCH_DURATION_TICKS = 220;

@@ -145,8 +145,7 @@ public class SmallShips {
         if (inputLeft && rotationSpeed > -maxRotSp) {
             rotationSpeed = Math.max(rotationSpeed - rotAcceleration / 8, -maxRotSp);
         }
-        boat.deltaRotation = rotationSpeed;
-        boat.setYRot(boat.getYRot() + boat.deltaRotation);
+        boat.setYRot(boat.getYRot() + rotationSpeed);
         invoke(shipClass(), ship.get(), "setRotSpeed", new Class[]{float.class}, rotationSpeed);
     }
 
@@ -240,8 +239,7 @@ public class SmallShips {
             rotationSpeed = Math.max(rotationSpeed - rotAcceleration * 1 / 8, -maxRotSp);
         }
 
-        boat.deltaRotation = rotationSpeed;
-        boat.setYRot(boat.getYRot() + boat.deltaRotation);
+        boat.setYRot(boat.getYRot() + rotationSpeed);
 
         invoke(shipClass(), ship.get(), "setRotSpeed", new Class[]{float.class}, rotationSpeed);
     }

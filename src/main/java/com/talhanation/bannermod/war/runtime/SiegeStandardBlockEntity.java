@@ -2,6 +2,7 @@ package com.talhanation.bannermod.war.runtime;
 
 import com.talhanation.bannermod.registry.war.ModWarBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -39,8 +40,8 @@ public class SiegeStandardBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         if (warId != null) {
             tag.putUUID("WarId", warId);
         }
@@ -50,8 +51,8 @@ public class SiegeStandardBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         warId = tag.hasUUID("WarId") ? tag.getUUID("WarId") : null;
         sidePoliticalEntityId = tag.hasUUID("SidePoliticalEntityId")
                 ? tag.getUUID("SidePoliticalEntityId")
@@ -63,9 +64,9 @@ public class SiegeStandardBlockEntity extends BlockEntity {
      * political color without an extra packet round-trip.
      */
     @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
-        saveAdditional(tag);
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = super.getUpdateTag(registries);
+        saveAdditional(tag, registries);
         return tag;
     }
 

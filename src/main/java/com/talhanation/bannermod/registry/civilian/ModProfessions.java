@@ -22,8 +22,8 @@ public class ModProfessions {
             DeferredHolder<PoiType, PoiType> pointOfInterest) {
         logger.info("Registering profession for {} with POI {}", name, pointOfInterest);
         return PROFESSIONS.register(name,
-                () -> new VillagerProfession(name, poi -> poi.get() == pointOfInterest.get(),
-                        poi -> poi.get() == pointOfInterest.get(), ImmutableSet.of(), ImmutableSet.of(),
+                () -> new VillagerProfession(name, poi -> poi.value() == pointOfInterest.get(),
+                        poi -> poi.value() == pointOfInterest.get(), ImmutableSet.of(), ImmutableSet.of(),
                         SoundEvents.VILLAGER_CELEBRATE));
     }
 }

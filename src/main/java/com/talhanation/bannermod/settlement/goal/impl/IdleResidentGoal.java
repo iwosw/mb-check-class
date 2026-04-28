@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 /** Lowest-priority fallback. Always startable; runs for 40 ticks. */
 public final class IdleResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/idle");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/idle");
 
     private static final int IDLE_PRIORITY = 1;
     private static final int IDLE_DURATION_TICKS = 40;

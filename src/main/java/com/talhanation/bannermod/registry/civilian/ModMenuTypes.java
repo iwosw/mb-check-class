@@ -67,16 +67,8 @@ public class ModMenuTypes {
      */
     private static <M extends AbstractContainerMenu, U extends Screen & MenuAccess<M>> void registerMenu(
             MenuType<? extends M> menuType, ScreenConstructor<M, U> screenConstructor) {
-        MenuScreens.register(menuType, (ScreenConstructor<M, U>) (menu, inventory, title) -> {
-            try {
-                return screenConstructor.create(menu, inventory, title);
-            } catch (Exception e) {
-                logger.error("Could not instantiate {}", screenConstructor.getClass().getSimpleName());
-                logger.error(e.getMessage());
-                logger.error(Arrays.toString(e.getStackTrace()));
-                return null;
-            }
-        });
+        // NeoForge 1.21 registers menu screens through RegisterMenuScreensEvent.
+        // This legacy helper is kept as a compile-only shim until screen registration is rewired.
     }
 
     @Nullable

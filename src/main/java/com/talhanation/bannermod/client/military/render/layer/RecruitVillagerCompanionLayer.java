@@ -17,7 +17,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class RecruitVillagerCompanionLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
 
-    private static final ResourceLocation LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/villager_assassin_cloth.png");
+    private static final ResourceLocation LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/villager/villager_assassin_cloth.png");
     public RecruitVillagerCompanionLayer(LivingEntityRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> renderer) {
         super(renderer);
     }
@@ -30,7 +30,7 @@ public class RecruitVillagerCompanionLayer extends RenderLayer<AbstractRecruitEn
         RecruitRenderProfiling.textureStateSwitch("companion");
         long start = RecruitRenderProfiling.start();
         VertexConsumer vertexconsumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(LOCATION));
-        this.getParentModel().renderToBuffer(poseStack, vertexconsumer, p_117722_, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        this.getParentModel().renderToBuffer(poseStack, vertexconsumer, p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
         RecruitRenderProfiling.layerDuration("companion", start);
     }
 

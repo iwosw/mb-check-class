@@ -10,16 +10,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = RestrictSunGoal.class, priority = Integer.MAX_VALUE)
 public class RestrictSunGoalMixin {
-    @Shadow
+    @Shadow(remap = false)
     @Final
     private PathfinderMob mob;
 
-    @Inject(method = "start", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/ai/goal/RestrictSunGoal;start()V"), cancellable = true)
-    public void start(CallbackInfoReturnable<Void> ci) {
+    @Inject(method = "start", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/ai/goal/RestrictSunGoal;start()V"), cancellable = true, remap = false)
+    public void start(CallbackInfo ci) {
         if(this.mob.getNavigation() instanceof GroundPathNavigation navigation) {
             navigation.setAvoidSun(true);
         } else if (this.mob.getNavigation() instanceof AsyncGroundPathNavigation navigation) {
@@ -28,8 +28,8 @@ public class RestrictSunGoalMixin {
         ci.cancel();
     }
 
-    @Inject(method = "stop", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/ai/goal/RestrictSunGoal;stop()V"), cancellable = true)
-    public void stop(CallbackInfoReturnable<Void> ci) {
+    @Inject(method = "stop", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/ai/goal/RestrictSunGoal;stop()V"), cancellable = true, remap = false)
+    public void stop(CallbackInfo ci) {
         if (!GoalUtils.hasGroundPathNavigation(this.mob)) {
             ci.cancel();
             return;

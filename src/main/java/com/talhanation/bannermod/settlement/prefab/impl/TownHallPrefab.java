@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
  * Designed as a compact "town hall" with indoor storage and work tables.
  */
 public final class TownHallPrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "town_hall");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "town_hall");
 
     private static final int WIDTH = 13;
     private static final int HEIGHT = 9;

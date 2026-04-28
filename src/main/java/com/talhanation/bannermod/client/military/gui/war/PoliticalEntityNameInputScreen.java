@@ -98,7 +98,7 @@ public class PoliticalEntityNameInputScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
         graphics.drawCenteredString(font, this.title.getString(), guiLeft + W / 2, guiTop + 8, 0xFFFFFF);

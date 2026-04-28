@@ -256,9 +256,9 @@ public class ClaimEvents {
     }
 
     @SubscribeEvent
-    public void onExplosion(ExplosionEvent event) {
+    public void onExplosion(ExplosionEvent.Start event) {
         if(event.getLevel().isClientSide()) return;
-        Vec3 vec = event.getExplosion().getPosition();
+        Vec3 vec = event.getExplosion().center();
         BlockPos pos = new BlockPos((int) vec.x, (int) vec.y, (int) vec.z);
         ChunkAccess access = server.overworld().getChunk(pos);
         RecruitsClaim claim = recruitsClaimManager.getClaim(access.getPos());

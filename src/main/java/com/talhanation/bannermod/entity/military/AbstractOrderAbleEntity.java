@@ -4,9 +4,11 @@ import com.talhanation.bannermod.ai.military.FleeFire;
 import com.talhanation.bannermod.ai.military.FleeTNT;
 import com.talhanation.bannermod.ai.military.FleeTarget;
 import com.talhanation.bannermod.ai.military.UseShield;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -28,6 +30,8 @@ import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -207,7 +211,7 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
     }
 
     protected float getStandingEyeHeight(Pose pos, EntityDimensions size) {
-        return size.height * 0.9F;
+        return size.height() * 0.9F;
     }
 
     public int getMaxHeadXRot() {
@@ -285,9 +289,12 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
     }
 
     public boolean doHurtTarget(Entity entity) {
-        boolean flag = entity.hurt(this.damageSources().mobAttack(this), (float)((int)this.getAttributeValue(Attributes.ATTACK_DAMAGE)));
+        DamageSource source = this.damageSources().mobAttack(this);
+        boolean flag = entity.hurt(source, (float)((int)this.getAttributeValue(Attributes.ATTACK_DAMAGE)));
         if (flag) {
-            this.doEnchantDamageEffects(this, entity);
+            if (this.level() instanceof ServerLevel serverLevel) {
+                EnchantmentHelper.doPostAttackEffects(serverLevel, entity, source);
+            }
         }
         this.addXp(2);
         this.checkLevel();
@@ -298,13 +305,13 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
     public void addLevelBuffs(){
         int level = getXpLevel();
         if(level <= 10){
-            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 3D, AttributeModifier.Operation.ADDITION));
-            getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus_level", 0.15D, AttributeModifier.Operation.ADDITION));
-            getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus_level", 0.01D, AttributeModifier.Operation.ADDITION));
-            getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus_level", 0.01D, AttributeModifier.Operation.ADDITION));
+            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "heath_bonus_level"), 3D, AttributeModifier.Operation.ADD_VALUE));
+            getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "attack_bonus_level"), 0.15D, AttributeModifier.Operation.ADD_VALUE));
+            getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "knockback_bonus_level"), 0.01D, AttributeModifier.Operation.ADD_VALUE));
+            getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "speed_bonus_level"), 0.01D, AttributeModifier.Operation.ADD_VALUE));
         }
         if(level > 10){
-            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
+            getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "heath_bonus_level"), 2D, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 
@@ -350,7 +357,7 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
     }
 
     @Override
-    public boolean canBeLeashed(Player player) {
+    public boolean canBeLeashed() {
         return false;
     }
 
@@ -364,8 +371,8 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
             }
             for (EquipmentSlot slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
                 ItemStack itemstack = this.getItemBySlot(slot);
-                if ((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !itemstack.getItem().isFireResistant()) && itemstack.getItem() instanceof ArmorItem) {
-                    itemstack.hurtAndBreak((int) damage, this, entity -> entity.broadcastBreakEvent(slot));
+                if ((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !itemstack.has(DataComponents.FIRE_RESISTANT)) && itemstack.getItem() instanceof ArmorItem) {
+                    itemstack.hurtAndBreak((int) damage, this, slot);
                 }
             }
         }
@@ -374,7 +381,7 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
     protected void damageMainHandItem() {
         ItemStack itemstack = this.getMainHandItem();
         if (itemstack.isDamageableItem()) {
-            itemstack.hurtAndBreak(1, this, entity -> entity.broadcastBreakEvent(EquipmentSlot.MAINHAND));
+            itemstack.hurtAndBreak(1, this, EquipmentSlot.MAINHAND);
         }
     }
 
@@ -390,7 +397,7 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
         if (this.useItem.getItem() instanceof ShieldItem) {
             int i = 1 + Mth.floor(damage);
             InteractionHand hand = this.getUsedItemHand();
-            this.useItem.hurtAndBreak(i, this, (entity) -> entity.broadcastBreakEvent(hand));
+            this.useItem.hurtAndBreak(i, this, hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
             if (this.useItem.isEmpty()) {
                 if (hand == InteractionHand.MAIN_HAND) {
                     this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);

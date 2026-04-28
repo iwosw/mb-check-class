@@ -17,13 +17,13 @@ import net.minecraft.resources.ResourceLocation;
 public class RecruitHumanBiomeLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
 
     private static final ResourceLocation[] TEXTURE = {
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_desert.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_jungle.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_plains.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_savanna.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_snowy_tundra.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_swamp.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/biome/human_taiga.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/biome/human_desert.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/biome/human_jungle.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/biome/human_plains.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/biome/human_savanna.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/biome/human_snowy_tundra.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/biome/human_swamp.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/biome/human_taiga.png"),
     };
     public RecruitHumanBiomeLayer(LivingEntityRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> renderer) {
         super(renderer);
@@ -36,7 +36,7 @@ public class RecruitHumanBiomeLayer extends RenderLayer<AbstractRecruitEntity, H
         }
         RecruitRenderProfiling.textureStateSwitch("biome");
         long start = RecruitRenderProfiling.start();
-        this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE[recruit.getBiome()])), p_117722_, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE[recruit.getBiome()])), p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
         RecruitRenderProfiling.layerDuration("biome", start);
     }
 }

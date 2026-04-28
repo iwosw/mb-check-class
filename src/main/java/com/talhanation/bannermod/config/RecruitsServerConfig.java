@@ -959,6 +959,6 @@ public class RecruitsServerConfig {
                 .writingMode(WritingMode.REPLACE)
                 .build();
         configData.load();
-        spec.setConfig(configData);
+        spec.correct(configData);
     }
 }

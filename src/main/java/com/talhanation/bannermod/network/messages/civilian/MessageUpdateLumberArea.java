@@ -2,6 +2,7 @@ package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -27,7 +28,7 @@ public class MessageUpdateLumberArea implements BannerModMessage<MessageUpdateLu
     public MessageUpdateLumberArea(UUID uuid, ItemStack saplingItem, boolean shearLeaves, boolean stripLogs, boolean replant) {
         this.uuid = uuid;
         CompoundTag compoundnbt = new CompoundTag();
-        this.tag = saplingItem.save(compoundnbt);
+        this.tag = (CompoundTag) saplingItem.save(RegistryAccess.EMPTY, compoundnbt);
         this.shearLeaves = shearLeaves;
         this.stripLogs = stripLogs;
         this.replant = replant;
@@ -51,7 +52,7 @@ public class MessageUpdateLumberArea implements BannerModMessage<MessageUpdateLu
     }
 
     public void update(LumberArea lumberArea){
-        ItemStack itemStack = ItemStack.of(tag);
+        ItemStack itemStack = ItemStack.parseOptional(RegistryAccess.EMPTY, tag);
         lumberArea.setSaplingStack(itemStack);
         lumberArea.setShearLeaves(this.shearLeaves);
         lumberArea.setStripLogs(this.stripLogs);

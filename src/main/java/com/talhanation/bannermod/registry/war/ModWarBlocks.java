@@ -14,7 +14,7 @@ public class ModWarBlocks {
             DeferredRegister.create(Registries.BLOCK, BannerModMain.MOD_ID);
 
     public static final DeferredHolder<Block, Block> SIEGE_STANDARD = BLOCKS.register("siege_standard",
-            () -> new SiegeStandardBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+            () -> new SiegeStandardBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
                     .strength(6.0F, 12.0F)
                     .noOcclusion()));
 }

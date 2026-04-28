@@ -40,7 +40,7 @@ import java.util.*;
 @OnlyIn(Dist.CLIENT)
 public class CommandScreen extends ScreenBase<CommandMenu> {
 
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/command_gui.png");
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/command_gui.png");
     private static final MutableComponent TEXT_EVERYONE = Component.translatable("gui.recruits.command.text.everyone");
     private static final int fontColor = 16250871;
     public final Player player;
@@ -475,7 +475,7 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
     }
 
     @Override
-    public boolean mouseScrolled(double p_94686_, double p_94687_, double p_94688_) {
+    public boolean mouseScrolled(double p_94686_, double p_94687_, double scrollX, double p_94688_) {
         if(p_94688_ > 0){
             this.setCurrentCategory(CommandCategoryManager.getPrevious(currentCategory));
         }
@@ -483,7 +483,7 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
             this.setCurrentCategory(CommandCategoryManager.getNext(currentCategory));
         }
 
-        return super.mouseScrolled(p_94686_, p_94687_, p_94688_);
+        return super.mouseScrolled(p_94686_, p_94687_, scrollX, p_94688_);
     }
 
     private void invertGroups() {

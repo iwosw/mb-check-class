@@ -58,7 +58,7 @@ public class RecruitsGroupButton extends ExtendedButton {
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
         int k = !this.active ? 0 : (this.isHoveredOrFocused() ? 2 : 1);
-        guiGraphics.blitWithBorder(WIDGETS_LOCATION, this.getX(), this.getY(), 0, 46 + k * 20, this.width, this.height, 200, 20, 2, 3, 2, 2);
+        guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, k == 2 ? 0xAA707070 : 0xAA303030);
 
         if(this.image != null){
             RenderSystem.setShader(GameRenderer::getPositionTexShader);

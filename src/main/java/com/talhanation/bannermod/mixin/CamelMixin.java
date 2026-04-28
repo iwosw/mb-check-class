@@ -19,7 +19,7 @@ public abstract class CamelMixin extends AbstractHorse {
     }
 
     @SuppressWarnings("ConstantValue")
-    @Inject(method = "travel", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/animal/camel/Camel;travel(Lnet/minecraft/world/phys/Vec3;)V"))
+    @Inject(method = "travel", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/animal/camel/Camel;travel(Lnet/minecraft/world/phys/Vec3;)V"), remap = false)
     private void camelTravelSuperWhenRecruitsRides(Vec3 vec3, CallbackInfo callback) {
         if(getControllingPassenger() instanceof AbstractRecruitEntity){
             super.travel(vec3);
@@ -27,4 +27,3 @@ public abstract class CamelMixin extends AbstractHorse {
     }
 
 }
-

@@ -2,6 +2,7 @@ package com.talhanation.bannermod.entity.civilian;
 
 import com.talhanation.bannermod.citizen.CitizenCore;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.phys.Vec3;
 
@@ -38,6 +39,11 @@ final class WorkerCitizenBridge {
             @Override
             public SimpleContainer getInventory() {
                 return worker.getInventory();
+            }
+
+            @Override
+            public HolderLookup.Provider registryAccess() {
+                return worker.registryAccess();
             }
 
             @Override

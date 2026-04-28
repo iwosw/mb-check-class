@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * is embedded so auto-staffing can bind a merchant.
  */
 public final class MarketStallPrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "market_stall");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "market_stall");
 
     private static final int WIDTH = 7;
     private static final int HEIGHT = 5;

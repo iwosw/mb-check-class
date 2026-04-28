@@ -54,7 +54,7 @@ public class FarmerEntity extends AbstractWorkerEntity{
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.3D)
-                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D)
                 .add(Attributes.ATTACK_DAMAGE, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
@@ -68,7 +68,7 @@ public class FarmerEntity extends AbstractWorkerEntity{
         RandomSource randomsource = world.getRandom();
         SpawnGroupData ilivingentitydata = super.finalizeSpawn(world, difficultyInstance, reason, data, nbt);
         ((AsyncGroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
-        this.populateDefaultEquipmentEnchantments(randomsource, difficultyInstance);
+        this.populateDefaultEquipmentEnchantments(world, randomsource, difficultyInstance);
 
         this.initSpawn();
 
@@ -103,11 +103,7 @@ public class FarmerEntity extends AbstractWorkerEntity{
         return null;
     }
     public boolean isBucketWithWater(ItemStack itemStack) {
-        if(itemStack.getItem() instanceof BucketItem bucketItem){
-            Fluid fluid = bucketItem.getFluid();
-            if(fluid instanceof WaterFluid || fluid.isSame(Fluids.WATER)) return true;
-        }
-        return false;
+        return itemStack.is(Items.WATER_BUCKET);
     }
     public boolean wantsToKeep(ItemStack itemStack) {
         if (itemStack.getItem() instanceof HoeItem) {

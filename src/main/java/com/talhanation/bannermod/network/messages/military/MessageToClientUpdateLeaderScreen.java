@@ -5,6 +5,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
 import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
@@ -37,17 +38,16 @@ public class MessageToClientUpdateLeaderScreen implements BannerModMessage<Messa
 
     @Override
     public MessageToClientUpdateLeaderScreen fromBytes(FriendlyByteBuf buf) {
-        this.waypoints = buf.readList(FriendlyByteBuf::readBlockPos);
-        this.waypointItems = buf.readList(FriendlyByteBuf::readItem);
+        this.waypoints = buf.readList(byteBuf -> byteBuf.readBlockPos());
+        this.waypointItems = buf.readList(byteBuf -> ItemStack.OPTIONAL_STREAM_CODEC.decode((RegistryFriendlyByteBuf) byteBuf));
         this.size = buf.readInt();
         return this;
     }
 
     @Override
     public void toBytes(FriendlyByteBuf buf) {
-        buf.writeCollection(waypoints, FriendlyByteBuf::writeBlockPos);
-        buf.writeCollection(waypointItems, FriendlyByteBuf::writeItem);
+        buf.writeCollection(waypoints, (byteBuf, value) -> byteBuf.writeBlockPos(value));
+        buf.writeCollection(waypointItems, (byteBuf, value) -> ItemStack.OPTIONAL_STREAM_CODEC.encode((RegistryFriendlyByteBuf) byteBuf, value));
         buf.writeInt(this.size);
     }
 }
-

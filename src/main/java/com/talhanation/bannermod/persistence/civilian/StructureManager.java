@@ -115,7 +115,7 @@ public class StructureManager {
         File file = new File(dir, filename.endsWith(".nbt") ? filename : filename + ".nbt");
         root.putString("name", filename);
         try {
-            NbtIo.writeCompressed(root, file);
+            NbtIo.writeCompressed(root, file.toPath());
             Minecraft.getInstance().player.displayClientMessage(
                     Component.literal("Scan saved to: " + file.getPath()), true);
         } catch (IOException e) {

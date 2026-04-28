@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public final class FarmPrefab implements BuildingPrefab {
 
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "farm");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "farm");
 
     private static final int WIDTH = 7;
     private static final int HEIGHT = 3;

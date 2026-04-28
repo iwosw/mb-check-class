@@ -145,7 +145,7 @@ public class MessengerEntity extends AbstractChunkLoaderEntity implements ICompa
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.3D)
-                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D)
                 .add(Attributes.ATTACK_DAMAGE, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
@@ -484,7 +484,7 @@ public class MessengerEntity extends AbstractChunkLoaderEntity implements ICompa
     }
 
     public void playHornSound() {
-        this.playSound(SoundEvents.GOAT_HORN_SOUND_VARIANTS.get(1).get(), 20F, 0.8F + 0.4F * this.getCommandSenderWorld().random.nextFloat());
+        this.playSound(SoundEvents.GOAT_HORN_SOUND_VARIANTS.get(1).value(), 20F, 0.8F + 0.4F * this.getCommandSenderWorld().random.nextFloat());
     }
 
     public void arriveAtTargetPlayer(ServerPlayer target){

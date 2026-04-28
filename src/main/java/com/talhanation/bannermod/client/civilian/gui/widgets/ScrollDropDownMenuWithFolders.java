@@ -269,7 +269,7 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double delta) {
         if (!visible || !isOpen) return false;
         scrollOffset -= (int) delta;
         scrollOffset = Math.max(0, Math.min(scrollOffset, entries.size() - maxVisibleOptions));

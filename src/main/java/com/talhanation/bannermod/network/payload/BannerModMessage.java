@@ -18,6 +18,23 @@ import java.util.Locale;
  * Adapter for legacy packet classes while their registration/sending runs on NeoForge payload APIs.
  */
 public interface BannerModMessage<T extends BannerModMessage<T>> extends Message<T> {
+    PacketFlow getExecutingSide();
+
+    default T fromBytes(FriendlyByteBuf buf) {
+        @SuppressWarnings("unchecked")
+        T self = (T) this;
+        return self;
+    }
+
+    default void toBytes(FriendlyByteBuf buf) {
+    }
+
+    default void executeServerSide(BannerModNetworkContext context) {
+    }
+
+    default void executeClientSide(BannerModNetworkContext context) {
+    }
+
     @Override
     default CustomPacketPayload.Type<T> type() {
         return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(

@@ -125,8 +125,8 @@ public class MessagePatrolLeaderSetRoute implements BannerModMessage<MessagePatr
         this.recruit     = buf.readUUID();
         boolean hasRoute = buf.readBoolean();
         this.routeId     = hasRoute ? buf.readUUID() : null;
-        this.waypoints   = buf.readList(FriendlyByteBuf::readBlockPos);
-        this.waitSeconds = buf.readList(FriendlyByteBuf::readVarInt);
+        this.waypoints   = buf.readList(byteBuf -> byteBuf.readBlockPos());
+        this.waitSeconds = buf.readList(byteBuf -> byteBuf.readVarInt());
         return this;
     }
 
@@ -135,8 +135,8 @@ public class MessagePatrolLeaderSetRoute implements BannerModMessage<MessagePatr
         buf.writeUUID(this.recruit);
         buf.writeBoolean(this.routeId != null);
         if (this.routeId != null) buf.writeUUID(this.routeId);
-        buf.writeCollection(this.waypoints, FriendlyByteBuf::writeBlockPos);
-        buf.writeCollection(this.waitSeconds, FriendlyByteBuf::writeVarInt);
+        buf.writeCollection(this.waypoints, (byteBuf, value) -> byteBuf.writeBlockPos(value));
+        buf.writeCollection(this.waitSeconds, (byteBuf, value) -> byteBuf.writeVarInt(value));
     }
 
     enum ValidationResult {

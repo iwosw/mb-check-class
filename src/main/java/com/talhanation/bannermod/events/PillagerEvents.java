@@ -5,6 +5,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.ai.military.pillager.PillagerMeleeAttackGoal;
 import com.talhanation.bannermod.ai.military.pillager.PillagerUseShield;
 import net.minecraft.util.Mth;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -155,7 +156,7 @@ public class PillagerEvents {
             Level level = itemEntity.getCommandSenderWorld();
             if (itemStack.getItem() instanceof BannerItem) {
 
-                if (itemEntity.isOnFire() && ItemStack.matches(itemStack, Raid.getLeaderBannerInstance())) {
+                if (itemEntity.isOnFire() && ItemStack.matches(itemStack, Raid.getLeaderBannerInstance(level.registryAccess().lookupOrThrow(Registries.BANNER_PATTERN)))) {
                     Player player = level.getNearestPlayer(itemEntity, 16D);
                     if (player != null) {
                         MobEffectInstance effectinstance1 = player.getEffect(MobEffects.BAD_OMEN);

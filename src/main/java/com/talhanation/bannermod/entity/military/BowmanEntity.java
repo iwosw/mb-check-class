@@ -64,7 +64,7 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
         return Mob.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.31D)
-                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.05D)
                 .add(Attributes.ATTACK_DAMAGE, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D) //do not change as ranged ai dependants on it
@@ -112,10 +112,10 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
             arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + this.arrowDamageModifier());
 
             int punchLevel = getEnchantmentLevel(Enchantments.PUNCH, itemstack);
-            if (punchLevel > 0) arrow.setKnockback(punchLevel);
+            // Knockback is applied through vanilla enchantment effects in 1.21.
 
             int fireLevel = getEnchantmentLevel(Enchantments.FLAME, itemstack);
-            if (fireLevel > 0) arrow.setSecondsOnFire(100);
+            if (fireLevel > 0) arrow.igniteForSeconds(5.0F);
 
             double distance = this.distanceToSqr(target.getX(), target.getY(), target.getZ());
             double heightDiff = target.getY() - this.getY();
@@ -171,10 +171,10 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
             if (powerLevel > 0) arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + this.arrowDamageModifier());
 
             int punchLevel = getEnchantmentLevel(Enchantments.PUNCH, itemstack);
-            if (punchLevel > 0) arrow.setKnockback(punchLevel);
+            // Knockback is applied through vanilla enchantment effects in 1.21.
 
             int fireLevel = getEnchantmentLevel(Enchantments.FLAME, itemstack);
-            if (fireLevel > 0) arrow.setSecondsOnFire(100);
+            if (fireLevel > 0) arrow.igniteForSeconds(5.0F);
 
             double d0 = x - this.getX();
             double d1 = y - this.getY();

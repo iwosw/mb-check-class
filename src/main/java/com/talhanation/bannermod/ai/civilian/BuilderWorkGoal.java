@@ -394,8 +394,8 @@ public class BuilderWorkGoal extends Goal {
             int scanFacingVal = entityTag.getInt("facing");
 
             // Look up entity type
-            ResourceLocation rl = new ResourceLocation(typeId);
-            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.getValue(rl);
+            ResourceLocation rl = ResourceLocation.parse(typeId);
+            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(rl).orElse(null);
             if (entityType == null) continue;
 
             // Compute world position using same formula as setStartBuild / WorkerAreaRenderer

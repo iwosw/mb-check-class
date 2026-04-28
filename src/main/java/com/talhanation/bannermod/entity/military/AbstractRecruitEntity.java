@@ -128,7 +128,6 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
         this.xpReward = 6;
         this.navigation = this.createNavigation(world);
         this.targetingConditions = TargetingConditions.forCombat().ignoreInvisibilityTesting().selector(this::shouldAttack);
-        this.setMaxUpStep(1F);
         this.setMaxFallDistance(1);
     }
 
@@ -165,6 +164,11 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
 
     public void setMaxFallDistance(int x){
         this.maxFallDistance = x;
+    }
+
+    @Override
+    public float maxUpStep() {
+        return 1.0F;
     }
 
     ///////////////////////////////////TICK/////////////////////////////////////////
@@ -361,7 +365,7 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
     }
 
     void applyRecruitSpawnEnchantments(ServerLevelAccessor world, DifficultyInstance difficulty) {
-        this.populateDefaultEquipmentEnchantments(world.getRandom(), difficulty);
+        this.populateDefaultEquipmentEnchantments(world, world.getRandom(), difficulty);
     }
 
     protected final void initStandardRecruitSpawn(String defaultName, int cost) {
@@ -523,7 +527,7 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
     }
 
     protected float getStandingEyeHeight(@NotNull Pose pos, EntityDimensions size) {
-        return size.height * 0.98F;
+        return size.height() * 0.98F;
     }
 
     public int getMaxHeadXRot() {
@@ -735,7 +739,7 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
     }
 
     @Override
-    public boolean canBeLeashed(@NotNull Player player) {
+    public boolean canBeLeashed() {
         return false;
     }
 

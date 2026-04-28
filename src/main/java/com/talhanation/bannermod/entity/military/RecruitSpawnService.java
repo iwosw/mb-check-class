@@ -1,7 +1,9 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -50,10 +52,10 @@ final class RecruitSpawnService {
     }
 
     static void setRandomSpawnBonus(AbstractRecruitEntity recruit) {
-        recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus", recruit.getRandom().nextDouble() * 0.5D, AttributeModifier.Operation.MULTIPLY_BASE));
-        recruit.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus", recruit.getRandom().nextDouble() * 0.5D, AttributeModifier.Operation.MULTIPLY_BASE));
-        recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus", recruit.getRandom().nextDouble() * 0.1D, AttributeModifier.Operation.MULTIPLY_BASE));
-        recruit.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus", recruit.getRandom().nextDouble() * 0.1D, AttributeModifier.Operation.MULTIPLY_BASE));
+        recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "heath_bonus"), recruit.getRandom().nextDouble() * 0.5D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        recruit.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "attack_bonus"), recruit.getRandom().nextDouble() * 0.5D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "knockback_bonus"), recruit.getRandom().nextDouble() * 0.1D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        recruit.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "speed_bonus"), recruit.getRandom().nextDouble() * 0.1D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
     }
 
     static void applySpawnValues(AbstractRecruitEntity recruit) {
@@ -68,11 +70,11 @@ final class RecruitSpawnService {
         Holder<Biome> biome = recruit.getCommandSenderWorld().getBiome(recruit.getOnPos());
         byte biomeByte = 2;
         int variant = recruit.getRandom().nextInt(0, 14);
-        if (biome.is(Biomes.ERODED_BADLANDS) || biome.containsTag(Tags.Biomes.IS_DESERT) || biome.containsTag(Tags.Biomes.IS_SANDY) && !biome.containsTag(Tags.Biomes.IS_WET_OVERWORLD)) {
+        if (biome.is(Biomes.ERODED_BADLANDS) || biome.is(Tags.Biomes.IS_DESERT) || biome.is(Tags.Biomes.IS_SANDY) && !biome.is(Tags.Biomes.IS_WET_OVERWORLD)) {
             biomeByte = 0;
             variant = recruit.getRandom().nextInt(15, 19);
         }
-        else if (biome.is(Tags.Biomes.IS_CONIFEROUS) && biome.is(Tags.Biomes.IS_COLD_OVERWORLD) && !(biome.is(Tags.Biomes.IS_SNOWY))) {
+        else if (biome.is(Tags.Biomes.IS_TAIGA) && biome.is(Tags.Biomes.IS_COLD_OVERWORLD) && !(biome.is(Tags.Biomes.IS_SNOWY))) {
             biomeByte = 6;
             variant = recruit.getRandom().nextInt(5, 14);
         }
@@ -80,7 +82,7 @@ final class RecruitSpawnService {
             biomeByte = 1;
             variant = recruit.getRandom().nextInt(15, 19);
         }
-        else if (biome.is(Tags.Biomes.IS_HOT_OVERWORLD) && biome.is(Tags.Biomes.IS_SPARSE_OVERWORLD)) {
+        else if (biome.is(Tags.Biomes.IS_HOT_OVERWORLD) && biome.is(Tags.Biomes.IS_SPARSE_VEGETATION_OVERWORLD)) {
             biomeByte = 3;
             variant = recruit.getRandom().nextInt(15, 19);
         }

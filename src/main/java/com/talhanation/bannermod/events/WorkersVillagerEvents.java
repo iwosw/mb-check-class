@@ -21,6 +21,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.bus.api.ICancellableEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -53,8 +54,8 @@ public class WorkersVillagerEvents {
 
     @SubscribeEvent
     public void onVillagerLivingUpdate(EntityTickEvent.Post event) {
-        LivingEntity livingEntity = event.getEntity();
-        if (!(livingEntity instanceof Villager villager) || villager.level().isClientSide() || !(villager.level() instanceof ServerLevel serverLevel)) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Villager villager) || villager.level().isClientSide() || !(villager.level() instanceof ServerLevel serverLevel)) {
             return;
         }
 
@@ -92,7 +93,9 @@ public class WorkersVillagerEvents {
         }
 
         if(disableInteractionInMarketArea(event.getEntity(), event.getLevel(), event.getPos())){
-            event.setCanceled(true);
+            if (event instanceof ICancellableEvent cancellableEvent) {
+                cancellableEvent.setCanceled(true);
+            }
         }
 
     }

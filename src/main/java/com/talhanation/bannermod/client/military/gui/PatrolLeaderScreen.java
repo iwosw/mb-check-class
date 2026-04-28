@@ -28,7 +28,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
     private static final MutableComponent TT_STOP      = Component.translatable("gui.recruits.inv.tooltip.patrol_leader_stop");
     private static final MutableComponent TT_PAUSE     = Component.translatable("gui.recruits.inv.tooltip.patrol_leader_pause");
     private static final MutableComponent TT_RESUME    = Component.translatable("gui.recruits.inv.tooltip.patrol_leader_resume");
-    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
     private static final int TEXTURE_W = 195;
     private static final int TEXTURE_H = 160;
     private static final int FONT_COLOR = 4210752;

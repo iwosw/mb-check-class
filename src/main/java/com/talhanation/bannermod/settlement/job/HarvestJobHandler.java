@@ -39,7 +39,7 @@ import java.util.UUID;
  */
 public final class HarvestJobHandler implements JobHandler {
 
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "harvest");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "harvest");
 
     /** Order types this handler is willing to claim on behalf of its residents. */
     public static final Set<SettlementWorkOrderType> SUPPORTED_TYPES = EnumSet.of(

@@ -19,6 +19,8 @@ import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.animal.horse.Markings;
 import net.minecraft.world.entity.animal.horse.Variant;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.neoforged.neoforge.common.NeoForgeMod;
@@ -73,7 +75,7 @@ public class NomadEntity extends BowmanEntity {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.32D)
-                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.05D)
                 .add(Attributes.ATTACK_DAMAGE, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D)
@@ -105,11 +107,11 @@ public class NomadEntity extends BowmanEntity {
                 Horse horse = new Horse(EntityType.HORSE, this.getCommandSenderWorld());
                 horse.setPos(this.getX(), this.getY(), this.getZ());
                 horse.setTamed(true);
-                horse.equipSaddle(null);
+                horse.equipSaddle(new ItemStack(Items.SADDLE), null);
 
                 Variant variant = Util.getRandom(Variant.values(), this.getRandom());
                 Markings markings = Util.getRandom(Markings.values(), this.getRandom());
-                horse.setVariantAndMarkings(variant, markings);
+                horse.setVariant(variant);
 
                 this.startRiding(horse);
                 this.getCommandSenderWorld().addFreshEntity(horse);

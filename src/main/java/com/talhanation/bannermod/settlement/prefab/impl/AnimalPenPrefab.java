@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * trough. An {@code AnimalPenArea} entity is embedded at the enclosure center.
  */
 public final class AnimalPenPrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "animal_pen");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "animal_pen");
 
     private static final int WIDTH = 9;
     private static final int HEIGHT = 4;

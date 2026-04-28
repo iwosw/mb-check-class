@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
  * discover it as a deposit target even though no worker is assigned.
  */
 public final class StoragePrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "storage");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "storage");
 
     private static final int WIDTH = 9;
     private static final int HEIGHT = 7;

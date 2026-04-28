@@ -111,7 +111,7 @@ public class CrossbowWeapon implements IWeapon {
     
     @Override
     public SoundEvent getLoadSound() {
-        return SoundEvents.CROSSBOW_LOADING_END;
+        return SoundEvents.CROSSBOW_LOADING_END.value();
     }
 
     @Override
@@ -140,7 +140,7 @@ public class CrossbowWeapon implements IWeapon {
 		
         int i = getEnchantmentLevel(shooter, Enchantments.PIERCING, shooter.getMainHandItem());
         if (i > 0) {
-            projectileEntity.setPierceLevel((byte)i);
+            projectileEntity.pickup = AbstractArrow.Pickup.DISALLOWED;
         }
 
         int k = getEnchantmentLevel(shooter, Enchantments.MULTISHOT, shooter.getMainHandItem());

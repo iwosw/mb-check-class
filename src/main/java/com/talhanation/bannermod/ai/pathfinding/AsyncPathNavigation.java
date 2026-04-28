@@ -247,7 +247,7 @@ public abstract class AsyncPathNavigation extends PathNavigation {
     }
 
     public boolean isTrueAsyncCommitTargetAlive() {
-        return this.mob.isAlive() && !this.mob.isRemoved() && this.mob.isAddedToWorld();
+        return this.mob.isAlive() && !this.mob.isRemoved();
     }
 
     public boolean hasUnsupportedTrueAsyncPassability() {

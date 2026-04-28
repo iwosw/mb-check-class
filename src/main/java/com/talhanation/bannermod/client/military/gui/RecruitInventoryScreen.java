@@ -32,7 +32,7 @@ import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 @OnlyIn(Dist.CLIENT)
 public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/recruit_gui.png" );
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/recruit_gui.png" );
 
     private static final MutableComponent TEXT_HEALTH = Component.translatable("gui.recruits.inv.health");
     private static final MutableComponent TEXT_LEVEL = Component.translatable("gui.recruits.inv.level");
@@ -401,9 +401,9 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         return super.mouseClicked(mouseX, mouseY, button);
     }
     @Override
-    public boolean mouseScrolled(double x, double y, double d) {
-        if(groupSelectionDropDownMenu != null) groupSelectionDropDownMenu.mouseScrolled(x,y,d);
-        return super.mouseScrolled(x, y, d);
+    public boolean mouseScrolled(double x, double y, double scrollX, double d) {
+        if(groupSelectionDropDownMenu != null) groupSelectionDropDownMenu.mouseScrolled(x, y, scrollX, d);
+        return super.mouseScrolled(x, y, scrollX, d);
     }
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
@@ -546,7 +546,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
 
-        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 50, j + 82, 30, (float)(i + 50) - mouseX, (float)(j + 75 - 50) - mouseY, this.recruit);
+        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 10, j + 20, i + 90, j + 100, 30, 0.0F, (float)(i + 50) - mouseX, (float)(j + 25) - mouseY, this.recruit);
     }
 
     private void updateCombatStanceButton() {

@@ -1,7 +1,9 @@
 package com.talhanation.bannermod.entity.military;
 
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.events.RecruitEvent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ShieldItem;
@@ -26,26 +28,26 @@ final class RecruitProgressionService {
     static void applyLevelBuffs(AbstractRecruitEntity recruit) {
         int level = recruit.getXpLevel();
         if (level <= 10) {
-            recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
-            recruit.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus_level", 0.03D, AttributeModifier.Operation.ADDITION));
-            recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus_level", 0.0012D, AttributeModifier.Operation.ADDITION));
-            recruit.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus_level", 0.0025D, AttributeModifier.Operation.ADDITION));
+            recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "heath_bonus_level"), 2D, AttributeModifier.Operation.ADD_VALUE));
+            recruit.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "attack_bonus_level"), 0.03D, AttributeModifier.Operation.ADD_VALUE));
+            recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "knockback_bonus_level"), 0.0012D, AttributeModifier.Operation.ADD_VALUE));
+            recruit.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "speed_bonus_level"), 0.0025D, AttributeModifier.Operation.ADD_VALUE));
         }
         if (level > 10) {
-            recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
+            recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "heath_bonus_level"), 2D, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 
     static void applyLevelBuffsForLevel(AbstractRecruitEntity recruit, int level) {
         for (int i = 0; i < level; i++) {
             if (level <= 10) {
-                recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
-                recruit.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier("attack_bonus_level", 0.03D, AttributeModifier.Operation.ADDITION));
-                recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier("knockback_bonus_level", 0.0012D, AttributeModifier.Operation.ADDITION));
-                recruit.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier("speed_bonus_level", 0.0025D, AttributeModifier.Operation.ADDITION));
+                recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "heath_bonus_level"), 2D, AttributeModifier.Operation.ADD_VALUE));
+                recruit.getAttribute(Attributes.ATTACK_DAMAGE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "attack_bonus_level"), 0.03D, AttributeModifier.Operation.ADD_VALUE));
+                recruit.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "knockback_bonus_level"), 0.0012D, AttributeModifier.Operation.ADD_VALUE));
+                recruit.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "speed_bonus_level"), 0.0025D, AttributeModifier.Operation.ADD_VALUE));
             }
             if (level > 10) {
-                recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("heath_bonus_level", 2D, AttributeModifier.Operation.ADDITION));
+                recruit.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "heath_bonus_level"), 2D, AttributeModifier.Operation.ADD_VALUE));
             }
         }
     }

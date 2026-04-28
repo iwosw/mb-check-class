@@ -75,10 +75,10 @@ public class SiegeStandardBlockEntityRenderer implements BlockEntityRenderer<Sie
         float x1 = (float) box.maxX, y1 = (float) box.maxY, z1 = (float) box.maxZ;
 
         // top quad
-        consumer.vertex(pose, x0, y1, z0).color(r, g, b, a).uv(0F, 0F).overlayCoords(packedOverlay).uv2(packedLight).normal(0F, 1F, 0F).endVertex();
-        consumer.vertex(pose, x1, y1, z0).color(r, g, b, a).uv(1F, 0F).overlayCoords(packedOverlay).uv2(packedLight).normal(0F, 1F, 0F).endVertex();
-        consumer.vertex(pose, x1, y1, z1).color(r, g, b, a).uv(1F, 1F).overlayCoords(packedOverlay).uv2(packedLight).normal(0F, 1F, 0F).endVertex();
-        consumer.vertex(pose, x0, y1, z1).color(r, g, b, a).uv(0F, 1F).overlayCoords(packedOverlay).uv2(packedLight).normal(0F, 1F, 0F).endVertex();
+        consumer.addVertex(pose, x0, y1, z0).setColor(r, g, b, a).setUv(0F, 0F).setOverlay(packedOverlay).setLight(packedLight).setNormal(0F, 1F, 0F);
+        consumer.addVertex(pose, x1, y1, z0).setColor(r, g, b, a).setUv(1F, 0F).setOverlay(packedOverlay).setLight(packedLight).setNormal(0F, 1F, 0F);
+        consumer.addVertex(pose, x1, y1, z1).setColor(r, g, b, a).setUv(1F, 1F).setOverlay(packedOverlay).setLight(packedLight).setNormal(0F, 1F, 0F);
+        consumer.addVertex(pose, x0, y1, z1).setColor(r, g, b, a).setUv(0F, 1F).setOverlay(packedOverlay).setLight(packedLight).setNormal(0F, 1F, 0F);
 
         // four side quads
         addSideQuad(consumer, pose, x0, y0, z0, x1, y1, z0, 0F, 0F, -1F, r, g, b, a, packedLight, packedOverlay);
@@ -94,10 +94,10 @@ public class SiegeStandardBlockEntityRenderer implements BlockEntityRenderer<Sie
                                     float nx, float ny, float nz,
                                     float r, float g, float b, float a,
                                     int packedLight, int packedOverlay) {
-        consumer.vertex(pose, xa, y0, za).color(r, g, b, a).uv(0F, 0F).overlayCoords(packedOverlay).uv2(packedLight).normal(nx, ny, nz).endVertex();
-        consumer.vertex(pose, xb, y0, zb).color(r, g, b, a).uv(1F, 0F).overlayCoords(packedOverlay).uv2(packedLight).normal(nx, ny, nz).endVertex();
-        consumer.vertex(pose, xb, y1, zb).color(r, g, b, a).uv(1F, 1F).overlayCoords(packedOverlay).uv2(packedLight).normal(nx, ny, nz).endVertex();
-        consumer.vertex(pose, xa, y1, za).color(r, g, b, a).uv(0F, 1F).overlayCoords(packedOverlay).uv2(packedLight).normal(nx, ny, nz).endVertex();
+        consumer.addVertex(pose, xa, y0, za).setColor(r, g, b, a).setUv(0F, 0F).setOverlay(packedOverlay).setLight(packedLight).setNormal(nx, ny, nz);
+        consumer.addVertex(pose, xb, y0, zb).setColor(r, g, b, a).setUv(1F, 0F).setOverlay(packedOverlay).setLight(packedLight).setNormal(nx, ny, nz);
+        consumer.addVertex(pose, xb, y1, zb).setColor(r, g, b, a).setUv(1F, 1F).setOverlay(packedOverlay).setLight(packedLight).setNormal(nx, ny, nz);
+        consumer.addVertex(pose, xa, y1, za).setColor(r, g, b, a).setUv(0F, 1F).setOverlay(packedOverlay).setLight(packedLight).setNormal(nx, ny, nz);
     }
 
     private static void renderColoredOutline(PoseStack poseStack, VertexConsumer consumer, AABB box, int argb) {
@@ -128,7 +128,7 @@ public class SiegeStandardBlockEntityRenderer implements BlockEntityRenderer<Sie
     private static void line(VertexConsumer consumer, org.joml.Matrix4f pose,
                              float x1, float y1, float z1, float x2, float y2, float z2,
                              float r, float g, float b, float a) {
-        consumer.vertex(pose, x1, y1, z1).color(r, g, b, a).normal(0F, 1F, 0F).endVertex();
-        consumer.vertex(pose, x2, y2, z2).color(r, g, b, a).normal(0F, 1F, 0F).endVertex();
+        consumer.addVertex(pose, x1, y1, z1).setColor(r, g, b, a).setNormal(0F, 1F, 0F);
+        consumer.addVertex(pose, x2, y2, z2).setColor(r, g, b, a).setNormal(0F, 1F, 0F);
     }
 }

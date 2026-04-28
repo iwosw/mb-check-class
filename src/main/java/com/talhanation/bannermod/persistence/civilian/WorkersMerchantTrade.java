@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.persistence.civilian;
 
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -42,8 +43,8 @@ public class WorkersMerchantTrade {
     public CompoundTag toNbt() {
         CompoundTag tag = new CompoundTag();
         tag.putUUID("uuid", this.uuid);
-        tag.put("currencyItem", this.currencyItem.serializeNBT());
-        tag.put("tradeItem", this.tradeItem.serializeNBT());
+        tag.put("currencyItem", this.currencyItem.save(RegistryAccess.EMPTY));
+        tag.put("tradeItem", this.tradeItem.save(RegistryAccess.EMPTY));
         tag.putInt("maxTrades", maxTrades);
         tag.putInt("currentTrades", currentTrades);
         tag.putBoolean("allowDamagedCurrency", this.allowDamagedCurrency);
@@ -52,8 +53,8 @@ public class WorkersMerchantTrade {
     }
 
     public static WorkersMerchantTrade fromNbt(CompoundTag tag) {
-        ItemStack currencyItem = ItemStack.of(tag.getCompound("currencyItem"));
-        ItemStack tradeItem = ItemStack.of(tag.getCompound("tradeItem"));
+        ItemStack currencyItem = ItemStack.parseOptional(RegistryAccess.EMPTY, tag.getCompound("currencyItem"));
+        ItemStack tradeItem = ItemStack.parseOptional(RegistryAccess.EMPTY, tag.getCompound("tradeItem"));
         UUID uuid = tag.getUUID("uuid");
         int maxTrades = tag.getInt("maxTrades");
         int currentTrades = tag.getInt("currentTrades");

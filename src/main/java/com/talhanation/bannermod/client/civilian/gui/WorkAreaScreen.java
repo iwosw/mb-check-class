@@ -21,7 +21,7 @@ import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public abstract class WorkAreaScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/workareascreen.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/workareascreen.png");
     private static final MutableComponent TEXT_FORWARD = Component.translatable("gui.workers.command.text.forward");
     private static final MutableComponent TEXT_BACKWARD = Component.translatable("gui.workers.command.text.back");
     private static final MutableComponent TEXT_LEFT = Component.translatable("gui.workers.command.text.left");

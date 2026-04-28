@@ -2,6 +2,8 @@ package com.talhanation.bannermod.citizen;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
@@ -83,6 +85,11 @@ public final class CitizenCoreState implements CitizenCore {
     @Override
     public SimpleContainer getInventory() {
         return this.inventory;
+    }
+
+    @Override
+    public HolderLookup.Provider registryAccess() {
+        return RegistryAccess.EMPTY;
     }
 
     @Override

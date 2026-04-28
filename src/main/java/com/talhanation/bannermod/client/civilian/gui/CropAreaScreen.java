@@ -92,9 +92,9 @@ public class CropAreaScreen extends WorkAreaScreen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
     @Override
-    public boolean mouseScrolled(double x, double y, double d) {
-        if(seedItemSelectionDropDownMenu != null) seedItemSelectionDropDownMenu.mouseScrolled(x,y,d);
-        return super.mouseScrolled(x, y, d);
+    public boolean mouseScrolled(double x, double y, double scrollX, double d) {
+        if(seedItemSelectionDropDownMenu != null) seedItemSelectionDropDownMenu.mouseScrolled(x, y, scrollX, d);
+        return super.mouseScrolled(x, y, scrollX, d);
     }
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
