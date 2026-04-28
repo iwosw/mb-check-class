@@ -67,9 +67,9 @@ public class WorkersVillagerEvents {
 
     @SubscribeEvent
     public void onServerTick(ServerTickEvent.Post event) {
-        ServerLevel level = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer() == null
+        ServerLevel level = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer() == null
                 ? null
-                : net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
+                : net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
         if (level == null || level.getGameTime() % 200L != 0L) {
             return;
         }

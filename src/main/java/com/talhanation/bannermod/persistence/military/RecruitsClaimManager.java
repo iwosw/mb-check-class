@@ -75,7 +75,7 @@ public class RecruitsClaimManager {
     public void removeClaim(RecruitsClaim claim) {
         if (claim != null) {
             // ClaimEvent.Removed feuern
-            ServerLevel level = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
+            ServerLevel level = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
             NeoForge.EVENT_BUS.post(new ClaimEvent.Removed(claim, level));
 
             claims.entrySet().removeIf(entry -> entry.getValue().equals(claim));
