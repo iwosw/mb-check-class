@@ -198,7 +198,7 @@ public class BannerModWarOutcomeAndTaxGameTests {
         BannerModDedicatedServerGameTestSupport.joinTeam(level, defenderTeam, defenderLeaderPlayer);
 
         BlockPos attackerClaimPos = helper.absolutePos(new BlockPos(2, 2, 2));
-        BlockPos defenderClaimPos = helper.absolutePos(new BlockPos(14, 2, 14));
+        BlockPos defenderClaimPos = helper.absolutePos(new BlockPos(34, 2, 34));
         RecruitsClaim attackerClaim = BannerModDedicatedServerGameTestSupport.seedClaim(
                 level, attackerClaimPos, attackerTeam, attackerLeader,
                 attackerLeaderPlayer.getName().getString());
