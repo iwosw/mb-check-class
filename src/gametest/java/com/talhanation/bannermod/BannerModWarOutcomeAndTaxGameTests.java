@@ -24,7 +24,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,8 +70,8 @@ public class BannerModWarOutcomeAndTaxGameTests {
     public static void occupationTaxAccrualMovesTreasuryAndAuditsThroughLiveRuntime(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         Setup setup = setupAttackerDefender(helper, level, "tax");
-        UUID attackerClaimOwnerId = UUID.nameUUIDFromBytes((setup.warId + ":tax:attacker").getBytes(StandardCharsets.UTF_8));
-        UUID defenderClaimOwnerId = UUID.nameUUIDFromBytes((setup.warId + ":tax:defender").getBytes(StandardCharsets.UTF_8));
+        UUID attackerClaimOwnerId = setup.attackerEntityId;
+        UUID defenderClaimOwnerId = setup.defenderEntityId;
         setup.attackerClaim.setOwnerPoliticalEntityId(attackerClaimOwnerId);
         setup.defenderClaim.setOwnerPoliticalEntityId(defenderClaimOwnerId);
         ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, setup.attackerClaim);
