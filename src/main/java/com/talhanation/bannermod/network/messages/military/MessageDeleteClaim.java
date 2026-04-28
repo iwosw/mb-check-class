@@ -3,20 +3,20 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
 
-public class MessageDeleteClaim implements Message<MessageDeleteClaim> {
+public class MessageDeleteClaim implements BannerModMessage<MessageDeleteClaim> {
 
     private CompoundTag claimNBT;
 
@@ -28,8 +28,8 @@ public class MessageDeleteClaim implements Message<MessageDeleteClaim> {
         this.claimNBT = claim.toNBT();
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

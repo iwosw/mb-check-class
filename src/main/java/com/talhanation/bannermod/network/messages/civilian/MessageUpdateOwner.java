@@ -3,18 +3,18 @@ package com.talhanation.bannermod.network.messages.civilian;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
 
-public class MessageUpdateOwner implements Message<MessageUpdateOwner> {
+public class MessageUpdateOwner implements BannerModMessage<MessageUpdateOwner> {
 
     public UUID uuid;
     public UUID playerUUID;
@@ -29,8 +29,8 @@ public class MessageUpdateOwner implements Message<MessageUpdateOwner> {
         this.playerName = playerInfo.getName();
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

@@ -2,15 +2,15 @@ package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
 import com.talhanation.bannermod.entity.civilian.workarea.MiningPatternSettings;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
-public class MessageUpdateMiningArea implements Message<MessageUpdateMiningArea> {
+public class MessageUpdateMiningArea implements BannerModMessage<MessageUpdateMiningArea> {
 
     public UUID uuid;
     public int xSize;
@@ -36,8 +36,8 @@ public class MessageUpdateMiningArea implements Message<MessageUpdateMiningArea>
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

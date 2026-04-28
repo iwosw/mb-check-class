@@ -3,17 +3,17 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;
 import java.util.UUID;
 
-public class MessageSaveFormationFollowMovement implements Message<MessageSaveFormationFollowMovement> {
+public class MessageSaveFormationFollowMovement implements BannerModMessage<MessageSaveFormationFollowMovement> {
 
     private UUID player_uuid;
 
@@ -29,8 +29,8 @@ public class MessageSaveFormationFollowMovement implements Message<MessageSaveFo
         this.formation = formation;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

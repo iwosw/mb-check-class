@@ -8,20 +8,20 @@ import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.CommandEvents;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MessageFormationMapMoveOrder implements Message<MessageFormationMapMoveOrder> {
+public class MessageFormationMapMoveOrder implements BannerModMessage<MessageFormationMapMoveOrder> {
     private UUID contactId;
     private UUID groupId;
     private BlockPos target;
@@ -36,8 +36,8 @@ public class MessageFormationMapMoveOrder implements Message<MessageFormationMap
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

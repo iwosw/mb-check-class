@@ -7,17 +7,17 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.ICompanion;
 import com.talhanation.bannermod.util.RecruitCommanderUtil;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.*;
 
-public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageRemoveAssignedGroupFromCompanion> {
+public class MessageRemoveAssignedGroupFromCompanion implements BannerModMessage<MessageRemoveAssignedGroupFromCompanion> {
 
     private UUID owner;
     private UUID companion;
@@ -30,8 +30,8 @@ public class MessageRemoveAssignedGroupFromCompanion implements Message<MessageR
         this.companion = companion;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {

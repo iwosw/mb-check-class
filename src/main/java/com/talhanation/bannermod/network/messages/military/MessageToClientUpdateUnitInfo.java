@@ -1,13 +1,13 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.ClientManager;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 
-public class MessageToClientUpdateUnitInfo implements Message<MessageToClientUpdateUnitInfo> {
+public class MessageToClientUpdateUnitInfo implements BannerModMessage<MessageToClientUpdateUnitInfo> {
     private boolean configValueNobleNeedsVillagers;
     private int availableRecruitsToHire;
     public MessageToClientUpdateUnitInfo() {
@@ -20,8 +20,8 @@ public class MessageToClientUpdateUnitInfo implements Message<MessageToClientUpd
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

@@ -3,7 +3,8 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.CaptainEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -14,7 +15,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.common.Tags;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
@@ -22,7 +22,7 @@ import net.minecraftforge.network.PacketDistributor;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessagePatrolLeaderAddWayPoint implements Message<MessagePatrolLeaderAddWayPoint> {
+public class MessagePatrolLeaderAddWayPoint implements BannerModMessage<MessagePatrolLeaderAddWayPoint> {
     private UUID worker;
     private int x;
     private int y;
@@ -38,8 +38,8 @@ public class MessagePatrolLeaderAddWayPoint implements Message<MessagePatrolLead
         this.z = z;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {

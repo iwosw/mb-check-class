@@ -1,7 +1,8 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
@@ -10,14 +11,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
 import static com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity.DONE_TIME;
 
-public class MessageUpdateWorkArea implements Message<MessageUpdateWorkArea> {
+public class MessageUpdateWorkArea implements BannerModMessage<MessageUpdateWorkArea> {
     public float x;
     public float y;
     public float z;
@@ -39,8 +39,8 @@ public class MessageUpdateWorkArea implements Message<MessageUpdateWorkArea> {
         this.destroy = destroy;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

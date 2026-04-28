@@ -1,19 +1,19 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
 import static com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity.DONE_TIME;
 
-public class MessageUpdateLumberArea implements Message<MessageUpdateLumberArea> {
+public class MessageUpdateLumberArea implements BannerModMessage<MessageUpdateLumberArea> {
 
     public UUID uuid;
     public CompoundTag tag;
@@ -33,8 +33,8 @@ public class MessageUpdateLumberArea implements Message<MessageUpdateLumberArea>
         this.replant = replant;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

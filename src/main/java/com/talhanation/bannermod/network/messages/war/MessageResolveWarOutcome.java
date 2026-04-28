@@ -15,7 +15,8 @@ import com.talhanation.bannermod.war.runtime.ClaimRepublisher;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRuntime;
 import com.talhanation.bannermod.war.runtime.WarOutcomeApplier;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -23,7 +24,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class MessageResolveWarOutcome implements Message<MessageResolveWarOutcome> {
+public class MessageResolveWarOutcome implements BannerModMessage<MessageResolveWarOutcome> {
     private UUID warId;
     private byte actionOrdinal;
 
@@ -45,8 +45,8 @@ public class MessageResolveWarOutcome implements Message<MessageResolveWarOutcom
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

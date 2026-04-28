@@ -2,20 +2,20 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessagePatrolLeaderRemoveWayPoint implements Message<MessagePatrolLeaderRemoveWayPoint> {
+public class MessagePatrolLeaderRemoveWayPoint implements BannerModMessage<MessagePatrolLeaderRemoveWayPoint> {
     private UUID worker;
 
     public MessagePatrolLeaderRemoveWayPoint() {
@@ -25,8 +25,8 @@ public class MessagePatrolLeaderRemoveWayPoint implements Message<MessagePatrolL
         this.worker = recruit;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {

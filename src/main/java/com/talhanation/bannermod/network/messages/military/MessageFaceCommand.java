@@ -6,18 +6,18 @@ import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageFaceCommand implements Message<MessageFaceCommand> {
+public class MessageFaceCommand implements BannerModMessage<MessageFaceCommand> {
 
     private UUID player_uuid;
     private UUID group;
@@ -34,8 +34,8 @@ public class MessageFaceCommand implements Message<MessageFaceCommand> {
         this.tight = tight;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

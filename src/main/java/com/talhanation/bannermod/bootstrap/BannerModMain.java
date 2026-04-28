@@ -73,6 +73,7 @@ public class BannerModMain {
 
         // Lifecycle
         modEventBus.addListener(this::setup);
+        modEventBus.addListener(BannerModNetworkBootstrap::registerPayloads);
 
         // Register military deferred registers (from bannermod.registry.military)
         com.talhanation.bannermod.registry.military.ModBlocks.BLOCKS.register(modEventBus);

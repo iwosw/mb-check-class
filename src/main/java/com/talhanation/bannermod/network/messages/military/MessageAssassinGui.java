@@ -1,18 +1,18 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.entity.military.AssassinLeaderEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageAssassinGui implements Message<MessageAssassinGui> {
+public class MessageAssassinGui implements BannerModMessage<MessageAssassinGui> {
 
     private UUID uuid;
     private UUID recruit;
@@ -28,8 +28,8 @@ public class MessageAssassinGui implements Message<MessageAssassinGui> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

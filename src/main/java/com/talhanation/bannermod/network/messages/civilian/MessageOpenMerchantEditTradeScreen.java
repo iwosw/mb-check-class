@@ -3,18 +3,18 @@ package com.talhanation.bannermod.network.messages.civilian;
 import com.talhanation.bannermod.entity.civilian.MerchantAccessControl;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
-public class MessageOpenMerchantEditTradeScreen implements Message<MessageOpenMerchantEditTradeScreen> {
+public class MessageOpenMerchantEditTradeScreen implements BannerModMessage<MessageOpenMerchantEditTradeScreen> {
     private UUID player;
     private UUID merchantUuid;
     private CompoundTag nbt;
@@ -28,8 +28,8 @@ public class MessageOpenMerchantEditTradeScreen implements Message<MessageOpenMe
         this.nbt = trade.toNbt();
     }
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
     @Override
     public void executeServerSide(NetworkEvent.Context context) {

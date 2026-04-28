@@ -2,7 +2,8 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.army.map.FormationMapContact;
 import com.talhanation.bannermod.client.military.ClientManager;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.api.distmarker.Dist;
@@ -11,7 +12,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;
 
-public class MessageToClientUpdateFormationMapSnapshot implements Message<MessageToClientUpdateFormationMapSnapshot> {
+public class MessageToClientUpdateFormationMapSnapshot implements BannerModMessage<MessageToClientUpdateFormationMapSnapshot> {
     private CompoundTag contacts;
 
     public MessageToClientUpdateFormationMapSnapshot() {
@@ -22,8 +23,8 @@ public class MessageToClientUpdateFormationMapSnapshot implements Message<Messag
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

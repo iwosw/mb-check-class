@@ -1,12 +1,12 @@
 package com.talhanation.bannermod.network.messages.war;
 
 import com.talhanation.bannermod.war.runtime.WarAllyService;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
@@ -15,7 +15,7 @@ import java.util.UUID;
  * Client → server: invitee leader accepts (or declines) an outstanding ally
  * invitation. Mirrors {@code /bannermod war ally accept|decline}.
  */
-public class MessageRespondAllyInvite implements Message<MessageRespondAllyInvite> {
+public class MessageRespondAllyInvite implements BannerModMessage<MessageRespondAllyInvite> {
     private UUID inviteId;
     private boolean accept;
 
@@ -28,8 +28,8 @@ public class MessageRespondAllyInvite implements Message<MessageRespondAllyInvit
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

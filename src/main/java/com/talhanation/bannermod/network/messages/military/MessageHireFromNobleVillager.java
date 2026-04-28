@@ -7,7 +7,8 @@ import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
 import com.talhanation.bannermod.events.runtime.VillagerConversionService;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import com.talhanation.bannermod.persistence.military.RecruitsHireTrade;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -16,7 +17,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class MessageHireFromNobleVillager implements Message<MessageHireFromNobleVillager> {
+public class MessageHireFromNobleVillager implements BannerModMessage<MessageHireFromNobleVillager> {
     private UUID nobleUUID;
     private UUID villagerUUID;
     private int cost;
@@ -52,8 +52,8 @@ public class MessageHireFromNobleVillager implements Message<MessageHireFromNobl
         this.closing = closing;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {

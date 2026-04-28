@@ -3,7 +3,8 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.client.military.gui.MessengerAnswerScreen;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -12,7 +13,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 
-public class MessageToClientOpenMessengerAnswerScreen implements Message<MessageToClientOpenMessengerAnswerScreen> {
+public class MessageToClientOpenMessengerAnswerScreen implements BannerModMessage<MessageToClientOpenMessengerAnswerScreen> {
 
     public String message;
     public CompoundTag nbt;
@@ -28,8 +29,8 @@ public class MessageToClientOpenMessengerAnswerScreen implements Message<Message
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

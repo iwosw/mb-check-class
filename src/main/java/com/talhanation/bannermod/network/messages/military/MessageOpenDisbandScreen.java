@@ -1,15 +1,15 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
-public class MessageOpenDisbandScreen implements Message<MessageOpenDisbandScreen> {
+public class MessageOpenDisbandScreen implements BannerModMessage<MessageOpenDisbandScreen> {
 
     private UUID player;
     private UUID recruit;
@@ -24,8 +24,8 @@ public class MessageOpenDisbandScreen implements Message<MessageOpenDisbandScree
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

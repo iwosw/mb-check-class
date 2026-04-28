@@ -1,13 +1,13 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.settlement.prefab.BuildingPlacementService;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 /**
@@ -16,7 +16,7 @@ import net.minecraftforge.network.NetworkEvent;
  * <p>The actual placement work is handled by {@link BuildingPlacementService}, which
  * validates the prefab id, spawns the {@code BuildArea}, and loads the blueprint.</p>
  */
-public class MessageRequestPlaceBuilding implements Message<MessageRequestPlaceBuilding> {
+public class MessageRequestPlaceBuilding implements BannerModMessage<MessageRequestPlaceBuilding> {
     public ResourceLocation prefabId;
     public BlockPos pos;
     public int facingIndex;
@@ -31,8 +31,8 @@ public class MessageRequestPlaceBuilding implements Message<MessageRequestPlaceB
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

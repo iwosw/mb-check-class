@@ -2,20 +2,20 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.army.map.FormationMapSnapshotService;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
-public class MessageRequestFormationMapSnapshot implements Message<MessageRequestFormationMapSnapshot> {
+public class MessageRequestFormationMapSnapshot implements BannerModMessage<MessageRequestFormationMapSnapshot> {
     public MessageRequestFormationMapSnapshot() {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

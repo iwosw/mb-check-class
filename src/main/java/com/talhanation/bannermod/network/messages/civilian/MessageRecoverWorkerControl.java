@@ -1,19 +1,19 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MessageRecoverWorkerControl implements Message<MessageRecoverWorkerControl> {
+public class MessageRecoverWorkerControl implements BannerModMessage<MessageRecoverWorkerControl> {
 
     public List<UUID> workerUuids = new ArrayList<>();
 
@@ -25,8 +25,8 @@ public class MessageRecoverWorkerControl implements Message<MessageRecoverWorker
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

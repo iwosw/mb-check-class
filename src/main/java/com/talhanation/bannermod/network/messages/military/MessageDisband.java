@@ -2,16 +2,16 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageDisband implements Message<MessageDisband> {
+public class MessageDisband implements BannerModMessage<MessageDisband> {
 
     private UUID recruit;
     private boolean keepTeam;
@@ -24,8 +24,8 @@ public class MessageDisband implements Message<MessageDisband> {
         this.keepTeam = keepTeam;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {
