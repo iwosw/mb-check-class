@@ -13,8 +13,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 import java.util.List;
@@ -38,7 +38,7 @@ public class BannerModDedicatedServerReconnectGameTests {
                 "Reconnect Recruit",
                 RECONNECTED_OWNER_UUID
         );
-        Player temporaryOwner = helper.makeMockPlayer();
+        Player temporaryOwner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         FarmerEntity worker = BannerModGameTestSupport.spawnOwnedFarmer(
                 helper,
                 temporaryOwner,
@@ -96,7 +96,7 @@ public class BannerModDedicatedServerReconnectGameTests {
                 "Roundtrip Recruit",
                 RECONNECTED_OWNER_UUID
         );
-        Player temporaryOwner = helper.makeMockPlayer();
+        Player temporaryOwner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         FarmerEntity originalWorker = BannerModGameTestSupport.spawnOwnedFarmer(
                 helper,
                 temporaryOwner,

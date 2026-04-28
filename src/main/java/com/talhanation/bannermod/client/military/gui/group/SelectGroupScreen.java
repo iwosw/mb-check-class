@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 
 public class SelectGroupScreen extends ListScreenBase implements IGroupSelection {
 
-    protected static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/select_player.png");
+    protected static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/select_player.png");
     protected static final Component BUTTON_BACK = Component.translatable("gui.recruits.button.back");
     protected static Component BUTTON_TEXT;
     protected static Component TOOLTIP_BUTTON;
@@ -69,7 +69,7 @@ public class SelectGroupScreen extends ListScreenBase implements IGroupSelection
         ySize = HEADER_SIZE + units * UNIT_SIZE + FOOTER_SIZE;
 
         if (groupList != null) {
-            groupList.updateSize(width, height, guiTop + HEADER_SIZE + SEARCH_HEIGHT, guiTop + HEADER_SIZE + units * UNIT_SIZE);
+            groupList.setRectangle(width, units * UNIT_SIZE - SEARCH_HEIGHT, 0, guiTop + HEADER_SIZE + SEARCH_HEIGHT);
         } else {
             groupList = new RecruitsGroupList(width, height, guiTop + HEADER_SIZE + SEARCH_HEIGHT, guiTop + HEADER_SIZE + units * UNIT_SIZE, CELL_HEIGHT, this, groupIn == null ? null : List.of(groupIn.getUUID()));
         }
@@ -110,7 +110,6 @@ public class SelectGroupScreen extends ListScreenBase implements IGroupSelection
         super.tick();
         ClientManager.updateGroups();
         if(searchBox != null){
-            searchBox.tick();
         }
 
         if(groupList != null){

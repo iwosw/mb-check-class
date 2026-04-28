@@ -24,7 +24,7 @@ import java.awt.*;
 
 @OnlyIn(Dist.CLIENT)
 public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/assassin_gui.png");
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/assassin_gui.png");
 
     private static final MutableComponent TEXT_HEALTH = Component.literal("gui.recruits.inv.health");
     private static final MutableComponent TEXT_LEVEL = Component.literal("gui.recruits.inv.level");

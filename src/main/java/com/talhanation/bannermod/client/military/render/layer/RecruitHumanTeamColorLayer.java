@@ -17,33 +17,33 @@ import net.minecraft.resources.ResourceLocation;
 public class RecruitHumanTeamColorLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
 
     private static final ResourceLocation[] TEXTURE = {
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_white.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_black.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_light_grey.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_grey.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_dark_grey.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_light_blue.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_blue.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_dark_blue.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_light_green.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_green.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_dark_green.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_light_red.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_red.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_dark_red.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_light_brown.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_brown.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_dark_brown.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_light_cyan.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_cyan.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_dark_cyan.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_yellow.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_orange.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_magenta.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_purple.png"),
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_team_gold.png")
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_white.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_black.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_light_grey.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_grey.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_dark_grey.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_light_blue.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_blue.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_dark_blue.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_light_green.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_green.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_dark_green.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_light_red.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_red.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_dark_red.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_light_brown.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_brown.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_dark_brown.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_light_cyan.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_cyan.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_dark_cyan.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_yellow.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_orange.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_magenta.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_purple.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_team_gold.png")
     };
-    private static final ResourceLocation TEXTURE2 = new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/human/human_base_cloth.png");
+    private static final ResourceLocation TEXTURE2 = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_base_cloth.png");
     public RecruitHumanTeamColorLayer(LivingEntityRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> renderer) {
         super(renderer);
     }
@@ -56,10 +56,10 @@ public class RecruitHumanTeamColorLayer extends RenderLayer<AbstractRecruitEntit
         RecruitRenderProfiling.textureStateSwitch("team_color");
         long start = RecruitRenderProfiling.start();
         if (recruit.getTeam() != null) {
-            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE[recruit.getColor()])), p_117722_, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE[recruit.getColor()])), p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
         }
         else{
-            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE2)), p_117722_, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE2)), p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
         }
         RecruitRenderProfiling.layerDuration("team_color", start);
     }

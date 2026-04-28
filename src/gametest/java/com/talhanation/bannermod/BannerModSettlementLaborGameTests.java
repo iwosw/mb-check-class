@@ -10,9 +10,9 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.util.FakePlayerFactory;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
@@ -25,7 +25,7 @@ public class BannerModSettlementLaborGameTests {
     @GameTest(template = "harness_empty")
     public static void settlementLaborKeepsAuthorizationSeparateFromRecoveryControl(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        Player ownerPlayer = helper.makeMockPlayer();
+        Player ownerPlayer = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         Player outsiderPlayer = FakePlayerFactory.get(level, new GameProfile(UUID.randomUUID(), "settlement-outsider"));
         FarmerEntity worker = BannerModGameTestSupport.spawnOwnedFarmer(
                 helper,

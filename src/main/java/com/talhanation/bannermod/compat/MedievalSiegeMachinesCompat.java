@@ -42,8 +42,8 @@ public final class MedievalSiegeMachinesCompat {
 
     private static void detectNamespace(String namespace, Map<ResourceLocation, Set<Operation>> machines) {
         for (String path : KNOWN_MACHINE_PATHS) {
-            ResourceLocation id = new ResourceLocation(namespace, path);
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(namespace, path);
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
             if (type != null) {
                 machines.put(id, EnumSet.of(Operation.CREW_SEAT, Operation.AIM, Operation.LOAD, Operation.FIRE));
             }

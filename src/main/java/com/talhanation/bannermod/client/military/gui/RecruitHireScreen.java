@@ -29,7 +29,7 @@ import java.text.DecimalFormat;
 
 @OnlyIn(Dist.CLIENT)
 public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/hire_gui.png");
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/hire_gui.png");
 
     private static final MutableComponent TEXT_HIRE = Component.translatable("gui.recruits.hire_gui.text.hire");
 
@@ -101,9 +101,9 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
         return super.mouseClicked(mouseX, mouseY, button);
     }
     @Override
-    public boolean mouseScrolled(double x, double y, double d) {
-        if(groupSelectionDropDownMenu != null) groupSelectionDropDownMenu.mouseScrolled(x,y,d);
-        return super.mouseScrolled(x, y, d);
+    public boolean mouseScrolled(double x, double y, double scrollX, double d) {
+        if(groupSelectionDropDownMenu != null) groupSelectionDropDownMenu.mouseScrolled(x, y, scrollX, d);
+        return super.mouseScrolled(x, y, scrollX, d);
     }
 
     @Override
@@ -173,8 +173,8 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
 
-        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics,i + 30, j + 60, 15, (float)(i + 50) - mouseX, (float)(j + 75 - 50) - mouseY, this.recruit);
-        if(recruit.getVehicle() instanceof AbstractHorse horse) InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 30, j + 72, 15, (float)(i + 50) - mouseX, (float)(j + 75 - 50) - mouseY, horse);
+        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 10, j + 20, i + 50, j + 75, 15, 0.0F, (float)(i + 50) - mouseX, (float)(j + 25) - mouseY, this.recruit);
+        if(recruit.getVehicle() instanceof AbstractHorse horse) InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 10, j + 32, i + 50, j + 87, 15, 0.0F, (float)(i + 50) - mouseX, (float)(j + 25) - mouseY, horse);
     }
 
 }

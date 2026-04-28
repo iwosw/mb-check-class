@@ -7,6 +7,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -40,7 +41,6 @@ public class MessageToClientUpdateClaims implements BannerModMessage<MessageToCl
         return BannerModMessage.clientbound();
     }
 
-    @Override
     @OnlyIn(Dist.CLIENT)
     public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.full_sync.claims", claimsListNBT);
@@ -55,24 +55,24 @@ public class MessageToClientUpdateClaims implements BannerModMessage<MessageToCl
     }
 
     @Override
-    public MessageToClientUpdateClaims fromBytes(FriendlyByteBuf buf) {
+    public MessageToClientUpdateClaims fromBytes(RegistryFriendlyByteBuf buf) {
         this.claimsListNBT = buf.readNbt();
         this.claimCost = buf.readInt();
         this.chunkCost = buf.readInt();
         this.cascadeOfCost = buf.readBoolean();
-        this.currencyItemStack = buf.readItem();
+        this.currencyItemStack = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
         this.allowClaiming = buf.readBoolean();
         this.fogOfWarEnabled = buf.readBoolean();
         return this;
     }
 
     @Override
-    public void toBytes(FriendlyByteBuf buf) {
+    public void toBytes(RegistryFriendlyByteBuf buf) {
         buf.writeNbt(this.claimsListNBT);
         buf.writeInt(this.claimCost);
         buf.writeInt(this.chunkCost);
         buf.writeBoolean(this.cascadeOfCost);
-        buf.writeItemStack(this.currencyItemStack, false);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, this.currencyItemStack);
         buf.writeBoolean(this.allowClaiming);
         buf.writeBoolean(this.fogOfWarEnabled);
     }

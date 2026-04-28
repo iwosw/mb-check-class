@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 /** High-priority during the rest phase. Keeps residents at home overnight. */
 public final class RestResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/rest");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/rest");
 
     private static final int REST_PRIORITY = 90;
     private static final int REST_DURATION_TICKS = 200;

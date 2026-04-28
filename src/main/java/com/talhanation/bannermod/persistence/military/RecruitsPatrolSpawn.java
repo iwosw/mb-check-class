@@ -384,7 +384,7 @@ public class RecruitsPatrolSpawn {
     public static void createWanderingTrader(ServerLevel world, BlockPos upPos, AbstractLeaderEntity leader) {
         WanderingTrader villager = EntityType.WANDERING_TRADER.create(world);
         villager.moveTo(upPos.getX() + 0.5, upPos.getY() + 0.5, upPos.getZ() + 0.5, random.nextFloat() * 360 - 180, 0);
-        villager.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null, null);
+        villager.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null);
         villager.setPersistenceRequired();
         villager.goalSelector.addGoal(0, new FollowCaravanOwner(villager, leader.getUUID()));
         world.addFreshEntity(villager);
@@ -393,10 +393,10 @@ public class RecruitsPatrolSpawn {
     public static void createHorse(ServerLevel world, BlockPos upPos, Villager villager) {
         Horse horse = EntityType.HORSE.create(world);
         horse.moveTo(upPos.getX() + 0.5, upPos.getY() + 0.5, upPos.getZ() + 0.5, random.nextFloat() * 360 - 180, 0);
-        horse.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null, null);
+        horse.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null);
         horse.setPersistenceRequired();
         horse.setTamed(true);
-        horse.equipSaddle(null);
+        horse.equipSaddle(new ItemStack(Items.SADDLE), null);
         horse.setLeashedTo(villager, true);
         world.addFreshEntity(horse);
     }
@@ -404,7 +404,7 @@ public class RecruitsPatrolSpawn {
     public static Villager createVillager(ServerLevel world, BlockPos upPos, AbstractLeaderEntity leader) {
         Villager villager = EntityType.VILLAGER.create(world);
         villager.moveTo(upPos.getX() + 0.5, upPos.getY() + 0.5, upPos.getZ() + 0.5, random.nextFloat() * 360 - 180, 0);
-        villager.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null, null);
+        villager.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null);
         villager.setPersistenceRequired();
         villager.goalSelector.addGoal(0, new FollowCaravanOwner(villager, leader.getUUID()));
         world.addFreshEntity(villager);
@@ -414,12 +414,11 @@ public class RecruitsPatrolSpawn {
     public static void createLlama(ServerLevel world, BlockPos upPos, Villager villager) {
         Llama llama = EntityType.LLAMA.create(world);
         llama.moveTo(upPos.getX() + 0.5, upPos.getY() + 0.5, upPos.getZ() + 0.5, random.nextFloat() * 360 - 180, 0);
-        llama.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null, null);
+        llama.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null);
         llama.setPersistenceRequired();
         llama.setTamed(true);
         llama.setChest(true);
         llama.getPersistentData().putInt("Strength", 5);
-        llama.createInventory();
         llama.setLeashedTo(villager, true);
         llama.getPersistentData().putBoolean("Caravan", true);
         fillLlamaInventory(llama);
@@ -449,11 +448,10 @@ public class RecruitsPatrolSpawn {
     public static void createMule(ServerLevel world, BlockPos upPos, LivingEntity owner) {
         Mule mule = EntityType.MULE.create(world);
         mule.moveTo(upPos.getX() + 0.5, upPos.getY() + 0.5, upPos.getZ() + 0.5, random.nextFloat() * 360 - 180, 0);
-        mule.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null, null);
+        mule.finalizeSpawn(world, world.getCurrentDifficultyAt(upPos), MobSpawnType.PATROL, null);
         mule.setPersistenceRequired();
         mule.setTamed(true);
         mule.setChest(true);
-        mule.createInventory();
         mule.setLeashedTo(owner, true);
         mule.getPersistentData().putBoolean("Caravan", true);
         fillMuleInventory(mule);

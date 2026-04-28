@@ -57,7 +57,7 @@
     {
       "id": "PORT-001",
       "title": "NeoForge 1.21.1 port",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Future platform migration may be needed, but it is not active gameplay work and should not live as a stale parallel plan.",
       "scope": [
@@ -77,13 +77,19 @@
           "text": "Split into PORT-002 build baseline, PORT-003 API migration, and PORT-004 verification/smoke; parent remains open until the port branch fully targets NeoForge 1.21.1 and passes compile, tests, and smoke."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: root build targets NeoForge 1.21.1; ctx log -- ./gradlew compileJava succeeded; ctx log -- ./gradlew test succeeded; ctx log -- ./gradlew verifyGameTestStage succeeded; old Forge compile assumptions blocking the port are cleared."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "PORT-002",
         "PORT-003",
         "PORT-004"
-      ]
+      ],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "WAR-007",
@@ -2789,7 +2795,7 @@
     {
       "id": "PORT-003",
       "title": "Migrate BannerMod source APIs to NeoForge 1.21.1",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Forge 1.20.1 APIs must be migrated before the port can compile or smoke run.",
       "scope": [
@@ -2807,13 +2813,19 @@
           "text": "Attempted direct verification on feature/port-003: ctx log -- ./gradlew compileJava failed with 1130 compile errors. First clusters are removed or renamed Forge event/overlay APIs, entity inventory/synched-data/saved-data APIs, registry/menu/spawn egg/item component APIs, and networking payload assumptions. Split remaining PORT-003 source migration into dependency chain PORT-005 -> PORT-006 -> PORT-007 -> PORT-008 -> PORT-009; PORT-003 now waits for PORT-009 to prove root compileJava."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded against NeoForge 1.21.1 with source API migration blockers cleared."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-004",
       "title": "Verify NeoForge port tests and smoke run",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-001 acceptance requires tests and in-game smoke after source migration.",
       "scope": [
@@ -2826,8 +2838,14 @@
         "PORT-003"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded; ctx log -- ./gradlew test succeeded; ctx log -- ./gradlew verifyGameTestStage succeeded, exercising the NeoForge GameTest smoke server."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "ARMY-004",
@@ -3268,7 +3286,7 @@
     {
       "id": "PORT-009",
       "title": "Close remaining NeoForge source compile blockers",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "After the major API clusters are migrated, PORT-003 still needs a final pass to remove residual Forge 1.20.1 source assumptions.",
       "scope": [
@@ -3286,8 +3304,14 @@
           "text": "Initial PORT-009 attempt updated TickEvent split, LivingIncomingDamageEvent replacement, PathType rename, removed DistExecutor dependency, and marked unresolved named mixin targets remap=false in a scratch worktree, but compileJava still exposed about 897 masked errors. Split remaining closure into PORT-014 event APIs, PORT-015 military inventory/equipment, PORT-016 projectile/ranged combat, PORT-017 identifier/profile/registry access, and PORT-018 final compile sweep. Scratch changes were not merged."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded; residual NeoForge source compile blockers are cleared or represented by green compile."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-010",
@@ -3442,7 +3466,7 @@
     {
       "id": "PORT-016",
       "title": "Port projectile and ranged combat APIs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-009 compile exposes projectile and ranged combat API changes after earlier port blockers are removed.",
       "scope": [
@@ -3455,13 +3479,19 @@
         "PORT-015"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) compileJava reached Java compilation and reported no projectile, arrow, ranged combat, BowmanEntity, CrossbowWeapon, ProjectileUtil, or old enchantment API errors after the port; 2) remaining compileJava failures are unrelated mixin/pathfinding port blockers (BlockPathTypes and mixin target mappings); 3) focused search found no old getMobArrow/customArrow/POWER_ARROWS/PUNCH_ARROWS/FLAMING_ARROWS/INFINITY_ARROWS usages in active ranged code."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-017",
       "title": "Port identifier profile and registry access APIs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-009 compile exposes ResourceLocation, GameProfile, and registry access API changes that are distinct from registry object migration.",
       "scope": [
@@ -3474,13 +3504,19 @@
         "PORT-016"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded; compile no longer reports ResourceLocation constructor, GameProfile/profile, or CitizenCore registry access API errors."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-018",
       "title": "Final NeoForge compile sweep",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "After the known residual PORT-009 clusters land, a final compile pass is required to close masked source errors and prove the port compiles.",
       "scope": [
@@ -3496,8 +3532,14 @@
         "PORT-021"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded for the root NeoForge 1.21.1 source tree."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-019",
@@ -3552,7 +3594,7 @@
     {
       "id": "PORT-021",
       "title": "Remove remaining Forge server lifecycle hooks",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT audit found active source still referencing net.minecraftforge.server.ServerLifecycleHooks after the NeoForge migration.",
       "scope": [
@@ -3565,8 +3607,751 @@
         "PORT-020"
       ],
       "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) ctx search net\\.minecraftforge over src/main/java and src/main/resources returned zero matches; 2) remaining ServerLifecycleHooks references now resolve to net.neoforged.neoforge.server.ServerLifecycleHooks; 3) filtered compileJava output reported no net.minecraftforge, ServerLifecycleHooks, WorkersVillagerEvents, or RecruitsClaimManager errors, with remaining compile failures unrelated mixin/pathfinding port blockers."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-022",
+      "title": "Fix 1.21 GUI compile blockers",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Current NeoForge port cannot proceed until screens, widgets, list sizing, and mouse/scroll API compile errors are cleared.",
+      "scope": [
+        "Migrate only currently failing client GUI calls such as EditBox ticking, AbstractSelectionList sizing, widget render overrides, InventoryScreen entity previews, and scrolled input signatures."
+      ],
+      "acceptance": [
+        "./gradlew compileJava no longer reports errors from client GUI screen/widget classes.",
+        "Changes are compile-focused and do not redesign player-facing flows."
+      ],
+      "dependencies": [
+        "PORT-018"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded; no client GUI screen/widget compile errors remain."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-023",
+      "title": "Fix 1.21 renderer compile blockers",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Current compile output still fails in entity, HUD, banner, line, model-layer, and overlay rendering code after the 1.21 API migration.",
+      "scope": [
+        "Migrate renderer signatures, VertexConsumer calls, model tint rendering, banner pattern rendering, overlay visibility checks, and DeltaTracker/partial-tick usage only far enough to compile."
+      ],
+      "acceptance": [
+        "./gradlew compileJava no longer reports errors from client renderer, render layer, HUD overlay, banner, or line rendering classes.",
+        "No new render architecture is introduced in this task; it is only the compile unblock."
+      ],
+      "dependencies": [
+        "PORT-018"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded; no client renderer, render layer, HUD overlay, banner, or line rendering compile errors remain."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-024",
+      "title": "Fix 1.21 item and block-entity compile blockers",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "The port still has non-render API breakage in block-entity save/load, tooltip context, registry lookup, and item equipment APIs.",
+      "scope": [
+        "Migrate SiegeStandardBlockEntity save/load/update-tag signatures, item appendHoverText signatures, registry lookup calls, and equipment-slot API calls surfaced by compileJava."
+      ],
+      "acceptance": [
+        "./gradlew compileJava no longer reports errors from item classes, block entity classes, or compatibility helper classes.",
+        "NBT persistence behavior remains equivalent for existing block entities and item data."
+      ],
+      "dependencies": [
+        "PORT-018"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded; no item, block entity, registry lookup, equipment API, or compatibility helper compile errors remain."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-025",
+      "title": "Restore green port verification gate",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Compile fixes are not done until the port passes the cheap build and regression gates currently expected for this branch.",
+      "scope": [
+        "Run compileJava, unit tests, and verifyGameTestStage after PORT-022 through PORT-024 are complete; fix any remaining compile-only fallout discovered by those gates."
+      ],
+      "acceptance": [
+        "tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava succeeds.",
+        "tools/ai-context-proxy/bin/ctx log -- ./gradlew test succeeds or records a concrete non-compile blocker as progress.",
+        "tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage succeeds or records a concrete non-compile blocker as progress."
+      ],
+      "dependencies": [
+        "PORT-022",
+        "PORT-023",
+        "PORT-024"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew compileJava succeeded; ctx log -- ./gradlew test succeeded; ctx log -- ./gradlew verifyGameTestStage succeeded."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "RENDER-001",
+      "title": "Audit render and UI layer rewrite surface",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The current render/UI layer has accumulated compile-driven 1.21 patches and vanilla-derived fragments; a rewrite needs a bounded inventory before code is replaced.",
+      "scope": [
+        "Inventory active client renderers, HUD overlays, GUI screens, shared widgets, copied vanilla snippets, and relevant reference-mod patterns from MineColonies, Hundred Years Warfare, Millenaire, tutorials, and GitHub examples."
+      ],
+      "acceptance": [
+        "A progress note lists the files/modules to rewrite, files intentionally kept, and concrete external/reference examples for each major area.",
+        "No production render/UI code is rewritten in this audit task."
+      ],
+      "dependencies": [
+        "PORT-025"
+      ],
+      "progress": [],
       "verification": [],
       "evidence": []
+    },
+    {
+      "id": "RENDER-002",
+      "title": "Define new render and UI architecture",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "A from-scratch rewrite needs explicit boundaries so the replacement is Minecraft-native and not another patch pile.",
+      "scope": [
+        "Define the replacement architecture for entity renderers, model layers, banners, projectile/line renderers, HUD overlays, shared widgets, list screens, trade/hiring screens, group/player screens, and world-map drawing."
+      ],
+      "acceptance": [
+        "A progress note records package boundaries, ownership rules, server-authoritative UI constraints, localization expectations, and reference-mod patterns selected for implementation.",
+        "The design avoids direct vanilla copy-paste except for unavoidable API calls, with retained references documented."
+      ],
+      "dependencies": [
+        "RENDER-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-003",
+      "title": "Rewrite recruit entity renderer base",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Recruit entity rendering should be owned BannerMod code instead of fragile patched renderer subclasses.",
+      "scope": [
+        "Replace the recruit renderer base/classes for human and villager recruits with a clean 1.21-native renderer structure and explicit nameplate/profiling hooks."
+      ],
+      "acceptance": [
+        "Human and villager recruit renderers compile and render with the same model selection, texture selection, nameplate behavior, and profiling categories as before.",
+        "No copied vanilla renderer logic remains in the rewritten recruit renderer base beyond normal API usage."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-004",
+      "title": "Rewrite recruit cosmetic model layers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Team color, biome, companion, and head layers still carry old model rendering assumptions and should be rebuilt around 1.21 model APIs.",
+      "scope": [
+        "Rewrite recruit cosmetic layers for team color, biome, companion marker, and custom head rendering using 1.21 tint/color and profile APIs."
+      ],
+      "acceptance": [
+        "All recruit cosmetic layers compile and visually preserve team color, biome texture, companion marker, and skull/head item rendering behavior.",
+        "Layer code uses current model render color APIs instead of legacy float RGBA renderToBuffer calls."
+      ],
+      "dependencies": [
+        "RENDER-003"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-005",
+      "title": "Rewrite banner and siege-standard rendering",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Banner and siege-standard rendering touches changed vanilla banner APIs and should be replaced with a clear BannerMod-owned renderer.",
+      "scope": [
+        "Rewrite GUI banner preview rendering and siege-standard block-entity rendering around 1.21 BannerPatternLayers, Sheets materials, color resolution, and block-entity sync data."
+      ],
+      "acceptance": [
+        "Banner previews and siege standards compile and render the expected base color, pattern layers, and political color cues.",
+        "Block-entity renderer code does not depend on copied obsolete vanilla banner rendering snippets."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-006",
+      "title": "Rewrite projectile and work-area renderers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Fishing line, projectile, and work-area renderers are compile-sensitive and currently patched directly against low-level vertex APIs.",
+      "scope": [
+        "Rewrite FishingBobberRenderer, work-area outlines, and any related debug/line renderers with small owned primitives for 1.21 VertexConsumer and RenderType usage."
+      ],
+      "acceptance": [
+        "Fishing line, bobber, and work-area outline rendering compile and remain visible in-world without GL state leaks.",
+        "Renderer helpers are minimal and do not copy vanilla renderer bodies wholesale."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-007",
+      "title": "Rewrite HUD overlay stack",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Claim, battle, and status overlays must avoid vanilla private internals and avoid overlap with hotbar, chat, boss bars, and existing BannerMod HUD elements.",
+      "scope": [
+        "Replace ClaimOverlayManager, BattleWindowHud, and related overlay positioning/gating with a small overlay coordinator using public 1.21 GUI APIs."
+      ],
+      "acceptance": [
+        "HUD overlays compile, hide or reposition safely around hotbar/chat/boss/tab overlays using public APIs, and preserve existing claim/battle information.",
+        "Overlay behavior has empty/stale/missing-state handling for synced server data."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-008",
+      "title": "Rewrite shared GUI widgets and lists",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Shared widgets and list bases were patched for 1.21 API changes and should be rebuilt cleanly before screen rewrites depend on them.",
+      "scope": [
+        "Rewrite shared GUI foundations such as list bases, category/group buttons, checkboxes, drop-downs, scroll lists, and reusable render helpers."
+      ],
+      "acceptance": [
+        "Shared widgets compile on 1.21 and support keyboard/mouse input, narration where applicable, hover/focus states, and scaled viewport bounds.",
+        "No widget relies on removed list sizing, background, or selection APIs."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-009",
+      "title": "Rewrite trade and hiring screens",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Merchant, noble, and hiring screens mix old list APIs, entity previews, and ad-hoc button drawing.",
+      "scope": [
+        "Rewrite MerchantTradeScreen, NobleTradeScreen, RecruitHireScreen, and their list/entry rendering on top of the new shared GUI widgets."
+      ],
+      "acceptance": [
+        "Trade and hiring screens compile, preserve trade selection, currency display, hire gating, entity previews, and disabled/empty states.",
+        "Player-facing strings are localized or existing localization keys are reused."
+      ],
+      "dependencies": [
+        "RENDER-008"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-010",
+      "title": "Rewrite group and player selection screens",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Group/player selection screens currently depend on fragile list sizing and manual widget lifecycle code.",
+      "scope": [
+        "Rewrite group list, group add/edit, select group, select player, player list, and group/player entry rendering around the new shared list/widget layer."
+      ],
+      "acceptance": [
+        "Group/player screens compile and preserve filtering, selection, add/edit/remove actions, blacklist/self handling, and stale snapshot refresh.",
+        "Screens remain usable at common Minecraft GUI scales without controls outside the viewport."
+      ],
+      "dependencies": [
+        "RENDER-008"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-011",
+      "title": "Rewrite world-map route rendering",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "World-map rendering and route editing contain custom drawing, popup, scroll, and line logic that should be rebuilt on the new render/UI layer.",
+      "scope": [
+        "Rewrite WorldMapScreen route rendering primitives, route/waypoint popups, selection UI, and map interaction rendering while preserving server-authoritative command dispatch."
+      ],
+      "acceptance": [
+        "World-map route UI compiles and preserves route display, waypoint edit/name popups, scroll/zoom behavior, selection state, and command dispatch through the unified command pipeline.",
+        "Route drawing uses owned primitives and current GuiGraphics/VertexConsumer APIs."
+      ],
+      "dependencies": [
+        "RENDER-008"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-012",
+      "title": "Add render and UI regression verification",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "A full render/UI rewrite needs observable checks beyond compile success to catch broken screens and overlays.",
+      "scope": [
+        "Add or update the cheapest feasible automated and manual verification for rewritten screens, HUD overlays, entity renderers, banner rendering, and world-map route rendering."
+      ],
+      "acceptance": [
+        "compileJava and available client-safe tests pass after render/UI rewrites.",
+        "A verification note lists each rewritten render/UI area and how it was checked, including overlap checks for HUD overlays."
+      ],
+      "dependencies": [
+        "RENDER-003",
+        "RENDER-004",
+        "RENDER-005",
+        "RENDER-006",
+        "RENDER-007",
+        "RENDER-009",
+        "RENDER-010",
+        "RENDER-011"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-013",
+      "title": "Remove old render/UI implementation leftovers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "After the replacement lands, old patched or copied render/UI code should not remain as shadow behavior.",
+      "scope": [
+        "Delete unused old render/UI helpers, obsolete copied snippets, dead imports, and replaced code paths; document retained vanilla API references only where unavoidable."
+      ],
+      "acceptance": [
+        "No unused old render/UI implementation remains reachable after the rewrite.",
+        "compileJava and render/UI verification from RENDER-012 still pass after cleanup."
+      ],
+      "dependencies": [
+        "RENDER-012"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-001",
+      "title": "Audit vanilla-derived gameplay code",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Pathfinding, navigation, entity behavior, attack, and target-finding code contain vanilla-derived logic that should be replaced with owned BannerMod implementations after the render rewrite.",
+      "scope": [
+        "Inventory vanilla-derived code in AsyncPathNavigation, AsyncPathfinder, Path/NodeEvaluator variants, attack methods, target acquisition, entity helpers, and copied behavior snippets; map each to reference-mod or tutorial examples."
+      ],
+      "acceptance": [
+        "A progress note lists every vanilla-derived gameplay area to rewrite, retained API-only references, and candidate examples from MineColonies, Hundred Years Warfare, Millenaire, GitHub, or tutorials.",
+        "No gameplay code is rewritten in this audit task."
+      ],
+      "dependencies": [
+        "RENDER-013"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-002",
+      "title": "Design owned movement and pathfinding contract",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The async pathfinding chain should be rebuilt around BannerMod behavior needs instead of mirroring vanilla internals.",
+      "scope": [
+        "Define owned contracts for path requests, actor state, navigation results, cancellation, priority/queue integration, and thread-safety boundaries."
+      ],
+      "acceptance": [
+        "A progress note records the new pathfinding/navigation contract, accepted reference patterns, concurrency boundaries, and migration order.",
+        "The design explicitly preserves unified command pipeline semantics and CommandIntentLog auditability."
+      ],
+      "dependencies": [
+        "VANILLA-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-003",
+      "title": "Rewrite async pathfinder core",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "AsyncPathfinder should be BannerMod-owned code with clear inputs/outputs instead of copied or fragile vanilla-pathfinder behavior.",
+      "scope": [
+        "Replace the async pathfinder core and path result representation with owned code implementing the contract from VANILLA-002."
+      ],
+      "acceptance": [
+        "Async path requests compile and return usable success/failure/cancelled results for existing recruit navigation callers.",
+        "Thread-safety and world snapshot assumptions are explicit in code or progress notes."
+      ],
+      "dependencies": [
+        "VANILLA-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-004",
+      "title": "Rewrite ground and water navigation chain",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "AsyncGroundPathNavigation and AsyncWaterBoundPathNavigation are core movement infrastructure and should not depend on copied vanilla navigation internals.",
+      "scope": [
+        "Rewrite ground and water navigation around the owned pathfinder contract while preserving recruit movement, sailor/water behavior, and stuck/retry semantics."
+      ],
+      "acceptance": [
+        "Ground and water recruits can request, follow, cancel, and retry paths through the new navigation chain.",
+        "Formation and command movement paths still enter through CommandIntentDispatcher and CommandEvents."
+      ],
+      "dependencies": [
+        "VANILLA-003"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-005",
+      "title": "Rewrite node evaluator and path-type logic",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Custom NodeEvaluator code is sensitive to vanilla internals and should be replaced with focused BannerMod terrain/path-type rules.",
+      "scope": [
+        "Rewrite civilian, military, sailor, and recruit node evaluators/path-type decisions using explicit BannerMod rules and current 1.21 APIs."
+      ],
+      "acceptance": [
+        "Pathing preserves land, water, door/fence, hazard, and recruit-specific traversal behavior covered by existing or added checks.",
+        "No obsolete copied NodeEvaluator bodies remain."
+      ],
+      "dependencies": [
+        "VANILLA-003"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-006",
+      "title": "Rewrite formation movement integration",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Formation movement must stay server-authoritative while pathing internals are replaced.",
+      "scope": [
+        "Rework movement/formation integration so regroup, come-to-me, move-to-position, forward/back, queue mode, and tight formation use the new navigation contract without bypassing command intent dispatch."
+      ],
+      "acceptance": [
+        "All server-side movement states 0 through 8 preserve documented semantics and explicit target handling.",
+        "No packet handler or UI path calls recruit movement directly outside CommandIntentDispatcher/CommandEvents."
+      ],
+      "dependencies": [
+        "VANILLA-004",
+        "VANILLA-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-007",
+      "title": "Rewrite target acquisition logic",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Target finding is gameplay-critical and should be explicit BannerMod logic rather than copied vanilla-style selectors.",
+      "scope": [
+        "Rewrite recruit target selection, ally/enemy filtering, claim/war authority checks, aggro rules, and target retention/drop behavior around owned services."
+      ],
+      "acceptance": [
+        "Recruits select valid hostile targets, ignore allies/protected targets, drop stale targets, and respect war/claim authority rules.",
+        "Targeting behavior has automated or recorded scenario verification."
+      ],
+      "dependencies": [
+        "VANILLA-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-008",
+      "title": "Rewrite melee attack flow",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Recruit melee attacks should use owned combat decisions and current 1.21 APIs instead of copied vanilla attack bodies.",
+      "scope": [
+        "Rewrite melee attack timing, reach, damage application, shield/attribute/enchantment handling, callbacks, and audit/profiling hooks."
+      ],
+      "acceptance": [
+        "Melee recruits damage valid enemies, respect cooldown/reach/team rules, trigger expected equipment/enchantment effects, and do not attack invalid targets.",
+        "Combat behavior has automated or recorded scenario verification."
+      ],
+      "dependencies": [
+        "VANILLA-007"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-009",
+      "title": "Rewrite ranged and projectile combat flow",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Ranged combat and projectile behavior need an owned design that works with bows, crossbows, firearms, and compatibility layers.",
+      "scope": [
+        "Rewrite ranged attack selection, line of sight checks, projectile creation, reload/cooldown handling, ammo use, and compatibility hooks without copied vanilla attack logic."
+      ],
+      "acceptance": [
+        "Ranged recruits fire expected projectiles or compatible firearms, consume/require ammo correctly, and respect target/authority rules.",
+        "Existing projectile and Boomsticks compatibility expectations remain testable after the rewrite."
+      ],
+      "dependencies": [
+        "VANILLA-007"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-010",
+      "title": "Rewrite entity interaction helpers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Entity helper methods around equipment, mounts, leash, spawn, and inventory often drift across Minecraft versions when copied from vanilla behavior.",
+      "scope": [
+        "Rewrite recruit entity helper flows for equipment slots, spawn data, mounts/saddles, leash behavior, item pickup/use, and inventory serialization around current public APIs."
+      ],
+      "acceptance": [
+        "Recruit spawn, equipment, mount, leash, pickup, and inventory behavior compile and preserve observable behavior after replacement.",
+        "No obsolete copied vanilla helper methods remain for these flows."
+      ],
+      "dependencies": [
+        "VANILLA-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-011",
+      "title": "Add movement and pathfinding regression tests",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Replacing pathfinding/navigation needs checks that prove recruits still move, form up, and recover from path failures.",
+      "scope": [
+        "Add GameTests or the cheapest executable verification for async path requests, ground/water navigation, formation movement, explicit target movement, cancellation, and stuck/retry behavior."
+      ],
+      "acceptance": [
+        "Movement/pathfinding verification covers ground movement, water movement, formation movement, explicit target movement, cancellation, and path failure handling.",
+        "Verification is runnable through the project test/GameTest workflow or documented as blocked with concrete reasons."
+      ],
+      "dependencies": [
+        "VANILLA-006"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-012",
+      "title": "Add combat and targeting regression tests",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Replacing target acquisition and attack flows needs checks that prove recruits still fight valid targets and reject invalid ones.",
+      "scope": [
+        "Add GameTests or the cheapest executable verification for target filtering, target retention/drop, melee attack, ranged attack, ammo/projectile behavior, and authority/team restrictions."
+      ],
+      "acceptance": [
+        "Combat/targeting verification covers valid enemies, allies, protected targets, stale target dropping, melee damage, ranged projectile firing, and ammo requirements.",
+        "Verification is runnable through the project test/GameTest workflow or documented as blocked with concrete reasons."
+      ],
+      "dependencies": [
+        "VANILLA-008",
+        "VANILLA-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "VANILLA-013",
+      "title": "Remove remaining vanilla-derived gameplay leftovers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "After gameplay rewrites, stale copied vanilla-derived code should not remain as hidden maintenance debt.",
+      "scope": [
+        "Delete unused old pathfinding, navigation, NodeEvaluator, targeting, combat, and entity-helper implementations; document any retained vanilla API references and why they are unavoidable."
+      ],
+      "acceptance": [
+        "No replaced vanilla-derived gameplay implementation remains reachable.",
+        "compileJava, movement/pathfinding verification, and combat/targeting verification still pass or record concrete blockers."
+      ],
+      "dependencies": [
+        "VANILLA-010",
+        "VANILLA-011",
+        "VANILLA-012"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PROC-003",
+      "title": "Re-sequence backlog after migration-first epics",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Compile fixes, render rewrite, and vanilla-derived gameplay rewrites must run before unrelated UX/gameplay/architecture tasks, but dependency rewiring must preserve existing task dependencies.",
+      "scope": [
+        "Audit existing open and in-progress non-migration tasks, preserve their current dependencies, and append VANILLA-013 as a prerequisite where appropriate using tools/backlog set-deps."
+      ],
+      "acceptance": [
+        "tools/backlog ready only surfaces the compile/render/vanilla migration chain or tasks explicitly exempted from the migration freeze until VANILLA-013 is done.",
+        "No existing task dependency is lost while adding the migration-first prerequisite."
+      ],
+      "dependencies": [
+        "PORT-025"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-026",
+      "title": "Fix unit test Minecraft classpath",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "After main compileJava is green, ./gradlew test fails at compileTestJava because unit tests cannot resolve Minecraft, Netty, and NeoForge classes such as net.minecraft.core.BlockPos, CompoundTag, FriendlyByteBuf, and Dist.",
+      "scope": [
+        "Repair the Gradle/source-set test classpath or split pure JVM tests from Minecraft-dependent tests so existing unit tests compile under the 1.21.1 NeoForge port."
+      ],
+      "acceptance": [
+        "tools/ai-context-proxy/bin/ctx log -- ./gradlew test no longer fails because Minecraft, Netty, or NeoForge packages are missing from compileTestJava.",
+        "Any remaining test failures are runtime assertion failures or explicitly documented follow-up blockers, not missing dependency/classpath errors."
+      ],
+      "dependencies": [
+        "PORT-025"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew test succeeded after wiring the test source set to the Minecraft/NeoForge runtime classpath and fixing exposed 1.21 test API compile errors."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-027",
+      "title": "Fix GameTest runtime dependency resolution",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "After main compileJava is green, verifyGameTestStage cannot compile/run because runtimeClasspath cannot resolve maven.modrinth:playeranimator:2.0.1+1.21.1 from configured repositories.",
+      "scope": [
+        "Resolve the playeranimator dependency issue by correcting coordinates/repositories, vendoring an allowed local fallback, or making the optional dependency absent-safe for GameTest resolution."
+      ],
+      "acceptance": [
+        "tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage no longer fails while resolving maven.modrinth:playeranimator:2.0.1+1.21.1.",
+        "Any remaining GameTest failure is an actual compile/runtime/test failure with a concrete follow-up note, not dependency resolution."
+      ],
+      "dependencies": [
+        "PORT-025"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew verifyGameTestStage succeeded after correcting playeranimator to the Modrinth-published NeoForge coordinate; dependency resolution no longer fails."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-028",
+      "title": "Restore full test and GameTest verification",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-026 and PORT-027 fix the known infrastructure blockers, but the port is not verified until both gates are re-run successfully or produce concrete non-infrastructure failures.",
+      "scope": [
+        "Run ./gradlew test and ./gradlew verifyGameTestStage after the unit test classpath and GameTest dependency blockers are fixed; address or record any remaining failures."
+      ],
+      "acceptance": [
+        "tools/ai-context-proxy/bin/ctx log -- ./gradlew test succeeds or records a specific non-classpath follow-up task.",
+        "tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage succeeds or records a specific non-dependency-resolution follow-up task."
+      ],
+      "dependencies": [
+        "PORT-026",
+        "PORT-027"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified on feature/port-batch-16: ctx log -- ./gradlew test succeeded and ctx log -- ./gradlew verifyGameTestStage succeeded; no remaining classpath or dependency-resolution blocker is recorded."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }

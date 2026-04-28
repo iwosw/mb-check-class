@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
 
@@ -58,7 +59,7 @@ public class RecruitPickupWantedItemGoal extends Goal {
                         recruit.getBoundingBox().inflate(16.0D, 3.0D, 16.0D),
                         (item) -> recruit.getAllowedItems().test(item) &&
                                 recruit.distanceTo(item) < 25 &&
-                                ((item.getItem().isEdible() && recruit.getHunger() < 30) ||
+                                ((item.getItem().has(DataComponents.FOOD) && recruit.getHunger() < 30) ||
                                         (recruit.wantsToPickUp(item.getItem())))
                 ).forEach((item) -> {
                     this.itemEntityList.add(item);
@@ -92,10 +93,8 @@ public class RecruitPickupWantedItemGoal extends Goal {
             case MOVE -> {
                 if (itemEntity != null) {
                     recruit.getNavigation().moveTo(itemEntity, 1F);
-                    recruit.setMaxUpStep(1.25F);
                     if (recruit.distanceTo(itemEntity) < 3F) {
                         this.state = PICKUP;
-                        recruit.setMaxUpStep(1F);
 
                     }
                 } else state = SELECT;

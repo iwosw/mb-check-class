@@ -23,7 +23,7 @@ public abstract class AbstractHorseMixin extends Animal {
     }
 
     @SuppressWarnings("ConstantValue")
-    @Inject(method = "isImmobile", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/animal/horse/AbstractHorse;isImmobile()Z"), cancellable = true)
+    @Inject(method = "isImmobile", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/animal/horse/AbstractHorse;isImmobile()Z"), cancellable = true, remap = false)
     private void horseIsMobileWhenRecruitsRides(CallbackInfoReturnable<Boolean> callback) {
         if(getControllingPassenger() instanceof AbstractRecruitEntity){
             callback.setReturnValue(false);
@@ -31,7 +31,7 @@ public abstract class AbstractHorseMixin extends Animal {
     }
 
     @SuppressWarnings("DataFlowIssue")
-    @Inject(method = "positionRider", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/Entity;positionRider(Lnet/minecraft/world/entity/Entity;)V"), cancellable = true)
+    @Inject(method = "positionRider", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/Entity;positionRider(Lnet/minecraft/world/entity/Entity;)V"), cancellable = true, remap = false)
     private void superPositionRiderWhenRecruitsRides(Entity entity, MoveFunction moveFunction, CallbackInfo ci) {
         if (this.isAlive() && isVehicle() && getControllingPassenger() instanceof AbstractRecruitEntity) {
             super.positionRider(entity, moveFunction);
@@ -40,4 +40,3 @@ public abstract class AbstractHorseMixin extends Animal {
     }
 
 }
-

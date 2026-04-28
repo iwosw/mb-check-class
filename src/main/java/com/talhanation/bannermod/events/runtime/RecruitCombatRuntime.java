@@ -52,7 +52,7 @@ public final class RecruitCombatRuntime {
         Entity impactEntity = ((EntityHitResult) rayTrace).getEntity();
         String encode = impactEntity.getEncodeId();
         if (encode != null && encode.contains("corpse:corpse")) {
-            event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
+            event.setCanceled(true);
             return;
         }
         if (!(impactEntity instanceof LivingEntity impactLiving)) {
@@ -60,7 +60,7 @@ public final class RecruitCombatRuntime {
         }
 
         if (projectile instanceof AbstractArrow arrow && arrow.getPierceLevel() > 0 && owner instanceof LivingEntity livingOwner && !canAttack(livingOwner, impactLiving)) {
-            event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
+            event.setCanceled(true);
             CANCELED_PROJECTILES.add(projectile);
             return;
         }
@@ -71,17 +71,17 @@ public final class RecruitCombatRuntime {
                 Entity passenger = animal.getFirstPassenger();
                 AbstractRecruitEntity passengerRecruit = RecruitEntityAccess.asRecruit(passenger);
                 if (passengerRecruit != null && !canAttack(recruit, passengerRecruit)) {
-                    event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
+                    event.setCanceled(true);
                     return;
                 }
                 if (passenger instanceof Player player && !canAttack(recruit, player)) {
-                    event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
+                    event.setCanceled(true);
                     return;
                 }
             }
 
             if (!canAttack(recruit, impactLiving)) {
-                event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
+                event.setCanceled(true);
                 return;
             }
             recruit.addXp(2);
@@ -89,13 +89,13 @@ public final class RecruitCombatRuntime {
         }
 
         if (owner instanceof AbstractIllager illager && !RecruitsServerConfig.PillagerFriendlyFire.get() && illager.isAlliedTo(impactLiving)) {
-            event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
+            event.setCanceled(true);
             CANCELED_PROJECTILES.add(projectile);
             return;
         }
 
         if (owner instanceof Player player && !canHarmTeam(player, impactLiving)) {
-            event.setImpactResult(ProjectileImpactEvent.ImpactResult.SKIP_ENTITY);
+            event.setCanceled(true);
         }
     }
 

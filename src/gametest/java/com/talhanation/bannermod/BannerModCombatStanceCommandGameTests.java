@@ -14,8 +14,8 @@ import com.talhanation.bannermod.registry.military.ModEntityTypes;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModCombatStanceCommandGameTests {
@@ -49,7 +49,7 @@ public class BannerModCombatStanceCommandGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
     public static void combatStanceCommandDrivesRangedFormationLeash(GameTestHelper helper) {
-        Player owner = helper.makeMockPlayer();
+        Player owner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         owner.moveTo(helper.absolutePos(RecruitsBattleGameTestSupport.SquadAnchor.WEST.anchor()).getX() + 0.5D,
                 helper.absolutePos(RecruitsBattleGameTestSupport.SquadAnchor.WEST.anchor()).getY(),
                 helper.absolutePos(RecruitsBattleGameTestSupport.SquadAnchor.WEST.anchor()).getZ() + 0.5D,

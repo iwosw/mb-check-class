@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MobMixin {
 
     @SuppressWarnings("DataFlowIssue")
-    @Inject(method = "createNavigation", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/Mob;createNavigation(Lnet/minecraft/world/level/Level;)Lnet/minecraft/world/entity/ai/navigation/PathNavigation;"), cancellable = true)
+    @Inject(method = "createNavigation", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/Mob;createNavigation(Lnet/minecraft/world/level/Level;)Lnet/minecraft/world/entity/ai/navigation/PathNavigation;"), cancellable = true, remap = false)
     private void createNavigation(Level world, CallbackInfoReturnable<PathNavigation> callback) {
         if(((Mob)(Object)this) instanceof AbstractHorse horse && horse.getFirstPassenger() instanceof AbstractRecruitEntity && !(((Mob)(Object)this) instanceof SkeletonHorse)){
             callback.setReturnValue(new RecruitsHorsePathNavigation(horse, ((Mob)(Object)this).getCommandSenderWorld()));
@@ -26,7 +26,7 @@ public class MobMixin {
     }
 
     @SuppressWarnings("DataFlowIssue")
-    @Inject(method = "getMaxFallDistance", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/Mob;getMaxFallDistance()I"), cancellable = true)
+    @Inject(method = "getMaxFallDistance", at = @At(value = "HEAD", target = "Lnet/minecraft/world/entity/Mob;getMaxFallDistance()I"), cancellable = true, remap = false)
     private void getMaxFallDistance(CallbackInfoReturnable<Integer> callback){
         if(((Mob)(Object)this) instanceof AbstractHorse horse && horse.getFirstPassenger() instanceof AbstractRecruitEntity && !(((Mob)(Object)this) instanceof SkeletonHorse)){
             callback.setReturnValue(1);

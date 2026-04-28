@@ -3,6 +3,8 @@ package com.talhanation.bannermod.compat;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.IRangedRecruit;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -14,6 +16,7 @@ import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.Vec3;
@@ -41,9 +44,7 @@ public class CrossbowWeapon implements IWeapon {
 
     @Override
     public int getWeaponLoadTime() {
-        ItemStack weapon = this.getWeapon().getDefaultInstance();
-        int quickChargeLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.QUICK_CHARGE, weapon);
-        return 40 - quickChargeLevel * 4;
+        return 40;
     }
 
     @Override
@@ -57,7 +58,7 @@ public class CrossbowWeapon implements IWeapon {
     }
     @Override
     public AbstractArrow getProjectileArrow(LivingEntity shooter) {
-        return new Arrow(shooter.getCommandSenderWorld(), shooter);
+        return new Arrow(shooter.getCommandSenderWorld(), shooter, Items.ARROW.getDefaultInstance(), shooter.getMainHandItem());
     }
 
     public boolean isLoaded(ItemStack itemStack) {
@@ -110,7 +111,7 @@ public class CrossbowWeapon implements IWeapon {
     
     @Override
     public SoundEvent getLoadSound() {
-        return SoundEvents.CROSSBOW_LOADING_END;
+        return SoundEvents.CROSSBOW_LOADING_END.value();
     }
 
     @Override
@@ -137,12 +138,12 @@ public class CrossbowWeapon implements IWeapon {
     public void performRangedAttackIWeapon(AbstractRecruitEntity shooter, double x, double y, double z, float projectileSpeed) {
         AbstractArrow projectileEntity = this.getProjectileArrow(shooter);
 		
-        int i = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PIERCING, shooter.getMainHandItem());
+        int i = getEnchantmentLevel(shooter, Enchantments.PIERCING, shooter.getMainHandItem());
         if (i > 0) {
-            projectileEntity.setPierceLevel((byte)i);
+            projectileEntity.pickup = AbstractArrow.Pickup.DISALLOWED;
         }
 
-        int k = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MULTISHOT, shooter.getMainHandItem());
+        int k = getEnchantmentLevel(shooter, Enchantments.MULTISHOT, shooter.getMainHandItem());
         if (k > 0) {
             //TODO:
         }
@@ -159,6 +160,13 @@ public class CrossbowWeapon implements IWeapon {
 
         shooter.damageMainHandItem();
 
+    }
+
+    private static int getEnchantmentLevel(LivingEntity shooter, ResourceKey<Enchantment> enchantment, ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(
+                shooter.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(enchantment),
+                stack
+        );
     }
 
 }

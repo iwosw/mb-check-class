@@ -45,7 +45,7 @@ public class MessageHireFromNobleVillager implements BannerModMessage<MessageHir
         }
         else{
             this.cost = 0;
-            this.resource = new ResourceLocation("","");
+            this.resource = ResourceLocation.fromNamespaceAndPath("", "");
         }
 
         this.needsVillager = needsVillager;

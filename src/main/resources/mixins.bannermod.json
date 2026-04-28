@@ -8,7 +8,6 @@
     "AbstractHorseMixin",
     "AnimalMixin",
     "CamelMixin",
-    "ClassInstanceMultiMapMixin",
     "GoalUtilsMixin",
     "LivingEntityMixin",
     "MobMixin",

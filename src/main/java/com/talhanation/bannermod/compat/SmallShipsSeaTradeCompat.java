@@ -14,23 +14,23 @@ import java.util.UUID;
 public final class SmallShipsSeaTradeCompat {
 
     private static final List<ResourceLocation> SUPPORTED_VESSEL_TYPES = List.of(
-            new ResourceLocation("smallships", "cog"),
-            new ResourceLocation("smallships", "galley"),
-            new ResourceLocation("smallships", "drakkar"),
-            new ResourceLocation("smallships", "rowboat"),
-            new ResourceLocation("smallships", "brigg"),
-            new ResourceLocation("smallships", "dhow")
+            ResourceLocation.fromNamespaceAndPath("smallships", "cog"),
+            ResourceLocation.fromNamespaceAndPath("smallships", "galley"),
+            ResourceLocation.fromNamespaceAndPath("smallships", "drakkar"),
+            ResourceLocation.fromNamespaceAndPath("smallships", "rowboat"),
+            ResourceLocation.fromNamespaceAndPath("smallships", "brigg"),
+            ResourceLocation.fromNamespaceAndPath("smallships", "dhow")
     );
 
     private SmallShipsSeaTradeCompat() {
     }
 
     public static List<CarrierCandidate> candidateCarrierTypes() {
-        return candidateCarrierTypes(BannerModMain.isSmallShipsLoaded, BuiltInRegistries.ENTITY_TYPE.getKeys());
+        return candidateCarrierTypes(BannerModMain.isSmallShipsLoaded, BuiltInRegistries.ENTITY_TYPE.keySet());
     }
 
     public static boolean hasBindableCarrierCandidate() {
-        return hasBindableCarrierCandidate(BannerModMain.isSmallShipsLoaded, BuiltInRegistries.ENTITY_TYPE.getKeys(), Class::forName);
+        return hasBindableCarrierCandidate(BannerModMain.isSmallShipsLoaded, BuiltInRegistries.ENTITY_TYPE.keySet(), Class::forName);
     }
 
     static boolean hasBindableCarrierCandidate(boolean smallShipsLoaded,

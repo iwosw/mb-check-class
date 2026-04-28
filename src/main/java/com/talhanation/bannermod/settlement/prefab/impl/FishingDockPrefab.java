@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * fisherman to the water tiles.
  */
 public final class FishingDockPrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "fishing_dock");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "fishing_dock");
 
     private static final int WIDTH = 7;
     private static final int HEIGHT = 3;

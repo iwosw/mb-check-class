@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.entity.military;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -26,7 +27,7 @@ final class RecruitEquipmentService {
         if (recruit.level().isClientSide()) return;
         ItemStack handItem = recruit.getItemBySlot(EquipmentSlot.MAINHAND);
         boolean hasHandItem = !handItem.isEmpty();
-        recruit.getMainHandItem().hurtAndBreak(1, recruit, entity -> entity.broadcastBreakEvent(EquipmentSlot.MAINHAND));
+        recruit.getMainHandItem().hurtAndBreak(1, recruit, EquipmentSlot.MAINHAND);
         if (recruit.getMainHandItem().isEmpty() && hasHandItem) {
             recruit.inventory.setItem(5, ItemStack.EMPTY);
             recruit.getInventory().setChanged();
@@ -67,7 +68,7 @@ final class RecruitEquipmentService {
 
     static void hurtCurrentlyUsedShield(AbstractRecruitEntity recruit, float damage) {
         if (recruit.level().isClientSide()) return;
-        recruit.getOffhandItem().hurtAndBreak(1, recruit, entity -> entity.broadcastBreakEvent(EquipmentSlot.OFFHAND));
+        recruit.getOffhandItem().hurtAndBreak(1, recruit, EquipmentSlot.OFFHAND);
         if (recruit.getOffhandItem().isEmpty()) {
             recruit.inventory.setItem(4, ItemStack.EMPTY);
             recruit.getInventory().setChanged();
@@ -79,8 +80,8 @@ final class RecruitEquipmentService {
     private static void hurtArmorSlot(AbstractRecruitEntity recruit, DamageSource damageSource, EquipmentSlot slot, int inventorySlot, net.minecraft.sounds.SoundEvent breakSound) {
         ItemStack armor = recruit.getItemBySlot(slot);
         boolean hadArmor = !armor.isEmpty();
-        if ((!(damageSource.is(DamageTypes.IN_FIRE) && damageSource.is(DamageTypes.ON_FIRE)) || !armor.getItem().isFireResistant()) && armor.getItem() instanceof ArmorItem) {
-            armor.hurtAndBreak(1, recruit, entity -> entity.broadcastBreakEvent(slot));
+        if ((!(damageSource.is(DamageTypes.IN_FIRE) && damageSource.is(DamageTypes.ON_FIRE)) || !armor.has(DataComponents.FIRE_RESISTANT)) && armor.getItem() instanceof ArmorItem) {
+            armor.hurtAndBreak(1, recruit, slot);
         }
         if (recruit.getItemBySlot(slot).isEmpty() && hadArmor) {
             recruit.inventory.setItem(inventorySlot, ItemStack.EMPTY);

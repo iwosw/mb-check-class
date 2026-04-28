@@ -32,7 +32,7 @@ import java.text.DecimalFormat;
 @OnlyIn(Dist.CLIENT)
 public class DebugInvScreen extends ScreenBase<DebugInvMenu> {
 
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/debug_gui.png" );
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/debug_gui.png" );
 
     private static final int fontColor = 4210752;
     private EditBox textField;
@@ -91,7 +91,6 @@ public class DebugInvScreen extends ScreenBase<DebugInvMenu> {
 
     protected void containerTick() {
         super.containerTick();
-        if(textField != null) textField.tick();
     }
 
 

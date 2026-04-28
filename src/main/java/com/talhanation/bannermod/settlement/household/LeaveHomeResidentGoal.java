@@ -18,7 +18,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public final class LeaveHomeResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/leave_home");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/leave_home");
 
     private static final int LEAVE_HOME_PRIORITY = 80;
     private static final int LEAVE_HOME_DURATION_TICKS = 60;

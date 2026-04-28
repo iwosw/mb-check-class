@@ -288,7 +288,7 @@ public class PoliticalEntityListScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
         graphics.drawCenteredString(font, text("gui.bannermod.states.heading").getString(), guiLeft + W / 2, guiTop + 7, 0xFFFFFF);
@@ -421,7 +421,7 @@ public class PoliticalEntityListScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double delta) {
         int max = Math.max(0, entities.size() - LIST_VISIBLE);
         scrollOffset = Math.max(0, Math.min(max, scrollOffset - (int) Math.signum(delta)));
         return true;

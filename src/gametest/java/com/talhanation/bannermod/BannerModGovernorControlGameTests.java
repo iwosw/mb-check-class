@@ -15,8 +15,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
@@ -47,8 +47,8 @@ public class BannerModGovernorControlGameTests {
         helper.assertTrue(service.getGovernorRecruitUuid(claim) != null && service.getGovernorRecruitUuid(claim).equals(recruit.getUUID()),
                 "Expected the persisted governor snapshot to retain the recruit UUID");
 
-        CompoundTag saved = BannerModGovernorManager.get(level).save(new CompoundTag());
-        BannerModGovernorManager reloaded = BannerModGovernorManager.load(saved);
+        CompoundTag saved = BannerModGovernorManager.get(level).save(new CompoundTag(), null);
+        BannerModGovernorManager reloaded = BannerModGovernorManager.load(saved, null);
         helper.assertTrue(reloaded.getSnapshot(claim.getUUID()) != null && recruit.getUUID().equals(reloaded.getSnapshot(claim.getUUID()).governorRecruitUuid()),
                 "Expected governor assignment to survive manager round-trip persistence");
         helper.succeed();

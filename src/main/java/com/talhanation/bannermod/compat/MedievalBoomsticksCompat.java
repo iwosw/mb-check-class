@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 public final class MedievalBoomsticksCompat {
     private static final String MOD_ID = "musketmod";
-    private static final ResourceLocation CARTRIDGE = new ResourceLocation(MOD_ID, "cartridge");
+    private static final ResourceLocation CARTRIDGE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "cartridge");
     private static final Map<String, FirearmContract> SUPPORTED_FIREARMS = Map.of(
             "musket", new FirearmContract(CARTRIDGE, MusketWeapon::new),
             "musket_with_bayonet", new FirearmContract(CARTRIDGE, MusketBayonetWeapon::new),
@@ -50,7 +50,7 @@ public final class MedievalBoomsticksCompat {
     }
 
     public static ItemStack createAmmoStack(ResourceLocation ammoId, int count) {
-        Item item = BuiltInRegistries.ITEM.getValue(ammoId);
+        Item item = BuiltInRegistries.ITEM.getOptional(ammoId).orElse(null);
         if (item == null) {
             return ItemStack.EMPTY;
         }

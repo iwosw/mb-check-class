@@ -16,7 +16,7 @@ import java.util.List;
 
 public class ConfirmScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_small.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_small.png");
     private final Runnable yesAction;
     private final Runnable noAction;
     private final Runnable backAction;

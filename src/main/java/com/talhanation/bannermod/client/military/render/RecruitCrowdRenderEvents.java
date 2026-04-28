@@ -73,7 +73,7 @@ public final class RecruitCrowdRenderEvents {
         int rendered = 0;
         int candidates = 0;
         int frustumCulled = 0;
-        float partialTick = event.getPartialTick();
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
         long startNanos = System.nanoTime();
 
         for (AbstractRecruitEntity recruit : recruits) {
@@ -150,10 +150,10 @@ public final class RecruitCrowdRenderEvents {
                                 float maxU,
                                 float maxV,
                                 int light) {
-        consumer.vertex(pose.pose(), minX, minY, 0.0F).color(255, 255, 255, 255).uv(minU, maxV).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(pose.normal(), 0.0F, 0.0F, 1.0F).endVertex();
-        consumer.vertex(pose.pose(), maxX, minY, 0.0F).color(255, 255, 255, 255).uv(maxU, maxV).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(pose.normal(), 0.0F, 0.0F, 1.0F).endVertex();
-        consumer.vertex(pose.pose(), maxX, maxY, 0.0F).color(255, 255, 255, 255).uv(maxU, minV).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(pose.normal(), 0.0F, 0.0F, 1.0F).endVertex();
-        consumer.vertex(pose.pose(), minX, maxY, 0.0F).color(255, 255, 255, 255).uv(minU, minV).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(pose.normal(), 0.0F, 0.0F, 1.0F).endVertex();
+        consumer.addVertex(pose.pose(), minX, minY, 0.0F).setColor(255, 255, 255, 255).setUv(minU, maxV).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(pose.pose(), maxX, minY, 0.0F).setColor(255, 255, 255, 255).setUv(maxU, maxV).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(pose.pose(), maxX, maxY, 0.0F).setColor(255, 255, 255, 255).setUv(maxU, minV).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(pose.pose(), minX, maxY, 0.0F).setColor(255, 255, 255, 255).setUv(minU, minV).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0.0F, 0.0F, 1.0F);
     }
 
     private static double lerp(float partialTick, double previous, double current) {

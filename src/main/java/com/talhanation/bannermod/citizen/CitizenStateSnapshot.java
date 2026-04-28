@@ -47,6 +47,11 @@ public record CitizenStateSnapshot(
         return new Builder();
     }
 
+    private static EquipmentSlot getEquipmentSlotForItem(ItemStack itemStack) {
+        EquipmentSlot slot = itemStack.getEquipmentSlot();
+        return slot != null ? slot : EquipmentSlot.MAINHAND;
+    }
+
     public static CompoundTag copyInventory(SimpleContainer inventory, HolderLookup.Provider registries) {
         CompoundTag inventoryData = new CompoundTag();
         ListTag items = new ListTag();
@@ -77,7 +82,7 @@ public record CitizenStateSnapshot(
         ListTag armorItems = inventoryData.getList("ArmorItems", 10);
         for (int i = 0; i < armorItems.size(); ++i) {
             ItemStack armor = ItemStack.parseOptional(registries, armorItems.getCompound(i));
-            EquipmentSlot slot = net.minecraft.world.entity.Mob.getEquipmentSlotForItem(armor);
+            EquipmentSlot slot = getEquipmentSlotForItem(armor);
             int inventorySlot = switch (slot) {
                 case HEAD -> 0;
                 case CHEST -> 1;

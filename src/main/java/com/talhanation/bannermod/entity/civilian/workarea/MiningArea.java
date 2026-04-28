@@ -107,7 +107,7 @@ public class MiningArea extends AbstractWorkAreaEntity {
             case WEST  -> end = start.offset(-width, height, -depth);
             default  -> end = start.offset(width, height, depth);//EAST
         }
-        return new AABB(start, end);
+        return new AABB(Vec3.atLowerCornerOf(start), Vec3.atLowerCornerOf(end));
     }
 
     public int getHeightOffset() {

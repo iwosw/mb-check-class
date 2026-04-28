@@ -9,11 +9,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.jetbrains.annotations.NotNull;
 
 final class RecruitCombatDecisions {
@@ -48,14 +50,13 @@ final class RecruitCombatDecisions {
 
     static boolean doHurtTarget(AbstractRecruitEntity recruit, @NotNull Entity entity, double damageMultiplier) {
         float damage = (float) recruit.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
-        if (entity instanceof LivingEntity livingEntity) {
-            damage += net.minecraft.world.item.enchantment.EnchantmentHelper.getDamageBonus(recruit.getMainHandItem(), livingEntity.getMobType());
+        net.minecraft.world.damagesource.DamageSource source = recruit.damageSources().mobAttack(recruit);
+        if (recruit.level() instanceof ServerLevel serverLevel) {
+            damage = EnchantmentHelper.modifyDamage(serverLevel, recruit.getMainHandItem(), entity, source, damage);
         }
         if (damageMultiplier > 0.0D && damageMultiplier != 1.0D) {
             damage = (float) (damage * damageMultiplier);
         }
-        int fireAspect = net.minecraft.world.item.enchantment.EnchantmentHelper.getFireAspect(recruit);
-        if (fireAspect > 0) entity.setSecondsOnFire(fireAspect * 4);
         // Stage 4.D: BannerMod unit-type matchup counters — only against other recruits
         // so PvE / PvP balance against players and monsters is untouched.
         if (entity instanceof AbstractRecruitEntity defender) {
@@ -83,9 +84,11 @@ final class RecruitCombatDecisions {
         if (moraleMultiplier != 1.0D) {
             damage = (float) (damage * moraleMultiplier);
         }
-        boolean flag = entity.hurt(recruit.damageSources().mobAttack(recruit), damage);
+        boolean flag = entity.hurt(source, damage);
         if (flag) {
-            recruit.doEnchantDamageEffects(recruit, entity);
+            if (recruit.level() instanceof ServerLevel serverLevel) {
+                EnchantmentHelper.doPostAttackEffects(serverLevel, entity, source);
+            }
             recruit.setLastHurtMob(entity);
             // COMBAT-004: a successful melee hit during a CHARGING window transitions the
             // attacker to EXHAUSTED via CavalryChargePolicy.advance — that's the gate that

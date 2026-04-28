@@ -6,6 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
@@ -37,11 +38,11 @@ public class StructureTemplateLoader {
             CompoundTag root;
             if (fileName.endsWith(".nbt")) {
                 try (InputStream input = Files.newInputStream(templatePath)) {
-                    root = NbtIo.readCompressed(input);
+                    root = NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap());
                 }
             } else if (fileName.endsWith(".schem") || fileName.endsWith(".schematic")) {
                 try (InputStream input = Files.newInputStream(templatePath)) {
-                    root = convertSchematic(NbtIo.readCompressed(input), stripExtension(fileName));
+                    root = convertSchematic(NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap()), stripExtension(fileName));
                 }
             } else {
                 return null;

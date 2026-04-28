@@ -22,7 +22,7 @@ import org.lwjgl.glfw.GLFW;
 public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
 
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/professions/professions_main_gui.png");
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/professions/professions_main_gui.png");
     private final Player player;
     private final AbstractRecruitEntity recruit;
     private EditBox textField;
@@ -80,7 +80,6 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     protected void containerTick() {
         super.containerTick();
-        if(textField != null) textField.tick();
     }
 
 

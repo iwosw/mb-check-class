@@ -29,8 +29,8 @@ import java.util.UUID;
 
 public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
 
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/merchant.png" );
-    private static final ResourceLocation ARROW_IMAGE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/arrow.png");
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/merchant.png" );
+    private static final ResourceLocation ARROW_IMAGE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/arrow.png");
     private static final MutableComponent BUTTON_ADD = Component.translatable("gui.workers.button.add");
     private static final MutableComponent BUTTON_EDIT = Component.translatable("gui.workers.button.edit");
     private static final MutableComponent BUTTON_REMOVE = Component.translatable("gui.workers.button.remove");
@@ -103,11 +103,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
         int itemWidth = LIST_W - 10;
 
         this.tradeList = new TradeList(Minecraft.getInstance(), listWidth, listHeight, listTop, listBottom, itemHeight, itemWidth);
-        this.tradeList.setRenderBackground(false);
-        this.tradeList.setRenderTopAndBottom(false);
-
-        this.tradeList.setLeftPos(listLeft);
-        this.tradeList.setRenderSelection(false);
+        this.tradeList.setX(listLeft);
 
         this.loadTrades();
 
@@ -359,7 +355,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
     private class TradeList extends ObjectSelectionList<TradeList.TradeEntry> {
         public int itemWidth;
         public TradeList(Minecraft mc, int width, int height, int top, int bottom, int itemHeight, int itemWidth) {
-            super(mc, width, height, top, bottom, itemHeight);
+            super(mc, width, height, top, itemHeight);
             this.itemWidth = itemWidth;
         }
 
@@ -415,7 +411,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                 guiGraphics.setColor(1.0F, 1.0F, 1.0F, alpha);
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
-                guiGraphics.blitNineSliced(AbstractButton.WIDGETS_LOCATION, rowLeft, top, rowWidth, entryHeight, 20, 4, 200, 20, 0, textureY);
+                guiGraphics.fill(rowLeft, top, rowLeft + rowWidth, top + entryHeight, hovered ? 0xAA707070 : 0xAA303030);
                 guiGraphics.setColor(1.0F, 1.0F, 1.0F, alpha);
 
                 RenderSystem.setShaderTexture(0, ARROW_IMAGE);

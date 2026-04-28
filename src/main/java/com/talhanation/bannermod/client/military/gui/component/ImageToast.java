@@ -29,7 +29,7 @@ public class ImageToast implements Toast {
 
     @Override
     public Visibility render(GuiGraphics guiGraphics, ToastComponent toastComponent, long deltaTime) {
-        guiGraphics.blit(TEXTURE, 0, 0, 0, 0, this.width(), this.height());
+        guiGraphics.fill(0, 0, this.width(), this.height(), 0xCC202020);
 
         if (image != null) {
             guiGraphics.blit(this.image, 5, 5, 0, 0, 21, 21, 21, 21);

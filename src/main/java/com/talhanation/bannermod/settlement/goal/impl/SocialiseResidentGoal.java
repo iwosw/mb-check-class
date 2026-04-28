@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 /** Mid-priority leisure goal active during civic-day windows. */
 public final class SocialiseResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/socialise");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/socialise");
 
     private static final int SOCIALISE_PRIORITY = 30;
     private static final int SOCIALISE_DURATION_TICKS = 120;

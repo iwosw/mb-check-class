@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * automatically on completion.
  */
 public final class LumberCampPrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "lumber_camp");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "lumber_camp");
 
     private static final int WIDTH = 9;
     private static final int HEIGHT = 5;

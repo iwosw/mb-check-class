@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class GovernorScreen extends ScreenBase<GovernorContainer> {
-    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
     private static GovernorViewState latestState = GovernorViewState.empty();
 
     private final Player player;

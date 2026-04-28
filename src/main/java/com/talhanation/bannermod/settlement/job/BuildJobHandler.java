@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 public final class BuildJobHandler implements JobHandler {
 
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "build");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "build");
 
     public static final Set<SettlementWorkOrderType> SUPPORTED_TYPES = EnumSet.of(
             SettlementWorkOrderType.BREAK_BLOCK,

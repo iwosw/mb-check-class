@@ -256,7 +256,7 @@ public class StructurePreviewWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double x) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double x) {
         if (isHoveredOrFocused()) {
             zoom += x;
             zoom = Mth.clamp(zoom, 3f, 20f);
@@ -265,5 +265,4 @@ public class StructurePreviewWidget extends AbstractWidget {
         return false;
     }
 }
-
 

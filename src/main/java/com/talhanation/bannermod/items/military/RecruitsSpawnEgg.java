@@ -201,7 +201,7 @@ public class RecruitsSpawnEgg extends DeferredSpawnEggItem {
         for (int i = 0; i < armorItems.size(); ++i) {
             ItemStack armor = ItemStack.parseOptional(recruit.registryAccess(), armorItems.getCompound(i));
             if (!armor.isEmpty()) {
-                recruit.setItemSlot(Mob.getEquipmentSlotForItem(armor), armor);
+                recruit.setItemSlot(recruit.getEquipmentSlotForItem(armor), armor);
             }
         }
 

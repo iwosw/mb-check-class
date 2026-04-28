@@ -27,8 +27,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.UUID;
@@ -190,7 +190,7 @@ public class BannerModBuildingInvalidationGameTests {
                 Level.OVERWORLD,
                 origin.offset(2, 1, 2),
                 List.of(new ZoneSelection(ZoneRole.WORK_ZONE, origin.offset(1, 1, 1), origin.offset(4, 2, 4), null)),
-                new AABB(origin.offset(1, 1, 1), origin.offset(4, 2, 4)),
+                bounds(origin.offset(1, 1, 1), origin.offset(4, 2, 4)),
                 BuildingValidationState.VALID,
                 1,
                 50,
@@ -234,7 +234,7 @@ public class BannerModBuildingInvalidationGameTests {
                 Level.OVERWORLD,
                 origin.offset(2, 1, 2),
                 List.of(new ZoneSelection(ZoneRole.WORK_ZONE, origin.offset(1, 1, 1), origin.offset(4, 2, 4), null)),
-                new AABB(origin.offset(1, 1, 1), origin.offset(4, 2, 4)),
+                bounds(origin.offset(1, 1, 1), origin.offset(4, 2, 4)),
                 BuildingValidationState.VALID,
                 1,
                 50,
@@ -273,7 +273,7 @@ public class BannerModBuildingInvalidationGameTests {
                 Level.OVERWORLD,
                 origin.offset(1, 1, 1),
                 List.of(new ZoneSelection(ZoneRole.WORK_ZONE, origin.offset(1, 1, 1), origin.offset(2, 2, 2), null)),
-                new AABB(origin.offset(1, 1, 1), origin.offset(8, 3, 8)),
+                bounds(origin.offset(1, 1, 1), origin.offset(8, 3, 8)),
                 BuildingValidationState.VALID,
                 1,
                 40,
@@ -306,7 +306,7 @@ public class BannerModBuildingInvalidationGameTests {
     @GameTest(template = "harness_empty")
     public static void fortBootstrapCreatesSettlementRecord(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        Player player = helper.makeMockPlayer();
+        Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         BlockPos fortOrigin = new BlockPos(20, 2, 20);
         BlockPos anchor = fortOrigin.offset(5, 1, 5);
 
@@ -371,7 +371,7 @@ public class BannerModBuildingInvalidationGameTests {
                 new ZoneSelection(ZoneRole.INTERIOR, origin.offset(1, 1, 1), origin.offset(4, 2, 4), null),
                 new ZoneSelection(ZoneRole.SLEEPING, origin.offset(2, 1, 2), origin.offset(3, 1, 3), null)
         );
-        AABB bounds = new AABB(origin, origin.offset(5, 3, 5));
+        AABB bounds = bounds(origin, origin.offset(5, 3, 5));
         return new ValidatedBuildingRecord(
                 buildingId,
                 UUID.randomUUID(),
@@ -396,7 +396,7 @@ public class BannerModBuildingInvalidationGameTests {
                 new ZoneSelection(ZoneRole.INTERIOR, origin.offset(-3, 0, -3), origin.offset(-2, 1, -2), null),
                 new ZoneSelection(ZoneRole.SLEEPING, origin.offset(-3, 0, -3), origin.offset(-3, 0, -3), null)
         );
-        AABB staleBounds = new AABB(origin.offset(-3, 0, -3), origin.offset(-2, 1, -2));
+        AABB staleBounds = bounds(origin.offset(-3, 0, -3), origin.offset(-2, 1, -2));
         return new ValidatedBuildingRecord(
                 buildingId,
                 UUID.randomUUID(),
@@ -445,6 +445,10 @@ public class BannerModBuildingInvalidationGameTests {
         }
 
         level.setBlockAndUpdate(origin.offset(2, 1, 2), Blocks.RED_BED.defaultBlockState());
+    }
+
+    private static AABB bounds(BlockPos min, BlockPos max) {
+        return new AABB(min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
     }
 
     private static void buildValidFort(ServerLevel level, BlockPos origin) {

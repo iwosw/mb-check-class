@@ -12,8 +12,8 @@ import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
-import net.minecraft.core.Holder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -27,8 +27,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.scores.PlayerTeam;
-import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.common.util.FakePlayer;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -145,8 +144,8 @@ public final class BannerModDedicatedServerGameTestSupport {
 
     public static ItemStack recruitCurrencyStack() {
         ResourceLocation id = ResourceLocation.tryParse(RecruitsServerConfig.RecruitCurrency.get());
-        Optional<Holder<Item>> holder = id == null ? Optional.empty() : ForgeRegistries.ITEMS.getHolder(id);
-        return holder.map(itemHolder -> itemHolder.value().getDefaultInstance()).orElseGet(Items.EMERALD::getDefaultInstance);
+        Optional<Item> item = id == null ? Optional.empty() : BuiltInRegistries.ITEM.getOptional(id);
+        return item.map(Item::getDefaultInstance).orElseGet(Items.EMERALD::getDefaultInstance);
     }
 
     public static void assignDetachedOwnership(AbstractRecruitEntity recruit, UUID ownerId) {

@@ -5,8 +5,8 @@ import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class IntegratedRuntimeGameTests {

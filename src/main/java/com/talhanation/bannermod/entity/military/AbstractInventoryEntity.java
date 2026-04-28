@@ -6,9 +6,12 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.inventory.military.RecruitSimpleContainer;
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
 import com.talhanation.bannermod.util.RegistryLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
@@ -19,7 +22,9 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractSkullBlock;
@@ -102,7 +107,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
         for (int i = 0; i < armorItems.size(); ++i) {
             ItemStack armor = ItemStack.parseOptional(this.registryAccess(), armorItems.getCompound(i));
             if (!armor.isEmpty()) {
-                int index = this.getInventorySlotIndex(Mob.getEquipmentSlotForItem(armor));
+                int index = this.getInventorySlotIndex(this.getEquipmentSlotForItem(armor));
                 this.inventory.setItem(index, armor);
             }
         }
@@ -353,10 +358,10 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
            return this.getItemBySlot(equipmentslot).isEmpty() && !hasSameTypeOfItem(itemStack) && canEquipItem(itemStack);
        }
        else
-           return itemStack.isEdible();
+           return itemStack.has(DataComponents.FOOD);
     }
     @NotNull
-    public static EquipmentSlot getEquipmentSlotForItem(ItemStack itemStack) {
+    public EquipmentSlot getEquipmentSlotForItem(ItemStack itemStack) {
         final EquipmentSlot slot = itemStack.getEquipmentSlot();
         if (slot != null) return slot; // FORGE: Allow modders to set a non-default equipment slot for a stack; e.g. a non-armor chestplate-slot item
         Item item = itemStack.getItem();
@@ -385,8 +390,9 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
         } else if (current.getItem() instanceof DiggerItem digger && replacer.getItem() instanceof SwordItem) {
 
             double swordDamage = getMainHandAttackDamage(replacer);
-            if (digger.getAttackDamage() != swordDamage) {
-                return digger.getAttackDamage() < swordDamage;
+            double diggerDamage = getMainHandAttackDamage(current);
+            if (diggerDamage != swordDamage) {
+                return diggerDamage < swordDamage;
             }
             return this.canReplaceEqualItem(replacer, current);
         }
@@ -414,7 +420,7 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
         }
 
         else if (replacer.getItem() instanceof ArmorItem) {
-            if (EnchantmentHelper.hasBindingCurse(current)) {
+            if (hasBindingCurse(current)) {
                 return false;
             } else if (!(current.getItem() instanceof ArmorItem)) {
                 return true;
@@ -438,8 +444,10 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
                 if (current.getItem() instanceof DiggerItem) {
                     DiggerItem diggeritem = (DiggerItem)replacer.getItem();
                     DiggerItem diggeritem1 = (DiggerItem)current.getItem();
-                    if (diggeritem.getAttackDamage() != diggeritem1.getAttackDamage()) {
-                        return diggeritem.getAttackDamage() > diggeritem1.getAttackDamage();
+                    double replacerDamage = getMainHandAttackDamage(replacer);
+                    double currentDamage = getMainHandAttackDamage(current);
+                    if (replacerDamage != currentDamage) {
+                        return replacerDamage > currentDamage;
                     }
 
                     return this.canReplaceEqualItem(replacer, current);
@@ -452,6 +460,17 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
 
     private static double getMainHandAttackDamage(ItemStack stack) {
         return stack.getAttributeModifiers().compute(0.0D, EquipmentSlot.MAINHAND);
+    }
+
+    private boolean hasBindingCurse(ItemStack stack) {
+        return getEnchantmentLevel(Enchantments.BINDING_CURSE, stack) > 0;
+    }
+
+    private int getEnchantmentLevel(ResourceKey<Enchantment> enchantment, ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(
+                this.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(enchantment),
+                stack
+        );
     }
 
 

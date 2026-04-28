@@ -33,7 +33,7 @@ import net.minecraft.world.item.UseAnim;
 public class RecruitVillagerRenderer extends MobRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
 
     private static final ResourceLocation[] TEXTURE = {
-            new ResourceLocation(BannerModMain.MOD_ID,"textures/entity/villager/villager_1.png"),
+            ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/villager/villager_1.png"),
     };
     public ResourceLocation getTextureLocation(AbstractRecruitEntity recruit) {
         RecruitRenderProfiling.textureStateSwitch("base_model");
@@ -77,9 +77,9 @@ public class RecruitVillagerRenderer extends MobRenderer<AbstractRecruitEntity, 
     }
 
     @Override
-    protected void renderNameTag(AbstractRecruitEntity recruit, Component displayName, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    protected void renderNameTag(AbstractRecruitEntity recruit, Component displayName, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float partialTick) {
         long start = RecruitRenderProfiling.start();
-        super.renderNameTag(recruit, displayName, poseStack, bufferSource, packedLight);
+        super.renderNameTag(recruit, displayName, poseStack, bufferSource, packedLight, partialTick);
         RecruitRenderProfiling.duration("nameplates", start);
     }
 

@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.entity.civilian;
 
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 
 final class WorkerSupplyRuntime {
@@ -11,7 +13,8 @@ final class WorkerSupplyRuntime {
     }
 
     boolean wantsToKeep(ItemStack itemStack) {
-        return itemStack.isEdible() && itemStack.getFoodProperties(this.worker).getNutrition() > 4;
+        FoodProperties food = itemStack.get(DataComponents.FOOD);
+        return food != null && food.nutrition() > 4;
     }
 
     boolean wantsToPickUp(ItemStack itemStack) {

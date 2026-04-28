@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 public class CitizenRenderer extends MobRenderer<CitizenEntity, VillagerModel<CitizenEntity>> {
-    private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation("minecraft", "textures/entity/villager/villager.png");
+    private static final ResourceLocation DEFAULT_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/villager/villager.png");
 
     public CitizenRenderer(EntityRendererProvider.Context context) {
         super(context, new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)), 0.5F);

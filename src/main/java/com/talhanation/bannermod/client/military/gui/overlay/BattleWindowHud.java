@@ -47,7 +47,7 @@ public class BattleWindowHud {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
         if (mc.options.hideGui) return;
-        if (mc.options.renderDebug) return;
+        if (mc.getDebugOverlay().showDebugScreen()) return;
         if (!regulatedPvpEnabled()) return;
 
         BattleWindowSchedule schedule = schedule();

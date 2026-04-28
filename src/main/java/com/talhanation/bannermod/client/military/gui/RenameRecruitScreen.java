@@ -23,7 +23,7 @@ public class RenameRecruitScreen extends Screen {
     private int topPos;
     private int imageWidth;
     private int imageHeight;
-    private static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(BannerModMain.MOD_ID,"textures/gui/gui_small.png");
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_small.png");
     private static final MutableComponent TEXT_CANCEL = Component.translatable("gui.recruits.groups.cancel");
     private static final MutableComponent TEXT_SAVE = Component.translatable("gui.recruits.groups.save");
     private static final MutableComponent TEXT_RENAME_RECRUIT = Component.translatable("gui.recruits.inv.rename");
@@ -68,7 +68,6 @@ public class RenameRecruitScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        editBox.tick();
     }
 
     private void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
@@ -82,7 +81,7 @@ public class RenameRecruitScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        this.renderBackground(guiGraphics);
+        super.renderBackground(guiGraphics, mouseX, mouseY, delta);
         this.renderBackground(guiGraphics, mouseX, mouseY, delta);
         super.render(guiGraphics, mouseX, mouseY, delta);
         this.renderForeground(guiGraphics, mouseX, mouseY, delta);
@@ -93,4 +92,3 @@ public class RenameRecruitScreen extends Screen {
         return false;
     }
 }
-

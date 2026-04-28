@@ -81,7 +81,6 @@ public class BuildAreaScreen extends WorkAreaScreen {
     @Override
     public void tick() {
         super.tick();
-        if(scanNameEditBox != null && scanNameEditBox.isFocused()) scanNameEditBox.tick();
     }
 
     @Override
@@ -436,10 +435,10 @@ public class BuildAreaScreen extends WorkAreaScreen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
     @Override
-    public boolean mouseScrolled(double x, double y, double d) {
-        if(structureOptions != null  && structureOptions.isMouseOver(x, y)) structureOptions.mouseScrolled(x,y,d);
-        if(requiredItemsDropDownMenu != null && requiredItemsDropDownMenu.isMouseOver(x, y)) requiredItemsDropDownMenu.mouseScrolled(x,y,d);
-        return super.mouseScrolled(x, y, d);
+    public boolean mouseScrolled(double x, double y, double scrollX, double d) {
+        if(structureOptions != null  && structureOptions.isMouseOver(x, y)) structureOptions.mouseScrolled(x, y, scrollX, d);
+        if(requiredItemsDropDownMenu != null && requiredItemsDropDownMenu.isMouseOver(x, y)) requiredItemsDropDownMenu.mouseScrolled(x, y, scrollX, d);
+        return super.mouseScrolled(x, y, scrollX, d);
     }
 
     @Override

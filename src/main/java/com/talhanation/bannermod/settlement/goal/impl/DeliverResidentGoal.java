@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public final class DeliverResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/deliver");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/deliver");
 
     private static final int DELIVER_PRIORITY = 55;
     private static final int DELIVER_DURATION_TICKS = 200;

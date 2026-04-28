@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 import static com.talhanation.bannermod.client.military.ClientManager.currency;
 
 public class NobleTradeScreen extends RecruitsScreenBase {
-    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/noble_villager.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/noble_villager.png");
     private static final Component TITLE = Component.translatable("gui.recruits.villager_noble");
     private static final Component HIRE_BUTTON = Component.translatable("gui.recruits.villager_noble.hire");
     private static final Component TEXT_VILLAGERS = Component.translatable("gui.recruits.villager_noble.villagers");
@@ -92,11 +92,7 @@ public class NobleTradeScreen extends RecruitsScreenBase {
         this.group = ClientManager.getSelectedGroup();
 
         this.tradeList = new TradeList(Minecraft.getInstance(), listWidth, listHeight, listTop, listBottom, itemHeight, itemWidth);
-        this.tradeList.setRenderBackground(false);
-        this.tradeList.setRenderTopAndBottom(false);
-
-        this.tradeList.setLeftPos(listLeft);
-        this.tradeList.setRenderSelection(false);
+        this.tradeList.setX(listLeft);
 
         this.addRenderableWidget(this.tradeList);
 
@@ -165,7 +161,6 @@ public class NobleTradeScreen extends RecruitsScreenBase {
         if(this.player.tickCount % 20 == 0){
             this.findVillagers();
         }
-        if(this.descriptionBox != null) descriptionBox.tick();
         this.loadTrades();
         this.updateHireButtonState();
     }
@@ -227,9 +222,9 @@ public class NobleTradeScreen extends RecruitsScreenBase {
         return super.mouseClicked(mouseX, mouseY, button);
     }
     @Override
-    public boolean mouseScrolled(double x, double y, double d) {
-        if(groupSelectionDropDownMenu != null) groupSelectionDropDownMenu.mouseScrolled(x,y,d);
-        return super.mouseScrolled(x, y, d);
+    public boolean mouseScrolled(double x, double y, double scrollX, double d) {
+        if(groupSelectionDropDownMenu != null) groupSelectionDropDownMenu.mouseScrolled(x, y, scrollX, d);
+        return super.mouseScrolled(x, y, scrollX, d);
     }
 
     @Override
@@ -315,7 +310,7 @@ public class NobleTradeScreen extends RecruitsScreenBase {
     private class TradeList extends ObjectSelectionList<TradeList.TradeEntry> {
         public int itemWidth;
         public TradeList(Minecraft mc, int width, int height, int top, int bottom, int itemHeight, int itemWidth) {
-            super(mc, width, height, top, bottom, itemHeight);
+            super(mc, width, height, top, itemHeight);
             this.itemWidth = itemWidth;
         }
 
@@ -370,7 +365,7 @@ public class NobleTradeScreen extends RecruitsScreenBase {
                 guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
-                guiGraphics.blitNineSliced(AbstractButton.WIDGETS_LOCATION, rowLeft, top, rowWidth, entryHeight, 20, 4, 200, 20, 0, textureY);
+                guiGraphics.fill(rowLeft, top, rowLeft + rowWidth, top + entryHeight, hovered ? 0xAA707070 : 0xAA303030);
                 guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
                 guiGraphics.drawString(font, trade.title, x, y, -2039584, false);

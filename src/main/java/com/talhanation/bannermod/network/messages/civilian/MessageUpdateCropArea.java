@@ -2,6 +2,7 @@ package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -25,7 +26,7 @@ public class MessageUpdateCropArea implements BannerModMessage<MessageUpdateCrop
         this.uuid = uuid;
 
         CompoundTag compoundnbt = new CompoundTag();
-        this.tag = cropItem.save(compoundnbt);
+        this.tag = (CompoundTag) cropItem.save(RegistryAccess.EMPTY, compoundnbt);
     }
 
     public PacketFlow getExecutingSide() {
@@ -46,7 +47,7 @@ public class MessageUpdateCropArea implements BannerModMessage<MessageUpdateCrop
     }
 
     public void update(CropArea cropArea){
-        ItemStack itemStack = ItemStack.of(tag);
+        ItemStack itemStack = ItemStack.parseOptional(RegistryAccess.EMPTY, tag);
         cropArea.setSeedStack(itemStack);
         cropArea.updateType();
         cropArea.setTime(cropArea.getTime() + DONE_TIME);

@@ -5,7 +5,9 @@ import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.compat.MedievalBoomsticksCompat;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.effect.MobEffect;
@@ -73,7 +75,7 @@ final class RecruitUpkeepService {
 
     static boolean hasFoodInInv(AbstractRecruitEntity recruit) {
         for (int i = 0; i < recruit.getInventory().getContainerSize(); i++) {
-            if (recruit.getInventory().getItem(i).isEdible()) {
+            if (recruit.getInventory().getItem(i).has(DataComponents.FOOD)) {
                 return true;
             }
         }
@@ -193,7 +195,7 @@ final class RecruitUpkeepService {
         return false;
     }
 
-    private static void addEffectIfMissing(AbstractRecruitEntity recruit, MobEffect effect, int duration, int amplifier) {
+    private static void addEffectIfMissing(AbstractRecruitEntity recruit, Holder<MobEffect> effect, int duration, int amplifier) {
         if (!recruit.hasEffect(effect)) recruit.addEffect(new MobEffectInstance(effect, duration, amplifier, false, false, true));
     }
 }

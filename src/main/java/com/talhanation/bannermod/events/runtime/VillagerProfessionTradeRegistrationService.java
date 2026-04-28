@@ -7,6 +7,7 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.ItemLike;
@@ -58,7 +59,7 @@ public final class VillagerProfessionTradeRegistrationService {
         @Override
         public MerchantOffer getOffer(Entity entity, RandomSource random) {
             return new MerchantOffer(
-                    new ItemStack(this.buyingItem, this.buyingAmount),
+                    new ItemCost(this.buyingItem, this.buyingAmount),
                     new ItemStack(this.sellingItem, 1),
                     MAX_USES,
                     GIVEN_EXPERIENCE,

@@ -25,7 +25,7 @@ import java.util.Locale;
 @OnlyIn(Dist.CLIENT)
 public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSelection {
 
-    protected static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/select_player.png");
+    protected static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/select_player.png");
     protected static final Component TITLE = Component.translatable("gui.recruits.groups.title");
     protected static final Component ADD_BUTTON = Component.translatable("gui.recruits.groups.add");
     protected static final Component EDIT_BUTTON = Component.translatable("gui.recruits.groups.edit");
@@ -71,7 +71,7 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
         units = Math.max(minUnits, (height - HEADER_SIZE - FOOTER_SIZE - gapTop - gapBottom - SEARCH_HEIGHT) / UNIT_SIZE);
 
         if (groupList != null) {
-            groupList.updateSize(width, height, guiTop + HEADER_SIZE + SEARCH_HEIGHT, guiTop + HEADER_SIZE + units * UNIT_SIZE);
+            groupList.setRectangle(width, units * UNIT_SIZE - SEARCH_HEIGHT, 0, guiTop + HEADER_SIZE + SEARCH_HEIGHT);
         } else {
             groupList = new RecruitsGroupList(width, height, guiTop + HEADER_SIZE + SEARCH_HEIGHT, guiTop + HEADER_SIZE + units * UNIT_SIZE, CELL_HEIGHT, this, null);
         }
@@ -103,7 +103,6 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
         super.tick();
         ClientManager.updateGroups();
         if(searchBox != null){
-            searchBox.tick();
         }
         if(groupList != null){
             groupList.tick();

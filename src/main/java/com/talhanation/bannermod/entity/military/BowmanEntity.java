@@ -7,7 +7,9 @@ import com.talhanation.bannermod.ai.military.RecruitStrategicFire;
 import com.talhanation.bannermod.ai.military.RecruitRangedBowAttackGoal;
 import com.talhanation.bannermod.util.AttackUtil;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
@@ -21,6 +23,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
@@ -61,7 +64,7 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
         return Mob.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.31D)
-                .add(NeoForgeMod.SWIM_SPEED.get(), 0.3D)
+                .add(NeoForgeMod.SWIM_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.05D)
                 .add(Attributes.ATTACK_DAMAGE, 0.5D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D) //do not change as ranged ai dependants on it
@@ -103,17 +106,16 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
 
             ItemStack itemstack = this.getProjectile(this.getItemInHand(InteractionHand.MAIN_HAND));
 
-            AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemstack, v);
-            arrow = ((net.minecraft.world.item.BowItem) this.getMainHandItem().getItem()).customArrow(arrow);
+            AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemstack, v, this.getMainHandItem());
 
-            int powerLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.POWER_ARROWS, itemstack);
+            int powerLevel = getEnchantmentLevel(Enchantments.POWER, itemstack);
             arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + this.arrowDamageModifier());
 
-            int punchLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PUNCH_ARROWS, itemstack);
-            if (punchLevel > 0) arrow.setKnockback(punchLevel);
+            int punchLevel = getEnchantmentLevel(Enchantments.PUNCH, itemstack);
+            // Knockback is applied through vanilla enchantment effects in 1.21.
 
-            int fireLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.FLAMING_ARROWS, itemstack);
-            if (fireLevel > 0) arrow.setSecondsOnFire(100);
+            int fireLevel = getEnchantmentLevel(Enchantments.FLAME, itemstack);
+            if (fireLevel > 0) arrow.igniteForSeconds(5.0F);
 
             double distance = this.distanceToSqr(target.getX(), target.getY(), target.getZ());
             double heightDiff = target.getY() - this.getY();
@@ -132,7 +134,7 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
             arrow.shoot(d0, d1 + d3 * angle, d2, force, accuracy);
 
             if(RecruitsServerConfig.RangedRecruitsNeedArrowsToShoot.get()){
-                int k = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY_ARROWS, this.getMainHandItem());
+                int k = getEnchantmentLevel(Enchantments.INFINITY, this.getMainHandItem());
                 if (k == 0) {
                     this.consumeArrow();
                     arrow.pickup = AbstractArrow.Pickup.ALLOWED;
@@ -151,22 +153,28 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
         return 1.0D;
     }
 
+    private int getEnchantmentLevel(ResourceKey<Enchantment> enchantment, ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(
+                this.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(enchantment),
+                stack
+        );
+    }
+
     public void performRangedAttackXYZ(double x, double y, double z, float v, float angle, float force) {
         if(this.level().isClientSide()) return;
         if (this.getMainHandItem().getItem() instanceof BowItem) {
             ItemStack itemstack = this.getProjectile(this.getItemInHand(InteractionHand.MAIN_HAND));
 
-            AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemstack, v);
-            arrow = ((net.minecraft.world.item.BowItem) this.getMainHandItem().getItem()).customArrow(arrow);
+            AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemstack, v, this.getMainHandItem());
 
-            int powerLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.POWER_ARROWS, itemstack);
+            int powerLevel = getEnchantmentLevel(Enchantments.POWER, itemstack);
             if (powerLevel > 0) arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + this.arrowDamageModifier());
 
-            int punchLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PUNCH_ARROWS, itemstack);
-            if (punchLevel > 0) arrow.setKnockback(punchLevel);
+            int punchLevel = getEnchantmentLevel(Enchantments.PUNCH, itemstack);
+            // Knockback is applied through vanilla enchantment effects in 1.21.
 
-            int fireLevel = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.FLAMING_ARROWS, itemstack);
-            if (fireLevel > 0) arrow.setSecondsOnFire(100);
+            int fireLevel = getEnchantmentLevel(Enchantments.FLAME, itemstack);
+            if (fireLevel > 0) arrow.igniteForSeconds(5.0F);
 
             double d0 = x - this.getX();
             double d1 = y - this.getY();

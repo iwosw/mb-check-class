@@ -4,7 +4,7 @@ import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import org.jetbrains.annotations.NotNull;
@@ -16,14 +16,14 @@ public class DebugSyncWorkerPathNavigation extends GroundPathNavigation { // ONL
     public DebugSyncWorkerPathNavigation(AbstractWorkerEntity worker, Level world) {
         super(worker, world);
         this.worker = worker;
-        worker.setPathfindingMalus(BlockPathTypes.WATER, 32.0F);
-        worker.setPathfindingMalus(BlockPathTypes.TRAPDOOR, 32.0F);
-        worker.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, 32.0F);
-        worker.setPathfindingMalus(BlockPathTypes.DAMAGE_CAUTIOUS, 32.0F);
-        worker.setPathfindingMalus(BlockPathTypes.DANGER_POWDER_SNOW, -1.0F);
-        worker.setPathfindingMalus(BlockPathTypes.DOOR_WOOD_CLOSED, 0.0F);
-        worker.setPathfindingMalus(BlockPathTypes.FENCE, 32.0F);
-        worker.setPathfindingMalus(BlockPathTypes.LAVA, -1.0F);
+        worker.setPathfindingMalus(PathType.WATER, 32.0F);
+        worker.setPathfindingMalus(PathType.TRAPDOOR, 32.0F);
+        worker.setPathfindingMalus(PathType.DAMAGE_FIRE, 32.0F);
+        worker.setPathfindingMalus(PathType.DAMAGE_CAUTIOUS, 32.0F);
+        worker.setPathfindingMalus(PathType.DANGER_POWDER_SNOW, -1.0F);
+        worker.setPathfindingMalus(PathType.DOOR_WOOD_CLOSED, 0.0F);
+        worker.setPathfindingMalus(PathType.FENCE, 32.0F);
+        worker.setPathfindingMalus(PathType.LAVA, -1.0F);
     }
 
     protected @NotNull PathFinder createPathFinder(int range) {

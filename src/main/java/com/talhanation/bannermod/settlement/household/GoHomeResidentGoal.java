@@ -17,7 +17,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public final class GoHomeResidentGoal implements ResidentGoal {
 
-    public static final ResourceLocation ID = new ResourceLocation(BannerModMain.MOD_ID, "resident/goal/go_home");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "resident/goal/go_home");
 
     private static final int GO_HOME_PRIORITY = 95;
     private static final int GO_HOME_DURATION_TICKS = 120;

@@ -27,6 +27,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
@@ -308,7 +309,7 @@ public abstract class AbstractWorkAreaEntity extends Entity {
             case EAST  -> end = start.offset(depth, height, width);   // depth entlang +X, width entlang +Z
             default    -> end = start.offset(-depth, height, -width); // WEST: depth entlang -X, width entlang -Z
         }
-        return new AABB(start, end);
+        return new AABB(Vec3.atLowerCornerOf(start), Vec3.atLowerCornerOf(end));
     }
     public static List<AbstractWorkAreaEntity> getNearbyAreas(Level level, BlockPos center, int radius) {
         List<AbstractWorkAreaEntity> nearby = new ArrayList<>();

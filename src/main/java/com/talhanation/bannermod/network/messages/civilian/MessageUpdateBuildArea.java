@@ -5,6 +5,7 @@ import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -115,7 +116,7 @@ public class MessageUpdateBuildArea implements BannerModMessage<MessageUpdateBui
 
         byte[] compressed = buf.readByteArray();
         try {
-            this.structureNBT = NbtIo.readCompressed(new ByteArrayInputStream(compressed));
+            this.structureNBT = NbtIo.readCompressed(new ByteArrayInputStream(compressed), NbtAccounter.unlimitedHeap());
         } catch (IOException e) {
             e.printStackTrace();
             this.structureNBT = new CompoundTag(); // Fallback

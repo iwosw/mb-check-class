@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * work-area automatically on completion.
  */
 public final class MinePrefab implements BuildingPrefab {
-    public static final ResourceLocation ID = new ResourceLocation("bannermod", "mine");
+    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("bannermod", "mine");
 
     private static final int WIDTH = 7;
     private static final int HEIGHT = 4;

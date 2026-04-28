@@ -232,8 +232,8 @@ public class BuildArea extends AbstractWorkAreaEntity {
             int relZ = entityTag.getInt("z");
             int scanFacingVal = entityTag.getInt("facing");
 
-            ResourceLocation rl = new ResourceLocation(typeId);
-            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.getValue(rl);
+            ResourceLocation rl = ResourceLocation.parse(typeId);
+            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(rl);
             if (entityType == null) continue;
 
             BlockPos worldPos = origin

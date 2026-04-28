@@ -36,18 +36,18 @@ public final class WorkersRuntime {
     }
 
     public static ResourceLocation id(String path) {
-        return new ResourceLocation(MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public static ResourceLocation legacyId(String path) {
-        return new ResourceLocation(LEGACY_MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(LEGACY_MOD_ID, path);
     }
 
     public static ResourceLocation migrateLegacyId(ResourceLocation id) {
         if (!LEGACY_MOD_ID.equals(id.getNamespace())) {
             return id;
         }
-        return new ResourceLocation(MOD_ID, id.getPath());
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, id.getPath());
     }
 
     public static String migrateLegacyId(String rawId) {
@@ -82,7 +82,7 @@ public final class WorkersRuntime {
     }
 
     public static ResourceLocation resolveRegistryId(String rawId) {
-        ResourceLocation id = new ResourceLocation(rawId);
+        ResourceLocation id = ResourceLocation.parse(rawId);
         if (BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
             return id;
         }
@@ -96,11 +96,11 @@ public final class WorkersRuntime {
     }
 
     public static EntityType<?> resolveEntityType(String rawId) {
-        return BuiltInRegistries.ENTITY_TYPE.getValue(resolveRegistryId(rawId));
+        return BuiltInRegistries.ENTITY_TYPE.getOptional(resolveRegistryId(rawId)).orElse(null);
     }
 
     public static ResourceLocation mergedAssetId(String path) {
-        return new ResourceLocation(ACTIVE_ASSET_NAMESPACE, path);
+        return ResourceLocation.fromNamespaceAndPath(ACTIVE_ASSET_NAMESPACE, path);
     }
 
     public static ResourceLocation mergedGuiTexture(String fileName) {

@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.render.layer;
 
-import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.talhanation.bannermod.client.military.render.RecruitRenderProfiling;
@@ -80,12 +79,10 @@ public class VillagerRecruitCustomHeadLayer<T extends LivingEntity, M extends En
                 poseStack.translate(0.0D, 0.0625D, 0.0D);
 
                 ResolvableProfile profile = itemstack.get(DataComponents.PROFILE);
-                GameProfile gameprofile = profile == null ? null : profile.gameProfile();
-
                 poseStack.translate(-0.5D, 0.0D, -0.5D);
                 SkullBlock.Type skullblock$type = ((AbstractSkullBlock) ((BlockItem) item).getBlock()).getType();
                 SkullModelBase skullmodelbase = this.skullModels.get(skullblock$type);
-                RenderType rendertype = SkullBlockRenderer.getRenderType(skullblock$type, gameprofile);
+                RenderType rendertype = SkullBlockRenderer.getRenderType(skullblock$type, profile);
                 SkullBlockRenderer.renderSkull((Direction) null, 180.0F, p_116735_, poseStack, bufferSource, p_116733_, skullmodelbase, rendertype);
             } else if (!(item instanceof ArmorItem) || ((ArmorItem) item).getEquipmentSlot() != EquipmentSlot.HEAD) {
                 translateToHead(poseStack, flag);

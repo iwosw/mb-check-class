@@ -2,10 +2,11 @@ package com.talhanation.bannermod.ai.military;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
-import java.util.Objects;
 
 public class RecruitEatGoal extends Goal {
 
@@ -72,10 +73,12 @@ public class RecruitEatGoal extends Goal {
         BannerModMain.LOGGER.debug("Start--------------:");
         */
 
-        recruit.heal(Objects.requireNonNull(foodStack.getItem().getFoodProperties(foodStack, recruit)).getSaturationModifier() * 1);
+        FoodProperties foodProperties = foodStack.get(DataComponents.FOOD);
+        if (foodProperties == null) return;
+        recruit.heal(foodProperties.saturation() * 1);
         if (!recruit.isSaturated()){
-            float saturation = Objects.requireNonNull(foodStack.getItem().getFoodProperties(foodStack, recruit)).getSaturationModifier();
-            float nutrition = Objects.requireNonNull(foodStack.getItem().getFoodProperties(foodStack, recruit)).getNutrition() * 5;
+            float saturation = foodProperties.saturation();
+            float nutrition = foodProperties.nutrition() * 5;
 
             float currentHunger = recruit.getHunger();
             float newHunger = currentHunger + saturation + nutrition;

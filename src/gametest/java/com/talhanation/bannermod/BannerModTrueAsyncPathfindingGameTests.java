@@ -13,8 +13,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 import java.util.Set;
@@ -144,7 +144,7 @@ public class BannerModTrueAsyncPathfindingGameTests {
     }
 
     private static RecruitEntity spawnOwnedRecruit(GameTestHelper helper) {
-        Player owner = helper.makeMockPlayer();
+        Player owner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         return BannerModGameTestSupport.spawnOwnedRecruit(helper, owner, RECRUIT_POS);
     }
 

@@ -35,6 +35,8 @@ sourceSets {
     test {
         java.srcDirs = ['src/test/java']
         resources.srcDirs = ['src/test/resources']
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath + sourceSets.main.runtimeClasspath
+        runtimeClasspath += output + compileClasspath
     }
     gametest {
         java.srcDirs = ['src/gametest/java']
@@ -124,7 +126,7 @@ dependencies {
 
     compileOnly 'maven.modrinth:better-combat:2.2.4+1.21.1-neoforge'
     runtimeOnly 'maven.modrinth:better-combat:2.2.4+1.21.1-neoforge'
-    runtimeOnly 'maven.modrinth:playeranimator:2.0.1+1.21.1'
+    runtimeOnly 'maven.modrinth:playeranimator:2.0.1+1.21.1-forge'
     implementation 'curse.maven:corpse-316582:5157034'
     implementation 'curse.maven:epic-knights-armor-and-weapons-509041:5254836'
     implementation 'curse.maven:architectury-api-419699:5137938'

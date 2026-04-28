@@ -21,7 +21,7 @@ import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class RecruitMoreScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final Component TITLE = Component.translatable("gui.recruits.more_screen.title");
     private Player player;
     private AbstractRecruitEntity recruit;

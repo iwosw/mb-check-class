@@ -20,8 +20,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -40,7 +40,7 @@ public class BannerModLogisticsCourierGameTests {
     public static void authoredRouteCourierMovesItemsBetweenStorageEndpoints(GameTestHelper helper) {
         BannerModLogisticsRuntime.resetForTests();
         ServerLevel level = helper.getLevel();
-        Player owner = helper.makeMockPlayer();
+        Player owner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         MerchantEntity courier = BannerModGameTestSupport.spawnOwnedMerchant(helper, owner, new BlockPos(2, 2, 4));
         StorageArea sourceStorage = BannerModGameTestSupport.spawnOwnedStorageArea(helper, owner, new BlockPos(2, 2, 2));
         StorageArea destinationStorage = BannerModGameTestSupport.spawnOwnedStorageArea(helper, owner, new BlockPos(10, 2, 2));
@@ -102,7 +102,7 @@ public class BannerModLogisticsCourierGameTests {
     public static void courierUsesNearbyHorseOnSupportedRoute(GameTestHelper helper) {
         BannerModLogisticsRuntime.resetForTests();
         ServerLevel level = helper.getLevel();
-        Player owner = helper.makeMockPlayer();
+        Player owner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         MerchantEntity courier = BannerModGameTestSupport.spawnOwnedMerchant(helper, owner, new BlockPos(2, 2, 4));
         Horse horse = BannerModGameTestSupport.spawnEntity(helper, EntityType.HORSE, new BlockPos(3, 2, 4));
         StorageArea sourceStorage = BannerModGameTestSupport.spawnOwnedStorageArea(helper, owner, new BlockPos(2, 2, 2));
@@ -136,7 +136,7 @@ public class BannerModLogisticsCourierGameTests {
     public static void courierFallsBackWhenNoMountAvailable(GameTestHelper helper) {
         BannerModLogisticsRuntime.resetForTests();
         ServerLevel level = helper.getLevel();
-        Player owner = helper.makeMockPlayer();
+        Player owner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         MerchantEntity courier = BannerModGameTestSupport.spawnOwnedMerchant(helper, owner, new BlockPos(2, 2, 4));
         StorageArea sourceStorage = BannerModGameTestSupport.spawnOwnedStorageArea(helper, owner, new BlockPos(2, 2, 2));
         StorageArea destinationStorage = BannerModGameTestSupport.spawnOwnedStorageArea(helper, owner, new BlockPos(24, 2, 2));
