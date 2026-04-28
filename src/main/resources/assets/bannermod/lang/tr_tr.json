@@ -1311,6 +1311,7 @@
   "gui.recruits.map.diplomacy": "Diplomasi",
   "gui.recruits.map.claim_chunk": "Chunk'u sahip ol",
   "gui.recruits.map.claim_area": "Bölgeyi sahip ol",
+  "gui.recruits.map.claim_area_disabled": "Alan sahiplenme burada devre dışı. Sunucunun her düzenlemeyi doğrulaması için yakındaki chunk'ları tek tek sahiplen.",
   "gui.recruits.map.edit_claim": "Bölgeyi ayarla",
   "gui.recruits.map.remove_chunk": "Chunk'u sil",
   "gui.recruits.map.center_map": "Haritayi ortala",

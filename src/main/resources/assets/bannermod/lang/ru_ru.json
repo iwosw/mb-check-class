@@ -1324,6 +1324,7 @@
   "gui.recruits.map.diplomacy": "Дипломатия",
   "gui.recruits.map.claim_chunk": "Захватить чанк",
   "gui.recruits.map.claim_area": "Захватить территорию",
+  "gui.recruits.map.claim_area_disabled": "Захват области здесь отключен. Захватывай соседние чанки по одному, чтобы сервер проверял каждое изменение.",
   "gui.recruits.map.edit_claim": "Настроить территорию",
   "gui.recruits.map.remove_chunk": "Удалить чанк",
   "gui.recruits.map.center_map": "Центрировать карту",

@@ -773,6 +773,7 @@
   "gui.recruits.map.diplomacy": "Diplomacy",
   "gui.recruits.map.claim_chunk": "Claim Chunk",
   "gui.recruits.map.claim_area": "Claim Area",
+  "gui.recruits.map.claim_area_disabled": "Claim-area creation is disabled here. Claim nearby chunks one at a time so the server can validate each edit.",
   "gui.recruits.map.edit_claim": "Edit Claim",
   "gui.recruits.map.remove_chunk": "Remove Chunk",
   "gui.recruits.map.center_map": "Center Map",
