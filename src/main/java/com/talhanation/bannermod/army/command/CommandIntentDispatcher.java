@@ -2,6 +2,7 @@ package com.talhanation.bannermod.army.command;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.events.CommandEvents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;
@@ -47,23 +48,57 @@ public final class CommandIntentDispatcher {
         safeActors = narrowBySelection(player, safeActors);
         CommandIntentLog.instance().record(player, intent, safeActors.size());
 
-        if (player == null || safeActors.isEmpty()) {
+        if (player == null) {
+            return intent;
+        }
+        if (safeActors.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Command rejected: no eligible recruits selected."));
             return intent;
         }
 
         long gameTime = player.getCommandSenderWorld().getGameTime();
+        CommandIntentQueueRuntime queueRuntime = CommandIntentQueueRuntime.instance();
 
         if (intent.queueMode()) {
+            if (!CommandIntentQueueRuntime.canExecuteQueued(intent)) {
+                player.sendSystemMessage(Component.literal("Command rejected: queued " + intent.type() + " orders are not supported."));
+                return intent;
+            }
             // Append to each actor's queue. If the queue was empty, the runtime applies
             // the intent immediately so there's no perceived delay for the first waypoint.
-            CommandIntentQueueRuntime.instance().appendForActors(player, intent, safeActors, gameTime);
+            int modified = queueRuntime.appendForActors(player, intent, safeActors, gameTime);
+            player.sendSystemMessage(Component.literal("Command queued: " + modified + " recruit(s), "
+                    + pendingOrderCount(queueRuntime, safeActors) + " pending order(s)."));
             return intent;
         }
 
         // Non-queued: wipe any pending plan for these actors and apply the intent right now.
-        CommandIntentQueueRuntime.instance().clearForActors(safeActors);
+        int replaced = actorsWithPendingOrders(queueRuntime, safeActors);
+        queueRuntime.clearForActors(safeActors);
         applyIntentDirectly(player, intent, safeActors);
+        String suffix = replaced > 0 ? ", replaced queued orders for " + replaced + " recruit(s)." : ", immediate order.";
+        player.sendSystemMessage(Component.literal("Command accepted: " + safeActors.size() + " recruit(s)" + suffix));
         return intent;
+    }
+
+    private static int actorsWithPendingOrders(CommandIntentQueueRuntime queueRuntime, List<AbstractRecruitEntity> actors) {
+        int count = 0;
+        for (AbstractRecruitEntity actor : actors) {
+            if (actor != null && queueRuntime.sizeFor(actor.getUUID()) > 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int pendingOrderCount(CommandIntentQueueRuntime queueRuntime, List<AbstractRecruitEntity> actors) {
+        int count = 0;
+        for (AbstractRecruitEntity actor : actors) {
+            if (actor != null) {
+                count += queueRuntime.sizeFor(actor.getUUID());
+            }
+        }
+        return count;
     }
 
     /**
@@ -116,6 +151,11 @@ public final class CommandIntentDispatcher {
             for (AbstractRecruitEntity recruit : safeActors) {
                 CommandEvents.onCombatStanceCommand(
                         player.getUUID(), recruit, stanceChange.stance(), stanceChange.groupUuid());
+            }
+        } else if (intent instanceof CommandIntent.SiegeMachine siegeMachine) {
+            for (AbstractRecruitEntity recruit : safeActors) {
+                CommandEvents.onMountButton(
+                        player.getUUID(), recruit, siegeMachine.returnToKnownMount() ? null : siegeMachine.mountUuid(), siegeMachine.groupUuid());
             }
         }
     }

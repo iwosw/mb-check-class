@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 
-import net.minecraftforge.client.gui.widget.ExtendedButton;
+import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -51,6 +51,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     private static final MutableComponent BUTTON_SIEGE_ENGINEER = Component.translatable("gui.bannermod.inv.text.siege_engineer");
     private static final MutableComponent TOOLTIP_SIEGE_ENGINEER = Component.translatable("gui.bannermod.inv.tooltip.siege_engineer");
+    private static final MutableComponent TOOLTIP_SIEGE_ENGINEER_DISABLED = Component.translatable("gui.bannermod.inv.tooltip.siege_engineer_disabled");
 
     private static final MutableComponent BUTTON_ROGUE = Component.translatable("gui.bannermod.inv.text.rogue");
     private static final MutableComponent TOOLTIP_ROGUE = Component.translatable("gui.bannermod.inv.tooltip.rogue");
@@ -116,7 +117,10 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
         createProfessionButtons(BUTTON_PATROL_LEADER, TOOLTIP_PATROL_LEADER, 2,recruit.getXpLevel() >= 5);
         createProfessionButtons(BUTTON_CAPTAIN, BannerModMain.isSmallShipsCompatible ? TOOLTIP_CAPTAIN : TOOLTIP_CAPTAIN_DISABLED, 3, recruit.getXpLevel() >= 5 && BannerModMain.isSmallShipsLoaded && BannerModMain.isSmallShipsCompatible);
         createProfessionButtons(BUTTON_ASSASSIN, TOOLTIP_ASSASSIN, 4, false && recruit.getXpLevel() >= 5);
-        createProfessionButtons(BUTTON_SIEGE_ENGINEER, TOOLTIP_SIEGE_ENGINEER, 5, recruit.getXpLevel() >= 5 && BannerModMain.isSiegeWeaponsLoaded);
+        createProfessionButtons(BUTTON_SIEGE_ENGINEER,
+                BannerModMain.isSiegeWeaponsLoaded ? TOOLTIP_SIEGE_ENGINEER_DISABLED : TOOLTIP_SIEGE_ENGINEER_DISABLED,
+                5,
+                false);
 
         createProfessionButtons(BUTTON_GOVERNOR, TOOLTIP_GOVERNOR, 6, canDesignateGovernor());
         createProfessionButtons(BUTTON_SPY, TOOLTIP_SPY, 7, false && recruit.getXpLevel() >= 7);

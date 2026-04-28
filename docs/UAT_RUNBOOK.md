@@ -61,12 +61,15 @@ Failure signal: hit is cancelled with denial token in chat. Verify the hitter is
 Expected: occupation record placed; war RESOLVED; per-second tax ticker writes `OCCUPATION_TAX_PAID` audit on success and advances `lastTaxedAt` even on default; immunity denial fires within `LostTerritoryImmunityDays`.
 Failure signal: tax doesn't tick — `OccupationTaxAmountPerChunk` or `OccupationTaxIntervalDays` set to 0 (disabled). Treasury didn't move — defender has no claim ledger. Immunity didn't trigger — `WarCooldownRuntime` not initialized for this level.
 
-## 7. Revolt path (WAR-003, currently timer-driven)
+## 7. Revolt path (WAR-003, objective-presence driven)
 
 1. Defender or third-party calls `/bannermod war revolt <occupationId>`.
-2. Wait the timer cycle.
+2. Wait until the revolt is due and the battle window is open.
+3. Put only rebel-side recruits/players at the first occupied objective chunk.
+4. Repeat with defender/occupier presence at the objective.
+5. Repeat with the objective empty.
 
-Expected today: timer-based auto-success / failure window. WAR-003 is **not yet** objective-driven (open backlog) — flag this step as `WAR-003 pending` if the runbook is being used to verify warfare-RP completeness.
+Expected: rebel-only presence resolves the revolt as SUCCESS and removes the occupation; any defender/occupier presence resolves it as FAILED; an empty objective stays PENDING for the next open-window evaluation instead of resolving by timer alone.
 
 ## Cleanup
 

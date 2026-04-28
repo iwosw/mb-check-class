@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.ai.military.controller.RecruitCommandStateTransitions;
+import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
@@ -30,6 +31,9 @@ import java.util.UUID;
 
 final class MovementFormationCommandService {
 
+    private static final String ACTIVE_GROUPS_KEY = "ActiveGroups";
+    private static final String FORMATION_KEY = "Formation";
+
     private MovementFormationCommandService() {
     }
 
@@ -42,13 +46,13 @@ final class MovementFormationCommandService {
     }
 
     static void onMovementCommand(Player player, List<AbstractRecruitEntity> recruits, int movementState, int formation, boolean tight, @Nullable Vec3 explicitTargetPos) {
-        if (formation != 0 && (movementState == 2 || movementState == 4 || movementState == 6 || movementState == 7 || movementState == 8)) {
+        if (formation != 0 && MovementCommandState.usesFormationTarget(movementState)) {
             Vec3 targetPos = null;
 
             switch (movementState) {
-                case 2 -> targetPos = FormationUtils.getGeometricMedian(recruits, (ServerLevel) player.getCommandSenderWorld());
-                case 4 -> targetPos = player.position();
-                case 6 -> {
+                case MovementCommandState.HOLD_POSITION -> targetPos = FormationUtils.getGeometricMedian(recruits, (ServerLevel) player.getCommandSenderWorld());
+                case MovementCommandState.HOLD_OWNER_POSITION -> targetPos = player.position();
+                case MovementCommandState.MOVE_TO_POSITION -> {
                     if (explicitTargetPos != null) {
                         targetPos = explicitTargetPos;
                     } else {
@@ -56,8 +60,8 @@ final class MovementFormationCommandService {
                         targetPos = hitResult.getLocation();
                     }
                 }
-                case 7 -> targetPos = getFormationRelativeTarget(player, recruits, 1D);
-                case 8 -> targetPos = getFormationRelativeTarget(player, recruits, -1D);
+                case MovementCommandState.FORWARD -> targetPos = getFormationRelativeTarget(player, recruits, 1D);
+                case MovementCommandState.BACKWARD -> targetPos = getFormationRelativeTarget(player, recruits, -1D);
             }
 
             applyFormation(formation, recruits, player, targetPos, tight);
@@ -66,37 +70,37 @@ final class MovementFormationCommandService {
                 int state = recruit.getFollowState();
 
                 switch (movementState) {
-                    case 0 -> {
-                        if (state != 0) {
-                            recruit.setFollowState(0);
+                    case MovementCommandState.WANDER -> {
+                        if (state != MovementCommandState.WANDER) {
+                            recruit.setFollowState(MovementCommandState.WANDER);
                         }
                     }
-                    case 1 -> {
-                        if (state != 1) {
-                            recruit.setFollowState(1);
+                    case MovementCommandState.FOLLOW -> {
+                        if (state != MovementCommandState.FOLLOW) {
+                            recruit.setFollowState(MovementCommandState.FOLLOW);
                         }
                     }
-                    case 2 -> {
-                        if (state != 2) {
-                            recruit.setFollowState(2);
+                    case MovementCommandState.HOLD_POSITION -> {
+                        if (state != MovementCommandState.HOLD_POSITION) {
+                            recruit.setFollowState(MovementCommandState.HOLD_POSITION);
                         }
                     }
-                    case 3 -> {
-                        if (state != 3) {
-                            recruit.setFollowState(3);
+                    case MovementCommandState.BACK_TO_POSITION -> {
+                        if (state != MovementCommandState.BACK_TO_POSITION) {
+                            recruit.setFollowState(MovementCommandState.BACK_TO_POSITION);
                         }
                     }
-                    case 4 -> {
-                        if (state != 4) {
-                            recruit.setFollowState(4);
+                    case MovementCommandState.HOLD_OWNER_POSITION -> {
+                        if (state != MovementCommandState.HOLD_OWNER_POSITION) {
+                            recruit.setFollowState(MovementCommandState.HOLD_OWNER_POSITION);
                         }
                     }
-                    case 5 -> {
-                        if (state != 5) {
-                            recruit.setFollowState(5);
+                    case MovementCommandState.PROTECT -> {
+                        if (state != MovementCommandState.PROTECT) {
+                            recruit.setFollowState(MovementCommandState.PROTECT);
                         }
                     }
-                    case 6 -> {
+                    case MovementCommandState.MOVE_TO_POSITION -> {
                         BlockPos blockPos = null;
                         if (explicitTargetPos != null) {
                             blockPos = BlockPos.containing(explicitTargetPos);
@@ -110,12 +114,12 @@ final class MovementFormationCommandService {
 
                         if (blockPos != null) {
                             recruit.setMovePos(blockPos);
-                            recruit.setFollowState(0);
+                            recruit.setFollowState(MovementCommandState.WANDER);
                             recruit.setShouldMovePos(true);
                         }
                     }
-                    case 7 -> applySingleRecruitForwardBack(player, recruit, 1D);
-                    case 8 -> applySingleRecruitForwardBack(player, recruit, -1D);
+                    case MovementCommandState.FORWARD -> applySingleRecruitForwardBack(player, recruit, 1D);
+                    case MovementCommandState.BACKWARD -> applySingleRecruitForwardBack(player, recruit, -1D);
                 }
 
                 recruit.isInFormation = false;
@@ -269,7 +273,7 @@ final class MovementFormationCommandService {
             return;
         }
 
-        List<UUID> activeGroups = getSavedUUIDList(serverPlayer, "ActiveGroups");
+        List<UUID> activeGroups = getSavedUUIDList(serverPlayer, ACTIVE_GROUPS_KEY);
         recruits.removeIf(recruit -> !activeGroups.contains(recruit.getGroup()));
         groups.removeIf(group -> !activeGroups.contains(group.getUUID()));
 
@@ -279,10 +283,14 @@ final class MovementFormationCommandService {
 
     static void initializePlayerCommandState(Player player) {
         CompoundTag playerData = player.getPersistentData();
+        initializePlayerCommandState(playerData, (int) player.getX(), (int) player.getZ(), RecruitsServerConfig.MaxRecruitsForPlayer.get());
+    }
+
+    static void initializePlayerCommandState(CompoundTag playerData, int playerX, int playerZ, int maxRecruits) {
         CompoundTag data = playerData.getCompound(Player.PERSISTED_NBT_TAG);
 
         if (!data.contains("MaxRecruits")) {
-            data.putInt("MaxRecruits", RecruitsServerConfig.MaxRecruitsForPlayer.get());
+            data.putInt("MaxRecruits", maxRecruits);
         }
         if (!data.contains("CommandingGroup")) {
             data.putInt("CommandingGroup", 0);
@@ -290,26 +298,45 @@ final class MovementFormationCommandService {
         if (!data.contains("TotalRecruits")) {
             data.putInt("TotalRecruits", 0);
         }
-        if (!data.contains("ActiveGroups")) {
-            data.put("ActiveGroups", new ListTag());
+        if (!data.contains(ACTIVE_GROUPS_KEY)) {
+            data.put(ACTIVE_GROUPS_KEY, new ListTag());
         }
-        if (!data.contains("Formation")) {
-            data.putInt("Formation", 0);
+        if (!data.contains(FORMATION_KEY)) {
+            data.putInt(FORMATION_KEY, 0);
         }
         if (!data.contains("FormationPos")) {
-            data.putIntArray("FormationPos", new int[]{(int) player.getX(), (int) player.getZ()});
+            data.putIntArray("FormationPos", new int[]{playerX, playerZ});
         }
 
         playerData.put(Player.PERSISTED_NBT_TAG, data);
     }
 
+    static void copyPersistentCommandPreferences(Player original, Player clone) {
+        copyPersistentCommandPreferences(original.getPersistentData(), clone.getPersistentData());
+        initializePlayerCommandState(clone);
+    }
+
+    static void copyPersistentCommandPreferences(CompoundTag originalPlayerData, CompoundTag clonePlayerData) {
+        CompoundTag originalData = originalPlayerData.getCompound(Player.PERSISTED_NBT_TAG);
+        CompoundTag cloneData = clonePlayerData.getCompound(Player.PERSISTED_NBT_TAG);
+
+        if (originalData.contains(FORMATION_KEY, Tag.TAG_INT)) {
+            cloneData.putInt(FORMATION_KEY, originalData.getInt(FORMATION_KEY));
+        }
+        if (originalData.contains(ACTIVE_GROUPS_KEY, Tag.TAG_LIST)) {
+            cloneData.put(ACTIVE_GROUPS_KEY, originalData.getList(ACTIVE_GROUPS_KEY, Tag.TAG_COMPOUND).copy());
+        }
+
+        clonePlayerData.put(Player.PERSISTED_NBT_TAG, cloneData);
+    }
+
     static int getSavedFormation(Player player) {
-        return getPersistedData(player).getInt("Formation");
+        return getPersistedData(player).getInt(FORMATION_KEY);
     }
 
     static void saveFormation(Player player, int formation) {
         CompoundTag persisted = getPersistedData(player);
-        persisted.putInt("Formation", formation);
+        persisted.putInt(FORMATION_KEY, formation);
         savePersistedData(player, persisted);
     }
 

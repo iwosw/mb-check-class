@@ -18,7 +18,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraftforge.client.gui.widget.ExtendedButton;
+import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 import java.util.List;
 
@@ -146,7 +146,6 @@ public class ClaimEditScreen extends RecruitsScreenBase {
                 button -> {
                     this.claim.setName(editNameBox.getValue());
                     this.claim.setPlayer(playerInfo);
-                    this.claim.setOwnerPoliticalEntityId(null);
                     this.claim.setBlockInteractionAllowed(this.allowBlockInteracting);
                     this.claim.setBlockPlacementAllowed(this.allowBlockPlacing);
                     this.claim.setBlockBreakingAllowed(this.allowBlockBreaking);

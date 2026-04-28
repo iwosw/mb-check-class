@@ -10,6 +10,11 @@ import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
+import com.talhanation.bannermod.settlement.building.BuildingType;
+import com.talhanation.bannermod.settlement.building.BuildingValidationState;
+import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
+import com.talhanation.bannermod.settlement.building.ValidatedBuildingRegistryData;
+import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsReservation;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
@@ -22,7 +27,7 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -484,9 +489,10 @@ public final class BannerModSettlementService {
     }
 
     private static List<BannerModSettlementBuildingRecord> collectBuildings(ServerLevel level,
-                                                                            RecruitsClaim claim) {
+                                                                             RecruitsClaim claim) {
         List<BannerModSettlementBuildingRecord> buildings = new ArrayList<>();
-        for (AbstractWorkAreaEntity workArea : collectWorkAreas(level, claim, AbstractWorkAreaEntity.class)) {
+        List<AbstractWorkAreaEntity> workAreas = collectWorkAreas(level, claim, AbstractWorkAreaEntity.class);
+        for (AbstractWorkAreaEntity workArea : workAreas) {
             StockpileSeed stockpileSeed = resolveStockpileSeed(workArea);
             BannerModSettlementBuildingProfileSeed profileSeed = BannerModSettlementBuildingProfileSeed.fromWorkArea(workArea);
             buildings.add(new BannerModSettlementBuildingRecord(
@@ -509,7 +515,92 @@ public final class BannerModSettlementService {
                     profileSeed
             ));
         }
+        for (ValidatedBuildingRecord record : ValidatedBuildingRegistryData.get(level).allRecords()) {
+            if (claim.getUUID().equals(record.settlementId()) && isValidSnapshotBuilding(level, record) && !duplicatesLiveWorkArea(record, workAreas)) {
+                buildings.add(fromValidatedBuilding(record, claim));
+            }
+        }
         return buildings;
+    }
+
+    static BannerModSettlementBuildingRecord fromValidatedBuilding(ValidatedBuildingRecord record,
+                                                                   RecruitsClaim claim) {
+        return fromValidatedBuildingFields(
+                record.buildingId(),
+                record.type(),
+                record.anchorPos(),
+                record.capacity(),
+                record.assignedCitizenIds(),
+                claim == null || claim.getPlayerInfo() == null ? null : claim.getPlayerInfo().getUUID()
+        );
+    }
+
+    static BannerModSettlementBuildingRecord fromValidatedBuildingFields(UUID buildingId,
+                                                                         BuildingType type,
+                                                                         BlockPos anchorPos,
+                                                                         int rawCapacity,
+                                                                         List<UUID> assignedCitizenIds,
+                                                                         @Nullable UUID ownerUuid) {
+        int capacity = Math.max(1, rawCapacity);
+        int residentCapacity = switch (type) {
+            case HOUSE, STARTER_FORT -> capacity;
+            default -> 0;
+        };
+        int workplaceSlots = switch (type) {
+            case FARM, MINE, LUMBER_CAMP, SMITHY, ARCHITECT_WORKSHOP -> Math.max(1, PrefabAutoStaffingRuntime.vacancySlotsForManualBuilding(type));
+            default -> 0;
+        };
+        boolean stockpileBuilding = type == BuildingType.STORAGE;
+        int stockpileContainers = stockpileBuilding ? Math.max(1, capacity) : 0;
+        int stockpileSlots = stockpileBuilding ? Math.max(27, capacity * 27) : 0;
+        BannerModSettlementBuildingProfileSeed profileSeed = profileSeedForValidatedBuilding(type);
+        return new BannerModSettlementBuildingRecord(
+                buildingId,
+                "bannermod:validated_" + type.name().toLowerCase(Locale.ROOT),
+                anchorPos,
+                ownerUuid,
+                null,
+                residentCapacity,
+                workplaceSlots,
+                assignedCitizenIds == null ? 0 : assignedCitizenIds.size(),
+                assignedCitizenIds,
+                stockpileBuilding,
+                stockpileContainers,
+                stockpileSlots,
+                false,
+                false,
+                stockpileBuilding ? List.of("settlement") : List.of(),
+                profileSeed.category(),
+                profileSeed
+        );
+    }
+
+    private static boolean isValidSnapshotBuilding(ServerLevel level, ValidatedBuildingRecord record) {
+        return record != null
+                && record.state() == BuildingValidationState.VALID
+                && record.dimension().equals(level.dimension());
+    }
+
+    private static boolean duplicatesLiveWorkArea(ValidatedBuildingRecord record, List<AbstractWorkAreaEntity> workAreas) {
+        for (AbstractWorkAreaEntity workArea : workAreas) {
+            if (workArea.getOriginPos().equals(record.anchorPos()) || workArea.getBoundingBox().intersects(record.bounds())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static BannerModSettlementBuildingProfileSeed profileSeedForValidatedBuilding(BuildingType type) {
+        if (type == null) {
+            return BannerModSettlementBuildingProfileSeed.GENERAL;
+        }
+        return switch (type) {
+            case FARM -> BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION;
+            case MINE, LUMBER_CAMP, SMITHY -> BannerModSettlementBuildingProfileSeed.MATERIAL_PRODUCTION;
+            case STORAGE -> BannerModSettlementBuildingProfileSeed.STORAGE;
+            case ARCHITECT_WORKSHOP -> BannerModSettlementBuildingProfileSeed.CONSTRUCTION;
+            default -> BannerModSettlementBuildingProfileSeed.GENERAL;
+        };
     }
 
     static List<BannerModSettlementBuildingRecord> applyAssignedResidents(List<BannerModSettlementBuildingRecord> buildings,
@@ -1192,7 +1283,7 @@ public final class BannerModSettlementService {
     }
 
     private static String resolveBuildingTypeId(AbstractWorkAreaEntity workArea) {
-        ResourceLocation typeKey = ForgeRegistries.ENTITY_TYPES.getKey(workArea.getType());
+        ResourceLocation typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(workArea.getType());
         return typeKey == null ? workArea.getType().toString() : typeKey.toString();
     }
 

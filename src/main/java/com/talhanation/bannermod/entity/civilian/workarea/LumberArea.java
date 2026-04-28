@@ -19,8 +19,8 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.*;
 
@@ -38,19 +38,19 @@ public class LumberArea extends AbstractWorkAreaEntity {
         super(type, level);
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(SAPLING_STACK, ItemStack.EMPTY);
-        this.entityData.define(REPLANT, true);
-        this.entityData.define(SHEAR_LEAVES, false);
-        this.entityData.define(STRIP_LOGS, false);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(SAPLING_STACK, ItemStack.EMPTY);
+        builder.define(REPLANT, true);
+        builder.define(SHEAR_LEAVES, false);
+        builder.define(STRIP_LOGS, false);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if(tag.contains("saplingItem")){
-            ItemStack stack = ItemStack.of(tag.getCompound("saplingItem"));
+            ItemStack stack = ItemStack.parseOptional(this.registryAccess(), tag.getCompound("saplingItem"));
             this.setSaplingStack(stack);
         }
         this.setReplant(tag.getBoolean("replantTrees"));
@@ -62,7 +62,7 @@ public class LumberArea extends AbstractWorkAreaEntity {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         CompoundTag nbt = new CompoundTag();
-        this.getSaplingStack().save(nbt);
+        this.getSaplingStack().save(this.registryAccess(), nbt);
         tag.put("saplingItem", nbt);
         tag.putBoolean("replantTrees", getReplant());
         tag.putBoolean("shearLeaves", getShearLeaves());

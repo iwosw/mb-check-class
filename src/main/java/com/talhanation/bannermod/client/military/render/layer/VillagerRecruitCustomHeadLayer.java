@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.render.layer;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.talhanation.bannermod.client.military.render.RecruitRenderProfiling;
 import com.talhanation.bannermod.client.military.render.RecruitRenderLod;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.client.model.EntityModel;
@@ -16,17 +17,17 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.SkullBlockRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.minecraft.world.level.block.SkullBlock;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Map;
 
@@ -53,8 +54,11 @@ public class VillagerRecruitCustomHeadLayer<T extends LivingEntity, M extends En
 
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int p_116733_, T entity, float p_116735_, float p_116736_, float p_116737_, float p_116738_, float p_116739_, float p_116740_) {
         if (entity instanceof AbstractRecruitEntity recruit && !RecruitRenderLod.shouldRenderCustomHead(recruit)) {
+            RecruitRenderProfiling.layerSkipped("custom_head");
             return;
         }
+        RecruitRenderProfiling.textureStateSwitch("custom_head");
+        long start = RecruitRenderProfiling.start();
         ItemStack itemstack = entity.getItemBySlot(EquipmentSlot.HEAD);
         if (!itemstack.isEmpty()) {
             Item item = itemstack.getItem();
@@ -75,13 +79,8 @@ public class VillagerRecruitCustomHeadLayer<T extends LivingEntity, M extends En
                 poseStack.scale(f2, -f2, -f2);
                 poseStack.translate(0.0D, 0.0625D, 0.0D);
 
-                GameProfile gameprofile = null;
-                if (itemstack.hasTag()) {
-                    CompoundTag compoundtag = itemstack.getTag();
-                    if (compoundtag.contains("SkullOwner", 10)) {
-                        gameprofile = NbtUtils.readGameProfile(compoundtag.getCompound("SkullOwner"));
-                    }
-                }
+                ResolvableProfile profile = itemstack.get(DataComponents.PROFILE);
+                GameProfile gameprofile = profile == null ? null : profile.gameProfile();
 
                 poseStack.translate(-0.5D, 0.0D, -0.5D);
                 SkullBlock.Type skullblock$type = ((AbstractSkullBlock) ((BlockItem) item).getBlock()).getType();
@@ -95,6 +94,7 @@ public class VillagerRecruitCustomHeadLayer<T extends LivingEntity, M extends En
             poseStack.popPose();
 
         }
+        RecruitRenderProfiling.layerDuration("custom_head", start);
     }
 
     public static void translateToHead(PoseStack p_174484_, boolean p_174485_) {

@@ -4,18 +4,18 @@ import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageRangedFire implements Message<MessageRangedFire> {
+public class MessageRangedFire implements BannerModMessage<MessageRangedFire> {
 
     private UUID player;
     private UUID group;
@@ -30,13 +30,17 @@ public class MessageRangedFire implements Message<MessageRangedFire> {
         this.should = shields;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer sender = Objects.requireNonNull(context.getSender());
-        UUID actorUuid = authorizedPlayerUuid(sender.getUUID(), this.player);
+        dispatchToServer(sender, this.player, this.group, this.should);
+    }
+
+    public static void dispatchToServer(ServerPlayer sender, UUID player, UUID group, boolean should) {
+        UUID actorUuid = authorizedPlayerUuid(sender.getUUID(), player);
         AABB commandBox = sender.getBoundingBox().inflate(100);
         List<AbstractRecruitEntity> list = RecruitIndex.instance().groupInRange(
                 sender.getCommandSenderWorld(),
@@ -51,7 +55,7 @@ public class MessageRangedFire implements Message<MessageRangedFire> {
             list.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
         }
         for (AbstractRecruitEntity recruits : list) {
-                CommandEvents.onRangedFireCommand(sender, actorUuid, recruits, group, should);
+            CommandEvents.onRangedFireCommand(sender, actorUuid, recruits, group, should);
         }
     }
 

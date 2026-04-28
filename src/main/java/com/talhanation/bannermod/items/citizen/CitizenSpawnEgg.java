@@ -3,14 +3,16 @@ package com.talhanation.bannermod.items.citizen;
 import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 
 import java.util.function.Supplier;
 
@@ -20,7 +22,7 @@ import java.util.function.Supplier;
  * it via {@link CitizenEntity#switchProfession(CitizenProfession)} so a
  * picked-up citizen retains their role when re-spawned.
  */
-public class CitizenSpawnEgg extends ForgeSpawnEggItem {
+public class CitizenSpawnEgg extends DeferredSpawnEggItem {
 
     public CitizenSpawnEgg(Supplier<? extends EntityType<? extends CitizenEntity>> entityType,
                            int primaryColor,
@@ -38,7 +40,7 @@ public class CitizenSpawnEgg extends ForgeSpawnEggItem {
 
         ItemStack stack = context.getItemInHand();
         BlockPos pos = context.getClickedPos();
-        EntityType<?> type = this.getType(stack.getTag());
+        EntityType<?> type = this.getType(stack);
         Entity entity = type.create(level);
         if (!(entity instanceof CitizenEntity citizen)) {
             return super.useOn(context);
@@ -62,8 +64,7 @@ public class CitizenSpawnEgg extends ForgeSpawnEggItem {
     }
 
     private static CompoundTag readEntityTag(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
-        if (tag == null || !tag.contains("EntityTag")) return null;
-        return tag.getCompound("EntityTag");
+        CustomData data = stack.get(DataComponents.ENTITY_DATA);
+        return data == null ? null : data.copyTag();
     }
 }

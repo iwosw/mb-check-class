@@ -5,13 +5,13 @@ import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,11 +19,11 @@ import java.util.UUID;
 /**
  * Client → server: leader (or op) renames an existing political entity.
  *
- * <p>Authority is enforced server-side via {@link PoliticalEntityAuthority#isLeaderOrOp};
+ * <p>Authority is enforced server-side via {@link PoliticalEntityAuthority#canAct};
  * the client may render the rename button only when locally believed legal, but the server
  * never trusts that.</p>
  */
-public class MessageRenamePoliticalEntity implements Message<MessageRenamePoliticalEntity> {
+public class MessageRenamePoliticalEntity implements BannerModMessage<MessageRenamePoliticalEntity> {
 
     private UUID entityId;
     private String newName;
@@ -37,12 +37,12 @@ public class MessageRenamePoliticalEntity implements Message<MessageRenamePoliti
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null || this.entityId == null) {
             return;
@@ -58,8 +58,8 @@ public class MessageRenamePoliticalEntity implements Message<MessageRenamePoliti
             return;
         }
         PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
-            player.sendSystemMessage(Component.literal("Only the political entity leader (or an op) can do that."));
+        if (!PoliticalEntityAuthority.canAct(player, record)) {
+            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
             return;
         }
         PoliticalRegistryValidation.Result validation = registry.canRename(this.entityId, this.newName);

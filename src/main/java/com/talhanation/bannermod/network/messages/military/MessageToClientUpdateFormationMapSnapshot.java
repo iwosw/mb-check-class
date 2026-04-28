@@ -2,16 +2,17 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.army.map.FormationMapContact;
 import com.talhanation.bannermod.client.military.ClientManager;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 
-public class MessageToClientUpdateFormationMapSnapshot implements Message<MessageToClientUpdateFormationMapSnapshot> {
+public class MessageToClientUpdateFormationMapSnapshot implements BannerModMessage<MessageToClientUpdateFormationMapSnapshot> {
     private CompoundTag contacts;
 
     public MessageToClientUpdateFormationMapSnapshot() {
@@ -22,13 +23,13 @@ public class MessageToClientUpdateFormationMapSnapshot implements Message<Messag
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         ClientManager.formationMapContacts = FormationMapContact.listFromNbt(this.contacts);
         ClientManager.markFormationMapContactsChanged();
     }

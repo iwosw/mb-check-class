@@ -27,9 +27,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -58,14 +58,14 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        this.entityData.define(PLAYER_NAME, "");
-        this.entityData.define(PLAYER_UUID, Optional.empty());
-        this.entityData.define(WIDTH, 0);
-        this.entityData.define(HEIGHT, 0);
-        this.entityData.define(DEPTH, 0);
-        this.entityData.define(FACING, Direction.SOUTH);
-        this.entityData.define(TEAM_STRING_ID, "");
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        builder.define(PLAYER_NAME, "");
+        builder.define(PLAYER_UUID, Optional.empty());
+        builder.define(WIDTH, 0);
+        builder.define(HEIGHT, 0);
+        builder.define(DEPTH, 0);
+        builder.define(FACING, Direction.SOUTH);
+        builder.define(TEAM_STRING_ID, "");
     }
 
     @Override
@@ -149,7 +149,7 @@ public abstract class AbstractWorkAreaEntity extends Entity {
             return InteractionResult.SUCCESS;
         }
 
-        BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenWorkAreaScreen(this.getId(), this.getUUID()));
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenWorkAreaScreen(this.getId(), this.getUUID()));
         return InteractionResult.SUCCESS;
     }
 

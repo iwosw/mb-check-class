@@ -18,10 +18,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.*;
 import net.minecraft.world.phys.*;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -210,7 +210,7 @@ public class CommandEvents {
 
     public static void openCommandScreen(Player player) {
         if (player instanceof ServerPlayer) {
-            NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
+            BannerModNetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
 
                 @Override
                 public @NotNull Component getDisplayName() {
@@ -227,8 +227,8 @@ public class CommandEvents {
         }
     }
     @SubscribeEvent
-    public void onServerPlayerTick(TickEvent.PlayerTickEvent event){
-        if(event.player instanceof ServerPlayer serverPlayer && serverPlayer.tickCount % 20 == 0){
+    public void onServerPlayerTick(PlayerTickEvent.Post event){
+        if(event.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.tickCount % 20 == 0){
             MovementFormationCommandService.onServerPlayerTick(serverPlayer);
         }
     }
@@ -236,6 +236,11 @@ public class CommandEvents {
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         MovementFormationCommandService.initializePlayerCommandState(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        MovementFormationCommandService.copyPersistentCommandPreferences(event.getOriginal(), event.getEntity());
     }
 
     public static int getSavedFormation(Player player) {

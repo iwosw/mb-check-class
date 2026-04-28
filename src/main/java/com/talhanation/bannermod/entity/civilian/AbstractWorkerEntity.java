@@ -29,8 +29,8 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -57,6 +57,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     public boolean forcedDeposit;
     public UUID lastStorage;
     private final WorkerCourierService courierService = new WorkerCourierService(this);
+    private final WorkerTransportService transportService = new WorkerTransportService(this);
     private final WorkerInventoryService inventoryService = new WorkerInventoryService(this);
     private final WorkerControlAccess controlAccess = new WorkerControlAccess(this);
     private final WorkerSupplyRuntime supplyRuntime = new WorkerSupplyRuntime(this);
@@ -173,6 +174,10 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
         return this.courierService;
     }
 
+    WorkerTransportService transportService() {
+        return this.transportService;
+    }
+
     WorkerInventoryService inventoryService() {
         return this.inventoryService;
     }
@@ -206,6 +211,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
         this.getCommandSenderWorld().getProfiler().push("looting");
         WorkerRuntimeLoop.aiStep(this);
+        this.transportService.tick();
         this.getCitizenRoleController().onServerAiStep(this);
         this.getCommandSenderWorld().getProfiler().pop();
     }
@@ -236,8 +242,8 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
     //////////////////////////////////// REGISTER////////////////////////////////////
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
     }
 
     public void addAdditionalSaveData(@NotNull CompoundTag nbt) {

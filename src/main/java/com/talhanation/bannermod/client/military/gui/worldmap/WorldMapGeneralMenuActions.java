@@ -1,10 +1,8 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
-import com.talhanation.bannermod.client.military.ClientManager;
 import net.minecraft.network.chat.Component;
 
 final class WorldMapGeneralMenuActions {
-    private static final Component TEXT_DIPLOMACY = Component.translatable("gui.recruits.map.diplomacy");
     private static final Component TEXT_CENTER_MAP = Component.translatable("gui.recruits.map.center_map");
 
     private final WorldMapScreen screen;
@@ -14,11 +12,6 @@ final class WorldMapGeneralMenuActions {
     }
 
     void addEntries(WorldMapContextMenu menu) {
-        menu.addEntry(TEXT_DIPLOMACY.getString(),
-                () -> false,
-                this::openDiplomacyEditor
-        );
-
         menu.addEntry("Add Waypoint",
                 () -> screen.getSelectedRoute() != null
                         && screen.canPlaceWaypointAt(screen.snapshotWorldX, screen.snapshotWorldZ),
@@ -38,8 +31,5 @@ final class WorldMapGeneralMenuActions {
         );
 
         menu.addEntry(TEXT_CENTER_MAP.getString(), WorldMapScreen::centerOnPlayer);
-    }
-
-    private void openDiplomacyEditor(WorldMapScreen screen) {
     }
 }

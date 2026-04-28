@@ -5,6 +5,7 @@ import com.talhanation.bannermod.client.civilian.gui.PlaceBuildingScreen;
 import com.talhanation.bannermod.network.messages.civilian.MessageRequestPlaceBuilding;
 import com.talhanation.bannermod.network.messages.civilian.MessageRequestRegisterBuilding;
 import com.talhanation.bannermod.network.messages.civilian.MessageRequestValidateBuilding;
+import com.talhanation.bannermod.util.ItemStackComponentData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -22,9 +23,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -73,7 +73,7 @@ public class BuildingPlacementWandItem extends Item {
                 } else {
                     newMode = MODE_PLACE;
                 }
-                stack.getOrCreateTag().putString(TAG_WAND_MODE, newMode);
+                ItemStackComponentData.update(stack, tag -> tag.putString(TAG_WAND_MODE, newMode));
                 clearTapState(stack);
                 player.sendSystemMessage(Component.translatable(
                         modeTranslation(newMode))
@@ -83,7 +83,7 @@ public class BuildingPlacementWandItem extends Item {
         }
 
         if (level.isClientSide) {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> openSelectionScreen(stack));
+            openSelectionScreen(stack);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
@@ -149,16 +149,16 @@ public class BuildingPlacementWandItem extends Item {
             return InteractionResult.SUCCESS;
         }
 
-        CompoundTag tag = stack.getOrCreateTag();
-        if (!tag.contains(TAG_VALIDATION_CORNER_A)) {
-            tag.putLong(TAG_VALIDATION_CORNER_A, clicked.asLong());
+        CompoundTag tag = ItemStackComponentData.read(stack);
+        if (tag == null || !tag.contains(TAG_VALIDATION_CORNER_A)) {
+            ItemStackComponentData.update(stack, data -> data.putLong(TAG_VALIDATION_CORNER_A, clicked.asLong()));
             player.sendSystemMessage(Component.translatable(
                     "bannermod.prefab.wand.validate.corner_a",
                     clicked.getX(), clicked.getY(), clicked.getZ()).withStyle(ChatFormatting.AQUA));
             return InteractionResult.SUCCESS;
         }
         if (!tag.contains(TAG_VALIDATION_CORNER_B)) {
-            tag.putLong(TAG_VALIDATION_CORNER_B, clicked.asLong());
+            ItemStackComponentData.update(stack, data -> data.putLong(TAG_VALIDATION_CORNER_B, clicked.asLong()));
             player.sendSystemMessage(Component.translatable(
                     "bannermod.prefab.wand.validate.corner_b",
                     clicked.getX(), clicked.getY(), clicked.getZ()).withStyle(ChatFormatting.AQUA));
@@ -186,19 +186,19 @@ public class BuildingPlacementWandItem extends Item {
         }
 
         BlockPos clicked = context.getClickedPos();
-        CompoundTag tag = stack.getOrCreateTag();
-        if (!tag.contains(TAG_VALIDATION_CORNER_A)) {
-            tag.putLong(TAG_VALIDATION_CORNER_A, clicked.asLong());
+        CompoundTag tag = ItemStackComponentData.read(stack);
+        if (tag == null || !tag.contains(TAG_VALIDATION_CORNER_A)) {
+            ItemStackComponentData.update(stack, data -> data.putLong(TAG_VALIDATION_CORNER_A, clicked.asLong()));
             player.sendSystemMessage(Component.literal("Corner A selected").withStyle(ChatFormatting.AQUA));
             return InteractionResult.SUCCESS;
         }
         if (!tag.contains(TAG_VALIDATION_CORNER_B)) {
-            tag.putLong(TAG_VALIDATION_CORNER_B, clicked.asLong());
+            ItemStackComponentData.update(stack, data -> data.putLong(TAG_VALIDATION_CORNER_B, clicked.asLong()));
             player.sendSystemMessage(Component.literal("Corner B selected").withStyle(ChatFormatting.AQUA));
             return InteractionResult.SUCCESS;
         }
         if (!tag.contains(TAG_VALIDATION_CENTER)) {
-            tag.putLong(TAG_VALIDATION_CENTER, clicked.asLong());
+            ItemStackComponentData.update(stack, data -> data.putLong(TAG_VALIDATION_CENTER, clicked.asLong()));
             player.sendSystemMessage(Component.literal("Center selected. Tap key block.").withStyle(ChatFormatting.YELLOW));
             return InteractionResult.SUCCESS;
         }
@@ -233,7 +233,7 @@ public class BuildingPlacementWandItem extends Item {
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
         if (MODE_VALIDATE.equals(mode) || MODE_REGISTER.equals(mode)) {
-            CompoundTag tag = stack.getTag();
+            CompoundTag tag = ItemStackComponentData.read(stack);
             int taps = 0;
             if (tag != null) {
                 if (tag.contains(TAG_VALIDATION_CORNER_A)) taps++;
@@ -247,7 +247,7 @@ public class BuildingPlacementWandItem extends Item {
     }
 
     private static String readMode(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = ItemStackComponentData.read(stack);
         if (tag == null || !tag.contains(TAG_WAND_MODE)) {
             return MODE_PLACE;
         }
@@ -255,17 +255,15 @@ public class BuildingPlacementWandItem extends Item {
     }
 
     private static void clearTapState(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
-        if (tag == null) {
-            return;
-        }
-        tag.remove(TAG_VALIDATION_CORNER_A);
-        tag.remove(TAG_VALIDATION_CORNER_B);
-        tag.remove(TAG_VALIDATION_CENTER);
+        ItemStackComponentData.update(stack, tag -> {
+            tag.remove(TAG_VALIDATION_CORNER_A);
+            tag.remove(TAG_VALIDATION_CORNER_B);
+            tag.remove(TAG_VALIDATION_CENTER);
+        });
     }
 
     private static String readSelectedPrefab(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = ItemStackComponentData.read(stack);
         if (tag == null || !tag.contains(TAG_SELECTED_PREFAB)) {
             return null;
         }

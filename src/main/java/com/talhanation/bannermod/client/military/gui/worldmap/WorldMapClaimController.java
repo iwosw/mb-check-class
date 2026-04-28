@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.network.messages.military.MessageClaimIntent;
 import com.talhanation.bannermod.network.messages.military.MessageDoPayment;
 import com.talhanation.bannermod.network.messages.military.MessageUpdateClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
@@ -60,17 +61,7 @@ final class WorldMapClaimController {
 
         RecruitsClaim neighborClaim = getNeighborClaim(screen.selectedChunk);
         if (neighborClaim == null) return;
-        for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-            if (claim.equals(neighborClaim)) {
-                neighborClaim.addChunk(screen.selectedChunk);
-                recalculateCenter(neighborClaim);
-                ClientManager.markClaimsChanged();
-                break;
-            }
-        }
-
-        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoPayment(player.getUUID(), ClientManager.configValueChunkCost));
-        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(neighborClaim));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClaimIntent(MessageClaimIntent.Action.ADD_CHUNK, neighborClaim.getUUID(), screen.selectedChunk));
     }
 
     @Nullable

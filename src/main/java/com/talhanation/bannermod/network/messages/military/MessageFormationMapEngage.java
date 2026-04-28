@@ -4,17 +4,18 @@ import com.talhanation.bannermod.army.command.CommandHierarchy;
 import com.talhanation.bannermod.army.command.CommandIntent;
 import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
 import com.talhanation.bannermod.army.command.CommandIntentPriority;
+import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.CommandEvents;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ import java.util.UUID;
  *       chase their assigned target via the existing combat-follow AI.</li>
  * </ul>
  */
-public class MessageFormationMapEngage implements Message<MessageFormationMapEngage> {
+public class MessageFormationMapEngage implements BannerModMessage<MessageFormationMapEngage> {
 
     public enum Mode {
         ADVANCE_IN_FORMATION,
@@ -68,12 +69,12 @@ public class MessageFormationMapEngage implements Message<MessageFormationMapEng
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer sender = context.getSender();
         if (sender == null || target == null || actorContactId == null || mode == null) return;
 
@@ -105,7 +106,7 @@ public class MessageFormationMapEngage implements Message<MessageFormationMapEng
                 level.getGameTime(),
                 CommandIntentPriority.NORMAL,
                 false,
-                6,
+                MovementCommandState.MOVE_TO_POSITION,
                 formation,
                 false,
                 Vec3.atCenterOf(engagementTarget)

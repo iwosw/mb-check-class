@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.gui.war;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessageDeclareWar;
 import com.talhanation.bannermod.war.client.WarClientState;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.runtime.WarGoalType;
 import net.minecraft.client.Minecraft;
@@ -74,7 +75,7 @@ public class WarDeclareScreen extends Screen {
         Player player = Minecraft.getInstance().player;
         UUID playerId = player == null ? null : player.getUUID();
         for (PoliticalEntityRecord entity : WarClientState.entities()) {
-            if (playerId != null && playerId.equals(entity.leaderUuid()) && entity.status().canDeclareOffensiveWar()) {
+            if (playerId != null && PoliticalEntityAuthority.canAct(playerId, false, entity) && entity.status().canDeclareOffensiveWar()) {
                 this.attackers.add(entity);
             }
         }

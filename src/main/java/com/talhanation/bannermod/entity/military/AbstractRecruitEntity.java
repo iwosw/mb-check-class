@@ -68,10 +68,10 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.Tags;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -380,6 +380,7 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
 
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new com.talhanation.bannermod.ai.military.RecruitMoraleRoutGoal(this));
+        this.goalSelector.addGoal(6, new com.talhanation.bannermod.ai.military.RecruitSiegeObjectiveAttackGoal(this));
         this.goalSelector.addGoal(7, new com.talhanation.bannermod.ai.military.RecruitSiegeEscortGoal(this));
         this.goalSelector.addGoal(4, new BlockWithWeapon(this));
         this.goalSelector.addGoal(0, new RecruitFloatGoal(this));
@@ -433,9 +434,9 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
         this.targetSelector.addGoal(7, new RecruitDefendVillageFromPlayerGoal(this));
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        RecruitStateAccess.defineSynchedData(this);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        RecruitStateAccess.defineSynchedData(builder);
         //STATE
         // 0 = NEUTRAL
         // 1 = AGGRESSIVE
@@ -986,10 +987,6 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
                 return MORALE_LOSS;
             }
         }
-    }
-
-    <T> void defineStateData(EntityDataAccessor<T> accessor, T value) {
-        this.entityData.define(accessor, value);
     }
 
     <T> T getStateData(EntityDataAccessor<T> accessor) {

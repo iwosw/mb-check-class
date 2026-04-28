@@ -108,6 +108,7 @@ public final class WarRuntimeContext {
                 registry(level),
                 cooldowns(level),
                 com.talhanation.bannermod.war.config.WarServerConfig.lostTerritoryImmunityTicks(),
+                level,
                 com.talhanation.bannermod.governance.BannerModTreasuryManager.get(level),
                 com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager
         );

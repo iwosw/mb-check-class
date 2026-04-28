@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 /** Minimal server-side index for loaded recruits. Query results are always revalidated. */
@@ -25,6 +26,7 @@ public final class RecruitIndex {
     private static final RecruitIndex INSTANCE = new RecruitIndex();
 
     private final Map<ResourceKey<Level>, LevelIndex> byLevel = new ConcurrentHashMap<>();
+    private final Map<ResourceKey<Level>, AtomicLong> versions = new ConcurrentHashMap<>();
     private final Counters counters = new Counters();
 
     private RecruitIndex() {
@@ -38,6 +40,7 @@ public final class RecruitIndex {
         if (!(entity instanceof AbstractRecruitEntity recruit)) return;
         if (!(entity.level() instanceof ServerLevel level)) return;
         levelIndex(level).add(recruit);
+        incrementVersion(level.dimension());
     }
 
     public void onEntityLeave(Entity entity) {
@@ -46,6 +49,7 @@ public final class RecruitIndex {
         LevelIndex index = byLevel.get(level.dimension());
         if (index != null) {
             index.remove(recruit);
+            incrementVersion(level.dimension());
         }
     }
 
@@ -54,6 +58,7 @@ public final class RecruitIndex {
         LevelIndex index = levelIndex(level);
         index.byUuid.put(recruit.getUUID(), recruit.getUUID());
         index.move(index.byOwner, oldOwner, newOwner, recruit.getUUID());
+        incrementVersion(level.dimension());
     }
 
     public void onGroupChanged(AbstractRecruitEntity recruit, @Nullable UUID oldGroup, @Nullable UUID newGroup) {
@@ -61,6 +66,7 @@ public final class RecruitIndex {
         LevelIndex index = levelIndex(level);
         index.byUuid.put(recruit.getUUID(), recruit.getUUID());
         index.move(index.byGroup, oldGroup, newGroup, recruit.getUUID());
+        incrementVersion(level.dimension());
     }
 
     @Nullable
@@ -285,6 +291,12 @@ public final class RecruitIndex {
         );
     }
 
+    public long version(ServerLevel level) {
+        if (level == null) return 0L;
+        AtomicLong version = versions.get(level.dimension());
+        return version == null ? 0L : version.get();
+    }
+
     public void resetCounters() {
         counters.reset();
     }
@@ -292,11 +304,18 @@ public final class RecruitIndex {
     public void clear(ResourceKey<Level> dimension) {
         if (dimension != null) {
             byLevel.remove(dimension);
+            incrementVersion(dimension);
         }
     }
 
     private LevelIndex levelIndex(ServerLevel level) {
         return byLevel.computeIfAbsent(level.dimension(), ignored -> new LevelIndex());
+    }
+
+    private void incrementVersion(ResourceKey<Level> dimension) {
+        if (dimension != null) {
+            versions.computeIfAbsent(dimension, ignored -> new AtomicLong()).incrementAndGet();
+        }
     }
 
     public record Snapshot(long uuidHits, long uuidMisses, long groupQueries, long indexedCandidates, long fallbacks) {
@@ -328,7 +347,9 @@ public final class RecruitIndex {
     public void onRecruitTick(AbstractRecruitEntity recruit) {
         if (recruit == null) return;
         if (!(recruit.level() instanceof ServerLevel level)) return;
-        levelIndex(level).touch(recruit);
+        if (levelIndex(level).touch(recruit)) {
+            incrementVersion(level.dimension());
+        }
     }
 
     private static final class LevelIndex {
@@ -369,23 +390,24 @@ public final class RecruitIndex {
             removeFromChunk(cp, uuid);
         }
 
-        private void touch(AbstractRecruitEntity recruit) {
+        private boolean touch(AbstractRecruitEntity recruit) {
             UUID uuid = recruit.getUUID();
             if (!byUuid.containsKey(uuid)) {
                 // Index missed onJoin (e.g. captured before subscriber registered) — heal lazily.
                 add(recruit);
-                return;
+                return true;
             }
             ChunkPos current = recruit.chunkPosition();
             ChunkPos previous = lastKnownChunk.get(uuid);
             if (previous != null && previous.equals(current)) {
-                return;
+                return false;
             }
             if (previous != null) {
                 removeFromChunk(previous, uuid);
             }
             addToChunk(current, uuid);
             lastKnownChunk.put(uuid, current);
+            return true;
         }
 
         private void removeUuid(UUID uuid) {

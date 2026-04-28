@@ -1,20 +1,22 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageBackToMountEntity implements Message<MessageBackToMountEntity> {
+public class MessageBackToMountEntity implements BannerModMessage<MessageBackToMountEntity> {
 
     private UUID uuid;
 
@@ -28,11 +30,11 @@ public class MessageBackToMountEntity implements Message<MessageBackToMountEntit
         this.group = group;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         List<AbstractRecruitEntity> recruits = this.group == null
                 ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
@@ -44,7 +46,8 @@ public class MessageBackToMountEntity implements Message<MessageBackToMountEntit
                     player.getBoundingBox().inflate(100)
             );
         }
-        recruits.forEach((recruit) -> CommandEvents.onMountButton(uuid, recruit, null, group));
+        CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
+                player.level().getGameTime(), CommandIntentPriority.HIGH, false, null, group, true), recruits);
     }
 
     public MessageBackToMountEntity fromBytes(FriendlyByteBuf buf) {

@@ -2,21 +2,21 @@ package com.talhanation.bannermod.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.nio.file.Path;
 
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class RecruitsClientConfig {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static ForgeConfigSpec CLIENT;
-    public static ForgeConfigSpec.BooleanValue PlayVillagerAmbientSound;
-    public static ForgeConfigSpec.BooleanValue CommandScreenToggle;
-    public static ForgeConfigSpec.BooleanValue RecruitsLookLikeVillagers;
-    public static ForgeConfigSpec.BooleanValue UpdateCheckerClientside;
-    public static ForgeConfigSpec.BooleanValue DisableClaimGUIOverlay;
-    public static ForgeConfigSpec.BooleanValue UpdateMapTiles;
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static ModConfigSpec CLIENT;
+    public static ModConfigSpec.BooleanValue PlayVillagerAmbientSound;
+    public static ModConfigSpec.BooleanValue CommandScreenToggle;
+    public static ModConfigSpec.BooleanValue RecruitsLookLikeVillagers;
+    public static ModConfigSpec.BooleanValue DisableClaimGUIOverlay;
+    public static ModConfigSpec.BooleanValue UpdateMapTiles;
 
     static{
         BUILDER.comment("Recruits Config Client Side:").push("RecruitsClientSide");
@@ -47,17 +47,6 @@ public class RecruitsClientConfig {
                 .worldRestart()
                 .define("CommandScreenToggle", false);
 
-        UpdateCheckerClientside = BUILDER.comment("""
-                        ----UpdateCheckerClientside----
-                        \t(takes effect after restart)
-                        \t
-                        Should the client side update checker be active?""
-                        It is recommended to keep it enabled to receive information about new bug fixes and features.""
-                        default: true""")
-
-                .worldRestart()
-                .define("UpdateCheckerClientside", true);
-
         DisableClaimGUIOverlay = BUILDER.comment("""
                         ----DisableClaimGUIOverlay----
                         \t(takes effect after restart)
@@ -83,7 +72,7 @@ public class RecruitsClientConfig {
     }
 
 
-    public static void loadConfig(ForgeConfigSpec spec, Path path) {
+    public static void loadConfig(ModConfigSpec spec, Path path) {
         CommentedFileConfig configData = CommentedFileConfig.builder(path)
                 .sync()
                 .autosave()

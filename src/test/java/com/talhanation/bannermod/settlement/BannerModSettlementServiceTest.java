@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement;
 
+import com.talhanation.bannermod.settlement.building.BuildingType;
 import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
 
@@ -107,6 +108,26 @@ class BannerModSettlementServiceTest {
     }
 
     @Test
+    void mapsValidatedHouseStorageAndWorkplaceBuildingsIntoSnapshotRecords() {
+        UUID ownerUuid = UUID.randomUUID();
+        BannerModSettlementBuildingRecord houseRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.HOUSE, new BlockPos(0, 64, 0), 3, List.of(), ownerUuid);
+        BannerModSettlementBuildingRecord storageRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.STORAGE, new BlockPos(8, 64, 0), 2, List.of(), ownerUuid);
+        BannerModSettlementBuildingRecord farmRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.FARM, new BlockPos(16, 64, 0), 1, List.of(), ownerUuid);
+        BannerModSettlementStockpileSummary summary = BannerModSettlementService.summarizeStockpiles(List.of(storageRecord));
+
+        assertEquals("bannermod:validated_house", houseRecord.buildingTypeId());
+        assertEquals(3, houseRecord.residentCapacity());
+        assertEquals(ownerUuid, houseRecord.ownerUuid());
+        assertEquals("bannermod:validated_storage", storageRecord.buildingTypeId());
+        assertEquals(2, summary.containerCount());
+        assertEquals(54, summary.slotCapacity());
+        assertEquals(BannerModSettlementBuildingProfileSeed.STORAGE, storageRecord.buildingProfileSeed());
+        assertEquals("bannermod:validated_farm", farmRecord.buildingTypeId());
+        assertEquals(1, farmRecord.workplaceSlots());
+        assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, farmRecord.buildingProfileSeed());
+    }
+
+    @Test
     void summarizesMarketStateIntoAggregateSeed() {
         List<BannerModSettlementMarketRecord> markets = List.of(
                 new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9),
@@ -124,6 +145,7 @@ class BannerModSettlementServiceTest {
         assertEquals(markets, marketState.markets());
         assertEquals(List.of(), marketState.sellerDispatches());
     }
+
 
     @Test
     void scheduleWindowSeedDefaultsFromScheduleAndRuntimeRole() {

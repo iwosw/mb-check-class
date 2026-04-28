@@ -2,7 +2,9 @@ package com.talhanation.bannermod.network;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import de.maxhenkel.corelib.CommonRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import com.talhanation.bannermod.network.compat.BannerModChannel;
 
 // Military network messages (migrated from recruits.network.*)
 import com.talhanation.bannermod.network.messages.military.*;
@@ -24,10 +26,11 @@ import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.network.messages.war.MessageRespondAllyInvite;
 import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityStatus;
 import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
 
 /**
- * Owns the single shared SimpleChannel for the merged bannermod runtime.
+ * Owns the single shared BannerModChannel for the merged bannermod runtime.
  *
  * Military packets are registered at indices [0..MILITARY_MESSAGES.length) and
  * civilian packets at [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length).
@@ -103,6 +106,7 @@ public class BannerModNetworkBootstrap {
         MessageToClientUpdateClaims.class,
         MessageUpdateClaim.class,
         MessageDeleteClaim.class,
+        MessageClaimIntent.class,
         MessageToClientReceiveRoute.class,
         MessageTransferRoute.class,
         MessageToClientUpdateGroups.class,
@@ -194,6 +198,7 @@ public class BannerModNetworkBootstrap {
         MessageDeclareWar.class,
         MessageResolveWarOutcome.class,
         MessageUpdateCoLeader.class,
+        MessageSetPoliticalEntityStatus.class,
     };
 
     private BannerModNetworkBootstrap() {
@@ -208,36 +213,23 @@ public class BannerModNetworkBootstrap {
         return MILITARY_MESSAGES.length;
     }
 
-    /**
-     * Creates and returns the single shared SimpleChannel with all military and civilian
-     * packets registered. Must be called once during FMLCommonSetupEvent.
-     *
-     * Military packets: indices [0..107)
-     * Civilian packets: indices [107..130)
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static SimpleChannel createSharedChannel() {
-        SimpleChannel channel = CommonRegistry.registerChannel(BannerModMain.MOD_ID, "default");
-
-        // --- Military messages [0..MILITARY_MESSAGES.length) ---
-        for (int i = 0; i < MILITARY_MESSAGES.length; i++) {
-            CommonRegistry.registerMessage(channel, i, MILITARY_MESSAGES[i]);
+    public static void registerPayloads(RegisterPayloadHandlersEvent event) {
+        PayloadRegistrar registrar = event.registrar(BannerModMain.MOD_ID);
+        for (Class clazz : MILITARY_MESSAGES) {
+            CommonRegistry.registerMessage(registrar, clazz);
         }
-
-        // --- Civilian messages [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length) ---
-        for (int j = 0; j < CIVILIAN_MESSAGES.length; j++) {
-            CommonRegistry.registerMessage(channel, MILITARY_MESSAGES.length + j, CIVILIAN_MESSAGES[j]);
+        for (Class clazz : CIVILIAN_MESSAGES) {
+            CommonRegistry.registerMessage(registrar, clazz);
         }
-
-        // --- War messages [MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length .. ) ---
-        int warOffset = MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length;
-        for (int k = 0; k < WAR_MESSAGES.length; k++) {
-            CommonRegistry.registerMessage(channel, warOffset + k, WAR_MESSAGES[k]);
+        for (Class clazz : WAR_MESSAGES) {
+            CommonRegistry.registerMessage(registrar, clazz);
         }
+    }
 
-        // Bind to WorkersRuntime for compatibility
+    public static BannerModChannel createSharedChannel() {
+        BannerModChannel channel = new BannerModChannel();
         com.talhanation.bannermod.bootstrap.WorkersRuntime.bindChannel(channel);
-
         return channel;
     }
 }

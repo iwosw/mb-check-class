@@ -1,23 +1,28 @@
 {
-  "schema": 1,
+  "schema": 2,
   "canonical": true,
   "description": "Ordered BannerMod unfinished-work backlog. Use tools/backlog.py instead of reading this file directly during normal agent work.",
   "rules": [
     "This JSON file is the single canonical backlog; docs/BANNERMOD_BACKLOG.md is only a human-facing pointer.",
     "Use tools/backlog.py batch/list/show to inspect work instead of dumping the whole JSON file into context.",
-    "Every task must include id, title, status, why, scope, acceptance, and updated date.",
+    "Every task must include id, title, status, why, scope, acceptance, dependencies, and updated date.",
     "DONE means every acceptance item is observably satisfied in the current codebase, not merely supported by a lower-level policy or partial slice.",
     "Before marking a task done, run the relevant verification and record the result in verification. If a check cannot be run, record why.",
     "If a task changes UI, changes gameplay mechanics, or adds player-facing mechanics, update both MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md before marking it done.",
     "Append progress entries instead of rewriting history. Keep old evidence and progress unless it is factually wrong.",
-    "Add new work as an open task with concrete deliverables and verifiable acceptance checks. Do not add vague reminders."
+    "Add new work as an open task with concrete deliverables, explicit dependencies, and verifiable acceptance checks. Do not add vague reminders.",
+    "Dependencies must be explicit. Use an empty list when a task has no blockers; otherwise list the blocking task ids so work can be parallelized safely.",
+    "Use tools/backlog ready <N> as the main dependency-safe pickup queue for parallel work.",
+    "Once a task is taken into active execution, the executor must either finish it to acceptance or split the remaining scope into concrete child tasks and rewire the parent dependencies. Do not leave oversized half-done work parked in in_progress.",
+    "Parallel subagent execution must use one dedicated git worktree and one dedicated feature branch per task. Merge subagent work only after reviewing the exact diff and confirming the implementation satisfies the task acceptance without unrelated edits.",
+    "For dependency chains, complete the first task, then branch the dependent task from the updated tip of the first task branch, and continue step by step rather than branching dependent work from a stale base."
   ],
   "tasks": [
     {
       "id": "PERF-002",
       "title": "Crowd render optimization beyond LOD layers",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "in_progress",
+      "updated": "2026-04-28",
       "why": "Existing recruit render LOD skips some expensive layers at distance, but large multiplayer battles may still be dominated by base model rendering, layer passes, nameplates, state changes, and animation work.",
       "scope": [
         "Profile recruit render costs: base model, layers, nameplates, texture/state switches, and animation/model pose churn.",
@@ -34,18 +39,26 @@
         {
           "date": "2026-04-27",
           "text": "Added recruit.render debug profiling counters for crowd impostor rendering. The task remains open until a real client profiling run proves before/after improvement and near-range readability."
+        },
+        {
+          "date": "2026-04-28",
+          "text": "Split into PERF-010 profiling instrumentation and PERF-011 measured distant-render cuts; parent remains open until both children satisfy measured improvement, close-range readability, and profiling-evidence acceptance."
         }
       ],
       "verification": [],
       "evidence": [
         "Recruit render profiling summary includes recruit.render counters."
+      ],
+      "dependencies": [
+        "PERF-010",
+        "PERF-011"
       ]
     },
     {
       "id": "PORT-001",
       "title": "NeoForge 1.21.1 port",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "in_progress",
+      "updated": "2026-04-28",
       "why": "Future platform migration may be needed, but it is not active gameplay work and should not live as a stale parallel plan.",
       "scope": [
         "Create a branch only when this becomes active.",
@@ -58,15 +71,25 @@
         "compileJava, tests, and in-game smoke pass.",
         "Old Forge 1.20.1 assumptions are either removed or documented."
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into PORT-002 build baseline, PORT-003 API migration, and PORT-004 verification/smoke; parent remains open until the port branch fully targets NeoForge 1.21.1 and passes compile, tests, and smoke."
+        }
+      ],
       "verification": [],
-      "evidence": []
+      "evidence": [],
+      "dependencies": [
+        "PORT-002",
+        "PORT-003",
+        "PORT-004"
+      ]
     },
     {
       "id": "WAR-007",
       "title": "War Room declare-war wizard",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "War Room is now the political/war hub, but starting a war still requires /war declare, so the player-facing warfare loop falls back to chat commands at the most important step.",
       "scope": [
         "Add a War Room action flow to pick attacker, defender, war goal, and optional casus belli text.",
@@ -90,13 +113,17 @@
         "docs/POLITICS_WARFARE_EN.md documents declaration through /war declare.",
         "WarDeclarationCommands contains the command-only declaration path."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "UI-003",
+        "SEC-005"
+      ]
     },
     {
       "id": "WAR-008",
       "title": "Player-facing war outcome negotiation UI",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "War resolution actions exist, but cancel/peace/tribute/vassalize/demilitarize/occupy/annex are command-driven and partly admin-gated, so normal leaders lack a clear surrender, peace, or outcome flow.",
       "scope": [
         "Add a War Room outcome panel for legal leader actions: cancel, peace offer, tribute request, occupation, or other rules-approved outcomes.",
@@ -119,7 +146,11 @@
         "WarDeclarationCommands exposes outcome commands and gates several behind permission level 2.",
         "WarListScreen renders selected war details but no outcome controls."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "WAR-007",
+        "SEC-005"
+      ]
     },
     {
       "id": "SETTLEMENT-008",
@@ -149,7 +180,8 @@
         "docs/CITIZENS_PROFESSIONS_RECRUITS_EN.md notes manual validated buildings and prefab vacancies are not equivalent.",
         "PrefabAutoStaffingRuntime.onBuildAreaCompleted registers vacancies only after prefab completion."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SETTLEMENT-009",
@@ -179,13 +211,14 @@
         "BannerModGovernorSnapshot carries rollups/tokens.",
         "GovernorScreen renders taxes, incidents, recommendations, and policy labels but not logistics/work-order detail."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "POL-002",
       "title": "Co-leader management flow",
       "status": "done",
-      "updated": "2026-04-27",
+      "updated": "2026-04-28",
       "why": "Political records persist co-leaders and government forms, but normal players have no clear add/remove co-leader flow, making republic/shared-authority gameplay hard to use.",
       "scope": [
         "Add leader-authorized co-leader invite/add/remove actions.",
@@ -209,12 +242,15 @@
         "PoliticalRegistryRuntime has mutators for name/status/capital/form/color/charter but no co-leader mutator.",
         "Politics docs mention co-leaders without a management path."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SEC-005"
+      ]
     },
     {
       "id": "COMMAND-001",
       "title": "Recruit command acknowledgement and queue feedback",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The unified command pipeline supports queueing and logging, but normal command UI sends immediate commands and gives little feedback about affected units, overwritten orders, empty selections, or queue state.",
       "scope": [
@@ -228,13 +264,20 @@
         "Queue mode is either available with visible pending orders or intentionally disabled in UI."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "CommandIntentDispatcher now emits server-side chat acknowledgements for every unified command path: rejected no eligible recruits, accepted immediate recruit count, replaced queued-order count, queued modified recruit count, and pending order count for queueMode. Existing command UI keeps immediate mode (queue modifier remains hidden/disabled in UI because MessageMovement and command-screen paths send queueMode=false), while queued paths still expose pending counts if invoked. Player guides EN/RU updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "CommandIntentDispatcher supports queued vs immediate dispatch.",
         "CommandIntentLog is debug/in-memory only.",
         "MessageMovement sends queueMode=false.",
         "CommandScreen sends commands without accepted/queued/replaced feedback."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-001",
@@ -263,7 +306,8 @@
         "MessageDeleteClaim deletes from client-supplied claim data.",
         "MessageUpdateClaim has a guarded canEditClaim path that can be reused or unified."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-002",
@@ -292,7 +336,8 @@
         "MessageFaceCommand, MessageRangedFire, and MessageUpkeepEntity use client-provided UUIDs.",
         "CommandIntentDispatcher assumes caller supplied already-authorized actors."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-003",
@@ -326,7 +371,8 @@
         "MessageSetLeaderGroup and MessageAssignGroupToCompanion mutate state after weak or partial checks.",
         "MessageGroup shows a safer owned-group pattern."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-004",
@@ -356,12 +402,13 @@
         "ClaimAccessQueries looks up by ChunkPos.",
         "RecruitsClaimManager keys claims by ChunkPos."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-005",
       "title": "Unified political authority policy",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Government-aware authority exists, but mutation packets, claim editing, and UI enablement use different leader/co-leader/op checks. That makes republic and monarchy authority inconsistent in multiplayer.",
       "scope": [
@@ -375,12 +422,19 @@
         "Denial messages explain whether failure is role, government form, or op permission."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Unified shared political authority around PoliticalEntityAuthority.canAct for command, packet, and War Room UI paths. Commands now delegate shared actions through WarCommandSupport.canAct; political mutation packets for rename/capital/color/charter use canAct; claim edit uses canAct; ally invite/response/cancel, siege placement, declaration, and legal outcome UI use canAct. Government-form changes and co-leader list management remain strict leader/op via isLeaderOrOp with leader-only denial. UI enablement now mirrors shared authority for republic co-leaders while monarchy keeps co-leaders locked. Added PoliticalEntityAuthorityTest coverage for republic co-leader shared authority and strict leader-only policy parity. Updated player guides and politics docs. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava and focused ./gradlew test --tests com.talhanation.bannermod.war.registry.PoliticalEntityAuthorityTest (both BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "PoliticalEntityAuthority.canAct is government-aware.",
         "Some mutation packets use leader-only isLeaderOrOp.",
         "MessageUpdateClaim.canEditClaim permits co-leaders directly."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-003",
@@ -410,13 +464,14 @@
         "ClientSyncLifecycleEvents has login/logout hooks.",
         "WarListScreen snapshots state in init()/manual refresh()."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-004",
       "title": "Server-authoritative atomic claim editing UX",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "World-map claim UI mutates local claim objects optimistically and sends payment/update/delete separately. Server rejection can follow a charge or leave the map briefly showing unconfirmed state.",
       "scope": [
         "Replace create/add/remove/delete/edit flows with intent packets validated and charged atomically server-side.",
@@ -429,16 +484,28 @@
         "Denial reasons are visible in the world-map UI."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Added MessageClaimIntent for server-authoritative ADD_CHUNK, REMOVE_CHUNK, and DELETE flows. Server validates claiming enabled, Overworld, claim existence, edit authority, distance, occupancy/max-size, and payment before mutation; currency is charged only after validation. World-map add/remove/delete no longer mutates ClientManager claim state optimistically and waits for authoritative sync/broadcast; server sends accepted/denied chat feedback with reasons. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "WorldMapClaimController.claimArea/claimChunk and WorldMapClaimMenuActions.removeSelectedChunk/deleteSelectedClaim mutate/send client-authored claim state.",
         "MessageUpdateClaim consumes full claim NBT server-side."
+      ],
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "SEC-001",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006"
       ]
     },
     {
       "id": "UI-005",
       "title": "Build Area authoring validation and feedback",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Build Area scan/build flow relies on client-side structure scanning and sends structure data to the server, while player feedback for invalid scans, bounds, materials, or build-start rejection is thin.",
       "scope": [
@@ -452,16 +519,23 @@
         "Server enforces dimensions and NBT limits even if the client sends malformed data."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "BuildAreaScreen now shows status text for scan/load/build/place flows, rejects short scan names, invalid dimensions, missing structure data, and empty scans before send, disables Build/Place without a non-empty structure, and surfaces required-material guidance before normal builds. MessageUpdateBuildArea now enforces server-side dimension bounds, required build structure NBT, matching structure dimensions, non-empty block lists, and block count <= bounds before mutating or starting builds, with accepted/rejected system messages. Player guides EN/RU updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "BuildAreaScreen.performClientScan and button handlers scan/send structure data.",
         "MessageUpdateBuildArea accepts update payloads server-side."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-006",
       "title": "Storage route authoring UX and validation display",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Storage route setup exposes raw UUID/filter/count/priority fields and saves on close/toggles; parse failures are chat-only, which is brittle for non-technical players.",
       "scope": [
@@ -475,17 +549,24 @@
         "A player can pick or confirm a destination without manually typing a UUID."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "StorageAreaScreen now has explicit Apply route action instead of close-to-save for route fields. Apply route validates with BannerModLogisticsAuthoringState.parse before send, highlights destination UUID/filter/count/priority errors inline, normalizes valid values, shows current destination summary and route blocked state in the screen, and lets players confirm an existing destination without retyping it. Server-side MessageUpdateStorageArea still rejects parse failures with the same parser and visible system-message reason. Player guides EN/RU updated. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "StorageAreaScreen builds raw text fields and sends on close/toggle.",
         "MessageUpdateStorageArea parses updates and reports failures outside the screen flow."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "UI-007",
       "title": "Accessibility and localization pass for active screens",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "in_progress",
+      "updated": "2026-04-28",
       "why": "Several active screens use hardcoded English literals and custom widgets with empty narration hooks, reducing localization quality and accessibility.",
       "scope": [
         "Move hardcoded active UI strings in war/state/build/storage screens to language keys.",
@@ -497,11 +578,23 @@
         "Screen readers announce dropdown values/options and static status widgets.",
         "Disabled action buttons explain why they are unavailable."
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-27",
+          "text": "Partial batch: localized WarListScreen and PoliticalEntityListScreen active text to en_us/ru_ru keys; added disabled-action tooltips for war/state actions; added non-empty narration for DropDownMenu, BlackShowingTextField, and ItemWithLabelWidget. Verified with ./gradlew compileJava. Remaining acceptance not closed: broader build/storage screen localization pass still needs audit."
+        }
+      ],
       "verification": [],
       "evidence": [
         "WarListScreen and PoliticalEntityListScreen use button/render literals.",
         "DropDownMenu, BlackShowingTextField, and ItemWithLabelWidget have empty narration overrides."
+      ],
+      "dependencies": [
+        "UI-003",
+        "UI-005",
+        "UI-006",
+        "WAR-007",
+        "WAR-008"
       ]
     },
     {
@@ -532,7 +625,8 @@
         "RegionSnapshotBuilder.captureDynamicObstacles scans regions.",
         "Config exposes AsyncPathfindingSnapshotBudgetNanos."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-004",
@@ -562,7 +656,8 @@
         "stateHash serializes all records.",
         "WarClientState.encode produces the full client mirror payload."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-005",
@@ -592,12 +687,13 @@
         "RecruitsClaimManager.broadcastClaimsToAll sends full state to every player.",
         "MessageToClientUpdateClaims serializes all claims."
       ],
-      "doneDate": "2026-04-27"
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-006",
       "title": "Cache and throttle formation-map snapshots",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Formation-map snapshot requests scan indexed recruits and compute role/relation data per visible recruit. Repeated polling by multiple players can become repeated O(all recruits) server work.",
       "scope": [
@@ -611,16 +707,23 @@
         "Contact correctness remains unchanged after movement/group changes."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Implemented per-player/per-dimension formation-map snapshot request cache with 5-tick windows keyed by RecruitIndex version, same-tick request throttling, cached contact reuse, relation context reuse inside snapshot builds, and RuntimeProfilingCounters for requests, throttles, cache hits, recruit candidates, and emitted contacts. RecruitIndex version increments on join/leave/owner/group/chunk-bucket changes so cached snapshots invalidate on relevant group/movement topology changes. Verified with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "MessageRequestFormationMapSnapshot.executeServerSide directly builds snapshots.",
         "FormationMapSnapshotService.buildSnapshot iterates recruits and computes relation through relationFor."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-007",
       "title": "Stable batched settlement-orchestrator iteration",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Settlement orchestration is batched, but each batch recreates and sorts the full snapshot list before processing its slice. Large settlement counts pay O(n log n) setup on every batch tick.",
       "scope": [
@@ -634,16 +737,23 @@
         "Existing processed/total/completed counters remain meaningful."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Implemented per-level cached sorted settlement UUID order for orchestrator batches, rebuilt only when a maintenance cycle starts at startIndex <= 0. Batch processing keeps deterministic UUID order, retrieves current snapshots by UUID, and preserves BatchResult start/next/total/completed counters. Verified with ./gradlew test --tests com.talhanation.bannermod.settlement.BannerModSettlementOrchestratorTest and ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "ClaimEvents drives settlement orchestration batches.",
         "BannerModSettlementOrchestrator.tickBatch rebuilds and sorts snapshot collections while processing slices."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "PERF-008",
       "title": "Cap and cache Build Area preview rendering",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Structure previews can render every scanned block of every nearby visible BuildArea every frame, and the cache is single-preview only. Large prefabs or multiple nearby areas can spike client frame time.",
       "scope": [
@@ -657,17 +767,24 @@
         "Preview remains accurate near the player."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Implemented bounded 8-entry BuildArea preview structure cache, frustum-gated preview rendering, far-distance per-frame block and block-entity budgets, and profiling counters for cache hits/misses and budget skips. Verified with ctx log -- ./gradlew compileJava (BUILD SUCCESSFUL)."
+        }
+      ],
       "evidence": [
         "WorkerAreaRenderer.render iterates visible areas.",
         "renderStructurePreview loops scanned blocks and may create block entities.",
         "getCachedPreviewStructure stores only one preview structure."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "GEO-001",
       "title": "Terrain-derived settlement roles",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The transcript's strongest usable idea is that feudal power should emerge from logistics geography rather than arbitrary titles. BannerMod settlements and political entities need terrain/logistics roles so Crusader Kings-style politics has a Minecraft-world reason to exist.",
       "scope": [
@@ -683,16 +800,23 @@
         "Player guides describe settlement roles and how players can create or exploit them."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added BannerModSettlementStrategicSignals role classifier from observable snapshot data (food/storage surplus hub, routed market junction, fort route chokepoint, water gate), surfaced role and one-line reason in Governor logistics UI, documented in EN/RU guides, and covered with unit tests. Verified with strategic signal tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 1-17: barony as logistics answer and chokepoint/surplus lord.",
         "Transcript lines 53-61: workflow for marking nodes, routes, shadows, hierarchy, and job descriptions."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "ECON-001",
       "title": "Distance-aware supply routes and water advantage",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The transcript's oxen-paradox idea is suitable if simplified: land transport should be limited and water/routes should make supply cheaper, giving BannerMod economy strategic geography like Total War supply lines without simulating medieval mileage literally.",
       "scope": [
@@ -708,17 +832,24 @@
         "Player guides explain why roads/water/routes matter for settlement logistics."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added route-cost visibility from snapshot route/port data: water_advantaged, connected, single_route, and landlocked states with player-facing Governor logistics descriptions. Water/port access now shows as cheap supply advantage before penalties. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 5-8: oxen paradox and three-day rule as supply limit.",
         "Transcript lines 35-49: navigable water as major transport advantage and upstream/downstream asymmetry."
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "ECON-002",
       "title": "Specialized production for landlocked settlements",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "The transcript's refinery-baron idea fits Minecraft gameplay: settlements that cannot cheaply move bulk goods should convert local resources into higher-value goods, creating Bannerlord-style regional identity and trade reasons.",
       "scope": [
         "Define a small set of specialist settlement outputs from existing resources/buildings, such as grain to ale, wool to cloth, milk to cheese, ore to tools, or timber to worked goods.",
@@ -733,16 +864,26 @@
         "Player guides explain how to create and use specialist settlements."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added landlocked specialty detection for preserved_food and worked_materials from local production plus storage without water/routes; surfaced in Governor logistics UI and guides. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 29-35: landlocked specialist converts bulk into higher-value goods to survive transport limits."
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "GEO-001",
+        "ECON-001"
       ]
     },
     {
       "id": "WAR-009",
       "title": "Logistics objectives for wars and raids",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "The transcript validates a non-bullshit war loop for Minecraft strategy: wars should target supply routes, granaries, junctions, crossings, and market flow, not only entity kills or abstract claims.",
       "scope": [
         "Add war objective types or raid hooks for disrupting settlement logistics nodes such as granaries, roads, junction markets, river gates, or chokepoint forts.",
@@ -757,17 +898,29 @@
         "Player guides explain logistics objectives and counters."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added logistics objective tokens derived from settlement role inputs (stockpile, route_junction, water_gate, surplus_store) and surfaced them in Governor logistics UI as warning/planning targets before destructive economy effects. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 11-17: chokepoints, tolls, safe passage, and hollowed power when routes bypass them.",
         "Transcript lines 55-57: difficult-route vacuums become bandit/security problems and potential new power centers."
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "GEO-001",
+        "ECON-001",
+        "ECON-002",
+        "SETTLEMENT-009"
       ]
     },
     {
       "id": "POL-003",
       "title": "Logistics-driven loyalty pressure",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "The transcript's CK-compatible idea is that vassal loyalty follows supply dependency: upstream/source lords become independent, downstream/gatekeeper lords become transactional, and isolated weak lords resent powerful flow controllers.",
       "scope": [
         "Add non-destructive loyalty pressure signals derived from settlement role, route dependency, isolation, and supply disruption.",
@@ -782,16 +935,28 @@
         "Player guides explain logistics loyalty pressures and mitigation."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Added logistics-derived loyalty pressure tokens (isolated_supply, dependent_on_single_route, no_local_distribution) and surfaced them in Governor logistics UI as non-punitive warnings. Verified with strategic signal unit tests and compileJava."
+        }
+      ],
       "evidence": [
         "Transcript lines 39-45: upstream source lords trend rebellious, downstream gatekeepers trend diplomatic and transactional.",
         "Transcript lines 49-52: river few versus landlocked many creates structural political tension."
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "GEO-001",
+        "ECON-001",
+        "ECON-002",
+        "WAR-009"
       ]
     },
     {
       "id": "RP-001",
       "title": "Clean up or reconnect legacy diplomacy and treaty flow",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Legacy team diplomacy hooks and player-facing treaty/localization remnants still exist, but the active enemy-setting implementation is stubbed, making the supported RP model ambiguous.",
       "scope": [
@@ -803,16 +968,23 @@
         "Docs identify the single supported diplomacy model for recruits and political entities."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Recruit target decisions now use political war relation through entity-context isEnemy(recruit, target) instead of the legacy always-false team enemy path; damage authority remains routed through canHarmTeam. Removed empty duplicate RecruitEvents enemy-stub handlers and hid the disabled legacy world-map diplomacy menu entry. Verified with ctx log -- ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/events/runtime/RecruitDiplomacyPolicy.java",
         "src/main/java/com/talhanation/bannermod/combat/RecruitCombatDecisions.java"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "DOC-001",
       "title": "Update revolt documentation for objective-based resolution",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Runtime revolt resolution is objective-presence based, but UAT documentation still describes the behavior as timer-only/not objective-driven.",
       "scope": [
@@ -823,16 +995,23 @@
         "No current docs claim implemented revolts are only timer-based or not objective-driven."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "docs/UAT_RUNBOOK.md revolt section now describes objective-presence resolution: rebel-only success, defender/occupier-present failure, and empty objective remaining pending. Verified stale timer-only/not-objective wording is absent via ctx search and code compiles with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/WarRevoltScheduler.java",
         "docs/UAT_RUNBOOK.md"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-001",
       "title": "Remove siege-standard blocks when outcomes clear sieges",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "War outcomes clear runtime siege records but leave placed siege-standard blocks in the world, causing visible objectives to diverge from war state.",
       "scope": [
@@ -844,15 +1023,22 @@
         "A focused test or deterministic verification covers outcome siege cleanup."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarOutcomeApplier created through WarRuntimeContext now carries ServerLevel and clearSieges removes visible siege_standard blocks via SiegeStandardPlacementService.removeVisibleStandard before removing runtime records; command removal uses the same helper. Applies to cancel/white peace/tribute/occupy/annex/vassalize/demilitarize paths that call clearSieges. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/WarOutcomeApplier.java:376"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-002",
       "title": "Prevent duplicate siege standards at one position",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "SiegeStandardRuntime creates a new record for every placement while the world can only bind one block entity at a position, allowing runtime/block desync.",
       "scope": [
@@ -864,15 +1050,22 @@
         "Command and UI paths return clear feedback for duplicate or replacement behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "SiegeStandardRuntime.place now rejects duplicate BlockPos records; SiegeStandardPlacementService reports DUPLICATE_POSITION before block placement for command and UI paths. Added SiegeStandardRuntimeTest.placeRejectsDuplicatePosition. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/SiegeStandardRuntime.java:24"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-003",
       "title": "Make siege placement dimension-safe",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The War Room siege placement packet always targets the Overworld while using the sender position, so a player in another dimension can place an Overworld standard at copied coordinates.",
       "scope": [
@@ -884,16 +1077,23 @@
         "Tests cover Overworld and non-Overworld placement behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "MessagePlaceSiegeStandardHere now passes the sender's actual ServerLevel, and SiegeStandardPlacementService enforces Overworld-only placement for both packet and command callers with clear UNSUPPORTED_DIMENSION feedback. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/network/messages/war/MessagePlaceSiegeStandardHere.java:47"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SIEGE-004",
       "title": "Fix siege HUD war label",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "The siege HUD looks up a political entity by war UUID, so it falls back to short UUIDs instead of showing a recognizable war label.",
       "scope": [
         "Render attacker-vs-defender names or another real war label in the siege HUD.",
@@ -905,15 +1105,24 @@
         "Guide wording matches the actual HUD label."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarSiegeZoneOverlay now renders war labels as attacker vs defender entity names instead of looking up an entity by war UUID; short UUID fallback only remains inside entityName when side names are unavailable. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/client/military/hud/WarSiegeZoneOverlay.java:94"
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "UI-003"
       ]
     },
     {
       "id": "SIEGE-005",
       "title": "Align under-siege claim semantics with siege radius",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "HUD/zone logic uses radius containment, but claim under-siege checks only test the standard block chunk, making settlement effects narrower than the visible siege zone.",
       "scope": [
@@ -925,16 +1134,23 @@
         "Tests cover a standard just outside a claim whose radius overlaps it."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "WarSiegeQueries exposes claimIntersectsSiegeRadius and both server WarSiegeQueries.isClaimUnderSiege and client WarClientState.isClaimUnderSiege use it, aligning semantics with HUD radius containment. Added radius-overlap unit coverage for a standard outside the claim chunk whose radius overlaps the claim. Verified with ./gradlew test --tests com.talhanation.bannermod.war.runtime.SiegeStandardRuntimeTest compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/war/runtime/WarSiegeQueries.java",
         "src/main/java/com/talhanation/bannermod/war/client/WarClientState.java"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "MSM-001",
       "title": "Fix Siege-Engineer promotion contract",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "The client enables Siege-Engineer promotion when MSM is loaded, but server promotion mapping has no profession 5 and silently returns.",
       "scope": [
@@ -947,16 +1163,23 @@
         "RecruitEvents.entitiesByProfession and PromoteScreen agree on profession id 5 behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Disabled the Siege-Engineer promotion button regardless of MSM loaded state because no profession 5 recruit mapping exists yet; added disabled tooltip and server-side unsupported-profession feedback for unmapped promotion ids so client/server agree that profession 5 is unavailable until implemented. Verified with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/client/military/gui/PromoteScreen.java:119",
         "src/main/java/com/talhanation/bannermod/events/RecruitEvents.java:66"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "MSM-002",
       "title": "Add explicit Medieval Siege Machines compatibility adapter",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "Current MSM integration only detects mod presence; there is no optional API/entity adapter for supported machine capabilities.",
       "scope": [
@@ -969,17 +1192,24 @@
         "Unsupported MSM machines are ignored safely without hard dependency crashes."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "MedievalSiegeMachinesCompat now exposes a no-hard-dependency detectedMachines adapter that scans known MSM/legacy entity ids through ForgeRegistries and reports supported operations (crew seat, aim, load, fire) while ignoring missing entities safely. Build without MSM verified with ./gradlew compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/compat/MedievalSiegeMachinesCompat.java",
         "build.gradle"
-      ]
+      ],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "MSM-003",
       "title": "Add recruit siege-machine operation AI",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "Recruits cannot currently be confirmed to crew, aim, load, fire, move, or operate MSM siege machines; generic mounting only calls startRiding.",
       "scope": [
         "Implement recruit behavior for intended MSM use: crew, aim, load/fire, and operate/move where supported by MSM.",
@@ -992,16 +1222,26 @@
         "Behavior stops cleanly on dismount, death, loss of command, or machine removal."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Recruit siege-machine operation now uses the unified siege-machine command intent for crew/mount orders and existing MSM compat detection advertises crew/aim/load/fire capable machine types. Recruits can be ordered onto whitelisted siege machines through the command pipeline and stop/return via the same mount state goal cleanup. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/ai/military/RecruitMountEntity.java"
+      ],
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "MSM-001",
+        "MSM-002"
       ]
     },
     {
       "id": "MSM-004",
       "title": "Route siege-machine orders through command pipeline",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "No MSM-specific command intent exists, and direct packet-driven mount behavior bypasses the unified army command pipeline expected for movement/attack-style orders.",
       "scope": [
         "Add first-class command intent or intents for siege-machine assignment and operation if they mutate army behavior.",
@@ -1014,17 +1254,28 @@
         "No packet handler directly mutates recruit siege-machine operation state."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Added CommandIntent.SiegeMachine / SIEGE_MACHINE and routed MessageMountEntity, MessageBackToMountEntity, and MessageMountEntityGui through CommandIntentDispatcher instead of directly mutating recruit mount state. Dispatcher applies through CommandEvents.onMountButton, preserving selection narrowing, queue/log hooks, and unified command path. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/army/command/CommandIntent.java",
         "src/main/java/com/talhanation/bannermod/network/messages/military/MessageMountEntity.java"
+      ],
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "MSM-002",
+        "MSM-003",
+        "COMMAND-001"
       ]
     },
     {
       "id": "MSM-005",
       "title": "Implement recruit targeting for siege objectives",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "SiegeObjectivePolicy supports standard attack rules, but recruit AI currently only escorts same-side standards and does not acquire enemy standards as attack targets.",
       "scope": [
         "Wire SiegeObjectivePolicy.canAttackStandard into recruit target acquisition or a dedicated attack goal for BannerMod siege standards.",
@@ -1037,17 +1288,27 @@
         "Recruit attack behavior is covered by tests or deterministic verification."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Added RecruitSiegeObjectiveAttackGoal: recruits resolve enemy siege standards through SiegeObjectivePolicy.canAttackStandard, path to the objective block, apply SiegeStandardRuntime damage on interval, and remove destroyed standards. Same-side standards remain handled by escort goal. Verified with compileJava."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/combat/SiegeObjectivePolicy.java",
         "src/main/java/com/talhanation/bannermod/ai/military/RecruitSiegeEscortGoal.java"
+      ],
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "MSM-003",
+        "SIEGE-005"
       ]
     },
     {
       "id": "SETTLEMENT-010",
       "title": "In-game settlement founding onboarding",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "The code supports a multi-step founding path, but a player must already know to create a political state, craft the surveyor, set anchor and zones, validate in air, and then use a separate wand for later prefab work. docs/STATUS.md explicitly calls full settlement onboarding incomplete.",
       "scope": [
         "Add player-facing founding guidance covering political state creation, starter fort requirements, surveyor mode/role workflow, validation-in-air, claim bootstrap rules, and next steps after success.",
@@ -1060,13 +1321,22 @@
         "The in-game guidance names the correct tools and interactions without requiring source or docs."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Settlement Surveyor tooltip now gives in-game founding sequence: create/join state, build Starter Fort with anchor plus AUTHORITY_POINT and INTERIOR zones, validate with right-click air, then expand with Building Placement Wand. Existing validation/bootstrap messages cover missing settlement, invalid fort, town too close, claim authority, and bootstrap success/failure. Updated EN/RU localization. Verified with compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "UI-008"
+      ]
     },
     {
       "id": "SETTLEMENT-011",
       "title": "Starter workers have actionable first jobs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "SettlementBootstrapService spawns farmer, miner, lumberjack, and builder as starter citizens, but WorkerSettlementSpawner only seeds a default CropArea for farmers. Miner, lumberjack, and builder can enter the new settlement unassigned until the player creates areas, which makes the bootstrap success message overpromise immediate settlement life.",
       "scope": [
@@ -1080,14 +1350,21 @@
         "A focused test or GameTest covers the starter bootstrap assignments/waiting reasons for farmer, miner, lumberjack, and builder."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Bootstrap success feedback now explicitly distinguishes starter workers from free citizens: farmer is ready with a starter crop area, miner waits for a mine, lumberjack waits for a lumber camp, and builder waits for an architect workshop/build area. Player guides EN/RU updated with the same early-settlement mechanic. Added SettlementBootstrapServiceTest for the ready/waiting message. Verified with ./gradlew test --tests com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapServiceTest compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SETTLEMENT-012",
       "title": "Validated buildings feed settlement snapshots and progression",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "Manual validation registers ValidatedBuildingRecord data, but BannerModSettlementService.collectBuildings currently builds settlement snapshots from live AbstractWorkAreaEntity records. That means manually validated houses, storage, markets, and other buildings can be invisible to capacity, home assignment, growth scoring, and political promotion even after validation succeeds.",
       "scope": [
         "Merge valid ValidatedBuildingRecord entries for a settlement into BannerModSettlementSnapshot building records alongside live work areas.",
@@ -1100,14 +1377,23 @@
         "Snapshot tests cover manual-only, prefab-only, and overlapping manual-plus-prefab building cases."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Merged valid manual building records into settlement snapshot building records with live-work-area overlap dedupe. Manual houses contribute resident capacity, validated storage contributes stockpile containers/slots and storage profile, and manual workplace buildings map into profile/workplace-slot seeds. Added unit coverage in BannerModSettlementServiceTest. Verified with ctx log -- ./gradlew -Dnet.minecraftforge.gradle.check.certs=false test --tests com.talhanation.bannermod.settlement.BannerModSettlementServiceTest --tests com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapServiceTest and ctx log -- ./gradlew compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SETTLEMENT-008"
+      ]
     },
     {
       "id": "SETTLEMENT-013",
       "title": "Survival free-citizen source for vacancy professions",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "The intended flow says free CitizenEntity instances occupy vacancies and convert into workers or recruits, but the normal settlement bootstrap and villager growth paths spawn workers directly, while docs say spawn eggs are not the normal survival flow. Without a reliable survival source of free citizens, vacancy-based professions and barracks recruitment can be unreachable or unclear.",
       "scope": [
         "Define and implement the normal survival source for unassigned CitizenEntity population in settlements.",
@@ -1121,13 +1407,23 @@
         "Players can see why no citizens are available when vacancies exist but remain unfilled."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "Starter-fort bootstrap now spawns four free CitizenEntity instances for vacancy professions, exposes bootstrap feedback for available free citizens and empty-vacancy causes, and guides explain the survival citizen source and vacancy flow. Verified with targeted settlement/bootstrap unit tests and compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SETTLEMENT-008",
+        "SETTLEMENT-012"
+      ]
     },
     {
       "id": "UI-008",
       "title": "Settlement surveyor tool feedback and localization",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-27",
       "why": "SettlementSurveyorToolItem is the core UI for founding and manual validation, but it uses hardcoded English literals, cryptic enum names for modes/roles, no preview of captured zones, and no compact checklist before validation. This makes the main settlement loop difficult even when mechanics work.",
       "scope": [
@@ -1141,14 +1437,21 @@
         "After validation, the player sees whether a fort bootstrapped a settlement, a building was registered, or which requirement blocked success."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "SettlementSurveyorToolItem now uses localized readable mode/role labels and localized feedback for missing session, mode/role cycling, anchor, corner, and zone capture. Tooltip now shows mode, marker role, anchor, captured zone count, and pending corner. SurveyorFeedbackFormatter separates validation blockers, warnings, and pass summary through localized messages. Added en_us and ru_ru keys. Verified with ./gradlew compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27",
+      "dependencies": []
     },
     {
       "id": "SEC-006",
       "title": "Preserve political ownership when editing claims",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "ClaimEditScreen.save mutates the local claim and calls claim.setOwnerPoliticalEntityId(null) before MessageUpdateClaim. Editing a settlement claim can silently strip the political owner, breaking settlement faction binding and later worker/faction logic even if the edit only changed name or permissions.",
       "scope": [
         "Ensure claim edit packets preserve existing ownerPoliticalEntityId unless the server-side action is explicitly transferring ownership.",
@@ -1161,14 +1464,23 @@
         "Any denied ownership transfer gives a visible server-side reason and does not mutate the client map as accepted."
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-27",
+          "result": "ClaimEditScreen no longer clears ownerPoliticalEntityId before sending MessageUpdateClaim; server MessageUpdateClaim already preserves existing political owner/player/admin fields for non-admin edits. Verified with ./gradlew compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-27",
+      "dependencies": [
+        "SEC-005"
+      ]
     },
     {
       "id": "POL-004",
       "title": "Player-facing settlement-to-state progression",
-      "status": "open",
-      "updated": "2026-04-27",
+      "status": "done",
+      "updated": "2026-04-28",
       "why": "PoliticalStatePromotionPolicy gates command-side promotion from settlement to state on starter fort or town hall plus storage and market, but the active War Room state UI only exposes create/rename/capital/form/color/charter actions. Players cannot discover or complete the faction progression loop from settlement infrastructure to political status in UI.",
       "scope": [
         "Add a player-facing promotion/status flow that shows current political entity status, required settlement infrastructure, and missing requirements.",
@@ -1180,6 +1492,2077 @@
         "A leader can see why a settlement cannot become a state, including missing starter fort/town hall, storage, or market.",
         "When requirements are met, the UI or guided flow can request promotion and shows accepted or denied feedback.",
         "Command and UI promotion checks agree on requirements and authority."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "War Room state detail panel now shows state-promotion requirements and a Promote STATE action. The action sends a server-authoritative status request using PoliticalStatePromotionPolicy, reusing command-side requirements and returning accepted/denied chat feedback including missing infrastructure. Updated EN/RU localization. Verified with compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28",
+      "dependencies": [
+        "POL-002",
+        "SETTLEMENT-010",
+        "SETTLEMENT-012",
+        "SEC-005"
+      ]
+    },
+    {
+      "id": "QA-001",
+      "title": "Audit/fix backlog closure gaps for surveyor onboarding and starter workers",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Recent done tasks UI-008 and SETTLEMENT-011 leave observable holes: surveyor validation still shows raw enum names and starter-worker acceptance is only covered by a string test, not actual worker readiness state.",
+      "scope": [
+        "1) Localize/humanize surveyor validation type labels in success/failure feedback. 2) Add focused verification for starter worker readiness that exercises real bootstrap assignments/waiting reasons rather than only checking a message string. 3) Re-review affected guides/backlog verification after fixes."
+      ],
+      "acceptance": [
+        "1) Surveyor validation messages show human-readable localized building type names instead of raw enum constants. 2) Tests verify actual starter worker readiness/waiting behavior, not just the bootstrap message text. 3) Backlog status/verification for the affected area reflects the true implementation state."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Localized surveyor validation type labels to human-readable EN/RU strings via file.jarVersion-backed surveyor formatter keys. Acceptance 1 is addressed in code; acceptance 2 remains open because starter-worker verification is still only a message-string unit test, and acceptance 3 remains open until the affected backlog items are re-reviewed/updated."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UI-008",
+        "SETTLEMENT-011"
+      ]
+    },
+    {
+      "id": "AUTH-001",
+      "title": "Harden recruit ownership transfer packet authority",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "MessageAssignRecruitToPlayer currently allows client-driven ownership reassignment without proving direct control or admin authority, which is a critical server-authority break.",
+      "scope": [
+        "Server-side recruit transfer handling must resolve the real sender, require explicit ownership or approved override authority, reject spoofed target owners, and cover the live packet path with focused verification."
+      ],
+      "acceptance": [
+        "Recruit ownership transfer is rejected unless the sender has explicit server-authorized control; spoofed transfer attempts leave ownership unchanged; focused tests exercise both allowed and denied packet flows."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Recruit transfer authority now resolves the real packet sender and requires direct recruit control or permission level 2. 2) Spoofed outsider transfer leaves ownership unchanged in RecruitOwnershipTransferAuthorityGameTests. 3) Allowed owner and admin transfer flows are covered by GameTests. 4) Integrated compileJava, test, compileGametestJava, and verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "ARMY-001",
+      "title": "Complete queued CommandIntent parity for all command variants",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "The queue runtime currently executes only a subset of intent variants, so queued stance and siege-machine commands can be accepted yet never applied.",
+      "scope": [
+        "CommandIntentQueueRuntime must execute every supported intent variant or reject unsupported variants before queueing, and queue behavior must stay aligned with immediate command behavior."
+      ],
+      "acceptance": [
+        "Every queueable intent kind either executes correctly from the queue or is explicitly rejected before enqueue; tests prove parity for movement, face, attack, aggro, stance, strategic fire, and siege-machine flows."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into ARMY-004 explicit unsupported-intent rejection and ARMY-005 queue parity for remaining variants; parent remains open until every queueable intent executes correctly or is rejected before enqueue with tests."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "ARMY-004",
+        "ARMY-005"
+      ]
+    },
+    {
+      "id": "AUTH-002",
+      "title": "Harden group ownership transfer packet authority",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "MessageAssignGroupToPlayer trusts client-supplied owner data and can rewrite group ownership and member owners without any server authorization.",
+      "scope": [
+        "Group transfer must validate the real sender, require ownership or approved override authority for the group and all mutated members, derive the new owner from trusted server state, and verify behavior through the real packet path."
+      ],
+      "acceptance": [
+        "Unauthorized group transfer packets are rejected; authorized transfers update both group and member ownership consistently; focused tests cover spoofed and valid group transfer scenarios."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Group transfer now validates the real sender against owned group authority and loaded member control. 2) Spoofed outsider group transfer is denied in GroupAssignmentAuthorityGameTests. 3) Valid transfer updates group and loaded member ownership in focused GameTests. 4) Integrated compileJava, test, compileGametestJava, and verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "ARMY-002",
+      "title": "Normalize movement-state contract across intent docs and execution",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "CommandIntent documents movementState values that do not match MovementFormationCommandService semantics, creating a latent integration and maintenance hazard.",
+      "scope": [
+        "Movement-state meaning must be defined once, aligned across intent comments, packet translators, UI selectors, and execution services, and verified against live server behavior."
+      ],
+      "acceptance": [
+        "Movement-state constants and documentation match runtime semantics everywhere they are consumed; no packet or UI path relies on stale state numbering; focused tests cover representative state mappings."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) MovementCommandState is the single source for movement-state constants and CommandIntent docs match runtime semantics. 2) Packet/UI/service consumers no longer rely on stale state numbering. 3) MovementCommandStateTest covers representative movement and formation mappings. 4) Integrated compileJava, test, compileGametestJava, and verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "AUTH-004",
+      "title": "Harden work-area owner reassignment against spoofing",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "MessageUpdateOwner trusts arbitrary client-supplied player identity and can orphan work areas by clearing team state when the claimed owner is offline or fake.",
+      "scope": [
+        "Work-area owner mutation must resolve trusted target identity server-side, preserve or recompute team linkage safely, reject nonexistent owners, and verify both authorized and denied flows."
+      ],
+      "acceptance": [
+        "Spoofed or nonexistent owner updates are rejected; valid owner changes preserve consistent team metadata; focused tests cover owner reassignment and offline-edge handling."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Work-area owner updates now resolve the target from trusted online server players and reject spoofed or nonexistent owners. 2) WorkAreaOwnerUpdateTest covers invalid/offline rejection and valid owner reassignment. 3) Valid changes preserve/recompute team metadata from server state. 4) Integrated compileJava, test, compileGametestJava, and verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "AUTH-003",
+      "title": "Server-authorize world-map teleport and fix safe-height correction",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "World-map teleport is currently gated only by client UI and the low-Y fallback is broken, allowing unauthorized teleports and unsafe target correction.",
+      "scope": [
+        "The server teleport packet must enforce admin or approved authority, reject unprivileged callers, and correct invalid heightmap results using working server-side safety logic."
+      ],
+      "acceptance": [
+        "Non-authorized teleport packets are denied server-side; authorized teleports land on a validated safe position; tests cover both denial and low-height correction cases."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) World-map teleport packets now require server-side creative plus permission level 2 authority. 2) MessageTeleportPlayerTest covers unauthorized denial and authorized policy. 3) Safe target correction uses server-side heightmap logic and low-height correction tests pass. 4) Integrated compileJava, test, compileGametestJava, and verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "AUTH-005",
+      "title": "Define and enforce nation and team command authority semantics",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Command authority currently mixes owner and scoreboard-team checks while the nation-leader path is effectively a dead stub, leaving intended command hierarchy unclear and partially unimplemented.",
+      "scope": [
+        "The command hierarchy must have explicit supported authority roles, remove dead paths or implement them fully, and apply the same rules across recruit command packets, UI affordances, and tests."
+      ],
+      "acceptance": [
+        "Command authority rules are documented in code and enforced consistently across command entry points; dead nation-authority branches are removed or implemented; verification covers owner, teammate, and nation-level cases."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into AUTH-006 authority-role definition, AUTH-007 enforcement, and AUTH-008 hierarchy tests; parent remains open until semantics are documented, enforced, and verified across command entry points."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-006",
+        "AUTH-007",
+        "AUTH-008"
+      ]
+    },
+    {
+      "id": "ARMY-003",
+      "title": "Persist player army command preferences across clone and respawn",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Formation, active groups, and related command preferences appear to initialize on login only, risking silent resets across death or player clone events.",
+      "scope": [
+        "Player army command preference persistence must survive clone and respawn correctly, and any intended non-persistent command state must be documented explicitly."
+      ],
+      "acceptance": [
+        "Saved formation and active-group preferences survive player clone and respawn when intended; non-persistent fields are explicitly excluded by design; tests cover login, clone, and reload behavior."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Player clone handling copies saved Formation and ActiveGroups preferences. 2) Transient formation runtime fields are explicitly excluded. 3) MovementFormationCommandServiceTest covers login defaults, clone copy, transient exclusions, and reload/non-overwrite behavior. 4) Integrated compileJava, test, compileGametestJava, and verifyGameTestStage passed."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "SYNC-001",
+      "title": "Add settlement client snapshot sync for player-facing UIs",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Settlement intelligence is mostly server-side today, leaving governor and related UIs dependent on ad hoc requests and thin placeholder states instead of a coherent client mirror.",
+      "scope": [
+        "Player-facing settlement and governor screens need a clear synced snapshot contract, client mirror, refresh triggers, and waiting or stale-state UX for data arrival."
+      ],
+      "acceptance": [
+        "Relevant settlement UIs render from a coherent synced snapshot with explicit loading or stale states; data refreshes propagate without reopening screens; focused verification covers login, open-screen, and mutation refresh paths."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into SYNC-002 snapshot contract, SYNC-003 client mirror/loading UX, and SYNC-004 refresh verification; parent remains open until settlement UIs render from coherent snapshots and refresh without reopening."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "SYNC-002",
+        "SYNC-003",
+        "SYNC-004"
+      ]
+    },
+    {
+      "id": "UX-001",
+      "title": "Restore worker command hotkey and opening flow",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "The worker command hotkey is defined and documented but not actually handled by client input, leaving a promised control surface non-functional.",
+      "scope": [
+        "The worker command key path must open the intended screen reliably, avoid conflicting input behavior, and be verified against both keybinding registration and the live opening flow."
+      ],
+      "acceptance": [
+        "The documented worker command hotkey opens the worker command UI in-game; conflicting or duplicate bindings are resolved intentionally; focused verification covers registration and real key handling."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Worker command hotkey is registered once on X and consumed by KeyEvents. 2) Key handling selects the worker command category before opening the existing server-backed command screen. 3) Duplicate/conflicting binding was removed and localized labels are present. 4) Integrated compileJava, test, processResources in task branch, compileGametestJava, and verifyGameTestStage passed; code-path inspection verified real opening flow."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "UX-002",
+      "title": "Finish claim-area flow and route and waypoint discoverability",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "The world map advertises claim-area and route or waypoint interactions, but some affordances are incomplete or weakly explained, which makes the flow feel broken or hidden.",
+      "scope": [
+        "Claim-area functionality must either be fully implemented or removed from player UI, and route or waypoint flows need discoverable in-game affordances, explanations, and guide coverage."
+      ],
+      "acceptance": [
+        "Every visible world-map action is functional or intentionally absent; players can discover route and waypoint flows in-game without external docs; verification covers claim-area, waypoint, and route interactions."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into UX-010 claim-area affordance resolution, UX-011 route/waypoint discoverability, and UX-012 verification/docs; parent remains open until every visible map action is functional or intentionally absent and flows are discoverable in-game."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UX-010",
+        "UX-011",
+        "UX-012"
+      ]
+    },
+    {
+      "id": "UX-003",
+      "title": "Add disabled-reason and loading-state UX across critical screens",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "War, claim, governor, and work-area screens often hide unavailable actions or show thin failure states, forcing players to infer authority, sync, or range problems from chat or silence.",
+      "scope": [
+        "Critical screens must surface why actions are unavailable, distinguish waiting-for-sync from empty state, and show consistent loading and stale-data feedback."
+      ],
+      "acceptance": [
+        "Disabled actions explain why they are unavailable; waiting-for-sync, empty, and stale states are visually distinct on the main war, claim, governor, and work-area screens; focused verification covers representative denial and loading cases."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UI-003",
+        "UI-004",
+        "UI-005",
+        "UI-006",
+        "SYNC-001"
+      ]
+    },
+    {
+      "id": "UX-004",
+      "title": "Remove raw UUID and internal-value leakage from player UI",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Politics, war, claim, and governor screens still expose raw UUID fragments, enum internals, and hardcoded English that read like debug surfaces rather than shipped player UI.",
+      "scope": [
+        "Player-facing screens must render localized labels, human-readable identities, and interpreted state text instead of raw internal values across the active war, politics, claim, and governor surfaces."
+      ],
+      "acceptance": [
+        "Target screens no longer expose raw UUIDs, enum internals, or hardcoded English for normal player flows; visible text comes from lang keys and player-friendly formatting; verification covers the main war and governance screens."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UI-007"
+      ]
+    },
+    {
+      "id": "UX-005",
+      "title": "Ship full in-game settlement onboarding",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "New-player settlement setup still depends too heavily on markdown docs and transient chat instructions for surveyor, starter fort, wand, citizens, and professions.",
+      "scope": [
+        "Settlement onboarding must be understandable from in-game tooltips, screens, guided feedback, and stateful prompts from first claim through staffed starter buildings and professions."
+      ],
+      "acceptance": [
+        "A new player can found a starter settlement, register buildings, understand staffing, and reach first profession loops using in-game guidance alone; verification covers the full onboarding path step by step."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-005",
+        "QA-001"
+      ]
+    },
+    {
+      "id": "UX-006",
+      "title": "Add player UI for revolts and remaining war outcomes",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Revolts and several war outcomes are still primarily command or admin flows, leaving a major strategy surface without coherent in-game UI for normal players.",
+      "scope": [
+        "War Room or related screens must support player-facing revolt interaction, remaining outcome selection, tribute-related flows, and clear authority feedback for those actions."
+      ],
+      "acceptance": [
+        "Normal player war flows for revolts and supported outcomes can be completed through in-game UI with clear authority and cooldown feedback; verification covers declare, occupy, revolt, and remaining outcome interactions."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UX-007",
+        "UX-008",
+        "UX-009"
+      ]
+    },
+    {
+      "id": "GAME-001",
+      "title": "Replace noop settlement project bridge with live build execution",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Settlement projects currently fall back to a noop build-area resolver in important paths, so project logic can exist without driving real construction work in the world.",
+      "scope": [
+        "Settlement projects must bind to real build areas or equivalent world execution paths, publish actionable work, and reflect progress through actual building activity instead of placeholder records."
+      ],
+      "acceptance": [
+        "Active settlement projects create real executable construction work in-world; project progress reflects actual build execution rather than noop placeholders; focused verification covers project creation, assignment, and completion."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into GAME-009 real project build-area binding and GAME-010 actual build-execution progress; parent remains open until project creation, assignment, and completion are verified against real world work."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-009",
+        "GAME-010"
+      ]
+    },
+    {
+      "id": "GAME-002",
+      "title": "Turn sea-trade summaries into a real production and consumption loop",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Sea trade is currently represented mostly as summary math and recommendation text, not a materially meaningful production and consumption gameplay system.",
+      "scope": [
+        "Sea trade must consume and produce real goods or equivalent transport state, interact with settlement logistics, and expose player-visible bottlenecks and results through gameplay rather than hints alone."
+      ],
+      "acceptance": [
+        "Sea-trade routes affect real goods flow and settlement state; players can observe production, transport, and consumption consequences; verification covers at least one end-to-end sea-trade loop."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "SHIPS-001",
+        "SHIPS-002",
+        "SHIPS-003"
+      ]
+    },
+    {
+      "id": "GAME-003",
+      "title": "Materialize occupation, revolt, tribute, and tax consequences",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Occupation, revolt, tribute, and tax systems rely heavily on records and ledgers today, which weakens immersion and leaves strategic outcomes underrepresented in the world.",
+      "scope": [
+        "These war-economy systems need stronger world and UI consequences such as visible control state, material obligations, objective pressure, and player-readable ongoing effects beyond hidden saved records."
+      ],
+      "acceptance": [
+        "Occupation, revolt, tribute, and tax states produce observable ongoing effects in world play and player UI; the main consequences are no longer hidden behind abstract records alone; verification covers both state transition and observable aftermath."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-006",
+        "GAME-007",
+        "GAME-008"
+      ]
+    },
+    {
+      "id": "GAME-004",
+      "title": "Give claims stronger in-world representation and boundary feedback",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Claims strongly affect permissions but remain mostly abstract chunk records plus overlays, leaving territory control under-materialized in the world itself.",
+      "scope": [
+        "Claims need stronger in-world boundary or authority feedback, clearer ownership cues, and interaction feedback that makes protected space legible without relying only on the map screen."
+      ],
+      "acceptance": [
+        "Players can perceive claim boundaries or authority state from normal world play; common protected-space interactions provide clear in-world feedback; verification covers friendly, hostile, and unclaimed territory reads."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into GAME-011 territory boundary/authority cues and GAME-012 protected-space interaction feedback; parent remains open until friendly, hostile, and unclaimed reads are verified."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-011",
+        "GAME-012"
+      ]
+    },
+    {
+      "id": "GAME-005",
+      "title": "Unify settlement bootstrap paths",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Surveyor-based starter founding and automatic claim worker bootstrap currently look like partially separate onboarding systems, which risks contradictory world state and player expectations.",
+      "scope": [
+        "Settlement bootstrap must have one coherent lifecycle from claim through starter structures, workers, citizens, and formal settlement records, with explicit rules for auto-bootstrap versus manual founding."
+      ],
+      "acceptance": [
+        "Manual and automatic bootstrap paths converge on the same settlement lifecycle and data model; players and code no longer see contradictory startup states; verification covers both entry paths and their resulting records."
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Split into GAME-013 lifecycle definition and GAME-014 path convergence; parent remains open until manual and automatic bootstrap paths produce the same settlement records and player-visible startup state."
+        }
+      ],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-013",
+        "GAME-014"
+      ]
+    },
+    {
+      "id": "ARCH-001",
+      "title": "Split RecruitEvents into smaller runtime services",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "RecruitEvents currently acts as a multi-responsibility runtime hub for lifecycle, sync, patrol, combat hooks, and server tick behavior, which makes changes risky and obscures invariants.",
+      "scope": [
+        "RecruitEvents must be decomposed into narrower services with explicit responsibilities and stable seams for lifecycle, sync, patrol, and combat integration while preserving behavior."
+      ],
+      "acceptance": [
+        "Recruit runtime responsibilities are separated into smaller units with clear ownership and no behavior regression; core recruit flows still pass existing verification after the split."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-005",
+        "ARMY-001",
+        "ARMY-003"
+      ]
+    },
+    {
+      "id": "ARCH-002",
+      "title": "Split ClaimEvents into claim, protection, queue, and settlement services",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "ClaimEvents currently mixes claim manager lifecycle, protection hooks, command queue ticking, and governor or settlement heartbeat orchestration in one oversized event surface.",
+      "scope": [
+        "ClaimEvents must be broken into smaller services with explicit ownership of protection, claim runtime, command queue advancement, and settlement heartbeat responsibilities."
+      ],
+      "acceptance": [
+        "Claim-related runtime concerns are separated into smaller services with stable event registration and preserved behavior; verification covers claim protection, queue ticking, and settlement heartbeat flows."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-003",
+        "TEST-003"
+      ]
+    },
+    {
+      "id": "ARCH-003",
+      "title": "Decompose settlement snapshot and orchestration services",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "BannerModSettlementService and BannerModSettlementOrchestrator each aggregate too many responsibilities, making settlement behavior hard to reason about, test, and evolve safely.",
+      "scope": [
+        "Settlement snapshot building, logistics derivation, staffing, project planning, home assignment, seller dispatch, and job orchestration must be split into smaller bounded services with explicit contracts."
+      ],
+      "acceptance": [
+        "Settlement runtime responsibilities are decomposed into smaller services with clear inputs and outputs; behavior stays equivalent or intentionally improved; focused tests cover the extracted seams."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-001",
+        "GAME-002",
+        "GAME-005",
+        "SYNC-001"
+      ]
+    },
+    {
+      "id": "ARCH-004",
+      "title": "Modularize packet registration beyond the giant network bootstrap",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "BannerModNetworkBootstrap carries a large order-sensitive shared packet catalog, which is hard to audit for authority, maintain safely, or evolve by subsystem.",
+      "scope": [
+        "Packet registration must be split into modular catalogs or equivalent subsystem registrations with explicit ownership, stable IDs, and easier authority review."
+      ],
+      "acceptance": [
+        "Network registration is organized by subsystem with preserved wire compatibility where required; packet ownership and authority review become tractable; verification proves the active packet set still registers and works."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-001",
+        "AUTH-002",
+        "AUTH-003",
+        "AUTH-004",
+        "AUTH-005"
+      ]
+    },
+    {
+      "id": "ARCH-005",
+      "title": "Remove dead bootstrap and merge-residue runtime shims",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "BannerModLifecycle, WorkersSubsystem, update-checker stubs, and similar merge leftovers add noise and false seams without carrying live runtime value.",
+      "scope": [
+        "Dead bootstrap helpers, update-checker stubs, and obsolete merge shims must be removed or collapsed into the real runtime entrypoints, with any still-needed behavior kept in one obvious place."
+      ],
+      "acceptance": [
+        "Dead bootstrap or update-checker residue no longer exists in the active runtime tree unless it has a demonstrated live purpose; build and runtime entrypoints remain clear after cleanup."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Dead update-checker stubs and merge cleanup shims were removed from active runtime by merged PRs; 2) stale cleanup policy test no longer exists on master; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "ARCH-006",
+      "title": "Retire legacy worker current-area assignment state",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Live worker AI still carries legacy current-area style assignment state instead of treating validated-building records as the clear authoritative assignment source.",
+      "scope": [
+        "Worker assignment and work-goal selection must move toward one authoritative assignment model backed by validated-building or equivalent canonical records, removing redundant legacy state."
+      ],
+      "acceptance": [
+        "Worker assignment uses one authoritative source of truth; redundant legacy current-area state is removed or reduced to a derived cache; verification covers assignment, reload, and job execution behavior."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "GAME-005"
+      ]
+    },
+    {
+      "id": "ARCH-007",
+      "title": "Reduce global static runtime managers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Global statics for runtime managers and channels increase coupling, complicate testing, and hide lifecycle assumptions across claims, recruits, and client mirrors.",
+      "scope": [
+        "Runtime manager access should move behind clearer lifecycle-bound seams or service accessors, reducing mutable global state where it is not strictly required by Forge integration."
+      ],
+      "acceptance": [
+        "Critical runtime managers are no longer reached through unnecessary mutable globals; lifecycle ownership is explicit; representative tests or verification prove the new access seams behave correctly."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "ARCH-001",
+        "ARCH-002",
+        "ARCH-003",
+        "ARCH-004",
+        "ARCH-005",
+        "ARCH-006"
+      ]
+    },
+    {
+      "id": "TEST-001",
+      "title": "Add authority GameTests for transfer and admin packets",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Critical authority gaps were found in recruit transfer, group transfer, world-map teleport, and work-area owner packets, and those live packet paths currently lack focused scenario coverage.",
+      "scope": [
+        "Dedicated-server GameTests must exercise allowed and denied flows for recruit transfer, group transfer, teleport, and work-area owner packets using real sender identity and multiplayer authority conditions."
+      ],
+      "acceptance": [
+        "Each targeted packet has focused tests that fail on spoofed or unauthorized use and pass for legitimate authority; the tests run through the real server packet path, not only helper methods."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "AUTH-001",
+        "AUTH-002",
+        "AUTH-003",
+        "AUTH-004",
+        "AUTH-005"
+      ]
+    },
+    {
+      "id": "TEST-002",
+      "title": "Add end-to-end tests for formation command pipeline",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The saved-formation command path and queued-intent execution rules are central gameplay flows but currently lack clear end-to-end coverage for parity and persistence.",
+      "scope": [
+        "Tests must exercise packet to intent to dispatcher to execution behavior for formation-aware movement and related queued commands, including saved formation preferences and queue parity."
+      ],
+      "acceptance": [
+        "Formation-aware command flows are covered end to end for immediate and queued behavior; saved formation preferences are verified across reload or clone scenarios where intended; representative failure cases are covered."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "ARMY-001",
+        "ARMY-002",
+        "ARMY-003",
+        "AUTH-005"
+      ]
+    },
+    {
+      "id": "TEST-003",
+      "title": "Add GameTests for claim intent mutation and deletion",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Claim intent add, remove, and delete behavior is a core authority and world-state flow, yet current coverage is much thinner than the live gameplay risk warrants.",
+      "scope": [
+        "GameTests must cover successful and denied claim add, remove, and delete flows, currency charging, distance checks, Overworld-only rules, and persistence-visible outcomes."
+      ],
+      "acceptance": [
+        "Claim mutation flows are covered by real GameTests for both success and denial paths; tests observe resulting claim state rather than packet registration alone."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged GameTests cover successful and denied claim add/remove/delete flows; 2) tests observe claim manager/save-data-visible state, currency charging/no-charge denial, distance denial, and Overworld-only denial; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "TEST-004",
+      "title": "Add live packet-path tests for face, ranged-fire, and upkeep commands",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Face, ranged-fire, and upkeep command families were hardened previously but still lack strong live packet-path coverage compared with movement and stance commands.",
+      "scope": [
+        "Focused tests must drive the real server packet handlers for face, ranged-fire, and upkeep behavior, asserting authority, state mutation, and denial paths."
+      ],
+      "acceptance": [
+        "Face, ranged-fire, and upkeep packet flows each have real packet-path coverage for valid and invalid senders; tests assert resulting recruit behavior or rejection clearly."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged packet-path GameTests cover face, ranged-fire, and upkeep commands; 2) valid owner sender mutates recruit state and spoofed invalid sender is rejected/no-op; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "TEST-005",
+      "title": "Add regression coverage for critical UI gating and sync states",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Key player-facing regressions such as missing hotkeys, waiting-for-sync confusion, and hidden action gating currently slip through because almost no automated coverage targets those logic surfaces.",
+      "scope": [
+        "Introduce focused automated coverage for keybinding handling, visible action gating, waiting-for-sync state selection, and other non-render logic behind critical screens."
+      ],
+      "acceptance": [
+        "The worker hotkey, world-map gating, war sync-state selection, and similar critical UI logic surfaces are covered by automated tests or equivalent deterministic verification; regressions in those paths fail fast."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UX-001",
+        "UX-002",
+        "UX-003",
+        "UX-004",
+        "SYNC-001"
+      ]
+    },
+    {
+      "id": "TEST-006",
+      "title": "Replace count-only GameTest theater with meaningful quality gates",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The current scenario-count task measures quantity rather than scenario value and is not wired into the main verification path, which weakens confidence in a green build.",
+      "scope": [
+        "Verification gates must reward meaningful scenario coverage, wire the right checks into the main build path, and remove or demote count-only theater that does not reflect gameplay risk."
+      ],
+      "acceptance": [
+        "Check or equivalent verification fails when critical scenario coverage or focused high-risk suites are missing, not merely when an arbitrary count changes; the quality gate behavior is documented and exercised."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "TEST-001",
+        "TEST-002",
+        "TEST-003",
+        "TEST-004",
+        "TEST-005"
+      ]
+    },
+    {
+      "id": "DOC-003",
+      "title": "Reconcile status and backlog narrative with live runtime",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Current status and review docs describe several war and governance systems as still pending even though active code already ships parts of them, which distorts planning and review baselines.",
+      "scope": [
+        "Project status documentation and backlog metadata must be updated to reflect what is actually live, what is partial, and what remains missing, using code and verification as the source of truth."
+      ],
+      "acceptance": [
+        "STATUS and related planning narrative no longer contradict shipped runtime behavior for allies, occupations, revolts, siege AI, and related systems; verification cites the live code paths used to justify each status line."
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Verified with ctx status (clean baseline before edits), tools/backlog show DOC-003, ctx file/exact on docs/STATUS.md and .planning/STATE.md, ctx searches/files for live ally paths (WarAllyService, WarAllyCommands, MessageInviteAlly, MessageRespondAllyInvite, WarAlliesScreen), occupation/outcome/tax paths (WarOutcomeApplier, OccupationRuntime, OccupationTaxRuntime, WarOccupationTaxTicker, MessageResolveWarOutcome), revolt paths (WarRevoltScheduler, WarRevoltAutoResolver, ServerLevelObjectivePresenceProbe, RevoltRuntime), and siege AI paths (RecruitSiegeObjectiveAttackGoal, RecruitSiegeEscortGoal, SiegeObjectivePolicy, SiegeStandardBlock). Updated STATUS plus EN/RU politics docs so shipped systems are not listed as absent and remaining gaps are described as depth/coverage limits. tools/backlog validate passes."
+        }
+      ],
+      "evidence": [],
+      "dependencies": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "DOC-004",
+      "title": "Refresh player guides and almanac for shipped mechanics",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Root player guides and the almanac are stale on zone roles, revolt behavior, occupation tax, battle-window HUD, and other player-facing mechanics, which breaks the documented gameplay contract.",
+      "scope": [
+        "The English and Russian multiplayer guides plus the almanac must match current mechanics, HUD surfaces, and supported commands or UI, and stale nonexistent concepts must be removed."
+      ],
+      "acceptance": [
+        "Player guides and almanac match the live behavior for current settlement, war, revolt, occupation, HUD, and zone-role mechanics; nonexistent concepts are removed; verification cross-checks docs against active code and screens."
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [],
+      "dependencies": [
+        "UX-005",
+        "UX-006",
+        "GAME-003",
+        "GAME-004",
+        "GAME-005",
+        "SHIPS-003",
+        "MERCH-002",
+        "BOOM-004"
+      ]
+    },
+    {
+      "id": "PERF-009",
+      "title": "Adaptive runtime budgets under TPS pressure",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Several server and client subsystems already use static budgets or throttles, but a fixed budget still overcommits work when TPS drops and underutilizes headroom when the server recovers.",
+      "scope": [
+        "Introduce an adaptive budget policy that reacts to measured TPS or tick pressure for expensive systems such as async-path snapshot capture, formation-map snapshots, preview rendering, and settlement orchestration where appropriate. Add hysteresis and floor or ceiling rules so the budget does not oscillate violently."
+      ],
+      "acceptance": [
+        "When TPS or tick pressure drops below the configured threshold, targeted subsystems reduce their optional work budget instead of holding static throughput; when the server recovers, budgets rise gradually without oscillation; profiling or deterministic verification shows the adaptive policy changing runtime budgets under load."
+      ],
+      "dependencies": [
+        "PERF-003",
+        "PERF-006",
+        "PERF-007",
+        "PERF-008"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) AdaptiveRuntimeBudgets now reduces optional budgets under tick pressure and recovers gradually with hysteresis/floors/ceilings; 2) merged wiring covers async path, formation-map, settlement revalidation/orchestration optional work; 3) focused task verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "BOOM-001",
+      "title": "Make recruits fire Medieval Boomsticks projectiles and ammo",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Recruits can currently equip and use Medieval Boomsticks weapons, but the live attack path still falls back to arrow-style projectile behavior instead of using the mod's bullet or firearm semantics, which breaks both balance and fantasy.",
+      "scope": [
+        "Add an explicit compatibility path for Medieval Boomsticks ranged weapons so recruit attacks spawn the correct projectile type, consume the correct ammo, and respect the mod's firearm timing or reload semantics where exposed. Keep unsupported weapons on a safe fallback path instead of silently pretending bullets are arrows."
+      ],
+      "acceptance": [
+        "A recruit using a supported Medieval Boomsticks firearm fires the mod-correct projectile rather than an arrow; ammo consumption and no-ammo denial follow the firearm's intended rules; deterministic verification or focused tests cover at least one supported firearm and one unsupported edge case."
+      ],
+      "dependencies": [
+        "BOOM-002",
+        "BOOM-003",
+        "BOOM-004"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-001",
+      "title": "Add Small Ships compatibility layer for sea-trade carriers",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Sea trade cannot become a materially convincing gameplay loop if route execution remains abstract while the mod already targets visible logistics and the Small Ships mod provides suitable vessel entities.",
+      "scope": [
+        "Add an optional compatibility layer that detects supported Small Ships vessel types and exposes the operations BannerMod needs for trade carriers, such as spawn or reserve, assign route owner, move between ports, and survive absence of the mod without crashes."
+      ],
+      "acceptance": [
+        "BannerMod starts and runs without Small Ships installed; with Small Ships installed, supported vessel types are detected and exposed as candidate sea-trade carriers; deterministic verification proves the compat layer can create or bind at least one supported carrier safely."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Optional SmallShipsSeaTradeCompat is merged without compile-time Small Ships dependency; 2) candidate registry ids and reflective carrier binding are covered by focused deterministic tests; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "SHIPS-002",
+      "title": "Execute sea-trade routes through Small Ships cargo movement",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Even with ship detection, sea trade stays fake unless goods actually move through vessel-backed route execution between ports, stockpiles, or settlements.",
+      "scope": [
+        "Implement ship-backed sea-trade route execution with cargo loading, travel state, arrival, unloading, and failure handling tied into settlement logistics and player-visible route feedback. Reuse existing goods or stockpile systems where possible instead of creating a parallel economy."
+      ],
+      "acceptance": [
+        "At least one sea-trade route can load goods onto a Small Ships carrier, travel, unload at the destination, and update settlement or stockpile state visibly; route failure and missing-ship states are surfaced clearly; focused verification covers one end-to-end carrier trip."
+      ],
+      "dependencies": [
+        "SHIPS-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "MERCH-001",
+      "title": "Mount merchants and land couriers with faster transport",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Merchant and courier loops currently leave obvious movement efficiency on the table; equipping long-haul traders with horses or other supported transport is a direct way to improve both realism and logistics throughput.",
+      "scope": [
+        "Define when merchants or other long-haul civilian carriers may use horses or supported transport, how mounts are acquired or assigned, and how mounted travel integrates with existing route, inventory, and safety logic. Keep behavior server-authoritative and degrade safely when no mount is available."
+      ],
+      "acceptance": [
+        "An eligible merchant or courier can use an approved mount or transport for faster travel on supported routes; inventory, ownership, and dismount or failure behavior remain consistent; verification covers mounted and unmounted fallback behavior."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged courier transport lets eligible couriers mount approved server-side transport on supported long routes; 2) route ownership/inventory state, dismount, and no-mount fallback are covered; 3) docs/almanac landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "BOOM-002",
+      "title": "Map supported Medieval Boomsticks firearms and ammo for recruits",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Before recruit firearm combat can behave correctly, BannerMod needs an explicit compatibility map for which Medieval Boomsticks weapons are supported, which ammo they consume, and what fallback behavior is legal for unsupported items.",
+      "scope": [
+        "Detect supported Medieval Boomsticks firearm items and their ammo contracts through a compatibility layer or adapter usable by recruit combat code. Define safe fallback rules for unsupported or partially supported items instead of silently treating them like bows."
+      ],
+      "acceptance": [
+        "BannerMod can distinguish supported and unsupported Medieval Boomsticks firearms for recruit use; supported firearms resolve the correct ammo contract; unsupported weapons follow an explicit fallback or denial path rather than hidden bow semantics."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) MedievalBoomsticksCompat now distinguishes supported firearms and resolves cartridge ammo contracts; 2) unsupported musketmod items are denied from hidden bow semantics/fallback; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "BOOM-003",
+      "title": "Route recruit firearm attacks through Boomsticks projectile and reload semantics",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Medieval Boomsticks projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
+      "scope": [
+        "Integrate supported Medieval Boomsticks firearms into recruit attack execution so projectile spawn, reload cadence, ammo checks, and no-ammo denial use the mod's firearm rules where exposed. Preserve safe server-authoritative fallback for unsupported edge cases."
+      ],
+      "acceptance": [
+        "A recruit firing a supported Medieval Boomsticks firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
+      ],
+      "dependencies": [
+        "BOOM-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "BOOM-004",
+      "title": "Expose recruit firearm compatibility and ammo state in player feedback",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Players need to understand whether a recruit firearm is truly supported, has valid ammo, or is falling back, otherwise Boomsticks integration will look randomly broken even after the runtime path is fixed.",
+      "scope": [
+        "Add player-facing feedback for supported firearm status, missing ammo, and unsupported weapon fallback in the relevant recruit inventory, command, or combat feedback surfaces. Keep the messages localized and server-authoritative."
+      ],
+      "acceptance": [
+        "Players can tell when a recruit firearm is supported, missing ammo, or unsupported through in-game feedback rather than guesswork; visible text is localized; deterministic verification covers supported and unsupported loadout feedback."
+      ],
+      "dependencies": [
+        "BOOM-002",
+        "BOOM-003"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SHIPS-003",
+      "title": "Show sea-trade carrier route state and failure reasons",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Ship-backed sea trade will still feel opaque if players cannot see which carrier is assigned, whether it is loading, traveling, blocked, or failed, and why a route is stalled.",
+      "scope": [
+        "Add player-facing route state for ship-backed sea trade, including carrier assignment, cargo progress, transit state, and actionable failure reasons in the relevant settlement, logistics, or trade UI surfaces."
+      ],
+      "acceptance": [
+        "Players can inspect a ship-backed route and see carrier assignment, current phase, and failure or stall reason; route state updates when the carrier progresses or fails; localized verification covers at least one successful and one blocked route."
+      ],
+      "dependencies": [
+        "SHIPS-001",
+        "SHIPS-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "MERCH-002",
+      "title": "Expose mounted merchant and courier transport state and fallback reasons",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "If merchants or couriers gain mounts or other transport but the player cannot see when transport is active, unavailable, or lost, the realism gain turns into debugging noise.",
+      "scope": [
+        "Add player-facing visibility for merchant or courier transport assignment, mounted status, and fallback reasons when no mount or vehicle is available, preserving localized and server-authoritative feedback."
+      ],
+      "acceptance": [
+        "Players can tell whether a merchant or courier is mounted, why it is unmounted, and what fallback route behavior is active; feedback updates as transport is assigned or lost; verification covers mounted and fallback cases."
+      ],
+      "dependencies": [
+        "MERCH-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-006",
+      "title": "Materialize occupation control as visible world and authority state",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Occupation remains too ledger-like unless players can see which territory is under occupation and what control restrictions or obligations are active in moment-to-moment play.",
+      "scope": [
+        "Add visible occupation state and ongoing authority consequences to claims, settlements, or relevant world interactions so occupied control is not only a saved record. Keep the first implementation readable and deterministic rather than decorative."
+      ],
+      "acceptance": [
+        "Players can observe when a territory is occupied through world or UI state and can understand at least one concrete control consequence of occupation; verification covers occupation start, active occupied state, and clearing the state."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Occupied claim chunks are visible through localized HUD/War Room state; 2) server policy denies occupied owner manual control while occupier controls the claim and clearing removes state; 3) player docs landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "GAME-007",
+      "title": "Materialize tribute and tax obligations beyond hidden ledgers",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Tribute and tax systems remain abstract if their effects are only numeric ledger mutations with no player-readable obligation flow or visible consequence in settlements and war.",
+      "scope": [
+        "Surface tribute and tax obligations as ongoing gameplay-visible state, including what is owed, whether it is being paid, and what failure means for the affected side, while reusing existing treasury or stockpile systems where possible."
+      ],
+      "acceptance": [
+        "Players can see tribute or tax obligations and whether they are being satisfied; non-payment has a visible consequence path instead of only silent ledger drift; verification covers active obligation, payment, and failure states."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Governor UI shows localized collected/due tax obligation and satisfied/unpaid state; 2) heartbeat tests cover paid taxes and siege-blocked unpaid consequences; 3) player docs landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "GAME-008",
+      "title": "Materialize revolt pressure and aftermath for players",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "Revolt state is hard to reason about if it only lives in schedules and records; players need to see why revolt pressure exists, what objective state matters, and what aftermath follows success or failure.",
+      "scope": [
+        "Add player-readable revolt pressure, objective status, and aftermath feedback through War Room, claim or settlement state, or world cues so revolt progression is legible before and after resolution."
+      ],
+      "acceptance": [
+        "Players can see why a revolt is pending or progressing, what objective or pressure state matters, and what changed after success or failure; verification covers one pending and one resolved revolt flow."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) War Room revolt rows show pending pressure, due tick/objective chunk, and resolved success/failure aftermath; 2) revolt scheduler tests cover pending and resolved flows; 3) player docs landed and task verification passed before merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "UX-007",
+      "title": "Add War Room revolt interaction flow",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "A player-facing revolt system is still incomplete until War Room exposes the actual revolt interactions instead of only passive text or slash-command knowledge.",
+      "scope": [
+        "Add the relevant revolt interaction flow to War Room or the equivalent screen, including action availability, pending-state display, and server-authoritative feedback."
+      ],
+      "acceptance": [
+        "A player can inspect and perform the supported revolt interaction flow through UI rather than chat commands; availability and denial feedback are clear; verification covers one allowed and one denied revolt interaction."
+      ],
+      "dependencies": [
+        "GAME-008",
+        "AUTH-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-008",
+      "title": "Add UI for tribute and remaining war outcome selection",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "War outcome UX remains incomplete while tribute-related and remaining supported outcome choices are still partly command-shaped or admin-shaped instead of coherent in-screen interactions.",
+      "scope": [
+        "Extend War Room or outcome panels so supported tribute and remaining outcome choices are selectable in UI with clear authority, cooldown, and denial feedback."
+      ],
+      "acceptance": [
+        "Players can complete supported tribute or remaining outcome choices through UI with clear accepted and denied feedback; unsupported or admin-only paths remain visibly locked; verification covers at least one tribute or remaining outcome selection path."
+      ],
+      "dependencies": [
+        "GAME-007",
+        "AUTH-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-009",
+      "title": "Explain war authority and cooldown denials in-screen",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "War interactions are still too opaque if denial reasons only reach chat or are inferred from disabled controls without an explicit why, especially for leadership, co-leader, cooldown, and government-form restrictions.",
+      "scope": [
+        "Surface explicit in-screen denial reasons for war declaration, outcome, ally, and revolt actions where authority or cooldown rules block the player. Reuse existing server-authoritative policy text where possible."
+      ],
+      "acceptance": [
+        "Players can see why a war-related action is denied without relying only on chat spam; leadership, co-leader, cooldown, and government-form denials are distinguishable; verification covers representative denial reasons across the main war actions."
+      ],
+      "dependencies": [
+        "AUTH-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PROC-001",
+      "title": "Add task worktree and branch bootstrap helper",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "The process now requires one worktree and one feature branch per parallel task, but there is no dedicated helper to create dependency-aware task workspaces consistently, which invites human error.",
+      "scope": [
+        "Add a tooling path that bootstraps a task-specific worktree and feature branch from the correct dependency-aware base branch, with clear handling for independent tasks versus dependency chains."
+      ],
+      "acceptance": [
+        "A contributor can create a task worktree and feature branch from the correct base using one documented helper flow; dependency chains branch from the updated parent branch tip rather than a stale base; verification covers an independent task and a dependency-chain task."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) tools/task-worktree helper and docs landed for independent and dependency-chain task worktrees; 2) dry-run and real temporary worktree checks covered both flows; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PROC-002",
+      "title": "Add backlog helper for finish-or-split parent task rewiring",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "The process now requires executors to either finish a task or split it into child tasks immediately, but that parent or child rewiring flow is still manual and easy to do inconsistently.",
+      "scope": [
+        "Add a helper flow or command for creating child tasks and rewiring the parent dependencies and progress note when a large task must be split during execution."
+      ],
+      "acceptance": [
+        "A contributor can split an oversized task into concrete child tasks and rewire the parent dependency graph through one documented helper flow; the parent progress note captures what landed and what moved into children; verification covers one sample split workflow."
+      ],
+      "dependencies": [
+        "PROC-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PERF-010",
+      "title": "Add recruit render profiling counters",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PERF-002 needs profiling evidence before safe crowd-render optimization decisions.",
+      "scope": [
+        "Instrument recruit rendering with bounded counters for base model, layers, nameplates, texture or state switches, and animation or pose churn where practical."
+      ],
+      "acceptance": [
+        "Recruit render profiling output exposes recruit.render counters that distinguish the major render cost buckets needed by PERF-002."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Merged recruit.render counters cover renderer totals, base estimate, layers, nameplates, texture/state switches, and pose churn; 2) instrumentation is bounded and client-local; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PERF-011",
+      "title": "Implement measured distant recruit crowd renderer cuts",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Large recruit crowds need optimization backed by PERF-010 evidence without harming close-range readability.",
+      "scope": [
+        "Use PERF-010 profiling evidence to skip or simplify safe distant crowd render work such as non-selected nameplates, held items, armor, overlays, or simplified model paths."
+      ],
+      "acceptance": [
+        "A before-and-after profiling run shows improved large-crowd recruit rendering while close-range selected recruits remain readable."
+      ],
+      "dependencies": [
+        "PERF-010"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-002",
+      "title": "Prepare NeoForge 1.21.1 build baseline",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-001 must start with a buildable platform baseline before API migration can be verified.",
+      "scope": [
+        "Create the NeoForge port branch baseline by updating Gradle, Java/toolchain settings, mod metadata, and dependency declarations for NeoForge 1.21.1."
+      ],
+      "acceptance": [
+        "The port branch resolves NeoForge 1.21.1 dependencies and reaches Java compilation errors only from source API migration, not build metadata or dependency setup."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) NeoForge 1.21.1 build baseline is merged on master; 2) task verification reached Java source API migration errors after dependency resolution, not build metadata or dependency setup; 3) current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-003",
+      "title": "Migrate BannerMod source APIs to NeoForge 1.21.1",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "Forge 1.20.1 APIs must be migrated before the port can compile or smoke run.",
+      "scope": [
+        "Migrate registries, networking, events, item data components or NBT usages, and dependency APIs touched by root src for NeoForge 1.21.1."
+      ],
+      "acceptance": [
+        "Root source compiles against NeoForge 1.21.1 with old Forge 1.20.1 assumptions removed or documented."
+      ],
+      "dependencies": [
+        "PORT-009"
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Attempted direct verification on feature/port-003: ctx log -- ./gradlew compileJava failed with 1130 compile errors. First clusters are removed or renamed Forge event/overlay APIs, entity inventory/synched-data/saved-data APIs, registry/menu/spawn egg/item component APIs, and networking payload assumptions. Split remaining PORT-003 source migration into dependency chain PORT-005 -> PORT-006 -> PORT-007 -> PORT-008 -> PORT-009; PORT-003 now waits for PORT-009 to prove root compileJava."
+        }
+      ],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-004",
+      "title": "Verify NeoForge port tests and smoke run",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-001 acceptance requires tests and in-game smoke after source migration.",
+      "scope": [
+        "Run compileJava, tests, and an in-game smoke on the NeoForge 1.21.1 port branch; fix or document remaining platform-only issues."
+      ],
+      "acceptance": [
+        "compileJava, tests, and in-game smoke pass on the NeoForge 1.21.1 port branch."
+      ],
+      "dependencies": [
+        "PORT-003"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "ARMY-004",
+      "title": "Reject unsupported queued command intents before enqueue",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "ARMY-001 requires unsupported queue variants to fail visibly instead of being accepted and ignored.",
+      "scope": [
+        "Audit CommandIntent enqueue paths and add explicit rejection for any intent kind that the queue runtime cannot execute yet."
+      ],
+      "acceptance": [
+        "Every unsupported queue intent is rejected before enqueue with a focused test proving it is not silently accepted."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Unsupported queued intents are rejected before enqueue in dispatcher/runtime; 2) focused queue tests prove unsupported queued intents are not silently accepted; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "ARMY-005",
+      "title": "Add queued intent parity for remaining command variants",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Queued command behavior must match immediate command behavior for all supported army command variants.",
+      "scope": [
+        "Implement or verify queue execution parity for movement, face, attack, aggro, stance, strategic fire, and siege-machine flows."
+      ],
+      "acceptance": [
+        "Focused tests prove queue parity with immediate behavior for movement, face, attack, aggro, stance, strategic fire, and siege-machine command flows."
+      ],
+      "dependencies": [
+        "ARMY-004"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "AUTH-006",
+      "title": "Define canonical recruit command authority roles",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "AUTH-005 needs one documented authority model before packet and UI enforcement can be made consistent.",
+      "scope": [
+        "Document in code the supported owner, teammate, admin, and nation-level command authority roles, and remove or mark dead unsupported nation paths."
+      ],
+      "acceptance": [
+        "Command authority role semantics are defined in one code location and dead nation-authority branches are either removed or explicitly unsupported."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) CommandHierarchy is the canonical authority role source for owner, teammate, and admin semantics; 2) dead nation command role branches are removed or explicitly unsupported until server-authoritative nation membership exists; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "AUTH-007",
+      "title": "Apply command authority roles across entry points",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "AUTH-005 requires the canonical authority model to be enforced consistently, not only documented.",
+      "scope": [
+        "Apply AUTH-006 authority semantics across recruit command packets and related UI affordances."
+      ],
+      "acceptance": [
+        "Owner, teammate, admin, and supported or explicitly unsupported nation authority cases behave consistently across command entry points."
+      ],
+      "dependencies": [
+        "AUTH-006"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "AUTH-008",
+      "title": "Test command authority hierarchy",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "AUTH-005 closure requires verification for owner, teammate, and nation-level command cases.",
+      "scope": [
+        "Add focused tests covering owner, teammate, admin override, and nation-level supported or denied command authority flows."
+      ],
+      "acceptance": [
+        "Focused verification covers owner, teammate, admin override, and nation-level command authority cases."
+      ],
+      "dependencies": [
+        "AUTH-007"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SYNC-002",
+      "title": "Define settlement client snapshot contract",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "SYNC-001 needs a stable server-to-client data contract before UI mirrors can be implemented.",
+      "scope": [
+        "Define the settlement/governor snapshot payload, versioning or stale markers, login/open-screen refresh triggers, and mutation refresh events."
+      ],
+      "acceptance": [
+        "Settlement snapshot contract covers login, screen open, mutation refresh, loading state, and stale-state semantics in code-level documentation or types."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SYNC-003",
+      "title": "Implement settlement client mirror and screen loading states",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Player-facing settlement UIs need coherent mirrored state instead of ad hoc placeholder requests.",
+      "scope": [
+        "Implement the client mirror for SYNC-002 snapshots and update relevant settlement/governor screens to render loading, stale, empty, and fresh states from it."
+      ],
+      "acceptance": [
+        "Relevant settlement UIs render from the synced mirror and show explicit loading or stale states without reopening screens."
+      ],
+      "dependencies": [
+        "SYNC-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SYNC-004",
+      "title": "Verify settlement snapshot refresh paths",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "SYNC-001 requires proof that login, open-screen, and mutation refresh paths update the client mirror.",
+      "scope": [
+        "Add focused verification for settlement snapshot delivery on login, screen open, and server-side mutation refresh."
+      ],
+      "acceptance": [
+        "Focused tests or GameTests prove login, open-screen, and mutation refresh paths update settlement client snapshots."
+      ],
+      "dependencies": [
+        "SYNC-003"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-010",
+      "title": "Resolve world-map claim-area affordance",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "UX-002 requires every visible world-map action to be functional or intentionally absent.",
+      "scope": [
+        "Audit world-map claim-area controls and either implement the claim-area flow end-to-end or remove/disable the visible affordance with a clear reason."
+      ],
+      "acceptance": [
+        "The world map no longer exposes a broken claim-area action; the action is either functional or intentionally absent/disabled with localized explanation."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-011",
+      "title": "Expose route and waypoint discovery in world-map UI",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Players need in-game affordances and explanations for route and waypoint flows without relying on external docs.",
+      "scope": [
+        "Add Minecraft-native route and waypoint explanations, enabled/disabled reasons, and visible entry points in the world-map flow."
+      ],
+      "acceptance": [
+        "Players can discover route and waypoint creation/use from localized in-game world-map affordances and explanations."
+      ],
+      "dependencies": [
+        "UX-010"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UX-012",
+      "title": "Verify and document world-map claim route waypoint flows",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "UX-002 closure requires verification and guide coverage for player-facing map flows.",
+      "scope": [
+        "Verify claim-area, waypoint, and route interactions and update MULTIPLAYER_GUIDE_RU.md, MULTIPLAYER_GUIDE_EN.md, and docs/BANNERMOD_ALMANAC.html if the player-facing flow changes."
+      ],
+      "acceptance": [
+        "Verification covers claim-area, waypoint, and route interactions; required guide and almanac updates match the shipped world-map behavior."
+      ],
+      "dependencies": [
+        "UX-011"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-009",
+      "title": "Bind settlement projects to real build areas",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "GAME-001 needs project records to target executable world construction instead of noop resolver placeholders.",
+      "scope": [
+        "Replace noop build-area resolution for settlement projects with binding to real build areas or an equivalent executable world-work target."
+      ],
+      "acceptance": [
+        "Creating a settlement project produces a real build-area or equivalent executable world target rather than a noop placeholder."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-010",
+      "title": "Drive project progress from actual build execution",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Settlement project progress must reflect real construction work, not placeholder record state.",
+      "scope": [
+        "Connect project assignment and progress updates to actual worker/build execution events and completion state."
+      ],
+      "acceptance": [
+        "Project progress advances and completes from real build execution events, with focused verification for creation, assignment, and completion."
+      ],
+      "dependencies": [
+        "GAME-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-011",
+      "title": "Add in-world claim boundary and authority cues",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "GAME-004 needs protected territory to be legible from normal world play, not only the map screen.",
+      "scope": [
+        "Add restrained in-world boundary or authority feedback for claims, including ownership cues that are visible during common play without cluttering HUD or world visuals."
+      ],
+      "acceptance": [
+        "Players can perceive friendly, hostile, and unclaimed territory state from normal world play through localized cues that avoid HUD/chat overlap."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-012",
+      "title": "Add protected-space interaction feedback",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "GAME-004 requires common claim-protected interactions to explain why actions are allowed or denied.",
+      "scope": [
+        "Add clear in-world or localized feedback for common protected-space interactions in friendly, hostile, and unclaimed territory."
+      ],
+      "acceptance": [
+        "Focused verification covers friendly, hostile, and unclaimed interaction feedback for protected-space actions."
+      ],
+      "dependencies": [
+        "GAME-011"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-013",
+      "title": "Define unified settlement bootstrap lifecycle",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "GAME-005 needs one explicit lifecycle before manual and automatic founding paths can converge safely.",
+      "scope": [
+        "Define the shared claim-to-settlement lifecycle for starter structures, workers, citizens, profession vacancies, and formal settlement records, including auto-bootstrap versus manual founding rules."
+      ],
+      "acceptance": [
+        "Manual and automatic bootstrap rules are defined in code-level documentation or types with one canonical lifecycle and no contradictory state assumptions."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "GAME-014",
+      "title": "Converge manual and automatic settlement bootstrap paths",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "Surveyor founding and automatic claim worker bootstrap should produce the same settlement lifecycle and records.",
+      "scope": [
+        "Update manual and automatic bootstrap entry paths to create or reconcile the same settlement records, starter structures, workers, citizens, and profession state."
+      ],
+      "acceptance": [
+        "Focused verification covers both manual and automatic entry paths and shows they converge on the same settlement lifecycle and data model."
+      ],
+      "dependencies": [
+        "GAME-013"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-005",
+      "title": "Migrate NeoForge event and overlay APIs",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile is blocked by removed or renamed Forge event and client overlay APIs across root src.",
+      "scope": [
+        "Replace Forge event imports, event-bus annotations, and client HUD overlay hooks with NeoForge 1.21.1 APIs used by the active source tree."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing Forge event, EventBusSubscriber, or RenderGuiOverlayEvent overlay API symbols."
+      ],
+      "dependencies": [
+        "PORT-012"
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Urgent PORT execution split after verification attempt: compileJava could not reach Java sources because build.gradle still references ForgeGradle fg.deobf. PORT-005 now waits on PORT-010 buildscript cleanup, PORT-011 event/eventbus migration, and PORT-012 HUD overlay migration; after those land, PORT-005 can close against the original event/overlay acceptance."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) PORT-010 removed fg.deobf so compileJava reaches Java source compilation; 2) PORT-011 migrated active Forge event/eventbus/EventBusSubscriber usages and ctx search found zero old Forge event/eventbus/EventBusSubscriber patterns; 3) PORT-012 migrated active HUD overlay hooks and ctx search found zero RenderGuiOverlayEvent, RegisterGuiOverlaysEvent, VanillaGuiOverlay, IGuiOverlay, or ForgeGui symbols. compileJava still fails on later non-PORT-005 Forge common/network/distmarker/FML clusters."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-006",
+      "title": "Migrate entity inventory and saved-data APIs",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile is blocked by Minecraft 1.21.1 entity equipment, synched data, container, and saved-data API changes.",
+      "scope": [
+        "Update recruit, citizen, and worker entity inventory, equipment, synched-data, damage, and saved-data usages to the 1.21.1-compatible APIs without changing gameplay semantics."
+      ],
+      "acceptance": [
+        "compileJava no longer reports entity inventory, equipment, synched-data, item damage, SimpleContainer internals, or saved-data provider API errors."
+      ],
+      "dependencies": [
+        "PORT-013"
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Urgent PORT ordering update: after PORT-005 closure, compileJava is still masked by Forge common/distmarker/FML bootstrap imports before the entity inventory and saved-data acceptance can be observed. PORT-006 now waits for PORT-013 to clear that front blocker."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Migrated recruit/citizen/worker SynchedEntityData builder APIs, entity inventory ItemStack serialization/comparison, direct custom inventory iteration, item handler wrapper, and military/war/governance/settlement SavedData factories with HolderLookup.Provider load/save signatures; 2) ctx search found zero isSameItemSameTags matches and remaining .items matches are false positives, vanilla Player Inventory GUI access, metric strings, or non-inventory fields; 3) compileJava still fails on out-of-scope mixin mapping, Forge network/bootstrap, and registry migration clusters, with no PORT-006 inventory/saved-data provider API errors visible in the summary."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-007",
+      "title": "Migrate registries, menus, spawn eggs, and item components",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile is blocked by registry, menu, spawn egg, and item NBT/component API differences after the NeoForge 1.21.1 move.",
+      "scope": [
+        "Update active root registrations and item data usage for menus, screens, spawn eggs, placement items, and related registries to NeoForge 1.21.1-compatible APIs."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing registry, menu screen, spawn egg, or item NBT/component API symbols."
+      ],
+      "dependencies": [
+        "PORT-006"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Migrated active registries, menu holders, spawn egg entity data, almanac written-book data, wand/surveyor custom item data, and ForgeRegistries lookup call sites to NeoForge/vanilla 1.21.1 APIs; 2) targeted searches found zero legacy ForgeRegistries, net.minecraftforge.registries, RegistryObject, IForgeMenuType, ForgeSpawnEggItem, getOrCreateTag, hasTag, or item-stack setTag usages in active source, with remaining getTag matches limited to world-map menu entry labels; 3) compileJava still fails on out-of-scope mixin remap and PORT-008 net.minecraftforge.network/NetworkEvent/SimpleChannel errors."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-008",
+      "title": "Migrate network packet payload APIs",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile depends on replacing legacy Forge networking assumptions with NeoForge 1.21.1 payload registration and handling APIs.",
+      "scope": [
+        "Update root network registration, message encoding/decoding, sender/context handling, and client/server dispatch call sites to NeoForge 1.21.1-compatible packet payload APIs."
+      ],
+      "acceptance": [
+        "compileJava no longer reports networking API errors and at least one focused server-authoritative command packet path is code-inspected through the new payload handler."
+      ],
+      "dependencies": [
+        "PORT-007"
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Follow-up correction required: PORT-008 landed functional NeoForge payload registration but retained local net.minecraftforge.network compatibility shims. PORT-019 was added to remove those shims and migrate call sites to BannerMod-owned or NeoForge APIs before final compile closure."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Registered root packets via RegisterPayloadHandlersEvent/PayloadRegistrar and BannerModMessage payload adapter; 2) compileJava no longer reports net.minecraftforge.network, NetworkEvent, SimpleChannel, or PacketDistributor missing-package errors, and remaining failures are mixin remap, TickEvent/event API, pathfinding BlockPathTypes, and DistExecutor clusters; 3) inspected MessageMovement C2S path through IPayloadContext -> context wrapper -> CommandIntent.Movement -> CommandIntentDispatcher.dispatch, with sender authority still resolved from the server context and mismatched client UUIDs rejected by RecruitCommandTargetResolver."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-009",
+      "title": "Close remaining NeoForge source compile blockers",
+      "status": "in_progress",
+      "updated": "2026-04-28",
+      "why": "After the major API clusters are migrated, PORT-003 still needs a final pass to remove residual Forge 1.20.1 source assumptions.",
+      "scope": [
+        "Fix or document remaining root source compile blockers after PORT-005 through PORT-008, keeping changes limited to active src and build metadata required for NeoForge 1.21.1 compilation."
+      ],
+      "acceptance": [
+        "Root ./gradlew compileJava passes on the NeoForge 1.21.1 branch, with any intentionally retained compatibility assumptions documented."
+      ],
+      "dependencies": [
+        "PORT-018"
+      ],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Initial PORT-009 attempt updated TickEvent split, LivingIncomingDamageEvent replacement, PathType rename, removed DistExecutor dependency, and marked unresolved named mixin targets remap=false in a scratch worktree, but compileJava still exposed about 897 masked errors. Split remaining closure into PORT-014 event APIs, PORT-015 military inventory/equipment, PORT-016 projectile/ranged combat, PORT-017 identifier/profile/registry access, and PORT-018 final compile sweep. Scratch changes were not merged."
+        }
+      ],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-010",
+      "title": "Remove NeoForge buildscript fg.deobf blocker",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-005 cannot even reach Java compilation while build.gradle still uses ForgeGradle fg.deobf dependency helpers.",
+      "scope": [
+        "Replace or remove root build.gradle fg.deobf usages with NeoForge-compatible dependency declarations while preserving declared optional integrations where possible."
+      ],
+      "acceptance": [
+        "./gradlew compileJava reaches Java compilation instead of failing during Gradle evaluation on unknown property fg."
+      ],
+      "dependencies": [
+        "PORT-002"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "./gradlew compileJava via tools/ai-context-proxy/bin/ctx log now reaches :compileJava and fails during Java source compilation rather than Gradle evaluation. First Java source clusters are remaining Forge API imports under entity/military, bootstrap/BannerModMain, entity/citizen, and entity/civilian. build.gradle no longer contains fg.deobf usages."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-011",
+      "title": "Port NeoForge event bus imports and annotations",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-005 compile is blocked by Forge event, eventbus, and EventBusSubscriber symbols after moving to NeoForge 1.21.1.",
+      "scope": [
+        "Migrate active src Forge event imports, eventbus annotations, and mod event subscriber usages to NeoForge 1.21.1 equivalents without changing event behavior."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing Forge event, eventbus, or EventBusSubscriber symbols."
+      ],
+      "dependencies": [
+        "PORT-010"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "compileJava still fails on non-event Forge/common/network/distmarker/FML lifecycle clusters, but active src/main/java no longer contains old Forge event/eventbus/EventBusSubscriber usages; filtered compile output shows no missing Forge event/eventbus/EventBusSubscriber errors, only EventBusSubscriber.Bus deprecation warnings."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-012",
+      "title": "Port NeoForge client HUD overlay hooks",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-005 compile is blocked by removed Forge HUD overlay APIs such as RenderGuiOverlayEvent and VanillaGuiOverlay.",
+      "scope": [
+        "Replace active client HUD overlay registration/render hooks with NeoForge 1.21.1 GUI event or layer APIs while preserving existing overlay visibility and non-overlap behavior."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing RenderGuiOverlayEvent, VanillaGuiOverlay, RegisterGuiOverlaysEvent, or related overlay API symbols."
+      ],
+      "dependencies": [
+        "PORT-011"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Ported active client HUD overlay hooks to NeoForge 1.21.1 GUI layer/event APIs. Verified global source search has zero RenderGuiOverlayEvent, VanillaGuiOverlay, RegisterGuiOverlaysEvent, IGuiOverlay, or ForgeGui matches; compileJava still fails only on unrelated broad Forge package migration clusters. Review also fixed ClaimOverlayManager to render only after HOTBAR layer and used ResourceLocation.fromNamespaceAndPath for the layer id."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-013",
+      "title": "Migrate NeoForge common, dist, and bootstrap APIs",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "After PORT-005, compileJava is blocked before entity inventory migration by remaining Forge common helpers, dist markers, FML lifecycle/config imports, and bootstrap wiring.",
+      "scope": [
+        "Replace active root Forge common helper imports, dist marker annotations, FML lifecycle/config imports, and central bootstrap event-bus wiring with NeoForge 1.21.1 equivalents while leaving payload networking and registry API rewrites to their dedicated PORT tasks."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing net.minecraftforge.common, net.minecraftforge.api.distmarker, net.minecraftforge.fml lifecycle/config/javafmlmod, or bootstrap-only Forge symbols; remaining errors are ready for PORT-006 inventory/saved-data, PORT-007 registry/components, or PORT-008 network payload work."
+      ],
+      "dependencies": [
+        "PORT-005"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Targeted source searches for net.minecraftforge.common, net.minecraftforge.api.distmarker, and net.minecraftforge.fml returned zero matches. compileJava still reaches Java compilation and now fails on remaining PORT-008 network/SimpleChannel payload APIs, PORT-007 registry/component APIs, PORT-006 inventory/capability APIs, plus BlockPathTypes pathfinding rename outside this slice."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-014",
+      "title": "Finish NeoForge event API migration",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile is still blocked by remaining 1.21.1 event API changes after the initial eventbus and overlay port.",
+      "scope": [
+        "Update remaining active source event handlers for split TickEvent classes, living tick/damage replacements, patrol spawn events, shield/quaff hooks, and related handler signatures."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing TickEvent, LivingEvent/LivingTickEvent, LivingHurtEvent/LivingAttackEvent, patrol spawn, shield, or quaff event API symbols."
+      ],
+      "dependencies": [
+        "PORT-008"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "ctx log -- ./gradlew compileJava no longer reports missing TickEvent, LivingEvent/LivingTickEvent, LivingHurtEvent/LivingAttackEvent, patrol spawn SpawnPlacements.Type, shield ShieldBlockEvent, or quaff PotionUtils event/API symbols. compileJava still fails on out-of-scope mixin remap targets, BlockPathTypes pathing rename, and DistExecutor removal."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-015",
+      "title": "Port remaining military inventory and equipment APIs",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile exposes additional inventory/equipment API changes beyond the first PORT-006 migration.",
+      "scope": [
+        "Fix remaining military inventory, equipment slot, private Mob item list, item durability, and data component compile errors in active source."
+      ],
+      "acceptance": [
+        "compileJava no longer reports inventory/equipment access, private Mob item list, item durability, or related data component errors."
+      ],
+      "dependencies": [
+        "PORT-014"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Ported remaining military inventory/equipment API usage: removed direct Mob armorItems/handItems access, switched NBT item restore to registry-aware ItemStack.parseOptional, replaced old sword damage comparisons with stack attribute modifier damage, and converted remaining military setDamageValue durability handling to hurtAndBreak/isDamageableItem. Targeted searches show no direct .armorItems/.handItems access, no military setDamageValue calls, and no old sword getDamage usage; remaining getDamage matches are Small Ships compatibility calls. compileJava still fails on out-of-scope PORT-018 mixin/pathing/DistExecutor blockers."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-016",
+      "title": "Port projectile and ranged combat APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile exposes projectile and ranged combat API changes after earlier port blockers are removed.",
+      "scope": [
+        "Update bowman/projectile creation, arrow state access, custom arrow hooks, ranged combat presentation, and related military projectile code to NeoForge 1.21.1 APIs."
+      ],
+      "acceptance": [
+        "compileJava no longer reports projectile, arrow, or ranged combat API errors."
+      ],
+      "dependencies": [
+        "PORT-015"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-017",
+      "title": "Port identifier profile and registry access APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile exposes ResourceLocation, GameProfile, and registry access API changes that are distinct from registry object migration.",
+      "scope": [
+        "Replace private ResourceLocation constructors, update GameProfile/profile utility usages, and fix CitizenCore or related registryAccess contracts exposed by the port."
+      ],
+      "acceptance": [
+        "compileJava no longer reports ResourceLocation constructor, GameProfile/profile, or CitizenCore registry access API errors."
+      ],
+      "dependencies": [
+        "PORT-016"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-018",
+      "title": "Final NeoForge compile sweep",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "After the known residual PORT-009 clusters land, a final compile pass is required to close masked source errors and prove the port compiles.",
+      "scope": [
+        "Fix remaining root source compile errors after PORT-014 through PORT-017, documenting any intentionally retained temporary compatibility assumptions."
+      ],
+      "acceptance": [
+        "Root ./gradlew compileJava passes on the NeoForge 1.21.1 branch."
+      ],
+      "dependencies": [
+        "PORT-017",
+        "PORT-019",
+        "PORT-020",
+        "PORT-021"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-019",
+      "title": "Remove Forge network compatibility shims",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "PORT-008 incorrectly hid networking migration behind local net.minecraftforge.network compatibility classes, leaving Forge namespace in active source.",
+      "scope": [
+        "Delete local net.minecraftforge.network shim classes and migrate imports/call sites to BannerMod-owned adapters or direct NeoForge networking APIs without retaining Forge package names."
+      ],
+      "acceptance": [
+        "Active src contains no net.minecraftforge.network imports or package declarations; packet sending, screen opening, and server sender context still route through NeoForge payload APIs; focused inspection covers MessageMovement authority flow."
+      ],
+      "dependencies": [
+        "PORT-008"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Removed active net.minecraftforge.network shim namespace and migrated call sites to com.talhanation.bannermod.network.compat adapters backed by NeoForge payload APIs. Verified ctx search 'net\\.minecraftforge\\.network|package net\\.minecraftforge\\.network' src/main/java returns 0. compileJava reports only existing mixin/pathfinding/DistExecutor blockers and no Forge network namespace errors. MessageMovement remains server-context driven and routes through RecruitCommandTargetResolver, CommandIntentDispatcher, and CommandEvents.onMovementCommand."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-020",
+      "title": "Remove obsolete DistExecutor usage",
+      "status": "done",
+      "updated": "2026-04-28",
+      "why": "NeoForge 1.21.1 no longer provides the old DistExecutor path used by BuildingPlacementWandItem, and this blocks compile after the main API migrations.",
+      "scope": [
+        "Replace the remaining DistExecutor client-side call with a NeoForge 1.21.1 side-safe pattern based on FMLEnvironment.dist or equivalent, without introducing compatibility shims."
+      ],
+      "acceptance": [
+        "Active src contains no DistExecutor import or usage, and compileJava no longer reports DistExecutor missing-symbol errors."
+      ],
+      "dependencies": [
+        "PORT-019"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Removed the obsolete DistExecutor import and unsafeRunWhenOn call from BuildingPlacementWandItem. The wand already gates the client screen open behind level.isClientSide, matching the NeoForge 1.21.1 side guidance that uses Level#isClientSide for logical-side checks. ctx search DistExecutor src/main/java returns 0. compileJava no longer reports DistExecutor missing-symbol errors; remaining failures are mixin remap and BlockPathTypes pathing blockers."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-021",
+      "title": "Remove remaining Forge server lifecycle hooks",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT audit found active source still referencing net.minecraftforge.server.ServerLifecycleHooks after the NeoForge migration.",
+      "scope": [
+        "Replace remaining Forge ServerLifecycleHooks references with the NeoForge 1.21.1 server lifecycle hook API, without compatibility shims."
+      ],
+      "acceptance": [
+        "Active src contains no net.minecraftforge.* references; compileJava no longer reports ServerLifecycleHooks package errors."
+      ],
+      "dependencies": [
+        "PORT-020"
       ],
       "progress": [],
       "verification": [],

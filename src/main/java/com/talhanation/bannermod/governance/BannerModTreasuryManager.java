@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.governance;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -15,14 +16,15 @@ import java.util.UUID;
 
 public class BannerModTreasuryManager extends SavedData {
     private static final String FILE_ID = "bannermodTreasury";
+    private static final SavedData.Factory<BannerModTreasuryManager> FACTORY = new SavedData.Factory<>(BannerModTreasuryManager::new, BannerModTreasuryManager::load);
 
     private final Map<UUID, BannerModTreasuryLedgerSnapshot> ledgers = new LinkedHashMap<>();
 
     public static BannerModTreasuryManager get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(BannerModTreasuryManager::load, BannerModTreasuryManager::new, FILE_ID);
+        return level.getDataStorage().computeIfAbsent(FACTORY, FILE_ID);
     }
 
-    public static BannerModTreasuryManager load(CompoundTag tag) {
+    public static BannerModTreasuryManager load(CompoundTag tag, HolderLookup.Provider registries) {
         BannerModTreasuryManager manager = new BannerModTreasuryManager();
         if (tag.contains("Ledgers", Tag.TAG_LIST)) {
             ListTag ledgers = tag.getList("Ledgers", Tag.TAG_COMPOUND);
@@ -35,7 +37,7 @@ public class BannerModTreasuryManager extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (BannerModTreasuryLedgerSnapshot ledger : this.ledgers.values()) {
             list.add(ledger.toTag());

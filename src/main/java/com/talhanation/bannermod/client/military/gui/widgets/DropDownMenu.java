@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
@@ -30,7 +31,7 @@ public class DropDownMenu<T> extends AbstractWidget {
             List<T> options, Function<T, String> optionTextGetter,
             Consumer<T> onSelect
     ) {
-        super(x, y, width, height, Component.literal(""));
+        super(x, y, width, height, Component.translatable("gui.bannermod.widget.dropdown"));
         this.selectedOption = selectedOption;
         this.options = options;
         this.onSelect = onSelect;
@@ -134,8 +135,12 @@ public class DropDownMenu<T> extends AbstractWidget {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput p_259858_) {
-
+    protected void updateWidgetNarration(NarrationElementOutput narration) {
+        narration.add(NarratedElementType.TITLE, Component.translatable(
+                "gui.bannermod.widget.dropdown.narration", getSelectedText(), options.size()));
+        if (isOpen) {
+            narration.add(NarratedElementType.USAGE, Component.translatable("gui.bannermod.widget.dropdown.open"));
+        }
     }
 
     public boolean isOpen() { return isOpen; }

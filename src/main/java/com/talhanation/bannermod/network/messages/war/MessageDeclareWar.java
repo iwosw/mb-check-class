@@ -8,20 +8,20 @@ import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.runtime.WarDeclarationService;
 import com.talhanation.bannermod.war.runtime.WarGoalType;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public class MessageDeclareWar implements Message<MessageDeclareWar> {
+public class MessageDeclareWar implements BannerModMessage<MessageDeclareWar> {
     private UUID attackerId;
     private UUID defenderId;
     private byte goalOrdinal;
@@ -38,12 +38,12 @@ public class MessageDeclareWar implements Message<MessageDeclareWar> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null || this.attackerId == null || this.defenderId == null) {
             return;
@@ -70,7 +70,7 @@ public class MessageDeclareWar implements Message<MessageDeclareWar> {
                     WarRuntimeContext.allyInvites(level).all(),
                     WarRuntimeContext.occupations(level).all(),
                     WarRuntimeContext.revolts(level).all());
-            BannerModMain.SIMPLE_CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientUpdateWarState(payload));
         }
     }

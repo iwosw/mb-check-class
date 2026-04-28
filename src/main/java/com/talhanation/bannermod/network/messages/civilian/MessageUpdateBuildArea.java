@@ -1,19 +1,24 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.UUID;
-public class MessageUpdateBuildArea implements Message<MessageUpdateBuildArea> {
+public class MessageUpdateBuildArea implements BannerModMessage<MessageUpdateBuildArea> {
+    private static final int MIN_SIZE = 3;
+    private static final int MAX_SIZE = 32;
 
     public UUID uuid;
     public CompoundTag structureNBT;
@@ -34,11 +39,11 @@ public class MessageUpdateBuildArea implements Message<MessageUpdateBuildArea> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         ServerPlayer player = context.getSender();
         if(player == null) return;
 
@@ -52,8 +57,42 @@ public class MessageUpdateBuildArea implements Message<MessageUpdateBuildArea> {
             return;
         }
 
+        String denial = validationDenial();
+        if (denial != null) {
+            player.sendSystemMessage(Component.literal("Build Area update rejected: " + denial));
+            return;
+        }
+
         this.update(buildArea);
+        player.sendSystemMessage(Component.literal(build ? "Build Area build request accepted." : "Build Area scan settings accepted."));
         WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), buildArea.blockPosition());
+    }
+
+    private String validationDenial() {
+        if (xSize < MIN_SIZE || xSize > MAX_SIZE || ySize < MIN_SIZE || ySize > MAX_SIZE || zSize < MIN_SIZE || zSize > MAX_SIZE) {
+            return "dimensions must be between " + MIN_SIZE + " and " + MAX_SIZE;
+        }
+        if (structureNBT == null) {
+            return "missing structure data";
+        }
+        if (!build) {
+            return null;
+        }
+        if (structureNBT.isEmpty() || !structureNBT.contains("blocks", Tag.TAG_LIST)) {
+            return "scan or load a structure before building";
+        }
+        if (structureNBT.getInt("width") != xSize || structureNBT.getInt("height") != ySize || structureNBT.getInt("depth") != zSize) {
+            return "structure dimensions do not match the Build Area";
+        }
+        ListTag blocks = structureNBT.getList("blocks", Tag.TAG_COMPOUND);
+        int maxBlocks = xSize * ySize * zSize;
+        if (blocks.isEmpty()) {
+            return "structure contains no blocks";
+        }
+        if (blocks.size() > maxBlocks) {
+            return "structure contains more blocks than its bounds allow";
+        }
+        return null;
     }
 
     public void update(BuildArea buildArea){

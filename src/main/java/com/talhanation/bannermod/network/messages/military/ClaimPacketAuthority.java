@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 
 import javax.annotation.Nullable;
@@ -26,6 +27,6 @@ final class ClaimPacketAuthority {
         if (politicalOwner == null) {
             return false;
         }
-        return actorUuid.equals(politicalOwner.leaderUuid()) || politicalOwner.coLeaderUuids().contains(actorUuid);
+        return PoliticalEntityAuthority.canAct(actorUuid, false, politicalOwner);
     }
 }

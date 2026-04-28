@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.citizen;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.phys.Vec3;
 
@@ -35,6 +36,8 @@ public interface CitizenCore {
     void setFollowState(int state);
 
     SimpleContainer getInventory();
+
+    HolderLookup.Provider registryAccess();
 
     @Nullable
     String getTeamId();
@@ -82,7 +85,7 @@ public interface CitizenCore {
                 .boundWorkAreaUuid(this.getBoundWorkAreaUUID())
                 .holdPos(this.getHoldPos())
                 .movePos(this.getMovePos())
-                .inventoryData(CitizenStateSnapshot.copyInventory(this.getInventory()))
+                .inventoryData(CitizenStateSnapshot.copyInventory(this.getInventory(), this.registryAccess()))
                 .runtimeFlags(flags)
                 .build();
     }
@@ -107,6 +110,6 @@ public interface CitizenCore {
         for (RuntimeFlag flag : RuntimeFlag.values()) {
             this.setRuntimeFlag(flag, snapshot.runtimeFlag(flag));
         }
-        CitizenStateSnapshot.restoreInventory(this.getInventory(), snapshot.inventoryData());
+        CitizenStateSnapshot.restoreInventory(this.getInventory(), snapshot.inventoryData(), this.registryAccess());
     }
 }

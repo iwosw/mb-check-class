@@ -18,7 +18,7 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 
@@ -56,6 +56,11 @@ public class SmallShips {
         if (entity == null) return false;
         ReflectiveCompatAccess access = new ReflectiveCompatAccess(classResolver::resolve);
         return access.findClass(SHIP_CLASS_NAME).filter(shipClass -> shipClass.isInstance(entity)).isPresent();
+    }
+
+    static boolean hasSmallShipEntityClass(ReflectiveClassResolver classResolver) {
+        ReflectiveCompatAccess access = new ReflectiveCompatAccess(classResolver::resolve);
+        return access.findClass(SHIP_CLASS_NAME).isPresent();
     }
 
     public boolean isCaptainDriver(){
@@ -328,7 +333,7 @@ public class SmallShips {
 
     @Nullable
     public static ItemStack getSmallShipsItem() {
-        return ForgeRegistries.ITEMS.getDelegateOrThrow(ResourceLocation.tryParse("smallships:oak_cog")).get().getDefaultInstance();
+        return BuiltInRegistries.ITEM.get(ResourceLocation.tryParse("smallships:oak_cog")).getDefaultInstance();
     }
 
     public void repairShip(CaptainEntity captain) {

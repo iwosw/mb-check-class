@@ -4,18 +4,18 @@ import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageUpkeepPos implements Message<MessageUpkeepPos> {
+public class MessageUpkeepPos implements BannerModMessage<MessageUpkeepPos> {
 
     private UUID player;
     private UUID group;
@@ -30,30 +30,39 @@ public class MessageUpkeepPos implements Message<MessageUpkeepPos> {
         this.pos = pos;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> recruits = this.group == null
-                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.player, player.position(), 100.0D)
-                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
+        dispatchToServer(player, this.player, this.group, this.pos);
+    }
+
+    public static void dispatchToServer(ServerPlayer sender, UUID playerUuid, UUID group, BlockPos pos) {
+        UUID actorUuid = authorizedPlayerUuid(sender.getUUID(), playerUuid);
+        List<AbstractRecruitEntity> recruits = group == null
+                ? RecruitIndex.instance().ownerInRange(sender.getCommandSenderWorld(), actorUuid, sender.position(), 100.0D)
+                : RecruitCommandTargetResolver.resolveGroupTargets(sender, playerUuid, group, "upkeep-pos");
         if (recruits == null) {
             RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+            recruits = sender.getCommandSenderWorld().getEntitiesOfClass(
                     AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(100)
+                    sender.getBoundingBox().inflate(100)
             );
         }
         recruits.forEach((recruit) -> CommandEvents.onUpkeepCommand(
-                this.player,
+                actorUuid,
                 recruit,
                 group,
                 false,
                 null,
                 pos)
         );
+    }
+
+    static UUID authorizedPlayerUuid(UUID senderUuid, UUID ignoredWireUuid) {
+        return senderUuid;
     }
 
     public MessageUpkeepPos fromBytes(FriendlyByteBuf buf) {

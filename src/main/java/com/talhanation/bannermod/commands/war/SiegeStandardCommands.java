@@ -4,7 +4,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.talhanation.bannermod.registry.war.ModWarBlocks;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
@@ -20,7 +19,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.block.Blocks;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -131,9 +129,7 @@ public final class SiegeStandardCommands {
         // Remove the data record first; if a block exists at the recorded position, also clear it.
         // SiegeStandardBlock.onRemove guards against a double-remove via the same lookup.
         boolean removed = runtime.remove(id);
-        if (level.getBlockState(record.pos()).is(ModWarBlocks.SIEGE_STANDARD.get())) {
-            level.setBlockAndUpdate(record.pos(), Blocks.AIR.defaultBlockState());
-        }
+        SiegeStandardPlacementService.removeVisibleStandard(level, record);
         if (!removed) {
             context.getSource().sendFailure(Component.literal("Failed to remove siege standard."));
             return 0;

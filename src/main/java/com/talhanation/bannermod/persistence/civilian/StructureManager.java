@@ -8,7 +8,6 @@ import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +15,7 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +72,7 @@ public class StructureManager {
         );
         RuntimeProfilingCounters.add("structure_scan.work_areas_seen", workAreas.size());
         for (AbstractWorkAreaEntity wa : workAreas) {
-            ResourceLocation typeKey = ForgeRegistries.ENTITY_TYPES.getKey(wa.getType());
+            ResourceLocation typeKey = BuiltInRegistries.ENTITY_TYPE.getKey(wa.getType());
             if (typeKey == null || wa instanceof BuildArea) continue;
             BlockPos delta = wa.getOnPos().subtract(origin);
             int relZ = dotHorizontal(delta, facing);

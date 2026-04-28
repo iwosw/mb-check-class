@@ -1,13 +1,13 @@
 package com.talhanation.bannermod.network.messages.war;
 
 import com.talhanation.bannermod.war.runtime.SiegeStandardPlacementService;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.UUID;
 
@@ -18,7 +18,7 @@ import java.util.UUID;
  * UI. Validation, audit, and block placement run through
  * {@link SiegeStandardPlacementService} so the slash and packet entry points stay in sync.</p>
  */
-public class MessagePlaceSiegeStandardHere implements Message<MessagePlaceSiegeStandardHere> {
+public class MessagePlaceSiegeStandardHere implements BannerModMessage<MessagePlaceSiegeStandardHere> {
 
     private UUID warId;
     private UUID sideId;
@@ -34,17 +34,17 @@ public class MessagePlaceSiegeStandardHere implements Message<MessagePlaceSiegeS
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = context.getSender();
         if (player == null || this.warId == null || this.sideId == null) {
             return;
         }
-        ServerLevel level = player.serverLevel().getServer().overworld();
+        ServerLevel level = player.serverLevel();
         if (level == null) {
             return;
         }

@@ -4,13 +4,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 
 public class BlackShowingTextField extends AbstractWidget {
     protected static final int BG_FILL_SELECTED = FastColor.ARGB32.color(255, 10, 10, 10);
-    private final String text;
+    private final Component text;
     private final int textXOffset;
     private final int textYOffset;
     public BlackShowingTextField(int x, int y, int width, int height, Component component) {
@@ -18,8 +19,8 @@ public class BlackShowingTextField extends AbstractWidget {
     }
 
     public BlackShowingTextField(int x, int y, int width, int height, int textXOffset, int textYOffset, Component component){
-        super(x, y, width, height, Component.empty());
-        this.text = component.getString();
+        super(x, y, width, height, component);
+        this.text = component;
         this.textXOffset = textXOffset;
         this.textYOffset = textYOffset;
     }
@@ -29,7 +30,7 @@ public class BlackShowingTextField extends AbstractWidget {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput p_259858_) {
-
+    protected void updateWidgetNarration(NarrationElementOutput narration) {
+        narration.add(NarratedElementType.TITLE, getMessage());
     }
 }

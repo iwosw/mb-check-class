@@ -6,9 +6,9 @@ import com.talhanation.bannermod.war.runtime.BattleWindowSchedule;
 import com.talhanation.bannermod.war.runtime.OccupationRecord;
 import com.talhanation.bannermod.war.runtime.RevoltRecord;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
+import com.talhanation.bannermod.war.runtime.WarSiegeQueries;
 import com.talhanation.bannermod.war.runtime.WarAllyInviteRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -116,6 +116,39 @@ public final class WarClientState {
 
     public static OccupationRecord occupationById(UUID id) {
         return occupationsById.get(id);
+    }
+
+    public static boolean isClaimOccupied(RecruitsClaim claim) {
+        return occupationForClaim(claim) != null;
+    }
+
+    public static boolean isClaimChunkOccupied(RecruitsClaim claim, ChunkPos chunk) {
+        return occupationForClaimChunk(claim, chunk) != null;
+    }
+
+    public static OccupationRecord occupationForClaim(RecruitsClaim claim) {
+        if (claim == null || claim.getOwnerPoliticalEntityId() == null) return null;
+        for (OccupationRecord occupation : occupations) {
+            if (!claim.getOwnerPoliticalEntityId().equals(occupation.occupiedEntityId())) {
+                continue;
+            }
+            for (net.minecraft.world.level.ChunkPos chunk : claim.getClaimedChunks()) {
+                if (occupation.chunks().contains(chunk)) {
+                    return occupation;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static OccupationRecord occupationForClaimChunk(RecruitsClaim claim, ChunkPos chunk) {
+        if (claim == null || chunk == null || claim.getOwnerPoliticalEntityId() == null) return null;
+        for (OccupationRecord occupation : occupations) {
+            if (claim.getOwnerPoliticalEntityId().equals(occupation.occupiedEntityId()) && occupation.chunks().contains(chunk)) {
+                return occupation;
+            }
+        }
+        return null;
     }
 
     public static PoliticalEntityRecord entityById(UUID id) {
@@ -226,9 +259,7 @@ public final class WarClientState {
         if (activeWarIds.isEmpty()) return false;
         for (SiegeStandardRecord siege : sieges) {
             if (!activeWarIds.contains(siege.warId())) continue;
-            BlockPos pos = siege.pos();
-            if (pos == null) continue;
-            if (claim.containsChunk(new ChunkPos(pos))) {
+            if (WarSiegeQueries.claimIntersectsSiegeRadius(claim, siege)) {
                 return true;
             }
         }

@@ -28,6 +28,7 @@ Politics, claims, war declarations, allies, siege standards, occupations, and ou
 - Claims can belong to a political entity UUID.
 - A player is treated as a political member if they are leader or co-leader of an entity.
 - War Room state UI lets leaders add or remove co-leaders by player UUID; monarchy still lists co-leaders but keeps authority leader-only, while republic shares authority through `PoliticalEntityAuthority.canAct`.
+- Shared-authority paths use `PoliticalEntityAuthority.canAct`: rename, status, capital, color, charter, claim edit, ally invite/response/cancel, siege placement, declaration, and legal outcome actions. Government-form changes and co-leader list management remain strict leader/op actions.
 - Settlement bootstrap uses this membership to create the first claim.
 - Claim editing allows owners, political leaders/co-leaders, or creative permission-level-2 admins.
 - Claim overlap with other claims is rejected.
@@ -91,5 +92,5 @@ Politics, claims, war declarations, allies, siege standards, occupations, and ou
 ## Current Limits
 
 - Some outcomes are command/admin-driven rather than fully automated player UI flows.
-- War objective AI, occupation tax/control depth, morale, cavalry/ranged backline behavior, and siege objective AI are known open areas.
+- War objective AI, occupation control depth, morale, and ranged-backline polish are known open areas. Occupation records/tax, objective-presence revolt resolution, consent-based allies, and basic siege-standard attack/escort are already live in `WarOutcomeApplier`, `WarOccupationTaxTicker`, `WarRevoltScheduler`/`WarRevoltAutoResolver`, `WarAllyService`, `RecruitSiegeObjectiveAttackGoal`, and `RecruitSiegeEscortGoal`.
 - Sea trade exists as logistics hooks and settlement hints, not a complete war/economy loop.

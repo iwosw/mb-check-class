@@ -5,6 +5,7 @@ import com.talhanation.bannermod.compat.musketmod.*;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
 import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,8 +13,6 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class RecruitRangedMusketAttackGoal extends Goal {
     private final CrossBowmanEntity crossBowman;
@@ -72,38 +71,16 @@ public class RecruitRangedMusketAttackGoal extends Goal {
     protected boolean isWeaponInHand() {
         ItemStack itemStack = crossBowman.getMainHandItem();
 
-        if(itemStack.getDescriptionId().equals("item.musketmod.musket")) {
-            this.weapon = new MusketWeapon();
-            return true;
-        }
-        else if(itemStack.getDescriptionId().equals("item.musketmod.musket_with_bayonet")){
-            this.weapon = new MusketBayonetWeapon();
-            return true;
-        }
-        else if(itemStack.getDescriptionId().equals("item.musketmod.musket_with_scope")){
-            this.weapon = new MusketScopeWeapon();
-            return true;
-        }
-        else if(itemStack.getDescriptionId().equals("item.musketmod.blunderbuss")){
-            this.weapon = new BlunderbussWeapon();
-            return true;
-        }
-        else if(itemStack.getDescriptionId().equals("item.musketmod.pistol")){
-            this.weapon = new PistolWeapon();
-            return true;
-        }
-        else
-            return false;
+        return MedievalBoomsticksCompat.createRecruitWeapon(itemStack)
+                .map(weapon -> {
+                    this.weapon = weapon;
+                    return true;
+                })
+                .orElse(false);
     }
 
     public static boolean isMusket(ItemStack itemStack){
-       String disc = itemStack.getDescriptionId();
-
-       return disc.equals("item.musketmod.musket")
-               || disc.equals("item.musketmod.musket_with_bayonet")
-               || disc.equals("item.musketmod.musket_with_scope")
-               || disc.equals("item.musketmod.blunderbuss")
-               || disc.equals("item.musketmod.pistol");
+       return MedievalBoomsticksCompat.isSupportedRecruitFirearm(itemStack);
     }
 
     public void tick() {
@@ -274,10 +251,14 @@ public class RecruitRangedMusketAttackGoal extends Goal {
         }
     }
     private void consumeAmmo() {
-        List<ItemStack> items = this.crossBowman.getInventory().items;
+        ResourceLocation ammoId = MedievalBoomsticksCompat.ammoContract(crossBowman.getMainHandItem()).orElse(null);
+        if (ammoId == null) {
+            return;
+        }
 
-        for (ItemStack stack : items) {
-            if (stack.getDescriptionId().equals("item.musketmod.cartridge")) {
+        for (int i = 0; i < this.crossBowman.getInventory().getContainerSize(); i++) {
+            ItemStack stack = this.crossBowman.getInventory().getItem(i);
+            if (MedievalBoomsticksCompat.isAmmo(stack, ammoId)) {
                 stack.shrink(1);
                 break;
             }
@@ -285,7 +266,16 @@ public class RecruitRangedMusketAttackGoal extends Goal {
     }
 
     private boolean canLoad(){
-        return this.crossBowman.getInventory().items.stream().anyMatch(itemStack -> itemStack.getDescriptionId().equals("item.musketmod.cartridge"));
+        ResourceLocation ammoId = MedievalBoomsticksCompat.ammoContract(crossBowman.getMainHandItem()).orElse(null);
+        if (ammoId == null) {
+            return false;
+        }
+        for (int i = 0; i < this.crossBowman.getInventory().getContainerSize(); i++) {
+            if (MedievalBoomsticksCompat.isAmmo(this.crossBowman.getInventory().getItem(i), ammoId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void checkHands(){

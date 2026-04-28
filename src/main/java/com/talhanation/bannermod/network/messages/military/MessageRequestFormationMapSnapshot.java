@@ -2,29 +2,31 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.army.map.FormationMapSnapshotService;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
-public class MessageRequestFormationMapSnapshot implements Message<MessageRequestFormationMapSnapshot> {
+public class MessageRequestFormationMapSnapshot implements BannerModMessage<MessageRequestFormationMapSnapshot> {
     public MessageRequestFormationMapSnapshot() {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer sender = context.getSender();
         if (sender == null) return;
+        FormationMapSnapshotService.SnapshotRequestResult result = FormationMapSnapshotService.requestSnapshot(sender);
+        if (result.throttled()) return;
         BannerModMain.SIMPLE_CHANNEL.send(
-                PacketDistributor.PLAYER.with(() -> sender),
-                new MessageToClientUpdateFormationMapSnapshot(FormationMapSnapshotService.buildSnapshot(sender))
+                BannerModPacketDistributor.PLAYER.with(() -> sender),
+                new MessageToClientUpdateFormationMapSnapshot(result.contacts())
         );
     }
 

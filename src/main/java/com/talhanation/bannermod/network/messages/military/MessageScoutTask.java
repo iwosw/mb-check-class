@@ -2,19 +2,19 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.ScoutEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageScoutTask implements Message<MessageScoutTask> {
+public class MessageScoutTask implements BannerModMessage<MessageScoutTask> {
 
     private UUID recruit;
     private int state;
@@ -26,11 +26,11 @@ public class MessageScoutTask implements Message<MessageScoutTask> {
         this.state = state;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context){
+    public void executeServerSide(BannerModNetworkContext context){
         dispatchToServer(Objects.requireNonNull(context.getSender()), this.recruit, this.state);
     }
 
@@ -44,6 +44,8 @@ public class MessageScoutTask implements Message<MessageScoutTask> {
         List<ScoutEntity> list = targetScout == null ? List.of() : List.of(targetScout);
         CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
                 player.getUUID(),
+                player.getTeam() == null ? null : player.getTeam().getName(),
+                player.hasPermissions(2),
                 recruitId,
                 list.stream().map(scout -> new CommandTargeting.RecruitSnapshot(
                         scout.getUUID(),

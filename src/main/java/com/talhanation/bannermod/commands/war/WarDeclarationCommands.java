@@ -161,8 +161,8 @@ public final class WarDeclarationCommands {
                 PoliticalRegistryRuntime reg = WarRuntimeContext.registry(level);
                 Optional<PoliticalEntityRecord> attacker = reg.byId(war.attackerPoliticalEntityId());
                 if (!context.getSource().hasPermission(2)
-                        && (attacker.isEmpty() || !WarCommandSupport.isLeaderOrOp(context, attacker.get()))) {
-                    throw WarCommandSupport.ERR_NOT_LEADER.create();
+                        && (attacker.isEmpty() || !WarCommandSupport.canAct(context, attacker.get()))) {
+                    throw WarCommandSupport.ERR_NOT_AUTHORIZED.create();
                 }
                 yield applier.cancel(war.id(), gameTime, "command_cancel");
             }
@@ -204,8 +204,8 @@ public final class WarDeclarationCommands {
         PoliticalRegistryRuntime reg = WarRuntimeContext.registry(level);
         Optional<PoliticalEntityRecord> attacker = reg.byId(war.attackerPoliticalEntityId());
         if (!context.getSource().hasPermission(2)
-                && (attacker.isEmpty() || !WarCommandSupport.isLeaderOrOp(context, attacker.get()))) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
+                && (attacker.isEmpty() || !WarCommandSupport.canAct(context, attacker.get()))) {
+            throw WarCommandSupport.ERR_NOT_AUTHORIZED.create();
         }
         ChunkPos centre = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
         int r = Math.max(0, Math.min(radius, 8));
@@ -228,8 +228,8 @@ public final class WarDeclarationCommands {
         PoliticalRegistryRuntime reg = WarRuntimeContext.registry(level);
         Optional<PoliticalEntityRecord> attacker = reg.byId(war.attackerPoliticalEntityId());
         if (!context.getSource().hasPermission(2)
-                && (attacker.isEmpty() || !WarCommandSupport.isLeaderOrOp(context, attacker.get()))) {
-            throw WarCommandSupport.ERR_NOT_LEADER.create();
+                && (attacker.isEmpty() || !WarCommandSupport.canAct(context, attacker.get()))) {
+            throw WarCommandSupport.ERR_NOT_AUTHORIZED.create();
         }
         ChunkPos centre = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
         WarOutcomeApplier applier = WarRuntimeContext.applierFor(level);

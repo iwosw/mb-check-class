@@ -3,20 +3,22 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.registry.citizen.ModCitizenItems;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.world.item.component.CustomData;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
+public class MessageWriteSpawnEgg implements BannerModMessage<MessageWriteSpawnEgg> {
 
     public UUID recruit;
 
@@ -27,11 +29,11 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
         this.recruit = recruit;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.recruit);
         if (entity instanceof CitizenEntity citizenEntity && citizenEntity.distanceToSqr(player) <= 64.0D * 64.0D) {
@@ -60,9 +62,7 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
         if (citizenEntity.getTeam() != null) {
             entityTag.putString("Team", citizenEntity.getTeam().getName());
         }
-        CompoundTag itemTag = new CompoundTag();
-        itemTag.put("EntityTag", entityTag);
-        itemStack.setTag(itemTag);
+        itemStack.set(DataComponents.ENTITY_DATA, CustomData.of(entityTag));
         player.setItemInHand(hand, itemStack);
         return true;
     }

@@ -4,19 +4,20 @@ import com.talhanation.bannermod.items.civilian.BuildingPlacementWandItem;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefab;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabDescriptor;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabRegistry;
+import com.talhanation.bannermod.util.ItemStackComponentData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.gui.widget.ExtendedButton;
+import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 import java.util.List;
 
 /**
  * Screen used by {@link BuildingPlacementWandItem} to pick which prefab the wand will
  * place on the next block right-click. The chosen prefab id is written to the wand
- * item stack's NBT under {@link BuildingPlacementWandItem#TAG_SELECTED_PREFAB}.
+ * item stack's custom data under {@link BuildingPlacementWandItem#TAG_SELECTED_PREFAB}.
  */
 public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen {
 
@@ -119,7 +120,7 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
 
     private void onSelect(BuildingPrefabDescriptor descriptor) {
         String id = descriptor.id().toString();
-        this.wandStack.getOrCreateTag().putString(BuildingPlacementWandItem.TAG_SELECTED_PREFAB, id);
+        ItemStackComponentData.update(this.wandStack, tag -> tag.putString(BuildingPlacementWandItem.TAG_SELECTED_PREFAB, id));
 
         Minecraft mc = Minecraft.getInstance();
         Component name = Component.translatable(descriptor.displayKey());

@@ -65,10 +65,8 @@ public final class BannerModSettlementOrchestrator {
         LevelRuntimeState state = runtimeState(level);
         long gameTime = level.getGameTime();
         state.workOrderRuntime.reclaimAbandoned(gameTime);
-        List<BannerModSettlementSnapshot> snapshots = new ArrayList<>(settlementManager.getAllSnapshots());
-        snapshots.removeIf(snapshot -> snapshot == null || snapshot.claimUuid() == null);
-        snapshots.sort(Comparator.comparing(BannerModSettlementSnapshot::claimUuid));
-        int total = snapshots.size();
+        List<UUID> snapshotOrder = state.snapshotOrderForBatch(settlementManager, startIndex);
+        int total = snapshotOrder.size();
         if (total == 0 || maxSnapshots <= 0) {
             return recordBatchResult("settlement.heartbeat.orchestrator_batch", new BatchResult(0, total == 0 ? 0 : Math.max(0, Math.min(startIndex, total)), total, total == 0), startNanos);
         }
@@ -76,7 +74,7 @@ public final class BannerModSettlementOrchestrator {
         int clampedStart = Math.max(0, Math.min(startIndex, total));
         int endIndex = Math.min(total, clampedStart + maxSnapshots);
         for (int i = clampedStart; i < endIndex; i++) {
-            BannerModSettlementSnapshot snapshot = snapshots.get(i);
+            BannerModSettlementSnapshot snapshot = settlementManager.getSnapshot(snapshotOrder.get(i));
             if (snapshot == null) {
                 continue;
             }
@@ -315,6 +313,7 @@ public final class BannerModSettlementOrchestrator {
         final Map<UUID, Long> jobCooldownExpiries;
         final SettlementWorkOrderRuntime workOrderRuntime;
         final SettlementWorkOrderPublisherRegistry publisherRegistry;
+        private final List<UUID> orchestratorSnapshotOrder = new ArrayList<>();
 
         private LevelRuntimeState(BannerModSettlementProjectRuntime projectRuntime,
                                   BannerModHomeAssignmentRuntime homeRuntime,
@@ -334,6 +333,19 @@ public final class BannerModSettlementOrchestrator {
             this.jobCooldownExpiries = jobCooldownExpiries;
             this.workOrderRuntime = workOrderRuntime;
             this.publisherRegistry = publisherRegistry;
+        }
+
+        List<UUID> snapshotOrderForBatch(BannerModSettlementManager settlementManager, int startIndex) {
+            if (startIndex <= 0 || this.orchestratorSnapshotOrder.isEmpty()) {
+                this.orchestratorSnapshotOrder.clear();
+                for (BannerModSettlementSnapshot snapshot : settlementManager.getAllSnapshots()) {
+                    if (snapshot != null && snapshot.claimUuid() != null) {
+                        this.orchestratorSnapshotOrder.add(snapshot.claimUuid());
+                    }
+                }
+                this.orchestratorSnapshotOrder.sort(Comparator.naturalOrder());
+            }
+            return this.orchestratorSnapshotOrder;
         }
 
         private static LevelRuntimeState create(BannerModSettlementProjectRuntime projectRuntime,

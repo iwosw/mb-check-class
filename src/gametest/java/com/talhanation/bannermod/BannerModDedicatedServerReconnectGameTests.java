@@ -2,6 +2,7 @@ package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.gametest.support.RecruitsCommandGameTestSupport;
 import com.talhanation.bannermod.network.messages.military.MessageMovement;
@@ -16,11 +17,13 @@ import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
+import java.util.List;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModDedicatedServerReconnectGameTests {
 
     private static final UUID RECONNECTED_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000704");
+    private static final UUID ROUNDTRIP_GROUP_UUID = UUID.fromString("00000000-0000-0000-0000-000000000705");
     private static final String RECONNECTED_OWNER_NAME = "reconnected-owner";
     private static final String RECONNECTED_OWNER_TEAM_ID = "phase07_reconnected_owner";
 
@@ -115,12 +118,13 @@ public class BannerModDedicatedServerReconnectGameTests {
         originalCropArea.setBeingWorkedOn(true);
 
         helper.runAfterDelay(5, () -> {
-            RecruitsCommandGameTestSupport.prepareForCommand(originalRecruit, RecruitsCommandGameTestSupport.TARGET_GROUP_UUID);
+            RecruitsCommandGameTestSupport.prepareForCommand(originalRecruit, ROUNDTRIP_GROUP_UUID);
 
             CompoundTag recruitData = BannerModDedicatedServerGameTestSupport.saveEntity(originalRecruit);
             CompoundTag workerData = BannerModDedicatedServerGameTestSupport.saveEntity(originalWorker);
             CompoundTag cropAreaData = BannerModDedicatedServerGameTestSupport.saveEntity(originalCropArea);
 
+            RecruitIndex.instance().onEntityLeave(originalRecruit);
             originalRecruit.discard();
             originalWorker.discard();
             originalCropArea.discard();
@@ -143,19 +147,23 @@ public class BannerModDedicatedServerReconnectGameTests {
                     RecruitsBattleGameTestSupport.EAST_RANGED_LEFT_POS,
                     cropAreaData
             );
+            RecruitsBattleGameTestSupport.assignFormationCohort(List.of(loadedRecruit), ROUNDTRIP_GROUP_UUID);
+            RecruitsCommandGameTestSupport.prepareForCommand(loadedRecruit, ROUNDTRIP_GROUP_UUID);
             BannerModDedicatedServerGameTestSupport.seedClaim(level, loadedCropArea.blockPosition(), RECONNECTED_OWNER_TEAM_ID, RECONNECTED_OWNER_UUID, RECONNECTED_OWNER_NAME);
             Player reconnectedPlayer = createReconnectedPlayer(helper, level);
 
-            MessageMovement.dispatchToServer(
-                    reconnectedPlayer,
-                    reconnectedPlayer.getUUID(),
-                    RecruitsCommandGameTestSupport.TARGET_GROUP_UUID,
-                    1,
-                    0,
-                    false
-            );
-
             helper.runAfterDelay(5, () -> {
+                MessageMovement.dispatchToServer(
+                        reconnectedPlayer,
+                        reconnectedPlayer.getUUID(),
+                        ROUNDTRIP_GROUP_UUID,
+                        1,
+                        0,
+                        false
+                );
+            });
+
+            helper.runAfterDelay(12, () -> {
                 helper.assertTrue(RECONNECTED_OWNER_UUID.equals(loadedRecruit.getOwnerUUID()),
                         "Expected recruit ownership to survive the save/load round trip");
                 helper.assertTrue(RECONNECTED_OWNER_UUID.equals(loadedWorker.getOwnerUUID()),

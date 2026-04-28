@@ -2,8 +2,10 @@ package com.talhanation.bannermod.settlement.bootstrap;
 
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
+import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalMembership;
@@ -16,12 +18,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.scores.PlayerTeam;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
 public final class SettlementBootstrapService {
+    private static final int STARTER_FREE_CITIZEN_COUNT = 4;
     private static final List<WorkerSettlementSpawnRules.WorkerProfession> STARTER_PROFESSIONS = List.of(
             WorkerSettlementSpawnRules.WorkerProfession.FARMER,
             WorkerSettlementSpawnRules.WorkerProfession.MINER,
@@ -82,7 +86,18 @@ public final class SettlementBootstrapService {
         registry.put(settlement);
 
         int spawnedWorkers = spawnStarterCitizens(level, authorityPos, claim);
-        return BootstrapResult.success("Settlement bootstrapped. Starter citizens spawned: " + spawnedWorkers, settlement);
+        int spawnedFreeCitizens = spawnStarterFreeCitizens(level, authorityPos, claim);
+        return BootstrapResult.success(starterWorkerReadinessMessage(spawnedWorkers, spawnedFreeCitizens), settlement);
+    }
+
+    static String starterWorkerReadinessMessage(int spawnedWorkers) {
+        return starterWorkerReadinessMessage(spawnedWorkers, STARTER_FREE_CITIZEN_COUNT);
+    }
+
+    static String starterWorkerReadinessMessage(int spawnedWorkers, int spawnedFreeCitizens) {
+        return "Settlement bootstrapped. Starter workers spawned: " + spawnedWorkers
+                + ". Free citizens available for vacancies: " + Math.max(0, spawnedFreeCitizens)
+                + ". Ready: farmer has a starter crop area. Waiting: miner needs a mine, lumberjack needs a lumber camp, builder needs an architect workshop/build area. If vacancies remain empty, no free citizen is close enough or available yet.";
     }
 
     public static BootstrapResult bootstrapSettlement(ServerLevel level,
@@ -209,5 +224,41 @@ public final class SettlementBootstrapService {
             }
         }
         return spawned;
+    }
+
+    private static int spawnStarterFreeCitizens(ServerLevel level, BlockPos authorityPos, RecruitsClaim claim) {
+        int spawned = 0;
+        for (int i = 0; i < STARTER_FREE_CITIZEN_COUNT; i++) {
+            BlockPos spawnPos = authorityPos.offset((i % 2) + 1, 0, (i / 2) + 1);
+            if (spawnFreeCitizen(level, spawnPos, claim)) {
+                spawned++;
+            }
+        }
+        return spawned;
+    }
+
+    private static boolean spawnFreeCitizen(ServerLevel level, BlockPos spawnPos, RecruitsClaim claim) {
+        CitizenEntity citizen = ModCitizenEntityTypes.CITIZEN.get().create(level);
+        if (citizen == null) {
+            return false;
+        }
+        citizen.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+        citizen.setOwned(true);
+        PoliticalEntityRecord owner = claim.getOwnerPoliticalEntityId() == null
+                ? null
+                : WarRuntimeContext.registry(level).byId(claim.getOwnerPoliticalEntityId()).orElse(null);
+        if (owner != null && owner.leaderUuid() != null) {
+            citizen.setOwnerUUID(java.util.Optional.of(owner.leaderUuid()));
+        } else if (claim.getPlayerInfo() != null) {
+            citizen.setOwnerUUID(java.util.Optional.of(claim.getPlayerInfo().getUUID()));
+        }
+        level.addFreshEntity(citizen);
+        if (owner != null) {
+            PlayerTeam team = level.getScoreboard().getPlayerTeam(owner.name());
+            if (team != null) {
+                level.getScoreboard().addPlayerToTeam(citizen.getScoreboardName(), team);
+            }
+        }
+        return true;
     }
 }

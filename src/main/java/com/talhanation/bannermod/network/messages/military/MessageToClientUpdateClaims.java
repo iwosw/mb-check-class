@@ -3,17 +3,18 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.List;
 
-public class MessageToClientUpdateClaims implements Message<MessageToClientUpdateClaims> {
+public class MessageToClientUpdateClaims implements BannerModMessage<MessageToClientUpdateClaims> {
     private CompoundTag claimsListNBT;
     private int claimCost;
     private int chunkCost;
@@ -35,13 +36,13 @@ public class MessageToClientUpdateClaims implements Message<MessageToClientUpdat
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         RuntimeProfilingCounters.recordNbtPacket("network.full_sync.claims", claimsListNBT);
         ClientManager.recruitsClaims = RecruitsClaim.getListFromNBT(claimsListNBT);
         ClientManager.markClaimsChanged();

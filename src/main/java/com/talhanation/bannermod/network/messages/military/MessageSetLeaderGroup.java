@@ -4,12 +4,12 @@ import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -19,7 +19,7 @@ import java.util.UUID;
  * Client → Server: assigns a group UUID to a leader entity so the
  * subsequent {@link MessageAssignGroupToCompanion} knows which group to use.
  */
-public class MessageSetLeaderGroup implements Message<MessageSetLeaderGroup> {
+public class MessageSetLeaderGroup implements BannerModMessage<MessageSetLeaderGroup> {
 
     private UUID leaderUUID;
     @Nullable
@@ -33,12 +33,12 @@ public class MessageSetLeaderGroup implements Message<MessageSetLeaderGroup> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         Entity entity = player.serverLevel().getEntity(this.leaderUUID);
         if (!(entity instanceof AbstractLeaderEntity leader)

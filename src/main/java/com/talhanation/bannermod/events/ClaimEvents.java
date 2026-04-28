@@ -13,6 +13,7 @@ import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.AdaptiveRuntimeBudgets;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.persistence.military.*;
 import net.minecraft.core.BlockPos;
@@ -26,16 +27,16 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.level.ExplosionEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.ExplosionEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import java.util.List;
 
 public class ClaimEvents {
@@ -64,6 +65,8 @@ public class ClaimEvents {
     private static int governorMaintenanceStage;
 
     private static int governorMaintenanceCursor;
+
+    private static long serverTickStartedAtNanos;
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
@@ -97,8 +100,15 @@ public class ClaimEvents {
     }
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event){
-        if (event.phase != TickEvent.Phase.END) return;
+    public void onServerTickStart(ServerTickEvent.Pre event){
+        serverTickStartedAtNanos = System.nanoTime();
+    }
+
+    @SubscribeEvent
+    public void onServerTick(ServerTickEvent.Post event){
+        if (serverTickStartedAtNanos > 0L) {
+            AdaptiveRuntimeBudgets.recordServerTickNanos(System.nanoTime() - serverTickStartedAtNanos);
+        }
         if (server == null || recruitsClaimManager == null) return;
 
         ServerLevel level = server.overworld();
@@ -120,7 +130,12 @@ public class ClaimEvents {
             tickGovernorMaintenance(level);
         }
 
-        BuildingInvalidationRuntime.tickBatch(level, WorkersServerConfig.settlementRevalidationBatchSizePerTick());
+        int revalidationBudget = AdaptiveRuntimeBudgets.intBudget(
+                "settlement.revalidation.batch",
+                WorkersServerConfig.settlementRevalidationBatchSizePerTick(),
+                1
+        );
+        BuildingInvalidationRuntime.tickBatch(level, revalidationBudget);
     }
 
     private void tickGovernorMaintenance(ServerLevel level) {
@@ -164,7 +179,11 @@ public class ClaimEvents {
                     settlementManager,
                     governorManager,
                     governorMaintenanceCursor,
-                    SETTLEMENT_ORCHESTRATOR_BATCH_SIZE
+                    AdaptiveRuntimeBudgets.intBudget(
+                            "settlement.orchestrator.batch",
+                            SETTLEMENT_ORCHESTRATOR_BATCH_SIZE,
+                            1
+                    )
             );
             recordGovernorMaintenanceBatch("claim_events.settlement_heartbeat.orchestrator_batch", result.startIndex(), result.nextIndex(), result.totalItems(), result.completed(), startNanos);
             advanceGovernorMaintenance(result.nextIndex(), result.completed(), GOVERNOR_STAGE_IDLE);

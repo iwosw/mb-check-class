@@ -51,7 +51,8 @@ final class RecruitEquipmentService {
     }
 
     static void tryToReequipShield(AbstractRecruitEntity recruit) {
-        for (ItemStack itemStack : recruit.getInventory().items) {
+        for (int i = 0; i < recruit.getInventory().getContainerSize(); i++) {
+            ItemStack itemStack = recruit.getInventory().getItem(i);
             if (itemStack.getItem() instanceof ShieldItem) {
                 recruit.setItemSlot(EquipmentSlot.OFFHAND, itemStack);
                 recruit.inventory.setItem(recruit.getInventorySlotIndex(EquipmentSlot.OFFHAND), itemStack);

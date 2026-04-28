@@ -18,14 +18,13 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.scores.Team;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
-import net.minecraftforge.event.entity.ProjectileImpactEvent;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -126,7 +125,7 @@ public final class RecruitCombatRuntime {
         }
     }
 
-    public static void onLivingHurt(LivingHurtEvent event) {
+    public static void onLivingHurt(LivingIncomingDamageEvent event) {
         if (event.getEntity().getCommandSenderWorld().isClientSide()) {
             return;
         }
@@ -159,7 +158,7 @@ public final class RecruitCombatRuntime {
         }
     }
 
-    public static void onLivingAttack(LivingAttackEvent event) {
+    public static void onLivingAttack(LivingIncomingDamageEvent event) {
         if (event.getEntity().getCommandSenderWorld().isClientSide()) {
             return;
         }
@@ -191,8 +190,8 @@ public final class RecruitCombatRuntime {
         }
     }
 
-    public static void onWorldTickArrowCleaner(TickEvent.LevelTickEvent event) {
-        if (event.level.isClientSide() || !RecruitsServerConfig.AllowArrowCleaning.get() || event.phase != TickEvent.Phase.END) {
+    public static void onWorldTickArrowCleaner(LevelTickEvent.Post event) {
+        if (event.getLevel().isClientSide() || !RecruitsServerConfig.AllowArrowCleaning.get()) {
             return;
         }
         if (++tickCounter < 100) {
@@ -200,7 +199,7 @@ public final class RecruitCombatRuntime {
         }
         tickCounter = 0;
 
-        for (AbstractArrow arrow : event.level.getEntitiesOfClass(AbstractArrow.class, event.level.getWorldBorder().getCollisionShape().bounds())) {
+        for (AbstractArrow arrow : event.getLevel().getEntitiesOfClass(AbstractArrow.class, event.getLevel().getWorldBorder().getCollisionShape().bounds())) {
             if (arrow.pickup == AbstractArrow.Pickup.DISALLOWED && arrow.inGroundTime > 300) {
                 arrow.discard();
             }
@@ -229,6 +228,10 @@ public final class RecruitCombatRuntime {
 
     public static boolean isEnemy(Team team1, Team team2) {
         return RecruitDiplomacyPolicy.isEnemy(team1, team2);
+    }
+
+    public static boolean isEnemy(LivingEntity attacker, LivingEntity target) {
+        return RecruitDiplomacyPolicy.isEnemy(attacker, target);
     }
 
     public static boolean isNeutral(Team team1, Team team2) {

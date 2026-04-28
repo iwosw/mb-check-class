@@ -2,15 +2,16 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.gui.NobleTradeScreen;
 import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
-public class MessageToClientOpenNobleTradeScreen implements Message<MessageToClientOpenNobleTradeScreen> {
+public class MessageToClientOpenNobleTradeScreen implements BannerModMessage<MessageToClientOpenNobleTradeScreen> {
 
     private int entityId;
 
@@ -23,13 +24,13 @@ public class MessageToClientOpenNobleTradeScreen implements Message<MessageToCli
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         Player player = Minecraft.getInstance().player;
         if (player != null
                 && player.level().getEntity(this.entityId) instanceof VillagerNobleEntity nobleVillager

@@ -2,14 +2,14 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.gui.MessengerScreen;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 
-public class MessageToClientUpdateMessengerScreen implements Message<MessageToClientUpdateMessengerScreen> {
+public class MessageToClientUpdateMessengerScreen implements BannerModMessage<MessageToClientUpdateMessengerScreen> {
     public String message;
     public CompoundTag nbt;
     public MessageToClientUpdateMessengerScreen() {
@@ -24,12 +24,12 @@ public class MessageToClientUpdateMessengerScreen implements Message<MessageToCl
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override
-    public void executeClientSide(NetworkEvent.Context context) {
+    public void executeClientSide(BannerModNetworkContext context) {
         //MessengerScreen.message = this.message;
 
         if(nbt != null){

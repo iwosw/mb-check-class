@@ -7,15 +7,18 @@ import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
+import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityStatus;
 import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.GovernmentForm;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -53,9 +56,11 @@ public class PoliticalEntityListScreen extends Screen {
     private Button addCoLeaderButton;
     @Nullable
     private Button removeCoLeaderButton;
+    @Nullable
+    private Button promoteStateButton;
 
     public PoliticalEntityListScreen(@Nullable Screen parent) {
-        super(Component.literal("States"));
+        super(text("gui.bannermod.states.title"));
         this.parent = parent;
     }
 
@@ -64,28 +69,30 @@ public class PoliticalEntityListScreen extends Screen {
         super.init();
         this.guiLeft = (this.width - W) / 2;
         this.guiTop = (this.height - H) / 2;
-        addRenderableWidget(Button.builder(Component.literal("Create"), btn -> openCreateDialog())
+        addRenderableWidget(Button.builder(text("gui.bannermod.states.create"), btn -> openCreateDialog())
                 .bounds(guiLeft + 8, guiTop + H - 24, 60, 18).build());
-        this.renameButton = addRenderableWidget(Button.builder(Component.literal("Rename"), btn -> openRenameDialog())
+        this.renameButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.rename"), btn -> openRenameDialog())
                 .bounds(guiLeft + 72, guiTop + H - 24, 64, 18).build());
-        this.setCapitalButton = addRenderableWidget(Button.builder(Component.literal("Capital here"), btn -> setCapitalHere())
+        this.setCapitalButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.capital_here"), btn -> setCapitalHere())
                 .bounds(guiLeft + 140, guiTop + H - 24, 84, 18).build());
-        this.toggleFormButton = addRenderableWidget(Button.builder(Component.literal("Toggle gov form"), btn -> toggleGovernmentForm())
+        this.toggleFormButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.toggle_form"), btn -> toggleGovernmentForm())
                 .bounds(guiLeft + 228, guiTop + H - 24, 96, 18).build());
         // Second row of leader-only mutators (color / charter). Placed above the bottom row to
         // keep the spatial separation between "create / rename / capital / form" identity ops
         // and the "presentation" ops (color / charter) so the leader's eyes don't get tangled.
-        this.setColorButton = addRenderableWidget(Button.builder(Component.literal("Color"), btn -> openColorDialog())
+        this.setColorButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.color"), btn -> openColorDialog())
                 .bounds(guiLeft + 8, guiTop + H - 44, 60, 18).build());
-        this.setCharterButton = addRenderableWidget(Button.builder(Component.literal("Charter"), btn -> openCharterDialog())
+        this.setCharterButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.charter"), btn -> openCharterDialog())
                 .bounds(guiLeft + 72, guiTop + H - 44, 80, 18).build());
-        this.addCoLeaderButton = addRenderableWidget(Button.builder(Component.literal("Add co-leader"), btn -> openCoLeaderDialog(true))
+        this.addCoLeaderButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.add_co_leader"), btn -> openCoLeaderDialog(true))
                 .bounds(guiLeft + 156, guiTop + H - 44, 96, 18).build());
-        this.removeCoLeaderButton = addRenderableWidget(Button.builder(Component.literal("Remove co"), btn -> openCoLeaderDialog(false))
+        this.removeCoLeaderButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.remove_co_leader"), btn -> openCoLeaderDialog(false))
                 .bounds(guiLeft + 256, guiTop + H - 44, 86, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("Refresh"), btn -> refresh())
+        this.promoteStateButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.promote_state"), btn -> promoteToState())
+                .bounds(guiLeft + 346, guiTop + H - 44, 96, 18).build());
+        addRenderableWidget(Button.builder(text("gui.bannermod.common.refresh"), btn -> refresh())
                 .bounds(guiLeft + W - 172, guiTop + H - 64, 80, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("Back"), btn -> onClose())
+        addRenderableWidget(Button.builder(text("gui.bannermod.common.back"), btn -> onClose())
                 .bounds(guiLeft + W - 86, guiTop + H - 24, 80, 18).build());
         refresh();
     }
@@ -141,6 +148,11 @@ public class PoliticalEntityListScreen extends Screen {
                 ? GovernmentForm.REPUBLIC
                 : GovernmentForm.MONARCHY;
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetGovernmentForm(this.selected.id(), next));
+    }
+
+    private void promoteToState() {
+        if (selected == null) return;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSetPoliticalEntityStatus(selected.id(), PoliticalEntityStatus.STATE));
     }
 
     private void openColorDialog() {
@@ -207,39 +219,57 @@ public class PoliticalEntityListScreen extends Screen {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateCoLeader(entityId, UUID.fromString(coLeaderUuidText), add));
         } catch (IllegalArgumentException ignored) {
             if (this.minecraft != null && this.minecraft.player != null) {
-                this.minecraft.player.displayClientMessage(Component.literal("Invalid UUID."), false);
+                this.minecraft.player.displayClientMessage(text("gui.bannermod.states.invalid_uuid"), false);
             }
         }
     }
 
     private void updateLeaderButtons() {
+        boolean canAct = canLocalPlayerAct(this.selected);
         boolean leader = isLocalPlayerLeader(this.selected);
+        Component selectState = text("gui.bannermod.states.tooltip.select_state");
+        Component needAuthority = text("gui.bannermod.states.tooltip.need_authority");
+        Component needLeader = text("gui.bannermod.states.tooltip.need_leader");
         if (this.renameButton != null) {
-            this.renameButton.active = leader;
+            this.renameButton.active = canAct;
+            this.renameButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
         }
         if (this.setCapitalButton != null) {
-            this.setCapitalButton.active = leader;
+            this.setCapitalButton.active = canAct;
+            this.setCapitalButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
         }
         if (this.toggleFormButton != null) {
             this.toggleFormButton.active = leader;
             if (this.selected != null) {
-                String label = this.selected.governmentForm() == GovernmentForm.MONARCHY
-                        ? "→ Republic"
-                        : "→ Monarchy";
-                this.toggleFormButton.setMessage(Component.literal(label));
+                this.toggleFormButton.setMessage(text(this.selected.governmentForm() == GovernmentForm.MONARCHY
+                        ? "gui.bannermod.states.to_republic"
+                        : "gui.bannermod.states.to_monarchy"));
             }
+            this.toggleFormButton.setTooltip(leader ? null : Tooltip.create(this.selected == null ? selectState : needLeader));
         }
         if (this.setColorButton != null) {
-            this.setColorButton.active = leader;
+            this.setColorButton.active = canAct;
+            this.setColorButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
         }
         if (this.setCharterButton != null) {
-            this.setCharterButton.active = leader;
+            this.setCharterButton.active = canAct;
+            this.setCharterButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
         }
         if (this.addCoLeaderButton != null) {
             this.addCoLeaderButton.active = leader;
+            this.addCoLeaderButton.setTooltip(leader ? null : Tooltip.create(this.selected == null ? selectState : needLeader));
         }
         if (this.removeCoLeaderButton != null) {
             this.removeCoLeaderButton.active = leader && this.selected != null && !this.selected.coLeaderUuids().isEmpty();
+            Component tooltip = this.selected != null && this.selected.coLeaderUuids().isEmpty()
+                    ? text("gui.bannermod.states.tooltip.no_co_leaders")
+                    : (this.selected == null ? selectState : needLeader);
+            this.removeCoLeaderButton.setTooltip(this.removeCoLeaderButton.active ? null : Tooltip.create(tooltip));
+        }
+        if (this.promoteStateButton != null) {
+            boolean canPromote = canAct && this.selected != null && this.selected.status() != PoliticalEntityStatus.STATE;
+            this.promoteStateButton.active = canPromote;
+            this.promoteStateButton.setTooltip(canPromote ? Tooltip.create(text("gui.bannermod.states.tooltip.promote_state")) : Tooltip.create(this.selected == null ? selectState : needAuthority));
         }
     }
 
@@ -251,12 +281,17 @@ public class PoliticalEntityListScreen extends Screen {
         return leader != null && leader.equals(player.getUUID());
     }
 
+    private static boolean canLocalPlayerAct(@Nullable PoliticalEntityRecord entity) {
+        Player player = Minecraft.getInstance().player;
+        return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity);
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics);
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
-        graphics.drawCenteredString(font, "Political States (not claims or settlements)", guiLeft + W / 2, guiTop + 7, 0xFFFFFF);
+        graphics.drawCenteredString(font, text("gui.bannermod.states.heading").getString(), guiLeft + W / 2, guiTop + 7, 0xFFFFFF);
         renderList(graphics, mouseX, mouseY);
         renderDetails(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -280,7 +315,9 @@ public class PoliticalEntityListScreen extends Screen {
             graphics.drawString(font, font.plainSubstrByWidth(" " + displayName(entity), listW - 76), listX + 76, rowY + 4, 0xFFFFFF, false);
         }
         if (entities.isEmpty()) {
-            String empty = WarClientState.hasSnapshot() ? "No states yet" : "Waiting for server state sync";
+            String empty = text(WarClientState.hasSnapshot()
+                    ? "gui.bannermod.states.empty"
+                    : "gui.bannermod.states.waiting_sync").getString();
             graphics.drawCenteredString(font, empty, listX + listW / 2, listY + 62, 0xAAAAAA);
         }
     }
@@ -289,35 +326,44 @@ public class PoliticalEntityListScreen extends Screen {
         int x = guiLeft + 174;
         int y = guiTop + 28;
         int w = W - 182;
-        graphics.drawString(font, "State Detail", x, y, 0xFFFFFF, false);
+        graphics.drawString(font, text("gui.bannermod.states.detail"), x, y, 0xFFFFFF, false);
         if (selected == null) {
-            graphics.drawString(font, "Select a state.", x, y + 14, 0xAAAAAA, false);
-            graphics.drawString(font, "Settlement = place", x, y + 30, 0xAAAAAA, false);
-            graphics.drawString(font, "Claim = protected land", x, y + 42, 0xAAAAAA, false);
-            graphics.drawString(font, "State = political side", x, y + 54, 0xAAAAAA, false);
+            graphics.drawString(font, text("gui.bannermod.states.select_state"), x, y + 14, 0xAAAAAA, false);
+            graphics.drawString(font, text("gui.bannermod.states.help.settlement"), x, y + 30, 0xAAAAAA, false);
+            graphics.drawString(font, text("gui.bannermod.states.help.claim"), x, y + 42, 0xAAAAAA, false);
+            graphics.drawString(font, text("gui.bannermod.states.help.state"), x, y + 54, 0xAAAAAA, false);
             return;
         }
         String[] lines = {
-                "Name: " + displayName(selected),
-                "Status: " + selected.status().name(),
-                "Government: " + selected.governmentForm().name()
-                        + (selected.governmentForm().coLeadersShareAuthority() ? " (co-leaders share authority)" : " (leader sole authority)"),
-                "Leader: " + shortId(selected.leaderUuid()),
-                "Co-leaders: " + coLeaderSummary(selected),
-                "Co-leader authority: " + (selected.governmentForm().coLeadersShareAuthority() ? "active in republic" : "listed, monarchy locked"),
-                "Capital: " + (selected.capitalPos() == null ? "(none)" : selected.capitalPos().toShortString()),
-                "Color: " + (selected.color().isBlank() ? "(none)" : selected.color()),
-                "Region: " + (selected.homeRegion().isBlank() ? "(none)" : selected.homeRegion()),
-                "Wars: " + involvedWarCount(selected)
+                text("gui.bannermod.states.detail.name", displayName(selected)).getString(),
+                text("gui.bannermod.states.detail.status", selected.status().name()).getString(),
+                text("gui.bannermod.states.detail.government", selected.governmentForm().name(), text(selected.governmentForm().coLeadersShareAuthority() ? "gui.bannermod.states.authority.shared" : "gui.bannermod.states.authority.leader_only").getString()).getString(),
+                text("gui.bannermod.states.detail.leader", shortId(selected.leaderUuid())).getString(),
+                text("gui.bannermod.states.detail.co_leaders", coLeaderSummary(selected)).getString(),
+                text("gui.bannermod.states.detail.co_leader_authority", text(selected.governmentForm().coLeadersShareAuthority() ? "gui.bannermod.states.co_authority.active" : "gui.bannermod.states.co_authority.locked").getString()).getString(),
+                text("gui.bannermod.states.detail.capital", selected.capitalPos() == null ? text("gui.bannermod.common.none").getString() : selected.capitalPos().toShortString()).getString(),
+                text("gui.bannermod.states.detail.color", selected.color().isBlank() ? text("gui.bannermod.common.none").getString() : selected.color()).getString(),
+                text("gui.bannermod.states.detail.region", selected.homeRegion().isBlank() ? text("gui.bannermod.common.none").getString() : selected.homeRegion()).getString(),
+                text("gui.bannermod.states.detail.wars", involvedWarCount(selected)).getString()
         };
         for (int i = 0; i < lines.length; i++) {
             graphics.drawString(font, font.plainSubstrByWidth(lines[i], w), x, y + 14 + i * 12, 0xFFFFFF, false);
         }
+        int reqY = y + 14 + lines.length * 12 + 6;
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirements").getString(), w), x, reqY, 0xFFD77A, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_fort").getString(), w), x, reqY + 12, 0xAAAAAA, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_storage").getString(), w), x, reqY + 24, 0xAAAAAA, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_market").getString(), w), x, reqY + 36, 0xAAAAAA, false);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.server_checked").getString(), w), x, reqY + 48, 0x888888, false);
+    }
+
+    private static Component text(String key, Object... args) {
+        return Component.translatable(key, args);
     }
 
     private String coLeaderSummary(PoliticalEntityRecord entity) {
         if (entity.coLeaderUuids().isEmpty()) {
-            return "none";
+            return text("gui.bannermod.common.none").getString();
         }
         List<String> ids = new ArrayList<>();
         for (int i = 0; i < Math.min(3, entity.coLeaderUuids().size()); i++) {

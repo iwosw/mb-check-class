@@ -8,8 +8,6 @@ import net.minecraft.world.item.ShieldItem;
 
 import java.util.Objects;
 
-import static net.minecraft.world.entity.LivingEntity.getEquipmentSlotForItem;
-
 public class RecruitSimpleContainer extends SimpleContainer {
     private final AbstractInventoryEntity recruit;
     private final int size;
@@ -48,7 +46,7 @@ public class RecruitSimpleContainer extends SimpleContainer {
     private void moveItemToOccupiedSlotsWithSameType(ItemStack itemStack) {
         for(int i = 0; i < this.size; ++i) {
             ItemStack itemstack = this.getItem(i);
-            if (ItemStack.isSameItemSameTags(itemstack, itemStack)) {
+            if (ItemStack.isSameItemSameComponents(itemstack, itemStack)) {
                 this.moveItemsBetweenStacks(itemStack, itemstack);
                 if (itemStack.isEmpty()) {
                     return;

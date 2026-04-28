@@ -133,7 +133,7 @@ public final class TransportContainerExchange {
         int slotCap = container.getMaxStackSize();
         for (int i = 0; i < container.getContainerSize() && !stack.isEmpty(); i++) {
             ItemStack target = container.getItem(i);
-            if (target.isEmpty() || !ItemStack.isSameItemSameTags(target, stack)) {
+            if (target.isEmpty() || !ItemStack.isSameItemSameComponents(target, stack)) {
                 continue;
             }
             int max = Math.min(target.getMaxStackSize(), slotCap);

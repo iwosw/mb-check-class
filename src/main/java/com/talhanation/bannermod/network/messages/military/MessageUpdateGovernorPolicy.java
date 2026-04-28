@@ -3,16 +3,16 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.network.NetworkEvent;
+import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageUpdateGovernorPolicy implements Message<MessageUpdateGovernorPolicy> {
+public class MessageUpdateGovernorPolicy implements BannerModMessage<MessageUpdateGovernorPolicy> {
     private UUID recruit;
     private int policyOrdinal;
     private int value;
@@ -27,12 +27,12 @@ public class MessageUpdateGovernorPolicy implements Message<MessageUpdateGoverno
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override
-    public void executeServerSide(NetworkEvent.Context context) {
+    public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         BannerModGovernorPolicy[] policies = BannerModGovernorPolicy.values();
         if (this.policyOrdinal < 0 || this.policyOrdinal >= policies.length) {

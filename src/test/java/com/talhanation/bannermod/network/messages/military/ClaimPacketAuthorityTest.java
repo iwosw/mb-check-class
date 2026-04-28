@@ -2,6 +2,7 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
+import com.talhanation.bannermod.war.registry.GovernmentForm;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import net.minecraft.core.BlockPos;
@@ -57,7 +58,7 @@ class ClaimPacketAuthorityTest {
         );
 
         assertTrue(ClaimPacketAuthority.canEditClaim(leader, false, claim, owner));
-        assertTrue(ClaimPacketAuthority.canEditClaim(coLeader, false, claim, owner));
+        assertTrue(ClaimPacketAuthority.canEditClaim(coLeader, false, claim, owner.withGovernmentForm(GovernmentForm.REPUBLIC)));
     }
 
     @Test
