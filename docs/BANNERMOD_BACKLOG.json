@@ -3491,7 +3491,8 @@
       ],
       "dependencies": [
         "PORT-017",
-        "PORT-019"
+        "PORT-019",
+        "PORT-020"
       ],
       "progress": [],
       "verification": [],
@@ -3521,6 +3522,25 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-020",
+      "title": "Remove obsolete DistExecutor usage",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "NeoForge 1.21.1 no longer provides the old DistExecutor path used by BuildingPlacementWandItem, and this blocks compile after the main API migrations.",
+      "scope": [
+        "Replace the remaining DistExecutor client-side call with a NeoForge 1.21.1 side-safe pattern based on FMLEnvironment.dist or equivalent, without introducing compatibility shims."
+      ],
+      "acceptance": [
+        "Active src contains no DistExecutor import or usage, and compileJava no longer reports DistExecutor missing-symbol errors."
+      ],
+      "dependencies": [
+        "PORT-019"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
