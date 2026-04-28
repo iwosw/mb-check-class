@@ -3278,7 +3278,7 @@
     {
       "id": "PORT-011",
       "title": "Port NeoForge event bus imports and annotations",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-005 compile is blocked by Forge event, eventbus, and EventBusSubscriber symbols after moving to NeoForge 1.21.1.",
       "scope": [
@@ -3291,8 +3291,14 @@
         "PORT-010"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "compileJava still fails on non-event Forge/common/network/distmarker/FML lifecycle clusters, but active src/main/java no longer contains old Forge event/eventbus/EventBusSubscriber usages; filtered compile output shows no missing Forge event/eventbus/EventBusSubscriber errors, only EventBusSubscriber.Bus deprecation warnings."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-012",
