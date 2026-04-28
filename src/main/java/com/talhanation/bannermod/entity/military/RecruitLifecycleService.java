@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.scores.Team;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -23,7 +23,7 @@ final class RecruitLifecycleService {
     static void disband(AbstractRecruitEntity recruit, @Nullable Player player, boolean keepTeam, boolean increaseCost, @Nullable Component dismissMessage) {
         if (!recruit.getCommandSenderWorld().isClientSide()) {
             RecruitEvent.Dismissed dismissEvent = new RecruitEvent.Dismissed(recruit, player, keepTeam);
-            MinecraftForge.EVENT_BUS.post(dismissEvent);
+            NeoForge.EVENT_BUS.post(dismissEvent);
             if (dismissEvent.isCanceled()) return;
         }
         if (player != null && dismissMessage != null) player.sendSystemMessage(dismissMessage);
@@ -42,7 +42,7 @@ final class RecruitLifecycleService {
     static boolean hire(AbstractRecruitEntity recruit, Player player, @Nullable RecruitsGroup group, boolean message, Component recruitingMax, List<Component> recruitedMessages) {
         if (!recruit.getCommandSenderWorld().isClientSide()) {
             RecruitEvent.Hired hireEvent = new RecruitEvent.Hired(recruit, player);
-            MinecraftForge.EVENT_BUS.post(hireEvent);
+            NeoForge.EVENT_BUS.post(hireEvent);
             if (hireEvent.isCanceled()) return false;
         }
         Team ownerTeam = player.getTeam();

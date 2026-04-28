@@ -9,7 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 import net.minecraftforge.network.NetworkEvent;
 
 public class MessageToClientUpdateClaim implements Message<MessageToClientUpdateClaim> {
@@ -52,14 +52,14 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
 
                 ClientManager.markClaimsChanged();
 
-                MinecraftForge.EVENT_BUS.post(new ClientClaimEvent.DataUpdated(newClaim, isCurrentClaim));
+                NeoForge.EVENT_BUS.post(new ClientClaimEvent.DataUpdated(newClaim, isCurrentClaim));
                 return;
             }
         }
 
         ClientManager.recruitsClaims.add(newClaim);
         ClientManager.markClaimsChanged();
-        MinecraftForge.EVENT_BUS.post(
+        NeoForge.EVENT_BUS.post(
                 new ClientClaimEvent.DataUpdated(newClaim, false));
     }
     @Override

@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.persistence.military;
 
 import com.talhanation.bannermod.events.ClaimEvent;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
@@ -57,7 +57,8 @@ public class RecruitsClaimManager {
         // ClaimEvent.Updated feuern – cancelable
         boolean isNew = claims.values().stream().noneMatch(c -> c.getUUID().equals(claim.getUUID()));
         ClaimEvent.Updated updateEvent = new ClaimEvent.Updated(claim, level, isNew);
-        if (MinecraftForge.EVENT_BUS.post(updateEvent)) return;
+        NeoForge.EVENT_BUS.post(updateEvent);
+        if (updateEvent.isCanceled()) return;
 
         claims.entrySet().removeIf(entry -> entry.getValue().getUUID().equals(claim.getUUID()));
 
@@ -75,7 +76,7 @@ public class RecruitsClaimManager {
         if (claim != null) {
             // ClaimEvent.Removed feuern
             ServerLevel level = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
-            MinecraftForge.EVENT_BUS.post(new ClaimEvent.Removed(claim, level));
+            NeoForge.EVENT_BUS.post(new ClaimEvent.Removed(claim, level));
 
             claims.entrySet().removeIf(entry -> entry.getValue().equals(claim));
             persistClaims(RecruitsClaimSaveData.get(level));

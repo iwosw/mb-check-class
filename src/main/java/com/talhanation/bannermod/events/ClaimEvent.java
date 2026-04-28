@@ -2,12 +2,12 @@ package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.eventbus.api.Cancelable;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * Events für den Lebenszyklus von Claims. Werden auf dem
- * {@code MinecraftForge.EVENT_BUS} gepostet und sind server-side only.
+ * {@code NeoForge.EVENT_BUS} gepostet und sind server-side only.
  *
  * <p>Hinweis: {@code ClaimEvent.Updated} deckt sowohl die erstmalige Erstellung
  * eines Claims als auch spätere Änderungen (Chunks hinzugefügt/entfernt, Name,
@@ -54,8 +54,7 @@ public abstract class ClaimEvent extends Event {
      *
      * @see com.talhanation.bannermod.persistence.military.RecruitsClaimManager#addOrUpdateClaim(ServerLevel, RecruitsClaim)
      */
-    @Cancelable
-    public static class Updated extends ClaimEvent {
+    public static class Updated extends ClaimEvent implements ICancellableEvent {
         private final boolean isNew;
 
         public Updated(RecruitsClaim claim, ServerLevel level, boolean isNew) {

@@ -5,7 +5,7 @@ import com.talhanation.bannermod.events.RecruitEvent;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ShieldItem;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 
 final class RecruitProgressionService {
     private RecruitProgressionService() {
@@ -59,7 +59,7 @@ final class RecruitProgressionService {
             recalculateCost(recruit);
             if (recruit.getMorale() < 100) recruit.setMoral(recruit.getMorale() + 5F);
             if (!recruit.getCommandSenderWorld().isClientSide()) {
-                MinecraftForge.EVENT_BUS.post(new RecruitEvent.LevelUp(recruit, recruit.getXpLevel()));
+                NeoForge.EVENT_BUS.post(new RecruitEvent.LevelUp(recruit, recruit.getXpLevel()));
             }
         }
     }
