@@ -6,6 +6,7 @@ import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapLifecycle;
 import com.talhanation.bannermod.settlement.prefab.BuildingPlacementService;
 import com.talhanation.bannermod.settlement.prefab.impl.BarracksPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.StoragePrefab;
@@ -120,6 +121,8 @@ final class WorkerSettlementEventService {
     }
 
     private static void bootstrapClaimSettlement(ServerLevel level, RecruitsClaim claim) {
+        // Automatic bootstrap covers CLAIM_AUTHORITY -> STARTER_POPULATION only; formal records and
+        // profession vacancies are created by the manual SettlementBootstrapLifecycle path.
         UUID claimId = claim.getUUID();
         if (claimId == null || CLAIM_SETTLEMENT_BOOTSTRAPPED.containsKey(claimId)) {
             return;
