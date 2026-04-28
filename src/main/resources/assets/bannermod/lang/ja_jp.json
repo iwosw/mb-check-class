@@ -914,6 +914,8 @@
   "gui.recruits.groups.tooltip.merge": "このグループを選択したグループに統合します。",
   "gui.recruits.groups.nearby": "近くの兵士を割り当て",
   "gui.recruits.groups.tooltip.nearby": "近くにいる全兵士がこのグループに割り当てられます。",
+  "gui.recruits.list.search_hint": "検索",
+  "gui.recruits.list.empty_search": "一致する項目はありません",
   "subtitles.recruits.messenger_horn": "伝令の角笛が鳴る",
   "gui.recruits.inv.takeOwnership": "所有権を取得",
   "gui.recruits.inv.openInventory": "インベントリ",

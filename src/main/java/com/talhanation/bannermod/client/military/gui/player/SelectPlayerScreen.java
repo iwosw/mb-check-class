@@ -12,7 +12,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
@@ -47,9 +46,6 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
     private final boolean includeSelf;
     private final PlayersList.FilterType filterType;
 
-    private int gapTop;
-    private int gapBottom;
-
     public SelectPlayerScreen(Screen parent, Player player, Component title, Component buttonText, Component buttonTooltip, boolean includeSelf, PlayersList.FilterType filterType, Consumer<RecruitsPlayerInfo> buttonAction){
         super(title,236,0);
         this.parent = parent;
@@ -66,27 +62,23 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
     protected void init() {
         super.init();
 
-        gapTop = (int) (this.height * 0.1);
-        gapBottom = (int) (this.height * 0.1);
+        ListLayout layout = calculateListLayout(HEADER_SIZE, FOOTER_SIZE, SEARCH_HEIGHT, UNIT_SIZE, CELL_HEIGHT);
 
         guiLeft = guiLeft + 2;
-        guiTop = gapTop;
+        guiTop = layout.gapTop;
 
-        int minUnits = Mth.ceil((float) (CELL_HEIGHT + SEARCH_HEIGHT + 4) / (float) UNIT_SIZE);
-        units = Math.max(minUnits, (height - HEADER_SIZE - FOOTER_SIZE - gapTop - gapBottom - SEARCH_HEIGHT) / UNIT_SIZE);
+        units = layout.units;
         ySize = HEADER_SIZE + units * UNIT_SIZE + FOOTER_SIZE;
+        int listY = guiTop + HEADER_SIZE + SEARCH_HEIGHT;
+        int listHeight = units * UNIT_SIZE - SEARCH_HEIGHT;
 
         if (playerList != null) {
-            playerList.setRectangle(width, units * UNIT_SIZE - SEARCH_HEIGHT, 0, guiTop + HEADER_SIZE + SEARCH_HEIGHT);
+            playerList.setListBounds(width, listHeight, 0, listY);
         } else {
-            playerList = new PlayersList(width, height, guiTop + HEADER_SIZE + SEARCH_HEIGHT, guiTop + HEADER_SIZE + units * UNIT_SIZE, CELL_HEIGHT, this, filterType, player, includeSelf);
+            playerList = new PlayersList(width, listHeight, 0, listY, CELL_HEIGHT, this, filterType, player, includeSelf);
         }
         String string = searchBox != null ? searchBox.getValue() : "";
-        searchBox = new EditBox(font, guiLeft + 8, guiTop + HEADER_SIZE, 220, SEARCH_HEIGHT, Component.literal("SEARCH_HINT"));
-        searchBox.setMaxLength(16);
-        searchBox.setTextColor(0xFFFFFF);
-        searchBox.setValue(string);
-        searchBox.setResponder(this::checkSearchStringUpdate);
+        searchBox = createSearchBox(string, guiLeft + 8, guiTop + HEADER_SIZE, 220, SEARCH_HEIGHT, this::checkSearchStringUpdate);
         addWidget(searchBox);
         addWidget(playerList);
 
@@ -142,27 +134,14 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, HEADER_SIZE);
-        for (int i = 0; i < units; i++) {
-            guiGraphics.blit(TEXTURE, guiLeft, guiTop + HEADER_SIZE + UNIT_SIZE * i, 0, HEADER_SIZE, xSize, UNIT_SIZE);
-        }
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop + HEADER_SIZE + UNIT_SIZE * units, 0, HEADER_SIZE + UNIT_SIZE, xSize, FOOTER_SIZE);
-        guiGraphics.blit(TEXTURE, guiLeft + 10, guiTop + HEADER_SIZE + 6 - 2, xSize, 0, 12, 12);
+        renderListPanel(guiGraphics, TEXTURE, HEADER_SIZE, UNIT_SIZE, FOOTER_SIZE, units);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, this.getTitle(), width / 2 - font.width(this.getTitle()) / 2, guiTop + 5, 4210752, false);
 
-        if (!playerList.isEmpty()) {
-            playerList.render(guiGraphics, mouseX, mouseY, delta);
-        } else if (!searchBox.getValue().isEmpty()) {
-            guiGraphics.drawCenteredString(font, "EMPTY_SEARCH", width / 2, guiTop + HEADER_SIZE + (units * UNIT_SIZE) / 2 - font.lineHeight / 2, -1);
-        }
-        if (!searchBox.isFocused() && searchBox.getValue().isEmpty()) {
-            guiGraphics.drawString(font, "", searchBox.getX(), searchBox.getY(), -1);
-        }
-        searchBox.render(guiGraphics, mouseX, mouseY, delta);
+        renderSearchableList(guiGraphics, playerList, searchBox, mouseX, mouseY, delta, HEADER_SIZE, UNIT_SIZE, units);
     }
 
     private void checkSearchStringUpdate(String string) {
@@ -176,11 +155,9 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
     public boolean mouseClicked(double x, double y, int z) {
         if(playerList != null) playerList.mouseClicked(x,y,z);
         boolean flag = super.mouseClicked(x, y, z);
-        if(this.playerList.getFocused() != null){
-            this.selected = this.playerList.getFocused().getPlayerInfo();
-
-            this.actionButton.active = true;
-        }
+        RecruitsPlayerEntry entry = playerList.getPlayerEntryAtPosition(x, y);
+        this.selected = entry == null ? null : entry.getPlayerInfo();
+        this.actionButton.active = selected != null;
 
         return flag;
     }

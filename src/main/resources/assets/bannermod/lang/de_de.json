@@ -1123,6 +1123,8 @@
   "gui.recruits.groups.tooltip.merge": "Führt diese Gruppe in die ausgewählte Gruppe zusammen.",
   "gui.recruits.groups.nearby": "Nahestehende Rekruten zuweisen",
   "gui.recruits.groups.tooltip.nearby": "Alle nahestehenden Rekruten werden dieser Gruppe zugewiesen.",
+  "gui.recruits.list.search_hint": "Suchen",
+  "gui.recruits.list.empty_search": "Keine passenden Einträge",
   "subtitles.recruits.messenger_horn": "Botenhorn ertönt",
   "gui.recruits.inv.takeOwnership": "Übernehmen",
   "gui.recruits.inv.openInventory": "Inventar",

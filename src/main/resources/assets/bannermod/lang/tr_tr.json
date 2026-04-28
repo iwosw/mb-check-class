@@ -1123,6 +1123,8 @@
   "gui.recruits.groups.tooltip.merge": "Bu grubu seçilen grupla birleştirir.",
   "gui.recruits.groups.nearby": "Yakındaki Askerleri Ata",
   "gui.recruits.groups.tooltip.nearby": "Yakındaki tüm askerler bu gruba atanacak.",
+  "gui.recruits.list.search_hint": "Ara",
+  "gui.recruits.list.empty_search": "Eşleşen kayıt yok",
   "subtitles.recruits.messenger_horn": "Haberci borozanı çalyior",
   "gui.recruits.inv.takeOwnership": "Sahiplen",
   "gui.recruits.inv.openInventory": "Envanter",

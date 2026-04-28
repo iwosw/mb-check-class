@@ -1136,6 +1136,8 @@
   "gui.recruits.groups.tooltip.merge": "Объединяет эту группу с выбранной.",
   "gui.recruits.groups.nearby": "Назначить ближайших рекрутов",
   "gui.recruits.groups.tooltip.nearby": "Все ближайшие рекруты будут назначены в эту группу.",
+  "gui.recruits.list.search_hint": "Поиск",
+  "gui.recruits.list.empty_search": "Совпадений нет",
   "subtitles.recruits.messenger_horn": "Играет рог посланника",
   "gui.recruits.inv.takeOwnership": "Командовать",
   "gui.recruits.inv.openInventory": "Инвентарь",

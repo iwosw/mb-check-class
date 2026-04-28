@@ -72,8 +72,8 @@ public class EditOrAddGroupScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.leftPos = (this.width - this.imageWidth) / 2;
-        this.topPos = (this.height - this.imageHeight) / 2;
+        this.leftPos = Math.max(0, (this.width - this.imageWidth) / 2);
+        this.topPos = Math.max(0, (this.height - this.imageHeight) / 2);
 
 
         setWidgets();

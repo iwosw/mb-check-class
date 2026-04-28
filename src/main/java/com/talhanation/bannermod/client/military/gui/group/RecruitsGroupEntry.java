@@ -9,20 +9,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 @OnlyIn(Dist.CLIENT)
 public class RecruitsGroupEntry extends ListScreenEntryBase<RecruitsGroupEntry> {
-    protected static final int SKIN_SIZE = 24;
-    protected static final int PADDING = 4;
-    protected static final int BG_FILL = FastColor.ARGB32.color(255, 80, 80, 80);
-    protected static final int BG_FILL_HOVERED = FastColor.ARGB32.color(255, 100, 100, 100);
-    protected static final int BG_FILL_SELECTED = FastColor.ARGB32.color(255, 10, 10, 10);
-    protected static final int PLAYER_NAME_COLOR = FastColor.ARGB32.color(255, 255, 255, 255);
-
     protected final Minecraft minecraft;
     protected final IGroupSelection screen;
     protected final @NotNull RecruitsGroup group;
@@ -36,25 +28,12 @@ public class RecruitsGroupEntry extends ListScreenEntryBase<RecruitsGroupEntry> 
 
     @Override
     public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovered, float delta) {
-        int skinX = left + PADDING;
-        int skinY = top + (height - SKIN_SIZE) / 2;
-        int textX = skinX + SKIN_SIZE + PADDING;
-        int textY = top + (height - minecraft.font.lineHeight) / 2;
-
-        guiGraphics.fill(left, top, left + width, top + height, BG_FILL);
-
-        renderElement(guiGraphics, index, top, left, width, height, mouseX, mouseY, hovered, delta, skinX, skinY, textX, textY);
+        renderElement(guiGraphics, top, left, width, height, hovered, iconX(left), iconY(top, height), textX(left), textY(minecraft, top, height));
     }
 
-    public void renderElement(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovered, float delta, int skinX, int skinY, int textX, int textY) {
+    public void renderElement(GuiGraphics guiGraphics, int top, int left, int width, int height, boolean hovered, int skinX, int skinY, int textX, int textY) {
         boolean selected = screen.getSelected() != null && group.getUUID().equals(screen.getSelected().getUUID());
-        if (selected) {
-            guiGraphics.fill(left, top, left + width, top + height, BG_FILL_SELECTED);
-        } else if (hovered) {
-            guiGraphics.fill(left, top, left + width, top + height, BG_FILL_HOVERED);
-        } else {
-            guiGraphics.fill(left, top, left + width, top + height, BG_FILL);
-        }
+        renderRowBackground(guiGraphics, left, top, width, height, hovered, selected, ROW_FILL_ALT);
 
         if(this.image != null){
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
@@ -63,8 +42,8 @@ public class RecruitsGroupEntry extends ListScreenEntryBase<RecruitsGroupEntry> 
             guiGraphics.blit(this.image,  left + 5,  top + 5, 0, 0, 21, 21, 21, 21);
         }
 
-        guiGraphics.drawString(minecraft.font, group.getName(), (float) textX, (float) textY,  PLAYER_NAME_COLOR, false);
-        guiGraphics.drawString(minecraft.font, "[" + group.getCount() + "/" + group.getSize() + "]", (float) textX + 130, (float) textY,  PLAYER_NAME_COLOR, false);
+        guiGraphics.drawString(minecraft.font, group.getName(), (float) textX, (float) textY,  ROW_TEXT, false);
+        guiGraphics.drawString(minecraft.font, "[" + group.getCount() + "/" + group.getSize() + "]", (float) textX + 130, (float) textY,  ROW_TEXT, false);
 
     }
     public RecruitsGroup getGroup() {
@@ -76,4 +55,3 @@ public class RecruitsGroupEntry extends ListScreenEntryBase<RecruitsGroupEntry> 
         return screen.getGroupList();
     }
 }
-
