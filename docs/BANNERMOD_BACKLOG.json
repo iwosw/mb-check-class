@@ -2789,7 +2789,7 @@
     {
       "id": "PORT-003",
       "title": "Migrate BannerMod source APIs to NeoForge 1.21.1",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "Forge 1.20.1 APIs must be migrated before the port can compile or smoke run.",
       "scope": [
@@ -2799,9 +2799,14 @@
         "Root source compiles against NeoForge 1.21.1 with old Forge 1.20.1 assumptions removed or documented."
       ],
       "dependencies": [
-        "PORT-002"
+        "PORT-009"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Attempted direct verification on feature/port-003: ctx log -- ./gradlew compileJava failed with 1130 compile errors. First clusters are removed or renamed Forge event/overlay APIs, entity inventory/synched-data/saved-data APIs, registry/menu/spawn egg/item component APIs, and networking payload assumptions. Split remaining PORT-003 source migration into dependency chain PORT-005 -> PORT-006 -> PORT-007 -> PORT-008 -> PORT-009; PORT-003 now waits for PORT-009 to prove root compileJava."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -3140,6 +3145,101 @@
       ],
       "dependencies": [
         "GAME-013"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-005",
+      "title": "Migrate NeoForge event and overlay APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile is blocked by removed or renamed Forge event and client overlay APIs across root src.",
+      "scope": [
+        "Replace Forge event imports, event-bus annotations, and client HUD overlay hooks with NeoForge 1.21.1 APIs used by the active source tree."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing Forge event, EventBusSubscriber, or RenderGuiOverlayEvent overlay API symbols."
+      ],
+      "dependencies": [
+        "PORT-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-006",
+      "title": "Migrate entity inventory and saved-data APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile is blocked by Minecraft 1.21.1 entity equipment, synched data, container, and saved-data API changes.",
+      "scope": [
+        "Update recruit, citizen, and worker entity inventory, equipment, synched-data, damage, and saved-data usages to the 1.21.1-compatible APIs without changing gameplay semantics."
+      ],
+      "acceptance": [
+        "compileJava no longer reports entity inventory, equipment, synched-data, item damage, SimpleContainer internals, or saved-data provider API errors."
+      ],
+      "dependencies": [
+        "PORT-005"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-007",
+      "title": "Migrate registries, menus, spawn eggs, and item components",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile is blocked by registry, menu, spawn egg, and item NBT/component API differences after the NeoForge 1.21.1 move.",
+      "scope": [
+        "Update active root registrations and item data usage for menus, screens, spawn eggs, placement items, and related registries to NeoForge 1.21.1-compatible APIs."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing registry, menu screen, spawn egg, or item NBT/component API symbols."
+      ],
+      "dependencies": [
+        "PORT-006"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-008",
+      "title": "Migrate network packet payload APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-003 compile depends on replacing legacy Forge networking assumptions with NeoForge 1.21.1 payload registration and handling APIs.",
+      "scope": [
+        "Update root network registration, message encoding/decoding, sender/context handling, and client/server dispatch call sites to NeoForge 1.21.1-compatible packet payload APIs."
+      ],
+      "acceptance": [
+        "compileJava no longer reports networking API errors and at least one focused server-authoritative command packet path is code-inspected through the new payload handler."
+      ],
+      "dependencies": [
+        "PORT-007"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-009",
+      "title": "Close remaining NeoForge source compile blockers",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "After the major API clusters are migrated, PORT-003 still needs a final pass to remove residual Forge 1.20.1 source assumptions.",
+      "scope": [
+        "Fix or document remaining root source compile blockers after PORT-005 through PORT-008, keeping changes limited to active src and build metadata required for NeoForge 1.21.1 compilation."
+      ],
+      "acceptance": [
+        "Root ./gradlew compileJava passes on the NeoForge 1.21.1 branch, with any intentionally retained compatibility assumptions documented."
+      ],
+      "dependencies": [
+        "PORT-008"
       ],
       "progress": [],
       "verification": [],
