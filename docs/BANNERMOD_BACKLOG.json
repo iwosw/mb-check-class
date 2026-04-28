@@ -3412,7 +3412,7 @@
     {
       "id": "PORT-015",
       "title": "Port remaining military inventory and equipment APIs",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-009 compile exposes additional inventory/equipment API changes beyond the first PORT-006 migration.",
       "scope": [
@@ -3425,8 +3425,14 @@
         "PORT-014"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Ported remaining military inventory/equipment API usage: removed direct Mob armorItems/handItems access, switched NBT item restore to registry-aware ItemStack.parseOptional, replaced old sword damage comparisons with stack attribute modifier damage, and converted remaining military setDamageValue durability handling to hurtAndBreak/isDamageableItem. Targeted searches show no direct .armorItems/.handItems access, no military setDamageValue calls, and no old sword getDamage usage; remaining getDamage matches are Small Ships compatibility calls. compileJava still fails on out-of-scope PORT-018 mixin/pathing/DistExecutor blockers."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-016",
