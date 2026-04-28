@@ -3183,7 +3183,7 @@
     {
       "id": "PORT-006",
       "title": "Migrate entity inventory and saved-data APIs",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-003 compile is blocked by Minecraft 1.21.1 entity equipment, synched data, container, and saved-data API changes.",
       "scope": [
@@ -3201,8 +3201,14 @@
           "text": "Urgent PORT ordering update: after PORT-005 closure, compileJava is still masked by Forge common/distmarker/FML bootstrap imports before the entity inventory and saved-data acceptance can be observed. PORT-006 now waits for PORT-013 to clear that front blocker."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) Migrated recruit/citizen/worker SynchedEntityData builder APIs, entity inventory ItemStack serialization/comparison, direct custom inventory iteration, item handler wrapper, and military/war/governance/settlement SavedData factories with HolderLookup.Provider load/save signatures; 2) ctx search found zero isSameItemSameTags matches and remaining .items matches are false positives, vanilla Player Inventory GUI access, metric strings, or non-inventory fields; 3) compileJava still fails on out-of-scope mixin mapping, Forge network/bootstrap, and registry migration clusters, with no PORT-006 inventory/saved-data provider API errors visible in the summary."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-007",
