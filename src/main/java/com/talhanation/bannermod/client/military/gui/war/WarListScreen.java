@@ -13,6 +13,7 @@ import com.talhanation.bannermod.war.runtime.RevoltRecord;
 import com.talhanation.bannermod.war.runtime.RevoltState;
 import com.talhanation.bannermod.war.runtime.SiegeStandardRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
+import com.talhanation.bannermod.war.runtime.WarGoalType;
 import com.talhanation.bannermod.war.runtime.WarState;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.ChatFormatting;
@@ -326,7 +327,7 @@ public class WarListScreen extends Screen {
                 text("gui.bannermod.war_list.detail.sieges", activeSiegeCount(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.revolts", revoltSummary(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.outcome_ui").getString(),
-                text("gui.bannermod.war_list.detail.locked").getString(),
+                text("gui.bannermod.war_list.detail.consequences", consequenceSummary(war)).getString(),
                 text("gui.bannermod.war_list.detail.id", shortId(war.id())).getString()
         };
         for (String s : body) {
@@ -412,6 +413,27 @@ public class WarListScreen extends Screen {
         if (occupation == null || occupation.chunks().isEmpty()) return text("gui.bannermod.common.unknown").getString();
         ChunkPos chunk = occupation.chunks().get(0);
         return text("gui.bannermod.war_list.chunk", chunk.x, chunk.z).getString();
+    }
+
+    private String consequenceSummary(WarDeclarationRecord war) {
+        boolean hasOccupations = !WarClientState.occupationsForWar(war.id()).isEmpty();
+        boolean hasRevolts = !WarClientState.revoltsForWar(war.id()).isEmpty();
+        if (war.goalType() == WarGoalType.TRIBUTE && war.state() == WarState.RESOLVED) {
+            return text("gui.bannermod.war_list.consequence.tribute_resolved").getString();
+        }
+        if (hasOccupations && hasRevolts) {
+            return text("gui.bannermod.war_list.consequence.occupation_revolt_tax").getString();
+        }
+        if (hasOccupations) {
+            return text("gui.bannermod.war_list.consequence.occupation_tax").getString();
+        }
+        if (hasRevolts) {
+            return text("gui.bannermod.war_list.consequence.revolt").getString();
+        }
+        if (war.goalType() == WarGoalType.TRIBUTE) {
+            return text("gui.bannermod.war_list.consequence.tribute_pending").getString();
+        }
+        return text("gui.bannermod.common.none").getString();
     }
 
     private String revoltPressureLine(RevoltRecord revolt) {
