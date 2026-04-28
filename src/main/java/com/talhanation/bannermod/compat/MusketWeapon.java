@@ -262,6 +262,10 @@ public class MusketWeapon implements IWeapon {
 
     @Override
     public void performRangedAttackIWeapon(AbstractRecruitEntity shooter, double x, double y, double z, float projectileSpeed) {
+        if (MedievalBoomsticksCompat.fireWithBoomsticks(shooter, x, y, z)) {
+            return;
+        }
+
         AbstractHurtingProjectile projectileEntity = this.getProjectile(shooter);
         double d0 = x - shooter.getX();
         double d1 = y + 0.5D - projectileEntity.getY();

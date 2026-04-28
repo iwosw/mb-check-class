@@ -1,10 +1,16 @@
 package com.talhanation.bannermod.compat;
 
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.phys.Vec3;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -58,6 +64,43 @@ public final class MedievalBoomsticksCompat {
         ItemStack stack = item.getDefaultInstance();
         stack.setCount(count);
         return stack;
+    }
+
+    public static int reloadDurationOrDefault(ItemStack stack, int defaultDuration) {
+        try {
+            Class<?> gunItemClass = Class.forName("ewewukek.musketmod.GunItem");
+            Method reloadDuration = gunItemClass.getMethod("reloadDuration", ItemStack.class);
+            Object duration = reloadDuration.invoke(null, stack);
+            if (duration instanceof Integer ticks) {
+                return ticks;
+            }
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            BannerModMain.LOGGER.info("Medieval Boomsticks reload duration API was not found");
+        }
+        return defaultDuration;
+    }
+
+    public static boolean fireWithBoomsticks(AbstractRecruitEntity shooter, double x, double y, double z) {
+        ItemStack stack = shooter.getMainHandItem();
+        if (!isSupportedRecruitFirearm(stack)) {
+            return false;
+        }
+
+        try {
+            Class<?> gunItemClass = Class.forName("ewewukek.musketmod.GunItem");
+            if (!gunItemClass.isInstance(stack.getItem())) {
+                return false;
+            }
+
+            Vec3 direction = new Vec3(x - shooter.getX(), y + 0.5D - shooter.getEyeY(), z - shooter.getZ()).normalize();
+            Method mobUse = gunItemClass.getMethod("mobUse", net.minecraft.world.entity.LivingEntity.class, InteractionHand.class, Vec3.class);
+            mobUse.invoke(stack.getItem(), shooter, InteractionHand.MAIN_HAND, direction);
+            shooter.damageMainHandItem();
+            return true;
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            BannerModMain.LOGGER.info("Medieval Boomsticks mob firing API was not found");
+            return false;
+        }
     }
 
     private static Optional<FirearmContract> contract(ItemStack stack) {
