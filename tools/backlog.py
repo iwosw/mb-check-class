@@ -9,6 +9,7 @@ agent context.
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 import json
 import os
 import re
@@ -72,6 +73,13 @@ def main() -> int:
     p_set_deps.add_argument("id", help="Task id")
     p_set_deps.add_argument("--depends-on", action="append", default=[], help="Task id dependency; repeatable")
 
+    p_split = sub.add_parser("split", help="Split one parent task into child tasks and wire dependencies")
+    p_split.add_argument("id", help="Parent task id")
+    p_split.add_argument("--child-file", required=True, help="JSON file containing child task objects")
+    p_split.add_argument("--progress", required=True, help="Parent progress note describing landed and moved work")
+    p_split.add_argument("--date", default=today(), help="Progress/update date")
+    p_split.add_argument("--dry-run", action="store_true", help="Validate and preview without writing")
+
     p_done = sub.add_parser("done", help="Mark a task done after verification")
     p_done.add_argument("id", help="Task id")
     p_done.add_argument("--verification", required=True, help="Verification result proving acceptance is satisfied")
@@ -100,6 +108,8 @@ def main() -> int:
         return cmd_progress(path, data, args)
     if args.command == "set-deps":
         return cmd_set_deps(path, data, args)
+    if args.command == "split":
+        return cmd_split(path, data, args)
     if args.command == "done":
         return cmd_done(path, data, args)
     if args.command == "validate":
@@ -274,7 +284,7 @@ def cmd_add(path: Path, data: dict[str, Any], args: argparse.Namespace) -> int:
         "verification": [],
         "evidence": clean_optional_list(args.evidence, "evidence"),
     }
-    draft = dict(data)
+    draft = deepcopy(data)
     draft["tasks"] = [*tasks(data), task]
     validate_or_exit(draft)
     if args.dry_run:
@@ -311,6 +321,45 @@ def cmd_set_deps(path: Path, data: dict[str, Any], args: argparse.Namespace) -> 
         print(f"Updated dependencies for {task_id}: {', '.join(dependencies)}")
     else:
         print(f"Updated dependencies for {task_id}: none")
+    return 0
+
+
+def cmd_split(path: Path, data: dict[str, Any], args: argparse.Namespace) -> int:
+    parent = find_task(data, args.id)
+    parent_id = str(parent.get("id", "")).upper()
+    progress_text = required_text(args.progress, "progress")
+    child_specs = load_child_specs(Path(args.child_file))
+    child_ids = [str(task["id"]) for task in child_specs]
+    for child in child_specs:
+        child["updated"] = args.date
+    if parent_id in child_ids:
+        raise SystemExit(f"{parent_id} cannot be split into itself")
+    existing_ids = {str(task.get("id", "")).upper() for task in tasks(data)}
+    duplicates = [task_id for task_id in child_ids if task_id in existing_ids]
+    if duplicates:
+        raise SystemExit(f"child task already exists: {', '.join(duplicates)}")
+
+    draft = deepcopy(data)
+    draft_parent = find_task(draft, parent_id)
+    draft_parent["dependencies"] = child_ids
+    draft_parent["updated"] = args.date
+    draft_parent.setdefault("progress", []).append({"date": args.date, "text": progress_text})
+    if draft_parent.get("status") == "open":
+        draft_parent["status"] = "in_progress"
+    draft["tasks"] = [*tasks(draft), *child_specs]
+    validate_or_exit(draft)
+
+    if args.dry_run:
+        print("Split validation OK; no file written.")
+        print(f"Parent {parent_id} dependencies would become: {', '.join(child_ids)}")
+        for child in child_specs:
+            print_task(child, compact=True)
+        return 0
+
+    data.clear()
+    data.update(draft)
+    save(path, data)
+    print(f"Split {parent_id} into children: {', '.join(child_ids)}")
     return 0
 
 
@@ -489,6 +538,53 @@ def clean_optional_task_ids(values: list[str], field: str) -> list[str]:
     if len(set(normalized)) != len(normalized):
         raise SystemExit(f"{field} contains duplicate task ids")
     return normalized
+
+
+def load_child_specs(path: Path) -> list[dict[str, Any]]:
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            value = json.load(fh)
+    except FileNotFoundError:
+        raise SystemExit(f"child spec not found: {path}")
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"invalid JSON in child spec {path}: {exc}")
+    if not isinstance(value, list) or not value:
+        raise SystemExit("child spec must be a non-empty JSON array")
+
+    children: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, item in enumerate(value, start=1):
+        if not isinstance(item, dict):
+            raise SystemExit(f"child spec #{index} must be an object")
+        task_id = normalize_task_id(str(item.get("id", "")))
+        if task_id in seen:
+            raise SystemExit(f"child spec contains duplicate task id {task_id}")
+        seen.add(task_id)
+        children.append(
+            {
+                "id": task_id,
+                "title": required_text(str(item.get("title", "")), "title"),
+                "status": "open",
+                "updated": today(),
+                "why": required_text(str(item.get("why", "")), "why"),
+                "scope": clean_list(child_spec_list(item, index, "scope"), "scope"),
+                "acceptance": clean_list(child_spec_list(item, index, "acceptance"), "acceptance"),
+                "dependencies": clean_optional_task_ids(child_spec_list(item, index, "dependencies"), "dependencies"),
+                "progress": [],
+                "verification": [],
+                "evidence": clean_optional_list(child_spec_list(item, index, "evidence"), "evidence"),
+            }
+        )
+    return children
+
+
+def child_spec_list(item: dict[str, Any], index: int, field: str) -> list[str]:
+    value = item.get(field, [])
+    if not isinstance(value, list):
+        raise SystemExit(f"child spec #{index} {field} must be a list")
+    if not all(isinstance(entry, str) for entry in value):
+        raise SystemExit(f"child spec #{index} {field} must contain only strings")
+    return value
 
 
 def dependency_list(task: dict[str, Any]) -> list[str]:
