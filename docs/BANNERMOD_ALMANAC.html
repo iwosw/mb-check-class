@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BannerMod Player Almanac</title>
+  <style>
+    :root {
+      --leather: #3a2116;
+      --leather-hi: #74472b;
+      --paper: #e8d39a;
+      --paper-hi: #f6e6b7;
+      --paper-edge: #b88645;
+      --ink: #23160d;
+      --muted: #684a2d;
+      --red: #8a271e;
+      --green: #315b34;
+      --blue: #273f67;
+      --gold: #b9832f;
+      --slot: #8b744f;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font: 15px/1.42 Georgia, "Times New Roman", serif;
+      background:
+        linear-gradient(45deg, #1d1712 25%, transparent 25%) 0 0/32px 32px,
+        linear-gradient(45deg, transparent 75%, #1d1712 75%) 0 0/32px 32px,
+        #2c241b;
+    }
+    .cover {
+      max-width: 1180px;
+      margin: 22px auto;
+      padding: 22px;
+      background: linear-gradient(90deg, var(--leather), var(--leather-hi) 10%, #4b2a1a 48%, #2b170f 50%, #4b2a1a 52%, var(--leather-hi) 90%, var(--leather));
+      border: 5px solid #120b07;
+      box-shadow: 0 18px 60px rgba(0,0,0,.55), inset 0 0 28px rgba(255,220,140,.18);
+    }
+    header.book-title {
+      color: #f5d88c;
+      text-align: center;
+      padding: 12px 10px 22px;
+      text-shadow: 2px 2px #140907;
+      border: 2px solid #9a6732;
+      margin-bottom: 16px;
+      background: rgba(0,0,0,.16);
+    }
+    h1 { margin: 0; font-size: clamp(34px, 5vw, 58px); letter-spacing: .04em; }
+    .subtitle { margin: 5px 0 0; color: #e6c57a; font-style: italic; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 0 0 18px;
+    }
+    nav a {
+      color: #f4ddaa;
+      text-decoration: none;
+      padding: 5px 9px;
+      border: 1px solid #a87538;
+      background: rgba(0,0,0,.22);
+    }
+    .spread {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin: 18px 0;
+    }
+    .page {
+      position: relative;
+      min-height: 680px;
+      padding: 26px 28px 44px;
+      background:
+        linear-gradient(90deg, rgba(122,75,24,.20), transparent 8%, transparent 92%, rgba(122,75,24,.22)),
+        radial-gradient(circle at 20% 8%, rgba(255,255,255,.28), transparent 18%),
+        linear-gradient(var(--paper-hi), var(--paper));
+      border: 3px solid var(--paper-edge);
+      box-shadow: inset 0 0 26px rgba(88,48,15,.24), 0 2px 0 rgba(0,0,0,.25);
+    }
+    .page:after {
+      content: attr(data-page);
+      position: absolute;
+      bottom: 12px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    h2 { margin: 0 0 10px; color: var(--red); font-size: 25px; border-bottom: 3px double rgba(138,39,30,.4); }
+    h3 { margin: 15px 0 5px; color: var(--green); font-size: 18px; }
+    p { margin: 7px 0; }
+    ul, ol { margin: 6px 0 8px; padding-left: 22px; }
+    li { margin: 4px 0; }
+    code { padding: 1px 5px; background: rgba(80,48,12,.14); border: 1px solid rgba(80,48,12,.22); }
+    .recipe {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 30px);
+      gap: 4px;
+      margin: 6px 0;
+      vertical-align: middle;
+    }
+    .slot {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      background: #c7aa72;
+      border: 2px solid var(--slot);
+      box-shadow: inset 2px 2px rgba(255,255,255,.22), inset -2px -2px rgba(70,38,10,.25);
+      font-weight: bold;
+    }
+    .callout { padding: 9px 11px; margin: 9px 0; border-left: 5px solid var(--gold); background: rgba(255,255,255,.28); }
+    .danger { border-left-color: var(--red); }
+    .blue { border-left-color: var(--blue); }
+    .kbd { display: inline-block; min-width: 22px; text-align: center; padding: 1px 5px; border: 2px solid #5a4630; background: #d7bd7d; box-shadow: inset 1px 1px #fff0be; font-weight: bold; }
+    .columns { columns: 2 220px; column-gap: 24px; }
+    .tag { display: inline-block; color: #f8e6b2; background: var(--red); padding: 2px 7px; margin: 1px; font-size: 12px; border-radius: 2px; }
+    .small { font-size: 13px; color: var(--muted); }
+    .lang-switch {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 8px;
+      margin: -6px 0 12px;
+      background: rgba(28, 15, 9, .72);
+      border: 1px solid #a87538;
+    }
+    .lang-switch button {
+      cursor: pointer;
+      color: #f5d88c;
+      background: #3a2116;
+      border: 2px solid #a87538;
+      padding: 5px 16px;
+      font: bold 14px Georgia, "Times New Roman", serif;
+    }
+    body.lang-en .ru, body.lang-ru .en { display: none; }
+    body.lang-en .lang-switch button[data-lang="en"], body.lang-ru .lang-switch button[data-lang="ru"] { background: #8a271e; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+    th, td { border: 1px solid rgba(80,48,12,.35); padding: 5px 6px; vertical-align: top; }
+    th { color: var(--red); background: rgba(255,255,255,.22); }
+    @media (max-width: 860px) { .spread { grid-template-columns: 1fr; } .page { min-height: auto; } }
+  </style>
+</head>
+<body class="lang-en">
+  <main class="cover">
+    <header class="book-title">
+      <h1>BannerMod Player Almanac</h1>
+      <p class="subtitle">A practical field book for kingdoms, settlements, recruits, logistics, and siege warfare.</p>
+    </header>
+    <nav aria-label="Chapters">
+      <a href="#p1">Basics</a><a href="#p2">Founding</a><a href="#p3">Surveyor</a><a href="#p4">Buildings</a><a href="#p5">Life Cycle</a><a href="#p6">Economy</a><a href="#p7">Workers</a><a href="#p8">Recruits</a><a href="#p9">Politics</a><a href="#p10">War</a><a href="#p11">Sieges</a><a href="#p12">Trouble</a>
+    </nav>
+    <div class="lang-switch" aria-label="Language switch">
+      <button type="button" data-lang="en" onclick="document.body.className='lang-en'">English</button>
+      <button type="button" data-lang="ru" onclick="document.body.className='lang-ru'">Русский</button>
+    </div>
+
+    <section class="spread">
+      <article class="page" id="p1" data-page="1">
+        <h2>1. What BannerMod Adds</h2>
+        <p>BannerMod turns multiplayer Minecraft into a feudal strategy sandbox. It does not replace normal survival; it gives your base a political owner, workforce, economy, army, and war objectives.</p>
+        <h3>The three foundations</h3>
+        <table>
+          <tr><th>Concept</th><th>Meaning</th><th>Where</th></tr>
+          <tr><td>Claim</td><td>Protected Overworld land. Claims control block protection and settlement ownership.</td><td>Map <span class="kbd">M</span></td></tr>
+          <tr><td>Settlement</td><td>A living base: fort, homes, workers, citizens, storage, markets, projects, logistics.</td><td>Surveyor + Wand</td></tr>
+          <tr><td>State</td><td>Your political side: leaders, co-leaders, wars, allies, capitals, government form.</td><td>War Room <span class="kbd">U</span></td></tr>
+        </table>
+        <h3>Default controls</h3>
+        <p><span class="kbd">M</span> opens the world map. <span class="kbd">U</span> opens the War Room. <span class="kbd">R</span> opens recruit command controls. <span class="kbd">X</span> opens worker command controls.</p>
+        <div class="callout blue">Claims are Overworld-only. Nether and End chunks at matching X/Z coordinates are not protected by Overworld claims.</div>
+        <div class="ru">
+          <h3>Коротко по-русски</h3>
+          <p><strong>Клейм</strong> - защищенная земля в обычном мире. <strong>Поселение</strong> - живая база с фортом, домами, складами, рынком, рабочими и жителями. <strong>Государство</strong> - твоя политическая сторона для войн, союзов и управления.</p>
+          <p>Клавиши: <span class="kbd">M</span> карта, <span class="kbd">U</span> War Room, <span class="kbd">R</span> команды рекрутов, <span class="kbd">X</span> команды рабочих.</p>
+        </div>
+      </article>
+
+      <article class="page" id="p2" data-page="2">
+        <h2>2. Founding A Settlement</h2>
+        <ol>
+          <li>Pick a base location and claim a nearby Overworld chunk on the map.</li>
+          <li>Create a state: <code>/bannermod state create &lt;name&gt;</code>. You become leader.</li>
+          <li>Craft the two settlement tools.</li>
+          <li>Build a <code>Starter Fort</code>. This is the keystone; no settlement appears without it.</li>
+          <li>Use the surveyor to mark anchor and zones. Validate by right-clicking air.</li>
+          <li>On success, BannerMod creates or binds a claim, creates a <code>SettlementRecord</code>, spawns starter workers, and spawns four free citizens for vacancies.</li>
+        </ol>
+        <h3>Tool recipes</h3>
+        <p><strong>Settlement Surveyor Tool:</strong> 2 sticks, 2 oak planks, 1 iron ingot in a stairs-shaped pattern.</p>
+        <p><strong>Building Placement Wand:</strong> one gold block above one stick.</p>
+        <div class="callout danger">If founding fails, read the chat reason: missing state, missing anchor, missing required zone, invalid fort, town too close, no owned claim, or server-side claim rejection.</div>
+        <h3>What to do after bootstrap</h3>
+        <ol>
+          <li>Open the map and confirm the claim exists and belongs to your side.</li>
+          <li>Register storage first, because many later systems use stockpile visibility.</li>
+          <li>Register market second if you want state promotion and trade hints.</li>
+          <li>Add homes before growing population too far beyond capacity.</li>
+          <li>Create farm, mine, lumber camp, and architect workshop to unlock useful vacancies.</li>
+        </ol>
+        <div class="ru"><p><strong>Порядок по-русски:</strong> клейм -> государство -> surveyor/wand -> Starter Fort -> якорь и зоны -> ПКМ в воздухе -> склад -> рынок -> дома -> рабочие здания.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p3" data-page="3">
+        <h2>3. Surveyor And Wand</h2>
+        <h3>Settlement Surveyor Tool</h3>
+        <ul>
+          <li>Right-click the anchor block first. For a fort, anchor should sit inside the authority area.</li>
+          <li>Right-click corners to mark zones.</li>
+          <li>Shift + right-click in air cycles surveyor mode: starter fort, house, farm, mine, lumber camp, smithy, storage, architect workshop, inspect.</li>
+          <li>Shift + right-click on a block cycles zone role: <code>AUTHORITY_POINT</code>, <code>INTERIOR</code>, <code>EXTERIOR</code>, <code>WORK_ZONE</code>, <code>STORAGE</code>, and other roles.</li>
+          <li>Right-click air without shift validates the current session.</li>
+        </ul>
+        <h3>Building Placement Wand</h3>
+        <ul>
+          <li><code>PLACE</code>: place a prefab/build plan.</li>
+          <li><code>VALIDATE</code>: verify a manually built structure.</li>
+          <li><code>REGISTER</code>: register the building or work area with the settlement.</li>
+        </ul>
+        <p>Build Area screens show scan/build status and reject invalid names, empty scans, oversize structures, missing NBT, or bad bounds with visible reasons.</p>
+        <h3>Common validation mistakes</h3>
+        <ul>
+          <li>Anchor was not set before corners.</li>
+          <li>Wrong surveyor mode was selected.</li>
+          <li>Starter fort has no <code>AUTHORITY_POINT</code> or no <code>INTERIOR</code>.</li>
+          <li>Trying to validate non-fort buildings before the settlement exists.</li>
+          <li>Registered area is outside the friendly claim or belongs to the wrong side.</li>
+        </ul>
+        <div class="ru"><p><strong>Важно:</strong> Shift+ПКМ в воздухе меняет режим инструмента, Shift+ПКМ по блоку меняет роль зоны. Обычный ПКМ по воздуху запускает проверку.</p></div>
+      </article>
+
+      <article class="page" id="p4" data-page="4">
+        <h2>4. Buildings And What They Do</h2>
+        <table>
+          <tr><th>Building</th><th>Player effect</th><th>Settlement effect</th></tr>
+          <tr><td>Starter Fort / Town Hall</td><td>Founding anchor and promotion requirement.</td><td>Authority point; required for state promotion.</td></tr>
+          <tr><td>House</td><td>Validated home capacity.</td><td>Raises resident capacity and home assignment inputs.</td></tr>
+          <tr><td>Storage</td><td>Where resources live; routes can be configured.</td><td>Stockpile capacity, route hints, logistics signals.</td></tr>
+          <tr><td>Market</td><td>Merchant trade and economy hub.</td><td>Promotion requirement, market goods, seller dispatch.</td></tr>
+          <tr><td>Farm</td><td>Food production work.</td><td>Food profile, farmer vacancy, surplus-hub signal.</td></tr>
+          <tr><td>Mine</td><td>Ore/material workplace.</td><td>Miner vacancy, material profile.</td></tr>
+          <tr><td>Lumber Camp</td><td>Wood/material workplace.</td><td>Lumberjack vacancy, material profile.</td></tr>
+          <tr><td>Architect Workshop / Build Area</td><td>Construction planning and building.</td><td>Builder vacancy, project and construction signals.</td></tr>
+        </table>
+        <p class="small">Manual validated buildings and prefab-backed work areas both feed settlement snapshots. Overlapping live work areas are deduped to avoid double-counting.</p>
+        <h3>Recommended build order</h3>
+        <ol>
+          <li>Starter Fort: unlock settlement.</li>
+          <li>Storage: give the settlement a visible stockpile.</li>
+          <li>Farm: make the first food economy legible.</li>
+          <li>Market: unlock trade visibility and state-promotion requirement.</li>
+          <li>Homes: increase resident capacity and reduce housing pressure.</li>
+          <li>Mine/lumber/architect: unlock material and construction loops.</li>
+        </ol>
+        <div class="ru"><p><strong>Постройки:</strong> форт запускает поселение, склад дает запасы, рынок нужен для торговли и повышения, дома дают вместимость, ферма/шахта/лес дают вакансии.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p5" data-page="5">
+        <h2>5. Settlement Life Cycle</h2>
+        <ol>
+          <li><strong>Bootstrap:</strong> starter fort validation creates the settlement and first population.</li>
+          <li><strong>Vacancies:</strong> farms, mines, lumber camps, architect workshops, and barracks-like prefab roles create jobs.</li>
+          <li><strong>Citizens convert:</strong> a free citizen near a vacancy can bind to its anchor and become the required worker or recruit.</li>
+          <li><strong>Work orders:</strong> settlements publish tasks such as hauling and fetching resources. Workers claim, complete, cancel, or release them.</li>
+          <li><strong>Growth and projects:</strong> stockpile, market, resident capacity, shortages, and governor signals create project hints.</li>
+          <li><strong>Politics:</strong> once fort/town hall, storage, and market exist, the settlement can promote its state to <code>STATE</code>.</li>
+        </ol>
+        <div class="callout">Four free citizens appear from normal starter-fort bootstrap. They are not the same as starter workers; they are the survival source for vacancy professions.</div>
+        <h3>What the governor is telling you</h3>
+        <ul>
+          <li><strong>Shortage blockers</strong> mean jobs exist but resources are missing.</li>
+          <li><strong>Project hints</strong> are not magic quests; they are derived from capacity, goods, markets, and governance.</li>
+          <li><strong>Incidents</strong> warn about supply, tax pressure, and settlement health.</li>
+          <li><strong>Strategic labels</strong> tell why this settlement matters politically.</li>
+        </ul>
+        <div class="ru"><p><strong>Цикл:</strong> жители занимают вакансии, рабочие выполняют заказы, склады и рынки дают снабжение, губернатор показывает проблемы и подсказки развития.</p></div>
+      </article>
+
+      <article class="page" id="p6" data-page="6">
+        <h2>6. Economy And Logistics</h2>
+        <p>The governor logistics panel is the best in-game ledger. It shows pending/claimed/completed work orders, shortages, stockpile capacity, missing goods, project hints, strategic role, route cost, specialties, war objectives, and loyalty pressure.</p>
+        <h3>Storage routes</h3>
+        <p>Storage Area route fields use <code>Apply route</code>. The screen validates destination UUID, item filters, amount, and priority before sending. Valid entries show destination or blocked reason.</p>
+        <h3>Strategic roles</h3>
+        <ul>
+          <li><span class="tag">surplus hub</span> farms plus storage.</li>
+          <li><span class="tag">junction market</span> market plus authored routes.</li>
+          <li><span class="tag">chokepoint fort</span> fort plus route storage.</li>
+          <li><span class="tag">water gate</span> port or water access.</li>
+        </ul>
+        <p>Water/ports are cheap supply. Multiple routes are reliable. One route is vulnerable. Landlocked settlements are expensive and may specialize in preserved food or worked materials.</p>
+        <h3>How to read logistics in play</h3>
+        <ul>
+          <li>If storage exists but goods are missing, create source buildings or routes.</li>
+          <li>If a settlement is landlocked, build local production instead of relying on distant hauling.</li>
+          <li>If a route is single and important, defend it: it is a future war objective.</li>
+          <li>If a port exists, use it as a strategic gate, not just a warehouse.</li>
+        </ul>
+        <div class="ru"><p><strong>Экономика:</strong> склад показывает ресурсы, рынок связывает торговлю, вода удешевляет снабжение, один маршрут уязвим, landlocked-поселение должно специализироваться.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p7" data-page="7">
+        <h2>7. Workers And Citizens</h2>
+        <h3>Workers</h3>
+        <p>Workers operate registered work areas and settlement work orders. They must be inside a friendly claim, belong to the right side, and see a valid registered work area.</p>
+        <ul>
+          <li>Right-click a worker to open inventory and profession/task controls.</li>
+          <li>Use <span class="kbd">X</span> for worker group commands: follow, guard, move to position, stop.</li>
+          <li>If a claim is captured, deleted, or mismatched, work may stop.</li>
+        </ul>
+        <h3>Citizens</h3>
+        <p>Citizens are unassigned population. They can occupy vacancies and convert into workers or recruits. If no citizen is available, add housing, keep the settlement safe, and check whether the building actually registered a vacancy.</p>
+        <h3>Worker failure checklist</h3>
+        <ol>
+          <li>Is the work area inside a friendly claim?</li>
+          <li>Does the worker belong to your side?</li>
+          <li>Was the building validated or registered?</li>
+          <li>Does the building type create the profession you expect?</li>
+          <li>Does the settlement have storage/resource access for that job?</li>
+        </ol>
+        <div class="ru"><p><strong>Рабочие:</strong> ПКМ открывает инвентарь, <span class="kbd">X</span> дает групповые команды. Если стоят без дела - проверь клейм, сторону, регистрацию здания и ресурсы.</p></div>
+      </article>
+
+      <article class="page" id="p8" data-page="8">
+        <h2>8. Recruits And Command</h2>
+        <p>Recruits follow owners, consume upkeep, and can be issued individual or group orders. Use <span class="kbd">R</span> near recruits or from command UI.</p>
+        <h3>Orders</h3>
+        <div class="columns">
+          <ul>
+            <li>Hold</li><li>Follow</li><li>Regroup</li><li>Wander</li><li>Come to me</li><li>Patrol</li><li>Move to position</li><li>Face</li><li>Attack</li><li>Ranged fire</li><li>Aggression</li><li>Mount / siege-machine crew</li>
+          </ul>
+        </div>
+        <h3>Stances</h3>
+        <table>
+          <tr><th>Stance</th><th>Behavior</th></tr>
+          <tr><td>LOOSE</td><td>Flexible movement; shield blocks about 45%.</td></tr>
+          <tr><td>LINE_HOLD</td><td>Holds line harder; shield blocks about 55%.</td></tr>
+          <tr><td>SHIELD_WALL</td><td>Slow frontal wall; shield absorbs about 70% inside a 120 degree front cone.</td></tr>
+        </table>
+        <p>Pikes brace against cavalry, reach weapons strike farther, second-rank spearmen can poke through allies, side hits do x1.15, back hits do x1.5.</p>
+        <h3>Practical command doctrine</h3>
+        <ul>
+          <li>Use <code>LINE_HOLD</code> for stable fronts and to keep ranged troops from drifting forward.</li>
+          <li>Use <code>SHIELD_WALL</code> when arrows or frontal melee pressure matter more than speed.</li>
+          <li>Face commands matter: shields protect mostly forward.</li>
+          <li>Queue or selection-aware command paths avoid accidentally moving the whole army.</li>
+          <li>Mount/siege-machine orders now go through the same command intent pipeline as army orders.</li>
+        </ul>
+        <div class="ru"><p><strong>Рекруты:</strong> <span class="kbd">R</span> команды, строй и стойка решают бой. Щиты работают спереди, пики против кавалерии, удары в бок/спину сильнее.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p9" data-page="9">
+        <h2>9. States And Government</h2>
+        <p>States are controlled in the War Room or with commands.</p>
+        <ul>
+          <li><code>/bannermod state create &lt;name&gt;</code> creates a state.</li>
+          <li><code>/bannermod state list</code> lists states.</li>
+          <li><code>/bannermod state info &lt;id-fragment&gt;</code> shows details.</li>
+          <li><code>/bannermod state setcapital &lt;entity&gt; [pos]</code> sets capital.</li>
+          <li><code>/bannermod state status &lt;entity&gt; &lt;status&gt;</code> changes status.</li>
+        </ul>
+        <h3>Government form</h3>
+        <p><strong>Monarchy</strong> keeps key authority leader-only. <strong>Republic</strong> lets co-leaders share authority for status, capital, color, charter, claim edits, ally invites, siege placement, and legal war outcomes.</p>
+        <h3>Promotion</h3>
+        <p>To become a full <code>STATE</code>, the settlement must have starter fort or town hall, storage, and market. The War Room promotion button sends a server-checked request and reports missing infrastructure.</p>
+        <h3>Authority rules</h3>
+        <ul>
+          <li>Leader can perform core political actions.</li>
+          <li>Co-leaders gain shared authority in republics.</li>
+          <li>Operators may perform admin-only outcomes where marked.</li>
+          <li>Claim editing by political authority follows the same leader/co-leader model.</li>
+        </ul>
+        <div class="ru"><p><strong>Политика:</strong> монархия - решения у лидера. Республика - со-лидеры получают общую власть. STATE требует форт/ратушу, склад и рынок.</p></div>
+      </article>
+
+      <article class="page" id="p10" data-page="10">
+        <h2>10. War Room And Wars</h2>
+        <p>Open the War Room with <span class="kbd">U</span>. It shows battle-window banner, active wars, details, allies, target positions, and siege standards.</p>
+        <h3>Main buttons</h3>
+        <ul>
+          <li><strong>States:</strong> state list/detail/actions.</li>
+          <li><strong>Declare war:</strong> choose attacker, defender, goal, casus belli.</li>
+          <li><strong>Cancel / Occupy / Annex:</strong> server-authoritative outcomes.</li>
+          <li><strong>Allies:</strong> invite, accept, decline, or cancel ally invites before war activation.</li>
+          <li><strong>Place siege here:</strong> plants a standard after server validation.</li>
+        </ul>
+        <h3>War commands</h3>
+        <p><code>/bannermod war declare</code>, <code>list</code>, <code>info</code>, <code>cancel</code>, <code>whitepeace</code>, <code>tribute</code>, <code>vassalize</code>, <code>demilitarize</code>, <code>occupations</code>, and <code>revolts</code> mirror UI/admin flows.</p>
+        <h3>Battle windows</h3>
+        <p>The top banner tells whether battle is open or closed and when it changes. PvP war damage requires active/in-siege war state, open battle window, and registered participants.</p>
+        <h3>Allies</h3>
+        <p>Allies are consent-based before war activation: invite, accept, decline, or cancel. Peaceful entities cannot join attackers.</p>
+        <div class="ru"><p><strong>Война:</strong> War Room показывает фазы, стороны, цели, союзников и кнопки итогов. Союзы требуют согласия. Некоторые исходы доступны только операторам.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p11" data-page="11">
+        <h2>11. Sieges And Standards</h2>
+        <h3>Siege Standard recipe</h3>
+        <div class="recipe" aria-label="Siege standard recipe"><span class="slot">G</span><span class="slot">N</span><span class="slot">G</span><span class="slot">D</span><span class="slot">B</span><span class="slot">D</span><span class="slot">G</span><span class="slot">S</span><span class="slot">G</span></div>
+        <p><strong>G</strong> gold block, <strong>N</strong> emerald block, <strong>D</strong> diamond, <strong>B</strong> any banner, <strong>S</strong> stick. Stack size 16.</p>
+        <h3>How to place one</h3>
+        <ol>
+          <li>Have an active war.</li>
+          <li>Open War Room, select war, stand at the target place.</li>
+          <li>Click <code>Place siege here</code>, or use <code>/bannermod siege place &lt;warId&gt; &lt;side&gt; [pos] [radius]</code>.</li>
+        </ol>
+        <p>Default radius is 64 blocks. The block entity syncs war and side to clients; renderer colors the cap by political color. Standing inside an active siege zone shows a HUD banner.</p>
+        <h3>What standards do</h3>
+        <ul>
+          <li>They define battle/siege objective space.</li>
+          <li>Friendly recruits escort same-side standards.</li>
+          <li>Enemy recruits can target and damage standards.</li>
+          <li>Logistics objectives like stockpiles, route junctions, water gates, and surplus stores tell players what matters strategically.</li>
+        </ul>
+        <h3>Siege commands and counters</h3>
+        <p><code>/bannermod siege list [warId]</code> lists standards. <code>/bannermod siege remove &lt;standardId&gt;</code> is op-only. A standard's control pool drops when valid attackers damage it; reaching zero destroys it.</p>
+        <p>Place standards where defenders must respond: near stockpiles, routes, crossings, ports, gates, or surplus stores. Do not place them randomly; they are political pressure tools.</p>
+        <div class="ru"><p><strong>Осада:</strong> стандарт задает радиус цели. Свои рекруты охраняют, чужие атакуют. Ставь стандарт у склада, маршрута, порта или прохода - там, где потеря реально больна.</p></div>
+      </article>
+
+      <article class="page" id="p12" data-page="12">
+        <h2>12. Denials And Troubleshooting</h2>
+        <ul>
+          <li><strong>Claim edit denied:</strong> check Overworld, distance, overlap, max size, currency, server config, and authority.</li>
+          <li><strong>Settlement will not found:</strong> create/join state, validate starter fort, mark anchor and required zones, avoid too-close same-nation towns.</li>
+          <li><strong>Workers idle:</strong> check friendly claim, ownership, registered work area, matching vacancy, and available resources.</li>
+          <li><strong>No citizens take jobs:</strong> check free citizen availability and distance to vacancy anchor.</li>
+          <li><strong>Cannot promote state:</strong> register fort/town hall, storage, and market.</li>
+          <li><strong>War action locked:</strong> check leadership, war phase, peaceful status, cooldowns, and whether the outcome is op-only.</li>
+          <li><strong>Siege placement denied:</strong> check live war, side leadership, target position, and server validation.</li>
+        </ul>
+        <div class="callout">Rule of thumb: if a UI action changes gameplay, the server is the authority. Client screens preview and request; accepted state comes back through sync or chat feedback.</div>
+        <p class="small">This almanac is maintained from <code>MULTIPLAYER_GUIDE_EN.md</code>, <code>MULTIPLAYER_GUIDE_RU.md</code>, <code>docs/STATUS.md</code>, and live code contracts.</p>
+        <div class="ru"><p><strong>Если что-то не работает:</strong> проверь мир, дистанцию, власть, клейм, регистрацию здания, ресурсы, фазу войны и серверный текст отказа. Клиент просит, сервер решает.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p13" data-page="13">
+        <h2>13. Code Tables: Settlement</h2>
+        <h3>Surveyor modes</h3>
+        <p><code>BOOTSTRAP_FORT</code>, <code>HOUSE</code>, <code>FARM</code>, <code>MINE</code>, <code>LUMBER_CAMP</code>, <code>SMITHY</code>, <code>STORAGE</code>, <code>ARCHITECT_BUILDER</code>, <code>INSPECT_EXISTING</code>.</p>
+        <h3>Zone roles</h3>
+        <p><code>AUTHORITY_POINT</code>, <code>INTERIOR</code>, <code>SLEEPING</code>, <code>WORK_ZONE</code>, <code>FORT_PERIMETER</code>, <code>ENTRANCE</code>, <code>STORAGE</code>, <code>PREFAB_FOOTPRINT</code>.</p>
+        <h3>Building records</h3>
+        <ol>
+          <li>Surveyor validates a structure into a building snapshot.</li>
+          <li>Valid manual structures become <code>ValidatedBuildingRecord</code>.</li>
+          <li>Settlement refresh merges valid records and live work areas.</li>
+          <li>The merged snapshot calculates capacity, jobs, stockpiles, markets, desired goods, projects, supply signals, and promotion readiness.</li>
+        </ol>
+        <div class="ru"><p><strong>Таблица поселения:</strong> эти значения не лор, а реальные серверные enum-ы. Если режим или зона выбраны неверно, серверная проверка не даст нужного здания.</p></div>
+      </article>
+
+      <article class="page" id="p14" data-page="14">
+        <h2>14. Code Tables: Armies</h2>
+        <table>
+          <tr><th>Intent</th><th>Meaning</th></tr>
+          <tr><td>Movement</td><td>Hold, follow, regroup, wander, come-to-me, patrol, move-to-position, formation forward/back.</td></tr>
+          <tr><td>Face</td><td>Rotate formation without moving.</td></tr>
+          <tr><td>Attack</td><td>Attack command for eligible selected/group recruits.</td></tr>
+          <tr><td>StrategicFire</td><td>Ranged fire toggle.</td></tr>
+          <tr><td>Aggro</td><td>Passive, neutral, aggressive, raid-like states.</td></tr>
+          <tr><td>CombatStance</td><td><code>LOOSE</code>, <code>LINE_HOLD</code>, <code>SHIELD_WALL</code>.</td></tr>
+          <tr><td>SiegeMachine</td><td>Mount, return-to-mount, siege-machine crew orders.</td></tr>
+        </table>
+        <p>Movement states are numeric internally: <code>0</code> hold, <code>1</code> follow, <code>2</code> regroup, <code>3</code> wander, <code>4</code> come-to-me, <code>5</code> patrol, <code>6</code> move-to-position, <code>7/8</code> formation forward/back.</p>
+        <div class="ru"><p><strong>Команды армии:</strong> новые серверные пути идут через intent pipeline, иначе ломаются выбор, очередь, приоритет и аудит.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p15" data-page="15">
+        <h2>15. Commands You Actually Use</h2>
+        <h3>State</h3>
+        <ul>
+          <li><code>/bannermod state create &lt;name&gt;</code></li>
+          <li><code>/bannermod state list</code></li>
+          <li><code>/bannermod state info &lt;entity&gt;</code></li>
+          <li><code>/bannermod state setcapital &lt;entity&gt; [pos]</code></li>
+          <li><code>/bannermod state status &lt;entity&gt; &lt;SETTLEMENT|STATE|VASSAL|PEACEFUL&gt;</code></li>
+        </ul>
+        <h3>War</h3>
+        <p><code>declare</code>, <code>list</code>, <code>info</code>, <code>cancel</code>, <code>whitepeace</code>, <code>tribute</code>, <code>vassalize</code>, <code>demilitarize</code>, <code>occupations</code>, <code>revolts</code>, and <code>ally invite|accept|decline|cancel|list</code>.</p>
+        <h3>Siege</h3>
+        <p><code>/bannermod siege place &lt;warId&gt; &lt;side&gt; [pos] [radius]</code>, <code>/bannermod siege list [warId]</code>, and op-only <code>/bannermod siege remove &lt;standardId&gt;</code>.</p>
+        <div class="ru"><p><strong>Команды:</strong> UI War Room удобнее, но slash-команды полезны для админов, тестов и точной диагностики серверных отказов.</p></div>
+      </article>
+
+      <article class="page" id="p16" data-page="16">
+        <h2>16. Denial Reasons Decoded</h2>
+        <table>
+          <tr><th>Message shape</th><th>Likely fix</th></tr>
+          <tr><td><code>infrastructure_insufficient</code></td><td>Register fort/town hall, storage, and market before STATE promotion.</td></tr>
+          <tr><td><code>not_leader</code> or authority</td><td>Use the leader account, switch to republic for co-leader authority, or ask an operator.</td></tr>
+          <tr><td>Claim edit denied</td><td>Check Overworld, distance, currency, overlap, max size, ownership, and claiming config.</td></tr>
+          <tr><td>War not pre-active</td><td>Ally invites are only legal before activation.</td></tr>
+          <tr><td>Peaceful cannot join attacker</td><td><code>PEACEFUL</code> entities cannot join offensive attacker side.</td></tr>
+          <tr><td>Build or scan rejected</td><td>Check name, dimensions, empty scan, NBT, and server bounds.</td></tr>
+        </table>
+        <p>BannerMod is intentionally server-authoritative. If client UI and server disagree, the server wins and should send chat or UI feedback.</p>
+        <div class="ru"><p><strong>Отказы:</strong> почти всегда это проверка прав, расстояния, фазы войны, инфраструктуры или валидности здания, а не просто ошибка кнопки.</p></div>
+      </article>
+    </section>
+
+    <section class="spread">
+      <article class="page" id="p17" data-page="17">
+        <h2>17. Русский быстрый маршрут</h2>
+        <ol>
+          <li>Открой карту <span class="kbd">M</span>, заклейми чанк в обычном мире.</li>
+          <li>Создай государство: <code>/bannermod state create Название</code>.</li>
+          <li>Скрафти Surveyor Tool и Building Placement Wand.</li>
+          <li>Построй Starter Fort, отметь якорь и зоны <code>AUTHORITY_POINT</code> + <code>INTERIOR</code>.</li>
+          <li>ПКМ в воздухе валидирует. Успех дает SettlementRecord, рабочих и четыре свободных жителя.</li>
+          <li>Зарегистрируй склад, ферму, рынок, дома, шахту/лес/мастерскую.</li>
+          <li>Открой губернатора: смотри дефициты, проекты, роли, маршруты и pressure.</li>
+          <li>Открой War Room <span class="kbd">U</span>: управляй государством, войнами и осадами.</li>
+        </ol>
+      </article>
+
+      <article class="page" id="p18" data-page="18">
+        <h2>18. Русский бой и осады</h2>
+        <p>Рекруты командуются через <span class="kbd">R</span>. Стойки: <code>LOOSE</code>, <code>LINE_HOLD</code>, <code>SHIELD_WALL</code>. Щиты лучше работают лицом к врагу; пики держат кавалерию; удары сбоку и сзади сильнее.</p>
+        <p>Осада начинается не с драки, а с цели. Скрафти Siege Standard, выбери войну в War Room, встань у важного места и нажми <code>Place siege here</code>. Радиус по умолчанию 64 блока.</p>
+        <p>Ставь знамена у склада, маршрута, моста, порта, рынка или chokepoint fort. Свои рекруты охраняют знамена, чужие атакуют и сбивают control pool. Игроки могут наносить war PvP-урон только при правильной фазе войны, открытом battle window и участии обеих сторон.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

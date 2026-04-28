@@ -17,7 +17,7 @@ BannerMod is a brownfield merge workspace. Contributions should be small, verifi
 4. Make the smallest code change that satisfies the check.
 5. Add or update focused tests when behavior changes.
 6. Self-verify the result against every acceptance item of the backlog task before marking it done.
-7. Update `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md` when the task changes UI, changes mechanics, or adds player-facing mechanics that non-technical players must know.
+7. Update `MULTIPLAYER_GUIDE_RU.md`, `MULTIPLAYER_GUIDE_EN.md`, and `docs/BANNERMOD_ALMANAC.html` when the task changes UI, changes mechanics, or adds player-facing mechanics that non-technical players must know.
 8. Run the cheapest relevant verification first, then wider gates only when the touched area needs them.
 9. Update the backlog through `tools/backlog progress` or `tools/backlog done --verification`, and update `docs/STATUS.md` / `.planning/STATE.md` when shipped behavior or project status changes.
 10. Commit atomically by area: code, tools, and docs should usually be separate commits.
@@ -40,9 +40,20 @@ BannerMod is a brownfield merge workspace. Contributions should be small, verifi
 ## Documentation Rules
 
 - Keep player guides at root as `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md`.
+- Keep `docs/BANNERMOD_ALMANAC.html` as the compact player-facing book. Treat the root guides as the detailed source and refresh the almanac from them plus current code/status whenever player-visible mechanics change. If this becomes frequent, add a generator under `tools/` instead of hand-editing the HTML.
 - Keep module documentation under `docs/`.
 - Keep planning records under `.planning/`.
 - Do not move or edit sibling agent rule files unless you are updating that specific agent's rules.
+
+## Release Command
+
+After CI is green on the release commit, create and push an annotated tag without requiring GitHub CLI:
+
+`git tag -a v<version> <commit-sha> -m "BannerMod v<version>"`
+
+`git push origin v<version>`
+
+Then open GitHub Releases in the browser, choose the pushed tag, paste reviewed release notes, attach artifacts if needed, and publish. Do not create release tags from dirty worktrees or before the unit coverage, GameTest scenario coverage, and build stages pass.
 
 ## Commit Rules
 

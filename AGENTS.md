@@ -76,6 +76,7 @@ After coding, provide:
 - **DONE = every acceptance item is observably satisfied right now.** Closing a task is a binary check against the existing acceptance list, not a judgement call. If any acceptance item describes gameplay-observable behaviour you cannot demonstrate from current code, the task stays open even when supporting infrastructure landed.
 - Before marking a task done, verify your own implementation against every acceptance item. Record the exact verification result with `tools/backlog done <ID> --verification "..."`; if verification cannot be run, record what blocked it instead of pretending it passed.
 - If a backlog task changes UI, changes gameplay mechanics, or adds player-facing mechanics that a non-technical player must know, update `MULTIPLAYER_GUIDE_RU.md` and `MULTIPLAYER_GUIDE_EN.md` in the same slice before marking the task done.
+- Also update `docs/BANNERMOD_ALMANAC.html` for player-facing UI/mechanic changes. It is the compact medieval-book player almanac derived from the root guides plus current code/status; if repeated manual updates become noisy, add a `tools/` generator rather than letting it drift.
 - For partial work, use `tools/backlog progress <ID> "..."` and explicitly call out which acceptance items are not yet met. Append progress; do not rewrite history.
 - Before claiming a closure in chat, run `tools/backlog validate` and `tools/backlog show <ID>` and ensure the task status and verification match what you are about to say.
 

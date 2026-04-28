@@ -3,9 +3,14 @@ name: CI Build
 on:
   push:
     branches: [master]
+    tags:
+      - 'v*'
   pull_request:
     branches: [master]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 concurrency:
   group: ci-build-${{ github.ref }}
@@ -42,5 +47,20 @@ jobs:
           restore-keys: |
             forgegradle-${{ runner.os }}-
 
+      - name: Unit tests and coverage
+        run: ./gradlew -Dnet.minecraftforge.gradle.check.certs=false test jacocoTestCoverageVerification --stacktrace --warning-mode=summary
+
+      - name: GameTest scenario coverage
+        run: ./gradlew -Dnet.minecraftforge.gradle.check.certs=false compileGametestJava verifyGameTestScenarioCoverage --stacktrace --warning-mode=summary
+
+      - name: GameTest runtime
+        run: ./gradlew -Dnet.minecraftforge.gradle.check.certs=false runGameTestServer --stacktrace --warning-mode=summary
+
       - name: Build
-        run: ./gradlew build --stacktrace --warning-mode=summary
+        run: ./gradlew clean verifyBuildStage --stacktrace --warning-mode=summary
+
+      - name: Publish release JARs
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/libs/*.jar
