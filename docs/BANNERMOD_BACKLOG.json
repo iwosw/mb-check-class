@@ -3888,7 +3888,7 @@
     {
       "id": "RENDER-003",
       "title": "Rewrite recruit entity renderer base",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "Recruit entity rendering should be owned BannerMod code instead of fragile patched renderer subclasses.",
       "scope": [
@@ -3899,9 +3899,14 @@
         "No copied vanilla renderer logic remains in the rewritten recruit renderer base beyond normal API usage."
       ],
       "dependencies": [
-        "RENDER-002"
+        "RENDER-003A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Code merged from feature/render-003: shared recruit render/nameplate/pose logic now lives in AbstractRecruitRenderer and compileJava passed. Remaining rendered-parity acceptance moved to RENDER-003A for runtime/client smoke verification."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -3928,7 +3933,7 @@
     {
       "id": "RENDER-005",
       "title": "Rewrite banner and siege-standard rendering",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "Banner and siege-standard rendering touches changed vanilla banner APIs and should be replaced with a clear BannerMod-owned renderer.",
       "scope": [
@@ -3939,16 +3944,21 @@
         "Block-entity renderer code does not depend on copied obsolete vanilla banner rendering snippets."
       ],
       "dependencies": [
-        "RENDER-002"
+        "RENDER-005A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Code merged from feature/render-005: banner preview and siege-standard rendering now use 1.21 banner APIs; compileJava and processResources passed. Remaining visual-render acceptance moved to RENDER-005A for client/in-game smoke verification."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
     {
       "id": "RENDER-006",
       "title": "Rewrite projectile and work-area renderers",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "Fishing line, projectile, and work-area renderers are compile-sensitive and currently patched directly against low-level vertex APIs.",
       "scope": [
@@ -3959,16 +3969,21 @@
         "Renderer helpers are minimal and do not copy vanilla renderer bodies wholesale."
       ],
       "dependencies": [
-        "RENDER-002"
+        "RENDER-006A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Code merged from feature/render-006: bobber/string and work-area outline paths now use owned VertexConsumer/RenderType primitives; compileJava passed. Remaining in-world visibility acceptance moved to RENDER-006A."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
     {
       "id": "RENDER-007",
       "title": "Rewrite HUD overlay stack",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "Claim, battle, and status overlays must avoid vanilla private internals and avoid overlap with hotbar, chat, boss bars, and existing BannerMod HUD elements.",
       "scope": [
@@ -3982,13 +3997,19 @@
         "RENDER-002"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "1) compileJava passed; HUD overlays now render through HudOverlayCoordinator registered with public RegisterGuiLayersEvent and shared hide/overlap gates. 2) processResources passed with localized battle/siege HUD keys. 3) Code inspection confirmed missing/stale war sync is guarded by WarClientState.hasSnapshot(), while empty claim/siege/battle data renders safely as no overlay."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "RENDER-008",
       "title": "Rewrite shared GUI widgets and lists",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "Shared widgets and list bases were patched for 1.21 API changes and should be rebuilt cleanly before screen rewrites depend on them.",
       "scope": [
@@ -3999,9 +4020,14 @@
         "No widget relies on removed list sizing, background, or selection APIs."
       ],
       "dependencies": [
-        "RENDER-002"
+        "RENDER-008A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Partial implementation merged from feature/render-008: military dropdowns now use common bounds/scissor/scroll clamping, avoid empty-list scrollbar division, and add scroll-dropdown narration; compileJava passed. Remaining shared widget families moved to RENDER-008A."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -4603,6 +4629,82 @@
       "dependencies": [
         "SHIPS-002C",
         "VANILLA-013"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-003A",
+      "title": "Verify recruit renderer runtime parity",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "RENDER-003 code compiles, but the acceptance includes rendered parity that needs an observable client smoke check.",
+      "scope": [
+        "Run a client/in-game visual smoke or add an equivalent render verification for human and villager recruits after the AbstractRecruitRenderer rewrite, covering model selection, texture selection, nameplate behavior, and profiling category preservation."
+      ],
+      "acceptance": [
+        "Human and villager recruits are observed with the same model, texture, layer, nameplate, and profiling behavior as before the rewrite; verification evidence is recorded on RENDER-003."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-005A",
+      "title": "Verify banner and siege-standard visual parity",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "RENDER-005 code compiles, but banner previews and siege standards need visual confirmation for base colors, pattern layers, political cues, and removal of duplicate cloth.",
+      "scope": [
+        "Run a client/in-game visual smoke for GUI banner previews and placed siege standards after the banner rendering rewrite."
+      ],
+      "acceptance": [
+        "Banner previews preserve base color and pattern layers; placed siege standards render dynamic banner cloth with political color cue and no obsolete static cloth duplicate; verification evidence is recorded on RENDER-005."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-006A",
+      "title": "Verify projectile and work-area renderer visibility",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "RENDER-006 code compiles, but fishing bobber/string and work-area outline visibility need an observable in-world smoke check.",
+      "scope": [
+        "Run a client/in-world visual smoke after the ClientRenderPrimitives rewrite for fishing bobber, fishing line, and work-area outline rendering."
+      ],
+      "acceptance": [
+        "Fishing bobber, fishing line, and work-area outlines remain visible in world with no obvious GL state leak or rendering artifact; verification evidence is recorded on RENDER-006."
+      ],
+      "dependencies": [
+        "RENDER-002"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RENDER-008A",
+      "title": "Finish remaining shared widget foundations",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "RENDER-008 improved the military dropdown foundation, but other shared widget families still need review before the parent acceptance can be closed.",
+      "scope": [
+        "Review and update remaining shared GUI foundations such as civilian item/folder dropdowns, checkboxes, list bases, scroll lists, and reusable render helpers for 1.21 input, narration, hover/focus, and scaled viewport bounds."
+      ],
+      "acceptance": [
+        "Remaining shared widget families compile and support expected keyboard/mouse input, narration where applicable, hover/focus states, and scaled viewport bounds; verification evidence is recorded on RENDER-008."
+      ],
+      "dependencies": [
+        "RENDER-002"
       ],
       "progress": [],
       "verification": [],
