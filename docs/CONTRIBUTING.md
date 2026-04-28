@@ -53,7 +53,7 @@ After CI is green on the release commit, create and push an annotated tag withou
 
 `git push origin <version>`
 
-Use the literal project version string, for example `v1`. The canonical release path is tag-driven: push a `v*` tag that points at the reviewed `master` commit, let the tag CI finish green, and the workflow uploads `bannermod-<version>.jar` to the matching GitHub release. Do not rely on `release.created` to build artifacts, and do not create release tags from dirty worktrees or before the unit coverage, GameTest scenario coverage, and build stages pass.
+Use the literal project version string, for example `v1`. The canonical release path is tag-driven: push a `v*` tag that points at the reviewed `master` commit, let the tag CI finish green, and the workflow overrides the Gradle/mod version with that exact tag name so the uploaded artifact becomes `bannermod-<tag>.jar`. Do not rely on `release.created` to build artifacts, and do not create release tags from dirty worktrees or before the unit coverage, GameTest scenario coverage, and build stages pass.
 
 ## Commit Rules
 
