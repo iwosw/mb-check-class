@@ -46,9 +46,9 @@ public class CaptainEntity extends AbstractLeaderEntity {
         this.smallShipsController = new SmallShipsController(this, world);
         this.smallShipsController.tryMountShip(getVehicle());
     }
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(SAIL_POS, Optional.empty());
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(SAIL_POS, Optional.empty());
     }
     @Override
     protected void registerGoals() {
@@ -378,7 +378,6 @@ public class CaptainEntity extends AbstractLeaderEntity {
         return super.hurt(dmg, amt);
     }
 }
-
 
 
 

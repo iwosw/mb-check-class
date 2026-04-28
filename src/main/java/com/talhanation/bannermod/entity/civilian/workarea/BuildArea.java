@@ -55,9 +55,9 @@ public class BuildArea extends AbstractWorkAreaEntity {
         super(type, level);
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(STRUCTURE, new CompoundTag());
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(STRUCTURE, new CompoundTag());
     }
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {

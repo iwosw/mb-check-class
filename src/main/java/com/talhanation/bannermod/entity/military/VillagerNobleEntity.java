@@ -55,12 +55,12 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(TRADES, new CompoundTag());
-        this.entityData.define(TRADER_PROGRESS, 0);
-        this.entityData.define(TRADER_LEVEL, 1);
-        this.entityData.define(TYPE, "");
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TRADES, new CompoundTag());
+        builder.define(TRADER_PROGRESS, 0);
+        builder.define(TRADER_LEVEL, 1);
+        builder.define(TYPE, "");
     }
 
     @Override
@@ -366,7 +366,6 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
     }
 
 }
-
 
 
 

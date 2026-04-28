@@ -45,13 +45,13 @@ public class AnimalPenArea extends AbstractWorkAreaEntity {
     public AnimalPenArea(EntityType<?> type, Level level) {
         super(type, level);
     }
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(ANIMAL_TYPE, 0);
-        this.entityData.define(MAX_ANIMALS, 12);
-        this.entityData.define(BREED, true);
-        this.entityData.define(SLAUGHTER, true);
-        this.entityData.define(SPECIAL, true);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(ANIMAL_TYPE, 0);
+        builder.define(MAX_ANIMALS, 12);
+        builder.define(BREED, true);
+        builder.define(SLAUGHTER, true);
+        builder.define(SPECIAL, true);
     }
 
     @Override

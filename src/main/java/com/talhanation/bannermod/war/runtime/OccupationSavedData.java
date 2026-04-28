@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.war.runtime;
 
 import com.talhanation.bannermod.war.events.WarSyncDirtyTracker;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
@@ -8,6 +9,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 public class OccupationSavedData extends SavedData {
     private static final String FILE_ID = "bannermodOccupations";
+    private static final SavedData.Factory<OccupationSavedData> FACTORY = new SavedData.Factory<>(OccupationSavedData::new, OccupationSavedData::load);
 
     private final OccupationRuntime runtime;
 
@@ -26,19 +28,15 @@ public class OccupationSavedData extends SavedData {
     }
 
     public static OccupationSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                OccupationSavedData::load,
-                OccupationSavedData::new,
-                FILE_ID
-        );
+        return level.getDataStorage().computeIfAbsent(FACTORY, FILE_ID);
     }
 
-    public static OccupationSavedData load(CompoundTag tag) {
+    public static OccupationSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         return new OccupationSavedData(OccupationRuntime.fromTag(tag));
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         CompoundTag inner = runtime.toTag();
         tag.put("Occupations", inner.getList("Occupations", Tag.TAG_COMPOUND));
         return tag;

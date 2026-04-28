@@ -53,7 +53,8 @@ public final class WorkerSettlementSpawner {
             return null;
         }
 
-        for (ItemStack itemStack : villager.getInventory().items) {
+        for (int i = 0; i < villager.getInventory().getContainerSize(); i++) {
+            ItemStack itemStack = villager.getInventory().getItem(i);
             worker.getInventory().addItem(itemStack.copy());
         }
 

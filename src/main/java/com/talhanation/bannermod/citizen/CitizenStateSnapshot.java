@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.citizen;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.SimpleContainer;
@@ -46,7 +47,7 @@ public record CitizenStateSnapshot(
         return new Builder();
     }
 
-    public static CompoundTag copyInventory(SimpleContainer inventory) {
+    public static CompoundTag copyInventory(SimpleContainer inventory, HolderLookup.Provider registries) {
         CompoundTag inventoryData = new CompoundTag();
         ListTag items = new ListTag();
         for (int i = 0; i < inventory.getContainerSize(); ++i) {
@@ -54,7 +55,7 @@ public record CitizenStateSnapshot(
             if (!itemStack.isEmpty()) {
                 CompoundTag itemData = new CompoundTag();
                 itemData.putByte("Slot", (byte) i);
-                itemStack.save(itemData);
+                itemStack.save(registries, itemData);
                 items.add(itemData);
             }
         }
@@ -62,20 +63,20 @@ public record CitizenStateSnapshot(
         return inventoryData;
     }
 
-    public static void restoreInventory(SimpleContainer inventory, CompoundTag inventoryData) {
+    public static void restoreInventory(SimpleContainer inventory, CompoundTag inventoryData, HolderLookup.Provider registries) {
         inventory.clearContent();
         ListTag items = inventoryData.getList("Items", 10);
         for (int i = 0; i < items.size(); ++i) {
             CompoundTag itemData = items.getCompound(i);
             int slot = itemData.getByte("Slot") & 255;
             if (slot < inventory.getContainerSize()) {
-                inventory.setItem(slot, ItemStack.of(itemData));
+                inventory.setItem(slot, ItemStack.parseOptional(registries, itemData));
             }
         }
 
         ListTag armorItems = inventoryData.getList("ArmorItems", 10);
         for (int i = 0; i < armorItems.size(); ++i) {
-            ItemStack armor = ItemStack.of(armorItems.getCompound(i));
+            ItemStack armor = ItemStack.parseOptional(registries, armorItems.getCompound(i));
             EquipmentSlot slot = net.minecraft.world.entity.Mob.getEquipmentSlotForItem(armor);
             int inventorySlot = switch (slot) {
                 case HEAD -> 0;
@@ -93,7 +94,7 @@ public record CitizenStateSnapshot(
         for (int i = 0; i < handItems.size(); ++i) {
             int inventorySlot = i == 0 ? 5 : 4;
             if (inventorySlot < inventory.getContainerSize()) {
-                inventory.setItem(inventorySlot, ItemStack.of(handItems.getCompound(i)));
+                inventory.setItem(inventorySlot, ItemStack.parseOptional(registries, handItems.getCompound(i)));
             }
         }
         inventory.setChanged();

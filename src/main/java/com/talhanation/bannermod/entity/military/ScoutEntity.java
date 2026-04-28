@@ -46,10 +46,10 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
     public ScoutEntity(EntityType<? extends AbstractRecruitEntity> entityType, Level world) {
         super(entityType, world);
     }
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(OWNER_NAME, "");
-        this.entityData.define(TASK_STATE, (byte) 0);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(OWNER_NAME, "");
+        builder.define(TASK_STATE, (byte) 0);
     }
     @Override
     protected void registerGoals() {
@@ -338,7 +338,6 @@ public class ScoutEntity extends BowmanEntity implements ICompanion {
     }
 
 }
-
 
 
 

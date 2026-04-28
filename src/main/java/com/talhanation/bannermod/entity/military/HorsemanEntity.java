@@ -41,9 +41,9 @@ public class HorsemanEntity extends RecruitShieldmanEntity {
         super(entityType, world);
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(HAD_HORSE, false);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(HAD_HORSE, false);
     }
 
     @Override

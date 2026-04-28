@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.household;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
@@ -7,6 +8,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 public class BannerModHomeAssignmentSavedData extends SavedData {
     private static final String FILE_ID = "bannermodHomeAssignments";
+    private static final SavedData.Factory<BannerModHomeAssignmentSavedData> FACTORY = new SavedData.Factory<>(BannerModHomeAssignmentSavedData::new, BannerModHomeAssignmentSavedData::load);
 
     private final BannerModHomeAssignmentRuntime runtime;
 
@@ -20,19 +22,15 @@ public class BannerModHomeAssignmentSavedData extends SavedData {
     }
 
     public static BannerModHomeAssignmentSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                BannerModHomeAssignmentSavedData::load,
-                BannerModHomeAssignmentSavedData::new,
-                FILE_ID
-        );
+        return level.getDataStorage().computeIfAbsent(FACTORY, FILE_ID);
     }
 
-    public static BannerModHomeAssignmentSavedData load(CompoundTag tag) {
+    public static BannerModHomeAssignmentSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         return new BannerModHomeAssignmentSavedData(BannerModHomeAssignmentRuntime.fromTag(tag));
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         CompoundTag runtimeTag = this.runtime.toTag();
         tag.put("Assignments", runtimeTag.getList("Assignments", Tag.TAG_COMPOUND));
         return tag;

@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.settlement.prefab.player;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -14,18 +15,15 @@ import java.util.UUID;
 
 public class PlayerBuildingRegistrySavedData extends SavedData {
     private static final String FILE_ID = "bannermodPlayerBuildingRegistry";
+    private static final SavedData.Factory<PlayerBuildingRegistrySavedData> FACTORY = new SavedData.Factory<>(PlayerBuildingRegistrySavedData::new, PlayerBuildingRegistrySavedData::load);
 
     private final List<Entry> entries = new ArrayList<>();
 
     public static PlayerBuildingRegistrySavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                PlayerBuildingRegistrySavedData::load,
-                PlayerBuildingRegistrySavedData::new,
-                FILE_ID
-        );
+        return level.getDataStorage().computeIfAbsent(FACTORY, FILE_ID);
     }
 
-    public static PlayerBuildingRegistrySavedData load(CompoundTag tag) {
+    public static PlayerBuildingRegistrySavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         PlayerBuildingRegistrySavedData data = new PlayerBuildingRegistrySavedData();
         ListTag list = tag.getList("Entries", Tag.TAG_COMPOUND);
         for (Tag raw : list) {
@@ -38,7 +36,7 @@ public class PlayerBuildingRegistrySavedData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (Entry entry : entries) {
             list.add(entry.toTag());

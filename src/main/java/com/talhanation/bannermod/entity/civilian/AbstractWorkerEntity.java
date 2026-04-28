@@ -242,8 +242,8 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
     //////////////////////////////////// REGISTER////////////////////////////////////
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
     }
 
     public void addAdditionalSaveData(@NotNull CompoundTag nbt) {

@@ -25,7 +25,7 @@ final class WorkerInventoryService {
                 return true;
             }
 
-            if (ItemStack.isSameItemSameTags(itemStack, itemToAdd) && itemStack.getCount() < itemStack.getMaxStackSize()) {
+            if (ItemStack.isSameItemSameComponents(itemStack, itemToAdd) && itemStack.getCount() < itemStack.getMaxStackSize()) {
                 return true;
             }
         }
@@ -74,7 +74,8 @@ final class WorkerInventoryService {
 
     @Nullable
     ItemStack getMatchingItem(Predicate<ItemStack> predicate) {
-        for (ItemStack stack : this.getInventory().items) {
+        for (int i = 0; i < this.getInventory().getContainerSize(); i++) {
+            ItemStack stack = this.getInventory().getItem(i);
             if (!stack.isEmpty() && predicate.test(stack)) {
                 return stack;
             }
@@ -85,7 +86,8 @@ final class WorkerInventoryService {
     int countMatchingItems(Predicate<ItemStack> predicate) {
         int count = 0;
 
-        for (ItemStack stack : this.getInventory().items) {
+        for (int i = 0; i < this.getInventory().getContainerSize(); i++) {
+            ItemStack stack = this.getInventory().getItem(i);
             if (!stack.isEmpty() && predicate.test(stack)) {
                 count += stack.getCount();
             }
@@ -97,7 +99,8 @@ final class WorkerInventoryService {
     int countMatchingStacks(Predicate<ItemStack> predicate) {
         int count = 0;
 
-        for (ItemStack stack : this.getInventory().items) {
+        for (int i = 0; i < this.getInventory().getContainerSize(); i++) {
+            ItemStack stack = this.getInventory().getItem(i);
             if (!stack.isEmpty() && predicate.test(stack)) {
                 count++;
             }
@@ -118,7 +121,7 @@ final class WorkerInventoryService {
     private void moveItemToOccupiedSlotsWithSameType(ItemStack itemStackToMove) {
         for (int i = WORKER_STORAGE_START_SLOT; i < this.getInventory().getContainerSize(); ++i) {
             ItemStack itemStack = this.getInventory().getItem(i);
-            if (ItemStack.isSameItemSameTags(itemStack, itemStackToMove)) {
+            if (ItemStack.isSameItemSameComponents(itemStack, itemStackToMove)) {
                 this.moveItemsBetweenStacks(itemStackToMove, itemStack);
                 if (itemStackToMove.isEmpty()) {
                     return;
