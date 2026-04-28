@@ -367,16 +367,16 @@ public class WorldMapScreen extends Screen {
     }
 
     private void renderChunkHighlight(GuiGraphics guiGraphics, int chunkX, int chunkZ) {
-        int pixelX = (int) (offsetX + chunkX * 16 * scale);
-        int pixelZ = (int) (offsetZ + chunkZ * 16 * scale);
-        int size = (int) (16 * scale);
+        int pixelX = WorldMapRenderPrimitives.screenX(chunkX * 16, offsetX, scale);
+        int pixelZ = WorldMapRenderPrimitives.screenZ(chunkZ * 16, offsetZ, scale);
+        int size = Math.max(1, (int) Math.round(16 * scale));
         guiGraphics.fill(pixelX, pixelZ, pixelX + size, pixelZ + size, CHUNK_HIGHLIGHT_COLOR);
     }
 
     private void renderChunkOutline(GuiGraphics guiGraphics, int chunkX, int chunkZ, int color) {
-        int pixelX = (int) (offsetX + chunkX * 16 * scale);
-        int pixelZ = (int) (offsetZ + chunkZ * 16 * scale);
-        int size = (int) (16 * scale);
+        int pixelX = WorldMapRenderPrimitives.screenX(chunkX * 16, offsetX, scale);
+        int pixelZ = WorldMapRenderPrimitives.screenZ(chunkZ * 16, offsetZ, scale);
+        int size = Math.max(1, (int) Math.round(16 * scale));
         guiGraphics.hLine(pixelX, pixelX + size, pixelZ, color);
         guiGraphics.hLine(pixelX, pixelX + size, pixelZ + size, color);
         guiGraphics.vLine(pixelX, pixelZ, pixelZ + size, color);
@@ -392,8 +392,7 @@ public class WorldMapScreen extends Screen {
         int bgX = width / 2 - textWidth / 2 - 8;
         int bgY = height - 30;
         int bgWidth = textWidth + 16;
-        guiGraphics.fill(bgX, bgY, bgX + bgWidth, bgY + 20, 0x80000000);
-        guiGraphics.renderOutline(bgX, bgY, bgWidth, 20, 0x40FFFFFF);
+        WorldMapRenderPrimitives.panel(guiGraphics, bgX, bgY, bgWidth, 20);
         guiGraphics.drawCenteredString(font, combined, width / 2, height - 25, 0xFFFFFF);
     }
 
