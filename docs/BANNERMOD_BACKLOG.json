@@ -3889,7 +3889,7 @@
       "id": "RENDER-003",
       "title": "Rewrite recruit entity renderer base",
       "status": "in_progress",
-      "updated": "2026-04-28",
+      "updated": "2026-04-29",
       "why": "Recruit entity rendering should be owned BannerMod code instead of fragile patched renderer subclasses.",
       "scope": [
         "Replace the recruit renderer base/classes for human and villager recruits with a clean 1.21-native renderer structure and explicit nameplate/profiling hooks."
@@ -3905,6 +3905,10 @@
         {
           "date": "2026-04-28",
           "text": "Code merged from feature/render-003: shared recruit render/nameplate/pose logic now lives in AbstractRecruitRenderer and compileJava passed. Remaining rendered-parity acceptance moved to RENDER-003A for runtime/client smoke verification."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "Renderer parity evidence added by RENDER-003A: focused parity source test and compileJava passed; final closure still depends on interactive client smoke or equivalent accepted visual verification."
         }
       ],
       "verification": [],
@@ -3934,7 +3938,7 @@
       "id": "RENDER-005",
       "title": "Rewrite banner and siege-standard rendering",
       "status": "in_progress",
-      "updated": "2026-04-28",
+      "updated": "2026-04-29",
       "why": "Banner and siege-standard rendering touches changed vanilla banner APIs and should be replaced with a clear BannerMod-owned renderer.",
       "scope": [
         "Rewrite GUI banner preview rendering and siege-standard block-entity rendering around 1.21 BannerPatternLayers, Sheets materials, color resolution, and block-entity sync data."
@@ -3950,6 +3954,10 @@
         {
           "date": "2026-04-28",
           "text": "Code merged from feature/render-005: banner preview and siege-standard rendering now use 1.21 banner APIs; compileJava and processResources passed. Remaining visual-render acceptance moved to RENDER-005A for client/in-game smoke verification."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "RENDER-005A evidence added: focused BannerRenderParityTest, compileJava, and processResources passed; final closure still depends on in-game visual confirmation of banner preview and siege-standard rendering."
         }
       ],
       "verification": [],
@@ -3959,7 +3967,7 @@
       "id": "RENDER-006",
       "title": "Rewrite projectile and work-area renderers",
       "status": "in_progress",
-      "updated": "2026-04-28",
+      "updated": "2026-04-29",
       "why": "Fishing line, projectile, and work-area renderers are compile-sensitive and currently patched directly against low-level vertex APIs.",
       "scope": [
         "Rewrite FishingBobberRenderer, work-area outlines, and any related debug/line renderers with small owned primitives for 1.21 VertexConsumer and RenderType usage."
@@ -3975,6 +3983,10 @@
         {
           "date": "2026-04-28",
           "text": "Code merged from feature/render-006: bobber/string and work-area outline paths now use owned VertexConsumer/RenderType primitives; compileJava passed. Remaining in-world visibility acceptance moved to RENDER-006A."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "RENDER-006A automated evidence added: ClientRenderPrimitivesTest and compileJava passed; final closure still depends on in-world bobber/string/work-area outline visibility smoke."
         }
       ],
       "verification": [],
@@ -4040,8 +4052,8 @@
     {
       "id": "RENDER-009",
       "title": "Rewrite trade and hiring screens",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Merchant, noble, and hiring screens mix old list APIs, entity previews, and ad-hoc button drawing.",
       "scope": [
         "Rewrite MerchantTradeScreen, NobleTradeScreen, RecruitHireScreen, and their list/entry rendering on top of the new shared GUI widgets."
@@ -4054,14 +4066,20 @@
         "RENDER-008"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) compileJava passed after migrating MerchantTradeScreen and NobleTradeScreen trade lists/entries onto shared list widgets; 2) processResources passed with localized touched hire/stat labels; 3) code review confirmed trade selection, currency/item rendering, hire gating, entity previews, disabled/out-of-uses states, and existing packet paths were preserved."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-010",
       "title": "Rewrite group and player selection screens",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Group/player selection screens currently depend on fragile list sizing and manual widget lifecycle code.",
       "scope": [
         "Rewrite group list, group add/edit, select group, select player, player list, and group/player entry rendering around the new shared list/widget layer."
@@ -4074,14 +4092,20 @@
         "RENDER-008"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) compileJava passed; 2) processResources passed; 3) group/player screens now use shared list layout/search/panel/row rendering while preserving filtering, selection, add/edit/remove actions, blacklist/self handling, and stale snapshot refresh paths; 4) add/edit dialog origin is clamped for GUI-scale usability."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-011",
       "title": "Rewrite world-map route rendering",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "World-map rendering and route editing contain custom drawing, popup, scroll, and line logic that should be rebuilt on the new render/UI layer.",
       "scope": [
         "Rewrite WorldMapScreen route rendering primitives, route/waypoint popups, selection UI, and map interaction rendering while preserving server-authoritative command dispatch."
@@ -4091,9 +4115,14 @@
         "Route drawing uses owned primitives and current GuiGraphics/VertexConsumer APIs."
       ],
       "dependencies": [
-        "RENDER-008"
+        "RENDER-011A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Code merged from feature/render-011: world-map route drawing now uses owned WorldMapRenderPrimitives/current GuiGraphics and VertexConsumer APIs; compileJava and processResources passed; MessageFormationMapMoveOrder still dispatches through CommandIntentDispatcher by code inspection. Remaining runtime UI preservation moved to RENDER-011A."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -4643,8 +4672,8 @@
     {
       "id": "RENDER-003A",
       "title": "Verify recruit renderer runtime parity",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "RENDER-003 code compiles, but the acceptance includes rendered parity that needs an observable client smoke check.",
       "scope": [
         "Run a client/in-game visual smoke or add an equivalent render verification for human and villager recruits after the AbstractRecruitRenderer rewrite, covering model selection, texture selection, nameplate behavior, and profiling category preservation."
@@ -4655,15 +4684,20 @@
       "dependencies": [
         "RENDER-002"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Automated non-production renderer parity guard merged from feature/render-003a: RecruitRendererParitySourceTest covers human/villager model selection, texture selection, nameplate behavior, and profiling bucket preservation; focused JUnit test and compileJava passed. Interactive client smoke was not run, so visual observation acceptance remains open."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
     {
       "id": "RENDER-005A",
       "title": "Verify banner and siege-standard visual parity",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "RENDER-005 code compiles, but banner previews and siege standards need visual confirmation for base colors, pattern layers, political cues, and removal of duplicate cloth.",
       "scope": [
         "Run a client/in-game visual smoke for GUI banner previews and placed siege standards after the banner rendering rewrite."
@@ -4674,15 +4708,20 @@
       "dependencies": [
         "RENDER-002"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Automated non-production banner parity guard merged from feature/render-005a: BannerRenderParityTest covers base color, pattern layers, political cue, and no duplicate static cloth; compileJava, processResources, focused test passed. Interactive client smoke was not run, so visual observation acceptance remains open."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
     {
       "id": "RENDER-006A",
       "title": "Verify projectile and work-area renderer visibility",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "RENDER-006 code compiles, but fishing bobber/string and work-area outline visibility need an observable in-world smoke check.",
       "scope": [
         "Run a client/in-world visual smoke after the ClientRenderPrimitives rewrite for fishing bobber, fishing line, and work-area outline rendering."
@@ -4693,7 +4732,12 @@
       "dependencies": [
         "RENDER-002"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Automated primitive verification merged from feature/render-006a: ClientRenderPrimitivesTest covers bobber billboard quad, fishing-line vertex emission, and work-area outline box edges; focused test and compileJava passed. Interactive in-world visibility smoke still required."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -4721,6 +4765,25 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-28"
+    },
+    {
+      "id": "RENDER-011A",
+      "title": "Verify world-map route UI runtime behavior",
+      "status": "open",
+      "updated": "2026-04-29",
+      "why": "RENDER-011 code compiles and command dispatch was code-reviewed, but preserving route display, waypoint popups, scroll/zoom, and selection state needs an observable client smoke check.",
+      "scope": [
+        "Run a client/in-game world-map route UI smoke after the WorldMapRenderPrimitives rewrite, covering route display, waypoint edit/name popups, scroll/zoom behavior, selection state, and move command dispatch through CommandIntentDispatcher."
+      ],
+      "acceptance": [
+        "World-map route display, waypoint edit/name popups, scroll/zoom, and selection state behave as before; move command dispatch remains MessageFormationMapMoveOrder -> CommandIntentDispatcher; verification evidence is recorded on RENDER-011."
+      ],
+      "dependencies": [
+        "RENDER-008"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
