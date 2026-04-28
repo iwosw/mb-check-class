@@ -3526,7 +3526,7 @@
     {
       "id": "PORT-020",
       "title": "Remove obsolete DistExecutor usage",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "NeoForge 1.21.1 no longer provides the old DistExecutor path used by BuildingPlacementWandItem, and this blocks compile after the main API migrations.",
       "scope": [
@@ -3539,8 +3539,14 @@
         "PORT-019"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Removed the obsolete DistExecutor import and unsafeRunWhenOn call from BuildingPlacementWandItem. The wand already gates the client screen open behind level.isClientSide, matching the NeoForge 1.21.1 side guidance that uses Level#isClientSide for logical-side checks. ctx search DistExecutor src/main/java returns 0. compileJava no longer reports DistExecutor missing-symbol errors; remaining failures are mixin remap and BlockPathTypes pathing blockers."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }
