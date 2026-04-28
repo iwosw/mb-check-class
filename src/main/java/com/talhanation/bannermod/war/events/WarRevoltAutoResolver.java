@@ -6,9 +6,9 @@ import com.talhanation.bannermod.war.runtime.ServerLevelObjectivePresenceProbe;
 import com.talhanation.bannermod.war.runtime.WarRevoltScheduler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -24,10 +24,7 @@ public class WarRevoltAutoResolver {
     private int counter = 0;
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
+    public void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
         if (server == null) {
             return;

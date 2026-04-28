@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import net.neoforged.neoforge.event.entity.living.ShieldBlockEvent;
+import net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 
 /**
@@ -17,7 +17,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 public final class RecruitShieldEvents {
 
     @SubscribeEvent
-    public void onRecruitShieldBlock(ShieldBlockEvent event) {
+    public void onRecruitShieldBlock(LivingShieldBlockEvent event) {
         if (event.getEntity() instanceof AbstractRecruitEntity) {
             // Cancelling the event aborts vanilla shield blocking for this hit: damage
             // continues unzeroed and shield durability is not charged. BannerMod then

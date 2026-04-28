@@ -18,9 +18,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.*;
 import net.minecraft.world.phys.*;
-import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
@@ -227,8 +227,8 @@ public class CommandEvents {
         }
     }
     @SubscribeEvent
-    public void onServerPlayerTick(TickEvent.PlayerTickEvent event){
-        if(event.player instanceof ServerPlayer serverPlayer && serverPlayer.tickCount % 20 == 0){
+    public void onServerPlayerTick(PlayerTickEvent.Post event){
+        if(event.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.tickCount % 20 == 0){
             MovementFormationCommandService.onServerPlayerTick(serverPlayer);
         }
     }

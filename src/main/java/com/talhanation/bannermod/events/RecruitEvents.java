@@ -37,20 +37,19 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.scores.Team;
-import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityTeleportEvent;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
-import net.neoforged.neoforge.event.entity.living.LivingAttackEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.living.LivingHurtEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
@@ -195,7 +194,7 @@ public class RecruitEvents {
     }
 
     @SubscribeEvent
-    public void onServerTick(TickEvent.LevelTickEvent event) {
+    public void onServerTick(LevelTickEvent.Post event) {
         RecruitWorldLifecycleService.tickLevel(event, RECRUIT_PATROL, PILLAGER_PATROL);
     }
 
@@ -221,12 +220,12 @@ public class RecruitEvents {
     }
 
     @SubscribeEvent
-    public void onLivingHurt(LivingHurtEvent event) {
+    public void onLivingHurt(LivingIncomingDamageEvent event) {
         RecruitCombatRuntime.onLivingHurt(event);
     }
 
     @SubscribeEvent
-    public void onLivingAttack(LivingAttackEvent event) {
+    public void onLivingAttack(LivingIncomingDamageEvent event) {
         RecruitCombatRuntime.onLivingAttack(event);
     }
 
@@ -284,7 +283,7 @@ public class RecruitEvents {
     private int tickCounter = 0;
 
     @SubscribeEvent
-    public void onWorldTickArrowCleaner(TickEvent.LevelTickEvent event) {//for 1.18 and 1.19 use TickEvent.WorldTickEvent
+    public void onWorldTickArrowCleaner(LevelTickEvent.Post event) {//for 1.18 and 1.19 use TickEvent.WorldTickEvent
         RecruitCombatRuntime.onWorldTickArrowCleaner(event);
     }
 }
