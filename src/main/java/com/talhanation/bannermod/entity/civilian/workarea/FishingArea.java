@@ -27,8 +27,8 @@ public class FishingArea extends AbstractWorkAreaEntity {
     public FishingArea(EntityType<?> type, Level level) {
         super(type, level);
     }
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
     }
 
     @Override

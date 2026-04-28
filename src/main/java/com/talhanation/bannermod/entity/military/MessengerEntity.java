@@ -71,15 +71,15 @@ public class MessengerEntity extends AbstractChunkLoaderEntity implements ICompa
         super(entityType, world);
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(OWNER_NAME, "");
-        this.entityData.define(MESSENGER_STATE, 0);
-        this.entityData.define(WAITING_TIME, 0);
-        this.entityData.define(TARGETPLAYER, new CompoundTag());
-        this.entityData.define(MESSAGE, "");
-        this.entityData.define(TREATY_DURATION_HOURS, 0);
-        this.entityData.define(IS_TREATY_MESSENGER, false);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(OWNER_NAME, "");
+        builder.define(MESSENGER_STATE, 0);
+        builder.define(WAITING_TIME, 0);
+        builder.define(TARGETPLAYER, new CompoundTag());
+        builder.define(MESSAGE, "");
+        builder.define(TREATY_DURATION_HOURS, 0);
+        builder.define(IS_TREATY_MESSENGER, false);
     }
 
     @Override

@@ -75,15 +75,15 @@ public class MerchantEntity extends AbstractWorkerEntity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(TRADES, new CompoundTag());
-        this.entityData.define(TRADER_PROGRESS, 0);
-        this.entityData.define(TRADER_LEVEL, 1);
-        this.entityData.define(IS_TRADING, false);
-        this.entityData.define(IS_CREATIVE, false);
-        this.entityData.define(MARKET_NAME, "");
-        this.entityData.define(DAILY_REFRESH, false);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TRADES, new CompoundTag());
+        builder.define(TRADER_PROGRESS, 0);
+        builder.define(TRADER_LEVEL, 1);
+        builder.define(IS_TRADING, false);
+        builder.define(IS_CREATIVE, false);
+        builder.define(MARKET_NAME, "");
+        builder.define(DAILY_REFRESH, false);
     }
 
     @Override
@@ -514,7 +514,7 @@ public class MerchantEntity extends AbstractWorkerEntity {
             return a.getItem() == b.getItem();
         }
         else{
-            return ItemStack.isSameItemSameTags(a, b);
+            return ItemStack.isSameItemSameComponents(a, b);
         }
     }
 

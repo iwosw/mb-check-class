@@ -58,14 +58,14 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        this.entityData.define(PLAYER_NAME, "");
-        this.entityData.define(PLAYER_UUID, Optional.empty());
-        this.entityData.define(WIDTH, 0);
-        this.entityData.define(HEIGHT, 0);
-        this.entityData.define(DEPTH, 0);
-        this.entityData.define(FACING, Direction.SOUTH);
-        this.entityData.define(TEAM_STRING_ID, "");
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        builder.define(PLAYER_NAME, "");
+        builder.define(PLAYER_UUID, Optional.empty());
+        builder.define(WIDTH, 0);
+        builder.define(HEIGHT, 0);
+        builder.define(DEPTH, 0);
+        builder.define(FACING, Direction.SOUTH);
+        builder.define(TEAM_STRING_ID, "");
     }
 
     @Override

@@ -28,8 +28,8 @@ public class CommanderEntity extends AbstractLeaderEntity {
         attackController = new PatrolLeaderAttackController(this);
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
     }
 
     @Override
@@ -99,7 +99,6 @@ public class CommanderEntity extends AbstractLeaderEntity {
         return this.state != State.IDLE && this.state != State.PAUSED && this.state != State.STOPPED;
     }
 }
-
 
 
 

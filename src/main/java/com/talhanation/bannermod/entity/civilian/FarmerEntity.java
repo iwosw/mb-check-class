@@ -75,8 +75,8 @@ public class FarmerEntity extends AbstractWorkerEntity{
         return ilivingentitydata;
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
     }
 
     @Override//not used

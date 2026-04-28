@@ -434,9 +434,9 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
         this.targetSelector.addGoal(7, new RecruitDefendVillageFromPlayerGoal(this));
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        RecruitStateAccess.defineSynchedData(this);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        RecruitStateAccess.defineSynchedData(builder);
         //STATE
         // 0 = NEUTRAL
         // 1 = AGGRESSIVE
@@ -987,10 +987,6 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
                 return MORALE_LOSS;
             }
         }
-    }
-
-    <T> void defineStateData(EntityDataAccessor<T> accessor, T value) {
-        this.entityData.define(accessor, value);
     }
 
     <T> T getStateData(EntityDataAccessor<T> accessor) {

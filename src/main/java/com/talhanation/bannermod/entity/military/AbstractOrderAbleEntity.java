@@ -122,15 +122,15 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
         this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, false));
     }
 
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(DATA_REMAINING_ANGER_TIME, 0);
-        this.entityData.define(FLEEING, false);
-        this.entityData.define(XP, 0);
-        this.entityData.define(KILLS, 0);
-        this.entityData.define(LEVEL, 1);
-        this.entityData.define(isEating, true);
-        this.entityData.define(isInOrder,false);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_REMAINING_ANGER_TIME, 0);
+        builder.define(FLEEING, false);
+        builder.define(XP, 0);
+        builder.define(KILLS, 0);
+        builder.define(LEVEL, 1);
+        builder.define(isEating, true);
+        builder.define(isInOrder,false);
         //IS IN ORDER
         //IS LEADER
         //UUID OPFER optional

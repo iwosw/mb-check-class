@@ -49,15 +49,15 @@ public class MiningArea extends AbstractWorkAreaEntity {
     public MiningArea(EntityType<?> type, Level level) {
         super(type, level);
     }
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(HEIGHT_OFFSET, 1);
-        this.entityData.define(CLOSE_FLOOR, true);
-        this.entityData.define(MINING_MODE, MiningMode.TUNNEL.getIndex());
-        this.entityData.define(BRANCH_SPACING, 3);
-        this.entityData.define(BRANCH_LENGTH, 8);
-        this.entityData.define(DESCENT_STEP, 1);
-        this.entityData.define(CURRENT_SEGMENT, 0);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(HEIGHT_OFFSET, 1);
+        builder.define(CLOSE_FLOOR, true);
+        builder.define(MINING_MODE, MiningMode.TUNNEL.getIndex());
+        builder.define(BRANCH_SPACING, 3);
+        builder.define(BRANCH_LENGTH, 8);
+        builder.define(DESCENT_STEP, 1);
+        builder.define(CURRENT_SEGMENT, 0);
     }
 
     @Override

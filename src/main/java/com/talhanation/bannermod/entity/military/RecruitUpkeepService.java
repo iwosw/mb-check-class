@@ -72,7 +72,12 @@ final class RecruitUpkeepService {
     }
 
     static boolean hasFoodInInv(AbstractRecruitEntity recruit) {
-        return recruit.getInventory().items.stream().anyMatch(ItemStack::isEdible);
+        for (int i = 0; i < recruit.getInventory().getContainerSize(); i++) {
+            if (recruit.getInventory().getItem(i).isEdible()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static boolean needsToEat(AbstractRecruitEntity recruit) {

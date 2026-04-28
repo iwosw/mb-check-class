@@ -52,8 +52,8 @@ public class FishingBobberEntity extends Projectile {
     }
 
     @Override
-    protected void defineSynchedData() {
-        this.entityData.define(OWNER_UUID, Optional.empty());
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        builder.define(OWNER_UUID, Optional.empty());
     }
 
     @Override
