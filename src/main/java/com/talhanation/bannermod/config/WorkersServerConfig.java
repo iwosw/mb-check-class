@@ -376,6 +376,10 @@ public class WorkersServerConfig {
         return Math.max(0, resolveInt(SettlementSpawnCooldownDays, 3)) * 24000L;
     }
 
+    public static boolean shouldWorkAreaOnlyBeInFactionClaim() {
+        return resolveBoolean(ShouldWorkAreaOnlyBeInFactionClaim, false);
+    }
+
     public static WorkerSettlementSpawnRules.ClaimGrowthConfig claimWorkerGrowthConfig() {
         return new WorkerSettlementSpawnRules.ClaimGrowthConfig(
                 resolveBoolean(EnableClaimWorkerGrowth, true),

@@ -201,7 +201,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
     }
 
     private static boolean isInsideOwnFactionClaim(ServerPlayer player, BlockPos targetPos) {
-        if (!WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.get()) {
+        if (!WorkersServerConfig.shouldWorkAreaOnlyBeInFactionClaim()) {
             return true;
         }
         if (player.getTeam() == null || ClaimEvents.recruitsClaimManager == null) {

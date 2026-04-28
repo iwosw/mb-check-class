@@ -73,6 +73,8 @@ public class BannerModWarOutcomeAndTaxGameTests {
         seedTreasury(level, setup.defenderClaim, 100);
         // Ensure the occupier has a destination ledger.
         seedTreasury(level, setup.attackerClaim, 0);
+        setup.attackerClaim.setOwnerPoliticalEntityId(setup.attackerEntityId);
+        setup.defenderClaim.setOwnerPoliticalEntityId(setup.defenderEntityId);
         UUID attackerClaimOwnerId = setup.attackerClaim.getOwnerPoliticalEntityId();
         UUID defenderClaimOwnerId = setup.defenderClaim.getOwnerPoliticalEntityId();
 
