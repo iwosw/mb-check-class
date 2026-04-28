@@ -3263,7 +3263,7 @@
     {
       "id": "PORT-009",
       "title": "Close remaining NeoForge source compile blockers",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-28",
       "why": "After the major API clusters are migrated, PORT-003 still needs a final pass to remove residual Forge 1.20.1 source assumptions.",
       "scope": [
@@ -3273,9 +3273,14 @@
         "Root ./gradlew compileJava passes on the NeoForge 1.21.1 branch, with any intentionally retained compatibility assumptions documented."
       ],
       "dependencies": [
-        "PORT-008"
+        "PORT-018"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-28",
+          "text": "Initial PORT-009 attempt updated TickEvent split, LivingIncomingDamageEvent replacement, PathType rename, removed DistExecutor dependency, and marked unresolved named mixin targets remap=false in a scratch worktree, but compileJava still exposed about 897 masked errors. Split remaining closure into PORT-014 event APIs, PORT-015 military inventory/equipment, PORT-016 projectile/ranged combat, PORT-017 identifier/profile/registry access, and PORT-018 final compile sweep. Scratch changes were not merged."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -3378,6 +3383,101 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-014",
+      "title": "Finish NeoForge event API migration",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile is still blocked by remaining 1.21.1 event API changes after the initial eventbus and overlay port.",
+      "scope": [
+        "Update remaining active source event handlers for split TickEvent classes, living tick/damage replacements, patrol spawn events, shield/quaff hooks, and related handler signatures."
+      ],
+      "acceptance": [
+        "compileJava no longer reports missing TickEvent, LivingEvent/LivingTickEvent, LivingHurtEvent/LivingAttackEvent, patrol spawn, shield, or quaff event API symbols."
+      ],
+      "dependencies": [
+        "PORT-008"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-015",
+      "title": "Port remaining military inventory and equipment APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile exposes additional inventory/equipment API changes beyond the first PORT-006 migration.",
+      "scope": [
+        "Fix remaining military inventory, equipment slot, private Mob item list, item durability, and data component compile errors in active source."
+      ],
+      "acceptance": [
+        "compileJava no longer reports inventory/equipment access, private Mob item list, item durability, or related data component errors."
+      ],
+      "dependencies": [
+        "PORT-014"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-016",
+      "title": "Port projectile and ranged combat APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile exposes projectile and ranged combat API changes after earlier port blockers are removed.",
+      "scope": [
+        "Update bowman/projectile creation, arrow state access, custom arrow hooks, ranged combat presentation, and related military projectile code to NeoForge 1.21.1 APIs."
+      ],
+      "acceptance": [
+        "compileJava no longer reports projectile, arrow, or ranged combat API errors."
+      ],
+      "dependencies": [
+        "PORT-015"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-017",
+      "title": "Port identifier profile and registry access APIs",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT-009 compile exposes ResourceLocation, GameProfile, and registry access API changes that are distinct from registry object migration.",
+      "scope": [
+        "Replace private ResourceLocation constructors, update GameProfile/profile utility usages, and fix CitizenCore or related registryAccess contracts exposed by the port."
+      ],
+      "acceptance": [
+        "compileJava no longer reports ResourceLocation constructor, GameProfile/profile, or CitizenCore registry access API errors."
+      ],
+      "dependencies": [
+        "PORT-016"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PORT-018",
+      "title": "Final NeoForge compile sweep",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "After the known residual PORT-009 clusters land, a final compile pass is required to close masked source errors and prove the port compiles.",
+      "scope": [
+        "Fix remaining root source compile errors after PORT-014 through PORT-017, documenting any intentionally retained temporary compatibility assumptions."
+      ],
+      "acceptance": [
+        "Root ./gradlew compileJava passes on the NeoForge 1.21.1 branch."
+      ],
+      "dependencies": [
+        "PORT-017"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
