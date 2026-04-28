@@ -12,7 +12,7 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.OptionalInt;
 import java.util.Random;
@@ -76,7 +76,7 @@ public abstract class AttackUtil {
         if (item == null) {
             return null;
         }
-        ResourceLocation key = ForgeRegistries.ITEMS.getKey(item);
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
         return key == null ? item.getDescriptionId() : key.toString();
     }
 

@@ -4,6 +4,7 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -15,6 +16,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.minecraft.world.phys.Vec3;
@@ -35,13 +37,10 @@ public class RecruitsSpawnEgg extends DeferredSpawnEggItem {
         this.entityType = entityType;
     }
     @Override
-    public @NotNull EntityType<?> getType(CompoundTag compound){
-        if(compound != null && compound.contains("EntityTag", 10)) {
-            CompoundTag entityTag = compound.getCompound("EntityTag");
-
-            if(entityTag.contains("id", 8)) {
-                return EntityType.byString(entityTag.getString("id")).orElse(this.entityType.get());
-            }
+    public @NotNull EntityType<?> getType(ItemStack stack){
+        CompoundTag entityTag = readEntityData(stack);
+        if(entityTag != null && entityTag.contains("id", 8)) {
+            return EntityType.byString(entityTag.getString("id")).orElse(this.entityType.get());
         }
         return this.entityType.get();
     }
@@ -55,11 +54,11 @@ public class RecruitsSpawnEgg extends DeferredSpawnEggItem {
         else{
             ItemStack stack = context.getItemInHand();
             BlockPos pos = context.getClickedPos();
-            EntityType<?> entitytype = this.getType(stack.getTag());
+            EntityType<?> entitytype = this.getType(stack);
             Entity entity = entitytype.create(world);
 
 
-            CompoundTag entityTag = stack.getTag();
+            CompoundTag entityTag = readEntityData(stack);
             if(entity instanceof AbstractRecruitEntity recruit && entityTag != null && !entityTag.isEmpty()) {
 
                 fillRecruit(recruit, entityTag, pos);
@@ -77,8 +76,13 @@ public class RecruitsSpawnEgg extends DeferredSpawnEggItem {
         }
     }
 
+    public static CompoundTag readEntityData(ItemStack stack) {
+        CustomData data = stack.get(DataComponents.ENTITY_DATA);
+        return data == null ? null : data.copyTag();
+    }
+
     public static void fillRecruit(AbstractRecruitEntity recruit, CompoundTag entityTag, BlockPos pos){
-        CompoundTag nbt = entityTag.getCompound("EntityTag");
+        CompoundTag nbt = entityTag;
 
         if(nbt.isEmpty()) return;
 

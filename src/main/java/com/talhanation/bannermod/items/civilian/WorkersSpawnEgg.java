@@ -27,9 +27,9 @@ public class WorkersSpawnEgg extends RecruitsSpawnEgg {
         } else {
             ItemStack stack = context.getItemInHand();
             BlockPos pos = context.getClickedPos();
-            EntityType<?> entitytype = this.getType(stack.getTag());
+            EntityType<?> entitytype = this.getType(stack);
             Entity entity = entitytype.create(world);
-            CompoundTag entityTag = stack.getTag();
+            CompoundTag entityTag = readEntityData(stack);
             if (entity instanceof AbstractRecruitEntity) {
                 AbstractRecruitEntity recruit = (AbstractRecruitEntity)entity;
                 if (entityTag != null) {

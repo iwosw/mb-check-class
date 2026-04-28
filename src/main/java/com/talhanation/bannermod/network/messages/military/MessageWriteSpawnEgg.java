@@ -4,12 +4,14 @@ import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.registry.citizen.ModCitizenItems;
 import de.maxhenkel.corelib.net.Message;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -60,9 +62,7 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
         if (citizenEntity.getTeam() != null) {
             entityTag.putString("Team", citizenEntity.getTeam().getName());
         }
-        CompoundTag itemTag = new CompoundTag();
-        itemTag.put("EntityTag", entityTag);
-        itemStack.setTag(itemTag);
+        itemStack.set(DataComponents.ENTITY_DATA, CustomData.of(entityTag));
         player.setItemInHand(hand, itemStack);
         return true;
     }

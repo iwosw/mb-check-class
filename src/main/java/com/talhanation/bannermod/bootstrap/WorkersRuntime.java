@@ -6,7 +6,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraftforge.network.simple.SimpleChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -83,12 +83,12 @@ public final class WorkersRuntime {
 
     public static ResourceLocation resolveRegistryId(String rawId) {
         ResourceLocation id = new ResourceLocation(rawId);
-        if (ForgeRegistries.ENTITY_TYPES.containsKey(id)) {
+        if (BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
             return id;
         }
         if (LEGACY_MOD_ID.equals(id.getNamespace())) {
             ResourceLocation migratedId = migrateLegacyId(id);
-            if (ForgeRegistries.ENTITY_TYPES.containsKey(migratedId)) {
+            if (BuiltInRegistries.ENTITY_TYPE.containsKey(migratedId)) {
                 return migratedId;
             }
         }
@@ -96,7 +96,7 @@ public final class WorkersRuntime {
     }
 
     public static EntityType<?> resolveEntityType(String rawId) {
-        return ForgeRegistries.ENTITY_TYPES.getValue(resolveRegistryId(rawId));
+        return BuiltInRegistries.ENTITY_TYPE.getValue(resolveRegistryId(rawId));
     }
 
     public static ResourceLocation mergedAssetId(String path) {

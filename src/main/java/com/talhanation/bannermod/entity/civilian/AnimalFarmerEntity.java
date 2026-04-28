@@ -22,7 +22,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -109,7 +109,7 @@ public class AnimalFarmerEntity extends AbstractWorkerEntity{
         return super.wantsToKeep(itemStack);
     }
     public boolean wantsToPickUp(ItemStack itemStack) {
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(itemStack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
         if(id == null) return false;
 
         if(WorkersServerConfig.ANIMAL_FARMER_PICKUP.contains(id.toString())) return true;

@@ -5,6 +5,7 @@ import com.talhanation.bannermod.settlement.validation.SettlementSurveyorService
 import com.talhanation.bannermod.settlement.validation.SurveyorMode;
 import com.talhanation.bannermod.settlement.validation.SurveyorSessionCodec;
 import com.talhanation.bannermod.settlement.validation.ValidationSession;
+import com.talhanation.bannermod.util.ItemStackComponentData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -83,15 +84,15 @@ public class SettlementSurveyorToolItem extends Item {
             return InteractionResult.SUCCESS;
         }
 
-        CompoundTag tag = stack.getOrCreateTag();
+        CompoundTag tag = ItemStackComponentData.read(stack);
         if (!tag.contains(TAG_PENDING_CORNER)) {
-            tag.putLong(TAG_PENDING_CORNER, clicked.asLong());
+            ItemStackComponentData.update(stack, data -> data.putLong(TAG_PENDING_CORNER, clicked.asLong()));
             player.sendSystemMessage(Component.translatable("bannermod.surveyor.corner_a", clicked.toShortString()).withStyle(ChatFormatting.AQUA));
             return InteractionResult.SUCCESS;
         }
 
         BlockPos cornerA = BlockPos.of(tag.getLong(TAG_PENDING_CORNER));
-        tag.remove(TAG_PENDING_CORNER);
+        ItemStackComponentData.update(stack, data -> data.remove(TAG_PENDING_CORNER));
         ZoneRole role = selectedRole(stack);
         ValidationSession updated = session.upsertSelection(role, cornerA, clicked, clicked);
         SurveyorSessionCodec.write(stack, updated);
@@ -114,7 +115,7 @@ public class SettlementSurveyorToolItem extends Item {
             tooltip.add(Component.translatable("bannermod.surveyor.tooltip.zones", session.selections().size())
                     .withStyle(ChatFormatting.GRAY));
         }
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = ItemStackComponentData.read(stack);
         if (tag != null && tag.contains(TAG_PENDING_CORNER)) {
             tooltip.add(Component.translatable("bannermod.surveyor.tooltip.pending", BlockPos.of(tag.getLong(TAG_PENDING_CORNER)).toShortString())
                     .withStyle(ChatFormatting.GOLD));
@@ -151,13 +152,13 @@ public class SettlementSurveyorToolItem extends Item {
         ZoneRole[] roles = ZoneRole.values();
         ZoneRole current = selectedRole(stack);
         ZoneRole next = roles[(current.ordinal() + 1) % roles.length];
-        stack.getOrCreateTag().putString(TAG_SELECTED_ROLE, next.name());
+        ItemStackComponentData.update(stack, tag -> tag.putString(TAG_SELECTED_ROLE, next.name()));
         return next;
     }
 
     private static ZoneRole selectedRole(ItemStack stack) {
-        CompoundTag tag = stack.getOrCreateTag();
-        if (!tag.contains(TAG_SELECTED_ROLE)) {
+        CompoundTag tag = ItemStackComponentData.read(stack);
+        if (tag == null || !tag.contains(TAG_SELECTED_ROLE)) {
             return ZoneRole.INTERIOR;
         }
         try {

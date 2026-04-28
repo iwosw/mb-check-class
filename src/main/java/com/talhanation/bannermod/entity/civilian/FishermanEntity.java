@@ -23,7 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -103,7 +103,7 @@ public class FishermanEntity extends AbstractWorkerEntity{
     }
 
     public boolean wantsToPickUp(ItemStack itemStack) {
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(itemStack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
         if(id == null) return false;
 
         if(WorkersServerConfig.FISHERMAN_PICKUP.contains(id.toString())) return true;

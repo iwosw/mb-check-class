@@ -3,6 +3,7 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.util.RegistryLookup;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.Holder;
 import net.minecraft.network.FriendlyByteBuf;
@@ -17,7 +18,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.UUID;
 
@@ -129,7 +129,7 @@ public class MessageClaimIntent implements Message<MessageClaimIntent> {
     }
 
     private static Item currency() {
-        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(RecruitsServerConfig.RecruitCurrency.get()))
+        return RegistryLookup.itemHolder(ResourceLocation.tryParse(RecruitsServerConfig.RecruitCurrency.get()))
                 .map(Holder::value)
                 .orElse(Items.EMERALD);
     }

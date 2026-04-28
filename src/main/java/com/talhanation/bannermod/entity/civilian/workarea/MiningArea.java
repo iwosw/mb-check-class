@@ -28,7 +28,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.Tags;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Stack;
 import java.util.stream.Stream;
@@ -285,7 +285,7 @@ public class MiningArea extends AbstractWorkAreaEntity {
     }
 
     public boolean shouldIgnore(BlockState state){
-        ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         if(id == null) return false;
         return WorkersServerConfig.MINER_IGNORE.contains(id.toString());
     }

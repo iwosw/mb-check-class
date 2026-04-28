@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.util.RegistryLookup;
 import de.maxhenkel.corelib.net.Message;
 import net.minecraft.core.Holder;
 import net.minecraft.network.FriendlyByteBuf;
@@ -11,7 +12,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.UUID;
 
@@ -60,7 +60,7 @@ public class MessageDoPayment implements Message<MessageDoPayment> {
 
     private static Item getRecruitCurrency() {
         String currencyId = RecruitsServerConfig.RecruitCurrency.get();
-        return ForgeRegistries.ITEMS.getHolder(ResourceLocation.tryParse(currencyId))
+        return RegistryLookup.itemHolder(ResourceLocation.tryParse(currencyId))
                 .map(Holder::value)
                 .orElse(Items.EMERALD);
     }
