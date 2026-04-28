@@ -193,20 +193,22 @@ public class RecruitsSpawnEgg extends DeferredSpawnEggItem {
             CompoundTag compoundnbt = listnbt.getCompound(i);
             int j = compoundnbt.getByte("Slot") & 255;
             if (j < recruit.inventory.getContainerSize()) {
-                recruit.inventory.setItem(j, ItemStack.of(compoundnbt));
+                recruit.inventory.setItem(j, ItemStack.parseOptional(recruit.registryAccess(), compoundnbt));
             }
         }
 
         ListTag armorItems = nbt.getList("ArmorItems", 10);
-        for (int i = 0; i < recruit.armorItems.size(); ++i) {
-            int index = recruit.getInventorySlotIndex(Mob.getEquipmentSlotForItem(ItemStack.of(armorItems.getCompound(i))));
-            recruit.setItemSlot(recruit.getEquipmentSlotIndex(index), ItemStack.of(armorItems.getCompound(i)));
+        for (int i = 0; i < armorItems.size(); ++i) {
+            ItemStack armor = ItemStack.parseOptional(recruit.registryAccess(), armorItems.getCompound(i));
+            if (!armor.isEmpty()) {
+                recruit.setItemSlot(Mob.getEquipmentSlotForItem(armor), armor);
+            }
         }
 
         ListTag handItems = nbt.getList("HandItems", 10);
-        for (int i = 0; i < recruit.handItems.size(); ++i) {
+        for (int i = 0; i < handItems.size() && i < 2; ++i) {
             int index = i == 0 ? 5 : 4; //5 = mainhand 4 = offhand
-            recruit.setItemSlot(recruit.getEquipmentSlotIndex(index), ItemStack.of(handItems.getCompound(i)));
+            recruit.setItemSlot(recruit.getEquipmentSlotIndex(index), ItemStack.parseOptional(recruit.registryAccess(), handItems.getCompound(i)));
         }
 
         recruit.setPos(pos.getX() + 0.5, pos.getY() + 1 , pos.getZ() + 0.5);

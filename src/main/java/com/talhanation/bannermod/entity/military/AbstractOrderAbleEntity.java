@@ -36,6 +36,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Optional;
 
 public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
@@ -361,19 +362,19 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
             if (damage < 1.0F) {
                 damage = 1.0F;
             }
-            for (int i = 11; i < 15; ++i) {//11,12,13,14 = armor
-                ItemStack itemstack = this.inventory.getItem(i);
+            for (EquipmentSlot slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+                ItemStack itemstack = this.getItemBySlot(slot);
                 if ((!(damageSource.is(DamageTypes.IN_FIRE) && (damageSource.is(DamageTypes.ON_FIRE))) || !itemstack.getItem().isFireResistant()) && itemstack.getItem() instanceof ArmorItem) {
-                    itemstack.setDamageValue((int) damage);
+                    itemstack.hurtAndBreak((int) damage, this, entity -> entity.broadcastBreakEvent(slot));
                 }
             }
         }
     }
 
     protected void damageMainHandItem() {
-        ItemStack itemstack = this.inventory.getItem(9);// 10 = hoffhand slot
-        if (itemstack.getItem().isDamageable(itemstack)) {
-            itemstack.setDamageValue(1);
+        ItemStack itemstack = this.getMainHandItem();
+        if (itemstack.isDamageableItem()) {
+            itemstack.hurtAndBreak(1, this, entity -> entity.broadcastBreakEvent(EquipmentSlot.MAINHAND));
         }
     }
 
@@ -402,11 +403,6 @@ public abstract class AbstractOrderAbleEntity extends AbstractInventoryEntity{
                 this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
                 this.getSlot(10).set(ItemStack.EMPTY);
                 this.playSound(SoundEvents.SHIELD_BREAK, 0.8F, 0.8F + this.getCommandSenderWorld().random.nextFloat() * 0.4F);
-            }
-
-            ItemStack itemstack = this.inventory.getItem(10);// 10 = hoffhand slot
-            if (itemstack.getItem() instanceof ShieldItem) {
-                itemstack.setDamageValue((int) damage);
             }
         }
     }
