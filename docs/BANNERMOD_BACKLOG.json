@@ -3492,7 +3492,8 @@
       "dependencies": [
         "PORT-017",
         "PORT-019",
-        "PORT-020"
+        "PORT-020",
+        "PORT-021"
       ],
       "progress": [],
       "verification": [],
@@ -3547,6 +3548,25 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-28"
+    },
+    {
+      "id": "PORT-021",
+      "title": "Remove remaining Forge server lifecycle hooks",
+      "status": "open",
+      "updated": "2026-04-28",
+      "why": "PORT audit found active source still referencing net.minecraftforge.server.ServerLifecycleHooks after the NeoForge migration.",
+      "scope": [
+        "Replace remaining Forge ServerLifecycleHooks references with the NeoForge 1.21.1 server lifecycle hook API, without compatibility shims."
+      ],
+      "acceptance": [
+        "Active src contains no net.minecraftforge.* references; compileJava no longer reports ServerLifecycleHooks package errors."
+      ],
+      "dependencies": [
+        "PORT-020"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
