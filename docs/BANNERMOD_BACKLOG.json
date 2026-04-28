@@ -3303,7 +3303,7 @@
     {
       "id": "PORT-012",
       "title": "Port NeoForge client HUD overlay hooks",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-005 compile is blocked by removed Forge HUD overlay APIs such as RenderGuiOverlayEvent and VanillaGuiOverlay.",
       "scope": [
@@ -3316,8 +3316,14 @@
         "PORT-011"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "Ported active client HUD overlay hooks to NeoForge 1.21.1 GUI layer/event APIs. Verified global source search has zero RenderGuiOverlayEvent, VanillaGuiOverlay, RegisterGuiOverlaysEvent, IGuiOverlay, or ForgeGui matches; compileJava still fails only on unrelated broad Forge package migration clusters. Review also fixed ClaimOverlayManager to render only after HOTBAR layer and used ResourceLocation.fromNamespaceAndPath for the layer id."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     }
   ]
 }
