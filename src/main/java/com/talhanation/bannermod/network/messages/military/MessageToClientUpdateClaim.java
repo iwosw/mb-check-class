@@ -4,7 +4,8 @@ import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.api.ClientClaimEvent;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.api.distmarker.Dist;
@@ -12,7 +13,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.NeoForge;
 import net.minecraftforge.network.NetworkEvent;
 
-public class MessageToClientUpdateClaim implements Message<MessageToClientUpdateClaim> {
+public class MessageToClientUpdateClaim implements BannerModMessage<MessageToClientUpdateClaim> {
     private CompoundTag claimNBT;
 
     public MessageToClientUpdateClaim() {
@@ -23,8 +24,8 @@ public class MessageToClientUpdateClaim implements Message<MessageToClientUpdate
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

@@ -3,7 +3,8 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.registry.citizen.ModCitizenItems;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -12,13 +13,12 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
+public class MessageWriteSpawnEgg implements BannerModMessage<MessageWriteSpawnEgg> {
 
     public UUID recruit;
 
@@ -29,8 +29,8 @@ public class MessageWriteSpawnEgg implements Message<MessageWriteSpawnEgg> {
         this.recruit = recruit;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {

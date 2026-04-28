@@ -1,17 +1,17 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessagePatrolLeaderSetEnemyAction implements Message<MessagePatrolLeaderSetEnemyAction> {
+public class MessagePatrolLeaderSetEnemyAction implements BannerModMessage<MessagePatrolLeaderSetEnemyAction> {
 
     private UUID recruit;
     private byte action; // 0 = CHARGE, 1 = HOLD, 2 = KEEP_PATROLLING
@@ -23,8 +23,8 @@ public class MessagePatrolLeaderSetEnemyAction implements Message<MessagePatrolL
         this.action = action;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {

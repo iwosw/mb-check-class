@@ -3,7 +3,8 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
@@ -13,7 +14,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;
 
-public class MessageToClientUpdateClaims implements Message<MessageToClientUpdateClaims> {
+public class MessageToClientUpdateClaims implements BannerModMessage<MessageToClientUpdateClaims> {
     private CompoundTag claimsListNBT;
     private int claimCost;
     private int chunkCost;
@@ -35,8 +36,8 @@ public class MessageToClientUpdateClaims implements Message<MessageToClientUpdat
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

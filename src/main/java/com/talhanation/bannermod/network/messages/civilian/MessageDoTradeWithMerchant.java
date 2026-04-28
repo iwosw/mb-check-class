@@ -1,16 +1,16 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
-public class MessageDoTradeWithMerchant implements Message<MessageDoTradeWithMerchant> {
+public class MessageDoTradeWithMerchant implements BannerModMessage<MessageDoTradeWithMerchant> {
 
     public UUID merchantUuid;
     public UUID trade;
@@ -21,8 +21,8 @@ public class MessageDoTradeWithMerchant implements Message<MessageDoTradeWithMer
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

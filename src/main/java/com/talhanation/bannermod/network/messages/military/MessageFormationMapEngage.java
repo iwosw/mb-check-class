@@ -8,13 +8,13 @@ import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.CommandEvents;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import java.util.UUID;
  *       chase their assigned target via the existing combat-follow AI.</li>
  * </ul>
  */
-public class MessageFormationMapEngage implements Message<MessageFormationMapEngage> {
+public class MessageFormationMapEngage implements BannerModMessage<MessageFormationMapEngage> {
 
     public enum Mode {
         ADVANCE_IN_FORMATION,
@@ -69,8 +69,8 @@ public class MessageFormationMapEngage implements Message<MessageFormationMapEng
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

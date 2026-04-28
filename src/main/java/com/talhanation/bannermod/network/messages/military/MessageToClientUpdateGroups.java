@@ -2,10 +2,10 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 
-public class MessageToClientUpdateGroups implements Message<MessageToClientUpdateGroups> {
+public class MessageToClientUpdateGroups implements BannerModMessage<MessageToClientUpdateGroups> {
     private CompoundTag nbt;
     public MessageToClientUpdateGroups() {
 
@@ -25,8 +25,8 @@ public class MessageToClientUpdateGroups implements Message<MessageToClientUpdat
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

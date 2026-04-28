@@ -4,18 +4,18 @@ import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public class MessageUpdateCoLeader implements Message<MessageUpdateCoLeader> {
+public class MessageUpdateCoLeader implements BannerModMessage<MessageUpdateCoLeader> {
     private UUID entityId;
     private UUID coLeaderUuid;
     private boolean add;
@@ -30,8 +30,8 @@ public class MessageUpdateCoLeader implements Message<MessageUpdateCoLeader> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

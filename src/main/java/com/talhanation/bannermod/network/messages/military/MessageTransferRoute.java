@@ -1,11 +1,11 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -18,7 +18,7 @@ import static com.talhanation.bannermod.bootstrap.BannerModMain.SIMPLE_CHANNEL;
  * Client → Server: player wants to transfer a route to another online player.
  * Server → forwards as {@link MessageToClientReceiveRoute} to the target player.
  */
-public class MessageTransferRoute implements Message<MessageTransferRoute> {
+public class MessageTransferRoute implements BannerModMessage<MessageTransferRoute> {
 
     private UUID targetPlayerUUID;
     private CompoundTag routeNBT;
@@ -31,8 +31,8 @@ public class MessageTransferRoute implements Message<MessageTransferRoute> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

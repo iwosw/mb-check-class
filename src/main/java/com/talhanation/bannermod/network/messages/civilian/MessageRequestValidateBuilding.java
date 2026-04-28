@@ -1,12 +1,12 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.settlement.prefab.validation.BuildingValidationService;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 /**
@@ -16,7 +16,7 @@ import net.minecraftforge.network.NetworkEvent;
  * bounding box and the player's center tap (sanity check for intent). Handled by
  * {@link BuildingValidationService}.</p>
  */
-public class MessageRequestValidateBuilding implements Message<MessageRequestValidateBuilding> {
+public class MessageRequestValidateBuilding implements BannerModMessage<MessageRequestValidateBuilding> {
     public ResourceLocation prefabId;
     public BlockPos cornerA;
     public BlockPos cornerB;
@@ -33,8 +33,8 @@ public class MessageRequestValidateBuilding implements Message<MessageRequestVal
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

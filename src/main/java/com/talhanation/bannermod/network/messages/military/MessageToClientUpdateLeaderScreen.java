@@ -1,17 +1,17 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.gui.PatrolLeaderScreen;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;
 
 
-public class MessageToClientUpdateLeaderScreen implements Message<MessageToClientUpdateLeaderScreen> {
+public class MessageToClientUpdateLeaderScreen implements BannerModMessage<MessageToClientUpdateLeaderScreen> {
     public List<BlockPos> waypoints;
     public List<ItemStack> waypointItems;
     public int size;
@@ -26,8 +26,8 @@ public class MessageToClientUpdateLeaderScreen implements Message<MessageToClien
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

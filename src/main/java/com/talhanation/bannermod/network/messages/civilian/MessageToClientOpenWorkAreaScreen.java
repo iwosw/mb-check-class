@@ -1,7 +1,8 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -12,7 +13,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
-public class MessageToClientOpenWorkAreaScreen implements Message<MessageToClientOpenWorkAreaScreen> {
+public class MessageToClientOpenWorkAreaScreen implements BannerModMessage<MessageToClientOpenWorkAreaScreen> {
 
     private int entityId;
     private UUID uuid;
@@ -27,8 +28,8 @@ public class MessageToClientOpenWorkAreaScreen implements Message<MessageToClien
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

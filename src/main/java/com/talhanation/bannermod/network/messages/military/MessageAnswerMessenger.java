@@ -1,17 +1,17 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.entity.military.MessengerEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageAnswerMessenger implements Message<MessageAnswerMessenger> {
+public class MessageAnswerMessenger implements BannerModMessage<MessageAnswerMessenger> {
 
     private UUID recruit;
     public MessageAnswerMessenger() {
@@ -20,8 +20,8 @@ public class MessageAnswerMessenger implements Message<MessageAnswerMessenger> {
         this.recruit = recruit;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

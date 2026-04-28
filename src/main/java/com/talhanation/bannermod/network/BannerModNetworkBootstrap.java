@@ -2,6 +2,8 @@ package com.talhanation.bannermod.network;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import de.maxhenkel.corelib.CommonRegistry;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 // Military network messages (migrated from recruits.network.*)
@@ -211,36 +213,23 @@ public class BannerModNetworkBootstrap {
         return MILITARY_MESSAGES.length;
     }
 
-    /**
-     * Creates and returns the single shared SimpleChannel with all military and civilian
-     * packets registered. Must be called once during FMLCommonSetupEvent.
-     *
-     * Military packets: indices [0..107)
-     * Civilian packets: indices [107..130)
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
+    public static void registerPayloads(RegisterPayloadHandlersEvent event) {
+        PayloadRegistrar registrar = event.registrar(BannerModMain.MOD_ID);
+        for (Class clazz : MILITARY_MESSAGES) {
+            CommonRegistry.registerMessage(registrar, clazz);
+        }
+        for (Class clazz : CIVILIAN_MESSAGES) {
+            CommonRegistry.registerMessage(registrar, clazz);
+        }
+        for (Class clazz : WAR_MESSAGES) {
+            CommonRegistry.registerMessage(registrar, clazz);
+        }
+    }
+
     public static SimpleChannel createSharedChannel() {
-        SimpleChannel channel = CommonRegistry.registerChannel(BannerModMain.MOD_ID, "default");
-
-        // --- Military messages [0..MILITARY_MESSAGES.length) ---
-        for (int i = 0; i < MILITARY_MESSAGES.length; i++) {
-            CommonRegistry.registerMessage(channel, i, MILITARY_MESSAGES[i]);
-        }
-
-        // --- Civilian messages [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length) ---
-        for (int j = 0; j < CIVILIAN_MESSAGES.length; j++) {
-            CommonRegistry.registerMessage(channel, MILITARY_MESSAGES.length + j, CIVILIAN_MESSAGES[j]);
-        }
-
-        // --- War messages [MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length .. ) ---
-        int warOffset = MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length;
-        for (int k = 0; k < WAR_MESSAGES.length; k++) {
-            CommonRegistry.registerMessage(channel, warOffset + k, WAR_MESSAGES[k]);
-        }
-
-        // Bind to WorkersRuntime for compatibility
+        SimpleChannel channel = new SimpleChannel();
         com.talhanation.bannermod.bootstrap.WorkersRuntime.bindChannel(channel);
-
         return channel;
     }
 }

@@ -3,17 +3,17 @@ package com.talhanation.bannermod.network.messages.military;
 import com.talhanation.bannermod.compat.workers.IVillagerWorker;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.ICompanion;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageOpenSpecialScreen implements Message<MessageOpenSpecialScreen> {
+public class MessageOpenSpecialScreen implements BannerModMessage<MessageOpenSpecialScreen> {
 
     private UUID player;
     private UUID recruit;
@@ -28,8 +28,8 @@ public class MessageOpenSpecialScreen implements Message<MessageOpenSpecialScree
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

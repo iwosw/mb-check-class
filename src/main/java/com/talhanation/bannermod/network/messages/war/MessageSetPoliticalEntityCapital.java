@@ -4,13 +4,13 @@ import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Optional;
@@ -22,7 +22,7 @@ import java.util.UUID;
  * sender's current block position; this is what the "Set capital here" UI button sends so
  * the client never needs to round-trip the player coordinate.
  */
-public class MessageSetPoliticalEntityCapital implements Message<MessageSetPoliticalEntityCapital> {
+public class MessageSetPoliticalEntityCapital implements BannerModMessage<MessageSetPoliticalEntityCapital> {
 
     private UUID entityId;
     private boolean usePlayerPos;
@@ -42,8 +42,8 @@ public class MessageSetPoliticalEntityCapital implements Message<MessageSetPolit
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

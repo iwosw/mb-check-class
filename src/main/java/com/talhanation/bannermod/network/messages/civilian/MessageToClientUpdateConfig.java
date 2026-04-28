@@ -1,13 +1,14 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.client.civilian.WorkersClientManager;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 
-public class MessageToClientUpdateConfig implements Message<MessageToClientUpdateConfig> {
+public class MessageToClientUpdateConfig implements BannerModMessage<MessageToClientUpdateConfig> {
     private boolean allowWorkAreaOnlyInFactionClaim;
     public MessageToClientUpdateConfig() {
     }
@@ -17,8 +18,8 @@ public class MessageToClientUpdateConfig implements Message<MessageToClientUpdat
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

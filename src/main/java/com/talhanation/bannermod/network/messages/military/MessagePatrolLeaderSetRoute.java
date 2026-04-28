@@ -2,14 +2,14 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import javax.annotation.Nullable;
@@ -23,7 +23,7 @@ import java.util.UUID;
  * so the positions must be included in the packet — the server cannot read the
  * client's filesystem.
  */
-public class MessagePatrolLeaderSetRoute implements Message<MessagePatrolLeaderSetRoute> {
+public class MessagePatrolLeaderSetRoute implements BannerModMessage<MessagePatrolLeaderSetRoute> {
 
     private UUID recruit;
     @Nullable private UUID routeId;       // null = clear route
@@ -49,8 +49,8 @@ public class MessagePatrolLeaderSetRoute implements Message<MessagePatrolLeaderS
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

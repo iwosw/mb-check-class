@@ -1,16 +1,16 @@
 package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.client.military.gui.GovernorScreen;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MessageToClientUpdateGovernorScreen implements Message<MessageToClientUpdateGovernorScreen> {
+public class MessageToClientUpdateGovernorScreen implements BannerModMessage<MessageToClientUpdateGovernorScreen> {
     private UUID recruit;
     private String settlementStatus;
     private int citizenCount;
@@ -69,8 +69,8 @@ public class MessageToClientUpdateGovernorScreen implements Message<MessageToCli
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.CLIENT;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.clientbound();
     }
 
     @Override

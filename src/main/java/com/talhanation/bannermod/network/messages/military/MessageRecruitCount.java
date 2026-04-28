@@ -1,8 +1,8 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
@@ -18,7 +18,7 @@ import java.util.UUID;
  * future "recruit count" RPC should replace this class outright rather than threading new
  * logic through the deprecated payload.</p>
  */
-public class MessageRecruitCount implements Message<MessageRecruitCount> {
+public class MessageRecruitCount implements BannerModMessage<MessageRecruitCount> {
 
     private int group;
     private UUID uuid;
@@ -32,8 +32,8 @@ public class MessageRecruitCount implements Message<MessageRecruitCount> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

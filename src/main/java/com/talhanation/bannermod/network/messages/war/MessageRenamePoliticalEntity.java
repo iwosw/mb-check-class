@@ -5,12 +5,12 @@ import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Optional;
@@ -23,7 +23,7 @@ import java.util.UUID;
  * the client may render the rename button only when locally believed legal, but the server
  * never trusts that.</p>
  */
-public class MessageRenamePoliticalEntity implements Message<MessageRenamePoliticalEntity> {
+public class MessageRenamePoliticalEntity implements BannerModMessage<MessageRenamePoliticalEntity> {
 
     private UUID entityId;
     private String newName;
@@ -37,8 +37,8 @@ public class MessageRenamePoliticalEntity implements Message<MessageRenamePoliti
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

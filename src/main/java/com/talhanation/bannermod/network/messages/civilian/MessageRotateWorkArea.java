@@ -1,16 +1,16 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
-public class MessageRotateWorkArea implements Message<MessageRotateWorkArea> {
+public class MessageRotateWorkArea implements BannerModMessage<MessageRotateWorkArea> {
 
     public UUID uuid;
     public boolean clockwise;
@@ -23,8 +23,8 @@ public class MessageRotateWorkArea implements Message<MessageRotateWorkArea> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     @Override

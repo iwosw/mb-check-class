@@ -2,17 +2,17 @@ package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.civilian.MerchantAccessControl;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
-public class MessageUpdateMerchant implements Message<MessageUpdateMerchant> {
+public class MessageUpdateMerchant implements BannerModMessage<MessageUpdateMerchant> {
 
     public UUID merchantUuid;
     public boolean isCreative;
@@ -32,8 +32,8 @@ public class MessageUpdateMerchant implements Message<MessageUpdateMerchant> {
     }
 
     @Override
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context){

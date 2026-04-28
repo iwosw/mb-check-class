@@ -9,11 +9,11 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import de.maxhenkel.corelib.net.Message;
+import com.talhanation.bannermod.network.payload.BannerModMessage;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.HashSet;
@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-public class MessageCombatStance implements Message<MessageCombatStance> {
+public class MessageCombatStance implements BannerModMessage<MessageCombatStance> {
 
     private UUID playerUuid;
     private UUID group;
@@ -37,8 +37,8 @@ public class MessageCombatStance implements Message<MessageCombatStance> {
         this.stance = stance;
     }
 
-    public Dist getExecutingSide() {
-        return Dist.DEDICATED_SERVER;
+    public PacketFlow getExecutingSide() {
+        return BannerModMessage.serverbound();
     }
 
     public void executeServerSide(NetworkEvent.Context context) {
