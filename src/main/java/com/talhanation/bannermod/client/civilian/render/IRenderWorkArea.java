@@ -2,25 +2,18 @@ package com.talhanation.bannermod.client.civilian.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.LevelRenderer;
+import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
 
 
 public interface IRenderWorkArea {
     default void renderWorkArea(PoseStack poseStack, VertexConsumer vertexConsumer, AABB aabb){
-        LevelRenderer.renderLineBox(poseStack, vertexConsumer, aabb, 1F, 1F, 1F, 1F);
+        ClientRenderPrimitives.lineBox(poseStack, vertexConsumer, aabb, 1F, 1F, 1F, 1F);
     }
 
     default void drawLine(PoseStack stack, VertexConsumer buffer, Vec3 from, Vec3 to, float r, float g, float b, float a) {
-        Matrix4f matrix = stack.last().pose();
-        buffer.addVertex(matrix, (float) from.x, (float) from.y, (float) from.z)
-                .setColor(r, g, b, a)
-                .setNormal(0, 1, 0);
-        buffer.addVertex(matrix, (float) to.x, (float) to.y, (float) to.z)
-                .setColor(r, g, b, a)
-                .setNormal(0, 1, 0);
+        ClientRenderPrimitives.line(stack, buffer, from, to, r, g, b, a);
     }
 
 }

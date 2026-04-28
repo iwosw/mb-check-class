@@ -3,13 +3,13 @@ package com.talhanation.bannermod.client.civilian.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import com.talhanation.bannermod.entity.civilian.FishermanEntity;
 import com.talhanation.bannermod.entity.civilian.FishingBobberEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
@@ -36,50 +36,36 @@ public class FishingBobberRenderer extends EntityRenderer<FishingBobberEntity> {
             poseStack.scale(0.5F, 0.5F, 0.5F);
             poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
             poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-            PoseStack.Pose posestack$pose = poseStack.last();
-            Matrix4f matrix4f = posestack$pose.pose();
-            VertexConsumer vertexconsumer = multiBufferSource.getBuffer(RENDER_TYPE);
-            vertex(vertexconsumer, matrix4f, packetLight, 0.0F, 0, 0, 1);
-            vertex(vertexconsumer, matrix4f, packetLight, 1.0F, 0, 1, 1);
-            vertex(vertexconsumer, matrix4f, packetLight, 1.0F, 1, 1, 0);
-            vertex(vertexconsumer, matrix4f, packetLight, 0.0F, 1, 0, 0);
+            Matrix4f bobberPose = poseStack.last().pose();
+            VertexConsumer bobberBuffer = multiBufferSource.getBuffer(RENDER_TYPE);
+            ClientRenderPrimitives.texturedBillboardQuad(bobberBuffer, bobberPose, packetLight);
             poseStack.popPose();
-            int i = fisherman.getMainArm() == HumanoidArm.RIGHT ? 1 : -1;
+            int armSide = fisherman.getMainArm() == HumanoidArm.RIGHT ? 1 : -1;
             ItemStack itemstack = fisherman.getMainHandItem();
             if (!itemstack.canPerformAction(net.neoforged.neoforge.common.ItemAbilities.FISHING_ROD_CAST)) {
-                i = -i;
+                armSide = -armSide;
             }
 
-            float f = fisherman.getAttackAnim(partialTicks);
-            float f1 = Mth.sin(Mth.sqrt(f) * (float) Math.PI);
-            float f2 = Mth.lerp(partialTicks, fisherman.yBodyRotO, fisherman.yBodyRot) * ((float) Math.PI / 180F);
-            double d0 = (double) Mth.sin(f2);
-            double d1 = (double) Mth.cos(f2);
-            double d2 = (double) i * 0.35D;
-            double d3 = 0.8D;
-            double d4;
-            double d5;
-            double d6;
-            float f3;
+            float bodyYawRadians = Mth.lerp(partialTicks, fisherman.yBodyRotO, fisherman.yBodyRot) * ((float) Math.PI / 180F);
+            double yawSin = Mth.sin(bodyYawRadians);
+            double yawCos = Mth.cos(bodyYawRadians);
+            double armOffset = (double) armSide * 0.35D;
+            double handX = Mth.lerp((double) partialTicks, fisherman.xo, fisherman.getX()) - yawCos * armOffset - yawSin * 0.8D;
+            double handY = fisherman.yo + (double) fisherman.getEyeHeight() + (fisherman.getY() - fisherman.yo) * (double) partialTicks - 0.45D;
+            double handZ = Mth.lerp((double) partialTicks, fisherman.zo, fisherman.getZ()) - yawSin * armOffset + yawCos * 0.8D;
+            float crouchOffset = fisherman.isCrouching() ? -0.1875F : 0.0F;
 
-            d4 = Mth.lerp((double) partialTicks, fisherman.xo, fisherman.getX()) - d1 * d2 - d0 * 0.8D;
-            d5 = fisherman.yo + (double) fisherman.getEyeHeight() + (fisherman.getY() - fisherman.yo) * (double) partialTicks - 0.45D;
-            d6 = Mth.lerp((double) partialTicks, fisherman.zo, fisherman.getZ()) - d0 * d2 + d1 * 0.8D;
-            f3 = fisherman.isCrouching() ? -0.1875F : 0.0F;
+            double bobberX = Mth.lerp((double) partialTicks, fishingBobber.xo, fishingBobber.getX());
+            double bobberY = Mth.lerp((double) partialTicks, fishingBobber.yo, fishingBobber.getY()) + 0.25D;
+            double bobberZ = Mth.lerp((double) partialTicks, fishingBobber.zo, fishingBobber.getZ());
+            float lineX = (float) (handX - bobberX);
+            float lineY = (float) (handY - bobberY) + crouchOffset;
+            float lineZ = (float) (handZ - bobberZ);
+            VertexConsumer lineBuffer = multiBufferSource.getBuffer(RenderType.lineStrip());
+            PoseStack.Pose linePose = poseStack.last();
 
-
-            double d9 = Mth.lerp((double) partialTicks, fishingBobber.xo, fishingBobber.getX());
-            double d10 = Mth.lerp((double) partialTicks, fishingBobber.yo, fishingBobber.getY()) + 0.25D;
-            double d8 = Mth.lerp((double) partialTicks, fishingBobber.zo, fishingBobber.getZ());
-            float f4 = (float) (d4 - d9);
-            float f5 = (float) (d5 - d10) + f3;
-            float f6 = (float) (d6 - d8);
-            VertexConsumer vertexconsumer1 = multiBufferSource.getBuffer(RenderType.lineStrip());
-            PoseStack.Pose posestack$pose1 = poseStack.last();
-            int j = 16;
-
-            for (int k = 0; k <= 16; ++k) {
-                stringVertex(f4, f5, f6, vertexconsumer1, posestack$pose1, fraction(k, 16), fraction(k + 1, 16));
+            for (int segment = 0; segment <= 16; ++segment) {
+                fishingLineVertex(lineX, lineY, lineZ, lineBuffer, linePose, fraction(segment, 16), fraction(segment + 1, 16));
             }
 
             poseStack.popPose();
@@ -91,22 +77,20 @@ public class FishingBobberRenderer extends EntityRenderer<FishingBobberEntity> {
         return (float) p_114691_ / (float) p_114692_;
     }
 
-    private static void vertex(VertexConsumer p_254464_, Matrix4f p_254085_, int p_254296_, float p_253632_, int p_254132_, int p_254171_, int p_254026_) {
-        p_254464_.addVertex(p_254085_, p_253632_ - 0.5F, (float) p_254132_ - 0.5F, 0.0F).setColor(255, 255, 255, 255).setUv((float) p_254171_, (float) p_254026_).setOverlay(OverlayTexture.NO_OVERLAY).setLight(p_254296_).setNormal(0.0F, 1.0F, 0.0F);
-    }
-
-    private static void stringVertex(float p_174119_, float p_174120_, float p_174121_, VertexConsumer p_174122_, PoseStack.Pose p_174123_, float p_174124_, float p_174125_) {
-        float f = p_174119_ * p_174124_;
-        float f1 = p_174120_ * (p_174124_ * p_174124_ + p_174124_) * 0.5F + 0.25F;
-        float f2 = p_174121_ * p_174124_;
-        float f3 = p_174119_ * p_174125_ - f;
-        float f4 = p_174120_ * (p_174125_ * p_174125_ + p_174125_) * 0.5F + 0.25F - f1;
-        float f5 = p_174121_ * p_174125_ - f2;
-        float f6 = Mth.sqrt(f3 * f3 + f4 * f4 + f5 * f5);
-        f3 /= f6;
-        f4 /= f6;
-        f5 /= f6;
-        p_174122_.addVertex(p_174123_.pose(), f, f1, f2).setColor(0, 0, 0, 255).setNormal(f3, f4, f5);
+    private static void fishingLineVertex(float lineX, float lineY, float lineZ, VertexConsumer consumer, PoseStack.Pose pose, float start, float end) {
+        float x = lineX * start;
+        float y = lineY * (start * start + start) * 0.5F + 0.25F;
+        float z = lineZ * start;
+        float nextX = lineX * end - x;
+        float nextY = lineY * (end * end + end) * 0.5F + 0.25F - y;
+        float nextZ = lineZ * end - z;
+        float length = Mth.sqrt(nextX * nextX + nextY * nextY + nextZ * nextZ);
+        if (length > 1.0E-6F) {
+            nextX /= length;
+            nextY /= length;
+            nextZ /= length;
+        }
+        ClientRenderPrimitives.lineStripVertex(pose, consumer, x, y, z, 0.0F, 0.0F, 0.0F, 1.0F, nextX, nextY, nextZ);
     }
 
     public ResourceLocation getTextureLocation(FishingBobberEntity p_114703_) {
