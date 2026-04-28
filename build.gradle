@@ -37,7 +37,9 @@ mixin {
     overwriteErrorLevel = 'error'
 }
 
-version = project.findProperty('mod_version') ?: 'v1'
+def configuredVersion = (project.findProperty('mod_version') ?: 'v1').toString().trim()
+def releaseVersionOverride = (project.findProperty('release_version') ?: '').toString().trim()
+version = releaseVersionOverride ? releaseVersionOverride : configuredVersion
 group = 'com.talhanation.bannermod'
 archivesBaseName = 'bannermod'
 
