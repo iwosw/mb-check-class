@@ -14,8 +14,7 @@ import com.talhanation.bannermod.events.civilian.SettlementWorkOrderClaimRelease
 import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
 import com.talhanation.bannermod.client.military.events.ClientPlayerEvents;
 import com.talhanation.bannermod.client.military.events.KeyEvents;
-import com.talhanation.bannermod.client.military.gui.overlay.BattleWindowHud;
-import com.talhanation.bannermod.client.military.gui.overlay.ClaimOverlayManager;
+import com.talhanation.bannermod.client.military.gui.overlay.HudOverlayCoordinator;
 import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
 import com.talhanation.bannermod.commands.war.BannerModWarCommands;
@@ -184,12 +183,11 @@ public class BannerModMain {
         // as 21-11 (recruits/Main.java was deprecated to a no-op shim and these registrations
         // were not ported into the unified entrypoint). KeyEvents owns the R/U/M hotkey
         // listener that opens Command/Faction/Map screens; ClientPlayerEvents owns
-        // client-tick and world-load hooks; ClaimOverlayManager renders the claim HUD.
+        // client-tick and world-load hooks; HudOverlayCoordinator renders the claim/war HUD stack.
         // See 21-UAT.md gap "Recruits hotkey screens (Command/Faction/Map) and the claim overlay open in dev client".
         NeoForge.EVENT_BUS.register(new KeyEvents());
         NeoForge.EVENT_BUS.register(new ClientPlayerEvents());
-        NeoForge.EVENT_BUS.register(new ClaimOverlayManager());
-        NeoForge.EVENT_BUS.register(new BattleWindowHud());
+        NeoForge.EVENT_BUS.register(HudOverlayCoordinator.INSTANCE);
     }
 
     private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {
