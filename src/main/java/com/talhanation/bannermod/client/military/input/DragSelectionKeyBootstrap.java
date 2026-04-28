@@ -2,7 +2,7 @@ package com.talhanation.bannermod.client.military.input;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.neoforged.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.common.EventBusSubscriber;
