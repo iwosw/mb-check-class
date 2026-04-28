@@ -85,19 +85,23 @@ public class WorkersVillagerEvents {
     }
 
     @SubscribeEvent
-    public void onRightClickBlock(PlayerInteractEvent event) {
-        if (event.getLevel() == null || event.getEntity() == null) return;
+    public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        handleBlockInteraction(event);
+    }
 
-        if(!(event instanceof PlayerInteractEvent.RightClickBlock) && !(event instanceof PlayerInteractEvent.LeftClickBlock)) {
-            return;
-        }
+    @SubscribeEvent
+    public void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        handleBlockInteraction(event);
+    }
+
+    private void handleBlockInteraction(PlayerInteractEvent event) {
+        if (event.getLevel() == null || event.getEntity() == null) return;
 
         if(disableInteractionInMarketArea(event.getEntity(), event.getLevel(), event.getPos())){
             if (event instanceof ICancellableEvent cancellableEvent) {
                 cancellableEvent.setCanceled(true);
             }
         }
-
     }
 
     public static boolean disableInteractionInMarketArea(Player player, Level level, BlockPos pos) {

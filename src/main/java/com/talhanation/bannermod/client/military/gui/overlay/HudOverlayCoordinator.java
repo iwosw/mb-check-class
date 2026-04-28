@@ -28,7 +28,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -43,7 +42,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class HudOverlayCoordinator {
     public static final HudOverlayCoordinator INSTANCE = new HudOverlayCoordinator();
 
@@ -86,7 +84,6 @@ public final class HudOverlayCoordinator {
     private HudOverlayCoordinator() {
     }
 
-    @SubscribeEvent
     public static void registerOverlays(RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.HOTBAR, HUD_LAYER, HudOverlayCoordinator::render);
     }
