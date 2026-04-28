@@ -1,11 +1,13 @@
 package com.talhanation.bannermod.client.civilian.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.talhanation.bannermod.client.military.gui.widgets.GuiWidgetBounds;
 import com.talhanation.bannermod.bootstrap.WorkersRuntime;
 import com.talhanation.bannermod.persistence.civilian.StructureTemplateLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -83,7 +85,7 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
         this.currentRelativePath = relativePath;
         this.scrollOffset        = 0;
         this.entries             = scanDirectory(scanRoot.resolve(relativePath), relativePath);
-        this.maxVisibleOptions   = Math.min(5, Math.max(1, entries.size()));
+        this.maxVisibleOptions   = getVisibleOptionCount();
     }
 
     private List<Entry> scanDirectory(Path dir, Path relativePath) {
@@ -145,21 +147,19 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
 
         if (!isOpen) return;
 
-        int dropdownHeight = maxVisibleOptions * optionHeight;
+        int visibleOptions = getVisibleOptionCount();
+        if (visibleOptions <= 0) return;
+        maxVisibleOptions = visibleOptions;
+        scrollOffset = GuiWidgetBounds.clampScrollOffset(scrollOffset, entries.size(), visibleOptions);
+
+        int dropdownHeight = visibleOptions * optionHeight;
         int dropTop = getY() + height;
 
         gui.fill(getX(), dropTop, getX() + width, dropTop + dropdownHeight, bgFill);
         gui.pose().pushPose();
         gui.pose().translate(0, 0, 500);
 
-        double scale = Minecraft.getInstance().getWindow().getGuiScale();
-        int winH = Minecraft.getInstance().getWindow().getHeight();
-        RenderSystem.enableScissor(
-                (int)(getX() * scale),
-                (int)(winH - (dropTop + dropdownHeight) * scale),
-                (int)(width * scale),
-                (int)(dropdownHeight * scale)
-        );
+        GuiWidgetBounds.enableScissor(getX(), dropTop, width, dropdownHeight);
 
         for (int i = 0; i < entries.size(); i++) {
             int optionY = dropTop + (i - scrollOffset) * optionHeight;
@@ -191,10 +191,10 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
 
         RenderSystem.disableScissor();
 
-        if (entries.size() > maxVisibleOptions) {
+        if (entries.size() > visibleOptions) {
             int sbX = getX() + width - scrollbarWidth;
             int handleY = dropTop + (int)((float) scrollOffset / entries.size() * dropdownHeight);
-            int handleH = Math.max(10, (int)((float) maxVisibleOptions / entries.size() * dropdownHeight));
+            int handleH = Math.max(10, (int)((float) visibleOptions / entries.size() * dropdownHeight));
             gui.fill(sbX, dropTop, sbX + scrollbarWidth, dropTop + dropdownHeight, scrollbarColor);
             gui.fill(sbX, handleY, sbX + scrollbarWidth, handleY + handleH, scrollbarHandleColor);
         }
@@ -261,10 +261,12 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
         }
 
         if (isScrolling) {
-            int dropdownHeight = maxVisibleOptions * optionHeight;
+            int visibleOptions = getVisibleOptionCount();
+            int dropdownHeight = visibleOptions * optionHeight;
+            if (dropdownHeight <= 0) return;
             int relY = (int) mouseY - (getY() + height);
             scrollOffset = (int)((float) relY / dropdownHeight * entries.size());
-            scrollOffset = Math.max(0, Math.min(scrollOffset, entries.size() - maxVisibleOptions));
+            scrollOffset = GuiWidgetBounds.clampScrollOffset(scrollOffset, entries.size(), visibleOptions);
         }
     }
 
@@ -272,7 +274,7 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double delta) {
         if (!visible || !isOpen) return false;
         scrollOffset -= (int) delta;
-        scrollOffset = Math.max(0, Math.min(scrollOffset, entries.size() - maxVisibleOptions));
+        scrollOffset = GuiWidgetBounds.clampScrollOffset(scrollOffset, entries.size(), getVisibleOptionCount());
         return true;
     }
 
@@ -292,29 +294,39 @@ public class ScrollDropDownMenuWithFolders extends AbstractWidget {
     }
 
     private boolean isMouseOverDisplay(int mx, int my) {
-        return mx >= getX() && mx <= getX() + width && my >= getY() && my <= getY() + height;
+        return GuiWidgetBounds.contains(getX(), getY(), width, height, mx, my);
     }
 
     private boolean isMouseOverDropdown(int mx, int my) {
         if (!isOpen) return false;
         int dropTop = getY() + height;
-        int dropBot = dropTop + maxVisibleOptions * optionHeight;
-        return mx >= getX() && mx <= getX() + width && my >= dropTop && my <= dropBot;
+        int dropBot = dropTop + getVisibleOptionCount() * optionHeight;
+        return GuiWidgetBounds.contains(getX(), dropTop, width, dropBot - dropTop, mx, my);
     }
 
     private boolean isMouseOverScrollbar(int mx, int my) {
-        if (!isOpen || entries.size() <= maxVisibleOptions) return false;
+        int visibleOptions = getVisibleOptionCount();
+        if (!isOpen || entries.size() <= visibleOptions) return false;
         int sbX = getX() + width - scrollbarWidth;
         int dropTop = getY() + height;
-        int dropBot = dropTop + maxVisibleOptions * optionHeight;
-        return mx >= sbX && mx <= sbX + scrollbarWidth && my >= dropTop && my <= dropBot;
+        int dropBot = dropTop + visibleOptions * optionHeight;
+        return GuiWidgetBounds.contains(sbX, dropTop, scrollbarWidth, dropBot - dropTop, mx, my);
     }
 
     private boolean isMouseOverOption(int mx, int my, int optionY) {
-        return mx >= getX() && mx <= getX() + width
-                && my >= optionY && my <= optionY + optionHeight;
+        return GuiWidgetBounds.contains(getX(), optionY, width, optionHeight, mx, my);
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput out) {}
+    protected void updateWidgetNarration(NarrationElementOutput out) {
+        String headerText = currentRelativePath.toString().isEmpty()
+                ? Component.translatable("gui.bannermod.widget.dropdown.template_root").getString()
+                : currentRelativePath.toString().replace('\\', '/');
+        out.add(NarratedElementType.TITLE, Component.translatable(
+                "gui.bannermod.widget.dropdown.folder_narration", headerText, entries.size()));
+    }
+
+    private int getVisibleOptionCount() {
+        return GuiWidgetBounds.visibleRowsBelow(getY() + height, optionHeight, Math.min(5, entries.size()));
+    }
 }

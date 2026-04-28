@@ -20,6 +20,7 @@ public class RecruitsCheckBox extends AbstractButton {
     private static final ResourceLocation TEXTURE = ResourceLocation.parse("textures/gui/checkbox.png");
     private static final int TEXT_COLOR = 14737632;
     private final Consumer<Boolean> onToggle;
+    private final boolean showLabel;
     private boolean selected;
 
     public RecruitsCheckBox(int x, int y, int width, int height, Component label, boolean selected, Consumer<Boolean> onToggle) {
@@ -29,6 +30,7 @@ public class RecruitsCheckBox extends AbstractButton {
     public RecruitsCheckBox(int x, int y, int width, int height, Component label, boolean selected, boolean showLabel, Consumer<Boolean> onToggle) {
         super(x, y, width, height, label);
         this.selected = selected;
+        this.showLabel = showLabel;
         this.onToggle = onToggle;
 
     }
@@ -57,16 +59,18 @@ public class RecruitsCheckBox extends AbstractButton {
         RenderSystem.enableDepthTest();
 
         int alpha = Mth.ceil(this.alpha * 255.0F);
-        int bgColor = (0x80 << 24); // 0x80 = 128 = 50% Alpha
+        int bgColor = (this.isHoveredOrFocused() ? 0xA0 : 0x80) << 24;
         graphics.fill(getX(), getY(), getX() + width, getY() + height, bgColor);
 
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
-        graphics.blit(TEXTURE, this.getX(), this.getY(), this.isFocused() ? 20.0F : 0.0F, this.selected() ? 20.0F : 0.0F, 20, this.height, 64, 64);
+        graphics.blit(TEXTURE, this.getX(), this.getY(), this.isHoveredOrFocused() ? 20.0F : 0.0F, this.selected() ? 20.0F : 0.0F, 20, this.height, 64, 64);
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        int textX = this.getX() + 24;
-        int textY = this.getY() + (this.height - 8) / 2;
-        graphics.drawString(font, this.getMessage(), textX, textY, TEXT_COLOR | (alpha << 24));
+        if (showLabel) {
+            int textX = this.getX() + 24;
+            int textY = this.getY() + (this.height - 8) / 2;
+            graphics.drawString(font, this.getMessage(), textX, textY, TEXT_COLOR | (alpha << 24));
+        }
     }
 }
