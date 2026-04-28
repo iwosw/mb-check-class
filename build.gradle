@@ -37,9 +37,9 @@ mixin {
     overwriteErrorLevel = 'error'
 }
 
-version = '1'
+version = project.findProperty('mod_version') ?: 'v1'
 group = 'com.talhanation.bannermod'
-archivesBaseName = 'bannermod-1.20.1'
+archivesBaseName = 'bannermod'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 

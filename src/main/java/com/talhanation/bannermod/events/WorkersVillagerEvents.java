@@ -33,7 +33,7 @@ public class WorkersVillagerEvents {
 
         if(event.getEntity() instanceof ServerPlayer player){
                 WorkersRuntime.channel().send(PacketDistributor.PLAYER.with(() -> player),
-                        new MessageToClientUpdateConfig(WorkersServerConfig.ShouldWorkAreaOnlyBeInFactionClaim.get()));
+                        new MessageToClientUpdateConfig(WorkersServerConfig.shouldWorkAreaOnlyBeInFactionClaim()));
         }
     }
     @SubscribeEvent

@@ -49,11 +49,11 @@ BannerMod is a brownfield merge workspace. Contributions should be small, verifi
 
 After CI is green on the release commit, create and push an annotated tag without requiring GitHub CLI:
 
-`git tag -a v<version> <commit-sha> -m "BannerMod v<version>"`
+`git tag -a <version> <commit-sha> -m "BannerMod <version>"`
 
-`git push origin v<version>`
+`git push origin <version>`
 
-Then open GitHub Releases in the browser, choose the pushed tag, paste reviewed release notes, attach artifacts if needed, and publish. Do not create release tags from dirty worktrees or before the unit coverage, GameTest scenario coverage, and build stages pass.
+Use the literal project version string, for example `v1`. The CI workflow now also runs on GitHub release creation for `v*` tags and uploads the built `bannermod-<version>.jar` asset after unit tests, GameTests, and build verification pass. Do not create release tags from dirty worktrees or before the unit coverage, GameTest scenario coverage, and build stages pass.
 
 ## Commit Rules
 
