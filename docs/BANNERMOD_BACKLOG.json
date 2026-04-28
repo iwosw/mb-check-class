@@ -3253,7 +3253,7 @@
     {
       "id": "PORT-010",
       "title": "Remove NeoForge buildscript fg.deobf blocker",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-28",
       "why": "PORT-005 cannot even reach Java compilation while build.gradle still uses ForgeGradle fg.deobf dependency helpers.",
       "scope": [
@@ -3266,8 +3266,14 @@
         "PORT-002"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-28",
+          "result": "./gradlew compileJava via tools/ai-context-proxy/bin/ctx log now reaches :compileJava and fails during Java source compilation rather than Gradle evaluation. First Java source clusters are remaining Forge API imports under entity/military, bootstrap/BannerModMain, entity/citizen, and entity/civilian. build.gradle no longer contains fg.deobf usages."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-28"
     },
     {
       "id": "PORT-011",
