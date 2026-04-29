@@ -4261,8 +4261,8 @@
     {
       "id": "VANILLA-002",
       "title": "Design owned movement and pathfinding contract",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "The async pathfinding chain should be rebuilt around BannerMod behavior needs instead of mirroring vanilla internals.",
       "scope": [
         "Define owned contracts for path requests, actor state, navigation results, cancellation, priority/queue integration, and thread-safety boundaries."
@@ -4274,9 +4274,20 @@
       "dependencies": [
         "VANILLA-001"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Owned movement/pathfinding contract design: Path request contract: owned requests should be immutable server-created snapshots, not live Mob/Level/PathNavigation state. A request carries actor UUID, request id, path epoch, issued/created game time, start BlockPos, target BlockPos list, reach range/follow range or max distance, actor dimensions/step height/capability flags, PathPriority, deadline, and optional command correlation to the CommandIntent that caused it. Client packets must never create path requests directly; network handlers continue to build CommandIntent records and dispatch through CommandIntentDispatcher. Actor state contract: actor-owned mutable state remains on the server tick thread in AsyncPathNavigation/AbstractRecruitEntity/CommandIntentQueueRuntime: current path, targetPos, reachRange, last request time, command queue head, current epoch, alive/loaded checks, and movement completion thresholds. Worker threads may only observe copied actor facts captured in PathRequestSnapshot/RegionSnapshot. Navigation result contract: workers return immutable PathResult values keyed by actor UUID, request id, epoch, status, nodes, reached/partial flag, cost, visited count, solve time, and debug reason. Commit converts nodes to a Minecraft Path only on the server thread and applies only when actor is alive/loaded and result epoch equals the actor current epoch; CANCELLED/DEADLINE_EXCEEDED/invalid/stale results are discarded with profiling/debug accounting and never mutate navigation. Cancellation: cancellation is cooperative and represented by CancellationToken plus epoch invalidation. New immediate commands, queue replacement, entity removal/unload, target changes, unsupported snapshots, scheduler rejection, or deadline expiry invalidate pending work by advancing/clearing actor state; queued commands may leave older results in completion queues, but commit must discard them by epoch/request id before mutation. Priority/queue integration: CommandIntent priority and queueMode remain the source of order semantics. CommandIntentDispatcher records the intent in CommandIntentLog, narrows actors, then either appends to CommandIntentQueueRuntime or clears queued work and applies immediately. PathPriority is derived server-side from the active command/actor role, with combat/attack higher than follow/movement/work/wander; it is scheduler backpressure only and must not bypass CommandIntentQueueRuntime ordering or make a queued waypoint execute before its queue head. Thread-safety boundaries: Minecraft Level, Entity, Navigation, CommandEvents, CommandIntentQueueRuntime, and CommandIntentLog are server-thread-only mutation surfaces. Worker threads receive RegionSnapshot/PathRequestSnapshot copies and produce PathResult copies. Cross-thread sharing is limited to scheduler queues, pending target maps, atomics/volatile scheduler references, immutable records, and explicit commit callbacks run from TrueAsyncPathfindingRuntime.tick on the server thread. Accepted reference patterns: keep the CommandIntent sealed-record shape as the owned player-order contract; keep CommandIntentDispatcher as the only entry point for army movement/face/attack/aggro/stance/strategic-fire commands; keep CommandIntentLog as the audit ring buffer; use current async snapshot/result/committer patterns as the reference for owned path contracts; use epoch checks from AsyncPathNavigation and PathCommitter as the stale-result guard; use GlobalPathfindingController only as budget/defer/reuse reference, not as a gameplay-command source; keep vanilla Path/NodeEvaluator use behind owned adapters until replaced. Migration order: 1) introduce explicit owned PathRequest/ActorState/NavigationResult interfaces or records around the existing snapshot/result shapes; 2) thread CommandIntent type, priority, queueMode, and optional log correlation into server-side request creation without changing packet semantics; 3) route AsyncPathNavigation and TrueAsyncPathfindingRuntime through the owned contracts while preserving sync fallback; 4) add cancellation tokens tied to epoch/queue replacement/entity lifecycle; 5) migrate solver internals away from vanilla live state to snapshot-only reads; 6) remove legacy ad-hoc/deferred request shapes after tests prove queue ordering, stale discard, fallback, and audit logging. Unified command pipeline preservation: all player movement/pathfinding-causing actions must continue packet -> CommandIntent -> CommandIntentDispatcher.dispatch -> CommandEvents/CommandIntentQueueRuntime -> navigation; pathfinding is an implementation detail below that layer. CommandIntentLog auditability is preserved because every command is logged before queue/immediate application, and future path requests/results should carry enough command correlation for diagnostics without becoming a replacement audit log."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Inspected CommandIntent, CommandIntentDispatcher, CommandIntentLog, CommandIntentQueueRuntime, AsyncPathNavigation, GlobalPathfindingController, PathRequestSnapshot, PathResult, CancellationToken, AsyncPathScheduler, TrueAsyncPathfindingRuntime, and PathCommitter with ctx. Progress note records path request contract, actor state contract, navigation result contract, cancellation, priority/queue integration, thread-safety boundaries, accepted reference patterns, migration order, and explicit CommandIntentDispatcher/CommandIntentLog preservation. No gameplay/pathfinding code changed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-003",
