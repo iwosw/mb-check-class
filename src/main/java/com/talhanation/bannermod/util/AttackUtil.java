@@ -16,33 +16,59 @@ import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.OptionalInt;
 import java.util.Random;
+import java.util.concurrent.atomic.LongAdder;
 
 public abstract class AttackUtil {
+    private static final MeleeAttackCounters MELEE_ATTACK_COUNTERS = new MeleeAttackCounters();
+
     public static void checkAndPerformAttack(double distanceSqrToTarget, double reach, AbstractRecruitEntity recruit, LivingEntity target){
         if(distanceSqrToTarget <= reach){
             performAttack(recruit, target);
         }
     }
 
-    public static void performAttack(AbstractRecruitEntity recruit, LivingEntity target) {
+    public static boolean performAttack(AbstractRecruitEntity recruit, LivingEntity target) {
+        MELEE_ATTACK_COUNTERS.attempts.increment();
+        if (recruit == null || target == null || !target.isAlive() || target.isRemoved()) {
+            MELEE_ATTACK_COUNTERS.denied.increment();
+            return false;
+        }
+        if (!recruit.shouldAttack(target) || recruit.distanceToSqr(target) > getAttackReachSqr(recruit)) {
+            MELEE_ATTACK_COUNTERS.denied.increment();
+            return false;
+        }
         if(recruit.attackCooldown == 0 && !recruit.swinging && recruit.getLookControl().isLookingAtTarget()){
             int bannerCooldown = getAttackCooldown(recruit);
             OptionalInt betterCombatCooldown = BetterCombatAttackBridge.tryStartAttack(recruit, target, bannerCooldown);
             if (betterCombatCooldown.isPresent()) {
                 recruit.attackCooldown = Math.max(bannerCooldown, betterCombatCooldown.getAsInt());
-                return;
+                return true;
             }
+            boolean damaged;
             if(canPerformHorseAttack(recruit, target)){
-                if(target.getVehicle() != null) recruit.doHurtTarget(target.getVehicle());
+                damaged = target.getVehicle() != null && recruit.doHurtTarget(target.getVehicle());
             }
-            else recruit.doHurtTarget(target);
+            else damaged = recruit.doHurtTarget(target);
+            if (damaged) {
+                MELEE_ATTACK_COUNTERS.hits.increment();
+            }
 
             recruit.swing(InteractionHand.MAIN_HAND);
             // Stage 3.D: cadence is baseline + per-weapon windup. We bump cooldown
             // AFTER the hit rather than scheduling a deferred damage tick (see
             // AttackCadence javadoc for the why).
             recruit.attackCooldown = bannerCooldown;
+            return damaged;
         }
+        MELEE_ATTACK_COUNTERS.cooldownBlocked.increment();
+        return false;
+    }
+
+    public static MeleeAttackProfilingSnapshot meleeAttackProfilingSnapshot() {
+        return MELEE_ATTACK_COUNTERS.snapshot();
+    }
+
+    public record MeleeAttackProfilingSnapshot(long attempts, long denied, long cooldownBlocked, long hits) {
     }
 
     public static boolean canPerformHorseAttack(AbstractRecruitEntity recruit, LivingEntity target) {
@@ -78,6 +104,17 @@ public abstract class AttackUtil {
         }
         ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
         return key == null ? item.getDescriptionId() : key.toString();
+    }
+
+    private static final class MeleeAttackCounters {
+        private final LongAdder attempts = new LongAdder();
+        private final LongAdder denied = new LongAdder();
+        private final LongAdder cooldownBlocked = new LongAdder();
+        private final LongAdder hits = new LongAdder();
+
+        private MeleeAttackProfilingSnapshot snapshot() {
+            return new MeleeAttackProfilingSnapshot(attempts.sum(), denied.sum(), cooldownBlocked.sum(), hits.sum());
+        }
     }
 
     /*

@@ -49,6 +49,9 @@ final class RecruitCombatDecisions {
     }
 
     static boolean doHurtTarget(AbstractRecruitEntity recruit, @NotNull Entity entity, double damageMultiplier) {
+        if (!(entity instanceof LivingEntity target) || !target.isAlive() || target.isRemoved() || !shouldAttack(recruit, target)) {
+            return false;
+        }
         float damage = (float) recruit.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
         net.minecraft.world.damagesource.DamageSource source = recruit.damageSources().mobAttack(recruit);
         if (recruit.level() instanceof ServerLevel serverLevel) {
@@ -94,13 +97,13 @@ final class RecruitCombatDecisions {
             // attacker to EXHAUSTED via CavalryChargePolicy.advance — that's the gate that
             // stops the rider from spamming +100% bonus every swing.
             com.talhanation.bannermod.combat.CavalryChargeService.onChargeHit(recruit);
+            recruit.addXp(1);
+            if (recruit.getHunger() > 0) recruit.setHunger(recruit.getHunger() - 0.1F);
+            recruit.checkLevel();
+            if (recruit.getMorale() < 100) recruit.setMoral(recruit.getMorale() + 0.25F);
+            recruit.damageMainHandItem();
         }
-        recruit.addXp(1);
-        if (recruit.getHunger() > 0) recruit.setHunger(recruit.getHunger() - 0.1F);
-        recruit.checkLevel();
-        if (recruit.getMorale() < 100) recruit.setMoral(recruit.getMorale() + 0.25F);
-        recruit.damageMainHandItem();
-        return true;
+        return flag;
     }
 
     static boolean isMonster(LivingEntity target) {

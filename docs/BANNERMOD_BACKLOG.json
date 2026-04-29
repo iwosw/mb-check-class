@@ -4419,8 +4419,8 @@
     {
       "id": "VANILLA-008",
       "title": "Rewrite melee attack flow",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Recruit melee attacks should use owned combat decisions and current 1.21 APIs instead of copied vanilla attack bodies.",
       "scope": [
         "Rewrite melee attack timing, reach, damage application, shield/attribute/enchantment handling, callbacks, and audit/profiling hooks."
@@ -4433,8 +4433,14 @@
         "VANILLA-007"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "compileJava: PASS. compileGameTestJava: PASS. verifyGameTestStage: FAIL with 8 unrelated required failures: repairedhouserevalidationreturnstovalid, sharedownershipkeepsplayercycleauthorityaligned, reconnectedownerrecoversauthorityafterownershiproundtrip (Cannot encode empty ItemStack), mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, friendlyclaimbindingallowsplacementandsettlementoperation, courierfallsbackwhennomountavailable, courierusesnearbyhorseonsupportedroute. VANILLA-008 GameTests added for valid melee damage, same-team denial, reach/cooldown denial; no VANILLA-008 melee failures were reported in the stage log."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-009",
