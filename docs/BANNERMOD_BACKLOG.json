@@ -4323,8 +4323,8 @@
     {
       "id": "VANILLA-004",
       "title": "Rewrite ground and water navigation chain",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "AsyncGroundPathNavigation and AsyncWaterBoundPathNavigation are core movement infrastructure and should not depend on copied vanilla navigation internals.",
       "scope": [
         "Rewrite ground and water navigation around the owned pathfinder contract while preserving recruit movement, sailor/water behavior, and stuck/retry semantics."
@@ -4337,8 +4337,14 @@
         "VANILLA-003"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Ground and water recruits can request/follow/cancel/retry paths: compileGameTestJava passed and verifyGameTestStage executed focused GameTests groundnavigationcancelsstalependingpathandretries and waternavigationcancelsstalependingpathandretries without listing either as failed; the GameTests assert pending request acceptance, stop() stale-result rejection, retry commit, and installed path target for ground AsyncPathNavigation and water AsyncWaterBoundPathNavigation. 2) Formation and command movement paths still enter through CommandIntentDispatcher/CommandEvents: no packet, CommandIntentDispatcher, CommandEvents, or movement command routing files changed; only navigation internals and focused pathfinding GameTests changed. compileJava passed. Full verifyGameTestStage remains red due unrelated failures: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, authoredroutecouriermovesitemsbetweenstorageendpoints, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, sharedownershipkeepsplayercycleauthorityaligned, unmountedcourierinspectionreportsfootfallback, workerdeathreleasesactiveworkorderclaim."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-005",

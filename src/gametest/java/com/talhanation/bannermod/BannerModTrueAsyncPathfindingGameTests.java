@@ -1,6 +1,8 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.ai.pathfinding.AsyncPathNavigation;
+import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
+import com.talhanation.bannermod.ai.pathfinding.AsyncWaterBoundPathNavigation;
 import com.talhanation.bannermod.ai.pathfinding.async.AsyncPathScheduler;
 import com.talhanation.bannermod.ai.pathfinding.async.CancellationToken;
 import com.talhanation.bannermod.ai.pathfinding.async.GridAStarPathSolver;
@@ -12,12 +14,17 @@ import com.talhanation.bannermod.ai.pathfinding.async.RegionSnapshot;
 import com.talhanation.bannermod.ai.pathfinding.async.TrueAsyncPathfindingRuntime;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.entity.military.CaptainEntity;
 import com.talhanation.bannermod.entity.military.RecruitEntity;
+import com.talhanation.bannermod.registry.military.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -152,6 +159,44 @@ public class BannerModTrueAsyncPathfindingGameTests {
     }
 
     @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty", batch = "vanilla004_ground_nav")
+    public static void groundNavigationCancelsStalePendingPathAndRetries(GameTestHelper helper) {
+        configureTrueAsync(true);
+
+        RecruitEntity recruit = spawnOwnedRecruit(helper);
+        AsyncPathNavigation navigation = (AsyncPathNavigation) recruit.getNavigation();
+        BlockPos firstTarget = helper.absolutePos(TARGET_POS);
+        BlockPos retryTarget = helper.absolutePos(TARGET_POS.offset(-2, 0, 0));
+        AtomicBoolean exercised = new AtomicBoolean(false);
+
+        for (int delay = 5; delay <= 45; delay += 10) {
+            helper.runAfterDelay(delay, () -> exerciseNavigationCancelAndRetry(
+                    helper, exercised, recruit.getUUID(), navigation, firstTarget, retryTarget, 4001L, 4002L, "ground"));
+        }
+        helper.runAfterDelay(60, () -> helper.assertTrue(exercised.get(),
+                "Expected ground navigation to accept a pending true-async path request."));
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty", batch = "vanilla004_water_nav")
+    public static void waterNavigationCancelsStalePendingPathAndRetries(GameTestHelper helper) {
+        configureTrueAsync(true);
+
+        CaptainEntity captain = BannerModGameTestSupport.spawnEntity(helper, ModEntityTypes.CAPTAIN.get(), RECRUIT_POS);
+        TestWaterPathNavigation navigation = new TestWaterPathNavigation(captain, helper.getLevel());
+        BlockPos firstTarget = helper.absolutePos(TARGET_POS);
+        BlockPos retryTarget = helper.absolutePos(TARGET_POS.offset(-2, 0, 0));
+        AtomicBoolean exercised = new AtomicBoolean(false);
+
+        for (int delay = 5; delay <= 45; delay += 10) {
+            helper.runAfterDelay(delay, () -> exerciseNavigationCancelAndRetry(
+                    helper, exercised, captain.getUUID(), navigation, firstTarget, retryTarget, 4101L, 4102L, "water"));
+        }
+        helper.runAfterDelay(60, () -> helper.assertTrue(exercised.get(),
+                "Expected water navigation to accept a pending true-async path request."));
+    }
+
+    @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty", batch = "trueasync_core")
     public static void trueAsyncSchedulerReturnsSuccessFailureAndCancelledResults(GameTestHelper helper) {
         AsyncPathScheduler scheduler = new AsyncPathScheduler(new GridAStarPathSolver(), 1, 8, defaultCaps());
@@ -202,6 +247,82 @@ public class BannerModTrueAsyncPathfindingGameTests {
 
     private static boolean hasStatus(List<PathResult> results, long requestId, PathResultStatus status) {
         return results.stream().anyMatch(result -> result.requestId() == requestId && result.status() == status);
+    }
+
+    private static PathResult syntheticPathResult(UUID entityUuid,
+                                                  long requestId,
+                                                  long epoch,
+                                                  AsyncPathNavigation navigation,
+                                                  BlockPos target) {
+        return new PathResult(
+                entityUuid,
+                requestId,
+                epoch,
+                PathResultStatus.SUCCESS,
+                List.of(navigation.currentBlockPos(), target),
+                true,
+                1.0D,
+                2,
+                0L,
+                "synthetic-navigation-chain-test"
+        );
+    }
+
+    private static void exerciseNavigationCancelAndRetry(GameTestHelper helper,
+                                                         AtomicBoolean exercised,
+                                                         UUID entityUuid,
+                                                         AsyncPathNavigation navigation,
+                                                         BlockPos firstTarget,
+                                                         BlockPos retryTarget,
+                                                         long firstRequestId,
+                                                         long retryRequestId,
+                                                         String label) {
+        if (exercised.get()) {
+            return;
+        }
+        if (!navigation.moveTo(firstTarget.getX(), firstTarget.getY(), firstTarget.getZ(), 1.0D)) {
+            return;
+        }
+        exercised.set(true);
+        long cancelledEpoch = navigation.currentPathEpoch();
+        TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(navigation, firstRequestId, 1, firstTarget);
+
+        navigation.stop();
+        PathResult staleResult = syntheticPathResult(entityUuid, firstRequestId, cancelledEpoch, navigation, firstTarget);
+        var staleSummary = TrueAsyncPathfindingRuntime.instance().commitForTesting(List.of(staleResult));
+        helper.assertTrue(staleSummary.staleResults() == 1,
+                "Expected cancelled " + label + " request to reject its stale committed result.");
+        helper.assertTrue(navigation.getPath() == null,
+                "Expected cancelled " + label + " navigation to clear the active path.");
+
+        helper.assertTrue(navigation.moveTo(retryTarget.getX(), retryTarget.getY(), retryTarget.getZ(), 1.0D),
+                "Expected " + label + " navigation to accept a retry after cancellation.");
+        long retryEpoch = navigation.currentPathEpoch();
+        TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(navigation, retryRequestId, 1, retryTarget);
+        PathResult retryResult = syntheticPathResult(entityUuid, retryRequestId, retryEpoch, navigation, retryTarget);
+        var retrySummary = TrueAsyncPathfindingRuntime.instance().commitForTesting(List.of(retryResult));
+        helper.assertTrue(retrySummary.committed() == 1,
+                "Expected retried " + label + " request to commit through the navigation chain.");
+        assertPathTarget(helper, navigation, retryTarget, label + " retry");
+        helper.succeed();
+    }
+
+    private static void assertPathTarget(GameTestHelper helper, PathNavigation navigation, BlockPos target, String label) {
+        Path path = navigation.getPath();
+        helper.assertTrue(path != null, "Expected " + label + " to install an active path.");
+        helper.assertTrue(target.equals(path.getTarget()),
+                "Expected " + label + " path target " + target + ", got " + path.getTarget() + ".");
+    }
+
+    private static final class TestWaterPathNavigation extends AsyncWaterBoundPathNavigation {
+        private TestWaterPathNavigation(AsyncPathfinderMob mob, Level level) {
+            super(mob, level);
+        }
+
+        @Override
+        protected boolean canUpdatePath() {
+            return true;
+        }
     }
 
     private static Map<PathPriority, Integer> defaultCaps() {
