@@ -533,17 +533,15 @@ public final class BannerModSettlementService {
                 record.type(),
                 record.anchorPos(),
                 record.capacity(),
-                record.assignedCitizenIds(),
                 claim == null || claim.getPlayerInfo() == null ? null : claim.getPlayerInfo().getUUID()
         );
     }
 
     static BannerModSettlementBuildingRecord fromValidatedBuildingFields(UUID buildingId,
-                                                                         BuildingType type,
-                                                                         BlockPos anchorPos,
-                                                                         int rawCapacity,
-                                                                         List<UUID> assignedCitizenIds,
-                                                                         @Nullable UUID ownerUuid) {
+                                                                          BuildingType type,
+                                                                          BlockPos anchorPos,
+                                                                          int rawCapacity,
+                                                                          @Nullable UUID ownerUuid) {
         int capacity = Math.max(1, rawCapacity);
         int residentCapacity = switch (type) {
             case HOUSE, STARTER_FORT -> capacity;
@@ -565,8 +563,8 @@ public final class BannerModSettlementService {
                 null,
                 residentCapacity,
                 workplaceSlots,
-                assignedCitizenIds == null ? 0 : assignedCitizenIds.size(),
-                assignedCitizenIds,
+                0,
+                List.of(),
                 stockpileBuilding,
                 stockpileContainers,
                 stockpileSlots,

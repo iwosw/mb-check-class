@@ -305,7 +305,6 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
         if(this.getCommandSenderWorld().isClientSide()) return;
 
         WorkerIndex.instance().onWorkerTick(this);
-        WorkerRuntimeLoop.tick(this);
         this.getCitizenRoleController().onServerTick(this);
     }
 

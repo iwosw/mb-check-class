@@ -1,11 +1,14 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.settlement.building.BuildingType;
+import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionRecord;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionState;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeSummary;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
@@ -115,9 +118,9 @@ class BannerModSettlementServiceTest {
     @Test
     void mapsValidatedHouseStorageAndWorkplaceBuildingsIntoSnapshotRecords() {
         UUID ownerUuid = UUID.randomUUID();
-        BannerModSettlementBuildingRecord houseRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.HOUSE, new BlockPos(0, 64, 0), 3, List.of(), ownerUuid);
-        BannerModSettlementBuildingRecord storageRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.STORAGE, new BlockPos(8, 64, 0), 2, List.of(), ownerUuid);
-        BannerModSettlementBuildingRecord farmRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.FARM, new BlockPos(16, 64, 0), 1, List.of(), ownerUuid);
+        BannerModSettlementBuildingRecord houseRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.HOUSE, new BlockPos(0, 64, 0), 3, ownerUuid);
+        BannerModSettlementBuildingRecord storageRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.STORAGE, new BlockPos(8, 64, 0), 2, ownerUuid);
+        BannerModSettlementBuildingRecord farmRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.FARM, new BlockPos(16, 64, 0), 1, ownerUuid);
         BannerModSettlementStockpileSummary summary = BannerModSettlementService.summarizeStockpiles(List.of(storageRecord));
 
         assertEquals("bannermod:validated_house", houseRecord.buildingTypeId());
@@ -130,6 +133,31 @@ class BannerModSettlementServiceTest {
         assertEquals("bannermod:validated_farm", farmRecord.buildingTypeId());
         assertEquals(1, farmRecord.workplaceSlots());
         assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, farmRecord.buildingProfileSeed());
+    }
+
+    @Test
+    void ignoresLegacyValidatedBuildingAssignedCitizensOnReload() {
+        UUID staleWorkerUuid = UUID.randomUUID();
+        CompoundTag tag = new CompoundTag();
+        tag.putUUID("BuildingId", UUID.randomUUID());
+        tag.putUUID("SettlementId", UUID.randomUUID());
+        tag.putString("Type", BuildingType.FARM.name());
+        tag.putString("Dimension", "minecraft:overworld");
+        tag.putLong("AnchorPos", new BlockPos(16, 64, 0).asLong());
+        tag.putString("State", "VALID");
+        tag.putInt("Capacity", 1);
+        tag.putInt("QualityScore", 1);
+        ListTag legacyAssigned = new ListTag();
+        CompoundTag legacyAssignedEntry = new CompoundTag();
+        legacyAssignedEntry.putUUID("CitizenId", staleWorkerUuid);
+        legacyAssigned.add(legacyAssignedEntry);
+        tag.put("AssignedCitizenIds", legacyAssigned);
+
+        ValidatedBuildingRecord reloaded = ValidatedBuildingRecord.fromTag(tag);
+        BannerModSettlementBuildingRecord building = BannerModSettlementService.fromValidatedBuilding(reloaded, null);
+
+        assertEquals(0, building.assignedWorkerCount());
+        assertEquals(List.of(), building.assignedResidentUuids());
     }
 
     @Test

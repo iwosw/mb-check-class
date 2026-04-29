@@ -12,9 +12,6 @@ public interface CitizenRoleController {
     default void onRecoveredControl(CitizenRoleContext context) {
     }
 
-    default void onBoundWorkAreaRemembered(CitizenRoleContext context) {
-    }
-
     default void onServerAiStep(AbstractCitizenEntity citizen) {
     }
 
