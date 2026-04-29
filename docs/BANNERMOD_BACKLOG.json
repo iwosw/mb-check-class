@@ -3133,8 +3133,8 @@
     {
       "id": "UX-011",
       "title": "Expose route and waypoint discovery in world-map UI",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Players need in-game affordances and explanations for route and waypoint flows without relying on external docs.",
       "scope": [
         "Add Minecraft-native route and waypoint explanations, enabled/disabled reasons, and visible entry points in the world-map flow."
@@ -3147,8 +3147,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Localized in-game world-map affordances added: top-left Routes help/status panel explains + route creation, route selection, and right-click waypoint creation/use; route buttons have localized tooltips; right-click Add Waypoint remains visible when unavailable with localized no-route or unexplored/unloaded-chunk reasons. 2) Server authority preserved: only existing WorldMapRouteMutationController/ClientManager route-save and waypoint mutation paths are reused; no client-side server gameplay validation was added or bypassed. 3) Player workflow docs updated in MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html. 4) Verification passed: ctx log -- ./gradlew compileJava; ctx log -- ./gradlew test --tests com.talhanation.bannermod.client.military.gui.worldmap.WorldMapRouteUiVerificationTest; ctx log -- jq empty modified lang JSON files; tools/backlog validate."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-012",
