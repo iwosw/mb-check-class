@@ -57,4 +57,29 @@ class BannerModSettlementClientMirrorTest {
         assertEquals(7, stale.citizenCount());
         assertEquals("gui.bannermod.governor.action.disabled.stale", stale.actionReasonKey());
     }
+
+    @Test
+    void loginAndMutationRefreshUpdatesReplaceGovernorSnapshot() {
+        UUID recruitId = UUID.randomUUID();
+        UUID claimId = UUID.randomUUID();
+        BannerModSettlementClientMirror mirror = new BannerModSettlementClientMirror();
+        BannerModSettlementSnapshot settlement = BannerModSettlementSnapshot.create(claimId, new ChunkPos(6, 7), "green");
+        BannerModGovernorSnapshot loginGovernor = BannerModGovernorSnapshot.create(claimId, new ChunkPos(6, 7), "green")
+                .withHeartbeatReport(20L, 20L, 2, 1, 0, List.of(), List.of());
+        BannerModGovernorSnapshot mutationGovernor = loginGovernor
+                .withHeartbeatReport(30L, 30L, 5, 3, 1, List.of("new_resident"), List.of("expand_housing"));
+
+        mirror.applyGovernorUpdate(recruitId, Envelope.ready(20L, 20L, RefreshTrigger.LOGIN,
+                new Payload(claimId, settlement, loginGovernor)));
+        BannerModSettlementClientMirror.GovernorView login = mirror.governorView(recruitId);
+        assertEquals(SnapshotState.READY, login.state());
+        assertEquals(2, login.citizenCount());
+
+        mirror.applyGovernorUpdate(recruitId, Envelope.ready(30L, 30L, RefreshTrigger.MUTATION_REFRESH,
+                new Payload(claimId, settlement, mutationGovernor)));
+        BannerModSettlementClientMirror.GovernorView mutation = mirror.governorView(recruitId);
+        assertEquals(SnapshotState.READY, mutation.state());
+        assertEquals(5, mutation.citizenCount());
+        assertEquals(3, mutation.taxesDue());
+    }
 }

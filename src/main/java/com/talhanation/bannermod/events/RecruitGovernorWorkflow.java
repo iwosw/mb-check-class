@@ -89,18 +89,67 @@ final class RecruitGovernorWorkflow {
     static void syncGovernorScreen(ServerPlayer player, AbstractRecruitEntity recruit) {
         RecruitsClaim claim = resolveClaim(recruit);
         long gameTime = recruit.getCommandSenderWorld().getGameTime();
-        Envelope envelope;
-        if (claim == null || !(recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel)) {
-            envelope = Envelope.empty(0L, gameTime, RefreshTrigger.SCREEN_OPEN);
-        } else {
+        Envelope envelope = Envelope.empty(0L, gameTime, RefreshTrigger.SCREEN_OPEN);
+        if (claim != null && recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
             BannerModGovernorSnapshot governorSnapshot = governorService(serverLevel).getOrCreateGovernorSnapshot(claim);
             BannerModSettlementSnapshot settlementSnapshot = BannerModSettlementManager.get(serverLevel).getSnapshot(claim.getUUID());
-            envelope = Envelope.ready(gameTime, gameTime, RefreshTrigger.SCREEN_OPEN,
-                    new Payload(claim.getUUID(), settlementSnapshot, governorSnapshot));
+            envelope = buildEnvelope(claim, settlementSnapshot, governorSnapshot, gameTime, RefreshTrigger.SCREEN_OPEN);
         }
 
         BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                 new MessageToClientUpdateGovernorScreen(recruit.getUUID(), envelope));
+    }
+
+    static void syncGovernorSnapshotsOnLogin(ServerPlayer player) {
+        ServerLevel level = player.serverLevel();
+        BannerModGovernorManager governorManager = BannerModGovernorManager.get(level);
+        BannerModSettlementManager settlementManager = BannerModSettlementManager.get(level);
+        long gameTime = level.getGameTime();
+        for (BannerModGovernorSnapshot governorSnapshot : governorManager.getAllSnapshots()) {
+            if (!player.getUUID().equals(governorSnapshot.governorOwnerUuid()) || governorSnapshot.governorRecruitUuid() == null) {
+                continue;
+            }
+            BannerModSettlementSnapshot settlementSnapshot = settlementManager.getSnapshot(governorSnapshot.claimUuid());
+            Envelope envelope = buildEnvelope(governorSnapshot.claimUuid(), settlementSnapshot, governorSnapshot,
+                    gameTime, RefreshTrigger.LOGIN);
+            sendGovernorUpdate(player, governorSnapshot.governorRecruitUuid(), envelope);
+        }
+    }
+
+    static void syncGovernorMutationRefresh(ServerLevel level, RecruitsClaim claim) {
+        BannerModGovernorSnapshot governorSnapshot = BannerModGovernorManager.get(level).getSnapshot(claim.getUUID());
+        if (governorSnapshot == null || governorSnapshot.governorRecruitUuid() == null || governorSnapshot.governorOwnerUuid() == null) {
+            return;
+        }
+        ServerPlayer player = level.getServer().getPlayerList().getPlayer(governorSnapshot.governorOwnerUuid());
+        if (player == null) {
+            return;
+        }
+        BannerModSettlementSnapshot settlementSnapshot = BannerModSettlementManager.get(level).getSnapshot(claim.getUUID());
+        Envelope envelope = buildEnvelope(claim, settlementSnapshot, governorSnapshot, level.getGameTime(), RefreshTrigger.MUTATION_REFRESH);
+        sendGovernorUpdate(player, governorSnapshot.governorRecruitUuid(), envelope);
+    }
+
+    static Envelope buildEnvelope(RecruitsClaim claim,
+                                  BannerModSettlementSnapshot settlementSnapshot,
+                                  BannerModGovernorSnapshot governorSnapshot,
+                                  long gameTime,
+                                  RefreshTrigger trigger) {
+        return buildEnvelope(claim.getUUID(), settlementSnapshot, governorSnapshot, gameTime, trigger);
+    }
+
+    static Envelope buildEnvelope(java.util.UUID claimUuid,
+                                  BannerModSettlementSnapshot settlementSnapshot,
+                                  BannerModGovernorSnapshot governorSnapshot,
+                                  long gameTime,
+                                  RefreshTrigger trigger) {
+        return Envelope.ready(gameTime, gameTime, trigger,
+                new Payload(claimUuid, settlementSnapshot, governorSnapshot));
+    }
+
+    private static void sendGovernorUpdate(ServerPlayer player, java.util.UUID recruitUuid, Envelope envelope) {
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
+                new MessageToClientUpdateGovernorScreen(recruitUuid, envelope));
     }
 
     static void updateGovernorPolicy(ServerPlayer player, AbstractRecruitEntity recruit, BannerModGovernorPolicy policy, int value) {
