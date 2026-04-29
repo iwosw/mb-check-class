@@ -123,9 +123,9 @@ public class BannerModClaimWorkerGrowthGameTests {
         ServerLevel level = helper.getLevel();
         String teamId = "phase31_claim_friendly_field";
         ServerPlayer leader = createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003115"), "phase31-field-leader", teamId);
-        BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
-        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, teamId, leader.getUUID(), leader.getScoreboardName());
-        prepareField(level, helper.absolutePos(new BlockPos(8, 2, 8)));
+        BlockPos fieldCenter = helper.absolutePos(new BlockPos(8, 2, 8));
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, fieldCenter, teamId, leader.getUUID(), leader.getScoreboardName());
+        prepareField(level, fieldCenter);
 
         AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 20L, config);
 
