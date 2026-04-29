@@ -25,6 +25,8 @@ public record BannerModSeaTradeExecutionRecord(
 ) {
     public static final String FAILURE_NO_CARRIER = "NO_CARRIER";
     public static final String FAILURE_NO_CARGO_LOADED = "NO_CARGO_LOADED";
+    public static final String FAILURE_SOURCE_SHORTAGE = "SOURCE_SHORTAGE";
+    public static final String FAILURE_DESTINATION_FULL = "DESTINATION_FULL";
 
     public BannerModSeaTradeExecutionRecord {
         Objects.requireNonNull(routeId, "routeId");
@@ -130,6 +132,10 @@ public record BannerModSeaTradeExecutionRecord(
     }
 
     public BannerModSeaTradeExecutionRecord failed(String reason) {
+        return failed(reason, this.cargoCount);
+    }
+
+    public BannerModSeaTradeExecutionRecord failed(String reason, int remainingCargoCount) {
         String normalizedReason = reason == null || reason.isBlank() ? "UNKNOWN" : reason;
         return new BannerModSeaTradeExecutionRecord(
                 this.routeId,
@@ -138,7 +144,7 @@ public record BannerModSeaTradeExecutionRecord(
                 this.destinationStorageAreaId,
                 this.filter,
                 this.requestedCount,
-                this.cargoCount,
+                remainingCargoCount,
                 BannerModSeaTradeExecutionState.FAILED,
                 normalizedReason
         );

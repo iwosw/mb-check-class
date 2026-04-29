@@ -4890,8 +4890,8 @@
     {
       "id": "SHIPS-002C",
       "title": "Move sea-trade cargo through settlement stockpiles",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "The visible route must change real stockpile contents rather than only summarize potential import/export capacity.",
       "scope": [
         "Wire sea-trade execution to existing StorageArea containers and TransportContainerExchange so a ship-backed route withdraws matching goods from the source, holds them as carrier cargo, and deposits them at the destination without creating a parallel economy."
@@ -4904,8 +4904,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) compileJava passed via ctx log; 2) focused BannerModSeaTradeExecutionRuntimeTest passed via ctx log; 3) compileGameTestJava passed for BannerModSeaTradeExecutionGameTests; 4) runGameTestServer executed the new sea-trade GameTests without listing them as failures after correction, while the overall task still failed on pre-existing unrelated required GameTests: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, courier mount/route scenarios, ownership/group transfer, and workerdeathreleasesactiveworkorderclaim."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SHIPS-002D",
