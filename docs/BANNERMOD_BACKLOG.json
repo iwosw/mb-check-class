@@ -3276,8 +3276,8 @@
     {
       "id": "GAME-012",
       "title": "Add protected-space interaction feedback",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "GAME-004 requires common claim-protected interactions to explain why actions are allowed or denied.",
       "scope": [
         "Add clear in-world or localized feedback for common protected-space interactions in friendly, hostile, and unclaimed territory."
@@ -3290,8 +3290,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Focused test ./gradlew test --tests com.talhanation.bannermod.events.ClaimProtectionFeedbackTest passed and covers friendly, hostile, and unclaimed feedback keys. 2) ./gradlew compileJava passed. 3) Player-facing docs and almanac updated for denied protected-space system feedback; no GameTests were touched, so compileGameTestJava was not required."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-013",

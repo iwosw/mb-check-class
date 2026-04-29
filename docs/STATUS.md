@@ -22,6 +22,7 @@ Last updated: 2026-04-28.
 - Face, ranged-fire, and upkeep military packets now use the real server sender UUID for authority instead of client-supplied owner UUID fields.
 - Leader group and companion group assignment packet paths now require direct recruit control and owned groups before mutating leader/group state.
 - Claim protection is explicitly Overworld-only; Nether/End chunks at matching X/Z no longer inherit Overworld claim permissions.
+- Denied claim-protected interactions now send localized, cooldown-limited system feedback for friendly locks, hostile protection, and unclaimed wilderness rules.
 - War/state client mirrors clear on login/logout, expose sync-pending state, and open War Room/state screens refresh automatically when snapshots change.
 - Player login now sends full claim state only to the joining player; remaining full-claim broadcasts build one sync packet per event instead of one per recipient.
 - War-state sync now uses dirty/version tracking and cached payloads instead of serializing all war records every idle second for hash polling.
