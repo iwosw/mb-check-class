@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.network.messages.war;
 
 import com.talhanation.bannermod.war.runtime.WarAllyService;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
@@ -42,11 +44,20 @@ public class MessageRespondAllyInvite implements BannerModMessage<MessageRespond
                 ? WarAllyService.accept(level, player, this.inviteId)
                 : WarAllyService.decline(level, player, this.inviteId);
         if (result.ok()) {
-            player.sendSystemMessage(Component.literal(accept ? "Joined as ally." : "Invite declined."));
+            sendFeedback(player, Component.translatable(accept
+                    ? "gui.bannermod.war.feedback.ally_joined"
+                    : "gui.bannermod.war.feedback.ally_invite_declined"));
         } else {
-            player.sendSystemMessage(Component.literal((accept ? "Accept" : "Decline")
-                    + " denied: " + result.outcome().token()));
+            sendFeedback(player, Component.translatable(accept
+                    ? "gui.bannermod.war.denial.accept_invite"
+                    : "gui.bannermod.war.denial.decline_invite", result.outcome().component()));
         }
+    }
+
+    private static void sendFeedback(ServerPlayer player, Component message) {
+        player.sendSystemMessage(message);
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
+                new MessageToClientWarActionFeedback(message));
     }
 
     @Override

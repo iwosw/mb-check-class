@@ -25,7 +25,6 @@ public record ValidatedBuildingRecord(
         BuildingValidationState state,
         int capacity,
         int qualityScore,
-        List<UUID> assignedCitizenIds,
         long validatedAtGameTime,
         long lastCheckedGameTime,
         long invalidSinceGameTime
@@ -41,7 +40,6 @@ public record ValidatedBuildingRecord(
         state = state == null ? BuildingValidationState.VALID : state;
         capacity = Math.max(0, capacity);
         qualityScore = Math.max(0, qualityScore);
-        assignedCitizenIds = List.copyOf(assignedCitizenIds == null ? List.of() : assignedCitizenIds);
     }
 
     public CompoundTag toTag() {
@@ -71,14 +69,6 @@ public record ValidatedBuildingRecord(
         tag.putInt("Capacity", this.capacity);
         tag.putInt("QualityScore", this.qualityScore);
 
-        ListTag assignedTag = new ListTag();
-        for (UUID citizenId : this.assignedCitizenIds) {
-            CompoundTag assignedEntry = new CompoundTag();
-            assignedEntry.putUUID("CitizenId", citizenId);
-            assignedTag.add(assignedEntry);
-        }
-        tag.put("AssignedCitizenIds", assignedTag);
-
         tag.putLong("ValidatedAtGameTime", this.validatedAtGameTime);
         tag.putLong("LastCheckedGameTime", this.lastCheckedGameTime);
         tag.putLong("InvalidSinceGameTime", this.invalidSinceGameTime);
@@ -96,7 +86,6 @@ public record ValidatedBuildingRecord(
         BuildingValidationState state = parseState(tag.getString("State"));
         int capacity = tag.getInt("Capacity");
         int qualityScore = tag.getInt("QualityScore");
-        List<UUID> assignedCitizenIds = readAssignedCitizenIds(tag.getList("AssignedCitizenIds", Tag.TAG_COMPOUND));
         long validatedAtGameTime = tag.getLong("ValidatedAtGameTime");
         long lastCheckedGameTime = tag.getLong("LastCheckedGameTime");
         long invalidSinceGameTime = tag.getLong("InvalidSinceGameTime");
@@ -111,7 +100,6 @@ public record ValidatedBuildingRecord(
                 state,
                 capacity,
                 qualityScore,
-                assignedCitizenIds,
                 validatedAtGameTime,
                 lastCheckedGameTime,
                 invalidSinceGameTime
@@ -140,19 +128,6 @@ public record ValidatedBuildingRecord(
                 boundsTag.getDouble("MaxY"),
                 boundsTag.getDouble("MaxZ")
         );
-    }
-
-    private static List<UUID> readAssignedCitizenIds(ListTag listTag) {
-        List<UUID> ids = new ArrayList<>();
-        for (Tag entry : listTag) {
-            if (!(entry instanceof CompoundTag assigned)) {
-                continue;
-            }
-            if (assigned.hasUUID("CitizenId")) {
-                ids.add(assigned.getUUID("CitizenId"));
-            }
-        }
-        return ids;
     }
 
     private static ResourceKey<Level> parseDimension(String rawDimension) {

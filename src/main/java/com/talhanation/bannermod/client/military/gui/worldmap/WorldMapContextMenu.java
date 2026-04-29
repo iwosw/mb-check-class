@@ -47,19 +47,25 @@ public class WorldMapContextMenu {
     }
 
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack itemStack, String tag) {
-        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, itemStack, tag, null));
+        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, itemStack, tag, null, () -> true));
+    }
+    public void addEntry(Component text, BooleanSupplier condition, Consumer<WorldMapScreen> action, String tag) {
+        entries.add(new ContextMenuEntry(text, condition, action, ItemStack.EMPTY, tag, null, () -> true));
     }
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action, String tag) {
-        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, tag, null));
+        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, tag, null, () -> true));
     }
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action) {
-        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, "", null));
+        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, "", null, () -> true));
     }
     public void addEntry(String text, Consumer<WorldMapScreen> action) {
         addEntry(text, () -> true, action);
     }
     public void addDisabledEntry(Component text, Component reason, String tag) {
-        entries.add(new ContextMenuEntry(text, () -> true, screen -> {}, ItemStack.EMPTY, tag, reason));
+        entries.add(new ContextMenuEntry(text, () -> true, screen -> {}, ItemStack.EMPTY, tag, reason, () -> false));
+    }
+    public void addMaybeDisabledEntry(Component text, BooleanSupplier enabled, Component disabledReason, Consumer<WorldMapScreen> action, ItemStack stack, String tag) {
+        entries.add(new ContextMenuEntry(text, () -> true, action, stack, tag, disabledReason, enabled));
     }
 
     public void openAt(int x, int y) {
@@ -149,10 +155,10 @@ public class WorldMapContextMenu {
         return mouseX >= entryX && mouseX <= entryX + width && mouseY >= entryY && mouseY <= entryY + entryHeight;
     }
 
-    private record ContextMenuEntry(Component text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack stack, String tag, @Nullable Component disabledReason) {
+    private record ContextMenuEntry(Component text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack stack, String tag, @Nullable Component disabledReason, BooleanSupplier enabled) {
         public String getTag() { return tag; }
         public boolean shouldShow(WorldMapScreen screen) { return condition.getAsBoolean(); }
-        public boolean isDisabled() { return disabledReason != null; }
+        public boolean isDisabled() { return !enabled.getAsBoolean(); }
         public void execute(WorldMapScreen screen) { if (!isDisabled()) action.accept(screen); }
     }
 }

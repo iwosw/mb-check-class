@@ -2,7 +2,7 @@ package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.compat.CrossbowWeapon;
 import com.talhanation.bannermod.compat.IWeapon;
-import com.talhanation.bannermod.compat.MedievalBoomsticksCompat;
+import com.talhanation.bannermod.compat.MusketModCompat;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
 import com.talhanation.bannermod.entity.military.RecruitRangedCombatService;
@@ -81,7 +81,7 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
     }
 
     protected static boolean isCrossbow(ItemStack itemStack){
-        if (MedievalBoomsticksCompat.isMedievalBoomsticksItem(itemStack)) {
+        if (MusketModCompat.isMusketModItem(itemStack)) {
             return false;
         }
 

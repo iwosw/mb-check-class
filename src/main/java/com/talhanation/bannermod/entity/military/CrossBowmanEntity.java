@@ -1,7 +1,7 @@
 package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.compat.IWeapon;
-import com.talhanation.bannermod.compat.MedievalBoomsticksCompat;
+import com.talhanation.bannermod.compat.MusketModCompat;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitRangedCrossbowAttackGoal;
@@ -100,8 +100,8 @@ public class CrossBowmanEntity extends AbstractStrategicFireRecruitEntity implem
         if(RecruitsServerConfig.RangedRecruitsNeedArrowsToShoot.get()){
             if(isMusketModLoaded && IWeapon.isMusketModWeapon(this.getMainHandItem())){
                 int i = this.getRandom().nextInt(32);
-                MedievalBoomsticksCompat.ammoContract(this.getMainHandItem())
-                        .map(ammoId -> MedievalBoomsticksCompat.createAmmoStack(ammoId, 14 + i))
+                MusketModCompat.ammoContract(this.getMainHandItem())
+                        .map(ammoId -> MusketModCompat.createAmmoStack(ammoId, 14 + i))
                         .filter(stack -> !stack.isEmpty())
                         .ifPresent(arrows -> this.inventory.setItem(6, arrows));
             }
@@ -119,7 +119,7 @@ public class CrossBowmanEntity extends AbstractStrategicFireRecruitEntity implem
     }
     @Override
     public boolean wantsToPickUp(@NotNull ItemStack itemStack) {
-        if(isMusketModLoaded && MedievalBoomsticksCompat.isMedievalBoomsticksItem(itemStack)) return MedievalBoomsticksCompat.isSupportedRecruitItem(itemStack);
+        if(isMusketModLoaded && MusketModCompat.isMusketModItem(itemStack)) return MusketModCompat.isSupportedRecruitItem(itemStack);
         else if ((itemStack.getItem() instanceof BowItem || itemStack.getItem() instanceof ProjectileWeaponItem || itemStack.getItem() instanceof SwordItem) && this.getMainHandItem().isEmpty()){
             return !hasSameTypeOfItem(itemStack);
         }

@@ -8,6 +8,7 @@ import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWo
 import com.talhanation.bannermod.persistence.civilian.BuildBlock;
 import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
+import com.talhanation.bannermod.settlement.project.BannerModSettlementProjectRuntime;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -158,6 +159,9 @@ public class BuildArea extends AbstractWorkAreaEntity {
         this.creativeBuild = isCreative;
         this.resumePlanPending = false;
         this.setDone(false);
+        if (this.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            BannerModSettlementProjectRuntime.onBuildAreaStarted(serverLevel, this.getUUID());
+        }
         stackToPlace.clear();
         stackToBreak.clear();
         stackToPlaceMultiBlock.clear();
@@ -209,6 +213,15 @@ public class BuildArea extends AbstractWorkAreaEntity {
             this.setDone(true);
             this.buildStarted = false;
             this.creativeBuild = false;
+        }
+    }
+
+    @Override
+    public void setDone(boolean done) {
+        boolean wasDone = this.isDone();
+        super.setDone(done);
+        if (done && !wasDone && this.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            BannerModSettlementProjectRuntime.onBuildAreaCompleted(serverLevel, this.getUUID());
         }
     }
 

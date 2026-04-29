@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.network.messages.war;
 
 import com.talhanation.bannermod.war.runtime.SiegeStandardPlacementService;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
@@ -51,13 +53,18 @@ public class MessagePlaceSiegeStandardHere implements BannerModMessage<MessagePl
         SiegeStandardPlacementService.Result result = SiegeStandardPlacementService.placeAt(
                 level, player, this.warId, this.sideId, null, this.requestedRadius);
         if (result.ok()) {
-            player.sendSystemMessage(Component.literal(
-                    "Siege standard placed at " + result.record().pos().toShortString()
-                            + " (radius " + result.record().radius() + ")."));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.siege_standard_placed",
+                    result.record().pos().toShortString(), result.record().radius()));
         } else {
-            player.sendSystemMessage(Component.literal(
-                    SiegeStandardPlacementService.describe(result.outcome())));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.siege_standard",
+                    SiegeStandardPlacementService.describeComponent(result.outcome())));
         }
+    }
+
+    private static void sendFeedback(ServerPlayer player, Component message) {
+        player.sendSystemMessage(message);
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
+                new MessageToClientWarActionFeedback(message));
     }
 
     @Override

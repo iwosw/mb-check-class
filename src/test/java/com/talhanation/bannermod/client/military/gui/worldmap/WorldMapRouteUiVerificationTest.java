@@ -82,6 +82,38 @@ class WorldMapRouteUiVerificationTest {
         assertTrue(moveOrder.contains("CommandIntentDispatcher.dispatch(sender, intent, recruits);"));
     }
 
+    @Test
+    void worldMapClaimWaypointAndRouteFlowDocsMatchShippedInteractions() throws IOException {
+        String claimActions = read("src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapClaimMenuActions.java");
+        String generalActions = read("src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapGeneralMenuActions.java");
+        String waypointController = read("src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapWaypointInteractionController.java");
+        String routeMutation = read("src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapRouteMutationController.java");
+        String claimIntent = read("src/main/java/com/talhanation/bannermod/network/messages/military/MessageClaimIntent.java");
+        String englishGuide = read("MULTIPLAYER_GUIDE_EN.md");
+        String russianGuide = read("MULTIPLAYER_GUIDE_RU.md");
+        String almanac = read("docs/BANNERMOD_ALMANAC.html");
+
+        assertTrue(claimActions.contains("menu.addDisabledEntry(TEXT_CLAIM_AREA, TEXT_CLAIM_AREA_DISABLED"));
+        assertTrue(claimActions.contains("new MessageClaimIntent(MessageClaimIntent.Action.REMOVE_CHUNK"));
+        assertTrue(claimIntent.contains("applyServerSide(ServerPlayer player"));
+        assertTrue(claimIntent.contains("Action.ADD_CHUNK"));
+        assertTrue(claimIntent.contains("Action.REMOVE_CHUNK"));
+        assertTrue(claimIntent.contains("Action.DELETE"));
+
+        assertTrue(generalActions.contains("TEXT_WAYPOINT_NEEDS_ROUTE"));
+        assertTrue(generalActions.contains("TEXT_WAYPOINT_NEEDS_EXPLORED"));
+        assertTrue(generalActions.contains("WorldMapScreen::addWaypointAtClicked"));
+        assertTrue(waypointController.contains("route.addWaypoint(new RecruitsRoute.Waypoint"));
+        assertTrue(waypointController.contains("route.removeWaypoint(waypoint)"));
+        assertTrue(waypointController.contains("screen.canPlaceWaypointAt(finalPos.getX(), finalPos.getZ())"));
+        assertTrue(routeMutation.contains("ClientManager.saveRoute"));
+
+        assertTrue(englishGuide.contains("The `Claim Area` map action is intentionally disabled"));
+        assertTrue(russianGuide.contains("Действие `Claim Area` на карте намеренно отключено"));
+        assertTrue(almanac.contains("<span class=\"kbd\">Claim Area</span> is disabled"));
+        assertTrue(almanac.contains("<span class=\"kbd\">Claim Area</span> отключен"));
+    }
+
     private static RecruitsRoute.Waypoint waypoint(String name, int x, int z) {
         return new RecruitsRoute.Waypoint(name, new BlockPos(x, 64, z), null);
     }

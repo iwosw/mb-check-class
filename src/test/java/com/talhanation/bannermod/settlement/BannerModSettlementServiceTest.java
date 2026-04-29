@@ -1,15 +1,26 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.settlement.building.BuildingType;
+import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionRecord;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionState;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeSummary;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BannerModSettlementServiceTest {
 
@@ -110,9 +121,9 @@ class BannerModSettlementServiceTest {
     @Test
     void mapsValidatedHouseStorageAndWorkplaceBuildingsIntoSnapshotRecords() {
         UUID ownerUuid = UUID.randomUUID();
-        BannerModSettlementBuildingRecord houseRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.HOUSE, new BlockPos(0, 64, 0), 3, List.of(), ownerUuid);
-        BannerModSettlementBuildingRecord storageRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.STORAGE, new BlockPos(8, 64, 0), 2, List.of(), ownerUuid);
-        BannerModSettlementBuildingRecord farmRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.FARM, new BlockPos(16, 64, 0), 1, List.of(), ownerUuid);
+        BannerModSettlementBuildingRecord houseRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.HOUSE, new BlockPos(0, 64, 0), 3, ownerUuid);
+        BannerModSettlementBuildingRecord storageRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.STORAGE, new BlockPos(8, 64, 0), 2, ownerUuid);
+        BannerModSettlementBuildingRecord farmRecord = BannerModSettlementService.fromValidatedBuildingFields(UUID.randomUUID(), BuildingType.FARM, new BlockPos(16, 64, 0), 1, ownerUuid);
         BannerModSettlementStockpileSummary summary = BannerModSettlementService.summarizeStockpiles(List.of(storageRecord));
 
         assertEquals("bannermod:validated_house", houseRecord.buildingTypeId());
@@ -125,6 +136,31 @@ class BannerModSettlementServiceTest {
         assertEquals("bannermod:validated_farm", farmRecord.buildingTypeId());
         assertEquals(1, farmRecord.workplaceSlots());
         assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, farmRecord.buildingProfileSeed());
+    }
+
+    @Test
+    void ignoresLegacyValidatedBuildingAssignedCitizensOnReload() {
+        UUID staleWorkerUuid = UUID.randomUUID();
+        CompoundTag tag = new CompoundTag();
+        tag.putUUID("BuildingId", UUID.randomUUID());
+        tag.putUUID("SettlementId", UUID.randomUUID());
+        tag.putString("Type", BuildingType.FARM.name());
+        tag.putString("Dimension", "minecraft:overworld");
+        tag.putLong("AnchorPos", new BlockPos(16, 64, 0).asLong());
+        tag.putString("State", "VALID");
+        tag.putInt("Capacity", 1);
+        tag.putInt("QualityScore", 1);
+        ListTag legacyAssigned = new ListTag();
+        CompoundTag legacyAssignedEntry = new CompoundTag();
+        legacyAssignedEntry.putUUID("CitizenId", staleWorkerUuid);
+        legacyAssigned.add(legacyAssignedEntry);
+        tag.put("AssignedCitizenIds", legacyAssigned);
+
+        ValidatedBuildingRecord reloaded = ValidatedBuildingRecord.fromTag(tag);
+        BannerModSettlementBuildingRecord building = BannerModSettlementService.fromValidatedBuilding(reloaded, null);
+
+        assertEquals(0, building.assignedWorkerCount());
+        assertEquals(List.of(), building.assignedResidentUuids());
     }
 
     @Test
@@ -343,6 +379,46 @@ class BannerModSettlementServiceTest {
     }
 
     @Test
+    void seaTradeStatusLinesExposeExecutionProgressAndFailures() {
+        UUID sourceId = UUID.fromString("00000000-0000-0000-0000-000000003101");
+        UUID destinationId = UUID.fromString("00000000-0000-0000-0000-000000003102");
+        BannerModLogisticsItemFilter wheat = BannerModLogisticsItemFilter.ofItemIds(List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "wheat")));
+
+        List<String> lines = BannerModSettlementService.seaTradeStatusLines(
+                BannerModSeaTradeSummary.summarise(List.of()),
+                List.of(
+                        seaTradeRecord("00000000-0000-0000-0000-000000003201", sourceId, destinationId, wheat, 16, 0, BannerModSeaTradeExecutionState.LOADING, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003202", sourceId, destinationId, wheat, 16, 8, BannerModSeaTradeExecutionState.TRAVELLING, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003203", sourceId, destinationId, wheat, 16, 8, BannerModSeaTradeExecutionState.UNLOADING, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003204", sourceId, destinationId, wheat, 16, 0, BannerModSeaTradeExecutionState.COMPLETE, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003205", sourceId, destinationId, wheat, 16, 0, BannerModSeaTradeExecutionState.FAILED, BannerModSeaTradeExecutionRecord.FAILURE_NO_CARRIER),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003206", sourceId, destinationId, wheat, 16, 4, BannerModSeaTradeExecutionState.FAILED, BannerModSeaTradeExecutionRecord.FAILURE_DESTINATION_FULL)
+                )
+        );
+
+        assertEquals(List.of(
+                "gui.bannermod.governor.logistics.sea_trade.loading 3201 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.travelling 3202 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.unloading 3203 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.completed 3204 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.missing_ship 3205 unassigned gui.bannermod.governor.logistics.sea_trade.reason.no_carrier minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 3206 2201 gui.bannermod.governor.logistics.sea_trade.reason.destination_full minecraft:wheat 4 16"
+        ), lines.subList(0, 6));
+    }
+
+    @Test
+    void seaTradeStatusLocalizationCoversSuccessfulAndBlockedRoutes() throws Exception {
+        String enUs = Files.readString(Path.of("src/main/resources/assets/bannermod/lang/en_us.json"));
+        String ruRu = Files.readString(Path.of("src/main/resources/assets/bannermod/lang/ru_ru.json"));
+
+        for (String lang : List.of(enUs, ruRu)) {
+            assertTrue(lang.contains("gui.bannermod.governor.logistics.sea_trade.completed"));
+            assertTrue(lang.contains("gui.bannermod.governor.logistics.sea_trade.blocked_cargo"));
+            assertTrue(lang.contains("gui.bannermod.governor.logistics.sea_trade.reason.destination_full"));
+        }
+    }
+
+    @Test
     void summarizesSupplySignalsFromDesiredGoodsCoverageAndReservationHints() {
         UUID marketUuid = UUID.randomUUID();
         UUID cropAreaUuid = UUID.randomUUID();
@@ -499,5 +575,28 @@ class BannerModSettlementServiceTest {
         assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, foodCandidate.targetBuildingProfileSeed());
         assertEquals(3, foodCandidate.priority());
         assertEquals(List.of("food_demand", "storage_type:farmers"), foodCandidate.driverIds());
+    }
+
+    private static BannerModSeaTradeExecutionRecord seaTradeRecord(String routeId,
+                                                                   UUID sourceId,
+                                                                   UUID destinationId,
+                                                                   BannerModLogisticsItemFilter filter,
+                                                                   int requestedCount,
+                                                                   int cargoCount,
+                                                                   BannerModSeaTradeExecutionState state,
+                                                                   String failureReason) {
+        return new BannerModSeaTradeExecutionRecord(
+                UUID.fromString(routeId),
+                BannerModSeaTradeExecutionRecord.FAILURE_NO_CARRIER.equals(failureReason)
+                        ? null
+                        : UUID.fromString("00000000-0000-0000-0000-000000002201"),
+                sourceId,
+                destinationId,
+                filter,
+                requestedCount,
+                cargoCount,
+                state,
+                failureReason
+        );
     }
 }

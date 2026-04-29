@@ -31,11 +31,10 @@ public final class WarDeclarationService {
                                  WarGoalType goal,
                                  String casusBelli) {
         if (!PoliticalEntityAuthority.canAct(actorUuid, operator, attacker)) {
-            return Result.denied(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
+            return Result.denied(PoliticalEntityAuthority.denialReason(actorUuid, operator, attacker));
         }
         if (!attacker.status().canDeclareOffensiveWar()) {
-            return Result.denied(Component.literal(
-                    "Attacker status " + attacker.status().name() + " cannot declare offensive war."));
+            return Result.denied(Component.translatable("gui.bannermod.war.denial.attacker_status", attacker.status().name()));
         }
 
         WarDeclarationRuntime declarations = WarRuntimeContext.declarations(level);
@@ -46,7 +45,7 @@ public final class WarDeclarationService {
                 WarRuntimeContext.demilitarizations(level),
                 WarRuntimeContext.cooldowns(level));
         if (!cooldown.valid()) {
-            return Result.denied(Component.literal("Declaration blocked: " + cooldown.reason()));
+            return Result.denied(Component.translatable("gui.bannermod.war.denial.cooldown", cooldown.reason()));
         }
 
         Optional<WarDeclarationRecord> declared = declarations.declareWar(

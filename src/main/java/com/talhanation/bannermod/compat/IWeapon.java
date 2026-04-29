@@ -28,7 +28,7 @@ public interface IWeapon {
     void performRangedAttackIWeapon(AbstractRecruitEntity shooter, double x, double y, double z, float projectileSpeed);
 
     static boolean isMusketModWeapon(ItemStack stack){
-        return MedievalBoomsticksCompat.isSupportedRecruitFirearm(stack);
+        return MusketModCompat.isSupportedRecruitFirearm(stack);
     }
 
     boolean isLoaded(ItemStack stack);

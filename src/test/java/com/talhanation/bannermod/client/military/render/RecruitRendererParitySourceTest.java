@@ -64,6 +64,15 @@ class RecruitRendererParitySourceTest {
     }
 
     @Test
+    void crowdImpostorKeepsNearReadabilityThresholdsBelowDistantCut() throws IOException {
+        String source = read("RecruitRenderLod.java");
+
+        assertTrue(source.contains("CROWD_IMPOSTOR_DISTANCE = 48.0D"));
+        assertTrue(source.contains("distanceSqr <= square(32.0D)"));
+        assertTrue(source.contains("distanceSqr <= square(16.0D)"));
+    }
+
+    @Test
     void profilingBucketsKeepRuntimeCounterNames() throws IOException {
         String source = read("RecruitRenderProfiling.java");
 

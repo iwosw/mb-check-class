@@ -1687,8 +1687,8 @@
     {
       "id": "AUTH-005",
       "title": "Define and enforce nation and team command authority semantics",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Command authority currently mixes owner and scoreboard-team checks while the nation-leader path is effectively a dead stub, leaving intended command hierarchy unclear and partially unimplemented.",
       "scope": [
         "The command hierarchy must have explicit supported authority roles, remove dead paths or implement them fully, and apply the same rules across recruit command packets, UI affordances, and tests."
@@ -1702,14 +1702,20 @@
           "text": "Split into AUTH-006 authority-role definition, AUTH-007 enforcement, and AUTH-008 hierarchy tests; parent remains open until semantics are documented, enforced, and verified across command entry points."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain AUTH-006, AUTH-007, and AUTH-008: canonical command authority roles are defined, enforced across recruit command entry points/UI affordances, and covered by focused owner, teammate, admin override, and nation-level supported-or-denied authority verification. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-006",
         "AUTH-007",
         "AUTH-008",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARMY-003",
@@ -1737,8 +1743,8 @@
     {
       "id": "SYNC-001",
       "title": "Add settlement client snapshot sync for player-facing UIs",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Settlement intelligence is mostly server-side today, leaving governor and related UIs dependent on ad hoc requests and thin placeholder states instead of a coherent client mirror.",
       "scope": [
         "Player-facing settlement and governor screens need a clear synced snapshot contract, client mirror, refresh triggers, and waiting or stale-state UX for data arrival."
@@ -1752,14 +1758,20 @@
           "text": "Split into SYNC-002 snapshot contract, SYNC-003 client mirror/loading UX, and SYNC-004 refresh verification; parent remains open until settlement UIs render from coherent snapshots and refresh without reopening."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain SYNC-002, SYNC-003, and SYNC-004: settlement/governor snapshot contract exists, relevant settlement UIs render from the client mirror with explicit loading/stale/fresh states, and focused verification covers login, open-screen, and mutation refresh snapshot propagation. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "SYNC-002",
         "SYNC-003",
         "SYNC-004",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-001",
@@ -1814,8 +1826,8 @@
     {
       "id": "UX-003",
       "title": "Add disabled-reason and loading-state UX across critical screens",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "War, claim, governor, and work-area screens often hide unavailable actions or show thin failure states, forcing players to infer authority, sync, or range problems from chat or silence.",
       "scope": [
         "Critical screens must surface why actions are unavailable, distinguish waiting-for-sync from empty state, and show consistent loading and stale-data feedback."
@@ -1824,7 +1836,12 @@
         "Disabled actions explain why they are unavailable; waiting-for-sync, empty, and stale states are visually distinct on the main war, claim, governor, and work-area screens; focused verification covers representative denial and loading cases."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Disabled actions explain why unavailable: claim map/menu now surfaces localized reasons for waiting sync, stale claims, unclaimable chunks, missing neighbor authority, and missing claim owner; governor policy buttons expose enabled/disabled tooltips. 2) Waiting/empty/stale/ready states are visually distinct on representative critical screens: WarListScreen, claim map/edit, GovernorScreen, and WorkAreaScreen render separate localized state labels/outlines. 3) Focused verification: merged branch passed ctx log -- ./gradlew compileJava compileGameTestJava plus focused unit smoke command; player-facing UI changes documented in MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UI-003",
@@ -1833,7 +1850,8 @@
         "UI-006",
         "SYNC-001",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-004",
@@ -1879,8 +1897,8 @@
     {
       "id": "UX-006",
       "title": "Add player UI for revolts and remaining war outcomes",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Revolts and several war outcomes are still primarily command or admin flows, leaving a major strategy surface without coherent in-game UI for normal players.",
       "scope": [
         "War Room or related screens must support player-facing revolt interaction, remaining outcome selection, tribute-related flows, and clear authority feedback for those actions."
@@ -1889,14 +1907,20 @@
         "Normal player war flows for revolts and supported outcomes can be completed through in-game UI with clear authority and cooldown feedback; verification covers declare, occupy, revolt, and remaining outcome interactions."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain UX-007, UX-008, and UX-009. Revolt interaction is available in War Room through operator-controlled pending revolt resolution with allowed/denied verification; supported outcome selection including occupy/annex/tribute is exposed in War Room with server-authoritative accepted/denied feedback; declaration/outcome/siege/ally authority and cooldown denials are visible in-screen with localized reasons. Verification on merged branch: compileJava, compileGameTestJava, processResources, RevoltInteractionServiceTest, MessageResolveWarOutcomeTest, WarOutcomeApplierTest, PoliticalEntityAuthorityTest, WarCooldownPolicyTest, and WarCooldownPolicyImmunityTest passed; player guides and almanac were updated."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UX-007",
         "UX-008",
         "UX-009",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-001",
@@ -1927,8 +1951,8 @@
     {
       "id": "GAME-002",
       "title": "Turn sea-trade summaries into a real production and consumption loop",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Sea trade is currently represented mostly as summary math and recommendation text, not a materially meaningful production and consumption gameplay system.",
       "scope": [
         "Sea trade must consume and produce real goods or equivalent transport state, interact with settlement logistics, and expose player-visible bottlenecks and results through gameplay rather than hints alone."
@@ -1937,14 +1961,20 @@
         "Sea-trade routes affect real goods flow and settlement state; players can observe production, transport, and consumption consequences; verification covers at least one end-to-end sea-trade loop."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed sea-trade chain SHIPS-002 and SHIPS-003. Sea-trade execution now moves real goods through StorageArea/TransportContainerExchange-backed source, carrier cargo, and destination containers; settlement snapshots/governor logistics expose loading/travelling/unloading/completed/missing-carrier/blocked-cargo state, carrier assignment, cargo progress, and failure reasons so players can observe production/transport/consumption consequences. Verification on merged branch: compileJava, compileGameTestJava, processResources, BannerModSettlementServiceTest, and BannerModSettlementClientMirrorTest passed; player guides and almanac were updated."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "SHIPS-001",
         "SHIPS-002",
         "SHIPS-003",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-003",
@@ -2002,8 +2032,8 @@
     {
       "id": "GAME-005",
       "title": "Unify settlement bootstrap paths",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Surveyor-based starter founding and automatic claim worker bootstrap currently look like partially separate onboarding systems, which risks contradictory world state and player expectations.",
       "scope": [
         "Settlement bootstrap must have one coherent lifecycle from claim through starter structures, workers, citizens, and formal settlement records, with explicit rules for auto-bootstrap versus manual founding."
@@ -2017,13 +2047,19 @@
           "text": "Split into GAME-013 lifecycle definition and GAME-014 path convergence; parent remains open until manual and automatic bootstrap paths produce the same settlement records and player-visible startup state."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain GAME-013 and GAME-014: the unified claim-to-settlement lifecycle is defined, and manual plus automatic bootstrap paths converge on the same settlement lifecycle/data model with focused verification for both entry paths and resulting records. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-013",
         "GAME-014",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARCH-001",
@@ -2099,8 +2135,8 @@
     {
       "id": "ARCH-004",
       "title": "Modularize packet registration beyond the giant network bootstrap",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "BannerModNetworkBootstrap carries a large order-sensitive shared packet catalog, which is hard to audit for authority, maintain safely, or evolve by subsystem.",
       "scope": [
         "Packet registration must be split into modular catalogs or equivalent subsystem registrations with explicit ownership, stable IDs, and easier authority review."
@@ -2109,7 +2145,12 @@
         "Network registration is organized by subsystem with preserved wire compatibility where required; packet ownership and authority review become tractable; verification proves the active packet set still registers and works."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Network registration is organized by subsystem catalogs for military, civilian, and war packets while BannerModNetworkBootstrap preserves the existing public arrays and registers catalogs in the original military -> civilian -> war order, so wire IDs remain stable. 2) Packet ownership and authority review are tractable through subsystem catalog files under network/catalog. 3) Verification: merged branch passed compileJava/compileGameTestJava and focused BannerModIntegratedRuntimeSmokeTest in the combined Gradle command."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-001",
@@ -2118,7 +2159,8 @@
         "AUTH-004",
         "AUTH-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARCH-005",
@@ -2146,8 +2188,8 @@
     {
       "id": "ARCH-006",
       "title": "Retire legacy worker current-area assignment state",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Live worker AI still carries legacy current-area style assignment state instead of treating validated-building records as the clear authoritative assignment source.",
       "scope": [
         "Worker assignment and work-goal selection must move toward one authoritative assignment model backed by validated-building or equivalent canonical records, removing redundant legacy state."
@@ -2156,12 +2198,18 @@
         "Worker assignment uses one authoritative source of truth; redundant legacy current-area state is removed or reduced to a derived cache; verification covers assignment, reload, and job execution behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Worker assignment now uses boundWorkAreaUuid/resident assignment as the authoritative source: ValidatedBuildingRecord no longer persists/reloads assignedCitizenIds, settlement building snapshot records start unassigned and are populated by resident assignment, and legacy current-area remember callback/tick/save path was removed. 2) The remaining currentWorkAreaCache is a derived cache only. 3) Verification: merged branch passed compileJava/compileGameTestJava plus focused BannerModSettlementServiceTest, JobHandlerRegistryTest, and CitizenRoleControllerTest in the combined Gradle command; GameTest constructor fallout was fixed and committed."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARCH-007",
@@ -2191,8 +2239,8 @@
     {
       "id": "TEST-001",
       "title": "Add authority GameTests for transfer and admin packets",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Critical authority gaps were found in recruit transfer, group transfer, world-map teleport, and work-area owner packets, and those live packet paths currently lack focused scenario coverage.",
       "scope": [
         "Dedicated-server GameTests must exercise allowed and denied flows for recruit transfer, group transfer, teleport, and work-area owner packets using real sender identity and multiplayer authority conditions."
@@ -2201,7 +2249,12 @@
         "Each targeted packet has focused tests that fail on spoofed or unauthorized use and pass for legitimate authority; the tests run through the real server packet path, not only helper methods."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Added packet-path GameTests for recruit transfer, group transfer, world-map teleport, and work-area owner packets. 2) Tests encode/decode packets and execute the NeoForge server payload path with sender context, covering unauthorized/spoofed denial and legitimate authority success. 3) Verification: merged branch passed compileJava and compileGameTestJava; runGameTestServer was attempted and remains red only on known unrelated failures, with no new PacketAuthorityGameTests listed among failures."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-001",
@@ -2210,7 +2263,8 @@
         "AUTH-004",
         "AUTH-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "TEST-002",
@@ -2409,15 +2463,15 @@
     },
     {
       "id": "BOOM-001",
-      "title": "Make recruits fire Medieval Boomsticks projectiles and ammo",
+      "title": "Make recruits fire Ewewukek Musket Mod projectiles and ammo",
       "status": "open",
       "updated": "2026-04-28",
-      "why": "Recruits can currently equip and use Medieval Boomsticks weapons, but the live attack path still falls back to arrow-style projectile behavior instead of using the mod's bullet or firearm semantics, which breaks both balance and fantasy.",
+      "why": "Recruits can currently equip and use Ewewukek's Musket Mod weapons, but the live attack path still falls back to arrow-style projectile behavior instead of using the mod's bullet or firearm semantics, which breaks both balance and fantasy.",
       "scope": [
-        "Add an explicit compatibility path for Medieval Boomsticks ranged weapons so recruit attacks spawn the correct projectile type, consume the correct ammo, and respect the mod's firearm timing or reload semantics where exposed. Keep unsupported weapons on a safe fallback path instead of silently pretending bullets are arrows."
+        "Add an explicit compatibility path for Ewewukek's Musket Mod ranged weapons so recruit attacks spawn the correct projectile type, consume the correct ammo, and respect the mod's firearm timing or reload semantics where exposed. Keep unsupported weapons on a safe fallback path instead of silently pretending bullets are arrows."
       ],
       "acceptance": [
-        "A recruit using a supported Medieval Boomsticks firearm fires the mod-correct projectile rather than an arrow; ammo consumption and no-ammo denial follow the firearm's intended rules; deterministic verification or focused tests cover at least one supported firearm and one unsupported edge case."
+        "A recruit using a supported Ewewukek's Musket Mod firearm fires the mod-correct projectile rather than an arrow; ammo consumption and no-ammo denial follow the firearm's intended rules; deterministic verification or focused tests cover at least one supported firearm and one unsupported edge case."
       ],
       "dependencies": [
         "BOOM-002",
@@ -2455,8 +2509,8 @@
     {
       "id": "SHIPS-002",
       "title": "Execute sea-trade routes through Small Ships cargo movement",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Even with ship detection, sea trade stays fake unless goods actually move through vessel-backed route execution between ports, stockpiles, or settlements.",
       "scope": [
         "Implement ship-backed sea-trade route execution with cargo loading, travel state, arrival, unloading, and failure handling tied into settlement logistics and player-visible route feedback. Reuse existing goods or stockpile systems where possible instead of creating a parallel economy."
@@ -2474,8 +2528,14 @@
           "text": "Split needed: existing SHIPS-001 layer binds Small Ships carrier identity only; no cargo/navigation capability API is available at compile time and no persisted sea-trade route executor exists. Child chain SHIPS-002A..SHIPS-002D covers compat capabilities, execution state, stockpile cargo movement, and player-visible status/docs."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain SHIPS-002A, SHIPS-002B, SHIPS-002C, and SHIPS-002D: Small Ships carrier capability probing, persistent sea-trade execution state, real StorageArea/TransportContainerExchange cargo movement, and player-visible loading/travelling/unloading/completed/missing-ship/blocked-cargo feedback plus docs are implemented and verified in focused slices. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "MERCH-001",
@@ -2502,22 +2562,22 @@
     },
     {
       "id": "BOOM-002",
-      "title": "Map supported Medieval Boomsticks firearms and ammo for recruits",
+      "title": "Map supported Ewewukek Musket Mod firearms and ammo for recruits",
       "status": "done",
       "updated": "2026-04-28",
-      "why": "Before recruit firearm combat can behave correctly, BannerMod needs an explicit compatibility map for which Medieval Boomsticks weapons are supported, which ammo they consume, and what fallback behavior is legal for unsupported items.",
+      "why": "Before recruit firearm combat can behave correctly, BannerMod needs an explicit compatibility map for which Ewewukek's Musket Mod weapons are supported, which ammo they consume, and what fallback behavior is legal for unsupported items.",
       "scope": [
-        "Detect supported Medieval Boomsticks firearm items and their ammo contracts through a compatibility layer or adapter usable by recruit combat code. Define safe fallback rules for unsupported or partially supported items instead of silently treating them like bows."
+        "Detect supported Ewewukek's Musket Mod firearm items and their ammo contracts through a compatibility layer or adapter usable by recruit combat code. Define safe fallback rules for unsupported or partially supported items instead of silently treating them like bows."
       ],
       "acceptance": [
-        "BannerMod can distinguish supported and unsupported Medieval Boomsticks firearms for recruit use; supported firearms resolve the correct ammo contract; unsupported weapons follow an explicit fallback or denial path rather than hidden bow semantics."
+        "BannerMod can distinguish supported and unsupported Ewewukek's Musket Mod firearms for recruit use; supported firearms resolve the correct ammo contract; unsupported weapons follow an explicit fallback or denial path rather than hidden bow semantics."
       ],
       "dependencies": [],
       "progress": [],
       "verification": [
         {
           "date": "2026-04-28",
-          "result": "1) MedievalBoomsticksCompat now distinguishes supported firearms and resolves cartridge ammo contracts; 2) unsupported musketmod items are denied from hidden bow semantics/fallback; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+          "result": "1) MusketModCompat now distinguishes supported firearms and resolves cartridge ammo contracts; 2) unsupported musketmod items are denied from hidden bow semantics/fallback; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
         }
       ],
       "evidence": [],
@@ -2525,15 +2585,15 @@
     },
     {
       "id": "BOOM-003",
-      "title": "Route recruit firearm attacks through Boomsticks projectile and reload semantics",
+      "title": "Route recruit firearm attacks through Musket Mod projectile and reload semantics",
       "status": "in_progress",
-      "updated": "2026-04-28",
-      "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Medieval Boomsticks projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
+      "updated": "2026-04-29",
+      "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Ewewukek's Musket Mod projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
       "scope": [
-        "Integrate supported Medieval Boomsticks firearms into recruit attack execution so projectile spawn, reload cadence, ammo checks, and no-ammo denial use the mod's firearm rules where exposed. Preserve safe server-authoritative fallback for unsupported edge cases."
+        "Integrate supported Ewewukek's Musket Mod firearms into recruit attack execution so projectile spawn, reload cadence, ammo checks, and no-ammo denial use the mod's firearm rules where exposed. Preserve safe server-authoritative fallback for unsupported edge cases."
       ],
       "acceptance": [
-        "A recruit firing a supported Medieval Boomsticks firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
+        "A recruit firing a supported Ewewukek's Musket Mod firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
       ],
       "dependencies": [
         "BOOM-003A",
@@ -2542,7 +2602,11 @@
       "progress": [
         {
           "date": "2026-04-28",
-          "text": "Implementation merged on feature/backlog-batch-80-wave1 from feature/boom-003: supported recruit firearms invoke Medieval Boomsticks GunItem.mobUse reflectively and use Boomsticks reloadDuration when available; compileJava passed. Remaining acceptance proof moved to BOOM-003A for focused runtime/GameTest firearm combat verification of projectile spawn, reload cadence, and no-ammo denial."
+          "text": "Implementation merged on feature/backlog-batch-80-wave1 from feature/boom-003: supported recruit firearms invoke Ewewukek's Musket Mod GunItem.mobUse reflectively and use musketmod reloadDuration when available; compileJava passed. Remaining acceptance proof moved to BOOM-003A for focused runtime/GameTest firearm combat verification of projectile spawn, reload cadence, and no-ammo denial."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "Correction after scope clarification: keep Ewewukek's Musket Mod (musketmod) as the only firearm compatibility target. Do not integrate Medieval Boomsticks, Johannes Renaissance Rebirth, or other firearm mods in this slice."
         }
       ],
       "verification": [],
@@ -2553,7 +2617,7 @@
       "title": "Expose recruit firearm compatibility and ammo state in player feedback",
       "status": "open",
       "updated": "2026-04-28",
-      "why": "Players need to understand whether a recruit firearm is truly supported, has valid ammo, or is falling back, otherwise Boomsticks integration will look randomly broken even after the runtime path is fixed.",
+      "why": "Players need to understand whether a recruit firearm is truly supported, has valid ammo, or is falling back, otherwise musketmod integration will look randomly broken even after the runtime path is fixed.",
       "scope": [
         "Add player-facing feedback for supported firearm status, missing ammo, and unsupported weapon fallback in the relevant recruit inventory, command, or combat feedback surfaces. Keep the messages localized and server-authoritative."
       ],
@@ -2572,8 +2636,8 @@
     {
       "id": "SHIPS-003",
       "title": "Show sea-trade carrier route state and failure reasons",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Ship-backed sea trade will still feel opaque if players cannot see which carrier is assigned, whether it is loading, traveling, blocked, or failed, and why a route is stalled.",
       "scope": [
         "Add player-facing route state for ship-backed sea trade, including carrier assignment, cargo progress, transit state, and actionable failure reasons in the relevant settlement, logistics, or trade UI surfaces."
@@ -2587,8 +2651,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Players can inspect ship-backed route state in governor logistics: focused tests cover server-authored sea-trade status lines with route id, carrier assignment/unassigned state, current phase, cargo progress, successful route, missing-carrier state, and destination-full blocked reason. 2) Failure/stall reasons are localized for EN/RU, including explicit destination-full and no-carrier reasons. 3) Route state updates are sourced from the existing server sea-trade execution records surfaced through settlement snapshots/client mirror. 4) Verification: merged branch passed compileJava, compileGameTestJava, processResources, BannerModSettlementServiceTest, and BannerModSettlementClientMirrorTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "MERCH-002",
@@ -2692,8 +2762,8 @@
     {
       "id": "UX-007",
       "title": "Add War Room revolt interaction flow",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "A player-facing revolt system is still incomplete until War Room exposes the actual revolt interactions instead of only passive text or slash-command knowledge.",
       "scope": [
         "Add the relevant revolt interaction flow to War Room or the equivalent screen, including action availability, pending-state display, and server-authoritative feedback."
@@ -2707,14 +2777,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) War Room now exposes pending revolt resolution controls for the selected war, allowing operator users to mark the first pending revolt as won or failed through UI rather than chat. 2) Availability/denial feedback is localized and server-authoritative through MessageResolveRevolt and RevoltInteractionService; non-operators are denied and pending state/occupation are preserved. 3) Verification: merged branch passed compileJava, compileGameTestJava, processResources, and RevoltInteractionServiceTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-008",
       "title": "Add UI for tribute and remaining war outcome selection",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "War outcome UX remains incomplete while tribute-related and remaining supported outcome choices are still partly command-shaped or admin-shaped instead of coherent in-screen interactions.",
       "scope": [
         "Extend War Room or outcome panels so supported tribute and remaining outcome choices are selectable in UI with clear authority, cooldown, and denial feedback."
@@ -2728,14 +2804,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) War Room outcome buttons now gate cancel/occupy/annex/tribute by selected war state, matching war goal, attacking-side authority, and operator requirement for tribute. 2) Unsupported/admin-only paths are visibly locked with localized disabled reasons, and outcome requests report accepted/denied feedback through chat and the War Room feedback line. 3) Verification: merged branch passed compileJava, compileGameTestJava, processResources, MessageResolveWarOutcomeTest, and WarOutcomeApplierTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-009",
       "title": "Explain war authority and cooldown denials in-screen",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "War interactions are still too opaque if denial reasons only reach chat or are inferred from disabled controls without an explicit why, especially for leadership, co-leader, cooldown, and government-form restrictions.",
       "scope": [
         "Surface explicit in-screen denial reasons for war declaration, outcome, ally, and revolt actions where authority or cooldown rules block the player. Reuse existing server-authoritative policy text where possible."
@@ -2748,8 +2830,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) War Room and related war screens now show in-screen server-authoritative feedback for declare war, siege placement, ally invite/respond/cancel, and war outcomes, avoiding chat-only denial feedback. 2) Disabled tooltips distinguish leader-only, republic co-leader, monarchy-blocked co-leader, missing state, status, cooldown, closed-war, unsupported-goal, and op-only denials. 3) Verification: merged branch passed compileJava, compileGameTestJava, processResources, PoliticalEntityAuthorityTest, WarCooldownPolicyTest, and WarCooldownPolicyImmunityTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "PROC-001",
@@ -2825,8 +2913,8 @@
     {
       "id": "PERF-011",
       "title": "Implement measured distant recruit crowd renderer cuts",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "Large recruit crowds need optimization backed by PERF-010 evidence without harming close-range readability.",
       "scope": [
         "Use PERF-010 profiling evidence to skip or simplify safe distant crowd render work such as non-selected nameplates, held items, armor, overlays, or simplified model paths."
@@ -2835,10 +2923,18 @@
         "A before-and-after profiling run shows improved large-crowd recruit rendering while close-range selected recruits remain readable."
       ],
       "dependencies": [
-        "PERF-010",
-        "VANILLA-013"
+        "PERF-011A"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Implemented a minimal distant crowd cut by moving the crowd impostor threshold from 56 to 48 blocks and added a renderer source guard that keeps 32-block armor/layer and 16-block crowded-nameplate readability thresholds below the impostor cutoff; compileJava and focused renderer source test pass. Remaining acceptance requires a real client before/after large-crowd profiling run, which is blocked in this headless API session."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "Held open: renderer cutoff branch exists but acceptance requires PERF-011A real client before/after large-crowd profiling; API/headless session cannot provide visual selected-recruit readability proof."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -2946,8 +3042,8 @@
     {
       "id": "ARMY-005",
       "title": "Add queued intent parity for remaining command variants",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Queued command behavior must match immediate command behavior for all supported army command variants.",
       "scope": [
         "Implement or verify queue execution parity for movement, face, attack, aggro, stance, strategic fire, and siege-machine flows."
@@ -2960,8 +3056,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: focused queue parity coverage added for movement, face, attack, aggro, stance, strategic fire, and siege-machine command flows. compileJava passed; compileGameTestJava passed; focused CommandIntentQueueTest passed; verifyGameTestStage rerun no longer reports queuedcommandvariantsmatchimmediatefirstorderbehavior after the fix, but remains red from unrelated existing failures: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, sharedownershipkeepsplayercycleauthorityaligned, grouptransferupdatesgroupandmembersfromtrustedplayer, unmountedcourierinspectionreportsfootfallback, reconnectedownerrecoversauthorityafterownershiproundtrip, courierusesnearbyhorseonsupportedroute, workerdeathreleasesactiveworkorderclaim."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "AUTH-006",
@@ -2989,8 +3091,8 @@
     {
       "id": "AUTH-007",
       "title": "Apply command authority roles across entry points",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "AUTH-005 requires the canonical authority model to be enforced consistently, not only documented.",
       "scope": [
         "Apply AUTH-006 authority semantics across recruit command packets and related UI affordances."
@@ -3003,14 +3105,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: owner/teammate/admin/unsupported nation authority semantics are covered by CommandTargetingAuthorityTest, which passed via ctx log -- ./gradlew test --tests com.talhanation.bannermod.network.messages.military.CommandTargetingAuthorityTest; representative command entry points are covered by BannerModMultiplayerAuthorityConflictGameTests owner movement, teammate MessageFollowGui, admin MessageRest, and unsupported nation/outsider MessageRest cases. compileJava and compileGameTestJava passed. verifyGameTestStage remains red only on unrelated tests: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, sharedownershipkeepsplayercycleauthorityaligned, unmountedcourierinspectionreportsfootfallback, workerdeathreleasesactiveworkorderclaim; AUTH-007 tests are not failing."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "AUTH-008",
       "title": "Test command authority hierarchy",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "AUTH-005 closure requires verification for owner, teammate, and nation-level command cases.",
       "scope": [
         "Add focused tests covering owner, teammate, admin override, and nation-level supported or denied command authority flows."
@@ -3023,8 +3131,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Owner/teammate/admin/nation hierarchy coverage: ./gradlew test --tests com.talhanation.bannermod.network.messages.military.CommandTargetingAuthorityTest passed, covering owner, teammate, outsider-admin override, and explicitly unsupported nation/outsider denial through CommandHierarchy and CommandTargeting. 2) Packet-path/GameTest coverage: src/gametest/java/com/talhanation/bannermod/BannerModMultiplayerAuthorityConflictGameTests.java now explicitly exercises owner and teammate MessageFollowGui paths, admin MessageRest path, and unsupported nation/outsider MessageRest denial; ./gradlew compileGameTestJava passed. 3) compileJava passed. 4) ./gradlew verifyGameTestStage was run; it failed on unrelated non-authority tests (primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, sharedownershipkeepsplayercycleauthorityaligned, courierusesnearbyhorseonsupportedroute, workerdeathreleasesactiveworkorderclaim), with no AUTH-008 authority GameTests listed as failed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SYNC-002",
@@ -3052,8 +3166,8 @@
     {
       "id": "SYNC-003",
       "title": "Implement settlement client mirror and screen loading states",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Player-facing settlement UIs need coherent mirrored state instead of ad hoc placeholder requests.",
       "scope": [
         "Implement the client mirror for SYNC-002 snapshots and update relevant settlement/governor screens to render loading, stale, empty, and fresh states from it."
@@ -3066,14 +3180,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: relevant governor/settlement UI now opens in loading state from the client mirror, accepts server-synced ready/empty envelopes, marks the existing mirror stale after policy mutation until the next server refresh, and renders those states without reopening; focused test BannerModSettlementClientMirrorTest covers loading, empty, fresh, and stale formatting/action enablement; compileJava passed; compileGameTestJava not run because no GameTest sources were touched."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SYNC-004",
       "title": "Verify settlement snapshot refresh paths",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "SYNC-001 requires proof that login, open-screen, and mutation refresh paths update the client mirror.",
       "scope": [
         "Add focused verification for settlement snapshot delivery on login, screen open, and server-side mutation refresh."
@@ -3086,8 +3206,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: focused tests prove login, screen-open, and mutation-refresh settlement client snapshot paths. Verification: ./gradlew compileJava passed; ./gradlew compileGameTestJava passed; ./gradlew test --tests com.talhanation.bannermod.client.settlement.BannerModSettlementClientMirrorTest --tests com.talhanation.bannermod.events.RecruitGovernorWorkflowTest --tests com.talhanation.bannermod.network.messages.military.MessageToClientUpdateGovernorScreenTest passed, covering LOGIN/MUTATION_REFRESH mirror replacement, SCREEN_OPEN/LOGIN/MUTATION_REFRESH workflow envelopes, and MessageToClientUpdateGovernorScreen payload roundtrip."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-010",
@@ -3115,8 +3241,8 @@
     {
       "id": "UX-011",
       "title": "Expose route and waypoint discovery in world-map UI",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Players need in-game affordances and explanations for route and waypoint flows without relying on external docs.",
       "scope": [
         "Add Minecraft-native route and waypoint explanations, enabled/disabled reasons, and visible entry points in the world-map flow."
@@ -3129,14 +3255,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Localized in-game world-map affordances added: top-left Routes help/status panel explains + route creation, route selection, and right-click waypoint creation/use; route buttons have localized tooltips; right-click Add Waypoint remains visible when unavailable with localized no-route or unexplored/unloaded-chunk reasons. 2) Server authority preserved: only existing WorldMapRouteMutationController/ClientManager route-save and waypoint mutation paths are reused; no client-side server gameplay validation was added or bypassed. 3) Player workflow docs updated in MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html. 4) Verification passed: ctx log -- ./gradlew compileJava; ctx log -- ./gradlew test --tests com.talhanation.bannermod.client.military.gui.worldmap.WorldMapRouteUiVerificationTest; ctx log -- jq empty modified lang JSON files; tools/backlog validate."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-012",
       "title": "Verify and document world-map claim route waypoint flows",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "UX-002 closure requires verification and guide coverage for player-facing map flows.",
       "scope": [
         "Verify claim-area, waypoint, and route interactions and update MULTIPLAYER_GUIDE_RU.md, MULTIPLAYER_GUIDE_EN.md, and docs/BANNERMOD_ALMANAC.html if the player-facing flow changes."
@@ -3149,14 +3281,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: claim-area, waypoint, and route interactions verified by focused source-inspection test WorldMapRouteUiVerificationTest.worldMapClaimWaypointAndRouteFlowDocsMatchShippedInteractions; test confirms Claim Area is disabled, claim mutations route through server MessageClaimIntent, waypoint disabled reasons/add/remove/drag explored checks are wired, routes persist through ClientManager.saveRoute, and EN/RU guides plus almanac match shipped behavior. Verification run: ./gradlew test --tests com.talhanation.bannermod.client.military.gui.worldmap.WorldMapRouteUiVerificationTest passed; ./gradlew compileJava passed; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-009",
       "title": "Bind settlement projects to real build areas",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "GAME-001 needs project records to target executable world construction instead of noop resolver placeholders.",
       "scope": [
         "Replace noop build-area resolution for settlement projects with binding to real build areas or an equivalent executable world-work target."
@@ -3167,15 +3305,30 @@
       "dependencies": [
         "VANILLA-013"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Implemented live BuildArea binding for settlement project runtime/orchestrator and added BannerModSettlementProjectGameTests.settlementProjectBindsToExecutableBuildAreaTarget. Verified ctx log -- ./gradlew compileJava passed and ctx log -- ./gradlew compileGameTestJava passed. Runtime GameTest verification via ctx log -- ./gradlew verifyGameTestStage is blocked by unrelated existing suite failures/crash before a focused result can be claimed: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds failed, then GameTest server crashed in AbstractChestGoal.scanAvailableStorageAreas/DepositItemsToStorage on a merchant UnsupportedOperationException. GAME-009 acceptance is implemented but left open because the focused GameTest could not be observed green in this run."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "PASS: ctx log -- ./gradlew compileJava compileGameTestJava runGameTestServerGame009 isolated bannermod_game_009 GameTest namespace; settlementProjectBindsToExecutableBuildAreaTarget proved project binds to executable BuildArea target. PASS: tools/backlog validate."
+        },
+        {
+          "date": "2026-04-29",
+          "result": "PASS after feature-branch merge: ctx log -- ./gradlew compileGameTestJava runGameTestServerGame009. Isolated bannermod_game_009 holder uses bannermod:harness_empty template and proves settlement project binds to executable BuildArea target."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-010",
       "title": "Drive project progress from actual build execution",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Settlement project progress must reflect real construction work, not placeholder record state.",
       "scope": [
         "Connect project assignment and progress updates to actual worker/build execution events and completion state."
@@ -3188,14 +3341,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Creation/assignment: ctx log -- ./gradlew runGameTestServerGame010 passed; focused bannermod_game_010 GameTest creates a PendingProject, binds it to a live BuildArea through ClaimBuildAreaResolver, and observes SEARCHING_BUILDER. 2) Progress advancement: same GameTest calls BuildArea.setStartBuild(false), the production BuildArea start hook updates BannerModSettlementProjectRuntime assignment state to IN_PROGRESS. 3) Completion: same GameTest calls BuildArea.setDone(true), the production BuildArea completion hook updates assignment state to COMPLETED. Compile gates also passed: ctx log -- ./gradlew compileJava and ctx log -- ./gradlew compileGameTestJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-011",
       "title": "Add in-world claim boundary and authority cues",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "GAME-004 needs protected territory to be legible from normal world play, not only the map screen.",
       "scope": [
         "Add restrained in-world boundary or authority feedback for claims, including ownership cues that are visible during common play without cluttering HUD or world visuals."
@@ -3207,14 +3366,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Normal-play claim HUD now renders localized friendly/hostile/unclaimed authority labels in the existing top-right overlay stack, with friendly matching the server-side scoreboard-team claim ownership rule and hostile covering other owned claims; unclaimed renders for no claim/no owner. 2) Overlap check: reused HudOverlayCoordinator top-right stack below battle-window and siege-zone chips, with right margin/top safe margin, no chat/hotbar/crosshair/boss-bar overlap introduced. 3) Localization/docs check: en_us and ru_ru keys added; EN/RU guides and almanac updated. 4) Verification: focused ClaimAuthorityStatusTest passed; ./gradlew compileJava passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-012",
       "title": "Add protected-space interaction feedback",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "GAME-004 requires common claim-protected interactions to explain why actions are allowed or denied.",
       "scope": [
         "Add clear in-world or localized feedback for common protected-space interactions in friendly, hostile, and unclaimed territory."
@@ -3227,8 +3392,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Focused test ./gradlew test --tests com.talhanation.bannermod.events.ClaimProtectionFeedbackTest passed and covers friendly, hostile, and unclaimed feedback keys. 2) ./gradlew compileJava passed. 3) Player-facing docs and almanac updated for denied protected-space system feedback; no GameTests were touched, so compileGameTestJava was not required."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-013",
@@ -3256,8 +3427,8 @@
     {
       "id": "GAME-014",
       "title": "Converge manual and automatic settlement bootstrap paths",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Surveyor founding and automatic claim worker bootstrap should produce the same settlement lifecycle and records.",
       "scope": [
         "Update manual and automatic bootstrap entry paths to create or reconcile the same settlement records, starter structures, workers, citizens, and profession state."
@@ -3270,8 +3441,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Added BannerModBuildingInvalidationGameTests.manualAndAutomaticBootstrapConvergeOnStarterData, which executes manual STARTER_FORT bootstrap and automatic claim worker growth bootstrap in one GameTest and compares active SettlementRecord claim/faction binding, worker count/type set, free citizen count, and NONE profession state. 2) ctx log -- ./gradlew compileJava passed. 3) ctx log -- ./gradlew compileGameTestJava passed. 4) ctx log -- ./gradlew runGameTestServer was executed; the new GAME-014 test was not listed among failures, but the full stage remains blocked by existing unrelated required GameTest failures: primaryZoneMatrix, courier transport/route, ownership roundtrip, group transfer, and workorder claim failures."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "PORT-005",
@@ -4471,7 +4648,7 @@
       ],
       "acceptance": [
         "Ranged recruits fire expected projectiles or compatible firearms, consume/require ammo correctly, and respect target/authority rules.",
-        "Existing projectile and Boomsticks compatibility expectations remain testable after the rewrite."
+        "Existing projectile and musketmod compatibility expectations remain testable after the rewrite."
       ],
       "dependencies": [
         "VANILLA-007"
@@ -4714,20 +4891,29 @@
     },
     {
       "id": "BOOM-003A",
-      "title": "Verify Boomsticks recruit firearm combat flow",
-      "status": "open",
-      "updated": "2026-04-28",
-      "why": "BOOM-003 code now routes supported recruit firearms through Medieval Boomsticks, but the remaining acceptance proof requires an observable firearm combat flow with the optional mod active.",
+      "title": "Verify Musket Mod recruit firearm combat flow",
+      "status": "in_progress",
+      "updated": "2026-04-29",
+      "why": "BOOM-003 code now routes supported recruit firearms through Ewewukek's Musket Mod, but the remaining acceptance proof requires an observable firearm combat flow with the optional mod active.",
       "scope": [
-        "Run or add a focused runtime/GameTest/manual verification path for one supported Medieval Boomsticks firearm covering projectile spawn, reload or fire cadence, and no-ammo denial after the merged BOOM-003 routing."
+        "Run or add a focused runtime/GameTest/manual verification path for one supported Ewewukek's Musket Mod firearm covering projectile spawn, reload or fire cadence, and no-ammo denial after the merged BOOM-003 routing."
       ],
       "acceptance": [
-        "A supported Medieval Boomsticks firearm used by a recruit is observed spawning the mod-correct projectile, following the intended reload or fire cadence, and denying fire consistently when ammo is unavailable; verification evidence is recorded on BOOM-003."
+        "A supported Ewewukek's Musket Mod firearm used by a recruit is observed spawning the mod-correct projectile, following the intended reload or fire cadence, and denying fire consistently when ammo is unavailable; verification evidence is recorded on BOOM-003."
       ],
       "dependencies": [
         "VANILLA-013"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Added BannerModMusketModFirearmGameTests as a narrow GameTest harness for an Ewewukek's Musket Mod pistol: when musketmod is present it equips a recruit CrossBowman with musketmod:pistol, proves no-ammo denial before adding one cartridge, asserts no projectile before the reload cadence, then waits for a musketmod bullet projectile and cartridge consumption. Verification in this environment: ctx log -- ./gradlew compileJava passed; ctx log -- ./gradlew compileGametestJava passed. Runtime acceptance is still blocked because the GameTest runtime mod list contains BannerMod/Corelib/Minecraft/NeoForge only and no musketmod, so projectile spawn/cadence/no-ammo behavior could not be observed with the optional mod active."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "Correction after scope clarification: verification should target only Ewewukek's Musket Mod (musketmod). Medieval Boomsticks and Renaissance Rebirth remain out of scope."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -4757,8 +4943,8 @@
     {
       "id": "SHIPS-002A",
       "title": "Reflect Small Ships cargo and navigation capabilities",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "SHIPS-002 cannot safely execute vessel-backed sea trade until BannerMod can discover whether a bound Small Ships carrier exposes usable cargo and movement hooks without compile-time Small Ships API access.",
       "scope": [
         "Extend the optional Small Ships compatibility layer with reflection-backed capability probes for carrier cargo container access, position/state inspection, and movement or destination support; keep the layer safe when Small Ships is absent or incompatible."
@@ -4771,14 +4957,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: focused compat tests cover supported carrier binding plus missing cargo/navigation capability states, with extra position/state coverage; runtime support probes return localized unsupported-carrier reason keys instead of binding unsupported carriers. Verification: tools/ai-context-proxy/bin/ctx log -- ./gradlew test --tests com.talhanation.bannermod.compat.SmallShipsSeaTradeCompatTest passed; tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava passed; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SHIPS-002B",
       "title": "Persist ship-backed sea-trade route execution state",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Sea-trade execution needs durable route state before cargo movement can survive ticks, reloads, missing ships, and arrivals.",
       "scope": [
         "Add a server-side sea-trade execution model that tracks route id, bound carrier id, source and destination storage areas, selected item filter, requested count, cargo count, loading/travelling/unloading/failed states, and clear failure reasons."
@@ -4791,14 +4983,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Focused BannerModSeaTradeExecutionRuntimeTest passed for no-carrier failure preserving route id; 2) same focused test passed load-start tracking carrier, source/destination storage, filter, requested count, and LOADING state; 3) same focused test passed deterministic TRAVELLING transition with clamped cargo count; 4) same focused test passed arrival-ready transition to UNLOADING; 5) same focused test passed unload-complete transition to COMPLETE with cargo cleared and NBT runtime round-trip; 6) same focused test passed explicit failure reason while preserving route id/carrier/storage identity for settlement feedback; compileJava passed; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SHIPS-002C",
       "title": "Move sea-trade cargo through settlement stockpiles",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "The visible route must change real stockpile contents rather than only summarize potential import/export capacity.",
       "scope": [
         "Wire sea-trade execution to existing StorageArea containers and TransportContainerExchange so a ship-backed route withdraws matching goods from the source, holds them as carrier cargo, and deposits them at the destination without creating a parallel economy."
@@ -4811,14 +5009,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) compileJava passed via ctx log; 2) focused BannerModSeaTradeExecutionRuntimeTest passed via ctx log; 3) compileGameTestJava passed for BannerModSeaTradeExecutionGameTests; 4) runGameTestServer executed the new sea-trade GameTests without listing them as failures after correction, while the overall task still failed on pre-existing unrelated required GameTests: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, courier mount/route scenarios, ownership/group transfer, and workerdeathreleasesactiveworkorderclaim."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SHIPS-002D",
       "title": "Surface sea-trade route progress and failures to players",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Players need to understand when sea trade is moving goods, waiting for a ship, blocked by cargo capacity, or completed.",
       "scope": [
         "Expose ship-backed route status lines through settlement snapshots and update player-facing guides/almanac for the Small Ships sea-trade loop and failure states."
@@ -4831,8 +5035,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Settlement feedback status lines: focused BannerModSettlementServiceTest seaTradeStatusLinesExposeExecutionProgressAndFailures passed, covering loading, travelling, unloading, completed, missing-ship, and blocked-cargo route states. 2) Snapshot/client propagation: focused BannerModSettlementClientMirrorTest governorViewCopiesSeaTradeStatusLinesIntoLogisticsLines passed, proving settlement snapshot sea-trade lines reach governor logistics feedback. 3) Player-facing docs: MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, docs/BANNERMOD_ALMANAC.html, and in-game almanac localization describe the Small Ships sea-trade loop and failure states. 4) compileJava passed; no GameTests touched, so compileGameTestJava was not required. 5) tools/backlog validate passed before closure."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-003A",
@@ -4973,6 +5183,30 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-29"
+    },
+    {
+      "id": "PERF-011A",
+      "title": "Run PERF-011 client large-crowd profiling proof",
+      "status": "in_progress",
+      "updated": "2026-04-29",
+      "why": "PERF-011 cannot honestly close until a real client before/after profiling run proves the distant recruit renderer cut improves large crowds without harming close-range selected readability.",
+      "scope": [
+        "Run a controlled client large-crowd recruit render profiling scenario against the pre-cut baseline and the PERF-011 implementation.",
+        "Record before/after recruit.render counter numbers for the large-crowd path and manually check close-range selected recruit readability."
+      ],
+      "acceptance": [
+        "Before/after profiling numbers show improved large-crowd recruit rendering on recruit.render counters.",
+        "Close-range selected recruits remain readable in the same client verification pass."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Batch execution reached PERF-011A as the only remaining ready task, but acceptance requires a real client before/after large-crowd recruit render profiling run and close-range selected-recruit readability check. This API session cannot perform that runtime client profiling, so the task remains open and unclosed."
+        }
+      ],
+      "verification": [],
+      "evidence": []
     }
   ]
 }

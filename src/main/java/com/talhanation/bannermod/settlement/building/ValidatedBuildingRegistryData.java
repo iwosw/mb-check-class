@@ -101,7 +101,6 @@ public class ValidatedBuildingRegistryData extends SavedData {
                 state,
                 current.capacity(),
                 current.qualityScore(),
-                current.assignedCitizenIds(),
                 current.validatedAtGameTime(),
                 checkedGameTime,
                 invalidSince
@@ -137,7 +136,6 @@ public class ValidatedBuildingRegistryData extends SavedData {
                 state,
                 result.capacity(),
                 result.qualityScore(),
-                current.assignedCitizenIds(),
                 validatedAt,
                 checkedGameTime,
                 invalidSince

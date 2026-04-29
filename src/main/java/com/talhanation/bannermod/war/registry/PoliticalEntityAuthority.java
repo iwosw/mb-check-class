@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.war.registry;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -9,6 +10,11 @@ import java.util.UUID;
 public final class PoliticalEntityAuthority {
     public static final String DENIAL_NOT_AUTHORIZED = "Only the political entity leader, an authorized republic co-leader, or an op can do that.";
     public static final String DENIAL_LEADER_ONLY = "Only the political entity leader (or an op) can do that.";
+    public static final String DENIAL_NOT_AUTHORIZED_KEY = "gui.bannermod.war.denial.not_authorized";
+    public static final String DENIAL_LEADER_ONLY_KEY = "gui.bannermod.war.denial.leader_only";
+    public static final String DENIAL_NO_STATE_KEY = "gui.bannermod.war.denial.no_state";
+    public static final String DENIAL_CO_LEADER_MONARCHY_KEY = "gui.bannermod.war.denial.co_leader_monarchy";
+    public static final String DENIAL_OUTSIDER_REPUBLIC_KEY = "gui.bannermod.war.denial.outsider_republic";
 
     private PoliticalEntityAuthority() {
     }
@@ -74,5 +80,26 @@ public final class PoliticalEntityAuthority {
             }
         }
         return false;
+    }
+
+    public static Component denialReason(@Nullable UUID actorUuid, boolean opPrivilege, @Nullable PoliticalEntityRecord record) {
+        return Component.translatable(denialReasonKey(actorUuid, opPrivilege, record));
+    }
+
+    public static String denialReasonKey(@Nullable UUID actorUuid, boolean opPrivilege, @Nullable PoliticalEntityRecord record) {
+        if (record == null) {
+            return DENIAL_NO_STATE_KEY;
+        }
+        if (canAct(actorUuid, opPrivilege, record)) {
+            return "gui.bannermod.war.denial.allowed";
+        }
+        if (actorUuid != null && record.coLeaderUuids().contains(actorUuid)
+                && (record.governmentForm() == null || !record.governmentForm().coLeadersShareAuthority())) {
+            return DENIAL_CO_LEADER_MONARCHY_KEY;
+        }
+        if (record.governmentForm() != null && record.governmentForm().coLeadersShareAuthority()) {
+            return DENIAL_OUTSIDER_REPUBLIC_KEY;
+        }
+        return DENIAL_LEADER_ONLY_KEY;
     }
 }

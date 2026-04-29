@@ -1,7 +1,5 @@
 package com.talhanation.bannermod.entity.civilian;
 
-import com.talhanation.bannermod.citizen.CitizenRoleContext;
-import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
@@ -36,23 +34,6 @@ final class WorkerControlAccess {
         if ((previous == null && boundWorkAreaUuid == null) || (previous != null && previous.equals(boundWorkAreaUuid))) {
             return;
         }
-        refreshSettlementSnapshot();
-    }
-
-    void rememberCurrentWorkAreaBinding() {
-        AbstractWorkAreaEntity workArea = this.worker.getCurrentWorkArea();
-        if (workArea == null) {
-            return;
-        }
-
-        this.boundWorkArea = workArea.getUUID();
-        this.worker.getCitizenRoleController().onBoundWorkAreaRemembered(new CitizenRoleContext(
-                this.worker.getCitizenRole(),
-                this.worker.getCitizenCore(),
-                this.worker,
-                null,
-                this.boundWorkArea
-        ));
         refreshSettlementSnapshot();
     }
 

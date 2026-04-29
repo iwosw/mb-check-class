@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PoliticalEntityAuthorityTest {
@@ -84,5 +85,17 @@ class PoliticalEntityAuthorityTest {
     void strictLeaderPolicyNeverAllowsCoLeaders() {
         assertFalse(PoliticalEntityAuthority.isLeaderOrOp(CO_LEADER, false, record(LEADER, GovernmentForm.REPUBLIC)));
         assertFalse(PoliticalEntityAuthority.isLeaderOrOp(CO_LEADER, false, record(LEADER, GovernmentForm.MONARCHY)));
+    }
+
+    @Test
+    void denialReasonDistinguishesLeadershipAndGovernmentForm() {
+        assertEquals(PoliticalEntityAuthority.DENIAL_CO_LEADER_MONARCHY_KEY,
+                PoliticalEntityAuthority.denialReasonKey(CO_LEADER, false, record(LEADER, GovernmentForm.MONARCHY)));
+        assertEquals(PoliticalEntityAuthority.DENIAL_OUTSIDER_REPUBLIC_KEY,
+                PoliticalEntityAuthority.denialReasonKey(OTHER, false, record(LEADER, GovernmentForm.REPUBLIC)));
+        assertEquals(PoliticalEntityAuthority.DENIAL_LEADER_ONLY_KEY,
+                PoliticalEntityAuthority.denialReasonKey(OTHER, false, record(LEADER)));
+        assertEquals("gui.bannermod.war.denial.allowed",
+                PoliticalEntityAuthority.denialReasonKey(LEADER, false, record(LEADER)));
     }
 }

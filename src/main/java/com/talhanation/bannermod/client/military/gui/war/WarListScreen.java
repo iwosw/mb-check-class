@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
+import com.talhanation.bannermod.network.messages.war.MessageResolveRevolt;
 import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
@@ -55,6 +56,8 @@ public class WarListScreen extends Screen {
     private int observedWarStateVersion = -1;
     @Nullable
     private WarDeclarationRecord selected;
+    @Nullable
+    private Component outcomeFeedback;
 
     private Button openAttackerBtn;
     private Button openDefenderBtn;
@@ -64,6 +67,8 @@ public class WarListScreen extends Screen {
     private Button cancelWarBtn;
     private Button occupyBtn;
     private Button annexBtn;
+    private Button revoltSuccessBtn;
+    private Button revoltFailBtn;
     private Button tributeLockedBtn;
     private Button statesBtn;
     private Button refreshBtn;
@@ -108,6 +113,10 @@ public class WarListScreen extends Screen {
                 .bounds(detailX, detailY - 24, 80, 18).build();
         tributeLockedBtn = Button.builder(text("gui.bannermod.war_list.tribute_locked"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE))
                 .bounds(detailX + 88, detailY - 24, 80, 18).build();
+        revoltSuccessBtn = Button.builder(text("gui.bannermod.war_list.revolt.resolve_success"), btn -> sendRevolt(RevoltState.SUCCESS))
+                .bounds(detailX, detailY - 68, 80, 18).build();
+        revoltFailBtn = Button.builder(text("gui.bannermod.war_list.revolt.resolve_fail"), btn -> sendRevolt(RevoltState.FAILED))
+                .bounds(detailX + 88, detailY - 68, 80, 18).build();
 
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
@@ -118,6 +127,8 @@ public class WarListScreen extends Screen {
         addRenderableWidget(cancelWarBtn);
         addRenderableWidget(occupyBtn);
         addRenderableWidget(annexBtn);
+        addRenderableWidget(revoltSuccessBtn);
+        addRenderableWidget(revoltFailBtn);
         addRenderableWidget(tributeLockedBtn);
         addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
@@ -142,7 +153,14 @@ public class WarListScreen extends Screen {
 
     private void sendOutcome(MessageResolveWarOutcome.Action action) {
         if (selected == null) return;
+        this.outcomeFeedback = text("gui.bannermod.war_list.feedback.pending");
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageResolveWarOutcome(selected.id(), action));
+    }
+
+    private void sendRevolt(RevoltState outcome) {
+        RevoltRecord revolt = firstPendingRevolt(selected);
+        if (revolt == null) return;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageResolveRevolt(revolt.id(), outcome));
     }
 
     private void openAllies() {
@@ -175,9 +193,7 @@ public class WarListScreen extends Screen {
         if (placeSiegeBtn != null) {
             placeSiegeBtn.active = has && leaderSideOf(selected) != null
                     && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
-            placeSiegeBtn.setTooltip(placeSiegeBtn.active ? null : Tooltip.create(has
-                    ? text("gui.bannermod.war_list.tooltip.active_leader_required")
-                    : text("gui.bannermod.war_list.tooltip.select_war")));
+            placeSiegeBtn.setTooltip(placeSiegeBtn.active ? null : Tooltip.create(placeSiegeDenial(has)));
         }
         if (alliesBtn != null) {
             alliesBtn.active = has;
@@ -188,32 +204,108 @@ public class WarListScreen extends Screen {
                 Player player = Minecraft.getInstance().player;
                 return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity) && entity.status().canDeclareOffensiveWar();
             });
-            declareBtn.setTooltip(declareBtn.active ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.no_declarer")));
+            declareBtn.setTooltip(declareBtn.active ? null : Tooltip.create(declareDenial()));
         }
         boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
         boolean attackerLeader = has && canLocalPlayerActFor(selected.attackerPoliticalEntityId());
+        boolean localOp = Minecraft.getInstance().player != null && Minecraft.getInstance().player.hasPermissions(2);
         if (cancelWarBtn != null) {
             cancelWarBtn.active = live && attackerLeader;
-            cancelWarBtn.setTooltip(cancelWarBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            cancelWarBtn.setTooltip(cancelWarBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected)));
         }
         if (occupyBtn != null) {
-            occupyBtn.active = live && attackerLeader;
-            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            boolean supported = has && selected.goalType() == WarGoalType.OCCUPATION;
+            occupyBtn.active = live && attackerLeader && supported;
+            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected, supported)));
         }
         if (annexBtn != null) {
-            annexBtn.active = live && attackerLeader;
-            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            boolean supported = has && selected.goalType() == WarGoalType.ANNEX_LIMITED_CHUNKS;
+            annexBtn.active = live && attackerLeader && supported;
+            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected, supported)));
         }
         if (tributeLockedBtn != null) {
-            tributeLockedBtn.active = false;
-            tributeLockedBtn.setTooltip(Tooltip.create(text("gui.bannermod.war_list.tooltip.op_only")));
+            boolean supported = has && selected.goalType() == WarGoalType.TRIBUTE;
+            tributeLockedBtn.setMessage(localOp ? text("gui.bannermod.war_list.tribute") : text("gui.bannermod.war_list.tribute_locked"));
+            tributeLockedBtn.active = live && attackerLeader && supported && localOp;
+            tributeLockedBtn.setTooltip(tributeLockedBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected, supported, localOp)));
+        }
+        RevoltRecord pendingRevolt = firstPendingRevolt(selected);
+        Player player = Minecraft.getInstance().player;
+        boolean op = player != null && player.hasPermissions(2);
+        Component revoltTooltip = revoltLockedTooltip(has, pendingRevolt != null, op);
+        if (revoltSuccessBtn != null) {
+            revoltSuccessBtn.active = pendingRevolt != null && op;
+            revoltSuccessBtn.setTooltip(revoltSuccessBtn.active ? null : Tooltip.create(revoltTooltip));
+        }
+        if (revoltFailBtn != null) {
+            revoltFailBtn.active = pendingRevolt != null && op;
+            revoltFailBtn.setTooltip(revoltFailBtn.active ? null : Tooltip.create(revoltTooltip));
         }
     }
 
-    private static Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar) {
+    private Component placeSiegeDenial(boolean hasSelection) {
+        if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
+        if (selected.state() == WarState.RESOLVED || selected.state() == WarState.CANCELLED) return text("gui.bannermod.war_list.tooltip.war_closed");
+        return sideAuthorityDenial(selected);
+    }
+
+    private Component declareDenial() {
+        Player player = Minecraft.getInstance().player;
+        UUID actor = player == null ? null : player.getUUID();
+        for (PoliticalEntityRecord entity : WarClientState.entities()) {
+            if (PoliticalEntityAuthority.canAct(actor, false, entity) && !entity.status().canDeclareOffensiveWar()) {
+                return text("gui.bannermod.war.denial.attacker_status", entity.status().name());
+            }
+        }
+        if (!WarClientState.entities().isEmpty()) {
+            return PoliticalEntityAuthority.denialReason(actor, false, WarClientState.entities().get(0));
+        }
+        return text("gui.bannermod.war_list.tooltip.no_declarer");
+    }
+
+    private Component sideAuthorityDenial(WarDeclarationRecord war) {
+        Player player = Minecraft.getInstance().player;
+        UUID actor = player == null ? null : player.getUUID();
+        PoliticalEntityRecord attacker = WarClientState.entityById(war.attackerPoliticalEntityId());
+        PoliticalEntityRecord defender = WarClientState.entityById(war.defenderPoliticalEntityId());
+        if (PoliticalEntityAuthority.canAct(actor, false, attacker)) return PoliticalEntityAuthority.denialReason(actor, false, defender);
+        return PoliticalEntityAuthority.denialReason(actor, false, attacker);
+    }
+
+    private Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar, @Nullable WarDeclarationRecord war) {
+        return outcomeLockedTooltip(hasSelection, liveWar, war, true, true);
+    }
+
+    private Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar, @Nullable WarDeclarationRecord war, boolean supportedGoal) {
+        return outcomeLockedTooltip(hasSelection, liveWar, war, supportedGoal, true);
+    }
+
+    private Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar, @Nullable WarDeclarationRecord war, boolean supportedGoal, boolean operatorRequiredMet) {
         if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
         if (!liveWar) return text("gui.bannermod.war_list.tooltip.war_closed");
-        return text("gui.bannermod.war_list.tooltip.attacker_leader_required");
+        if (!supportedGoal) return text("gui.bannermod.war_list.tooltip.unsupported_outcome");
+        if (!operatorRequiredMet) return text("gui.bannermod.war_list.tooltip.op_only");
+        PoliticalEntityRecord attacker = war == null ? null : WarClientState.entityById(war.attackerPoliticalEntityId());
+        Player player = Minecraft.getInstance().player;
+        return PoliticalEntityAuthority.denialReason(player == null ? null : player.getUUID(), false, attacker);
+    }
+
+    private static Component revoltLockedTooltip(boolean hasSelection, boolean hasPendingRevolt, boolean op) {
+        if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
+        if (!hasPendingRevolt) return text("gui.bannermod.war_list.tooltip.revolt_none_pending");
+        if (!op) return text("gui.bannermod.war_list.tooltip.op_only");
+        return text("gui.bannermod.war_list.tooltip.revolt_select_pending");
+    }
+
+    @Nullable
+    private RevoltRecord firstPendingRevolt(@Nullable WarDeclarationRecord war) {
+        if (war == null) return null;
+        for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
+            if (revolt.state() == RevoltState.PENDING) {
+                return revolt;
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -247,8 +339,16 @@ public class WarListScreen extends Screen {
         renderBattleWindowBanner(graphics);
         renderList(graphics, mouseX, mouseY);
         renderDetailPanel(graphics);
+        renderActionFeedback(graphics);
 
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderActionFeedback(GuiGraphics graphics) {
+        Component feedback = WarClientState.lastActionFeedback();
+        if (feedback == null || feedback.getString().isBlank()) return;
+        graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), W - 18),
+                guiLeft + 8, guiTop + 28, 0xFFFFDD88, false);
     }
 
     private void renderBattleWindowBanner(GuiGraphics graphics) {
@@ -291,10 +391,13 @@ public class WarListScreen extends Screen {
         }
 
         if (wars.isEmpty()) {
-            String empty = text(WarClientState.hasSnapshot()
+            boolean hasSnapshot = WarClientState.hasSnapshot();
+            int color = hasSnapshot ? 0xFF8FA8FF : 0xFFAAAAAA;
+            String empty = text(hasSnapshot
                     ? "gui.bannermod.war_list.empty"
                     : "gui.bannermod.war_list.waiting_sync").getString();
-            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + listH / 2 - 4, 0xAAAAAA);
+            graphics.renderOutline(listX + 8, listY + listH / 2 - 14, listW - 16, 28, color);
+            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + listH / 2 - 4, color);
         }
     }
 
@@ -326,12 +429,17 @@ public class WarListScreen extends Screen {
                 text("gui.bannermod.war_list.detail.occupations", occupationSummary(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.sieges", activeSiegeCount(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.revolts", revoltSummary(war.id())).getString(),
-                text("gui.bannermod.war_list.detail.outcome_ui").getString(),
+                text("gui.bannermod.war_list.detail.revolt_ui").getString(),
+                text("gui.bannermod.war_list.detail.outcome_ui", outcomeStatus(war)).getString(),
                 text("gui.bannermod.war_list.detail.consequences", consequenceSummary(war)).getString(),
                 text("gui.bannermod.war_list.detail.id", shortId(war.id())).getString()
         };
         for (String s : body) {
             graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, 0xFFFFFF, false);
+            line++;
+        }
+        if (outcomeFeedback != null && line < 18) {
+            graphics.drawString(font, font.plainSubstrByWidth(outcomeFeedback.getString(), w), x, y + 14 + line * 11, 0xFFDDCC77, false);
             line++;
         }
         for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
@@ -436,6 +544,16 @@ public class WarListScreen extends Screen {
         return text("gui.bannermod.common.none").getString();
     }
 
+    private String outcomeStatus(WarDeclarationRecord war) {
+        return switch (war.goalType()) {
+            case TRIBUTE -> text("gui.bannermod.war_list.outcome_status.tribute").getString();
+            case OCCUPATION -> text("gui.bannermod.war_list.outcome_status.occupation").getString();
+            case ANNEX_LIMITED_CHUNKS -> text("gui.bannermod.war_list.outcome_status.annex").getString();
+            case VASSALIZATION, REGIME_CHANGE -> text("gui.bannermod.war_list.outcome_status.admin_only").getString();
+            case WHITE_PEACE -> text("gui.bannermod.war_list.outcome_status.unsupported").getString();
+        };
+    }
+
     private String revoltPressureLine(RevoltRecord revolt) {
         String rebel = entityName(revolt.rebelEntityId());
         return switch (revolt.state()) {
@@ -503,6 +621,7 @@ public class WarListScreen extends Screen {
                 int idx = scrollOffset + row;
                 if (idx >= 0 && idx < wars.size()) {
                     selected = wars.get(idx);
+                    outcomeFeedback = null;
                     updateButtonsState();
                     return true;
                 }

@@ -1,33 +1,13 @@
 package com.talhanation.bannermod.network;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import de.maxhenkel.corelib.CommonRegistry;
+import com.talhanation.bannermod.network.catalog.CivilianPacketCatalog;
+import com.talhanation.bannermod.network.catalog.MilitaryPacketCatalog;
+import com.talhanation.bannermod.network.catalog.PacketCatalog;
+import com.talhanation.bannermod.network.catalog.WarPacketCatalog;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import com.talhanation.bannermod.network.compat.BannerModChannel;
-
-// Military network messages (migrated from recruits.network.*)
-import com.talhanation.bannermod.network.messages.military.*;
-
-// Civilian network messages (migrated from workers.network.*)
-import com.talhanation.bannermod.network.messages.civilian.*;
-
-// War network messages (warfare-RP runtime sync)
-import com.talhanation.bannermod.network.messages.war.MessageCancelAllyInvite;
-import com.talhanation.bannermod.network.messages.war.MessageDeclareWar;
-import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
-import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
-import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
-import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
-import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
-import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
-import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
-import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
-import com.talhanation.bannermod.network.messages.war.MessageRespondAllyInvite;
-import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
-import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
-import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityStatus;
-import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
 
 /**
  * Owns the single shared BannerModChannel for the merged bannermod runtime.
@@ -43,162 +23,14 @@ import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarSt
  */
 public class BannerModNetworkBootstrap {
 
-    /**
-     * Military message catalog (verbatim order from recruits.Main legacy setup).
-     * Registered at channel indices [0..MILITARY_MESSAGES.length).
-     * Count: 107.
-     */
-    @SuppressWarnings({"rawtypes"})
-    public static final Class[] MILITARY_MESSAGES = {
-        MessageMovement.class,
-        MessageCommandScreen.class,
-        MessageRecruitGui.class,
-        MessageHire.class,
-        MessageHireGui.class,
-        MessageDisband.class,
-        MessageRest.class,
-        MessageAttack.class,
-        MessageAggro.class,
-        MessageAggroGui.class,
-        MessageListen.class,
-        MessageProtectEntity.class,
-        MessageMountEntity.class,
-        MessageMountEntityGui.class,
-        MessageDismount.class,
-        MessageDismountGui.class,
-        MessageBackToMountEntity.class,
-        MessageRangedFire.class,
-        MessageStrategicFire.class,
-        MessageShields.class,
-        MessageGroup.class,
-        MessageSplitGroup.class,
-        MessageMergeGroup.class,
-        MessageDisbandGroup.class,
-        MessageSetLeaderGroup.class,
-        MessageRecruitCount.class,
-        MessageAssassinCount.class,
-        MessageAssassinGui.class,
-        MessageAssassinate.class,
-        MessageFaceCommand.class,
-        MessageTeleportPlayer.class,
-        MessageScoutTask.class,
-        MessageFollowGui.class,
-        MessageClearTarget.class,
-        MessageClearTargetGui.class,
-        MessageOpenSpecialScreen.class,
-        MessageOpenPromoteScreen.class,
-        MessageOpenDisbandScreen.class,
-        MessageToClientOpenNobleTradeScreen.class,
-        MessageHireFromNobleVillager.class,
-        MessageWriteSpawnEgg.class,
-        MessageDoPayment.class,
-        MessageUpkeepEntity.class,
-        MessageUpkeepPos.class,
-        MessageClearUpkeep.class,
-        MessageClearUpkeepGui.class,
-        MessageToClientUpdateOnlinePlayers.class,
-        MessageSendMessenger.class,
-        MessageAnswerMessenger.class,
-        MessageToClientOpenMessengerAnswerScreen.class,
-        MessageToClientUpdateMessengerScreen.class,
-        MessageToClientUpdateHireState.class,
-        MessageToClientUpdateClaim.class,
-        MessageToClientUpdateClaims.class,
-        MessageUpdateClaim.class,
-        MessageDeleteClaim.class,
-        MessageClaimIntent.class,
-        MessageToClientReceiveRoute.class,
-        MessageTransferRoute.class,
-        MessageToClientUpdateGroups.class,
-        MessageUpdateGroup.class,
-        MessageAssignGroupToPlayer.class,
-        MessageAssignGroupToCompanion.class,
-        MessageRemoveAssignedGroupFromCompanion.class,
-        MessageAssignNearbyRecruitsInGroup.class,
-        MessageApplyNoGroup.class,
-        MessageToClientUpdateUnitInfo.class,
-        MessageToClientUpdateLeaderScreen.class,
-        MessageSaveFormationFollowMovement.class,
-        MessageFormationFollowMovement.class,
-        MessagePatrolLeaderSetRoute.class,
-        MessagePatrolLeaderAddWayPoint.class,
-        MessagePatrolLeaderRemoveWayPoint.class,
-        MessagePatrolLeaderSetCycle.class,
-        MessagePatrolLeaderSetPatrolState.class,
-        MessagePatrolLeaderSetPatrollingSpeed.class,
-        MessagePatrolLeaderSetWaitTime.class,
-        MessagePatrolLeaderSetEnemyAction.class,
-        MessagePatrolLeaderSetInfoMode.class,
-        MessageToClientSetToast.class,
-        MessagePromoteRecruit.class,
-        MessageOpenGovernorScreen.class,
-        MessageToClientUpdateGovernorScreen.class,
-        MessageUpdateGovernorPolicy.class,
-        MessageDebugGui.class,
-        MessageDebugScreen.class,
-        MessageSelectRecruits.class,
-        MessageCombatStance.class,
-        MessageCombatStanceGui.class,
-        MessageAssignRecruitToPlayer.class,
-        MessageRequestFormationMapSnapshot.class,
-        MessageToClientUpdateFormationMapSnapshot.class,
-        MessageFormationMapMoveOrder.class,
-        MessageFormationMapEngage.class,
-    };
+    public static final Class<?>[] MILITARY_MESSAGES = MilitaryPacketCatalog.MESSAGES;
+    public static final Class<?>[] CIVILIAN_MESSAGES = CivilianPacketCatalog.MESSAGES;
+    public static final Class<?>[] WAR_MESSAGES = WarPacketCatalog.MESSAGES;
 
-    /**
-     * Civilian message catalog (verbatim order from workers.WorkersMain legacy setup, minus
-     * the dead {@code MessageAddWorkArea} slot retired in 2026-04 — see SETTLEMENT-002).
-     * Registered at channel indices [MILITARY_MESSAGES.length..MILITARY_MESSAGES.length+CIVILIAN_MESSAGES.length).
-     * Count: 22. workerPacketOffset == MILITARY_MESSAGES.length == 107.
-     */
-    @SuppressWarnings({"rawtypes"})
-    public static final Class[] CIVILIAN_MESSAGES = {
-        MessageToClientOpenWorkAreaScreen.class,
-        MessageUpdateWorkArea.class,
-        MessageUpdateCropArea.class,
-        MessageUpdateLumberArea.class,
-        MessageUpdateBuildArea.class,
-        MessageUpdateMiningArea.class,
-        MessageUpdateMerchantTrade.class,
-        MessageUpdateMerchant.class,
-        MessageDoTradeWithMerchant.class,
-        MessageOpenMerchantEditTradeScreen.class,
-        MessageOpenMerchantTradeScreen.class,
-        MessageToClientUpdateConfig.class,
-        MessageUpdateStorageArea.class,
-        MessageUpdateAnimalPenArea.class,
-        MessageRotateWorkArea.class,
-        MessageMoveMerchantTrade.class,
-        MessageUpdateMarketArea.class,
-        MessageUpdateOwner.class,
-        MessageRecoverWorkerControl.class,
-        MessageRequestPlaceBuilding.class,
-        MessageRequestValidateBuilding.class,
-        MessageRequestRegisterBuilding.class,
-    };
-
-    /**
-     * War message catalog. Registered after civilian packets at indices
-     * [MILITARY_MESSAGES.length + CIVILIAN_MESSAGES.length .. ).
-     */
-    @SuppressWarnings({"rawtypes"})
-    public static final Class[] WAR_MESSAGES = {
-        MessageToClientUpdateWarState.class,
-        MessageCreatePoliticalEntity.class,
-        MessageRenamePoliticalEntity.class,
-        MessageSetPoliticalEntityCapital.class,
-        MessagePlaceSiegeStandardHere.class,
-        MessageSetGovernmentForm.class,
-        MessageInviteAlly.class,
-        MessageRespondAllyInvite.class,
-        MessageCancelAllyInvite.class,
-        MessageSetPoliticalEntityColor.class,
-        MessageSetPoliticalEntityCharter.class,
-        MessageDeclareWar.class,
-        MessageResolveWarOutcome.class,
-        MessageUpdateCoLeader.class,
-        MessageSetPoliticalEntityStatus.class,
+    private static final PacketCatalog[] PACKET_CATALOGS = {
+        MilitaryPacketCatalog.CATALOG,
+        CivilianPacketCatalog.CATALOG,
+        WarPacketCatalog.CATALOG,
     };
 
     private BannerModNetworkBootstrap() {
@@ -213,17 +45,10 @@ public class BannerModNetworkBootstrap {
         return MILITARY_MESSAGES.length;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(BannerModMain.MOD_ID);
-        for (Class clazz : MILITARY_MESSAGES) {
-            CommonRegistry.registerMessage(registrar, clazz);
-        }
-        for (Class clazz : CIVILIAN_MESSAGES) {
-            CommonRegistry.registerMessage(registrar, clazz);
-        }
-        for (Class clazz : WAR_MESSAGES) {
-            CommonRegistry.registerMessage(registrar, clazz);
+        for (PacketCatalog catalog : PACKET_CATALOGS) {
+            catalog.register(registrar);
         }
     }
 
