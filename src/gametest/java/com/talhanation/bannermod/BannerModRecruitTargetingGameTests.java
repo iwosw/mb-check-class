@@ -11,6 +11,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Zombie;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -60,6 +62,26 @@ public class BannerModRecruitTargetingGameTests {
         helper.succeed();
     }
 
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void recruitAcceptsValidEnemyRejectsAllyAndDropsDeadTarget(GameTestHelper helper) {
+        AbstractRecruitEntity recruit = spawnRecruit(helper, new BlockPos(2, 2, 2), "targeting-attacker", OWNER_UUID, OWNER_FACTION);
+        AbstractRecruitEntity ally = spawnRecruit(helper, new BlockPos(3, 2, 2), "targeting-ally", OWNER_UUID, OWNER_FACTION);
+        Zombie enemy = spawnZombie(helper, new BlockPos(4, 2, 2));
+
+        helper.assertTrue(recruit.canAttack(enemy),
+                "Expected recruit targeting to accept a live hostile mob");
+        helper.assertFalse(recruit.canAttack(ally),
+                "Expected recruit targeting to reject a same-owner/team ally");
+
+        recruit.setTarget(enemy);
+        enemy.kill();
+        recruit.tick();
+        helper.assertTrue(recruit.getTarget() == null,
+                "Expected recruit runtime to drop a dead/stale target on tick");
+        helper.succeed();
+    }
+
     private static ServerPlayer createPlayer(ServerLevel level, BlockPos spawnPos, UUID playerId, String name, String factionId) {
         ServerPlayer player = (ServerPlayer) BannerModDedicatedServerGameTestSupport.createPositionedFakeServerPlayer(level, playerId, name, spawnPos);
         BannerModDedicatedServerGameTestSupport.ensureFaction(level, factionId, playerId, name);
@@ -78,6 +100,21 @@ public class BannerModRecruitTargetingGameTests {
         BannerModDedicatedServerGameTestSupport.joinTeam(helper.getLevel(), factionId, recruit);
         recruit.setAggroState(1);
         return recruit;
+    }
+
+    private static Zombie spawnZombie(GameTestHelper helper, BlockPos relativePos) {
+        Zombie zombie = EntityType.ZOMBIE.create(helper.getLevel());
+        if (zombie == null) {
+            throw new IllegalArgumentException("Failed to create zombie test target");
+        }
+        BlockPos absolutePos = helper.absolutePos(relativePos);
+        zombie.moveTo(absolutePos.getX() + 0.5D, absolutePos.getY(), absolutePos.getZ() + 0.5D, 0.0F, 0.0F);
+        zombie.setPersistenceRequired();
+        zombie.setHealth(zombie.getMaxHealth());
+        if (!helper.getLevel().addFreshEntity(zombie)) {
+            throw new IllegalArgumentException("Failed to insert zombie test target");
+        }
+        return zombie;
     }
 
     private static void declareWar(ServerLevel level, String attackerFaction, String defenderFaction) {

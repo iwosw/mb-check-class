@@ -4526,8 +4526,8 @@
     {
       "id": "VANILLA-012",
       "title": "Add combat and targeting regression tests",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Replacing target acquisition and attack flows needs checks that prove recruits still fight valid targets and reject invalid ones.",
       "scope": [
         "Add GameTests or the cheapest executable verification for target filtering, target retention/drop, melee attack, ranged attack, ammo/projectile behavior, and authority/team restrictions."
@@ -4541,8 +4541,14 @@
         "VANILLA-009"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Targeting coverage: BannerModRecruitTargetingGameTests.recruitDropsProtectedClaimTargetAndRetainsWarTarget covers protected claim denial and valid declared-war enemy retention; BannerModRecruitTargetingGameTests.recruitAcceptsValidEnemyRejectsAllyAndDropsDeadTarget covers valid hostile mob targeting, same-owner/team ally rejection, and stale dead-target dropping. 2) Combat/ranged coverage: BannerModRecruitMeleeGameTests.recruitMeleeDamagesValidEnemy covers melee damage; BannerModCombatStanceCommandGameTests.rangedBowShotSpawnsProjectileAndAmmoRulesRemainObservable covers ranged projectile firing and ammo requirements; crossbowRangedGoalRejectsFriendlyTargets covers ranged ally authority rejection. 3) Workflow evidence: ctx log -- ./gradlew compileJava passed; ctx log -- ./gradlew compileGameTestJava passed; ctx log -- ./gradlew verifyGameTestStage ran but failed only unrelated required tests primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, sharedownershipkeepsplayercycleauthorityaligned, reconnectedownerrecoversauthorityafterownershiproundtrip, grouptransferupdatesgroupandmembersfromtrustedplayer, and courierusesnearbyhorseonsupportedroute; VANILLA-012 combat/targeting tests were not listed as failing."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-013",
