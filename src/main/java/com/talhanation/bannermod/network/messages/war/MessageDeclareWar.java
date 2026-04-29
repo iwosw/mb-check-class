@@ -53,14 +53,14 @@ public class MessageDeclareWar implements BannerModMessage<MessageDeclareWar> {
         Optional<PoliticalEntityRecord> attacker = registry.byId(this.attackerId);
         Optional<PoliticalEntityRecord> defender = registry.byId(this.defenderId);
         if (attacker.isEmpty() || defender.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Political entity not found."));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.entity_not_found"));
             return;
         }
 
         WarDeclarationService.Result result = WarDeclarationService.declare(
                 player.server, level, player.getUUID(), player.hasPermissions(2),
                 attacker.get(), defender.get(), decodeGoal(this.goalOrdinal), this.casusBelli);
-        player.sendSystemMessage(result.message());
+        sendFeedback(player, result.message());
         if (result.success()) {
             CompoundTag payload = WarClientState.encode(
                     registry.all(),
@@ -73,6 +73,12 @@ public class MessageDeclareWar implements BannerModMessage<MessageDeclareWar> {
             BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                     new MessageToClientUpdateWarState(payload));
         }
+    }
+
+    private static void sendFeedback(ServerPlayer player, Component message) {
+        player.sendSystemMessage(message);
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
+                new MessageToClientWarActionFeedback(message));
     }
 
     private static WarGoalType decodeGoal(byte ordinal) {

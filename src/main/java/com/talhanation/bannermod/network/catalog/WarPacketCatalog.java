@@ -13,6 +13,7 @@ import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityC
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCharter;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityStatus;
+import com.talhanation.bannermod.network.messages.war.MessageToClientWarActionFeedback;
 import com.talhanation.bannermod.network.messages.war.MessageToClientUpdateWarState;
 import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 
@@ -22,6 +23,7 @@ public final class WarPacketCatalog {
 
     public static final Class<?>[] MESSAGES = {
         MessageToClientUpdateWarState.class,
+        MessageToClientWarActionFeedback.class,
         MessageCreatePoliticalEntity.class,
         MessageRenamePoliticalEntity.class,
         MessageSetPoliticalEntityCapital.class,

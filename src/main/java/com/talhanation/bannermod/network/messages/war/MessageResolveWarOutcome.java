@@ -8,6 +8,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.config.WarServerConfig;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
 import com.talhanation.bannermod.war.rp.WarNoticeService;
@@ -59,7 +60,7 @@ public class MessageResolveWarOutcome implements BannerModMessage<MessageResolve
         WarDeclarationRuntime declarations = WarRuntimeContext.declarations(level);
         Optional<WarDeclarationRecord> warOpt = declarations.byId(this.warId);
         if (warOpt.isEmpty()) {
-            player.sendSystemMessage(Component.literal("War declaration not found."));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.war_not_found"));
             return;
         }
         WarDeclarationRecord war = warOpt.get();
@@ -67,30 +68,36 @@ public class MessageResolveWarOutcome implements BannerModMessage<MessageResolve
         PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
         Optional<PoliticalEntityRecord> attacker = registry.byId(war.attackerPoliticalEntityId());
         if (action == Action.TRIBUTE && !player.hasPermissions(2)) {
-            player.sendSystemMessage(Component.literal("Tribute outcomes are op-only."));
+            sendFeedback(player, Component.translatable("gui.bannermod.war_list.tooltip.op_only"));
             return;
         }
-        if (attacker.isEmpty() || !com.talhanation.bannermod.war.registry.PoliticalEntityAuthority.canAct(player, attacker.get())) {
-            player.sendSystemMessage(Component.literal(com.talhanation.bannermod.war.registry.PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
+        if (attacker.isEmpty() || !PoliticalEntityAuthority.canAct(player, attacker.get())) {
+            sendFeedback(player, PoliticalEntityAuthority.denialReason(player.getUUID(), player.hasPermissions(2), attacker.orElse(null)));
             return;
         }
 
         WarOutcomeApplier.Result result = apply(action, player, level, war);
         if (!result.valid()) {
-            player.sendSystemMessage(Component.literal("Outcome rejected: " + result.reason()));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.outcome", result.reason()));
             return;
         }
 
         WarDeclarationRecord finalWar = declarations.byId(war.id()).orElse(war);
         if (action == Action.CANCEL) {
             WarNoticeService.broadcastCancelled(player.server, finalWar, registry);
-            player.sendSystemMessage(Component.literal("War cancelled."));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.war_cancelled"));
         } else {
             String outcomeName = result.outcome() == null ? "RESOLVED" : result.outcome().name();
             WarNoticeService.broadcastOutcome(player.server, finalWar, registry, outcomeName);
-            player.sendSystemMessage(Component.literal("War resolved: " + outcomeName));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.war_resolved", outcomeName));
         }
         sendSnapshot(player, level, registry);
+    }
+
+    private static void sendFeedback(ServerPlayer player, Component message) {
+        player.sendSystemMessage(message);
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
+                new MessageToClientWarActionFeedback(message));
     }
 
     private static WarOutcomeApplier.Result apply(Action action, ServerPlayer player, ServerLevel level, WarDeclarationRecord war) {

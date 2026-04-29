@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -37,7 +38,7 @@ public class WarDeclareScreen extends Screen {
     private Button declareButton;
 
     public WarDeclareScreen(Screen parent) {
-        super(Component.literal("Declare War"));
+        super(Component.translatable("gui.bannermod.war_list.declare"));
         this.parent = parent;
     }
 
@@ -61,7 +62,7 @@ public class WarDeclareScreen extends Screen {
         addRenderableWidget(this.goalButton);
         addRenderableWidget(this.casusBelliBox);
 
-        this.declareButton = Button.builder(Component.literal("Declare"), btn -> declareWar())
+        this.declareButton = Button.builder(Component.translatable("gui.bannermod.war_list.declare"), btn -> declareWar())
                 .bounds(guiLeft + 10, guiTop + H - 28, 80, 18).build();
         addRenderableWidget(this.declareButton);
         addRenderableWidget(Button.builder(Component.literal("Cancel"), btn -> onClose())
@@ -121,6 +122,7 @@ public class WarDeclareScreen extends Screen {
         this.attackerButton.active = this.attackers.size() > 1;
         this.defenderButton.active = this.defenders.size() > 1;
         this.declareButton.active = attacker != null && defender != null;
+        this.declareButton.setTooltip(this.declareButton.active ? null : Tooltip.create(declareDenial()));
     }
 
     private void declareWar() {
@@ -165,12 +167,35 @@ public class WarDeclareScreen extends Screen {
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xD0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
         graphics.drawCenteredString(font, this.title.getString(), guiLeft + W / 2, guiTop + 8, 0xFFFFFF);
-        graphics.drawString(font, "Pick sides, goal, and optional casus belli.", guiLeft + 10, guiTop + 18, 0xCCCCCC, false);
-        graphics.drawString(font, "Casus belli", guiLeft + 155, guiTop + 48, 0xAAAAAA, false);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_declare.hint"), guiLeft + 10, guiTop + 18, 0xCCCCCC, false);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_declare.casus"), guiLeft + 155, guiTop + 48, 0xAAAAAA, false);
         if (this.attackers.isEmpty()) {
-            graphics.drawString(font, "No leader-controlled state can declare war.", guiLeft + 10, guiTop + 86, 0xFFFF8888, false);
+            graphics.drawString(font, font.plainSubstrByWidth(declareDenial().getString(), W - 20), guiLeft + 10, guiTop + 86, 0xFFFF8888, false);
         }
+        renderActionFeedback(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private Component declareDenial() {
+        Player player = Minecraft.getInstance().player;
+        UUID actor = player == null ? null : player.getUUID();
+        if (attackers.isEmpty()) {
+            if (!WarClientState.entities().isEmpty()) {
+                return PoliticalEntityAuthority.denialReason(actor, false, WarClientState.entities().get(0));
+            }
+            return Component.translatable("gui.bannermod.war_list.tooltip.no_declarer");
+        }
+        if (defenders.isEmpty()) {
+            return Component.translatable("gui.bannermod.war.denial.no_defender");
+        }
+        return Component.translatable("gui.bannermod.war_list.tooltip.no_declarer");
+    }
+
+    private void renderActionFeedback(GuiGraphics graphics) {
+        Component feedback = WarClientState.lastActionFeedback();
+        if (feedback == null || feedback.getString().isBlank()) return;
+        graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), W - 20),
+                guiLeft + 10, guiTop + H - 44, 0xFFFFDD88, false);
     }
 
     @Override
