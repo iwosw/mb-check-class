@@ -19,8 +19,6 @@ public class RecruitVillagerModel extends HumanoidModel<AbstractRecruitEntity> {
             return !parts.isEmpty();
         }).collect(ImmutableList.toImmutableList());
     }
-    //VillagerModel
-    //PlayerModel
     public static LayerDefinition createLayerDefinition() {
         MeshDefinition meshdefinition = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);
         PartDefinition partdefinition = meshdefinition.getRoot();
