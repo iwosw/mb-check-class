@@ -3888,7 +3888,7 @@
     {
       "id": "RENDER-003",
       "title": "Rewrite recruit entity renderer base",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-29",
       "why": "Recruit entity rendering should be owned BannerMod code instead of fragile patched renderer subclasses.",
       "scope": [
@@ -3915,8 +3915,14 @@
           "text": "RENDER-003A evidence: compileJava passed; code-path inspection of AbstractRecruitRenderer, RecruitHumanRenderer, and RecruitVillagerRenderer confirms human/villager texture selection is unchanged, model layer selection is explicit, nameplate rendering still delegates through MobRenderer with RecruitRenderLod gating, and profiling categories remain recorded around animation_pose, normal render, texture switches, and nameplates."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Human/villager recruit renderer parity: RENDER-003A is done with recorded parity evidence; RecruitRendererParitySourceTest passed and verifies model selection, texture selection, layer stack, nameplate hooks, and profiling bucket names. 2) compile/render gate: tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava passed. 3) Vanilla-copy cleanup: AbstractRecruitRenderer, RecruitHumanRenderer, and RecruitVillagerRenderer were inspected; the base delegates to MobRenderer APIs and contains only owned model-property/nameplate/profiling glue, with no copied vanilla renderer body."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-004",
