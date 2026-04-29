@@ -3021,8 +3021,8 @@
     {
       "id": "AUTH-008",
       "title": "Test command authority hierarchy",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "AUTH-005 closure requires verification for owner, teammate, and nation-level command cases.",
       "scope": [
         "Add focused tests covering owner, teammate, admin override, and nation-level supported or denied command authority flows."
@@ -3035,8 +3035,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Owner/teammate/admin/nation hierarchy coverage: ./gradlew test --tests com.talhanation.bannermod.network.messages.military.CommandTargetingAuthorityTest passed, covering owner, teammate, outsider-admin override, and explicitly unsupported nation/outsider denial through CommandHierarchy and CommandTargeting. 2) Packet-path/GameTest coverage: src/gametest/java/com/talhanation/bannermod/BannerModMultiplayerAuthorityConflictGameTests.java now explicitly exercises owner and teammate MessageFollowGui paths, admin MessageRest path, and unsupported nation/outsider MessageRest denial; ./gradlew compileGameTestJava passed. 3) compileJava passed. 4) ./gradlew verifyGameTestStage was run; it failed on unrelated non-authority tests (primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, sharedownershipkeepsplayercycleauthorityaligned, courierusesnearbyhorseonsupportedroute, workerdeathreleasesactiveworkorderclaim), with no AUTH-008 authority GameTests listed as failed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SYNC-002",
