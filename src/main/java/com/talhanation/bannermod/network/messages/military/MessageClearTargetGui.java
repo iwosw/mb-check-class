@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
@@ -30,8 +31,8 @@ public class MessageClearTargetGui implements BannerModMessage<MessageClearTarge
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
-        if (recruit != null) {
-            CommandEvents.onClearTargetButton(this.player, recruit, null);
+        if (recruit != null && RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
+            CommandEvents.onClearTargetButton(recruit.getOwnerUUID(), recruit, null);
         }
     }
 

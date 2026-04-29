@@ -2989,8 +2989,8 @@
     {
       "id": "AUTH-007",
       "title": "Apply command authority roles across entry points",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "AUTH-005 requires the canonical authority model to be enforced consistently, not only documented.",
       "scope": [
         "Apply AUTH-006 authority semantics across recruit command packets and related UI affordances."
@@ -3003,8 +3003,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: owner/teammate/admin/unsupported nation authority semantics are covered by CommandTargetingAuthorityTest, which passed via ctx log -- ./gradlew test --tests com.talhanation.bannermod.network.messages.military.CommandTargetingAuthorityTest; representative command entry points are covered by BannerModMultiplayerAuthorityConflictGameTests owner movement, teammate MessageFollowGui, admin MessageRest, and unsupported nation/outsider MessageRest cases. compileJava and compileGameTestJava passed. verifyGameTestStage remains red only on unrelated tests: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, sharedownershipkeepsplayercycleauthorityaligned, unmountedcourierinspectionreportsfootfallback, workerdeathreleasesactiveworkorderclaim; AUTH-007 tests are not failing."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "AUTH-008",
