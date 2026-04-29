@@ -3927,8 +3927,8 @@
     {
       "id": "RENDER-004",
       "title": "Rewrite recruit cosmetic model layers",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Team color, biome, companion, and head layers still carry old model rendering assumptions and should be rebuilt around 1.21 model APIs.",
       "scope": [
         "Rewrite recruit cosmetic layers for team color, biome, companion marker, and custom head rendering using 1.21 tint/color and profile APIs."
@@ -3941,8 +3941,14 @@
         "RENDER-003"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Cosmetic layer compile/behavior guard: tools/ai-context-proxy/bin/ctx log -- ./gradlew test --tests com.talhanation.bannermod.client.military.render.RecruitCosmeticLayerSourceTest passed; the test verifies team-color texture ranges and base cloth, biome texture selection, companion marker gating/textures, and skull/head item APIs using ResolvableProfile/DataComponents.PROFILE and ItemDisplayContext.HEAD. 2) Current color API: ctx search for legacy float/p_ renderToBuffer color calls in recruit cosmetic layers returned 0 matches; layers use the 1.21 packed ARGB renderToBuffer path with FULL_WHITE. 3) compileJava passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-005",

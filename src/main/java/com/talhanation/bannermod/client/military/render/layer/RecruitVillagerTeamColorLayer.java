@@ -13,10 +13,9 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
-;
-
 
 public class RecruitVillagerTeamColorLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
+    private static final int FULL_WHITE = 0xFFFFFFFF;
 
     private static final ResourceLocation[] TEXTURE = {
             ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/villager/villager_team_white.png"),
@@ -50,7 +49,7 @@ public class RecruitVillagerTeamColorLayer extends RenderLayer<AbstractRecruitEn
         super(renderer);
     }
 
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int p_117722_, AbstractRecruitEntity recruit, float p_117724_, float p_117725_, float p_117726_, float p_117727_, float p_117728_, float p_117729_) {
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, AbstractRecruitEntity recruit, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         if(recruit.isInvisible() || !RecruitRenderLod.shouldRenderCosmeticModelLayer(recruit)){
             RecruitRenderProfiling.layerSkipped("team_color");
             return;
@@ -58,10 +57,10 @@ public class RecruitVillagerTeamColorLayer extends RenderLayer<AbstractRecruitEn
         RecruitRenderProfiling.textureStateSwitch("team_color");
         long start = RecruitRenderProfiling.start();
         if (recruit.getTeam() != null) {
-            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE[recruit.getColor()])), p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE[recruit.getColor()])), packedLight, OverlayTexture.NO_OVERLAY, FULL_WHITE);
         }
         else{
-            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE2)), p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+            this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(TEXTURE2)), packedLight, OverlayTexture.NO_OVERLAY, FULL_WHITE);
         }
         RecruitRenderProfiling.layerDuration("team_color", start);
     }

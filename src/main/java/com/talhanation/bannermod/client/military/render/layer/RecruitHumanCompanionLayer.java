@@ -16,13 +16,14 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
 public class RecruitHumanCompanionLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
+    private static final int FULL_WHITE = 0xFFFFFFFF;
 
     private static final ResourceLocation LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/human/human_assassin_cloth.png");
     public RecruitHumanCompanionLayer(LivingEntityRenderer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> renderer) {
         super(renderer);
     }
 
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int p_117722_, AbstractRecruitEntity recruit, float p_117724_, float p_117725_, float p_117726_, float p_117727_, float p_117728_, float p_117729_) {
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, AbstractRecruitEntity recruit, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         if(recruit.isInvisible() || !(recruit instanceof ICompanion) || !RecruitRenderLod.shouldRenderCosmeticModelLayer(recruit)){
             RecruitRenderProfiling.layerSkipped("companion");
             return;
@@ -30,7 +31,7 @@ public class RecruitHumanCompanionLayer extends RenderLayer<AbstractRecruitEntit
         RecruitRenderProfiling.textureStateSwitch("companion");
         long start = RecruitRenderProfiling.start();
         VertexConsumer vertexconsumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(LOCATION));
-        this.getParentModel().renderToBuffer(poseStack, vertexconsumer, p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+        this.getParentModel().renderToBuffer(poseStack, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, FULL_WHITE);
         RecruitRenderProfiling.layerDuration("companion", start);
     }
 
