@@ -4448,8 +4448,8 @@
     {
       "id": "VANILLA-010",
       "title": "Rewrite entity interaction helpers",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Entity helper methods around equipment, mounts, leash, spawn, and inventory often drift across Minecraft versions when copied from vanilla behavior.",
       "scope": [
         "Rewrite recruit entity helper flows for equipment slots, spawn data, mounts/saddles, leash behavior, item pickup/use, and inventory serialization around current public APIs."
@@ -4461,9 +4461,24 @@
       "dependencies": [
         "VANILLA-001"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Added focused GameTest source BannerModRecruitEntityHelperGameTests.recruitEquipmentSlotsAndInventorySurviveSaveLoad covering in-world recruit equipment slot resolution, replacement eligibility, equipment save/load, inventory mirror preservation, and non-equipment inventory serialization. Verification attempted with tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage; result: FAILED before tests ran during GameTest server bootstrap at VillagerEvents.villagerTrades because RecruitsServerConfig.RecruitsVillagerRecruitMap.get() was read before config load. compileGameTestJava passed."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "GameTest evidence on feature/vanilla-010: ran tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage. The VANILLA-010 scenario BannerModRecruitEntityHelperGameTests.recruitEquipmentSlotsAndInventorySurviveSaveLoad executed; after fixes it was not listed among failing tests in the final run, so the VANILLA-010 GameTest passed. Full gate still failed due unrelated failures: repairedhouserevalidationreturnstovalid, unmountedcourierinspectionreportsfootfallback, reconnectedownerrecoversauthorityafterownershiproundtrip (CropArea.addAdditionalSaveData empty ItemStack), mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, claimgrownfarmerseedscropareafrompreparedfield, courierfallsbackwhennomountavailable, grouptransferupdatesgroupandmembersfromtrustedplayer, courierusesnearbyhorseonsupportedroute. Also ran tools/ai-context-proxy/bin/ctx log -- ./gradlew compileGameTestJava: BUILD SUCCESSFUL."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Audited recruit flows for spawn data, equipment slots, mounts/saddles, leash behavior, item pickup/use, and inventory serialization. Replaced obsolete copied equipment-slot/replacement helper logic in AbstractInventoryEntity with current ItemStack/Mob APIs while preserving recruit inventory mirroring. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava: BUILD SUCCESSFUL."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-011",
