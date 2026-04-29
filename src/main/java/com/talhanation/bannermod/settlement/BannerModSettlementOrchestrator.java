@@ -19,7 +19,6 @@ import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentSav
 import com.talhanation.bannermod.settlement.household.HomePreference;
 import com.talhanation.bannermod.settlement.job.JobExecutionContext;
 import com.talhanation.bannermod.settlement.job.JobHandlerRegistry;
-import com.talhanation.bannermod.settlement.project.BannerModBuildAreaProjectBridge;
 import com.talhanation.bannermod.settlement.project.BannerModSettlementProjectRuntime;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublishContext;
 import com.talhanation.bannermod.settlement.workorder.SettlementWorkOrderPublisherRegistry;
@@ -138,10 +137,10 @@ public final class BannerModSettlementOrchestrator {
                 MAX_GROWTH_QUEUE_SIZE
         );
         state.projectRuntime.tickClaim(
-                null,
+                level,
                 snapshot.claimUuid(),
                 growthQueue,
-                new BannerModBuildAreaProjectBridge.NoopBuildAreaResolver(),
+                BannerModSettlementProjectRuntime.buildAreaResolver(level),
                 gameTime
         );
 

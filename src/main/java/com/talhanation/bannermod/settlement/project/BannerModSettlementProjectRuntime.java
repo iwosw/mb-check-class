@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.project;
 
+import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.settlement.growth.PendingProject;
 import net.minecraft.server.level.ServerLevel;
 
@@ -17,9 +18,6 @@ import java.util.UUID;
  * <p>Settlement-service code (arriving in slice D) feeds freshly scored
  * {@link PendingProject growth queues} in and receives {@link ProjectAssignment}s
  * back. Queue state is persisted through {@link BannerModSettlementProjectSavedData}.
- * A real resolver is not bundled here — callers supply one, falling back to
- * {@link BannerModBuildAreaProjectBridge.NoopBuildAreaResolver} when the production
- * resolver is not yet available.
  */
 public final class BannerModSettlementProjectRuntime {
 
@@ -59,6 +57,13 @@ public final class BannerModSettlementProjectRuntime {
         return bridge;
     }
 
+    public static BannerModBuildAreaProjectBridge.BuildAreaResolver buildAreaResolver(ServerLevel level) {
+        if (level == null || ClaimEvents.recruitsClaimManager == null) {
+            return new BannerModBuildAreaProjectBridge.NoopBuildAreaResolver();
+        }
+        return new BannerModBuildAreaProjectBridge.ClaimManagerBuildAreaResolver(level, ClaimEvents.recruitsClaimManager);
+    }
+
     /**
      * Feed a newly scored growth queue into the scheduler and attempt to bind the head project
      * to a BuildArea. Returns the resulting {@link ProjectAssignment} when binding succeeds.
@@ -92,7 +97,7 @@ public final class BannerModSettlementProjectRuntime {
     /**
      * Static convenience overload matching the signature promised to downstream callers.
      * Resolves or creates the runtime for {@code level} and delegates to the instance method
-     * with a {@link BannerModBuildAreaProjectBridge.NoopBuildAreaResolver}.
+     * with a live BuildArea resolver when claim state is available.
      */
     public static Optional<ProjectAssignment> tickClaim(ServerLevel level, UUID claimUuid, List<PendingProject> growthQueue) {
         if (level == null || claimUuid == null) {
@@ -100,8 +105,7 @@ public final class BannerModSettlementProjectRuntime {
         }
         BannerModSettlementProjectRuntime runtime = forServer(level);
         long gameTime = level.getGameTime();
-        return runtime.tickClaim(level, claimUuid, growthQueue,
-                new BannerModBuildAreaProjectBridge.NoopBuildAreaResolver(), gameTime);
+        return runtime.tickClaim(level, claimUuid, growthQueue, buildAreaResolver(level), gameTime);
     }
 
     /** Defensive copy of the scheduler's current queue for {@code claimUuid}. */
