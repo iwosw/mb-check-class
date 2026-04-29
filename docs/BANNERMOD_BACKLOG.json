@@ -4577,8 +4577,8 @@
     {
       "id": "VANILLA-013",
       "title": "Remove remaining vanilla-derived gameplay leftovers",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "After gameplay rewrites, stale copied vanilla-derived code should not remain as hidden maintenance debt.",
       "scope": [
         "Delete unused old pathfinding, navigation, NodeEvaluator, targeting, combat, and entity-helper implementations; document any retained vanilla API references and why they are unavoidable."
@@ -4593,8 +4593,14 @@
         "VANILLA-012"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance 1: removed the unreachable debug sync worker GroundPathNavigation and its civilian WalkNodeEvaluator, plus the commented AbstractWorkerEntity hook and audit-test allowance that kept that replaced gameplay implementation in tree. ctx searches now find no DebugSyncWorkerPathNavigation, civilian RecruitsPathNodeEvaluator, or debug worker hook references. Remaining vanilla API references are unavoidable live API integration points: AsyncPathNavigation extends Minecraft PathNavigation, active military RecruitsPathNodeEvaluator extends WalkNodeEvaluator for recruit/horse navigation, and SailorNodeEvaluator extends SwimNodeEvaluator for boat navigation; all are reachable active BannerMod wrappers, not replaced leftovers. Acceptance 2: ctx log -- ./gradlew compileJava passed; ctx log -- ./gradlew compileGameTestJava passed; ctx log -- ./gradlew test --tests com.talhanation.bannermod.ai.pathfinding.AsyncNavigationClassAuditTest passed; ctx log -- ./gradlew verifyGameTestStage ran and failed only unrelated tests primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, sharedownershipkeepsplayercycleauthorityaligned, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, unmountedcourierinspectionreportsfootfallback, courierusesnearbyhorseonsupportedroute, and workerdeathreleasesactiveworkorderclaim. VANILLA-011 movement/pathfinding names groundNavigationCancelsStalePendingPathAndRetries, waterNavigationCancelsStalePendingPathAndRetries, formationMapMovePacketAppliesSavedFormationViaDispatcher, formationMapMovePacketPreservesExplicitTargetViaDispatcher, trueAsyncSchedulerReturnsSuccessFailureAndCancelledResults, and noPathResultDoesNotInstallNavigationPath were not listed as failures. VANILLA-012 combat/targeting names recruitDropsProtectedClaimTargetAndRetainsWarTarget, recruitAcceptsValidEnemyRejectsAllyAndDropsDeadTarget, recruitMeleeDamagesValidEnemy, rangedBowShotSpawnsProjectileAndAmmoRulesRemainObservable, and crossbowRangedGoalRejectsFriendlyTargets were not listed as failures."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "PROC-003",
