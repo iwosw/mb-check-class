@@ -3171,8 +3171,8 @@
     {
       "id": "UX-012",
       "title": "Verify and document world-map claim route waypoint flows",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "UX-002 closure requires verification and guide coverage for player-facing map flows.",
       "scope": [
         "Verify claim-area, waypoint, and route interactions and update MULTIPLAYER_GUIDE_RU.md, MULTIPLAYER_GUIDE_EN.md, and docs/BANNERMOD_ALMANAC.html if the player-facing flow changes."
@@ -3185,8 +3185,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: claim-area, waypoint, and route interactions verified by focused source-inspection test WorldMapRouteUiVerificationTest.worldMapClaimWaypointAndRouteFlowDocsMatchShippedInteractions; test confirms Claim Area is disabled, claim mutations route through server MessageClaimIntent, waypoint disabled reasons/add/remove/drag explored checks are wired, routes persist through ClientManager.saveRoute, and EN/RU guides plus almanac match shipped behavior. Verification run: ./gradlew test --tests com.talhanation.bannermod.client.military.gui.worldmap.WorldMapRouteUiVerificationTest passed; ./gradlew compileJava passed; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-009",
