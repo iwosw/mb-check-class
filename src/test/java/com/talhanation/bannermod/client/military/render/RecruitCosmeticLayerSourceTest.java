@@ -39,7 +39,7 @@ class RecruitCosmeticLayerSourceTest {
     @Test
     void customHeadLayersKeepCurrentProfileAndItemRenderingApis() throws IOException {
         assertContains("RecruitLodCustomHeadLayer.java", "extends CustomHeadLayer", "super.render", "RecruitRenderLod.shouldRenderCustomHead(recruit)");
-        assertContains("VillagerRecruitCustomHeadLayer.java", "ResolvableProfile", "DataComponents.PROFILE", "SkullBlockRenderer.getRenderType(skullblock$type, profile)", "ItemDisplayContext.HEAD");
+        assertContains("VillagerRecruitCustomHeadLayer.java", "ResolvableProfile", "DataComponents.PROFILE", "SkullBlockRenderer.getRenderType(skullType, profile)", "ItemDisplayContext.HEAD");
     }
 
     private static List<String> modelLayerFiles() {

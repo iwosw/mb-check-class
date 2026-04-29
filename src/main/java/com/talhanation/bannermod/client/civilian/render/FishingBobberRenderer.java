@@ -24,8 +24,8 @@ public class FishingBobberRenderer extends EntityRenderer<FishingBobberEntity> {
     private static final RenderType RENDER_TYPE = RenderType.entityCutout(TEXTURE_LOCATION);
     private static final double VIEW_BOBBING_SCALE = 960.0D;
 
-    public FishingBobberRenderer(EntityRendererProvider.Context p_174117_) {
-        super(p_174117_);
+    public FishingBobberRenderer(EntityRendererProvider.Context context) {
+        super(context);
     }
 
     public void render(FishingBobberEntity fishingBobber, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource multiBufferSource, int packetLight) {
@@ -73,8 +73,8 @@ public class FishingBobberRenderer extends EntityRenderer<FishingBobberEntity> {
         }
     }
 
-    private static float fraction(int p_114691_, int p_114692_) {
-        return (float) p_114691_ / (float) p_114692_;
+    private static float fraction(int segment, int totalSegments) {
+        return (float) segment / (float) totalSegments;
     }
 
     private static void fishingLineVertex(float lineX, float lineY, float lineZ, VertexConsumer consumer, PoseStack.Pose pose, float start, float end) {
@@ -93,7 +93,7 @@ public class FishingBobberRenderer extends EntityRenderer<FishingBobberEntity> {
         ClientRenderPrimitives.lineStripVertex(pose, consumer, x, y, z, 0.0F, 0.0F, 0.0F, 1.0F, nextX, nextY, nextZ);
     }
 
-    public ResourceLocation getTextureLocation(FishingBobberEntity p_114703_) {
+    public ResourceLocation getTextureLocation(FishingBobberEntity fishingBobber) {
         return TEXTURE_LOCATION;
     }
 }

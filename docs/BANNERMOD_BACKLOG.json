@@ -4204,8 +4204,8 @@
     {
       "id": "RENDER-013",
       "title": "Remove old render/UI implementation leftovers",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "After the replacement lands, old patched or copied render/UI code should not remain as shadow behavior.",
       "scope": [
         "Delete unused old render/UI helpers, obsolete copied snippets, dead imports, and replaced code paths; document retained vanilla API references only where unavoidable."
@@ -4218,8 +4218,14 @@
         "RENDER-012"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Cleanup scope: removed reachable old render leftovers found by source scan: no-op worker renderer overrides, disabled WorkersProfessionLayer comments, unused vanilla model/renderer imports, obfuscated copied-parameter names in active render helpers, and unused copied local variables in VillagerRecruitCustomHeadLayer. 2) Leftover scan: ctx search for p_ obfuscated parameters in active civilian/military renderers returned 0 matches; ctx search for WorkersProfessionLayer, //VillagerModel, //PlayerModel, VillagerHeadModel, SheepRenderer, boolean flag = true, and float f1 = 1.4F returned 0 matches in client code. 3) compileJava passed. 4) RENDER-012 render/UI verification still passed: RenderUiVerificationInventoryTest, RecruitRendererParitySourceTest, RecruitCosmeticLayerSourceTest, BannerRenderParityTest, ClientRenderPrimitivesTest, and WorldMapRouteUiVerificationTest."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-001",

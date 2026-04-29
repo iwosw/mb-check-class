@@ -67,7 +67,7 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
         this.shadowStrength = 0.0F;
     }
     @Override
-    public ResourceLocation getTextureLocation(AbstractWorkAreaEntity p_115034_) {
+    public ResourceLocation getTextureLocation(AbstractWorkAreaEntity workArea) {
         return TextureAtlas.LOCATION_BLOCKS;
     }
 
