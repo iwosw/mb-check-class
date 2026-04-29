@@ -4864,8 +4864,8 @@
     {
       "id": "SHIPS-002B",
       "title": "Persist ship-backed sea-trade route execution state",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Sea-trade execution needs durable route state before cargo movement can survive ticks, reloads, missing ships, and arrivals.",
       "scope": [
         "Add a server-side sea-trade execution model that tracks route id, bound carrier id, source and destination storage areas, selected item filter, requested count, cargo count, loading/travelling/unloading/failed states, and clear failure reasons."
@@ -4878,8 +4878,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Focused BannerModSeaTradeExecutionRuntimeTest passed for no-carrier failure preserving route id; 2) same focused test passed load-start tracking carrier, source/destination storage, filter, requested count, and LOADING state; 3) same focused test passed deterministic TRAVELLING transition with clamped cargo count; 4) same focused test passed arrival-ready transition to UNLOADING; 5) same focused test passed unload-complete transition to COMPLETE with cargo cleared and NBT runtime round-trip; 6) same focused test passed explicit failure reason while preserving route id/carrier/storage identity for settlement feedback; compileJava passed; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SHIPS-002C",
