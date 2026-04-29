@@ -35,13 +35,7 @@ public class BannerModSettlementProjectGameTests {
         assertSettlementProjectBindsToExecutableBuildAreaTarget(helper);
     }
 
-    @PrefixGameTestTemplate(false)
-    @GameTest(template = "harness_empty", templateNamespace = "bannermod_game_009")
-    public static void game009SettlementProjectBindsToExecutableBuildAreaTarget(GameTestHelper helper) {
-        assertSettlementProjectBindsToExecutableBuildAreaTarget(helper);
-    }
-
-    private static void assertSettlementProjectBindsToExecutableBuildAreaTarget(GameTestHelper helper) {
+    static void assertSettlementProjectBindsToExecutableBuildAreaTarget(GameTestHelper helper) {
         WorkAreaIndex.instance().clearAllForTest();
         ServerLevel level = helper.getLevel();
         Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);

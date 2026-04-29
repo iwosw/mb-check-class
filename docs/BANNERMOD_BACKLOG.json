@@ -3219,6 +3219,10 @@
         {
           "date": "2026-04-29",
           "result": "PASS: ctx log -- ./gradlew compileJava compileGameTestJava runGameTestServerGame009 isolated bannermod_game_009 GameTest namespace; settlementProjectBindsToExecutableBuildAreaTarget proved project binds to executable BuildArea target. PASS: tools/backlog validate."
+        },
+        {
+          "date": "2026-04-29",
+          "result": "PASS after feature-branch merge: ctx log -- ./gradlew compileGameTestJava runGameTestServerGame009. Isolated bannermod_game_009 holder uses bannermod:harness_empty template and proves settlement project binds to executable BuildArea target."
         }
       ],
       "evidence": [],
