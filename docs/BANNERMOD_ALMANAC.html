@@ -175,7 +175,7 @@
         </table>
         <h3>Default controls</h3>
         <p><span class="kbd">M</span> opens the world map. <span class="kbd">U</span> opens the War Room. <span class="kbd">R</span> opens recruit command controls. <span class="kbd">X</span> opens worker command controls.</p>
-        <p>World-map routes live in the top-left <span class="kbd">Routes</span> control: press <span class="kbd">+</span>, select the route, then right-click explored chunks to add waypoints. Disabled waypoint actions explain whether a route must be selected or the map spot is not explored/loaded. For claims, right-click a nearby Overworld chunk and use <span class="kbd">Claim chunk</span>; <span class="kbd">Claim Area</span> is disabled so the server validates expansion one chunk at a time.</p>
+        <p>World-map routes live in the top-left <span class="kbd">Routes</span> control: press <span class="kbd">+</span>, select the route, then right-click explored chunks to add waypoints. Disabled waypoint actions explain whether a route must be selected or the map spot is not explored/loaded. For claims, right-click a nearby Overworld chunk and use <span class="kbd">Claim chunk</span>; disabled claim actions now explain waiting sync, stale edits, unclaimable chunks, or missing neighbor authority. <span class="kbd">Claim Area</span> is disabled so the server validates expansion one chunk at a time.</p>
         <div class="callout blue">Claims are Overworld-only. Nether and End chunks at matching X/Z coordinates are not protected by Overworld claims.</div>
         <div class="callout blue">In the Overworld, the small top-right claim HUD labels normal play territory as friendly, hostile, or unclaimed. It stacks below battle/siege chips and does not replace server-side claim permission checks. Denied protected-space actions also show a short localized system message for friendly locks, hostile protection, or unclaimed wilderness rules.</div>
         <div class="ru">
@@ -293,7 +293,7 @@
 
       <article class="page" id="p6" data-page="6">
         <h2>6. Economy And Logistics</h2>
-        <p>The governor logistics panel reads a server-synced settlement mirror. It labels loading, stale, empty, and fresh states; wait for a fresh mirror before trusting the numbers. Policy buttons explain why they are disabled until the server can validate a change.</p>
+        <p>The governor logistics panel reads a server-synced settlement mirror. War, claim, governor, and work-area screens label loading, stale, empty, and ready states; wait for a fresh mirror before trusting the numbers. Policy buttons and disabled map actions explain why they are unavailable until the server can validate a change.</p>
         <p>Read taxes as <strong>collected / due</strong>. Satisfied taxes fund the treasury this heartbeat; unpaid taxes show why payment failed and warn that treasury growth, upkeep, and defense funding can stall.</p>
         <h3>Storage routes</h3>
         <p>Storage Area route fields use <code>Apply route</code>. The screen validates destination UUID, item filters, amount, and priority before sending. Valid entries show destination or blocked reason.</p>
