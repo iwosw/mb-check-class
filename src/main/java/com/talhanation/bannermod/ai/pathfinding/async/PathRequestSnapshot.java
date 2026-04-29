@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+/** Immutable server-thread path request copied before worker-thread solving. */
 public record PathRequestSnapshot(
         UUID entityUuid,
         long requestId,

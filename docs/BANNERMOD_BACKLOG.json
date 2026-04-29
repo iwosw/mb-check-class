@@ -4292,8 +4292,8 @@
     {
       "id": "VANILLA-003",
       "title": "Rewrite async pathfinder core",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "AsyncPathfinder should be BannerMod-owned code with clear inputs/outputs instead of copied or fragile vanilla-pathfinder behavior.",
       "scope": [
         "Replace the async pathfinder core and path result representation with owned code implementing the contract from VANILLA-002."
@@ -4305,9 +4305,20 @@
       "dependencies": [
         "VANILLA-002"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Implemented owned async core slice: preserved CANCELLED/DEADLINE terminal statuses even when partial nodes exist, documented worker-thread immutable request/snapshot/result assumptions in code, and added GameTest trueAsyncSchedulerReturnsSuccessFailureAndCancelledResults covering scheduler SUCCESS, NO_PATH, and CANCELLED results. Verification: ctx log -- ./gradlew compileJava PASS; ctx log -- ./gradlew compileGameTestJava PASS; ctx log -- ./gradlew verifyGameTestStage FAILED only on unrelated pre-existing GameTests (repairedhouserevalidationreturnstovalid, sharedownershipkeepsplayercycleauthorityaligned, unmountedcourierinspectionreportsfootfallback, reconnectedownerrecoversauthorityafterownershiproundtrip, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, claimgrownfarmerseedscropareafrompreparedfield, courierusesnearbyhorseonsupportedroute) plus CropArea empty ItemStack save error. New trueasync_core GameTest batch ran and had no LogTestReporter failure."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance 1: compileJava and compileGameTestJava passed; trueAsyncSchedulerReturnsSuccessFailureAndCancelledResults GameTest covers async scheduler SUCCESS, NO_PATH failure, and CANCELLED results for existing async path types. Acceptance 2: AsyncPathSolver, PathRequestSnapshot, RegionSnapshot, and PathResult now explicitly document immutable snapshot/result and worker-thread/server-thread boundaries. Commands: tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava PASS; tools/ai-context-proxy/bin/ctx log -- ./gradlew compileGameTestJava PASS; tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage FAILED due to unrelated existing failures; task-specific trueasync_core batch ran with no LogTestReporter failure."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-004",

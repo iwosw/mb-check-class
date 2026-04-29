@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+/** Immutable worker-thread result; committers must inspect status before applying nodes on the server thread. */
 public record PathResult(
         UUID entityUuid,
         long requestId,
