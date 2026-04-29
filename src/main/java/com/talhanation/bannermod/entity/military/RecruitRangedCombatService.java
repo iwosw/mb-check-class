@@ -68,7 +68,7 @@ public final class RecruitRangedCombatService {
         float accuracy = Math.max(6 - (float) (0.1F * morale), 0);
         arrow.shoot(d0, d1 + d3 * angle, d2, force, accuracy);
 
-        finishBowShot(shooter, arrow);
+        finishBowShot(shooter, arrow, true);
     }
 
     public static void fireBowAtPosition(BowmanEntity shooter, double x, double y, double z, float drawPower, float angle, float force) {
@@ -87,7 +87,7 @@ public final class RecruitRangedCombatService {
         float accuracy = 3F + Math.max(6 - (float) (0.1F * morale), 0);
         arrow.shoot(d0, d1 + d3 + angle, d2, force + 1.95F, accuracy);
 
-        finishBowShot(shooter, arrow);
+        finishBowShot(shooter, arrow, false);
     }
 
     private static void applyBowEnchantments(BowmanEntity shooter, ItemStack projectileStack, AbstractArrow arrow, boolean alwaysApplyBaseBonus) {
@@ -102,10 +102,10 @@ public final class RecruitRangedCombatService {
         }
     }
 
-    private static void finishBowShot(BowmanEntity shooter, AbstractArrow arrow) {
+    private static void finishBowShot(BowmanEntity shooter, AbstractArrow arrow, boolean honorInfinity) {
         if (RecruitsServerConfig.RangedRecruitsNeedArrowsToShoot.get()) {
             int infinityLevel = getEnchantmentLevel(shooter, Enchantments.INFINITY, shooter.getMainHandItem());
-            if (infinityLevel == 0) {
+            if (!honorInfinity || infinityLevel == 0) {
                 shooter.consumeArrow();
                 arrow.pickup = AbstractArrow.Pickup.ALLOWED;
             }
