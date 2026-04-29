@@ -2,8 +2,6 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.entity.military.RecruitIndex;
-import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
@@ -33,17 +31,13 @@ public class MessageClearTarget implements BannerModMessage<MessageClearTarget> 
 
     public void executeServerSide(BannerModNetworkContext context){
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> list = this.group == null
-                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
-                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
-        if (list == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            list = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(100));
-        }
+        dispatchToServer(player, this.uuid, this.group);
+    }
+
+    public static void dispatchToServer(ServerPlayer player, UUID playerUuid, UUID group) {
+        List<AbstractRecruitEntity> list = RecruitCommandTargetResolver.resolveGroupTargets(player, playerUuid, group, "clear-target");
         for (AbstractRecruitEntity recruits : list) {
-            CommandEvents.onClearTargetButton(uuid, recruits, group);
+            CommandEvents.onClearTargetButton(recruits.getOwnerUUID(), recruits, group);
         }
     }
     public MessageClearTarget fromBytes(FriendlyByteBuf buf) {
