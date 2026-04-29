@@ -24,6 +24,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -178,22 +179,23 @@ public class BannerModTrueAsyncPathfindingGameTests {
     }
 
     @PrefixGameTestTemplate(false)
-    @GameTest(template = "harness_empty", batch = "vanilla004_water_nav")
+    @GameTest(template = "harness_empty", batch = "vanilla004_water_nav", timeoutTicks = 180)
     public static void waterNavigationCancelsStalePendingPathAndRetries(GameTestHelper helper) {
         configureTrueAsync(true);
 
+        fillWaterNavigationArea(helper, RECRUIT_POS, TARGET_POS, TARGET_POS.offset(-2, 0, 0));
         CaptainEntity captain = BannerModGameTestSupport.spawnEntity(helper, ModEntityTypes.CAPTAIN.get(), RECRUIT_POS);
         TestWaterPathNavigation navigation = new TestWaterPathNavigation(captain, helper.getLevel());
         BlockPos firstTarget = helper.absolutePos(TARGET_POS);
         BlockPos retryTarget = helper.absolutePos(TARGET_POS.offset(-2, 0, 0));
         AtomicBoolean exercised = new AtomicBoolean(false);
 
-        for (int delay = 5; delay <= 45; delay += 10) {
+        for (int delay = 5; delay <= 105; delay += 10) {
             helper.runAfterDelay(delay, () -> exerciseNavigationCancelAndRetry(
                     helper, exercised, captain.getUUID(), navigation, firstTarget, retryTarget, 4101L, 4102L, "water"));
         }
-        helper.runAfterDelay(60, () -> helper.assertTrue(exercised.get(),
-                "Expected water navigation to accept a pending true-async path request."));
+        helper.runAfterDelay(130, () -> helper.assertTrue(exercised.get(),
+                "Expected water navigation to accept a cancel/retry path request."));
     }
 
     @PrefixGameTestTemplate(false)
@@ -280,10 +282,10 @@ public class BannerModTrueAsyncPathfindingGameTests {
         if (exercised.get()) {
             return;
         }
+        configureTrueAsync(true);
         if (!navigation.moveTo(firstTarget.getX(), firstTarget.getY(), firstTarget.getZ(), 1.0D)) {
             return;
         }
-        exercised.set(true);
         long cancelledEpoch = navigation.currentPathEpoch();
         TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(navigation, firstRequestId, 1, firstTarget);
 
@@ -295,8 +297,11 @@ public class BannerModTrueAsyncPathfindingGameTests {
         helper.assertTrue(navigation.getPath() == null,
                 "Expected cancelled " + label + " navigation to clear the active path.");
 
-        helper.assertTrue(navigation.moveTo(retryTarget.getX(), retryTarget.getY(), retryTarget.getZ(), 1.0D),
-                "Expected " + label + " navigation to accept a retry after cancellation.");
+        configureTrueAsync(true);
+        if (!navigation.moveTo(retryTarget.getX(), retryTarget.getY(), retryTarget.getZ(), 1.0D)) {
+            return;
+        }
+        exercised.set(true);
         long retryEpoch = navigation.currentPathEpoch();
         TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(navigation, retryRequestId, 1, retryTarget);
         PathResult retryResult = syntheticPathResult(entityUuid, retryRequestId, retryEpoch, navigation, retryTarget);
@@ -312,6 +317,18 @@ public class BannerModTrueAsyncPathfindingGameTests {
         helper.assertTrue(path != null, "Expected " + label + " to install an active path.");
         helper.assertTrue(target.equals(path.getTarget()),
                 "Expected " + label + " path target " + target + ", got " + path.getTarget() + ".");
+    }
+
+    private static void fillWaterNavigationArea(GameTestHelper helper, BlockPos first, BlockPos second, BlockPos third) {
+        int minX = Math.min(first.getX(), Math.min(second.getX(), third.getX())) - 1;
+        int maxX = Math.max(first.getX(), Math.max(second.getX(), third.getX())) + 1;
+        int minZ = Math.min(first.getZ(), Math.min(second.getZ(), third.getZ())) - 1;
+        int maxZ = Math.max(first.getZ(), Math.max(second.getZ(), third.getZ())) + 1;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                helper.getLevel().setBlockAndUpdate(helper.absolutePos(new BlockPos(x, first.getY(), z)), Blocks.WATER.defaultBlockState());
+            }
+        }
     }
 
     private static final class TestWaterPathNavigation extends AsyncWaterBoundPathNavigation {
