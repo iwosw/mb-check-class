@@ -4524,8 +4524,8 @@
     {
       "id": "VANILLA-011",
       "title": "Add movement and pathfinding regression tests",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Replacing pathfinding/navigation needs checks that prove recruits still move, form up, and recover from path failures.",
       "scope": [
         "Add GameTests or the cheapest executable verification for async path requests, ground/water navigation, formation movement, explicit target movement, cancellation, and stuck/retry behavior."
@@ -4538,8 +4538,14 @@
         "VANILLA-006"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance 1: movement/pathfinding coverage is executable through GameTests: ground movement/cancellation via groundNavigationCancelsStalePendingPathAndRetries; water movement/cancellation via waterNavigationCancelsStalePendingPathAndRetries; formation movement and explicit target movement via formationMapMovePacketAppliesSavedFormationViaDispatcher plus formationMapMovePacketPreservesExplicitTargetViaDispatcher; path failure handling via trueAsyncSchedulerReturnsSuccessFailureAndCancelledResults and noPathResultDoesNotInstallNavigationPath. Acceptance 2: tools/backlog validate passed; ctx log -- ./gradlew compileJava passed; ctx log -- ./gradlew compileGameTestJava passed; ctx log -- ./gradlew verifyGameTestStage executed but remains red from unrelated failures primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, sharedownershipkeepsplayercycleauthorityaligned, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, unmountedcourierinspectionreportsfootfallback, courierusesnearbyhorseonsupportedroute, and workerdeathreleasesactiveworkorderclaim. VANILLA-011 test names were not listed as failures."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-012",

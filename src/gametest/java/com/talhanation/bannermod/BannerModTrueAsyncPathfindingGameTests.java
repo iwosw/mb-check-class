@@ -229,6 +229,39 @@ public class BannerModTrueAsyncPathfindingGameTests {
         });
     }
 
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty", batch = "vanilla011_path_failure")
+    public static void noPathResultDoesNotInstallNavigationPath(GameTestHelper helper) {
+        configureTrueAsync(true);
+
+        RecruitEntity recruit = spawnOwnedRecruit(helper);
+        AsyncPathNavigation navigation = (AsyncPathNavigation) recruit.getNavigation();
+        BlockPos blockedTarget = helper.absolutePos(TARGET_POS);
+        long epoch = navigation.incrementPathEpoch();
+        long requestId = 4201L;
+
+        TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(navigation, requestId, 1, blockedTarget);
+        PathResult noPath = new PathResult(
+                recruit.getUUID(),
+                requestId,
+                epoch,
+                PathResultStatus.NO_PATH,
+                List.of(),
+                false,
+                0.0D,
+                0,
+                0L,
+                "vanilla011-no-path"
+        );
+
+        var summary = TrueAsyncPathfindingRuntime.instance().commitForTesting(List.of(noPath));
+        helper.assertTrue(summary.committed() == 1,
+                "Expected NO_PATH result to reach the navigation apply path for failure handling.");
+        helper.assertTrue(navigation.getPath() == null,
+                "Expected NO_PATH failure handling to leave navigation without an installed path.");
+        helper.succeed();
+    }
+
     private static RecruitEntity spawnOwnedRecruit(GameTestHelper helper) {
         Player owner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         return BannerModGameTestSupport.spawnOwnedRecruit(helper, owner, RECRUIT_POS);
