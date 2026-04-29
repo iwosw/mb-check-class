@@ -15,6 +15,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -97,7 +98,12 @@ public class BannerModGovernorControlGameTests {
         BannerModDedicatedServerGameTestSupport.joinTeam(level, FRIENDLY_TEAM_ID, leader);
 
         BlockPos claimPos = helper.absolutePos(new BlockPos(2, 2, 2));
+        BlockPos villagerPos = helper.absolutePos(new BlockPos(3, 2, 2));
+        BlockPos farmerPos = helper.absolutePos(new BlockPos(4, 2, 2));
         RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, FRIENDLY_LEADER_UUID, "phase23-report-leader");
+        claim.addChunk(new ChunkPos(villagerPos));
+        claim.addChunk(new ChunkPos(farmerPos));
+        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
         RecruitEntity recruit = BannerModGameTestSupport.spawnOwnedRecruit(helper, leader, new BlockPos(2, 2, 2));
         BannerModDedicatedServerGameTestSupport.assignRecruitToLeader(level, recruit, leader, FRIENDLY_TEAM_ID);
         BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(3, 2, 2), "phase23-villager");
