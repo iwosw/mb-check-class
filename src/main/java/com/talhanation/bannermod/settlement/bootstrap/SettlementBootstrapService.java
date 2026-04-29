@@ -73,25 +73,7 @@ public final class SettlementBootstrapService {
         if (existing != null) {
             return BootstrapResult.success("Settlement already exists at this authority position.", existing);
         }
-
-        UUID settlementId = UUID.randomUUID();
-        SettlementRecord settlement = new SettlementRecord(
-                settlementId,
-                player.getUUID(),
-                claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString(),
-                claim.getUUID(),
-                level.dimension(),
-                authorityPos,
-                authorityPos,
-                UUID.randomUUID(),
-                SettlementStatus.ACTIVE,
-                level.getGameTime()
-        );
-        registry.put(settlement);
-
-        int spawnedWorkers = spawnStarterCitizens(level, authorityPos, claim);
-        int spawnedFreeCitizens = spawnStarterFreeCitizens(level, authorityPos, claim);
-        return BootstrapResult.success(starterWorkerReadinessMessage(spawnedWorkers, spawnedFreeCitizens), settlement);
+        return createSettlement(level, player.getUUID(), authorityPos, claim);
     }
 
     static String starterWorkerReadinessMessage(int spawnedWorkers) {
@@ -132,10 +114,44 @@ public final class SettlementBootstrapService {
         if (existing != null) {
             return BootstrapResult.success("Settlement already exists at this authority position.", existing);
         }
+        return createSettlement(level, player.getUUID(), authorityPos, claim);
+    }
+
+    /**
+     * Automatic claim bootstrap path: starter structure placement happens before this call, then the
+     * persisted settlement record and starter population are created through the same model as manual founding.
+     */
+    public static BootstrapResult bootstrapClaimSettlement(ServerLevel level, RecruitsClaim claim, BlockPos authorityPos) {
+        if (level == null || claim == null || authorityPos == null) {
+            return BootstrapResult.failure("Bootstrap request is missing required arguments.");
+        }
+        SettlementRegistryData registry = SettlementRegistryData.get(level);
+        SettlementRecord existing = registry.getSettlementByClaimId(claim.getUUID());
+        if (existing == null) {
+            existing = registry.getSettlementAt(new ChunkPos(authorityPos));
+        }
+        if (existing != null) {
+            return BootstrapResult.success("Settlement already exists for this claim.", existing);
+        }
+
+        UUID ownerPlayerId = new UUID(0L, 0L);
+        PoliticalEntityRecord owner = claim.getOwnerPoliticalEntityId() == null
+                ? null
+                : WarRuntimeContext.registry(level).byId(claim.getOwnerPoliticalEntityId()).orElse(null);
+        if (owner != null && owner.leaderUuid() != null) {
+            ownerPlayerId = owner.leaderUuid();
+        } else if (claim.getPlayerInfo() != null) {
+            ownerPlayerId = claim.getPlayerInfo().getUUID();
+        }
+        return createSettlement(level, ownerPlayerId, authorityPos, claim);
+    }
+
+    private static BootstrapResult createSettlement(ServerLevel level, UUID ownerPlayerId, BlockPos authorityPos, RecruitsClaim claim) {
+        SettlementRegistryData registry = SettlementRegistryData.get(level);
         UUID settlementId = UUID.randomUUID();
         SettlementRecord settlement = new SettlementRecord(
                 settlementId,
-                player.getUUID(),
+                ownerPlayerId,
                 claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString(),
                 claim.getUUID(),
                 level.dimension(),
@@ -146,7 +162,9 @@ public final class SettlementBootstrapService {
                 level.getGameTime()
         );
         registry.put(settlement);
-        return BootstrapResult.success("Settlement bootstrapped in test/player mode. Starter citizens skipped.", settlement);
+        int spawnedWorkers = spawnStarterCitizens(level, authorityPos, claim);
+        int spawnedFreeCitizens = spawnStarterFreeCitizens(level, authorityPos, claim);
+        return BootstrapResult.success(starterWorkerReadinessMessage(spawnedWorkers, spawnedFreeCitizens), settlement);
     }
 
     @Nullable

@@ -5,8 +5,10 @@ import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
-import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
-import com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapLifecycle;
+import com.talhanation.bannermod.settlement.bootstrap.BootstrapResult;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapService;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRegistryData;
 import com.talhanation.bannermod.settlement.prefab.BuildingPlacementService;
 import com.talhanation.bannermod.settlement.prefab.impl.BarracksPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.StoragePrefab;
@@ -20,10 +22,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.entity.npc.Villager;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.entity.citizen.CitizenIndex;
-import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
-import net.minecraft.world.scores.PlayerTeam;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +33,6 @@ import java.util.UUID;
 final class WorkerSettlementEventService {
     private static final Map<UUID, Long> CLAIM_WORKER_GROWTH_SPAWN_TIMES = new HashMap<>();
     private static final Map<UUID, Boolean> CLAIM_SETTLEMENT_BOOTSTRAPPED = new HashMap<>();
-    private static final int INITIAL_CITIZEN_COUNT = 4;
 
     private WorkerSettlementEventService() {
     }
@@ -121,8 +120,6 @@ final class WorkerSettlementEventService {
     }
 
     private static void bootstrapClaimSettlement(ServerLevel level, RecruitsClaim claim) {
-        // Automatic bootstrap covers CLAIM_AUTHORITY -> STARTER_POPULATION only; formal records and
-        // profession vacancies are created by the manual SettlementBootstrapLifecycle path.
         UUID claimId = claim.getUUID();
         if (claimId == null || CLAIM_SETTLEMENT_BOOTSTRAPPED.containsKey(claimId)) {
             return;
@@ -133,16 +130,22 @@ final class WorkerSettlementEventService {
             return;
         }
 
-        int existingWorkers = WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, AbstractWorkerEntity.class);
-        if (existingWorkers > 0) {
+        BlockPos anchorPos = resolveClaimAnchorPos(level, claim);
+        SettlementRegistryData registry = SettlementRegistryData.get(level);
+        SettlementRecord existing = registry.getSettlementByClaimId(claimId);
+        if (existing == null) {
+            existing = registry.getSettlementAt(new ChunkPos(anchorPos));
+        }
+        if (existing != null) {
             CLAIM_SETTLEMENT_BOOTSTRAPPED.put(claimId, true);
             return;
         }
 
-        BlockPos anchorPos = resolveClaimAnchorPos(level, claim);
         placeInitialCentralBuilding(level, claim, anchorPos);
-        spawnInitialWorkers(level, claim, anchorPos);
-        CLAIM_SETTLEMENT_BOOTSTRAPPED.put(claimId, true);
+        BootstrapResult result = SettlementBootstrapService.bootstrapClaimSettlement(level, claim, anchorPos);
+        if (result.success()) {
+            CLAIM_SETTLEMENT_BOOTSTRAPPED.put(claimId, true);
+        }
     }
 
     private static void placeInitialCentralBuilding(ServerLevel level, RecruitsClaim claim, BlockPos anchorPos) {
@@ -155,48 +158,6 @@ final class WorkerSettlementEventService {
         );
         if (result == BuildingPlacementService.Result.UNKNOWN_PREFAB) {
             BuildingPlacementService.placeForClaim(level, claim, StoragePrefab.ID, anchorPos, Direction.SOUTH);
-        }
-    }
-
-    private static void spawnInitialWorkers(ServerLevel level, RecruitsClaim claim, BlockPos anchorPos) {
-        // Settlement bootstrap: one builder to construct the starter center.
-        WorkerSettlementSpawnRules.Decision builderDecision = new WorkerSettlementSpawnRules.Decision(
-                true,
-                WorkerSettlementSpawnRules.WorkerProfession.BUILDER,
-                null,
-                0L
-        );
-        WorkerSettlementSpawner.spawnClaimWorker(level, anchorPos, builderDecision, claim);
-
-        // Plus four generic citizens with no profession; they convert later by occupying jobs.
-        for (int i = 0; i < INITIAL_CITIZEN_COUNT; i++) {
-            BlockPos spawnPos = anchorPos.offset((i % 2) + 1, 0, (i / 2) + 1);
-            spawnInitialCitizen(level, claim, spawnPos);
-        }
-    }
-
-    private static void spawnInitialCitizen(ServerLevel level, RecruitsClaim claim, BlockPos spawnPos) {
-        UUID politicalEntityId = claim.getOwnerPoliticalEntityId();
-        if (politicalEntityId == null) {
-            return;
-        }
-        PoliticalEntityRecord owner = WarRuntimeContext.registry(level).byId(politicalEntityId).orElse(null);
-        if (owner == null) {
-            return;
-        }
-        CitizenEntity citizen = ModCitizenEntityTypes.CITIZEN.get().create(level);
-        if (citizen == null) {
-            return;
-        }
-        citizen.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
-        citizen.setOwned(true);
-        if (owner.leaderUuid() != null) {
-            citizen.setOwnerUUID(java.util.Optional.of(owner.leaderUuid()));
-        }
-        level.addFreshEntity(citizen);
-        PlayerTeam team = level.getScoreboard().getPlayerTeam(owner.name());
-        if (team != null) {
-            level.getScoreboard().addPlayerToTeam(citizen.getScoreboardName(), team);
         }
     }
 

@@ -1,7 +1,11 @@
 package com.talhanation.bannermod;
 
+import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.WorkersServerConfig;
+import com.talhanation.bannermod.entity.citizen.CitizenEntity;
+import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.building.BuildingValidationState;
@@ -9,6 +13,7 @@ import com.talhanation.bannermod.settlement.building.BuildingDefinitionRegistry;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRegistryData;
 import com.talhanation.bannermod.settlement.bootstrap.BootstrapResult;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
 import com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapService;
 import com.talhanation.bannermod.settlement.bootstrap.SettlementRegistryData;
 import com.talhanation.bannermod.settlement.building.ZoneRole;
@@ -23,15 +28,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModBuildingInvalidationGameTests {
@@ -341,6 +350,49 @@ public class BannerModBuildingInvalidationGameTests {
         helper.succeed();
     }
 
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void manualAndAutomaticBootstrapConvergeOnStarterData(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.EnableClaimWorkerGrowth, false);
+
+        ServerPlayer manualLeader = createLeader(helper, level,
+                UUID.fromString("00000000-0000-0000-0000-000000014001"),
+                "game014-manual-leader",
+                "game014_manual_faction",
+                new BlockPos(1, 2, 1));
+        BlockPos fortOrigin = new BlockPos(20, 2, 20);
+        BlockPos manualAnchor = fortOrigin.offset(5, 1, 5);
+        RecruitsClaim manualClaim = BannerModDedicatedServerGameTestSupport.seedClaim(
+                level, manualAnchor, "game014_manual_faction", manualLeader.getUUID(), manualLeader.getScoreboardName());
+
+        buildValidFort(level, fortOrigin);
+        BuildingValidationResult fortValidation = validateStarterFort(level, fortOrigin, manualAnchor);
+        helper.assertTrue(fortValidation.valid(), "Expected manual STARTER_FORT fixture to validate.");
+        BootstrapResult manualResult = SettlementBootstrapService.bootstrapSettlement(level, manualLeader, fortValidation);
+        helper.assertTrue(manualResult.success(), "Expected manual surveyor bootstrap to create a settlement.");
+        BootstrapFootprint manualFootprint = footprint(level, manualClaim, manualResult.settlement());
+
+        ServerPlayer automaticLeader = createLeader(helper, level,
+                UUID.fromString("00000000-0000-0000-0000-000000014002"),
+                "game014-auto-leader",
+                "game014_auto_faction",
+                new BlockPos(1, 2, 8));
+        BlockPos automaticAnchor = new BlockPos(80, 2, 80);
+        RecruitsClaim automaticClaim = BannerModDedicatedServerGameTestSupport.seedClaim(
+                level, automaticAnchor, "game014_auto_faction", automaticLeader.getUUID(), automaticLeader.getScoreboardName());
+
+        WorkersVillagerEvents.runClaimWorkerGrowthPass(level);
+        SettlementRecord automaticSettlement = SettlementRegistryData.get(level).getSettlementByClaimId(automaticClaim.getUUID());
+        helper.assertTrue(automaticSettlement != null, "Expected automatic claim bootstrap to create a settlement record.");
+        BootstrapFootprint automaticFootprint = footprint(level, automaticClaim, automaticSettlement);
+
+        helper.assertTrue(manualFootprint.sameStarterDataAs(automaticFootprint),
+                "Expected manual and automatic bootstrap to create matching active records, worker set, citizens, and profession state.");
+        WorkersServerConfig.clearAllTestOverrides();
+        helper.succeed();
+    }
+
     private static ValidatedBuildingRecord newRecord(UUID buildingId,
                                                      BuildingType type,
                                                      BuildingValidationState state,
@@ -363,6 +415,90 @@ public class BannerModBuildingInvalidationGameTests {
                 now,
                 invalidSince
         );
+    }
+
+    private static ServerPlayer createLeader(GameTestHelper helper, ServerLevel level, UUID playerId, String name, String teamId, BlockPos relativePos) {
+        Player player = BannerModDedicatedServerGameTestSupport.createFakeServerPlayer(level, playerId, name);
+        BannerModDedicatedServerGameTestSupport.ensureFaction(level, teamId, playerId, name);
+        BannerModDedicatedServerGameTestSupport.joinTeam(level, teamId, player);
+        BlockPos spawnPos = helper.absolutePos(relativePos);
+        player.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+        return (ServerPlayer) player;
+    }
+
+    private static BuildingValidationResult validateStarterFort(ServerLevel level, BlockPos fortOrigin, BlockPos anchor) {
+        return new DefaultBuildingValidator(new BuildingDefinitionRegistry()).validate(
+                level,
+                null,
+                new BuildingValidationRequest(
+                        new UUID(0L, 0L),
+                        BuildingType.STARTER_FORT,
+                        anchor,
+                        List.of(
+                                new ZoneSelection(ZoneRole.AUTHORITY_POINT, anchor, anchor, anchor),
+                                new ZoneSelection(ZoneRole.INTERIOR, fortOrigin.offset(1, 1, 1), fortOrigin.offset(8, 1, 8), anchor)
+                        )
+                )
+        );
+    }
+
+    private static BootstrapFootprint footprint(ServerLevel level, RecruitsClaim claim, SettlementRecord settlement) {
+        AABB bounds = claimBounds(level, claim);
+        List<AbstractWorkerEntity> workers = level.getEntitiesOfClass(AbstractWorkerEntity.class, bounds,
+                worker -> worker.isAlive() && claim.containsChunk(worker.chunkPosition()));
+        List<CitizenEntity> citizens = level.getEntitiesOfClass(CitizenEntity.class, bounds,
+                citizen -> citizen.isAlive() && claim.containsChunk(citizen.chunkPosition()));
+        Map<String, Long> workerTypes = workers.stream().collect(Collectors.groupingBy(
+                worker -> worker.getType().toString(),
+                Collectors.counting()
+        ));
+        long freeCitizens = citizens.stream().filter(citizen -> citizen.activeProfession() == CitizenProfession.NONE).count();
+        return new BootstrapFootprint(
+                settlement != null && settlement.status() == com.talhanation.bannermod.settlement.bootstrap.SettlementStatus.ACTIVE,
+                settlement != null && claim.getUUID().equals(settlement.claimId()),
+                settlement != null && claim.getOwnerPoliticalEntityId() != null
+                        && claim.getOwnerPoliticalEntityId().toString().equals(settlement.factionId()),
+                workers.size(),
+                workerTypes,
+                citizens.size(),
+                freeCitizens
+        );
+    }
+
+    private static AABB claimBounds(ServerLevel level, RecruitsClaim claim) {
+        ChunkPos anchorChunk = claim.getCenter() != null ? claim.getCenter() : new ChunkPos(0, 0);
+        return new AABB(
+                anchorChunk.getMinBlockX(),
+                level.getMinBuildHeight(),
+                anchorChunk.getMinBlockZ(),
+                anchorChunk.getMaxBlockX() + 1.0D,
+                level.getMaxBuildHeight(),
+                anchorChunk.getMaxBlockZ() + 1.0D
+        );
+    }
+
+    private record BootstrapFootprint(boolean activeRecord,
+                                      boolean claimBoundRecord,
+                                      boolean factionBoundRecord,
+                                      int workerCount,
+                                      Map<String, Long> workerTypes,
+                                      int citizenCount,
+                                      long freeCitizenCount) {
+        private boolean sameStarterDataAs(BootstrapFootprint other) {
+            return this.activeRecord
+                    && other.activeRecord
+                    && this.claimBoundRecord
+                    && other.claimBoundRecord
+                    && this.factionBoundRecord
+                    && other.factionBoundRecord
+                    && this.workerCount == 4
+                    && other.workerCount == 4
+                    && this.workerTypes.equals(other.workerTypes)
+                    && this.citizenCount == 4
+                    && other.citizenCount == 4
+                    && this.freeCitizenCount == 4
+                    && other.freeCitizenCount == 4;
+        }
     }
 
     private static ValidatedBuildingRecord validHouseRecord(UUID buildingId, long now, BlockPos origin) {
