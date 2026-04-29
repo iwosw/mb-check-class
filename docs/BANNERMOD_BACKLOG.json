@@ -3992,7 +3992,7 @@
     {
       "id": "RENDER-006",
       "title": "Rewrite projectile and work-area renderers",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-29",
       "why": "Fishing line, projectile, and work-area renderers are compile-sensitive and currently patched directly against low-level vertex APIs.",
       "scope": [
@@ -4019,8 +4019,14 @@
           "text": "RENDER-006A evidence: compileJava passed; ClientRenderPrimitivesTest passed and verifies the bobber billboard emits a textured visible quad, fishing-line vertices are opaque with normals, and work-area line boxes emit all 12 outline edges with non-zero normals."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Visibility and compile contract: RENDER-006A is done with recorded evidence; ClientRenderPrimitivesTest passed and covers bobber billboard quad emission, fishing-line vertex emission, and work-area outline box edges/normals. 2) compileJava passed. 3) Minimal owned helper check: ClientRenderPrimitives, FishingBobberRenderer, and IRenderWorkArea were inspected; low-level emission is centralized in small owned primitives and renderers call those helpers instead of copying full vanilla renderer bodies."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-007",
