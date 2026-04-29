@@ -2825,8 +2825,8 @@
     {
       "id": "PERF-011",
       "title": "Implement measured distant recruit crowd renderer cuts",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "Large recruit crowds need optimization backed by PERF-010 evidence without harming close-range readability.",
       "scope": [
         "Use PERF-010 profiling evidence to skip or simplify safe distant crowd render work such as non-selected nameplates, held items, armor, overlays, or simplified model paths."
@@ -2838,7 +2838,12 @@
         "PERF-010",
         "VANILLA-013"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Held open: renderer cutoff branch exists but acceptance requires PERF-011A real client before/after large-crowd profiling; API/headless session cannot provide visual selected-recruit readability proof."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -5083,6 +5088,25 @@
       ],
       "evidence": [],
       "doneDate": "2026-04-29"
+    },
+    {
+      "id": "PERF-011A",
+      "title": "Run PERF-011 client large-crowd profiling proof",
+      "status": "open",
+      "updated": "2026-04-29",
+      "why": "PERF-011 cannot honestly close until a real client before/after profiling run proves the distant recruit renderer cut improves large crowds without harming close-range selected readability.",
+      "scope": [
+        "Run a controlled client large-crowd recruit render profiling scenario against the pre-cut baseline and the PERF-011 implementation.",
+        "Record before/after recruit.render counter numbers for the large-crowd path and manually check close-range selected recruit readability."
+      ],
+      "acceptance": [
+        "Before/after profiling numbers show improved large-crowd recruit rendering on recruit.render counters.",
+        "Close-range selected recruits remain readable in the same client verification pass."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
