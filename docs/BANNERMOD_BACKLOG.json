@@ -4796,8 +4796,8 @@
     {
       "id": "BOOM-003A",
       "title": "Verify Boomsticks recruit firearm combat flow",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "BOOM-003 code now routes supported recruit firearms through Medieval Boomsticks, but the remaining acceptance proof requires an observable firearm combat flow with the optional mod active.",
       "scope": [
         "Run or add a focused runtime/GameTest/manual verification path for one supported Medieval Boomsticks firearm covering projectile spawn, reload or fire cadence, and no-ammo denial after the merged BOOM-003 routing."
@@ -4808,7 +4808,12 @@
       "dependencies": [
         "VANILLA-013"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Added BannerModBoomsticksFirearmGameTests as a narrow GameTest harness for a Medieval Boomsticks pistol: when musketmod is present it equips a recruit CrossBowman with musketmod:pistol, proves no-ammo denial before adding one cartridge, asserts no projectile before the reload cadence, then waits for a musketmod bullet projectile and cartridge consumption. Verification in this environment: ctx log -- ./gradlew compileJava passed; ctx log -- ./gradlew compileGametestJava passed. Runtime acceptance is still blocked because the GameTest runtime mod list contains BannerMod/Corelib/Minecraft/NeoForge only and no Medieval Boomsticks musketmod, so projectile spawn/cadence/no-ammo behavior could not be observed with the optional mod active."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
