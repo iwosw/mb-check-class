@@ -19,6 +19,8 @@ import com.talhanation.bannermod.shared.logistics.BannerModLogisticsReservation;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeEntrypoint;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionRecord;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionSavedData;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeSummary;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.resources.ResourceLocation;
@@ -144,6 +146,7 @@ public final class BannerModSettlementService {
         BannerModSettlementMarketState marketState = collectMarketState(level, claim);
         List<StorageArea> storageAreas = collectStorageAreas(level, claim);
         List<BannerModSeaTradeEntrypoint> liveSeaTradeEntrypoints = collectLiveSeaTradeEntrypoints(storageAreas);
+        List<BannerModSeaTradeExecutionRecord> localSeaTradeExecutions = collectLocalSeaTradeExecutions(level, storageAreas);
         BannerModSeaTradeSummary.Summary seaTradeSummary = BannerModSeaTradeSummary.summarise(liveSeaTradeEntrypoints);
         ReservationSignalSeed reservationSignalSeed = summarizeReservationSignalSeed(
                 buildings,
@@ -170,7 +173,7 @@ public final class BannerModSettlementService {
                 governorSnapshot != null && governorSnapshot.governorRecruitUuid() != null,
                 settlementFactionId != null && !settlementFactionId.isBlank()
         );
-        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed, seaTradeSummary);
+        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed, seaTradeSummary, localSeaTradeExecutions);
         BannerModSettlementSupplySignalState supplySignalState = summarizeSupplySignals(desiredGoodsSeed, stockpileSummary, marketState, residents, buildings, reservationSignalSeed, seaTradeSummary);
         int residentCapacity = 0;
         int workplaceCapacity = 0;
@@ -762,10 +765,19 @@ public final class BannerModSettlementService {
     }
 
     static BannerModSettlementTradeRouteHandoffSeed summarizeTradeRouteHandoffSeed(BannerModSettlementStockpileSummary stockpileSummary,
-                                                                                     BannerModSettlementMarketState marketState,
-                                                                                     BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
-                                                                                     ReservationSignalSeed reservationSignalSeed,
-                                                                                     BannerModSeaTradeSummary.Summary seaTradeSummary) {
+                                                                                      BannerModSettlementMarketState marketState,
+                                                                                      BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
+                                                                                      ReservationSignalSeed reservationSignalSeed,
+                                                                                      BannerModSeaTradeSummary.Summary seaTradeSummary) {
+        return summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed, seaTradeSummary, List.of());
+    }
+
+    static BannerModSettlementTradeRouteHandoffSeed summarizeTradeRouteHandoffSeed(BannerModSettlementStockpileSummary stockpileSummary,
+                                                                                      BannerModSettlementMarketState marketState,
+                                                                                      BannerModSettlementDesiredGoodsSeed desiredGoodsSeed,
+                                                                                      ReservationSignalSeed reservationSignalSeed,
+                                                                                      BannerModSeaTradeSummary.Summary seaTradeSummary,
+                                                                                      List<BannerModSeaTradeExecutionRecord> seaTradeExecutionRecords) {
         return new BannerModSettlementTradeRouteHandoffSeed(
                 marketState.sellerDispatchCount(),
                 marketState.readySellerDispatchCount(),
@@ -775,7 +787,7 @@ public final class BannerModSettlementService {
                 reservationSignalSeed.reservedUnitCount(),
                 desiredGoodsSeed.desiredGoods(),
                 marketState.sellerDispatches(),
-                seaTradeStatusLines(seaTradeSummary)
+                seaTradeStatusLines(seaTradeSummary, seaTradeExecutionRecords)
         );
     }
 
@@ -1069,6 +1081,19 @@ public final class BannerModSettlementService {
                 .toList();
     }
 
+    private static List<BannerModSeaTradeExecutionRecord> collectLocalSeaTradeExecutions(ServerLevel level, List<StorageArea> storageAreas) {
+        Set<UUID> storageAreaIds = storageAreas.stream()
+                .map(StorageArea::getUUID)
+                .collect(java.util.stream.Collectors.toSet());
+        if (storageAreaIds.isEmpty()) {
+            return List.of();
+        }
+        return BannerModSeaTradeExecutionSavedData.get(level).runtime().routes().stream()
+                .filter(record -> storageAreaIds.contains(record.sourceStorageAreaId())
+                        || storageAreaIds.contains(record.destinationStorageAreaId()))
+                .toList();
+    }
+
     private static StockpileSeed resolveStockpileSeed(AbstractWorkAreaEntity workArea) {
         if (!(workArea instanceof StorageArea storageArea)) {
             return StockpileSeed.empty();
@@ -1138,8 +1163,12 @@ public final class BannerModSettlementService {
         };
     }
 
-    private static List<String> seaTradeStatusLines(BannerModSeaTradeSummary.Summary seaTradeSummary) {
+    static List<String> seaTradeStatusLines(BannerModSeaTradeSummary.Summary seaTradeSummary,
+                                            List<BannerModSeaTradeExecutionRecord> executionRecords) {
         List<String> lines = new ArrayList<>();
+        for (BannerModSeaTradeExecutionRecord record : executionRecords) {
+            lines.add(seaTradeExecutionStatusLine(record));
+        }
         for (Map.Entry<ResourceLocation, Integer> entry : seaTradeSummary.importableByItem().entrySet()) {
             lines.add("Sea import benefit: " + entry.getKey() + " x" + entry.getValue());
         }
@@ -1150,6 +1179,40 @@ public final class BannerModSettlementService {
             lines.add("Sea trade bottleneck: " + bottleneck.toLowerCase(Locale.ROOT));
         }
         return lines;
+    }
+
+    private static List<String> seaTradeStatusLines(BannerModSeaTradeSummary.Summary seaTradeSummary) {
+        return seaTradeStatusLines(seaTradeSummary, List.of());
+    }
+
+    private static String seaTradeExecutionStatusLine(BannerModSeaTradeExecutionRecord record) {
+        String statusKey = switch (record.state()) {
+            case LOADING -> "loading";
+            case TRAVELLING -> "travelling";
+            case UNLOADING -> "unloading";
+            case COMPLETE -> "completed";
+            case FAILED -> BannerModSeaTradeExecutionRecord.FAILURE_NO_CARRIER.equals(record.failureReason())
+                    ? "missing_ship"
+                    : "blocked_cargo";
+        };
+        return "gui.bannermod.governor.logistics.sea_trade." + statusKey + " "
+                + shortRouteId(record.routeId()) + " "
+                + seaTradeFilterLabel(record) + " "
+                + record.cargoCount() + " "
+                + record.requestedCount();
+    }
+
+    private static String shortRouteId(UUID routeId) {
+        String value = routeId.toString().replace("-", "");
+        return value.substring(Math.max(0, value.length() - 8));
+    }
+
+    private static String seaTradeFilterLabel(BannerModSeaTradeExecutionRecord record) {
+        return record.filter().itemIds().stream()
+                .sorted(Comparator.comparing(ResourceLocation::toString))
+                .map(ResourceLocation::toString)
+                .findFirst()
+                .orElse("any");
     }
 
     private static String desiredGoodIdForProfile(BannerModSettlementBuildingProfileSeed profileSeed) {

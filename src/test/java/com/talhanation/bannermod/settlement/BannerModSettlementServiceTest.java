@@ -1,7 +1,12 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.settlement.building.BuildingType;
+import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionRecord;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionState;
+import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeSummary;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -343,6 +348,34 @@ class BannerModSettlementServiceTest {
     }
 
     @Test
+    void seaTradeStatusLinesExposeExecutionProgressAndFailures() {
+        UUID sourceId = UUID.fromString("00000000-0000-0000-0000-000000003101");
+        UUID destinationId = UUID.fromString("00000000-0000-0000-0000-000000003102");
+        BannerModLogisticsItemFilter wheat = BannerModLogisticsItemFilter.ofItemIds(List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "wheat")));
+
+        List<String> lines = BannerModSettlementService.seaTradeStatusLines(
+                BannerModSeaTradeSummary.summarise(List.of()),
+                List.of(
+                        seaTradeRecord("00000000-0000-0000-0000-000000003201", sourceId, destinationId, wheat, 16, 0, BannerModSeaTradeExecutionState.LOADING, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003202", sourceId, destinationId, wheat, 16, 8, BannerModSeaTradeExecutionState.TRAVELLING, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003203", sourceId, destinationId, wheat, 16, 8, BannerModSeaTradeExecutionState.UNLOADING, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003204", sourceId, destinationId, wheat, 16, 0, BannerModSeaTradeExecutionState.COMPLETE, ""),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003205", sourceId, destinationId, wheat, 16, 0, BannerModSeaTradeExecutionState.FAILED, BannerModSeaTradeExecutionRecord.FAILURE_NO_CARRIER),
+                        seaTradeRecord("00000000-0000-0000-0000-000000003206", sourceId, destinationId, wheat, 16, 4, BannerModSeaTradeExecutionState.FAILED, BannerModSeaTradeExecutionRecord.FAILURE_DESTINATION_FULL)
+                )
+        );
+
+        assertEquals(List.of(
+                "gui.bannermod.governor.logistics.sea_trade.loading 00003201 minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.travelling 00003202 minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.unloading 00003203 minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.completed 00003204 minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.missing_ship 00003205 minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 00003206 minecraft:wheat 4 16"
+        ), lines.subList(0, 6));
+    }
+
+    @Test
     void summarizesSupplySignalsFromDesiredGoodsCoverageAndReservationHints() {
         UUID marketUuid = UUID.randomUUID();
         UUID cropAreaUuid = UUID.randomUUID();
@@ -499,5 +532,26 @@ class BannerModSettlementServiceTest {
         assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, foodCandidate.targetBuildingProfileSeed());
         assertEquals(3, foodCandidate.priority());
         assertEquals(List.of("food_demand", "storage_type:farmers"), foodCandidate.driverIds());
+    }
+
+    private static BannerModSeaTradeExecutionRecord seaTradeRecord(String routeId,
+                                                                   UUID sourceId,
+                                                                   UUID destinationId,
+                                                                   BannerModLogisticsItemFilter filter,
+                                                                   int requestedCount,
+                                                                   int cargoCount,
+                                                                   BannerModSeaTradeExecutionState state,
+                                                                   String failureReason) {
+        return new BannerModSeaTradeExecutionRecord(
+                UUID.fromString(routeId),
+                UUID.randomUUID(),
+                sourceId,
+                destinationId,
+                filter,
+                requestedCount,
+                cargoCount,
+                state,
+                failureReason
+        );
     }
 }

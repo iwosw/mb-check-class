@@ -2,7 +2,13 @@ package com.talhanation.bannermod.client.settlement;
 
 import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
+import com.talhanation.bannermod.settlement.BannerModSettlementDesiredGoodsSeed;
+import com.talhanation.bannermod.settlement.BannerModSettlementMarketState;
+import com.talhanation.bannermod.settlement.BannerModSettlementProjectCandidateSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
+import com.talhanation.bannermod.settlement.BannerModSettlementStockpileSummary;
+import com.talhanation.bannermod.settlement.BannerModSettlementSupplySignalState;
+import com.talhanation.bannermod.settlement.BannerModSettlementTradeRouteHandoffSeed;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementClientSnapshotContract.Envelope;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementClientSnapshotContract.Payload;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementClientSnapshotContract.RefreshTrigger;
@@ -81,5 +87,52 @@ class BannerModSettlementClientMirrorTest {
         assertEquals(SnapshotState.READY, mutation.state());
         assertEquals(5, mutation.citizenCount());
         assertEquals(3, mutation.taxesDue());
+    }
+
+    @Test
+    void governorViewCopiesSeaTradeStatusLinesIntoLogisticsLines() {
+        UUID recruitId = UUID.randomUUID();
+        UUID claimId = UUID.randomUUID();
+        BannerModSettlementClientMirror mirror = new BannerModSettlementClientMirror();
+        List<String> seaTradeLines = List.of(
+                "gui.bannermod.governor.logistics.sea_trade.loading 00003201 minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.travelling 00003202 minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.unloading 00003203 minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.completed 00003204 minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.missing_ship 00003205 minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 00003206 minecraft:wheat 4 16"
+        );
+        BannerModSettlementSnapshot settlement = settlementWithSeaTradeLines(claimId, seaTradeLines);
+        BannerModGovernorSnapshot governor = BannerModGovernorSnapshot.create(claimId, new ChunkPos(3, 4), "blue");
+
+        mirror.applyGovernorUpdate(recruitId, Envelope.ready(12L, 12L, RefreshTrigger.SCREEN_OPEN,
+                new Payload(claimId, settlement, governor)));
+
+        BannerModSettlementClientMirror.GovernorView view = mirror.governorView(recruitId);
+        assertTrue(view.logisticsLines().containsAll(seaTradeLines));
+    }
+
+    private static BannerModSettlementSnapshot settlementWithSeaTradeLines(UUID claimId, List<String> seaTradeLines) {
+        return new BannerModSettlementSnapshot(
+                claimId,
+                3,
+                4,
+                "blue",
+                12L,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                BannerModSettlementStockpileSummary.empty(),
+                BannerModSettlementMarketState.empty(),
+                BannerModSettlementDesiredGoodsSeed.empty(),
+                BannerModSettlementProjectCandidateSeed.empty(),
+                new BannerModSettlementTradeRouteHandoffSeed(0, 0, 0, 0, 0, 0, List.of(), List.of(), seaTradeLines),
+                BannerModSettlementSupplySignalState.empty(),
+                List.of(),
+                List.of()
+        );
     }
 }

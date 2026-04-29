@@ -107,6 +107,7 @@ public final class BannerModSettlementClientMirror {
         lines.add(desiredGoods.isEmpty()
                 ? "gui.bannermod.governor.logistics.goods_none"
                 : "gui.bannermod.governor.logistics.goods " + desiredGoods.get(0).desiredGoodId() + " " + desiredGoods.get(0).driverCount());
+        lines.addAll(settlement.tradeRouteHandoffSeed().seaTradeStatusLines());
         return lines;
     }
 
