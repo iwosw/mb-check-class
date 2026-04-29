@@ -212,7 +212,7 @@ War Room is the main in-game UI for war and politics:
 - **Battle window banner**: top of the screen shows the current battle-window phase ("OPEN FRI 19:00-20:30 — closes in 45m" / "CLOSED — next SUN 18:00-19:30 in 1d 22h"). Green = open, gray = closed. The schedule is server-configured (`BattleWindows` in `bannermod-war-server.toml`) and synced to the client automatically.
 - **Active wars list** on the left: each war shows state (`DECLARED`/`ACTIVE`/`IN_SIEGE_WINDOW`/`RESOLVED`/`CANCELLED`), attacker, defender.
 - **Detail panel** on the right: attacker, defender, war state, goal type, casus belli, declaration time, allies, target positions, siege standards, occupations, revolt status, and a consequence summary for occupation tax, revolt pressure, or tribute aftermath.
-- Buttons: `Attacker info` / `Defender info` (open `PoliticalEntityInfoScreen`), `States` (state list), `Declare war`, `Cancel war`, `Occupy here`, `Annex here`, `Tribute: op only`, `Place siege here` (drop a siege standard at your current position), `Refresh`, `Close`.
+- Buttons: `Attacker info` / `Defender info` (open `PoliticalEntityInfoScreen`), `States` (state list), `Declare war`, `Cancel war`, `Occupy here`, `Annex here`, `Revolt won`, `Revolt failed`, `Tribute: op only`, `Place siege here` (drop a siege standard at your current position), `Refresh`, `Close`.
 
 `Place siege here` is enabled only when you are the leader of one of the war's sides and the war is not `RESOLVED`/`CANCELLED`. It sends `MessagePlaceSiegeStandardHere`, and the server validates against the same rules as `/bannermod siege place`.
 
@@ -313,6 +313,8 @@ When your territory is occupied by a hostile state you can declare a revolt from
 - `/bannermod war revolt resolve <revoltId> <outcome>` — admin-side resolution for operators.
 
 The War Room detail panel also shows revolt pressure. Pending revolts explain that occupied land is rebelling, the due tick, and the objective chunk that rebels must hold during an open battle window with no defenders present. Resolved revolts show the aftermath: success removes the occupation, while failure means the occupier held the objective and the occupation remains.
+
+Operators can resolve the first pending revolt on the selected war directly in the War Room with `Revolt won` or `Revolt failed`. The buttons are disabled when no war is selected, no pending revolt exists, or the local player is not an operator; the server repeats those checks and sends an explicit denial message if the action is rejected.
 
 ## When An Action Is Denied
 

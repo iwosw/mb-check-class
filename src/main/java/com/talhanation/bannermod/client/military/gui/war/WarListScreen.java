@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
+import com.talhanation.bannermod.network.messages.war.MessageResolveRevolt;
 import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
@@ -66,6 +67,8 @@ public class WarListScreen extends Screen {
     private Button cancelWarBtn;
     private Button occupyBtn;
     private Button annexBtn;
+    private Button revoltSuccessBtn;
+    private Button revoltFailBtn;
     private Button tributeLockedBtn;
     private Button statesBtn;
     private Button refreshBtn;
@@ -110,6 +113,10 @@ public class WarListScreen extends Screen {
                 .bounds(detailX, detailY - 24, 80, 18).build();
         tributeLockedBtn = Button.builder(text("gui.bannermod.war_list.tribute_locked"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE))
                 .bounds(detailX + 88, detailY - 24, 80, 18).build();
+        revoltSuccessBtn = Button.builder(text("gui.bannermod.war_list.revolt.resolve_success"), btn -> sendRevolt(RevoltState.SUCCESS))
+                .bounds(detailX, detailY - 68, 80, 18).build();
+        revoltFailBtn = Button.builder(text("gui.bannermod.war_list.revolt.resolve_fail"), btn -> sendRevolt(RevoltState.FAILED))
+                .bounds(detailX + 88, detailY - 68, 80, 18).build();
 
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
@@ -120,6 +127,8 @@ public class WarListScreen extends Screen {
         addRenderableWidget(cancelWarBtn);
         addRenderableWidget(occupyBtn);
         addRenderableWidget(annexBtn);
+        addRenderableWidget(revoltSuccessBtn);
+        addRenderableWidget(revoltFailBtn);
         addRenderableWidget(tributeLockedBtn);
         addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
@@ -146,6 +155,12 @@ public class WarListScreen extends Screen {
         if (selected == null) return;
         this.outcomeFeedback = text("gui.bannermod.war_list.feedback.pending");
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageResolveWarOutcome(selected.id(), action));
+    }
+
+    private void sendRevolt(RevoltState outcome) {
+        RevoltRecord revolt = firstPendingRevolt(selected);
+        if (revolt == null) return;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageResolveRevolt(revolt.id(), outcome));
     }
 
     private void openAllies() {
@@ -214,6 +229,18 @@ public class WarListScreen extends Screen {
             tributeLockedBtn.active = live && attackerLeader && supported && localOp;
             tributeLockedBtn.setTooltip(tributeLockedBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected, supported, localOp)));
         }
+        RevoltRecord pendingRevolt = firstPendingRevolt(selected);
+        Player player = Minecraft.getInstance().player;
+        boolean op = player != null && player.hasPermissions(2);
+        Component revoltTooltip = revoltLockedTooltip(has, pendingRevolt != null, op);
+        if (revoltSuccessBtn != null) {
+            revoltSuccessBtn.active = pendingRevolt != null && op;
+            revoltSuccessBtn.setTooltip(revoltSuccessBtn.active ? null : Tooltip.create(revoltTooltip));
+        }
+        if (revoltFailBtn != null) {
+            revoltFailBtn.active = pendingRevolt != null && op;
+            revoltFailBtn.setTooltip(revoltFailBtn.active ? null : Tooltip.create(revoltTooltip));
+        }
     }
 
     private Component placeSiegeDenial(boolean hasSelection) {
@@ -261,6 +288,24 @@ public class WarListScreen extends Screen {
         PoliticalEntityRecord attacker = war == null ? null : WarClientState.entityById(war.attackerPoliticalEntityId());
         Player player = Minecraft.getInstance().player;
         return PoliticalEntityAuthority.denialReason(player == null ? null : player.getUUID(), false, attacker);
+    }
+
+    private static Component revoltLockedTooltip(boolean hasSelection, boolean hasPendingRevolt, boolean op) {
+        if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
+        if (!hasPendingRevolt) return text("gui.bannermod.war_list.tooltip.revolt_none_pending");
+        if (!op) return text("gui.bannermod.war_list.tooltip.op_only");
+        return text("gui.bannermod.war_list.tooltip.revolt_select_pending");
+    }
+
+    @Nullable
+    private RevoltRecord firstPendingRevolt(@Nullable WarDeclarationRecord war) {
+        if (war == null) return null;
+        for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
+            if (revolt.state() == RevoltState.PENDING) {
+                return revolt;
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -384,6 +429,7 @@ public class WarListScreen extends Screen {
                 text("gui.bannermod.war_list.detail.occupations", occupationSummary(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.sieges", activeSiegeCount(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.revolts", revoltSummary(war.id())).getString(),
+                text("gui.bannermod.war_list.detail.revolt_ui").getString(),
                 text("gui.bannermod.war_list.detail.outcome_ui", outcomeStatus(war)).getString(),
                 text("gui.bannermod.war_list.detail.consequences", consequenceSummary(war)).getString(),
                 text("gui.bannermod.war_list.detail.id", shortId(war.id())).getString()

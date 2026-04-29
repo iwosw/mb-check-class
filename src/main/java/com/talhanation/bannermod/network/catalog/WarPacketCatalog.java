@@ -7,6 +7,7 @@ import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
+import com.talhanation.bannermod.network.messages.war.MessageResolveRevolt;
 import com.talhanation.bannermod.network.messages.war.MessageRespondAllyInvite;
 import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityCapital;
@@ -36,6 +37,7 @@ public final class WarPacketCatalog {
         MessageSetPoliticalEntityCharter.class,
         MessageDeclareWar.class,
         MessageResolveWarOutcome.class,
+        MessageResolveRevolt.class,
         MessageUpdateCoLeader.class,
         MessageSetPoliticalEntityStatus.class,
     };
