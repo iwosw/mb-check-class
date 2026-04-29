@@ -46,6 +46,7 @@ public class MessageToClientUpdateClaims implements BannerModMessage<MessageToCl
         RuntimeProfilingCounters.recordNbtPacket("network.full_sync.claims", claimsListNBT);
         ClientManager.recruitsClaims = RecruitsClaim.getListFromNBT(claimsListNBT);
         ClientManager.markClaimsChanged();
+        ClientManager.markClaimsSynchronized();
         ClientManager.configValueClaimCost = this.claimCost;
         ClientManager.configValueChunkCost = this.chunkCost;
         ClientManager.configValueCascadeClaimCost = this.cascadeOfCost;

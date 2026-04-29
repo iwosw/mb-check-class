@@ -25,6 +25,8 @@ public class ClientManager {
     public static Map<UUID, RecruitsClaim> recruitsClaimsByUUID = new HashMap<>();
     public static Map<Long, RecruitsClaim> recruitsClaimsByChunk = new HashMap<>();
     public static int recruitsClaimsVersion;
+    public static boolean hasClaimsSnapshot;
+    public static boolean claimsSnapshotStale;
     public static List<RecruitsGroup> groups = new ArrayList<>();
     public static int groupsVersion;
     public static List<FormationMapContact> formationMapContacts = new ArrayList<>();
@@ -82,6 +84,8 @@ public class ClientManager {
         currentClaim = null;
         configValueIsClaimingAllowed = false;
         configFogOfWarEnabled = false;
+        hasClaimsSnapshot = false;
+        claimsSnapshotStale = false;
         canPlayerHire = false;
         routesMap = resetState.routes();
     }
@@ -163,6 +167,17 @@ public class ClientManager {
     public static void markClaimsChanged() {
         rebuildClaimIndices();
         recruitsClaimsVersion++;
+    }
+
+    public static void markClaimsSynchronized() {
+        hasClaimsSnapshot = true;
+        claimsSnapshotStale = false;
+    }
+
+    public static void markClaimsStale() {
+        if (hasClaimsSnapshot) {
+            claimsSnapshotStale = true;
+        }
     }
 
     public static void rebuildClaimIndices() {

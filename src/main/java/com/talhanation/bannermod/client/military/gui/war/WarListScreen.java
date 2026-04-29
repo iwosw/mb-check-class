@@ -291,10 +291,13 @@ public class WarListScreen extends Screen {
         }
 
         if (wars.isEmpty()) {
-            String empty = text(WarClientState.hasSnapshot()
+            boolean hasSnapshot = WarClientState.hasSnapshot();
+            int color = hasSnapshot ? 0xFF8FA8FF : 0xFFAAAAAA;
+            String empty = text(hasSnapshot
                     ? "gui.bannermod.war_list.empty"
                     : "gui.bannermod.war_list.waiting_sync").getString();
-            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + listH / 2 - 4, 0xAAAAAA);
+            graphics.renderOutline(listX + 8, listY + listH / 2 - 14, listW - 16, 28, color);
+            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + listH / 2 - 4, color);
         }
     }
 

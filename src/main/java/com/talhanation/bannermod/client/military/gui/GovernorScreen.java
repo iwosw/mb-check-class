@@ -11,6 +11,7 @@ import com.talhanation.bannermod.shared.settlement.BannerModSettlementClientSnap
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -52,6 +53,8 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
     private void addPolicyButtons(BannerModGovernorPolicy policy, int yOffset) {
         Button minus = new ExtendedButton(this.leftPos + 150, this.topPos + yOffset, 16, 16, Component.literal("-"), button -> stepPolicy(policy, -1));
         Button plus = new ExtendedButton(this.leftPos + 170, this.topPos + yOffset, 16, 16, Component.literal("+"), button -> stepPolicy(policy, 1));
+        minus.setTooltip(Tooltip.create(text("gui.bannermod.governor.action.disabled.loading")));
+        plus.setTooltip(Tooltip.create(text("gui.bannermod.governor.action.disabled.loading")));
         this.policyButtons.add(minus);
         this.policyButtons.add(plus);
         addRenderableWidget(minus);
@@ -86,6 +89,7 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         guiGraphics.drawString(font, text("gui.bannermod.governor.title", recruit.getName().getString()), x, y, 4210752, false);
         y += 12;
         guiGraphics.drawString(font, text("gui.bannermod.governor.mirror_state", text(state.stateKey()).getString()), x, y, state.stateColor(), false);
+        guiGraphics.renderOutline(x - 3, y - 2, 120, 11, state.stateColor());
         y += 12;
         guiGraphics.drawString(font, text("gui.bannermod.governor.settlement", text(state.settlementKey()).getString()), x, y, 4210752, false);
         y += 12;
@@ -175,6 +179,7 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
     private void updatePolicyButtons(BannerModSettlementClientMirror.GovernorView state) {
         for (Button button : this.policyButtons) {
             button.active = state.canUpdatePolicy();
+            button.setTooltip(state.canUpdatePolicy() ? Tooltip.create(text("gui.bannermod.governor.action.enabled")) : Tooltip.create(text(state.actionReasonKey())));
         }
     }
 

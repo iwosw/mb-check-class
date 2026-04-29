@@ -811,5 +811,19 @@
   "key.bannermod.war_room_key": "Open War Room",
   "key.bannermod.map_screen_key": "Open Claim-Map Screen",
   "key.workers.open_command_screen": "Open Worker Command Screen",
-  "category.bannermod": "BannerMod"
+  "category.bannermod": "BannerMod",
+  "gui.bannermod.claim.disabled.no_owner": "Select an owner before saving this claim.",
+  "gui.bannermod.claim.state.empty": "Empty claim: no chunks are assigned.",
+  "gui.bannermod.claim.state.ready": "Claim synced: %s chunks.",
+  "gui.bannermod.claim.state.stale": "Claim update sent; waiting for server sync.",
+  "gui.bannermod.map.claim_state.empty": "No claims on the synced map.",
+  "gui.bannermod.map.claim_state.stale": "Claim edit pending server sync.",
+  "gui.bannermod.map.claim_state.waiting_sync": "Waiting for server claim sync.",
+  "gui.bannermod.work_area.state.empty_owner": "No worker owner is assigned.",
+  "gui.bannermod.work_area.state.ready": "Work area synced.",
+  "gui.bannermod.work_area.state.stale": "Work-area update sent; waiting for server sync.",
+  "gui.recruits.map.disabled.not_claim_leader": "Only the neighboring claim leader can claim this chunk.",
+  "gui.recruits.map.disabled.stale": "A claim edit is waiting for server sync.",
+  "gui.recruits.map.disabled.unclaimable_chunk": "Select a nearby unclaimed chunk outside buffer zones.",
+  "gui.recruits.map.disabled.waiting_sync": "Waiting for the server claim snapshot."
 }
