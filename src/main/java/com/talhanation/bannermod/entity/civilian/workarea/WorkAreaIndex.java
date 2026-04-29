@@ -89,16 +89,12 @@ public final class WorkAreaIndex {
         if (level == null || center == null || type == null) return List.of();
         if (!(level instanceof ServerLevel serverLevel)) {
             // On the client we don't maintain the index, so fall back to the broad scan.
-            AABB aabb = new AABB(center, center).inflate(radius);
-            List<T> fallback = level.getEntitiesOfClass(type, aabb);
-            RuntimeProfilingCounters.increment("work_area.index.fallback_scans");
-            RuntimeProfilingCounters.add("work_area.index.fallback_results", fallback.size());
-            return fallback;
+            return fallbackQueryInRange(level, center, radius, type);
         }
         ResourceKey<Level> key = level.dimension();
         Map<ChunkPos, Set<UUID>> chunks = byLevel.get(key);
         if (chunks == null || chunks.isEmpty()) {
-            return List.of();
+            return fallbackQueryInRange(level, center, radius, type);
         }
         int chunkRadius = Math.max(1, (int) Math.ceil(radius / 16.0));
         ChunkPos centerChunk = new ChunkPos(BlockPos.containing(center));
@@ -119,7 +115,21 @@ public final class WorkAreaIndex {
                 }
             }
         }
+        if (results.isEmpty()) {
+            return fallbackQueryInRange(level, center, radius, type);
+        }
         return results;
+    }
+
+    private <T extends AbstractWorkAreaEntity> List<T> fallbackQueryInRange(Level level,
+                                                                           Vec3 center,
+                                                                           double radius,
+                                                                           Class<T> type) {
+        AABB aabb = new AABB(center, center).inflate(radius);
+        List<T> fallback = level.getEntitiesOfClass(type, aabb);
+        RuntimeProfilingCounters.increment("work_area.index.fallback_scans");
+        RuntimeProfilingCounters.add("work_area.index.fallback_results", fallback.size());
+        return fallback;
     }
 
     /** Convenience overload — uses an entity's position as the query center. */

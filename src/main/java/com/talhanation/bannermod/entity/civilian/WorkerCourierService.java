@@ -77,6 +77,9 @@ final class WorkerCourierService {
         }
         this.clearCourierBlockedState();
         this.syncActiveCourierTaskNeeds();
+        if (activeCourierTask != null) {
+            this.worker.transportService().tick();
+        }
     }
 
     void clearActiveCourierTask() {
@@ -220,6 +223,15 @@ final class WorkerCourierService {
     @Nullable
     private StorageArea findStorageArea(ServerLevel level, UUID storageAreaId) {
         Entity entity = level.getEntity(storageAreaId);
-        return entity instanceof StorageArea storageArea ? storageArea : null;
+        if (entity instanceof StorageArea storageArea) {
+            return storageArea;
+        }
+        return level.getEntitiesOfClass(
+                        StorageArea.class,
+                        this.worker.getBoundingBox().inflate(128.0D),
+                        area -> storageAreaId.equals(area.getUUID()))
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 }

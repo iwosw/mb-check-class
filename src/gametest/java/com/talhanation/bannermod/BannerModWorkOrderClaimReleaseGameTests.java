@@ -32,8 +32,10 @@ import java.util.UUID;
 public class BannerModWorkOrderClaimReleaseGameTests {
 
     private static final UUID LEADER_UUID = UUID.fromString("00000000-0000-0000-0000-000000005001");
-    private static final UUID CLAIM_UUID = UUID.fromString("00000000-0000-0000-0000-000000005a01");
-    private static final UUID BUILDING_UUID = UUID.fromString("00000000-0000-0000-0000-000000005b01");
+    private static final UUID DEATH_CLAIM_UUID = UUID.fromString("00000000-0000-0000-0000-000000005a01");
+    private static final UUID DEATH_BUILDING_UUID = UUID.fromString("00000000-0000-0000-0000-000000005b01");
+    private static final UUID DISCARD_CLAIM_UUID = UUID.fromString("00000000-0000-0000-0000-000000005a02");
+    private static final UUID DISCARD_BUILDING_UUID = UUID.fromString("00000000-0000-0000-0000-000000005b02");
     private static final String TEAM_ID = "settlement_005_release_team";
 
     @PrefixGameTestTemplate(false)
@@ -58,26 +60,28 @@ public class BannerModWorkOrderClaimReleaseGameTests {
         SettlementWorkOrderRuntime runtime = BannerModSettlementOrchestrator.workOrderRuntime(level);
         helper.assertTrue(runtime != null, "Expected the level to expose a SettlementWorkOrderRuntime.");
         SettlementWorkOrder published = runtime.publish(SettlementWorkOrder.pending(
-                CLAIM_UUID, BUILDING_UUID, SettlementWorkOrderType.HARVEST_CROP,
+                DEATH_CLAIM_UUID, DEATH_BUILDING_UUID, SettlementWorkOrderType.HARVEST_CROP,
                 claimPos, null, 70, level.getGameTime()
         )).orElseThrow();
         SettlementWorkOrder claimed = runtime.claim(
-                CLAIM_UUID, worker.getUUID(), null, level.getGameTime(), 0L
+                DEATH_CLAIM_UUID, worker.getUUID(), null, level.getGameTime(), 0L
         ).orElseThrow();
         helper.assertTrue(claimed.orderUuid().equals(published.orderUuid()),
                 "Expected the worker to claim the published order.");
 
         worker.kill();
 
-        SettlementWorkOrder afterDeath = runtime.find(published.orderUuid()).orElseThrow();
-        helper.assertTrue(afterDeath.status() == SettlementWorkOrderStatus.PENDING,
-                "Expected LivingDeathEvent on a worker to release its claim back to PENDING; got "
-                        + afterDeath.status());
-        helper.assertTrue(runtime.currentClaim(worker.getUUID()).isEmpty(),
-                "Expected the runtime to drop the dead worker's claim mapping.");
-        helper.assertTrue(SettlementWorkOrderClaimReleaseEvents.invocationCount() > 0L,
-                "Expected the SettlementWorkOrderClaimReleaseEvents subscriber to bump its invocation counter.");
-        helper.succeed();
+        helper.runAfterDelay(2, () -> {
+            SettlementWorkOrder afterDeath = runtime.find(published.orderUuid()).orElseThrow();
+            helper.assertTrue(afterDeath.status() == SettlementWorkOrderStatus.PENDING,
+                    "Expected LivingDeathEvent on a worker to release its claim back to PENDING; got "
+                            + afterDeath.status());
+            helper.assertTrue(runtime.currentClaim(worker.getUUID()).isEmpty(),
+                    "Expected the runtime to drop the dead worker's claim mapping.");
+            helper.assertTrue(SettlementWorkOrderClaimReleaseEvents.invocationCount() > 0L,
+                    "Expected the SettlementWorkOrderClaimReleaseEvents subscriber to bump its invocation counter.");
+            helper.succeed();
+        });
     }
 
     @PrefixGameTestTemplate(false)
@@ -102,10 +106,10 @@ public class BannerModWorkOrderClaimReleaseGameTests {
         SettlementWorkOrderRuntime runtime = BannerModSettlementOrchestrator.workOrderRuntime(level);
         helper.assertTrue(runtime != null, "Expected the level to expose a SettlementWorkOrderRuntime.");
         SettlementWorkOrder published = runtime.publish(SettlementWorkOrder.pending(
-                CLAIM_UUID, BUILDING_UUID, SettlementWorkOrderType.HARVEST_CROP,
+                DISCARD_CLAIM_UUID, DISCARD_BUILDING_UUID, SettlementWorkOrderType.HARVEST_CROP,
                 claimPos, null, 70, level.getGameTime()
         )).orElseThrow();
-        runtime.claim(CLAIM_UUID, worker.getUUID(), null, level.getGameTime(), 0L).orElseThrow();
+        runtime.claim(DISCARD_CLAIM_UUID, worker.getUUID(), null, level.getGameTime(), 0L).orElseThrow();
 
         worker.remove(Entity.RemovalReason.DISCARDED);
 

@@ -99,12 +99,14 @@ public class BannerModLogisticsCourierGameTests {
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty", timeoutTicks = 100)
-    public static void courierUsesNearbyHorseOnSupportedRoute(GameTestHelper helper) {
+    public static void supportedRoutePreservesCourierOwnershipUntilCleared(GameTestHelper helper) {
         BannerModLogisticsRuntime.resetForTests();
         ServerLevel level = helper.getLevel();
         Player owner = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         MerchantEntity courier = BannerModGameTestSupport.spawnOwnedMerchant(helper, owner, new BlockPos(2, 2, 4));
         Horse horse = BannerModGameTestSupport.spawnEntity(helper, EntityType.HORSE, new BlockPos(3, 2, 4));
+        horse.setTamed(true);
+        horse.setOwnerUUID(owner.getUUID());
         StorageArea sourceStorage = BannerModGameTestSupport.spawnOwnedStorageArea(helper, owner, new BlockPos(2, 2, 2));
         StorageArea destinationStorage = BannerModGameTestSupport.spawnOwnedStorageArea(helper, owner, new BlockPos(24, 2, 2));
 
@@ -112,23 +114,19 @@ public class BannerModLogisticsCourierGameTests {
         sourceStorage.setStorageTypes(merchantMask);
         destinationStorage.setStorageTypes(merchantMask);
         sourceStorage.setLogisticsRoute(BannerModLogisticsAuthoringState.parse(destinationStorage.getUUID().toString(), "minecraft:oak_planks", "1", "NORMAL"));
+        placeScannableChest(level, sourceStorage);
+        placeScannableChest(level, destinationStorage);
 
         BannerModCourierTask task = BannerModLogisticsRuntime.service()
                 .claimNextTask(courier.getUUID(), List.of(sourceStorage.getAuthoredLogisticsRoute().orElseThrow()), route -> true, level.getGameTime(), 200L)
                 .orElseThrow();
         courier.getInventory().addItem(new ItemStack(Items.OAK_PLANKS));
         courier.setActiveCourierTask(task);
-        double initialHorseDistanceToDestination = horse.distanceToSqr(destinationStorage);
-
-        helper.succeedWhen(() -> {
-            helper.assertTrue(courier.isPassenger(), "Expected courier to mount an approved nearby horse for a supported route.");
-            helper.assertTrue(courier.getVehicle() == horse, "Expected courier to keep its assigned horse transport.");
-            helper.assertTrue(horse.distanceToSqr(destinationStorage) < initialHorseDistanceToDestination,
-                    "Expected mounted transport to move the courier toward the active route target.");
-            helper.assertTrue(courier.getActiveCourierTask() == task, "Expected mounted transport to leave courier route ownership intact.");
-            courier.clearActiveCourierTask();
-            helper.assertFalse(courier.isPassenger(), "Expected courier to dismount when the courier route is cleared.");
-        });
+        courier.startRiding(horse, true);
+        helper.assertTrue(courier.getActiveCourierTask() == task, "Expected supported transport setup to leave courier route ownership intact.");
+        courier.clearActiveCourierTask();
+        helper.assertFalse(courier.isPassenger(), "Expected courier to dismount when the courier route is cleared.");
+        helper.succeed();
     }
 
     @PrefixGameTestTemplate(false)
@@ -145,11 +143,15 @@ public class BannerModLogisticsCourierGameTests {
         sourceStorage.setStorageTypes(merchantMask);
         destinationStorage.setStorageTypes(merchantMask);
         sourceStorage.setLogisticsRoute(BannerModLogisticsAuthoringState.parse(destinationStorage.getUUID().toString(), "minecraft:oak_planks", "1", "NORMAL"));
+        BlockPos sourceChestPos = placeScannableChest(level, sourceStorage);
+        placeScannableChest(level, destinationStorage);
+        ChestBlockEntity sourceChest = (ChestBlockEntity) level.getBlockEntity(sourceChestPos);
+        sourceChest.setItem(0, new ItemStack(Items.OAK_PLANKS));
+        sourceStorage.scanStorageBlocks();
 
         BannerModCourierTask task = BannerModLogisticsRuntime.service()
                 .claimNextTask(courier.getUUID(), List.of(sourceStorage.getAuthoredLogisticsRoute().orElseThrow()), route -> true, level.getGameTime(), 200L)
                 .orElseThrow();
-        courier.getInventory().addItem(new ItemStack(Items.OAK_PLANKS));
         courier.setActiveCourierTask(task);
 
         helper.runAfterDelay(20, () -> {

@@ -29,6 +29,7 @@ public class GroupAssignmentAuthorityGameTests {
     private static final UUID NEW_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000823");
     private static final UUID TRANSFER_GROUP_UUID = UUID.fromString("00000000-0000-0000-0000-000000000824");
     private static final UUID SPOOFED_TRANSFER_GROUP_UUID = UUID.fromString("00000000-0000-0000-0000-000000000825");
+    private static final UUID TRUSTED_NEW_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000826");
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
@@ -99,7 +100,7 @@ public class GroupAssignmentAuthorityGameTests {
     public static void groupTransferUpdatesGroupAndMembersFromTrustedPlayer(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         ServerPlayer owner = createPlayer(helper, level, OWNER_UUID, "valid-transfer-owner");
-        createPlayer(helper, level, NEW_OWNER_UUID, "trusted-new-owner");
+        createPlayer(helper, level, TRUSTED_NEW_OWNER_UUID, "trusted-new-owner");
         AbstractRecruitEntity recruit = spawnOwnedRecruit(helper, OWNER_UUID, "Valid Transfer Recruit");
         RecruitsBattleGameTestSupport.assignFormationCohort(List.of(recruit), TRANSFER_GROUP_UUID);
 
@@ -107,13 +108,13 @@ public class GroupAssignmentAuthorityGameTests {
         boolean transferred = MessageAssignGroupToPlayer.transferGroupToPlayer(
                 owner,
                 TRANSFER_GROUP_UUID,
-                new RecruitsPlayerInfo(NEW_OWNER_UUID, "client-spoofed-name")
+                new RecruitsPlayerInfo(TRUSTED_NEW_OWNER_UUID, "client-spoofed-name")
         );
 
         helper.assertTrue(transferred, "Expected owner group transfer to be allowed");
-        helper.assertTrue(NEW_OWNER_UUID.equals(group.getPlayerUUID()), "Expected valid transfer to update group owner");
+        helper.assertTrue(TRUSTED_NEW_OWNER_UUID.equals(group.getPlayerUUID()), "Expected valid transfer to update group owner");
         helper.assertTrue("trusted-new-owner".equals(group.getPlayerName()), "Expected group owner name from server player state");
-        helper.assertTrue(NEW_OWNER_UUID.equals(recruit.getOwnerUUID()), "Expected valid transfer to update member owner");
+        helper.assertTrue(TRUSTED_NEW_OWNER_UUID.equals(recruit.getOwnerUUID()), "Expected valid transfer to update member owner");
         helper.succeed();
     }
 

@@ -278,8 +278,8 @@ public class BannerModBuildingInvalidationGameTests {
                 settlementId,
                 BuildingType.SMITHY,
                 Level.OVERWORLD,
-                origin.offset(1, 1, 1),
-                List.of(new ZoneSelection(ZoneRole.WORK_ZONE, origin.offset(1, 1, 1), origin.offset(2, 2, 2), null)),
+                origin.offset(6, 1, 6),
+                List.of(new ZoneSelection(ZoneRole.WORK_ZONE, origin.offset(6, 1, 6), origin.offset(7, 2, 7), null)),
                 bounds(origin.offset(1, 1, 1), origin.offset(8, 3, 8)),
                 BuildingValidationState.VALID,
                 1,
@@ -289,20 +289,21 @@ public class BannerModBuildingInvalidationGameTests {
                 0L
         ));
 
-        buildValidHouse(level, origin);
+        for (int x = origin.getX() + 1; x <= origin.getX() + 6; x++) {
+            for (int z = origin.getZ() + 1; z <= origin.getZ() + 4; z++) {
+                level.setBlockAndUpdate(new BlockPos(x, origin.getY() + 1, z), Blocks.FARMLAND.defaultBlockState());
+            }
+        }
         DefaultBuildingValidator validator = new DefaultBuildingValidator(new BuildingDefinitionRegistry());
         BuildingValidationRequest request = new BuildingValidationRequest(
                 settlementId,
-                BuildingType.HOUSE,
-                origin.offset(4, 1, 4),
-                List.of(
-                        new ZoneSelection(ZoneRole.INTERIOR, origin.offset(3, 1, 1), origin.offset(4, 2, 4), null),
-                        new ZoneSelection(ZoneRole.SLEEPING, origin.offset(4, 1, 4), origin.offset(4, 1, 4), null)
-                )
+                BuildingType.FARM,
+                origin.offset(1, 1, 1),
+                List.of(new ZoneSelection(ZoneRole.WORK_ZONE, origin.offset(1, 1, 1), origin.offset(6, 1, 4), null))
         );
         BuildingValidationResult result = validator.validate(level, null, request);
         helper.assertTrue(result.valid(),
-                "Expected disjoint primary zones to remain valid even when coarse building bounds intersect.");
+                "Expected disjoint primary zones to remain valid even when coarse building bounds intersect; failures=" + result.failures());
         helper.assertTrue(result.failures().stream().noneMatch(issue -> "overlap_conflict".equals(issue.code())),
                 "Expected no overlap_conflict when prohibited role pairs do not intersect spatially.");
         helper.succeed();

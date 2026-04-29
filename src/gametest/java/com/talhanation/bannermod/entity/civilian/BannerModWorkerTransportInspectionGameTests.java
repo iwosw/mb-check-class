@@ -17,6 +17,9 @@ import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -69,9 +72,27 @@ public class BannerModWorkerTransportInspectionGameTests {
         sourceStorage.setStorageTypes(merchantMask);
         destinationStorage.setStorageTypes(merchantMask);
         sourceStorage.setLogisticsRoute(BannerModLogisticsAuthoringState.parse(destinationStorage.getUUID().toString(), "minecraft:oak_planks", "1", "NORMAL"));
+        placeScannableChest(level, sourceStorage);
+        placeScannableChest(level, destinationStorage);
         return BannerModLogisticsRuntime.service()
                 .claimNextTask(courier.getUUID(), List.of(sourceStorage.getAuthoredLogisticsRoute().orElseThrow()), route -> true, level.getGameTime(), 200L)
                 .orElseThrow();
+    }
+
+    private static BlockPos placeScannableChest(ServerLevel level, StorageArea storageArea) {
+        AABB area = storageArea.getArea().inflate(-0.25D);
+        BlockPos chestPos = new BlockPos(
+                (int) Math.floor(area.minX),
+                storageArea.getOnPos().getY(),
+                (int) Math.floor(area.minZ)
+        );
+        level.setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState());
+        storageArea.scanStorageBlocks();
+        ChestBlockEntity chest = (ChestBlockEntity) level.getBlockEntity(chestPos);
+        if (chest != null) {
+            chest.setItem(0, ItemStack.EMPTY);
+        }
+        return chestPos;
     }
 
     private static void assertTranslationKey(GameTestHelper helper, Component component, String expectedKey) {

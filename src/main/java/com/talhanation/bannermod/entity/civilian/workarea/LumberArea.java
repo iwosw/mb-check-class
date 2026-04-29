@@ -61,9 +61,12 @@ public class LumberArea extends AbstractWorkAreaEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        CompoundTag nbt = new CompoundTag();
-        this.getSaplingStack().save(this.registryAccess(), nbt);
-        tag.put("saplingItem", nbt);
+        ItemStack saplingStack = this.getSaplingStack();
+        if (!saplingStack.isEmpty()) {
+            CompoundTag nbt = new CompoundTag();
+            saplingStack.save(this.registryAccess(), nbt);
+            tag.put("saplingItem", nbt);
+        }
         tag.putBoolean("replantTrees", getReplant());
         tag.putBoolean("shearLeaves", getShearLeaves());
         tag.putBoolean("stripLogs", getStripLogs());
