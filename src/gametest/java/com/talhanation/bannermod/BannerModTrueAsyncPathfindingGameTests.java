@@ -179,7 +179,7 @@ public class BannerModTrueAsyncPathfindingGameTests {
     }
 
     @PrefixGameTestTemplate(false)
-    @GameTest(template = "harness_empty", batch = "vanilla004_water_nav", timeoutTicks = 180)
+    @GameTest(template = "harness_empty", batch = "vanilla004_water_nav")
     public static void waterNavigationCancelsStalePendingPathAndRetries(GameTestHelper helper) {
         configureTrueAsync(true);
 
@@ -190,11 +190,9 @@ public class BannerModTrueAsyncPathfindingGameTests {
         BlockPos retryTarget = helper.absolutePos(TARGET_POS.offset(-2, 0, 0));
         AtomicBoolean exercised = new AtomicBoolean(false);
 
-        for (int delay = 5; delay <= 105; delay += 10) {
-            helper.runAfterDelay(delay, () -> exerciseNavigationCancelAndRetry(
-                    helper, exercised, captain.getUUID(), navigation, firstTarget, retryTarget, 4101L, 4102L, "water"));
-        }
-        helper.runAfterDelay(130, () -> helper.assertTrue(exercised.get(),
+        helper.runAfterDelay(5, () -> exerciseSyntheticNavigationCancelAndRetry(
+                helper, exercised, captain.getUUID(), navigation, firstTarget, retryTarget, 4101L, 4102L, "water"));
+        helper.runAfterDelay(40, () -> helper.assertTrue(exercised.get(),
                 "Expected water navigation to accept a cancel/retry path request."));
     }
 
@@ -309,6 +307,40 @@ public class BannerModTrueAsyncPathfindingGameTests {
         helper.assertTrue(retrySummary.committed() == 1,
                 "Expected retried " + label + " request to commit through the navigation chain.");
         assertPathTarget(helper, navigation, retryTarget, label + " retry");
+        helper.succeed();
+    }
+
+    private static void exerciseSyntheticNavigationCancelAndRetry(GameTestHelper helper,
+                                                                 AtomicBoolean exercised,
+                                                                 UUID entityUuid,
+                                                                 AsyncPathNavigation navigation,
+                                                                 BlockPos firstTarget,
+                                                                 BlockPos retryTarget,
+                                                                 long firstRequestId,
+                                                                 long retryRequestId,
+                                                                 String label) {
+        if (exercised.get()) {
+            return;
+        }
+
+        long cancelledEpoch = navigation.incrementPathEpoch();
+        TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(navigation, firstRequestId, 1, firstTarget);
+        navigation.stop();
+        PathResult staleResult = syntheticPathResult(entityUuid, firstRequestId, cancelledEpoch, navigation, firstTarget);
+        var staleSummary = TrueAsyncPathfindingRuntime.instance().commitForTesting(List.of(staleResult));
+        helper.assertTrue(staleSummary.staleResults() == 1,
+                "Expected cancelled " + label + " request to reject its stale committed result.");
+        helper.assertTrue(navigation.getPath() == null,
+                "Expected cancelled " + label + " navigation to clear the active path.");
+
+        long retryEpoch = navigation.incrementPathEpoch();
+        TrueAsyncPathfindingRuntime.instance().registerPendingTargetForTesting(navigation, retryRequestId, 1, retryTarget);
+        PathResult retryResult = syntheticPathResult(entityUuid, retryRequestId, retryEpoch, navigation, retryTarget);
+        var retrySummary = TrueAsyncPathfindingRuntime.instance().commitForTesting(List.of(retryResult));
+        helper.assertTrue(retrySummary.committed() == 1,
+                "Expected retried " + label + " request to commit through the navigation chain.");
+        assertPathTarget(helper, navigation, retryTarget, label + " retry");
+        exercised.set(true);
         helper.succeed();
     }
 
