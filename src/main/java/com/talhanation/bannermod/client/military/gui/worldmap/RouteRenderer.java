@@ -1,16 +1,11 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute.Waypoint;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
-import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -49,7 +44,7 @@ public class RouteRenderer {
 
     public static void renderDragGhost(GuiGraphics guiGraphics, Waypoint waypoint, int mouseX, int mouseY) {
         if (waypoint == null) return;
-        renderIconAt(guiGraphics, mouseX, mouseY, ICON_INDEX, COLOR_NORMAL, 0xFF);
+        renderIconAt(guiGraphics, mouseX, mouseY, ICON_INDEX, COLOR_NORMAL);
         if (waypoint.getAction() != null) {
             String label = waypoint.getAction().toString();
             int textWidth = Minecraft.getInstance().font.width(label);
@@ -67,11 +62,11 @@ public class RouteRenderer {
             Waypoint a = waypoints.get(i);
             Waypoint b = waypoints.get(i + 1);
             if (a == draggingWaypoint || b == draggingWaypoint) continue;
-            int x1 = (int)(offsetX + a.getPosition().getX() * scale);
-            int z1 = (int)(offsetZ + a.getPosition().getZ() * scale);
-            int x2 = (int)(offsetX + b.getPosition().getX() * scale);
-            int z2 = (int)(offsetZ + b.getPosition().getZ() * scale);
-            drawLine(guiGraphics, x1, z1, x2, z2, 0xAAFFFFFF);
+            int x1 = WorldMapRenderPrimitives.screenX(a.getPosition().getX(), offsetX, scale);
+            int z1 = WorldMapRenderPrimitives.screenZ(a.getPosition().getZ(), offsetZ, scale);
+            int x2 = WorldMapRenderPrimitives.screenX(b.getPosition().getX(), offsetX, scale);
+            int z2 = WorldMapRenderPrimitives.screenZ(b.getPosition().getZ(), offsetZ, scale);
+            WorldMapRenderPrimitives.solidLine(guiGraphics, x1, z1, x2, z2, 0xAAFFFFFF);
         }
     }
 
@@ -88,19 +83,19 @@ public class RouteRenderer {
         Waypoint next = clampedIdx < without.size() ? without.get(clampedIdx)     : null;
 
         if (prev != null) {
-            drawLine(guiGraphics,
-                    (int)(offsetX + prev.getPosition().getX() * scale),
-                    (int)(offsetZ + prev.getPosition().getZ() * scale),
-                    (int)(offsetX + draggingWaypoint.getPosition().getX() * scale),
-                    (int)(offsetZ + draggingWaypoint.getPosition().getZ() * scale),
+            WorldMapRenderPrimitives.dashedLine(guiGraphics,
+                    WorldMapRenderPrimitives.screenX(prev.getPosition().getX(), offsetX, scale),
+                    WorldMapRenderPrimitives.screenZ(prev.getPosition().getZ(), offsetZ, scale),
+                    WorldMapRenderPrimitives.screenX(draggingWaypoint.getPosition().getX(), offsetX, scale),
+                    WorldMapRenderPrimitives.screenZ(draggingWaypoint.getPosition().getZ(), offsetZ, scale),
                     0xFF00FFFF);
         }
         if (next != null) {
-            drawLine(guiGraphics,
-                    (int)(offsetX + draggingWaypoint.getPosition().getX() * scale),
-                    (int)(offsetZ + draggingWaypoint.getPosition().getZ() * scale),
-                    (int)(offsetX + next.getPosition().getX() * scale),
-                    (int)(offsetZ + next.getPosition().getZ() * scale),
+            WorldMapRenderPrimitives.dashedLine(guiGraphics,
+                    WorldMapRenderPrimitives.screenX(draggingWaypoint.getPosition().getX(), offsetX, scale),
+                    WorldMapRenderPrimitives.screenZ(draggingWaypoint.getPosition().getZ(), offsetZ, scale),
+                    WorldMapRenderPrimitives.screenX(next.getPosition().getX(), offsetX, scale),
+                    WorldMapRenderPrimitives.screenZ(next.getPosition().getZ(), offsetZ, scale),
                     0xFF00FFFF);
         }
     }
@@ -108,14 +103,14 @@ public class RouteRenderer {
     private static void renderWaypointIcon(GuiGraphics guiGraphics, Waypoint waypoint, int number,
                                            double offsetX, double offsetZ, double scale, int alpha,
                                            boolean isDragging) {
-        int pixelX = (int)(offsetX + waypoint.getPosition().getX() * scale);
-        int pixelZ = (int)(offsetZ + waypoint.getPosition().getZ() * scale);
+        int pixelX = WorldMapRenderPrimitives.screenX(waypoint.getPosition().getX(), offsetX, scale);
+        int pixelZ = WorldMapRenderPrimitives.screenZ(waypoint.getPosition().getZ(), offsetZ, scale);
 
         boolean loaded = isChunkLoaded(waypoint);
         int color = loaded ? COLOR_NORMAL : COLOR_NOT_LOADED;
         int argb  = (alpha << 24) | (color & 0x00FFFFFF);
 
-        renderIconAt(guiGraphics, pixelX, pixelZ, ICON_INDEX, argb, alpha);
+        renderIconAt(guiGraphics, pixelX, pixelZ, ICON_INDEX, argb);
 
         // Number label
         String numStr = String.valueOf(number);
@@ -152,48 +147,8 @@ public class RouteRenderer {
     }
 
     private static void renderIconAt(GuiGraphics guiGraphics, int pixelX, int pixelZ,
-                                     int iconIndex, int color, int alpha) {
-        PoseStack pose = guiGraphics.pose();
-        pose.pushPose();
-        pose.translate(pixelX, pixelZ, 0);
-        pose.scale(3.0f, 3.0f, 3.0f);
-
-        float u0 = (iconIndex % 16) / 16f;
-        float v0 = (iconIndex / 16) / 16f;
-        float u1 = u0 + 1f / 16f;
-        float v1 = v0 + 1f / 16f;
-
-        int a = (color >> 24) & 0xFF;
-        int r = (color >> 16) & 0xFF;
-        int g = (color >>  8) & 0xFF;
-        int b =  color        & 0xFF;
-
-        guiGraphics.flush();
-        VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.text(MAP_ICONS));
-        Matrix4f matrix = pose.last().pose();
-        int light = 0xF000F0;
-        consumer.addVertex(matrix, -1f,  1f, 0f).setColor(r, g, b, a).setUv(u0, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
-        consumer.addVertex(matrix,  1f,  1f, 0f).setColor(r, g, b, a).setUv(u1, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
-        consumer.addVertex(matrix,  1f, -1f, 0f).setColor(r, g, b, a).setUv(u1, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
-        consumer.addVertex(matrix, -1f, -1f, 0f).setColor(r, g, b, a).setUv(u0, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
-        guiGraphics.flush();
-
-        pose.popPose();
-    }
-
-    private static void drawLine(GuiGraphics g, int x1, int y1, int x2, int y2, int color) {
-        int dx = Math.abs(x2 - x1);
-        int dy = Math.abs(y2 - y1);
-        int sx = x1 < x2 ? 1 : -1;
-        int sy = y1 < y2 ? 1 : -1;
-        int err = dx - dy;
-        while (true) {
-            g.fill(x1, y1, x1 + 1, y1 + 1, color);
-            if (x1 == x2 && y1 == y2) break;
-            int e2 = 2 * err;
-            if (e2 > -dy) { err -= dy; x1 += sx; }
-            if (e2 <  dx) { err += dx; y1 += sy; }
-        }
+                                     int iconIndex, int color) {
+        WorldMapRenderPrimitives.texturedIcon(guiGraphics, MAP_ICONS, pixelX, pixelZ, iconIndex, 3.0F, color);
     }
 
     // -------------------------------------------------------------------------
@@ -204,8 +159,8 @@ public class RouteRenderer {
         if (route == null) return null;
         int hitRadius = Math.max(5, (int)(8 * scale / 2.0));
         for (Waypoint wp : route.getWaypoints()) {
-            int px = (int)(offsetX + wp.getPosition().getX() * scale);
-            int pz = (int)(offsetZ + wp.getPosition().getZ() * scale);
+            int px = WorldMapRenderPrimitives.screenX(wp.getPosition().getX(), offsetX, scale);
+            int pz = WorldMapRenderPrimitives.screenZ(wp.getPosition().getZ(), offsetZ, scale);
             if (Math.abs(mouseX - px) <= hitRadius && Math.abs(mouseY - pz) <= hitRadius) return wp;
         }
         return null;

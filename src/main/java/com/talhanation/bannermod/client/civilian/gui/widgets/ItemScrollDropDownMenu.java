@@ -1,9 +1,11 @@
 package com.talhanation.bannermod.client.civilian.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.talhanation.bannermod.client.military.gui.widgets.GuiWidgetBounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -40,8 +42,8 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
         this.options = options;
         this.onSelect = onSelect;
         this.optionHeight = height;
-        this.maxVisibleOptions = Math.min(5, options.size());
-        this.scrollbarHandleHeight = Math.max(10, (int)((float)this.maxVisibleOptions / (float)options.size() * (float)(height * this.maxVisibleOptions)));
+        this.maxVisibleOptions = getVisibleOptionCount();
+        this.scrollbarHandleHeight = getScrollbarHandleHeight(this.maxVisibleOptions * this.optionHeight);
         this.setCanSelectItem(true);
         this.setResetCount(true);
     }
@@ -64,11 +66,16 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
             guiGraphics.renderItemDecorations(Minecraft.getInstance().font, selectedOption, iconX, iconY);
 
             if (this.isOpen) {
-                int dropdownHeight = this.maxVisibleOptions * this.optionHeight;
+                int visibleOptions = getVisibleOptionCount();
+                if (visibleOptions <= 0) return;
+                this.maxVisibleOptions = visibleOptions;
+                this.scrollOffset = GuiWidgetBounds.clampScrollOffset(this.scrollOffset, this.options.size(), visibleOptions);
+
+                int dropdownHeight = visibleOptions * this.optionHeight;
                 guiGraphics.fill(this.getX(), this.getY() + this.height, this.getX() + this.width, this.getY() + this.height + dropdownHeight, this.bgFill);
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0.0F, 0.0F, 500.0F);
-                RenderSystem.enableScissor((int)((double)this.getX() * Minecraft.getInstance().getWindow().getGuiScale()), (int)((double)Minecraft.getInstance().getWindow().getHeight() - (double)(this.getY() + this.height + dropdownHeight) * Minecraft.getInstance().getWindow().getGuiScale()), (int)((double)this.width * Minecraft.getInstance().getWindow().getGuiScale()), (int)((double)dropdownHeight * Minecraft.getInstance().getWindow().getGuiScale()));
+                GuiWidgetBounds.enableScissor(this.getX(), this.getY() + this.height, this.width, dropdownHeight);
 
                 int i;
                 int optionY;
@@ -91,10 +98,10 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
                 }
 
                 RenderSystem.disableScissor();
-                if (this.options.size() > this.maxVisibleOptions) {
+                if (this.options.size() > visibleOptions) {
                     i = this.getX() + this.width - this.scrollbarWidth;
                     optionY = this.getY() + this.height + (int)((float)this.scrollOffset / (float)this.options.size() * (float)dropdownHeight);
-                    int scrollbarHeight = (int)((float)this.maxVisibleOptions / (float)this.options.size() * (float)dropdownHeight);
+                    int scrollbarHeight = getScrollbarHandleHeight(dropdownHeight);
                     guiGraphics.fill(i, this.getY() + this.height, i + this.scrollbarWidth, this.getY() + this.height + dropdownHeight, this.scrollbarColor);
                     guiGraphics.fill(i, optionY, i + this.scrollbarWidth, optionY + scrollbarHeight, this.scrollbarHandleColor);
                 }
@@ -131,8 +138,8 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
         }
 
         // Scrollbar ggf. anpassen
-        this.maxVisibleOptions = Math.min(5, options.size());
-        this.scrollbarHandleHeight = Math.max(10, (int)((float)this.maxVisibleOptions / (float)options.size() * (float)(this.height * this.maxVisibleOptions)));
+        this.maxVisibleOptions = getVisibleOptionCount();
+        this.scrollbarHandleHeight = getScrollbarHandleHeight(this.maxVisibleOptions * this.optionHeight);
     }
 
     public void onClick(double mouseX, double mouseY) {
@@ -175,10 +182,12 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
             }
 
             if (this.isScrolling) {
-                int dropdownHeight = this.maxVisibleOptions * this.optionHeight;
+                int visibleOptions = getVisibleOptionCount();
+                int dropdownHeight = visibleOptions * this.optionHeight;
+                if (dropdownHeight <= 0) return;
                 int scrollbarY = (int)mouseY - (this.getY() + this.height);
                 this.scrollOffset = (int)((float)scrollbarY / (float)dropdownHeight * (float)this.options.size());
-                this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.options.size() - this.maxVisibleOptions));
+                this.scrollOffset = GuiWidgetBounds.clampScrollOffset(this.scrollOffset, this.options.size(), visibleOptions);
             }
 
         }
@@ -188,8 +197,9 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
         if (!this.visible) {
             return false;
         } else if (this.isOpen) {
+            int visibleOptions = getVisibleOptionCount();
             this.scrollOffset -= (int)delta;
-            this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.options.size() - this.maxVisibleOptions));
+            this.scrollOffset = GuiWidgetBounds.clampScrollOffset(this.scrollOffset, this.options.size(), visibleOptions);
             return true;
         } else {
             return false;
@@ -208,18 +218,19 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
     }
 
     private boolean isMouseOverScrollbar(int mouseX, int mouseY) {
-        if (this.isOpen && this.options.size() > this.maxVisibleOptions) {
+        int visibleOptions = getVisibleOptionCount();
+        if (this.isOpen && this.options.size() > visibleOptions) {
             int scrollbarX = this.getX() + this.width - this.scrollbarWidth;
             int scrollbarY = this.getY() + this.height;
-            int scrollbarHeight = this.maxVisibleOptions * this.optionHeight;
-            return mouseX >= scrollbarX && mouseX <= scrollbarX + this.scrollbarWidth && mouseY >= scrollbarY && mouseY <= scrollbarY + scrollbarHeight;
+            int scrollbarHeight = visibleOptions * this.optionHeight;
+            return GuiWidgetBounds.contains(scrollbarX, scrollbarY, this.scrollbarWidth, scrollbarHeight, mouseX, mouseY);
         } else {
             return false;
         }
     }
 
     private boolean isMouseOverDisplay(int mouseX, int mouseY) {
-        return mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height;
+        return GuiWidgetBounds.contains(this.getX(), this.getY(), this.width, this.height, mouseX, mouseY);
     }
 
     private boolean isMouseOverDropdown(int mouseX, int mouseY) {
@@ -229,20 +240,31 @@ public class ItemScrollDropDownMenu extends AbstractWidget {
             int dropdownStartX = this.getX();
             int dropdownStartY = this.getY() + this.height;
             int dropdownEndX = dropdownStartX + this.width;
-            int dropdownEndY = dropdownStartY + this.maxVisibleOptions * this.optionHeight;
-            return mouseX >= dropdownStartX && mouseX <= dropdownEndX && mouseY >= dropdownStartY && mouseY <= dropdownEndY;
+            int dropdownEndY = dropdownStartY + getVisibleOptionCount() * this.optionHeight;
+            return GuiWidgetBounds.contains(dropdownStartX, dropdownStartY, dropdownEndX - dropdownStartX, dropdownEndY - dropdownStartY, mouseX, mouseY);
         }
     }
 
     private boolean isMouseOverOption(int mouseX, int mouseY, int optionY) {
-        return mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= optionY && mouseY <= optionY + this.optionHeight;
+        return GuiWidgetBounds.contains(this.getX(), optionY, this.width, this.optionHeight, mouseX, mouseY);
     }
 
     public boolean isMouseOver(double x, double y) {
         return this.isMouseOverDisplay((int)x, (int)y) || this.isMouseOverDropdown((int)x, (int)y) || this.isMouseOverScrollbar((int)x, (int)y) || super.isMouseOver(x, y);
     }
 
-    protected void updateWidgetNarration(NarrationElementOutput p_259858_) {
+    protected void updateWidgetNarration(NarrationElementOutput narration) {
+        narration.add(NarratedElementType.TITLE, Component.translatable(
+                "gui.bannermod.widget.dropdown.narration", this.selectedOption.getHoverName(), this.options.size()));
+    }
+
+    private int getVisibleOptionCount() {
+        return GuiWidgetBounds.visibleRowsBelow(this.getY() + this.height, this.optionHeight, Math.min(5, this.options.size()));
+    }
+
+    private int getScrollbarHandleHeight(int dropdownHeight) {
+        if (this.options.isEmpty() || dropdownHeight <= 0) return 0;
+        return Math.max(10, (int)((float)this.maxVisibleOptions / (float)this.options.size() * (float)dropdownHeight));
     }
 
     private void selectOption(ItemStack option) {

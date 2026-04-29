@@ -234,12 +234,12 @@ public class CommandEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         MovementFormationCommandService.initializePlayerCommandState(event.getEntity());
     }
 
     @SubscribeEvent
-    public static void onPlayerClone(PlayerEvent.Clone event) {
+    public void onPlayerClone(PlayerEvent.Clone event) {
         MovementFormationCommandService.copyPersistentCommandPreferences(event.getOriginal(), event.getEntity());
     }
 

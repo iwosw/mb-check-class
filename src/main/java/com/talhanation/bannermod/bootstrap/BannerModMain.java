@@ -8,14 +8,12 @@ import com.talhanation.bannermod.events.PillagerEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.events.VillagerEvents;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
-import com.talhanation.bannermod.events.WorkersCommandEvents;
 import com.talhanation.bannermod.events.civilian.SettlementMutationRefreshEvents;
 import com.talhanation.bannermod.events.civilian.SettlementWorkOrderClaimReleaseEvents;
 import com.talhanation.bannermod.client.civilian.events.ScreenEvents;
 import com.talhanation.bannermod.client.military.events.ClientPlayerEvents;
 import com.talhanation.bannermod.client.military.events.KeyEvents;
-import com.talhanation.bannermod.client.military.gui.overlay.BattleWindowHud;
-import com.talhanation.bannermod.client.military.gui.overlay.ClaimOverlayManager;
+import com.talhanation.bannermod.client.military.gui.overlay.HudOverlayCoordinator;
 import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
 import com.talhanation.bannermod.commands.war.BannerModWarCommands;
@@ -108,6 +106,7 @@ public class BannerModMain {
         // Client-side setup
         if (dist == Dist.CLIENT) {
             modEventBus.addListener(BannerModMain.this::clientSetup);
+            modEventBus.addListener(HudOverlayCoordinator::registerOverlays);
             modEventBus.addListener(com.talhanation.bannermod.registry.military.ModShortcuts::registerBindings);
             modEventBus.addListener(com.talhanation.bannermod.registry.civilian.ModShortcuts::registerBindings);
         }
@@ -126,7 +125,6 @@ public class BannerModMain {
     private void setup(final FMLCommonSetupEvent event) {
         // Workers runtime events
         NeoForge.EVENT_BUS.register(new WorkersVillagerEvents());
-        NeoForge.EVENT_BUS.register(new WorkersCommandEvents());
         // Recruits runtime events — ports the legacy recruits/Main.java registrations into the
         // unified entrypoint. RecruitEvents.onServerStarting is what initializes the static
         // recruitsPlayerUnitManager / recruitsGroupsManager fields read by AbstractRecruitEntity.
@@ -159,7 +157,6 @@ public class BannerModMain {
         isRPGZLoaded = ModList.get().isLoaded("rpgz");
     }
 
-    @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void clientSetup(FMLClientSetupEvent event) {
         // Military menus
@@ -184,12 +181,11 @@ public class BannerModMain {
         // as 21-11 (recruits/Main.java was deprecated to a no-op shim and these registrations
         // were not ported into the unified entrypoint). KeyEvents owns the R/U/M hotkey
         // listener that opens Command/Faction/Map screens; ClientPlayerEvents owns
-        // client-tick and world-load hooks; ClaimOverlayManager renders the claim HUD.
+        // client-tick and world-load hooks; HudOverlayCoordinator renders the claim/war HUD stack.
         // See 21-UAT.md gap "Recruits hotkey screens (Command/Faction/Map) and the claim overlay open in dev client".
         NeoForge.EVENT_BUS.register(new KeyEvents());
         NeoForge.EVENT_BUS.register(new ClientPlayerEvents());
-        NeoForge.EVENT_BUS.register(new ClaimOverlayManager());
-        NeoForge.EVENT_BUS.register(new BattleWindowHud());
+        NeoForge.EVENT_BUS.register(HudOverlayCoordinator.INSTANCE);
     }
 
     private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {

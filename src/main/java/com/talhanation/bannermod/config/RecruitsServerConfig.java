@@ -5,15 +5,12 @@ import com.electronwill.nightconfig.core.io.WritingMode;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@EventBusSubscriber
 public class RecruitsServerConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     public static ModConfigSpec SERVER;

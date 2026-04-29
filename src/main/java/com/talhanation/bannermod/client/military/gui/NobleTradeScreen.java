@@ -4,6 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.component.RecruitsMultiLineEditBox;
+import com.talhanation.bannermod.client.military.gui.widgets.ListScreenEntryBase;
+import com.talhanation.bannermod.client.military.gui.widgets.ListScreenListBase;
 import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
 import com.talhanation.bannermod.entity.military.VillagerNobleEntity;
 import com.talhanation.bannermod.network.messages.military.MessageHireFromNobleVillager;
@@ -24,9 +26,6 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.ObjectSelectionList;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -83,7 +82,6 @@ public class NobleTradeScreen extends RecruitsScreenBase {
 
         int listLeft = guiLeft + LIST_X;
         int listTop = guiTop + LIST_Y;
-        int listBottom = listTop + LIST_H;
         int listWidth = LIST_W;
         int listHeight = LIST_H;
         int itemHeight = 40;
@@ -91,8 +89,7 @@ public class NobleTradeScreen extends RecruitsScreenBase {
 
         this.group = ClientManager.getSelectedGroup();
 
-        this.tradeList = new TradeList(Minecraft.getInstance(), listWidth, listHeight, listTop, listBottom, itemHeight, itemWidth);
-        this.tradeList.setX(listLeft);
+        this.tradeList = new TradeList(listWidth, listHeight, listLeft, listTop, itemHeight, itemWidth);
 
         this.addRenderableWidget(this.tradeList);
 
@@ -248,13 +245,13 @@ public class NobleTradeScreen extends RecruitsScreenBase {
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, TITLE, guiLeft + 10, guiTop + 7, FONT_COLOR, false);
-        guiGraphics.drawString(font, Component.literal("Lvl: " + villagerNoble.getTraderLevel()), guiLeft + TRADE_TITLE_X, guiTop + 7, FONT_COLOR, false);
+        guiGraphics.drawString(font, Component.translatable("gui.recruits.stat.level_value", villagerNoble.getTraderLevel()), guiLeft + TRADE_TITLE_X, guiTop + 7, FONT_COLOR, false);
 
         if(villagerList != null) v = villagerList.size();
         else v = 0;
 
         if(ClientManager.configValueNobleNeedsVillagers)
-            guiGraphics.drawString(font, Component.literal(TEXT_VILLAGERS.getString() + ": " + v), guiLeft + TRADE_TITLE_X, guiTop + 30, FONT_COLOR, false);
+            guiGraphics.drawString(font, Component.translatable("gui.recruits.villager_noble.villagers_value", v), guiLeft + TRADE_TITLE_X, guiTop + 30, FONT_COLOR, false);
 
         if (selection != null) {
             int x = guiLeft + TRADE_TITLE_X ;
@@ -307,10 +304,10 @@ public class NobleTradeScreen extends RecruitsScreenBase {
     int yOffset = 15;
 
     /* ===================== List Widget ===================== */
-    private class TradeList extends ObjectSelectionList<TradeList.TradeEntry> {
+    private class TradeList extends ListScreenListBase<TradeList.TradeEntry> {
         public int itemWidth;
-        public TradeList(Minecraft mc, int width, int height, int top, int bottom, int itemHeight, int itemWidth) {
-            super(mc, width, height, top, itemHeight);
+        public TradeList(int width, int height, int left, int top, int itemHeight, int itemWidth) {
+            super(width, height, left, top, itemHeight);
             this.itemWidth = itemWidth;
         }
 
@@ -345,7 +342,7 @@ public class NobleTradeScreen extends RecruitsScreenBase {
             NobleTradeScreen.this.onSelected(entry);
         }
 
-        public class TradeEntry extends ObjectSelectionList.Entry<TradeEntry> {
+        public class TradeEntry extends ListScreenEntryBase<TradeEntry> {
             private final RecruitsHireTrade trade;
             public TradeEntry(RecruitsHireTrade trade) {
                 this.trade = trade;
@@ -386,10 +383,15 @@ public class NobleTradeScreen extends RecruitsScreenBase {
                 return true;
             }
 
-            @Override
             public Component getNarration() {
                 return Component.empty();
             }
+
+            @Override
+            public ListScreenListBase<TradeEntry> getList() {
+                return TradeList.this;
+            }
+
             private int getButtonTextureY(boolean hovered, boolean selected, boolean out) {
                 final int BUTTON_Y_OUT = 46;
                 final int BUTTON_Y_NORMAL = 66;

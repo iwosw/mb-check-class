@@ -58,9 +58,9 @@ Use `tools/task-worktree <TASK-ID> --base origin/master` for an independent task
 
 1. Starting a task means committing to carry it to acceptance in the same work slice unless a real blocker appears.
 2. If the task is too large, stop expanding the partial implementation and split the remaining work immediately.
-3. Create concrete child tasks with their own scope and acceptance using `tools/backlog add ...`.
-4. Rewire the parent into an orchestration task with `tools/backlog set-deps <PARENT> --depends-on <CHILD-1> --depends-on <CHILD-2> ...`.
-5. Append `tools/backlog progress <PARENT> "<what already landed>; <what moved into children>; <what still blocks closure>"`.
+3. Create a child spec JSON file with concrete child task objects containing `id`, `title`, `why`, `scope`, `acceptance`, and optional `dependencies` / `evidence`.
+4. Run `tools/backlog split <PARENT> --child-file <children.json> --progress "<what already landed>; <what moved into children>; <what still blocks closure>"` to add the children, replace the parent dependencies with those child IDs, and append the parent progress note in one write.
+5. Use `--dry-run` first when reviewing the split shape.
 6. Do not leave a large task in `in_progress` without either finishing it or explicitly splitting it this way.
 
 ## Acceptance Verification Flow

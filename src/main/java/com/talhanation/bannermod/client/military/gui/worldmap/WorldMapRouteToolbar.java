@@ -91,8 +91,7 @@ final class WorldMapRouteToolbar {
             return;
         }
 
-        guiGraphics.fill(ROUTE_UI_X, ROUTE_UI_Y, ROUTE_UI_X + ROUTE_DROPDOWN_W, ROUTE_UI_Y + ROUTE_BTN_SIZE, 0x80222222);
-        guiGraphics.renderOutline(ROUTE_UI_X, ROUTE_UI_Y, ROUTE_DROPDOWN_W, ROUTE_BTN_SIZE, 0x40FFFFFF);
+        WorldMapRenderPrimitives.panel(guiGraphics, ROUTE_UI_X, ROUTE_UI_Y, ROUTE_DROPDOWN_W, ROUTE_BTN_SIZE);
 
         if (routeDropDown.isOpen()) {
             routeDropDown.renderWidget(guiGraphics, mouseX, mouseY, partialTicks);
@@ -106,11 +105,8 @@ final class WorldMapRouteToolbar {
 
     private void renderButton(GuiGraphics guiGraphics, int mouseX, int mouseY, int buttonX,
                               String label, int labelColor, boolean selected) {
-        boolean hovered = isOverButton(mouseX, mouseY, buttonX);
-        int bg = selected ? 0x80555555 : (hovered ? 0x80444444 : 0x80222222);
-        guiGraphics.fill(buttonX, ROUTE_UI_Y, buttonX + ROUTE_BTN_SIZE, ROUTE_UI_Y + ROUTE_BTN_SIZE, bg);
-        guiGraphics.renderOutline(buttonX, ROUTE_UI_Y, ROUTE_BTN_SIZE, ROUTE_BTN_SIZE, 0x40FFFFFF);
-        guiGraphics.drawCenteredString(screen.getScreenFont(), label, buttonX + ROUTE_BTN_SIZE / 2, ROUTE_UI_Y + 6, labelColor);
+        WorldMapRenderPrimitives.button(guiGraphics, screen.getScreenFont(), mouseX, mouseY,
+                buttonX, ROUTE_UI_Y, ROUTE_BTN_SIZE, ROUTE_BTN_SIZE, label, labelColor, selected);
     }
 
     private int getAddButtonX() {
@@ -126,7 +122,7 @@ final class WorldMapRouteToolbar {
     }
 
     private boolean isOverButton(double mouseX, double mouseY, int buttonX) {
-        return mouseX >= buttonX && mouseX <= buttonX + ROUTE_BTN_SIZE
-                && mouseY >= ROUTE_UI_Y && mouseY <= ROUTE_UI_Y + ROUTE_BTN_SIZE;
+        return WorldMapRenderPrimitives.contains(mouseX, mouseY,
+                buttonX, ROUTE_UI_Y, ROUTE_BTN_SIZE, ROUTE_BTN_SIZE);
     }
 }

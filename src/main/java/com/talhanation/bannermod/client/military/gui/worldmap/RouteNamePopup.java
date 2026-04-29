@@ -10,10 +10,6 @@ public class RouteNamePopup {
 
     private static final int WIDTH = 200;
     private static final int HEIGHT = 64;
-    private static final int BG_COLOR = 0x80000000;
-    private static final int OUTLINE_COLOR = 0x40FFFFFF;
-    private static final int BTN_COLOR = 0x80222222;
-    private static final int BTN_HOVERED_COLOR = 0x80444444;
     private static final int TEXT_COLOR = 0xFFFFFF;
 
     private final WorldMapScreen parent;
@@ -74,8 +70,7 @@ public class RouteNamePopup {
         int py = (parent.height - HEIGHT) / 2;
 
         guiGraphics.fill(0, 0, parent.width, parent.height, 0x88000000);
-        guiGraphics.fill(px, py, px + WIDTH, py + HEIGHT, BG_COLOR);
-        guiGraphics.renderOutline(px, py, WIDTH, HEIGHT, OUTLINE_COLOR);
+        WorldMapRenderPrimitives.panel(guiGraphics, px, py, WIDTH, HEIGHT);
 
         guiGraphics.drawCenteredString(Minecraft.getInstance().font, "Route Name:",
                 px + WIDTH / 2, py + 6, TEXT_COLOR);
@@ -84,7 +79,7 @@ public class RouteNamePopup {
         int fieldY = py + 20;
         int fieldW = WIDTH - 16;
         guiGraphics.fill(fieldX - 1, fieldY - 1, fieldX + fieldW + 1, fieldY + 15, 0x80303030);
-        guiGraphics.renderOutline(fieldX - 1, fieldY - 1, fieldW + 2, 16, OUTLINE_COLOR);
+        guiGraphics.renderOutline(fieldX - 1, fieldY - 1, fieldW + 2, 16, 0xAA8A6A3A);
 
         if (nameField != null) nameField.render(guiGraphics, mouseX, mouseY, 0);
 
@@ -95,11 +90,8 @@ public class RouteNamePopup {
 
     private void renderButton(GuiGraphics guiGraphics, int mouseX, int mouseY,
                                String label, int x, int y, int w, int h) {
-        boolean hovered = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
-        guiGraphics.fill(x, y, x + w, y + h, hovered ? BTN_HOVERED_COLOR : BTN_COLOR);
-        guiGraphics.renderOutline(x, y, w, h, OUTLINE_COLOR);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, label,
-                x + w / 2, y + (h - 8) / 2, TEXT_COLOR);
+        WorldMapRenderPrimitives.button(guiGraphics, Minecraft.getInstance().font, mouseX, mouseY,
+                x, y, w, h, label, TEXT_COLOR, false);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY) {
@@ -119,11 +111,11 @@ public class RouteNamePopup {
 
         int btnY = py + HEIGHT - 18;
 
-        if (mouseX >= px + 8 && mouseX <= px + 88 && mouseY >= btnY && mouseY <= btnY + 14) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + 8, btnY, 80, 14)) {
             confirm();
             return true;
         }
-        if (mouseX >= px + WIDTH - 88 && mouseX <= px + WIDTH - 8 && mouseY >= btnY && mouseY <= btnY + 14) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + WIDTH - 88, btnY, 80, 14)) {
             close();
             return true;
         }

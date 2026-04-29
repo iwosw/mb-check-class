@@ -11,11 +11,6 @@ public class WaypointEditPopup {
 
     private static final int WIDTH = 210;
     private static final int HEIGHT = 90;
-    private static final int BG_COLOR = 0x80000000;
-    private static final int OUTLINE_COLOR = 0x40FFFFFF;
-    private static final int BTN_COLOR = 0x80222222;
-    private static final int BTN_HOVERED_COLOR = 0x80444444;
-    private static final int BTN_SELECTED_COLOR = 0xBB444444;
     private static final int TEXT_COLOR = 0xFFFFFF;
     private static final int TEXT_MUTED = 0xAAAAAA;
     private static final int BTN_H = 14;
@@ -113,8 +108,7 @@ public class WaypointEditPopup {
         int py = (parent.height - HEIGHT) / 2;
 
         guiGraphics.fill(0, 0, parent.width, parent.height, 0x88000000);
-        guiGraphics.fill(px, py, px + WIDTH, py + HEIGHT, BG_COLOR);
-        guiGraphics.renderOutline(px, py, WIDTH, HEIGHT, OUTLINE_COLOR);
+        WorldMapRenderPrimitives.panel(guiGraphics, px, py, WIDTH, HEIGHT);
 
         guiGraphics.drawCenteredString(Minecraft.getInstance().font, waypoint.getName(),
                 px + WIDTH / 2, py + 6, TEXT_COLOR);
@@ -132,7 +126,7 @@ public class WaypointEditPopup {
             int fieldX = px + 66;
             int fieldW = 54;
             guiGraphics.fill(fieldX - 1, fieldY - 1, fieldX + fieldW + 1, fieldY + 13, 0x80303030);
-            guiGraphics.renderOutline(fieldX - 1, fieldY - 1, fieldW + 2, 14, OUTLINE_COLOR);
+            guiGraphics.renderOutline(fieldX - 1, fieldY - 1, fieldW + 2, 14, 0xAA8A6A3A);
             if (waitField != null) waitField.render(guiGraphics, mouseX, mouseY, 0);
         }
 
@@ -144,22 +138,14 @@ public class WaypointEditPopup {
     private void renderActionButton(GuiGraphics guiGraphics, int mouseX, int mouseY,
                                      String label, RecruitsRoute.WaypointAction.Type type,
                                      int x, int y) {
-        boolean selected = actionType == type;
-        boolean hovered  = mouseX >= x && mouseX <= x + BTN_W && mouseY >= y && mouseY <= y + BTN_H;
-        int bg = selected ? BTN_SELECTED_COLOR : (hovered ? BTN_HOVERED_COLOR : BTN_COLOR);
-        guiGraphics.fill(x, y, x + BTN_W, y + BTN_H, bg);
-        guiGraphics.renderOutline(x, y, BTN_W, BTN_H, selected ? TEXT_COLOR : OUTLINE_COLOR);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, label,
-                x + BTN_W / 2, y + (BTN_H - 8) / 2, TEXT_COLOR);
+        WorldMapRenderPrimitives.button(guiGraphics, Minecraft.getInstance().font, mouseX, mouseY,
+                x, y, BTN_W, BTN_H, label, TEXT_COLOR, actionType == type);
     }
 
     private void renderButton(GuiGraphics guiGraphics, int mouseX, int mouseY,
                                String label, int x, int y, int w, int h) {
-        boolean hovered = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
-        guiGraphics.fill(x, y, x + w, y + h, hovered ? BTN_HOVERED_COLOR : BTN_COLOR);
-        guiGraphics.renderOutline(x, y, w, h, OUTLINE_COLOR);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, label,
-                x + w / 2, y + (h - 8) / 2, TEXT_COLOR);
+        WorldMapRenderPrimitives.button(guiGraphics, Minecraft.getInstance().font, mouseX, mouseY,
+                x, y, w, h, label, TEXT_COLOR, false);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY) {
@@ -176,15 +162,14 @@ public class WaypointEditPopup {
         int rowY = py + 22;
 
         // Action: None
-        if (mouseX >= px + 56 && mouseX <= px + 56 + BTN_W && mouseY >= rowY && mouseY <= rowY + BTN_H) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + 56, rowY, BTN_W, BTN_H)) {
             actionType = null;
             waitField = null;
             waitFieldBuilt = false;
             return true;
         }
         // Action: Wait
-        if (mouseX >= px + 56 + BTN_W + 4 && mouseX <= px + 56 + BTN_W * 2 + 4
-                && mouseY >= rowY && mouseY <= rowY + BTN_H) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + 56 + BTN_W + 4, rowY, BTN_W, BTN_H)) {
             if (actionType != RecruitsRoute.WaypointAction.Type.WAIT) {
                 waitField = null;
                 waitFieldBuilt = false;
@@ -198,10 +183,10 @@ public class WaypointEditPopup {
         if (waitField != null) waitField.mouseClicked(mouseX, mouseY, 0);
 
         int btnY = py + HEIGHT - 18;
-        if (mouseX >= px + 8 && mouseX <= px + 88 && mouseY >= btnY && mouseY <= btnY + BTN_H) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + 8, btnY, 80, BTN_H)) {
             confirm(); return true;
         }
-        if (mouseX >= px + WIDTH - 88 && mouseX <= px + WIDTH - 8 && mouseY >= btnY && mouseY <= btnY + BTN_H) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + WIDTH - 88, btnY, 80, BTN_H)) {
             close(); return true;
         }
 

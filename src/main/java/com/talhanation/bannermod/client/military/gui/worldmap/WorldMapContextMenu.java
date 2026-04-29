@@ -47,16 +47,19 @@ public class WorldMapContextMenu {
     }
 
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack itemStack, String tag) {
-        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, itemStack, tag));
+        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, itemStack, tag, null));
     }
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action, String tag) {
-        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, tag));
+        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, tag, null));
     }
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action) {
-        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, ""));
+        entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, "", null));
     }
     public void addEntry(String text, Consumer<WorldMapScreen> action) {
         addEntry(text, () -> true, action);
+    }
+    public void addDisabledEntry(Component text, Component reason, String tag) {
+        entries.add(new ContextMenuEntry(text, () -> true, screen -> {}, ItemStack.EMPTY, tag, reason));
     }
 
     public void openAt(int x, int y) {
@@ -88,15 +91,19 @@ public class WorldMapContextMenu {
         guiGraphics.renderOutline(x, y, width, height, 0xFF555555);
 
         int entryY = y;
+        Component hoveredDisabledReason = null;
         for (ContextMenuEntry entry : entries) {
             if (entry.shouldShow(screen)) {
                 boolean hovered = isMouseOverEntry(x, entryY);
                 if (hovered) hoveredEntryTag = entry.getTag();
+                if (hovered && entry.isDisabled()) hoveredDisabledReason = entry.disabledReason();
 
                 guiGraphics.fill(x, entryY, x + width, entryY + entryHeight, hovered ? 0xFF333333 : 0xFF1A1A1A);
 
                 int textColor;
-                if (entry.getTag().equals("admin")) {
+                if (entry.isDisabled()) {
+                    textColor = hovered ? 0xFF999999 : 0xFF777777;
+                } else if (entry.getTag().equals("admin")) {
                     textColor = hovered ? 0xFFFF5555 : 0xFFAA4444;
                 } else {
                     textColor = hovered ? 0xFFFFFF : 0xCCCCCC;
@@ -111,6 +118,9 @@ public class WorldMapContextMenu {
 
                 entryY += entryHeight;
             }
+        }
+        if (hoveredDisabledReason != null) {
+            guiGraphics.renderTooltip(screen.getMinecraft().font, hoveredDisabledReason, (int) worldMapScreen.mouseX, (int) worldMapScreen.mouseY);
         }
     }
 
@@ -139,9 +149,10 @@ public class WorldMapContextMenu {
         return mouseX >= entryX && mouseX <= entryX + width && mouseY >= entryY && mouseY <= entryY + entryHeight;
     }
 
-    private record ContextMenuEntry(Component text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack stack, String tag) {
+    private record ContextMenuEntry(Component text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack stack, String tag, @Nullable Component disabledReason) {
         public String getTag() { return tag; }
         public boolean shouldShow(WorldMapScreen screen) { return condition.getAsBoolean(); }
-        public void execute(WorldMapScreen screen) { action.accept(screen); }
+        public boolean isDisabled() { return disabledReason != null; }
+        public void execute(WorldMapScreen screen) { if (!isDisabled()) action.accept(screen); }
     }
 }

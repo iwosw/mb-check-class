@@ -18,15 +18,11 @@ public class ClaimOverlayRenderer {
 
     private boolean dataChanged = true;
 
-    public void render(GuiGraphics guiGraphics, Minecraft minecraft, RecruitsClaim claim, ClaimOverlayManager.OverlayState state, float alpha, int panelWidth, boolean underSiege, boolean occupied) {
-        if (claim == null || state == ClaimOverlayManager.OverlayState.HIDDEN) return;
+    public void render(GuiGraphics guiGraphics, Minecraft minecraft, RecruitsClaim claim, HudOverlayCoordinator.OverlayState state, float alpha, int panelWidth, int x, int y, boolean underSiege, boolean occupied) {
+        if (claim == null || state == HudOverlayCoordinator.OverlayState.HIDDEN) return;
 
         Font font = minecraft.font;
-
-        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int x = (screenWidth - panelWidth) / 2;
-        int y = 10;
-        int panelHeight = (state == ClaimOverlayManager.OverlayState.FULL) ? PANEL_HEIGHT_FULL : PANEL_HEIGHT_COMPACT;
+        int panelHeight = (state == HudOverlayCoordinator.OverlayState.FULL) ? PANEL_HEIGHT_FULL : PANEL_HEIGHT_COMPACT;
 
         int bgRawAlpha = underSiege ? SIEGE_BACKGROUND_ALPHA : (occupied ? OCCUPATION_BACKGROUND_ALPHA : BACKGROUND_ALPHA);
         int bgAlpha = (int)(bgRawAlpha * alpha);
@@ -36,7 +32,7 @@ public class ClaimOverlayRenderer {
 
         guiGraphics.fill(x, y, x + panelWidth, y + panelHeight, backgroundColor);
 
-        if (state == ClaimOverlayManager.OverlayState.FULL) {
+        if (state == HudOverlayCoordinator.OverlayState.FULL) {
             renderNormalFullContent(guiGraphics, claim, x, y, panelWidth, panelHeight, font, alpha);
         } else {
             renderNormalCompactContent(guiGraphics, claim, x, y, panelWidth, panelHeight, font, alpha);

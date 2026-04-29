@@ -30,7 +30,7 @@ Rebind in `Options → Controls → Key Binds → BannerMod / Workers`. Defaults
 
 ## First 10 Minutes (no admin tools)
 
-1. Pick a place for your base and claim at least one chunk in the Overworld. Open the map with `M`, right-click the chunk you want, choose `Claim chunk`. Claim cost and currency are server-defined (`AllowClaiming` must be true) and shown in the menu itself. Claim protection is Overworld-only; matching Nether or End X/Z chunks are not protected by Overworld claims.
+1. Pick a place for your base and claim at least one chunk in the Overworld. Open the map with `M`, right-click the chunk you want, choose `Claim chunk`. The `Claim Area` map action is intentionally disabled; expand by claiming nearby chunks one at a time so the server validates each edit. Claim cost and currency are server-defined (`AllowClaiming` must be true) and shown in the menu itself. Claim protection is Overworld-only; matching Nether or End X/Z chunks are not protected by Overworld claims.
 2. Create a state so your claim has a side: type `/bannermod state create <name>` in chat (e.g. `/bannermod state create Karl-City`). You become its leader. Inspect with `/bannermod state info <id-fragment>` or open the War Room (`U`) and click `States`.
 3. Craft `Settlement Surveyor Tool` and `Building Placement Wand`. Both items are added by the mod and are how you validate your starter fort and register buildings. The surveyor recipe is 2 sticks, 2 oak planks and 1 iron ingot in a stairs-shaped pattern. The wand recipe is one gold block over one stick.
 4. Place a `Starter Fort` — the keystone building, no settlement spawns without one. Build it manually or use a prefab, then use the `Settlement Surveyor Tool`: right-click the anchor block, then right-click corners of each required zone. Shift+right-click cycles surveyor mode; shift+right-click on a block cycles the zone role (`AUTHORITY_POINT`, `INTERIOR`, `EXTERIOR`, ...). The starter fort must include `AUTHORITY_POINT` and `INTERIOR`; the anchor should be inside the authority area. When the session is filled, right-click in the air without shift to validate the fort.
@@ -84,7 +84,7 @@ Build Area screens show scan/build status at the bottom. Invalid names, empty sc
 
 Storage Area route fields use an explicit `Apply route` button. The screen validates destination UUID, item-id filters, count, and priority before sending, normalizes valid values, and shows the current destination/blocked reason without relying on close-to-save.
 
-For long land storage routes, eligible merchants/couriers can automatically use a nearby unoccupied horse or server-approved mount. If no valid mount is available, they continue the same route on foot; clearing or failing the route makes them dismount.
+For long land storage routes, eligible merchants/couriers can automatically use a nearby unoccupied horse or server-approved mount. If no valid mount is available, they continue the same route on foot; clearing or failing the route makes them dismount. Right-click a worker to inspect whether it is mounted, why it is walking, and which fallback route behavior is active.
 
 Citizens can fill building vacancies and convert into workers or recruits when they reach the assigned building anchor. Starter-fort bootstrap gives a normal survival settlement four free citizens immediately. If vacancies remain empty, there may be no free citizen close enough or unassigned yet. Manual validated houses count as housing capacity, validated storage counts toward settlement stockpile infrastructure, and validated farm/mine/lumber/architect buildings create vacancy jobs like prefab completions.
 
@@ -207,7 +207,7 @@ War Room is the main in-game UI for war and politics:
 
 - **Battle window banner**: top of the screen shows the current battle-window phase ("OPEN FRI 19:00-20:30 — closes in 45m" / "CLOSED — next SUN 18:00-19:30 in 1d 22h"). Green = open, gray = closed. The schedule is server-configured (`BattleWindows` in `bannermod-war-server.toml`) and synced to the client automatically.
 - **Active wars list** on the left: each war shows state (`DECLARED`/`ACTIVE`/`IN_SIEGE_WINDOW`/`RESOLVED`/`CANCELLED`), attacker, defender.
-- **Detail panel** on the right: attacker, defender, war state, goal type, casus belli, declaration time, allies, target positions, siege standards, occupations, and revolt status.
+- **Detail panel** on the right: attacker, defender, war state, goal type, casus belli, declaration time, allies, target positions, siege standards, occupations, revolt status, and a consequence summary for occupation tax, revolt pressure, or tribute aftermath.
 - Buttons: `Attacker info` / `Defender info` (open `PoliticalEntityInfoScreen`), `States` (state list), `Declare war`, `Cancel war`, `Occupy here`, `Annex here`, `Tribute: op only`, `Place siege here` (drop a siege standard at your current position), `Refresh`, `Close`.
 
 `Place siege here` is enabled only when you are the leader of one of the war's sides and the war is not `RESOLVED`/`CANCELLED`. It sends `MessagePlaceSiegeStandardHere`, and the server validates against the same rules as `/bannermod siege place`.

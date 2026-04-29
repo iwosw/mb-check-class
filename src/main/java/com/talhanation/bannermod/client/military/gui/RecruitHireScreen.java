@@ -32,6 +32,15 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/hire_gui.png");
 
     private static final MutableComponent TEXT_HIRE = Component.translatable("gui.recruits.hire_gui.text.hire");
+    private static final Component TEXT_HP = Component.translatable("gui.recruits.stat.hp");
+    private static final Component TEXT_MAX_HP = Component.translatable("gui.recruits.stat.max_hp");
+    private static final Component TEXT_LEVEL = Component.translatable("gui.recruits.stat.level");
+    private static final Component TEXT_EXP = Component.translatable("gui.recruits.stat.exp");
+    private static final Component TEXT_KILLS = Component.translatable("gui.recruits.stat.kills");
+    private static final Component TEXT_MORALE = Component.translatable("gui.recruits.stat.morale");
+    private static final Component TEXT_ATTACK = Component.translatable("gui.recruits.stat.attack");
+    private static final Component TEXT_SPEED = Component.translatable("gui.recruits.stat.speed");
+    private static final Component TEXT_ARMOR = Component.translatable("gui.recruits.stat.armor");
 
     private static final int fontColor = 4210752;
 
@@ -124,31 +133,31 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
         guiGraphics.drawString(font, recruit.getDisplayName().getVisualOrderText(), 8, 5, fontColor, false);
         guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
 
-        guiGraphics.drawString(font, "Hp:", k, l, fontColor, false);
+        guiGraphics.drawString(font, TEXT_HP, k, l, fontColor, false);
         guiGraphics.drawString(font, "" + health, k + 25, l , fontColor, false);
 
-        guiGraphics.drawString(font, "Lvl:", k , l  + 10, fontColor, false);
+        guiGraphics.drawString(font, TEXT_LEVEL, k , l  + 10, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getXpLevel(), k + 25 , l + 10, fontColor, false);
 
-        guiGraphics.drawString(font, "Exp:", k, l + 20, fontColor, false);
+        guiGraphics.drawString(font, TEXT_EXP, k, l + 20, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getXp(), k + 25, l + 20, fontColor, false);
 
-        guiGraphics.drawString(font, "Kills:", k, l + 30, fontColor, false);
+        guiGraphics.drawString(font, TEXT_KILLS, k, l + 30, fontColor, false);
         guiGraphics.drawString(font, ""+ recruit.getKills(), k + 25, l + 30, fontColor, false);
 
-        guiGraphics.drawString(font, "Morale:", k, l + 40, fontColor, false);
+        guiGraphics.drawString(font, TEXT_MORALE, k, l + 40, fontColor, false);
         guiGraphics.drawString(font, ""+ moral, k + 37, l + 40, fontColor, false);
 
-        guiGraphics.drawString(font, "MaxHp:", k + 55, l, fontColor, false);
+        guiGraphics.drawString(font, TEXT_MAX_HP, k + 55, l, fontColor, false);
         guiGraphics.drawString(font, ""+ maxHealth, k + 90, l, fontColor, false);
 
-        guiGraphics.drawString(font, "Attack:", k + 55, l + 10, fontColor, false);
+        guiGraphics.drawString(font, TEXT_ATTACK, k + 55, l + 10, fontColor, false);
         guiGraphics.drawString(font, ""+ A_damage, k + 90, l + 10, fontColor, false);
 
-        guiGraphics.drawString(font, "Speed:", k + 55, l + 20, fontColor, false);
+        guiGraphics.drawString(font, TEXT_SPEED, k + 55, l + 20, fontColor, false);
         guiGraphics.drawString(font, ""+ decimalformat.format(speed), k + 90, l + 20, fontColor, false);
 
-        guiGraphics.drawString(font, "Armor:", k + 55, l + 30, fontColor, false);
+        guiGraphics.drawString(font, TEXT_ARMOR, k + 55, l + 30, fontColor, false);
         guiGraphics.drawString(font, ""+ armor, k + 90, l + 30, fontColor, false);
 
         if(ClientManager.currency != null){

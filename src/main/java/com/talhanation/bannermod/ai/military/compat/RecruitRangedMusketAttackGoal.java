@@ -54,7 +54,8 @@ public class RecruitRangedMusketAttackGoal extends Goal {
         super.start();
         this.crossBowman.setAggressive(true);
         this.state = State.IDLE;
-        this.weaponLoadTime = crossBowman.isPassenger() ? weapon.getWeaponLoadTime() * 2 : weapon.getWeaponLoadTime();
+        int reloadDuration = MedievalBoomsticksCompat.reloadDurationOrDefault(this.crossBowman.getMainHandItem(), weapon.getWeaponLoadTime());
+        this.weaponLoadTime = crossBowman.isPassenger() ? reloadDuration * 2 : reloadDuration;
         //this.checkHands();
     }
 

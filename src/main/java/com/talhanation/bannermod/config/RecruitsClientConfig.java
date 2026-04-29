@@ -3,12 +3,9 @@ package com.talhanation.bannermod.config;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import net.neoforged.neoforge.common.ModConfigSpec;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.nio.file.Path;
 
-@EventBusSubscriber
 public class RecruitsClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     public static ModConfigSpec CLIENT;
