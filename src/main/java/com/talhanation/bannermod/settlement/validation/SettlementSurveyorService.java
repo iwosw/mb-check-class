@@ -72,7 +72,6 @@ public final class SettlementSurveyorService {
                 BuildingValidationState.VALID,
                 result.capacity(),
                 result.qualityScore(),
-                java.util.List.of(),
                 level.getGameTime(),
                 level.getGameTime(),
                 0L

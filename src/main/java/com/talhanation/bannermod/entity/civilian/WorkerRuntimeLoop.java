@@ -17,10 +17,6 @@ final class WorkerRuntimeLoop {
         releaseDistantWorkArea(worker);
     }
 
-    static void tick(AbstractWorkerEntity worker) {
-        worker.controlAccess().rememberCurrentWorkAreaBinding();
-    }
-
     private static void tickLootPickup(AbstractWorkerEntity worker) {
         if (worker.tickCount % LOOT_PICKUP_SCAN_INTERVAL_TICKS != 0) {
             return;
