@@ -147,7 +147,11 @@ final class RecruitRuntimeLoop {
     }
 
     private static void runTargetSearchTick(AbstractRecruitEntity recruit) {
-        if (!recruit.isAlive() || recruit.getState() == 3) {
+        if (!recruit.isAlive()) {
+            return;
+        }
+        dropInvalidCurrentTarget(recruit);
+        if (recruit.getState() == 3) {
             return;
         }
 
@@ -163,6 +167,14 @@ final class RecruitRuntimeLoop {
             recruit.searchForTargets();
         } else {
             TARGET_SEARCH_PROFILING.recordLodSkip();
+        }
+    }
+
+    private static void dropInvalidCurrentTarget(AbstractRecruitEntity recruit) {
+        LivingEntity currentTarget = recruit.getTarget();
+        if (currentTarget != null && !isValidSharedTarget(recruit, currentTarget)) {
+            recruit.setTarget(null);
+            recruit.lastTargetLossTick = recruit.tickCount;
         }
     }
 

@@ -4373,8 +4373,8 @@
     {
       "id": "VANILLA-007",
       "title": "Rewrite target acquisition logic",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Target finding is gameplay-critical and should be explicit BannerMod logic rather than copied vanilla-style selectors.",
       "scope": [
         "Rewrite recruit target selection, ally/enemy filtering, claim/war authority checks, aggro rules, and target retention/drop behavior around owned services."
@@ -4386,9 +4386,24 @@
       "dependencies": [
         "VANILLA-001"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Follow-up GameTest coverage added in BannerModRecruitTargetingGameTests for protected claim target rejection/drop and war-authorized target retention. Verification attempted with tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage, but the supported GameTest gate failed before scenarios ran because VillagerEvents.villagerTrades read a config value before config load during server resource startup. compileJava and compileGametestJava both passed."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "GameTest evidence after bootstrap fixes: ran tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage. GameTest server started and executed scenarios, but the full gate failed with 7 required unrelated failures: repairedhouserevalidationreturnstovalid, sharedownershipkeepsplayercycleauthorityaligned, unmountedcourierinspectionreportsfootfallback, reconnectedownerrecoversauthorityafterownershiproundtrip, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, courierusesnearbyhorseonsupportedroute. No BannerModRecruitTargetingGameTests / recruitDropsProtectedClaimTargetAndRetainsWarTarget failure was reported, so the VANILLA-007 GameTest did not fail in this run. compileGametestJava also passed."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Recruits now route target validity through RecruitTargetAuthority before RecruitAttackPolicy allows an attack: owned claims protect non-monster living targets unless the recruit side owns, occupies, or is at war with the claim owner; RecruitRuntimeLoop drops any current target that no longer passes shouldAttack/canAttack even while passive. 2) Automated verification passed: ./gradlew test --tests com.talhanation.bannermod.events.runtime.RecruitTargetAuthorityTest and ctx log -- ./gradlew compileJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-008",
