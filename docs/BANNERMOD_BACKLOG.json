@@ -3173,8 +3173,8 @@
     {
       "id": "GAME-009",
       "title": "Bind settlement projects to real build areas",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "in_progress",
+      "updated": "2026-04-29",
       "why": "GAME-001 needs project records to target executable world construction instead of noop resolver placeholders.",
       "scope": [
         "Replace noop build-area resolution for settlement projects with binding to real build areas or an equivalent executable world-work target."
@@ -3185,7 +3185,12 @@
       "dependencies": [
         "VANILLA-013"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Implemented live BuildArea binding for settlement project runtime/orchestrator and added BannerModSettlementProjectGameTests.settlementProjectBindsToExecutableBuildAreaTarget. Verified ctx log -- ./gradlew compileJava passed and ctx log -- ./gradlew compileGameTestJava passed. Runtime GameTest verification via ctx log -- ./gradlew verifyGameTestStage is blocked by unrelated existing suite failures/crash before a focused result can be claimed: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds failed, then GameTest server crashed in AbstractChestGoal.scanAvailableStorageAreas/DepositItemsToStorage on a merchant UnsupportedOperationException. GAME-009 acceptance is implemented but left open because the focused GameTest could not be observed green in this run."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
