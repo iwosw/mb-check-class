@@ -5,6 +5,7 @@ import com.talhanation.bannermod.army.command.CommandIntent;
 import com.talhanation.bannermod.army.command.CommandIntentLog;
 import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.gametest.support.RecruitsCommandGameTestSupport;
 import com.talhanation.bannermod.network.messages.military.MessageFaceCommand;
@@ -18,6 +19,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -35,6 +37,7 @@ public class BannerModCommandPacketPathGameTests {
     private static final UUID MOVEMENT_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000807");
     private static final UUID GUI_MOVEMENT_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000808");
     private static final UUID MAP_MOVE_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000809");
+    private static final UUID FORMATION_MAP_MOVE_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000810");
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
@@ -185,6 +188,48 @@ public class BannerModCommandPacketPathGameTests {
                 "Expected map move packet to preserve explicit move-to-position target");
         helper.assertTrue(expectedMoveTarget.equals(recruit.getMovePos()) && recruit.getShouldMovePos(),
                 "Expected explicit map target to set recruit move position without a player pick lookup");
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty", batch = "vanilla011_movement_regression")
+    public static void formationMapMovePacketAppliesSavedFormationViaDispatcher(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer owner = commandSender(level, FORMATION_MAP_MOVE_OWNER_UUID, "formation-map-move-owner", helper, -45.0F);
+        AbstractRecruitEntity first = commandRecruit(helper, FORMATION_MAP_MOVE_OWNER_UUID, "Formation Map Move Recruit A");
+        AbstractRecruitEntity second = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
+                helper,
+                com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
+                RecruitsBattleGameTestSupport.WEST_FLANK_POS,
+                "Formation Map Move Recruit B",
+                FORMATION_MAP_MOVE_OWNER_UUID
+        );
+        RecruitsCommandGameTestSupport.prepareForCommand(second, RecruitsCommandGameTestSupport.TARGET_GROUP_UUID);
+        BlockPos target = helper.absolutePos(new BlockPos(8, 2, 8));
+        int expectedY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, target.getX(), target.getZ());
+        Vec3 expectedCenter = Vec3.atCenterOf(new BlockPos(target.getX(), expectedY, target.getZ()));
+        CommandEvents.saveFormation(owner, 1);
+        CommandIntentLog.instance().clearFor(owner.getUUID());
+
+        MessageFormationMapMoveOrder.dispatchToServer(owner, first.getUUID(), RecruitsCommandGameTestSupport.TARGET_GROUP_UUID, target);
+
+        CommandIntentLog.Entry entry = CommandIntentLog.instance().recentFor(owner.getUUID()).get(0);
+        helper.assertTrue(entry.intent() instanceof CommandIntent.Movement,
+                "Expected saved-formation map move to enter the command-intent dispatcher");
+        CommandIntent.Movement movement = (CommandIntent.Movement) entry.intent();
+        helper.assertTrue(movement.movementState() == MovementCommandState.MOVE_TO_POSITION
+                        && movement.formation() == 1
+                        && movement.targetPos() != null
+                        && entry.actorCount() == 2,
+                "Expected map move to preserve saved formation, explicit target, and group actor count");
+        helper.assertTrue(first.isInFormation && second.isInFormation,
+                "Expected explicit target movement with saved formation to apply formation membership");
+        helper.assertTrue(first.getFollowState() == MovementCommandState.BACK_TO_POSITION
+                        && second.getFollowState() == MovementCommandState.BACK_TO_POSITION,
+                "Expected formation movement to set recruits to return-to-formation follow state");
+        helper.assertTrue(first.getHoldPos().distanceToSqr(expectedCenter) < 64.0D
+                        && second.getHoldPos().distanceToSqr(expectedCenter) < 64.0D,
+                "Expected formation slots to be placed near the explicit map target");
         helper.succeed();
     }
 
