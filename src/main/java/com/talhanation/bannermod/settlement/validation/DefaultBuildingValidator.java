@@ -174,7 +174,7 @@ public class DefaultBuildingValidator implements BuildingValidator {
                     if (!PROHIBITED_OVERLAP_ROLE_PAIRS.contains(new RolePair(incomingZone.role(), existingZone.role()))) {
                         continue;
                     }
-                    if (!incomingZone.toAabb().intersects(existingZone.toAabb())) {
+                    if (!zonesOverlapByBlockVolume(incomingZone, existingZone)) {
                         continue;
                     }
                     blocking.add(new ValidationIssue(
@@ -510,7 +510,7 @@ public class DefaultBuildingValidator implements BuildingValidator {
                         continue;
                     }
                     walkable++;
-                    if (!level.canSeeSky(pos.above())) {
+                    if (hasRoofCover(level, pos)) {
                         roofed++;
                     }
                 }
@@ -518,6 +518,18 @@ public class DefaultBuildingValidator implements BuildingValidator {
         }
         double roofCoverage = walkable == 0 ? 0.0D : (double) roofed / (double) walkable;
         return new InteriorStats(walkable, roofCoverage);
+    }
+
+    private static boolean hasRoofCover(ServerLevel level, BlockPos pos) {
+        BlockPos.MutableBlockPos roofPos = new BlockPos.MutableBlockPos();
+        int maxY = Math.min(level.getMaxBuildHeight() - 1, pos.getY() + 8);
+        for (int y = pos.getY() + 2; y <= maxY; y++) {
+            roofPos.set(pos.getX(), y, pos.getZ());
+            if (!level.getBlockState(roofPos).isAir()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static int countBeds(ServerLevel level, ZoneSelection zone) {
@@ -871,6 +883,28 @@ public class DefaultBuildingValidator implements BuildingValidator {
             bounds = bounds.minmax(zone.toAabb());
         }
         return new ValidatedBuildingSnapshot(request.anchorPos(), bounds, request.zones());
+    }
+
+    private static boolean zonesOverlapByBlockVolume(ZoneSelection left, ZoneSelection right) {
+        return rangesOverlap(
+                Math.min(left.min().getX(), left.max().getX()),
+                Math.max(left.min().getX(), left.max().getX()),
+                Math.min(right.min().getX(), right.max().getX()),
+                Math.max(right.min().getX(), right.max().getX()))
+                && rangesOverlap(
+                Math.min(left.min().getY(), left.max().getY()),
+                Math.max(left.min().getY(), left.max().getY()),
+                Math.min(right.min().getY(), right.max().getY()),
+                Math.max(right.min().getY(), right.max().getY()))
+                && rangesOverlap(
+                Math.min(left.min().getZ(), left.max().getZ()),
+                Math.max(left.min().getZ(), left.max().getZ()),
+                Math.min(right.min().getZ(), right.max().getZ()),
+                Math.max(right.min().getZ(), right.max().getZ()));
+    }
+
+    private static boolean rangesOverlap(int leftMin, int leftMax, int rightMin, int rightMax) {
+        return Math.max(leftMin, rightMin) <= Math.min(leftMax, rightMax);
     }
 
     private record InteriorStats(int walkableBlocks, double roofCoverage) {

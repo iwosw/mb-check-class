@@ -101,6 +101,9 @@ public final class BannerModDedicatedServerGameTestSupport {
         claim.setName(factionId);
         claim.setOwnerPoliticalEntityId(politicalEntityId);
         claim.setPlayer(new RecruitsPlayerInfo(leaderId, leaderName));
+        claim.setBlockInteractionAllowed(false);
+        claim.setBlockPlacementAllowed(false);
+        claim.setBlockBreakingAllowed(false);
         claim.addChunk(chunkPos);
         ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
         return claim;

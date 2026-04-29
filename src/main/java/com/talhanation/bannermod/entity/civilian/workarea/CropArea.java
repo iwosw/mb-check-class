@@ -52,9 +52,12 @@ public class CropArea extends AbstractWorkAreaEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        CompoundTag nbt = new CompoundTag();
-        this.getSeedStack().save(this.registryAccess(), nbt);
-        tag.put("seedItem", nbt);
+        ItemStack seedStack = this.getSeedStack();
+        if (!seedStack.isEmpty()) {
+            CompoundTag nbt = new CompoundTag();
+            seedStack.save(this.registryAccess(), nbt);
+            tag.put("seedItem", nbt);
+        }
         if(fieldType != null) tag.putInt("fieldType", fieldType.getIndex());
     }
 

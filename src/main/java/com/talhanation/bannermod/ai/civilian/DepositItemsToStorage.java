@@ -223,7 +223,12 @@ public class DepositItemsToStorage extends AbstractChestGoal {
         }
 
         StorageDepositRules.DepositResult result = StorageDepositRules.depositAll(inventory, container, worker::wantsToKeep);
-        return !result.hasDepositableItemsRemaining();
+        boolean completed = !result.hasDepositableItemsRemaining();
+        if (completed && worker.hasActiveCourierTask()) {
+            worker.lastStorage = storageArea.getUUID();
+            worker.completeActiveCourierDelivery();
+        }
+        return completed;
     }
 
     public void setState(State state) {

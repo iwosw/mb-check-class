@@ -58,7 +58,7 @@ final class WorkerTransportService {
             return;
         }
 
-        this.worker.startRiding(transport);
+        this.worker.startRiding(transport, true);
         if (this.worker.isPassenger()) {
             this.driveMountedTransport(level, transport);
         }
@@ -128,7 +128,16 @@ final class WorkerTransportService {
     @Nullable
     private StorageArea resolveStorage(ServerLevel level, UUID storageAreaId) {
         Entity entity = level.getEntity(storageAreaId);
-        return entity instanceof StorageArea storageArea ? storageArea : null;
+        if (entity instanceof StorageArea storageArea) {
+            return storageArea;
+        }
+        return level.getEntitiesOfClass(
+                        StorageArea.class,
+                        this.worker.getBoundingBox().inflate(128.0D),
+                        area -> storageAreaId.equals(area.getUUID()))
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 
     @Nullable
