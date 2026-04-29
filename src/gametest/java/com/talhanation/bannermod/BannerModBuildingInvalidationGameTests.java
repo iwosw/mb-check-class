@@ -203,7 +203,6 @@ public class BannerModBuildingInvalidationGameTests {
                 BuildingValidationState.VALID,
                 1,
                 50,
-                List.of(),
                 level.getGameTime(),
                 level.getGameTime(),
                 0L
@@ -247,7 +246,6 @@ public class BannerModBuildingInvalidationGameTests {
                 BuildingValidationState.VALID,
                 1,
                 50,
-                List.of(),
                 level.getGameTime(),
                 level.getGameTime(),
                 0L
@@ -286,7 +284,6 @@ public class BannerModBuildingInvalidationGameTests {
                 BuildingValidationState.VALID,
                 1,
                 40,
-                List.of(),
                 level.getGameTime(),
                 level.getGameTime(),
                 0L
@@ -410,7 +407,6 @@ public class BannerModBuildingInvalidationGameTests {
                 state,
                 0,
                 0,
-                List.of(),
                 now,
                 now,
                 invalidSince
@@ -519,7 +515,6 @@ public class BannerModBuildingInvalidationGameTests {
                 BuildingValidationState.DEGRADED,
                 0,
                 0,
-                List.of(),
                 now,
                 now,
                 now - 200L
@@ -544,7 +539,6 @@ public class BannerModBuildingInvalidationGameTests {
                 BuildingValidationState.DEGRADED,
                 0,
                 0,
-                List.of(),
                 now,
                 now,
                 now - 200L
