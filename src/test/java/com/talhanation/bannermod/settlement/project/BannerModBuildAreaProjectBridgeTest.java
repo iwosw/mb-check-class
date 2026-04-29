@@ -82,6 +82,34 @@ class BannerModBuildAreaProjectBridgeTest {
     }
 
     @Test
+    void assignmentWithPhaseKeepsBindingAndRejectsMissingRequiredFields() {
+        UUID projectId = UUID.randomUUID();
+        UUID claim = UUID.randomUUID();
+        UUID buildArea = UUID.randomUUID();
+        PendingProject project = ProjectTestFactory.general(50, 3);
+        ProjectAssignment assignment = new ProjectAssignment(
+                projectId, claim, buildArea, project, 7L, AssignmentPhase.MATERIALS_PENDING);
+
+        ProjectAssignment advanced = assignment.withPhase(AssignmentPhase.SEARCHING_BUILDER);
+
+        assertEquals(projectId, advanced.projectId());
+        assertEquals(claim, advanced.claimUuid());
+        assertEquals(buildArea, advanced.buildAreaUuid());
+        assertSame(project, advanced.project());
+        assertEquals(7L, advanced.assignedAtGameTime());
+        assertEquals(AssignmentPhase.SEARCHING_BUILDER, advanced.phase());
+        assertThrows(IllegalArgumentException.class,
+                () -> new ProjectAssignment(null, claim, buildArea, project, 7L, AssignmentPhase.MATERIALS_PENDING));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ProjectAssignment(projectId, null, buildArea, project, 7L, AssignmentPhase.MATERIALS_PENDING));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ProjectAssignment(projectId, claim, null, project, 7L, AssignmentPhase.MATERIALS_PENDING));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ProjectAssignment(projectId, claim, buildArea, null, 7L, AssignmentPhase.MATERIALS_PENDING));
+        assertThrows(IllegalArgumentException.class, () -> assignment.withPhase(null));
+    }
+
+    @Test
     void emptyQueueYieldsEmptyOptional() {
         BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
         BannerModBuildAreaProjectBridge bridge = new BannerModBuildAreaProjectBridge();
