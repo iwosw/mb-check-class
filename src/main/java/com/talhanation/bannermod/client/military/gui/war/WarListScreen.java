@@ -55,6 +55,8 @@ public class WarListScreen extends Screen {
     private int observedWarStateVersion = -1;
     @Nullable
     private WarDeclarationRecord selected;
+    @Nullable
+    private Component outcomeFeedback;
 
     private Button openAttackerBtn;
     private Button openDefenderBtn;
@@ -142,6 +144,7 @@ public class WarListScreen extends Screen {
 
     private void sendOutcome(MessageResolveWarOutcome.Action action) {
         if (selected == null) return;
+        this.outcomeFeedback = text("gui.bannermod.war_list.feedback.pending");
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageResolveWarOutcome(selected.id(), action));
     }
 
@@ -192,27 +195,42 @@ public class WarListScreen extends Screen {
         }
         boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
         boolean attackerLeader = has && canLocalPlayerActFor(selected.attackerPoliticalEntityId());
+        boolean localOp = Minecraft.getInstance().player != null && Minecraft.getInstance().player.hasPermissions(2);
         if (cancelWarBtn != null) {
             cancelWarBtn.active = live && attackerLeader;
             cancelWarBtn.setTooltip(cancelWarBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
         }
         if (occupyBtn != null) {
-            occupyBtn.active = live && attackerLeader;
-            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            boolean supported = has && selected.goalType() == WarGoalType.OCCUPATION;
+            occupyBtn.active = live && attackerLeader && supported;
+            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, supported)));
         }
         if (annexBtn != null) {
-            annexBtn.active = live && attackerLeader;
-            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            boolean supported = has && selected.goalType() == WarGoalType.ANNEX_LIMITED_CHUNKS;
+            annexBtn.active = live && attackerLeader && supported;
+            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, supported)));
         }
         if (tributeLockedBtn != null) {
-            tributeLockedBtn.active = false;
-            tributeLockedBtn.setTooltip(Tooltip.create(text("gui.bannermod.war_list.tooltip.op_only")));
+            boolean supported = has && selected.goalType() == WarGoalType.TRIBUTE;
+            tributeLockedBtn.setMessage(localOp ? text("gui.bannermod.war_list.tribute") : text("gui.bannermod.war_list.tribute_locked"));
+            tributeLockedBtn.active = live && attackerLeader && supported && localOp;
+            tributeLockedBtn.setTooltip(tributeLockedBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, supported, localOp)));
         }
     }
 
     private static Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar) {
+        return outcomeLockedTooltip(hasSelection, liveWar, true, true);
+    }
+
+    private static Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar, boolean supportedGoal) {
+        return outcomeLockedTooltip(hasSelection, liveWar, supportedGoal, true);
+    }
+
+    private static Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar, boolean supportedGoal, boolean operatorRequiredMet) {
         if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
         if (!liveWar) return text("gui.bannermod.war_list.tooltip.war_closed");
+        if (!supportedGoal) return text("gui.bannermod.war_list.tooltip.unsupported_outcome");
+        if (!operatorRequiredMet) return text("gui.bannermod.war_list.tooltip.op_only");
         return text("gui.bannermod.war_list.tooltip.attacker_leader_required");
     }
 
@@ -329,12 +347,16 @@ public class WarListScreen extends Screen {
                 text("gui.bannermod.war_list.detail.occupations", occupationSummary(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.sieges", activeSiegeCount(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.revolts", revoltSummary(war.id())).getString(),
-                text("gui.bannermod.war_list.detail.outcome_ui").getString(),
+                text("gui.bannermod.war_list.detail.outcome_ui", outcomeStatus(war)).getString(),
                 text("gui.bannermod.war_list.detail.consequences", consequenceSummary(war)).getString(),
                 text("gui.bannermod.war_list.detail.id", shortId(war.id())).getString()
         };
         for (String s : body) {
             graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, 0xFFFFFF, false);
+            line++;
+        }
+        if (outcomeFeedback != null && line < 18) {
+            graphics.drawString(font, font.plainSubstrByWidth(outcomeFeedback.getString(), w), x, y + 14 + line * 11, 0xFFDDCC77, false);
             line++;
         }
         for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
@@ -439,6 +461,16 @@ public class WarListScreen extends Screen {
         return text("gui.bannermod.common.none").getString();
     }
 
+    private String outcomeStatus(WarDeclarationRecord war) {
+        return switch (war.goalType()) {
+            case TRIBUTE -> text("gui.bannermod.war_list.outcome_status.tribute").getString();
+            case OCCUPATION -> text("gui.bannermod.war_list.outcome_status.occupation").getString();
+            case ANNEX_LIMITED_CHUNKS -> text("gui.bannermod.war_list.outcome_status.annex").getString();
+            case VASSALIZATION, REGIME_CHANGE -> text("gui.bannermod.war_list.outcome_status.admin_only").getString();
+            case WHITE_PEACE -> text("gui.bannermod.war_list.outcome_status.unsupported").getString();
+        };
+    }
+
     private String revoltPressureLine(RevoltRecord revolt) {
         String rebel = entityName(revolt.rebelEntityId());
         return switch (revolt.state()) {
@@ -506,6 +538,7 @@ public class WarListScreen extends Screen {
                 int idx = scrollOffset + row;
                 if (idx >= 0 && idx < wars.size()) {
                     selected = wars.get(idx);
+                    outcomeFeedback = null;
                     updateButtonsState();
                     return true;
                 }
