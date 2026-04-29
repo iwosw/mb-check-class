@@ -9,7 +9,7 @@ import net.minecraft.world.phys.Vec3;
 
 public final class RecruitRenderLod {
     private static final double CROWD_SCAN_RADIUS = 48.0D;
-    private static final double CROWD_IMPOSTOR_DISTANCE = 56.0D;
+    private static final double CROWD_IMPOSTOR_DISTANCE = 48.0D;
     private static final int CROWD_SCAN_INTERVAL_TICKS = 10;
     private static final int CROWDED_RECRUIT_COUNT = 48;
 
