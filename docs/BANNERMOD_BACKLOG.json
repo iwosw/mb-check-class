@@ -4013,6 +4013,10 @@
         {
           "date": "2026-04-29",
           "text": "RENDER-006A automated evidence added: ClientRenderPrimitivesTest and compileJava passed; final closure still depends on in-world bobber/string/work-area outline visibility smoke."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "RENDER-006A evidence: compileJava passed; ClientRenderPrimitivesTest passed and verifies the bobber billboard emits a textured visible quad, fishing-line vertices are opaque with normals, and work-area line boxes emit all 12 outline edges with non-zero normals."
         }
       ],
       "verification": [],
@@ -4764,7 +4768,7 @@
     {
       "id": "RENDER-006A",
       "title": "Verify projectile and work-area renderer visibility",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-29",
       "why": "RENDER-006 code compiles, but fishing bobber/string and work-area outline visibility need an observable in-world smoke check.",
       "scope": [
@@ -4782,8 +4786,14 @@
           "text": "Automated primitive verification merged from feature/render-006a: ClientRenderPrimitivesTest covers bobber billboard quad, fishing-line vertex emission, and work-area outline box edges; focused test and compileJava passed. Interactive in-world visibility smoke still required."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Bobber visibility primitive: ClientRenderPrimitivesTest passed and verifies texturedBillboardQuad emits four textured, lit, normaled vertices. 2) Fishing-line visibility primitive: ClientRenderPrimitivesTest passed and verifies lineStripVertex emits an opaque black vertex with a non-zero normal. 3) Work-area outline visibility primitive: ClientRenderPrimitivesTest passed and verifies lineBox emits 24 vertices covering all 12 AABB edges with colors and non-zero normals. 4) compileJava passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-008A",
