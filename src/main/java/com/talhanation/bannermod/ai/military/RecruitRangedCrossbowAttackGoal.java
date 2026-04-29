@@ -5,9 +5,9 @@ import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.compat.MedievalBoomsticksCompat;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
+import com.talhanation.bannermod.entity.military.RecruitRangedCombatService;
 import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -46,7 +46,7 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
                 this.crossBowman.switchMainHandItem(RecruitRangedCrossbowAttackGoal::isCrossbow);
                 return false;
             }
-            return target.distanceTo(this.crossBowman) >= stopRange && this.canAttackMovePos() && !this.crossBowman.needsToGetFood() && !this.crossBowman.getShouldMount();
+            return RecruitRangedCombatService.canUseRangedTarget(this.crossBowman, target, stopRange, this::canAttackMovePos);
         } else {
             return crossBowman.getShouldStrategicFire();
         }
@@ -240,7 +240,7 @@ public class RecruitRangedCrossbowAttackGoal extends Goal {
     }
 
     private boolean hasArrows(){
-        return !consumeArrows || this.crossBowman.getInventory().hasAnyMatching(item -> item.is(ItemTags.ARROWS));
+        return RecruitRangedCombatService.hasArrowAmmo(this.crossBowman, consumeArrows);
     }
 
     private boolean canAttackMovePos() {

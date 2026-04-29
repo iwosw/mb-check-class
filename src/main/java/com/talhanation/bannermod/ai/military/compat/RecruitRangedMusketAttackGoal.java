@@ -2,6 +2,7 @@ package com.talhanation.bannermod.ai.military.compat;
 
 import com.talhanation.bannermod.compat.*;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
+import com.talhanation.bannermod.entity.military.RecruitRangedCombatService;
 import com.talhanation.bannermod.util.AttackUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -38,7 +39,7 @@ public class RecruitRangedMusketAttackGoal extends Goal {
                 return false;
             }
 
-            return livingentity.distanceTo(this.crossBowman) >= stopRange && this.canAttackMovePos() && !this.crossBowman.needsToGetFood() && !this.crossBowman.getShouldMount();
+            return RecruitRangedCombatService.canUseRangedTarget(this.crossBowman, livingentity, stopRange, this::canAttackMovePos);
         }
         else
             return crossBowman.getShouldStrategicFire() || (this.isWeaponInHand() && weapon != null && !weapon.isLoaded(crossBowman.getMainHandItem()));

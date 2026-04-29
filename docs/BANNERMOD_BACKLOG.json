@@ -4445,8 +4445,8 @@
     {
       "id": "VANILLA-009",
       "title": "Rewrite ranged and projectile combat flow",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Ranged combat and projectile behavior need an owned design that works with bows, crossbows, firearms, and compatibility layers.",
       "scope": [
         "Rewrite ranged attack selection, line of sight checks, projectile creation, reload/cooldown handling, ammo use, and compatibility hooks without copied vanilla attack logic."
@@ -4459,8 +4459,14 @@
         "VANILLA-007"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Implemented shared ranged combat target/ammo/projectile helpers and wired bow, crossbow, and firearm target selection through recruit authority rules. Verified with ctx log -- ./gradlew compileJava (pass), ctx log -- ./gradlew compileGameTestJava (pass), and ctx log -- ./gradlew verifyGameTestStage (red only on unrelated required tests: repairedhouserevalidationreturnstovalid, sharedownershipkeepsplayercycleauthorityaligned, reconnectedownerrecoversauthorityafterownershiproundtrip, unmountedcourierinspectionreportsfootfallback, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, hostileorunclaimedsettlementsnevercreateworkers, courierusesnearbyhorseonsupportedroute). VANILLA-009 GameTests rangedbowshotspawnsprojectileandammorulesremainobservable and crossbowrangedgoalrejectsfriendlytargets were not in the failure list and passed in the stage run."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-010",
