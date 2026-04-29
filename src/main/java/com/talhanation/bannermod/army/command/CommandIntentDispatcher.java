@@ -46,6 +46,7 @@ public final class CommandIntentDispatcher {
         }
         List<AbstractRecruitEntity> safeActors = actors == null ? List.of() : actors;
         safeActors = narrowBySelection(player, safeActors);
+        safeActors = new java.util.ArrayList<>(safeActors);
         CommandIntentLog.instance().record(player, intent, safeActors.size());
 
         if (player == null) {

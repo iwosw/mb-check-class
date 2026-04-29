@@ -91,7 +91,9 @@ public final class CommandIntentQueueRuntime {
                 || intent instanceof CommandIntent.Face
                 || intent instanceof CommandIntent.Attack
                 || intent instanceof CommandIntent.StrategicFire
-                || intent instanceof CommandIntent.Aggro;
+                || intent instanceof CommandIntent.Aggro
+                || intent instanceof CommandIntent.CombatStanceChange
+                || intent instanceof CommandIntent.SiegeMachine;
     }
 
     /**
@@ -202,7 +204,8 @@ public final class CommandIntentQueueRuntime {
     }
 
     private static void applyHead(@Nullable Player issuer, AbstractRecruitEntity recruit, CommandIntent intent) {
-        List<AbstractRecruitEntity> single = List.of(recruit);
+        List<AbstractRecruitEntity> single = new ArrayList<>(1);
+        single.add(recruit);
         if (intent instanceof CommandIntent.Movement move) {
             if (issuer != null) {
                 CommandEvents.onMovementCommand(issuer, single, move.movementState(), move.formation(), move.tight(), move.targetPos());
@@ -222,6 +225,15 @@ public final class CommandIntentQueueRuntime {
         } else if (intent instanceof CommandIntent.Aggro aggro) {
             if (issuer != null) {
                 CommandEvents.onAggroCommand(issuer.getUUID(), recruit, aggro.state(), aggro.groupUuid(), aggro.fromGui());
+            }
+        } else if (intent instanceof CommandIntent.CombatStanceChange stanceChange) {
+            if (issuer != null) {
+                CommandEvents.onCombatStanceCommand(issuer.getUUID(), recruit, stanceChange.stance(), stanceChange.groupUuid());
+            }
+        } else if (intent instanceof CommandIntent.SiegeMachine siegeMachine) {
+            if (issuer != null) {
+                CommandEvents.onMountButton(
+                        issuer.getUUID(), recruit, siegeMachine.returnToKnownMount() ? null : siegeMachine.mountUuid(), siegeMachine.groupUuid());
             }
         }
     }
