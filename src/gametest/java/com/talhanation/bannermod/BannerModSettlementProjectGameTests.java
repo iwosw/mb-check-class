@@ -77,4 +77,53 @@ public class BannerModSettlementProjectGameTests {
                 "Expected template-backed BuildArea projects to be executable and search for a builder");
         helper.succeed();
     }
+
+    static void assertSettlementProjectProgressesFromBuildExecutionEvents(GameTestHelper helper) {
+        WorkAreaIndex.instance().clearAllForTest();
+        ServerLevel level = helper.getLevel();
+        Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        BuildArea buildArea = BannerModGameTestSupport.spawnOwnedBuildArea(helper, player, new BlockPos(2, 2, 2));
+        buildArea.setStructureNBT(BannerModGameTestSupport.createMinimalBuildTemplate());
+        buildArea.setDone(false);
+
+        RecruitsClaim claim = new RecruitsClaim("project-progress-claim", null);
+        ChunkPos buildAreaChunk = buildArea.chunkPosition();
+        claim.setCenter(buildAreaChunk);
+        claim.addChunk(buildAreaChunk);
+
+        PendingProject project = new PendingProject(
+                UUID.randomUUID(),
+                ProjectKind.NEW_BUILDING,
+                null,
+                BannerModSettlementBuildingCategory.GENERAL,
+                BannerModSettlementBuildingProfileSeed.GENERAL,
+                100,
+                level.getGameTime(),
+                20,
+                ProjectBlocker.NONE
+        );
+
+        BannerModSettlementProjectRuntime runtime = BannerModSettlementProjectRuntime.forServer(level);
+        ProjectAssignment assignment = runtime.tickClaim(
+                level,
+                claim.getUUID(),
+                List.of(project),
+                new BannerModBuildAreaProjectBridge.ClaimBuildAreaResolver(level, claim),
+                level.getGameTime()
+        ).orElseThrow();
+
+        helper.assertTrue(assignment.phase() == AssignmentPhase.SEARCHING_BUILDER,
+                "Expected assignment to wait for build execution before reporting progress");
+
+        buildArea.setStartBuild(false);
+        ProjectAssignment inProgress = runtime.assignmentForBuildArea(buildArea.getUUID()).orElseThrow();
+        helper.assertTrue(inProgress.phase() == AssignmentPhase.IN_PROGRESS,
+                "Expected real BuildArea start event to advance project progress");
+
+        buildArea.setDone(true);
+        ProjectAssignment completed = runtime.assignmentForBuildArea(buildArea.getUUID()).orElseThrow();
+        helper.assertTrue(completed.phase() == AssignmentPhase.COMPLETED,
+                "Expected real BuildArea completion event to complete the project");
+        helper.succeed();
+    }
 }

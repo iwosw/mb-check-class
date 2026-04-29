@@ -3231,8 +3231,8 @@
     {
       "id": "GAME-010",
       "title": "Drive project progress from actual build execution",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Settlement project progress must reflect real construction work, not placeholder record state.",
       "scope": [
         "Connect project assignment and progress updates to actual worker/build execution events and completion state."
@@ -3245,8 +3245,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Creation/assignment: ctx log -- ./gradlew runGameTestServerGame010 passed; focused bannermod_game_010 GameTest creates a PendingProject, binds it to a live BuildArea through ClaimBuildAreaResolver, and observes SEARCHING_BUILDER. 2) Progress advancement: same GameTest calls BuildArea.setStartBuild(false), the production BuildArea start hook updates BannerModSettlementProjectRuntime assignment state to IN_PROGRESS. 3) Completion: same GameTest calls BuildArea.setDone(true), the production BuildArea completion hook updates assignment state to COMPLETED. Compile gates also passed: ctx log -- ./gradlew compileJava and ctx log -- ./gradlew compileGameTestJava."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-011",
