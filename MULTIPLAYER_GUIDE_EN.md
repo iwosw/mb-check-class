@@ -30,7 +30,7 @@ Rebind in `Options → Controls → Key Binds → BannerMod / Workers`. Defaults
 
 On the world map (`M`), use the top-left `Routes` control to create a route with `+`, select it, then right-click explored map chunks to add waypoints. The map shows disabled reasons when a waypoint cannot be placed, such as no selected route or an unexplored/unloaded chunk.
 
-During normal play in the Overworld, the small top-right claim HUD shows the current territory as friendly, hostile, or unclaimed. It sits under battle/siege chips and away from chat, crosshair, and the hotbar; server-side claim rules still decide whether actions are allowed.
+During normal play in the Overworld, the small top-right claim HUD shows the current territory as friendly, hostile, or unclaimed. It sits under battle/siege chips and away from chat, crosshair, and the hotbar; server-side claim rules still decide whether actions are allowed. If a protected-space action is denied, a short localized system message explains whether the block came from friendly claim locks, hostile claim protection, or server rules for unclaimed wilderness.
 
 ## First 10 Minutes (no admin tools)
 

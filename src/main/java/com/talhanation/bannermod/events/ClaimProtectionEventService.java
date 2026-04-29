@@ -22,6 +22,7 @@ final class ClaimProtectionEventService {
         if(event.getLevel().isClientSide()) return;
         if(claimProtectionPolicy().shouldDenyBlockBreak(event.getLevel(), event.getPos(), event.getPlayer())) {
             event.setCanceled(true);
+            ClaimProtectionFeedback.sendDenied(event.getPlayer(), event.getLevel(), event.getPos(), ClaimEvents.recruitsClaimManager);
             return;
         }
         if (event.getLevel() instanceof ServerLevel level) {
@@ -33,6 +34,9 @@ final class ClaimProtectionEventService {
         if(event.getLevel().isClientSide()) return;
         if(claimProtectionPolicy().shouldDenyBlockPlacement(event.getLevel(), event.getPos(), event.getEntity())) {
             event.setCanceled(true);
+            if (event.getEntity() instanceof Player player) {
+                ClaimProtectionFeedback.sendDenied(player, event.getLevel(), event.getPos(), ClaimEvents.recruitsClaimManager);
+            }
             return;
         }
         if (event.getLevel() instanceof ServerLevel level) {
@@ -79,6 +83,7 @@ final class ClaimProtectionEventService {
         if(claimProtectionPolicy().shouldDenyBlockInteraction(event.getLevel(), event.getPos(), player, event.getHand())){
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
+            ClaimProtectionFeedback.sendDenied(player, event.getLevel(), event.getPos(), ClaimEvents.recruitsClaimManager);
         }
     }
 
@@ -89,6 +94,7 @@ final class ClaimProtectionEventService {
         if(claimProtectionPolicy().shouldDenyBlockInteraction(event.getLevel(), targetPos, event.getEntity(), event.getHand())){
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
+            ClaimProtectionFeedback.sendDenied(event.getEntity(), event.getLevel(), targetPos, ClaimEvents.recruitsClaimManager);
         }
     }
 
@@ -97,6 +103,7 @@ final class ClaimProtectionEventService {
         if(claimProtectionPolicy().shouldDenyEntityInteraction(event.getEntity(), event.getTarget())){
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
+            ClaimProtectionFeedback.sendDenied(event.getEntity(), event.getLevel(), event.getTarget().blockPosition(), ClaimEvents.recruitsClaimManager);
         }
     }
 
@@ -105,6 +112,7 @@ final class ClaimProtectionEventService {
         if(claimProtectionPolicy().shouldDenyEntityInteraction(event.getEntity(), event.getTarget())){
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.FAIL);
+            ClaimProtectionFeedback.sendDenied(event.getEntity(), event.getLevel(), event.getTarget().blockPosition(), ClaimEvents.recruitsClaimManager);
         }
     }
 
@@ -113,6 +121,7 @@ final class ClaimProtectionEventService {
         if(player.level().isClientSide()) return;
         if(claimProtectionPolicy().shouldDenyEntityAttack(player, event.getTarget())){
             event.setCanceled(true);
+            ClaimProtectionFeedback.sendDenied(player, player.level(), event.getTarget().blockPosition(), ClaimEvents.recruitsClaimManager);
         }
     }
 
