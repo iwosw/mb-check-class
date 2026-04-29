@@ -1687,8 +1687,8 @@
     {
       "id": "AUTH-005",
       "title": "Define and enforce nation and team command authority semantics",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Command authority currently mixes owner and scoreboard-team checks while the nation-leader path is effectively a dead stub, leaving intended command hierarchy unclear and partially unimplemented.",
       "scope": [
         "The command hierarchy must have explicit supported authority roles, remove dead paths or implement them fully, and apply the same rules across recruit command packets, UI affordances, and tests."
@@ -1702,14 +1702,20 @@
           "text": "Split into AUTH-006 authority-role definition, AUTH-007 enforcement, and AUTH-008 hierarchy tests; parent remains open until semantics are documented, enforced, and verified across command entry points."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain AUTH-006, AUTH-007, and AUTH-008: canonical command authority roles are defined, enforced across recruit command entry points/UI affordances, and covered by focused owner, teammate, admin override, and nation-level supported-or-denied authority verification. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-006",
         "AUTH-007",
         "AUTH-008",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARMY-003",
@@ -1737,8 +1743,8 @@
     {
       "id": "SYNC-001",
       "title": "Add settlement client snapshot sync for player-facing UIs",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Settlement intelligence is mostly server-side today, leaving governor and related UIs dependent on ad hoc requests and thin placeholder states instead of a coherent client mirror.",
       "scope": [
         "Player-facing settlement and governor screens need a clear synced snapshot contract, client mirror, refresh triggers, and waiting or stale-state UX for data arrival."
@@ -1752,14 +1758,20 @@
           "text": "Split into SYNC-002 snapshot contract, SYNC-003 client mirror/loading UX, and SYNC-004 refresh verification; parent remains open until settlement UIs render from coherent snapshots and refresh without reopening."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain SYNC-002, SYNC-003, and SYNC-004: settlement/governor snapshot contract exists, relevant settlement UIs render from the client mirror with explicit loading/stale/fresh states, and focused verification covers login, open-screen, and mutation refresh snapshot propagation. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "SYNC-002",
         "SYNC-003",
         "SYNC-004",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-001",
@@ -2002,8 +2014,8 @@
     {
       "id": "GAME-005",
       "title": "Unify settlement bootstrap paths",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Surveyor-based starter founding and automatic claim worker bootstrap currently look like partially separate onboarding systems, which risks contradictory world state and player expectations.",
       "scope": [
         "Settlement bootstrap must have one coherent lifecycle from claim through starter structures, workers, citizens, and formal settlement records, with explicit rules for auto-bootstrap versus manual founding."
@@ -2017,13 +2029,19 @@
           "text": "Split into GAME-013 lifecycle definition and GAME-014 path convergence; parent remains open until manual and automatic bootstrap paths produce the same settlement records and player-visible startup state."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain GAME-013 and GAME-014: the unified claim-to-settlement lifecycle is defined, and manual plus automatic bootstrap paths converge on the same settlement lifecycle/data model with focused verification for both entry paths and resulting records. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-013",
         "GAME-014",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARCH-001",
@@ -2409,15 +2427,15 @@
     },
     {
       "id": "BOOM-001",
-      "title": "Make recruits fire Medieval Boomsticks projectiles and ammo",
+      "title": "Make recruits fire Ewewukek Musket Mod projectiles and ammo",
       "status": "open",
       "updated": "2026-04-28",
-      "why": "Recruits can currently equip and use Medieval Boomsticks weapons, but the live attack path still falls back to arrow-style projectile behavior instead of using the mod's bullet or firearm semantics, which breaks both balance and fantasy.",
+      "why": "Recruits can currently equip and use Ewewukek's Musket Mod weapons, but the live attack path still falls back to arrow-style projectile behavior instead of using the mod's bullet or firearm semantics, which breaks both balance and fantasy.",
       "scope": [
-        "Add an explicit compatibility path for Medieval Boomsticks ranged weapons so recruit attacks spawn the correct projectile type, consume the correct ammo, and respect the mod's firearm timing or reload semantics where exposed. Keep unsupported weapons on a safe fallback path instead of silently pretending bullets are arrows."
+        "Add an explicit compatibility path for Ewewukek's Musket Mod ranged weapons so recruit attacks spawn the correct projectile type, consume the correct ammo, and respect the mod's firearm timing or reload semantics where exposed. Keep unsupported weapons on a safe fallback path instead of silently pretending bullets are arrows."
       ],
       "acceptance": [
-        "A recruit using a supported Medieval Boomsticks firearm fires the mod-correct projectile rather than an arrow; ammo consumption and no-ammo denial follow the firearm's intended rules; deterministic verification or focused tests cover at least one supported firearm and one unsupported edge case."
+        "A recruit using a supported Ewewukek's Musket Mod firearm fires the mod-correct projectile rather than an arrow; ammo consumption and no-ammo denial follow the firearm's intended rules; deterministic verification or focused tests cover at least one supported firearm and one unsupported edge case."
       ],
       "dependencies": [
         "BOOM-002",
@@ -2455,8 +2473,8 @@
     {
       "id": "SHIPS-002",
       "title": "Execute sea-trade routes through Small Ships cargo movement",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Even with ship detection, sea trade stays fake unless goods actually move through vessel-backed route execution between ports, stockpiles, or settlements.",
       "scope": [
         "Implement ship-backed sea-trade route execution with cargo loading, travel state, arrival, unloading, and failure handling tied into settlement logistics and player-visible route feedback. Reuse existing goods or stockpile systems where possible instead of creating a parallel economy."
@@ -2474,8 +2492,14 @@
           "text": "Split needed: existing SHIPS-001 layer binds Small Ships carrier identity only; no cargo/navigation capability API is available at compile time and no persisted sea-trade route executor exists. Child chain SHIPS-002A..SHIPS-002D covers compat capabilities, execution state, stockpile cargo movement, and player-visible status/docs."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain SHIPS-002A, SHIPS-002B, SHIPS-002C, and SHIPS-002D: Small Ships carrier capability probing, persistent sea-trade execution state, real StorageArea/TransportContainerExchange cargo movement, and player-visible loading/travelling/unloading/completed/missing-ship/blocked-cargo feedback plus docs are implemented and verified in focused slices. Current gate after scope cleanup: tools/backlog validate PASS; ctx log -- ./gradlew compileJava compileGameTestJava PASS."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "MERCH-001",
@@ -2502,22 +2526,22 @@
     },
     {
       "id": "BOOM-002",
-      "title": "Map supported Medieval Boomsticks firearms and ammo for recruits",
+      "title": "Map supported Ewewukek Musket Mod firearms and ammo for recruits",
       "status": "done",
       "updated": "2026-04-28",
-      "why": "Before recruit firearm combat can behave correctly, BannerMod needs an explicit compatibility map for which Medieval Boomsticks weapons are supported, which ammo they consume, and what fallback behavior is legal for unsupported items.",
+      "why": "Before recruit firearm combat can behave correctly, BannerMod needs an explicit compatibility map for which Ewewukek's Musket Mod weapons are supported, which ammo they consume, and what fallback behavior is legal for unsupported items.",
       "scope": [
-        "Detect supported Medieval Boomsticks firearm items and their ammo contracts through a compatibility layer or adapter usable by recruit combat code. Define safe fallback rules for unsupported or partially supported items instead of silently treating them like bows."
+        "Detect supported Ewewukek's Musket Mod firearm items and their ammo contracts through a compatibility layer or adapter usable by recruit combat code. Define safe fallback rules for unsupported or partially supported items instead of silently treating them like bows."
       ],
       "acceptance": [
-        "BannerMod can distinguish supported and unsupported Medieval Boomsticks firearms for recruit use; supported firearms resolve the correct ammo contract; unsupported weapons follow an explicit fallback or denial path rather than hidden bow semantics."
+        "BannerMod can distinguish supported and unsupported Ewewukek's Musket Mod firearms for recruit use; supported firearms resolve the correct ammo contract; unsupported weapons follow an explicit fallback or denial path rather than hidden bow semantics."
       ],
       "dependencies": [],
       "progress": [],
       "verification": [
         {
           "date": "2026-04-28",
-          "result": "1) MedievalBoomsticksCompat now distinguishes supported firearms and resolves cartridge ammo contracts; 2) unsupported musketmod items are denied from hidden bow semantics/fallback; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
+          "result": "1) MusketModCompat now distinguishes supported firearms and resolves cartridge ammo contracts; 2) unsupported musketmod items are denied from hidden bow semantics/fallback; 3) task branch verification passed before merge and current PR is backlog-only on top of merged master."
         }
       ],
       "evidence": [],
@@ -2525,15 +2549,15 @@
     },
     {
       "id": "BOOM-003",
-      "title": "Route recruit firearm attacks through Boomsticks projectile and reload semantics",
+      "title": "Route recruit firearm attacks through Musket Mod projectile and reload semantics",
       "status": "in_progress",
-      "updated": "2026-04-28",
-      "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Medieval Boomsticks projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
+      "updated": "2026-04-29",
+      "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Ewewukek's Musket Mod projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
       "scope": [
-        "Integrate supported Medieval Boomsticks firearms into recruit attack execution so projectile spawn, reload cadence, ammo checks, and no-ammo denial use the mod's firearm rules where exposed. Preserve safe server-authoritative fallback for unsupported edge cases."
+        "Integrate supported Ewewukek's Musket Mod firearms into recruit attack execution so projectile spawn, reload cadence, ammo checks, and no-ammo denial use the mod's firearm rules where exposed. Preserve safe server-authoritative fallback for unsupported edge cases."
       ],
       "acceptance": [
-        "A recruit firing a supported Medieval Boomsticks firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
+        "A recruit firing a supported Ewewukek's Musket Mod firearm spawns the mod-correct projectile and follows the intended reload or fire cadence; no-ammo behavior matches the firearm contract; focused verification covers one supported firearm combat flow."
       ],
       "dependencies": [
         "BOOM-003A",
@@ -2542,7 +2566,11 @@
       "progress": [
         {
           "date": "2026-04-28",
-          "text": "Implementation merged on feature/backlog-batch-80-wave1 from feature/boom-003: supported recruit firearms invoke Medieval Boomsticks GunItem.mobUse reflectively and use Boomsticks reloadDuration when available; compileJava passed. Remaining acceptance proof moved to BOOM-003A for focused runtime/GameTest firearm combat verification of projectile spawn, reload cadence, and no-ammo denial."
+          "text": "Implementation merged on feature/backlog-batch-80-wave1 from feature/boom-003: supported recruit firearms invoke Ewewukek's Musket Mod GunItem.mobUse reflectively and use musketmod reloadDuration when available; compileJava passed. Remaining acceptance proof moved to BOOM-003A for focused runtime/GameTest firearm combat verification of projectile spawn, reload cadence, and no-ammo denial."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "Correction after scope clarification: keep Ewewukek's Musket Mod (musketmod) as the only firearm compatibility target. Do not integrate Medieval Boomsticks, Johannes Renaissance Rebirth, or other firearm mods in this slice."
         }
       ],
       "verification": [],
@@ -2553,7 +2581,7 @@
       "title": "Expose recruit firearm compatibility and ammo state in player feedback",
       "status": "open",
       "updated": "2026-04-28",
-      "why": "Players need to understand whether a recruit firearm is truly supported, has valid ammo, or is falling back, otherwise Boomsticks integration will look randomly broken even after the runtime path is fixed.",
+      "why": "Players need to understand whether a recruit firearm is truly supported, has valid ammo, or is falling back, otherwise musketmod integration will look randomly broken even after the runtime path is fixed.",
       "scope": [
         "Add player-facing feedback for supported firearm status, missing ammo, and unsupported weapon fallback in the relevant recruit inventory, command, or combat feedback surfaces. Keep the messages localized and server-authoritative."
       ],
@@ -4557,7 +4585,7 @@
       ],
       "acceptance": [
         "Ranged recruits fire expected projectiles or compatible firearms, consume/require ammo correctly, and respect target/authority rules.",
-        "Existing projectile and Boomsticks compatibility expectations remain testable after the rewrite."
+        "Existing projectile and musketmod compatibility expectations remain testable after the rewrite."
       ],
       "dependencies": [
         "VANILLA-007"
@@ -4800,15 +4828,15 @@
     },
     {
       "id": "BOOM-003A",
-      "title": "Verify Boomsticks recruit firearm combat flow",
+      "title": "Verify Musket Mod recruit firearm combat flow",
       "status": "in_progress",
       "updated": "2026-04-29",
-      "why": "BOOM-003 code now routes supported recruit firearms through Medieval Boomsticks, but the remaining acceptance proof requires an observable firearm combat flow with the optional mod active.",
+      "why": "BOOM-003 code now routes supported recruit firearms through Ewewukek's Musket Mod, but the remaining acceptance proof requires an observable firearm combat flow with the optional mod active.",
       "scope": [
-        "Run or add a focused runtime/GameTest/manual verification path for one supported Medieval Boomsticks firearm covering projectile spawn, reload or fire cadence, and no-ammo denial after the merged BOOM-003 routing."
+        "Run or add a focused runtime/GameTest/manual verification path for one supported Ewewukek's Musket Mod firearm covering projectile spawn, reload or fire cadence, and no-ammo denial after the merged BOOM-003 routing."
       ],
       "acceptance": [
-        "A supported Medieval Boomsticks firearm used by a recruit is observed spawning the mod-correct projectile, following the intended reload or fire cadence, and denying fire consistently when ammo is unavailable; verification evidence is recorded on BOOM-003."
+        "A supported Ewewukek's Musket Mod firearm used by a recruit is observed spawning the mod-correct projectile, following the intended reload or fire cadence, and denying fire consistently when ammo is unavailable; verification evidence is recorded on BOOM-003."
       ],
       "dependencies": [
         "VANILLA-013"
@@ -4816,7 +4844,11 @@
       "progress": [
         {
           "date": "2026-04-29",
-          "text": "Added BannerModBoomsticksFirearmGameTests as a narrow GameTest harness for a Medieval Boomsticks pistol: when musketmod is present it equips a recruit CrossBowman with musketmod:pistol, proves no-ammo denial before adding one cartridge, asserts no projectile before the reload cadence, then waits for a musketmod bullet projectile and cartridge consumption. Verification in this environment: ctx log -- ./gradlew compileJava passed; ctx log -- ./gradlew compileGametestJava passed. Runtime acceptance is still blocked because the GameTest runtime mod list contains BannerMod/Corelib/Minecraft/NeoForge only and no Medieval Boomsticks musketmod, so projectile spawn/cadence/no-ammo behavior could not be observed with the optional mod active."
+          "text": "Added BannerModMusketModFirearmGameTests as a narrow GameTest harness for an Ewewukek's Musket Mod pistol: when musketmod is present it equips a recruit CrossBowman with musketmod:pistol, proves no-ammo denial before adding one cartridge, asserts no projectile before the reload cadence, then waits for a musketmod bullet projectile and cartridge consumption. Verification in this environment: ctx log -- ./gradlew compileJava passed; ctx log -- ./gradlew compileGametestJava passed. Runtime acceptance is still blocked because the GameTest runtime mod list contains BannerMod/Corelib/Minecraft/NeoForge only and no musketmod, so projectile spawn/cadence/no-ammo behavior could not be observed with the optional mod active."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "Correction after scope clarification: verification should target only Ewewukek's Musket Mod (musketmod). Medieval Boomsticks and Renaissance Rebirth remain out of scope."
         }
       ],
       "verification": [],
