@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import java.util.List;
 import java.util.Objects;
 
+/** Immutable world slice captured on the server thread and safe to read from async solver workers. */
 public record RegionSnapshot(
         BlockPos originMin,
         int sizeX,

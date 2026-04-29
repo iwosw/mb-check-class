@@ -137,7 +137,7 @@ public class GridAStarPathSolver implements AsyncPathSolver {
         if (bestIndex >= 0) {
             List<BlockPos> nodes = reconstruct(region, cameFrom, bestIndex);
             if (nodes.size() > 1) {
-                return finish(request, PathResultStatus.PARTIAL, nodes, false, gScore[bestIndex], visitedNodes, startedAt, reason);
+                return finish(request, terminalStatus, nodes, false, gScore[bestIndex], visitedNodes, startedAt, reason);
             }
         }
         return finish(request, terminalStatus, List.of(), false, 0.0D, visitedNodes, startedAt, reason);
