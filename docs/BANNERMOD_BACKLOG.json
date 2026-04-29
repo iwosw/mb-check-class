@@ -3331,8 +3331,8 @@
     {
       "id": "GAME-014",
       "title": "Converge manual and automatic settlement bootstrap paths",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Surveyor founding and automatic claim worker bootstrap should produce the same settlement lifecycle and records.",
       "scope": [
         "Update manual and automatic bootstrap entry paths to create or reconcile the same settlement records, starter structures, workers, citizens, and profession state."
@@ -3345,8 +3345,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Added BannerModBuildingInvalidationGameTests.manualAndAutomaticBootstrapConvergeOnStarterData, which executes manual STARTER_FORT bootstrap and automatic claim worker growth bootstrap in one GameTest and compares active SettlementRecord claim/faction binding, worker count/type set, free citizen count, and NONE profession state. 2) ctx log -- ./gradlew compileJava passed. 3) ctx log -- ./gradlew compileGameTestJava passed. 4) ctx log -- ./gradlew runGameTestServer was executed; the new GAME-014 test was not listed among failures, but the full stage remains blocked by existing unrelated required GameTest failures: primaryZoneMatrix, courier transport/route, ownership roundtrip, group transfer, and workorder claim failures."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "PORT-005",
