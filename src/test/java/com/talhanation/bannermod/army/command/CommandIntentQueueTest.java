@@ -1,16 +1,15 @@
 package com.talhanation.bannermod.army.command;
 
+import com.talhanation.bannermod.ai.military.CombatStance;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommandIntentQueueTest {
@@ -103,16 +102,10 @@ class CommandIntentQueueTest {
     }
 
     @ParameterizedTest
-    @MethodSource("unsupportedQueuedIntents")
-    void runtimeRejectsUnsupportedQueuedIntentsBeforeEnqueue(CommandIntent intent) {
-        CommandIntentQueueRuntime runtime = CommandIntentQueueRuntime.instance();
-        runtime.clearAllForTest();
-
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> runtime.appendForActors(null, intent, List.of(), 0L));
-
-        assertTrue(thrown.getMessage().contains(intent.type().name()));
-        assertEquals(0, runtime.size());
+    @MethodSource("supportedQueuedIntents")
+    void runtimeSupportsEveryCommandIntentVariant(CommandIntent intent) {
+        assertTrue(CommandIntentQueueRuntime.canExecuteQueued(intent),
+                "Expected queued execution support for " + intent.type());
     }
 
     private static CommandIntent movement(long tick) {
@@ -127,10 +120,15 @@ class CommandIntentQueueTest {
         );
     }
 
-    private static Stream<CommandIntent> unsupportedQueuedIntents() {
+    private static Stream<CommandIntent> supportedQueuedIntents() {
         UUID groupUuid = UUID.randomUUID();
         return Stream.of(
-                new CommandIntent.CombatStanceChange(1L, CommandIntentPriority.NORMAL, true, null, groupUuid),
+                movement(1L),
+                new CommandIntent.Face(1L, CommandIntentPriority.NORMAL, true, 0, false),
+                new CommandIntent.Attack(1L, CommandIntentPriority.NORMAL, true, groupUuid),
+                new CommandIntent.StrategicFire(1L, CommandIntentPriority.NORMAL, true, groupUuid, true),
+                new CommandIntent.Aggro(1L, CommandIntentPriority.NORMAL, true, 2, groupUuid, false),
+                new CommandIntent.CombatStanceChange(1L, CommandIntentPriority.NORMAL, true, CombatStance.SHIELD_WALL, groupUuid),
                 new CommandIntent.SiegeMachine(1L, CommandIntentPriority.NORMAL, true, UUID.randomUUID(), groupUuid, false)
         );
     }
