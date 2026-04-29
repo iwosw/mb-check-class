@@ -55,7 +55,7 @@ public class RecruitRangedMusketAttackGoal extends Goal {
         super.start();
         this.crossBowman.setAggressive(true);
         this.state = State.IDLE;
-        int reloadDuration = MedievalBoomsticksCompat.reloadDurationOrDefault(this.crossBowman.getMainHandItem(), weapon.getWeaponLoadTime());
+        int reloadDuration = MusketModCompat.reloadDurationOrDefault(this.crossBowman.getMainHandItem(), weapon.getWeaponLoadTime());
         this.weaponLoadTime = crossBowman.isPassenger() ? reloadDuration * 2 : reloadDuration;
         //this.checkHands();
     }
@@ -72,7 +72,7 @@ public class RecruitRangedMusketAttackGoal extends Goal {
     protected boolean isWeaponInHand() {
         ItemStack itemStack = crossBowman.getMainHandItem();
 
-        return MedievalBoomsticksCompat.createRecruitWeapon(itemStack)
+        return MusketModCompat.createRecruitWeapon(itemStack)
                 .map(weapon -> {
                     this.weapon = weapon;
                     return true;
@@ -81,7 +81,7 @@ public class RecruitRangedMusketAttackGoal extends Goal {
     }
 
     public static boolean isMusket(ItemStack itemStack){
-       return MedievalBoomsticksCompat.isSupportedRecruitFirearm(itemStack);
+       return MusketModCompat.isSupportedRecruitFirearm(itemStack);
     }
 
     public void tick() {
@@ -252,14 +252,14 @@ public class RecruitRangedMusketAttackGoal extends Goal {
         }
     }
     private void consumeAmmo() {
-        ResourceLocation ammoId = MedievalBoomsticksCompat.ammoContract(crossBowman.getMainHandItem()).orElse(null);
+        ResourceLocation ammoId = MusketModCompat.ammoContract(crossBowman.getMainHandItem()).orElse(null);
         if (ammoId == null) {
             return;
         }
 
         for (int i = 0; i < this.crossBowman.getInventory().getContainerSize(); i++) {
             ItemStack stack = this.crossBowman.getInventory().getItem(i);
-            if (MedievalBoomsticksCompat.isAmmo(stack, ammoId)) {
+            if (MusketModCompat.isAmmo(stack, ammoId)) {
                 stack.shrink(1);
                 break;
             }
@@ -267,12 +267,12 @@ public class RecruitRangedMusketAttackGoal extends Goal {
     }
 
     private boolean canLoad(){
-        ResourceLocation ammoId = MedievalBoomsticksCompat.ammoContract(crossBowman.getMainHandItem()).orElse(null);
+        ResourceLocation ammoId = MusketModCompat.ammoContract(crossBowman.getMainHandItem()).orElse(null);
         if (ammoId == null) {
             return false;
         }
         for (int i = 0; i < this.crossBowman.getInventory().getContainerSize(); i++) {
-            if (MedievalBoomsticksCompat.isAmmo(this.crossBowman.getInventory().getItem(i), ammoId)) {
+            if (MusketModCompat.isAmmo(this.crossBowman.getInventory().getItem(i), ammoId)) {
                 return true;
             }
         }

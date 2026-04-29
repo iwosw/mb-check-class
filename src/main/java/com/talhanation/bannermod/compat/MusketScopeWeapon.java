@@ -237,7 +237,7 @@ public class MusketScopeWeapon implements IWeapon {
 
     @Override
     public void performRangedAttackIWeapon(AbstractRecruitEntity shooter, double x, double y, double z, float projectileSpeed) {
-        if (MedievalBoomsticksCompat.fireWithBoomsticks(shooter, x, y, z)) {
+        if (MusketModCompat.fireWithMusketMod(shooter, x, y, z)) {
             return;
         }
 

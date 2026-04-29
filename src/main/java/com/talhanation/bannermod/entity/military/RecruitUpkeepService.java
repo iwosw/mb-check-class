@@ -2,7 +2,7 @@ package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.compat.IWeapon;
-import com.talhanation.bannermod.compat.MedievalBoomsticksCompat;
+import com.talhanation.bannermod.compat.MusketModCompat;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.shared.logistics.BannerModSupplyStatus;
 import net.minecraft.core.Holder;
@@ -121,7 +121,7 @@ final class RecruitUpkeepService {
                     recruit.equipItem(equipment);
                     itemstack.shrink(1);
                 }
-                if (recruit instanceof CrossBowmanEntity crossBowmanEntity && BannerModMain.isMusketModLoaded && IWeapon.isMusketModWeapon(crossBowmanEntity.getMainHandItem()) && MedievalBoomsticksCompat.ammoContract(crossBowmanEntity.getMainHandItem()).map(ammoId -> MedievalBoomsticksCompat.isAmmo(itemstack, ammoId)).orElse(false)) {
+                if (recruit instanceof CrossBowmanEntity crossBowmanEntity && BannerModMain.isMusketModLoaded && IWeapon.isMusketModWeapon(crossBowmanEntity.getMainHandItem()) && MusketModCompat.ammoContract(crossBowmanEntity.getMainHandItem()).map(ammoId -> MusketModCompat.isAmmo(itemstack, ammoId)).orElse(false)) {
                     if (recruit.canTakeCartridge()) {
                         equipment = itemstack.copy();
                         recruit.inventory.addItem(equipment);

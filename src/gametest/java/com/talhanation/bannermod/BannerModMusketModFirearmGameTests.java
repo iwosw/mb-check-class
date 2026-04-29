@@ -1,7 +1,7 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.compat.MedievalBoomsticksCompat;
+import com.talhanation.bannermod.compat.MusketModCompat;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
 import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.registry.military.ModEntityTypes;
@@ -25,23 +25,23 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(BannerModMain.MOD_ID)
-public class BannerModBoomsticksFirearmGameTests {
+public class BannerModMusketModFirearmGameTests {
     private static final ResourceLocation PISTOL_ID = ResourceLocation.fromNamespaceAndPath("musketmod", "pistol");
     private static final ResourceLocation CARTRIDGE_ID = ResourceLocation.fromNamespaceAndPath("musketmod", "cartridge");
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty", templateNamespace = BannerModMain.MOD_ID, timeoutTicks = 220)
-    public static void recruitPistolUsesBoomsticksProjectileReloadAndAmmoDenial(GameTestHelper helper) {
+    public static void recruitPistolUsesMusketModProjectileReloadAndAmmoDenial(GameTestHelper helper) {
         if (!BannerModMain.isMusketModLoaded) {
-            BannerModMain.LOGGER.warn("BOOM-003A GameTest skipped: Medieval Boomsticks (musketmod) is not loaded in this runtime.");
+            BannerModMain.LOGGER.warn("BOOM-003A GameTest skipped: Ewewukek's Musket Mod (musketmod) is not loaded in this runtime.");
             helper.succeed();
             return;
         }
 
         Item pistol = BuiltInRegistries.ITEM.getOptional(PISTOL_ID)
-                .orElseThrow(() -> new IllegalStateException("Expected Medieval Boomsticks pistol item to be registered."));
+                .orElseThrow(() -> new IllegalStateException("Expected Ewewukek's Musket Mod pistol item to be registered."));
         Item cartridge = BuiltInRegistries.ITEM.getOptional(CARTRIDGE_ID)
-                .orElseThrow(() -> new IllegalStateException("Expected Medieval Boomsticks cartridge item to be registered."));
+                .orElseThrow(() -> new IllegalStateException("Expected Ewewukek's Musket Mod cartridge item to be registered."));
 
         Player owner = helper.makeMockPlayer(GameType.SURVIVAL);
         CrossBowmanEntity recruit = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
@@ -57,25 +57,25 @@ public class BannerModBoomsticksFirearmGameTests {
         recruit.setAggroState(1);
         recruit.setTarget(target);
 
-        helper.assertTrue(MedievalBoomsticksCompat.isSupportedRecruitFirearm(pistolStack),
-                "Expected the Medieval Boomsticks pistol to be routed through recruit firearm compat.");
+        helper.assertTrue(MusketModCompat.isSupportedRecruitFirearm(pistolStack),
+                "Expected the musketmod pistol to be routed through recruit firearm compat.");
         AABB testBounds = testBounds(helper);
-        int initialProjectiles = countBoomsticksProjectiles(helper.getLevel(), testBounds);
-        int reloadDuration = MedievalBoomsticksCompat.reloadDurationOrDefault(pistolStack, 40);
+        int initialProjectiles = countMusketModProjectiles(helper.getLevel(), testBounds);
+        int reloadDuration = MusketModCompat.reloadDurationOrDefault(pistolStack, 40);
 
         helper.runAfterDelay(Math.min(40, Math.max(1, reloadDuration - 1)), () -> {
-            helper.assertTrue(countBoomsticksProjectiles(helper.getLevel(), testBounds) == initialProjectiles,
-                    "Expected an unloaded recruit pistol with no cartridges to deny fire and spawn no Boomsticks projectile.");
+            helper.assertTrue(countMusketModProjectiles(helper.getLevel(), testBounds) == initialProjectiles,
+                    "Expected an unloaded recruit pistol with no cartridges to deny fire and spawn no musketmod projectile.");
             recruit.getInventory().addItem(new ItemStack(cartridge));
         });
 
         helper.runAfterDelay(Math.max(1, reloadDuration - 1), () -> helper.assertTrue(
-                countBoomsticksProjectiles(helper.getLevel(), testBounds) == initialProjectiles,
-                "Expected the recruit pistol not to fire before the Boomsticks reload cadence elapses."));
+                countMusketModProjectiles(helper.getLevel(), testBounds) == initialProjectiles,
+                "Expected the recruit pistol not to fire before the musketmod reload cadence elapses."));
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(countBoomsticksProjectiles(helper.getLevel(), testBounds) > initialProjectiles,
-                    "Expected the recruit pistol to spawn a Medieval Boomsticks projectile after reload and aim cadence.");
+            helper.assertTrue(countMusketModProjectiles(helper.getLevel(), testBounds) > initialProjectiles,
+                    "Expected the recruit pistol to spawn a musketmod projectile after reload and aim cadence.");
             helper.assertTrue(countCartridges(recruit) == 0,
                     "Expected the recruit pistol to consume the one available cartridge before firing.");
         });
@@ -103,7 +103,7 @@ public class BannerModBoomsticksFirearmGameTests {
         );
     }
 
-    private static int countBoomsticksProjectiles(ServerLevel level, AABB bounds) {
+    private static int countMusketModProjectiles(ServerLevel level, AABB bounds) {
         return level.getEntitiesOfClass(Entity.class, bounds, entity -> {
             ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
             return PISTOL_ID.getNamespace().equals(id.getNamespace()) && id.getPath().contains("bullet");
@@ -114,7 +114,7 @@ public class BannerModBoomsticksFirearmGameTests {
         int count = 0;
         for (int i = 0; i < recruit.getInventory().getContainerSize(); i++) {
             ItemStack stack = recruit.getInventory().getItem(i);
-            if (MedievalBoomsticksCompat.isAmmo(stack, CARTRIDGE_ID)) {
+            if (MusketModCompat.isAmmo(stack, CARTRIDGE_ID)) {
                 count += stack.getCount();
             }
         }
