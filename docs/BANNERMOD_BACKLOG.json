@@ -4816,8 +4816,8 @@
     {
       "id": "SHIPS-002A",
       "title": "Reflect Small Ships cargo and navigation capabilities",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "SHIPS-002 cannot safely execute vessel-backed sea trade until BannerMod can discover whether a bound Small Ships carrier exposes usable cargo and movement hooks without compile-time Small Ships API access.",
       "scope": [
         "Extend the optional Small Ships compatibility layer with reflection-backed capability probes for carrier cargo container access, position/state inspection, and movement or destination support; keep the layer safe when Small Ships is absent or incompatible."
@@ -4830,8 +4830,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: focused compat tests cover supported carrier binding plus missing cargo/navigation capability states, with extra position/state coverage; runtime support probes return localized unsupported-carrier reason keys instead of binding unsupported carriers. Verification: tools/ai-context-proxy/bin/ctx log -- ./gradlew test --tests com.talhanation.bannermod.compat.SmallShipsSeaTradeCompatTest passed; tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava passed; tools/backlog validate passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SHIPS-002B",
