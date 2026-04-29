@@ -4435,7 +4435,12 @@
       "dependencies": [
         "VANILLA-001"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Added focused GameTest source BannerModRecruitEntityHelperGameTests.recruitEquipmentSlotsAndInventorySurviveSaveLoad covering in-world recruit equipment slot resolution, replacement eligibility, equipment save/load, inventory mirror preservation, and non-equipment inventory serialization. Verification attempted with tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage; result: FAILED before tests ran during GameTest server bootstrap at VillagerEvents.villagerTrades because RecruitsServerConfig.RecruitsVillagerRecruitMap.get() was read before config load. compileGameTestJava passed."
+        }
+      ],
       "verification": [
         {
           "date": "2026-04-29",
