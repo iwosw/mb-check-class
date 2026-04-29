@@ -94,7 +94,15 @@ public class VillagerEvents {
 
     @SubscribeEvent
     public void villagerTrades(VillagerTradesEvent event) {
-        if(!RecruitsServerConfig.ShouldProfessionBlocksTrade.get()) return;
+        if(!shouldRegisterProfessionBlockTrades()) return;
         VillagerProfessionTradeRegistrationService.registerProfessionBlockTrades(event);
+    }
+
+    private static boolean shouldRegisterProfessionBlockTrades() {
+        try {
+            return RecruitsServerConfig.ShouldProfessionBlocksTrade.get();
+        } catch (IllegalStateException ignored) {
+            return false;
+        }
     }
 }
