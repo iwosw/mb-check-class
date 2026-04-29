@@ -15,6 +15,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -65,15 +66,15 @@ public class WarAlliesScreen extends Screen {
         rebuildRows();
 
         int btnY = guiTop + H - 28;
-        inviteAttackerBtn = Button.builder(Component.literal("Invite to Attacker"),
+        inviteAttackerBtn = Button.builder(Component.translatable("gui.bannermod.war_allies.invite_attacker"),
                 btn -> openInvitePicker(WarSide.ATTACKER))
                 .bounds(guiLeft + 8, btnY, 110, 18).build();
-        inviteDefenderBtn = Button.builder(Component.literal("Invite to Defender"),
+        inviteDefenderBtn = Button.builder(Component.translatable("gui.bannermod.war_allies.invite_defender"),
                 btn -> openInvitePicker(WarSide.DEFENDER))
                 .bounds(guiLeft + 122, btnY, 110, 18).build();
-        refreshBtn = Button.builder(Component.literal("Refresh"), btn -> rebuildRows())
+        refreshBtn = Button.builder(Component.translatable("gui.bannermod.common.refresh"), btn -> rebuildRows())
                 .bounds(guiLeft + 240, btnY, 60, 18).build();
-        closeBtn = Button.builder(Component.literal("Back"), btn -> onClose())
+        closeBtn = Button.builder(Component.translatable("gui.bannermod.common.back"), btn -> onClose())
                 .bounds(guiLeft + 304, btnY, 68, 18).build();
 
         addRenderableWidget(inviteAttackerBtn);
@@ -112,11 +113,21 @@ public class WarAlliesScreen extends Screen {
         if (inviteAttackerBtn != null) {
             inviteAttackerBtn.active = preActive && war != null
                     && isLeaderOf(war.attackerPoliticalEntityId(), local);
+            inviteAttackerBtn.setTooltip(inviteAttackerBtn.active ? null : Tooltip.create(inviteDenial(war, preActive, war == null ? null : war.attackerPoliticalEntityId())));
         }
         if (inviteDefenderBtn != null) {
             inviteDefenderBtn.active = preActive && war != null
                     && isLeaderOf(war.defenderPoliticalEntityId(), local);
+            inviteDefenderBtn.setTooltip(inviteDefenderBtn.active ? null : Tooltip.create(inviteDenial(war, preActive, war == null ? null : war.defenderPoliticalEntityId())));
         }
+    }
+
+    private Component inviteDenial(@Nullable WarDeclarationRecord war, boolean preActive, @Nullable UUID sideId) {
+        if (war == null) return Component.translatable("gui.bannermod.war.denial.war_not_found");
+        if (!preActive) return Component.translatable("gui.bannermod.war.ally_denial.war_not_pre_active");
+        PoliticalEntityRecord side = WarClientState.entityById(sideId);
+        UUID local = localPlayerUuid();
+        return PoliticalEntityAuthority.denialReason(local, false, side);
     }
 
     private void openInvitePicker(WarSide side) {
@@ -140,7 +151,15 @@ public class WarAlliesScreen extends Screen {
         graphics.drawCenteredString(font, header, guiLeft + W / 2, guiTop + 6, 0xFFFFFF);
 
         renderList(graphics, mouseX, mouseY);
+        renderActionFeedback(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderActionFeedback(GuiGraphics graphics) {
+        Component feedback = WarClientState.lastActionFeedback();
+        if (feedback == null || feedback.getString().isBlank()) return;
+        graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), W - 18),
+                guiLeft + 8, guiTop + H - 42, 0xFFFFDD88, false);
     }
 
     private void renderList(GuiGraphics graphics, int mouseX, int mouseY) {

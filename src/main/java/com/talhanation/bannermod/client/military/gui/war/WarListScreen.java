@@ -175,9 +175,7 @@ public class WarListScreen extends Screen {
         if (placeSiegeBtn != null) {
             placeSiegeBtn.active = has && leaderSideOf(selected) != null
                     && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
-            placeSiegeBtn.setTooltip(placeSiegeBtn.active ? null : Tooltip.create(has
-                    ? text("gui.bannermod.war_list.tooltip.active_leader_required")
-                    : text("gui.bannermod.war_list.tooltip.select_war")));
+            placeSiegeBtn.setTooltip(placeSiegeBtn.active ? null : Tooltip.create(placeSiegeDenial(has)));
         }
         if (alliesBtn != null) {
             alliesBtn.active = has;
@@ -188,21 +186,21 @@ public class WarListScreen extends Screen {
                 Player player = Minecraft.getInstance().player;
                 return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity) && entity.status().canDeclareOffensiveWar();
             });
-            declareBtn.setTooltip(declareBtn.active ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.no_declarer")));
+            declareBtn.setTooltip(declareBtn.active ? null : Tooltip.create(declareDenial()));
         }
         boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
         boolean attackerLeader = has && canLocalPlayerActFor(selected.attackerPoliticalEntityId());
         if (cancelWarBtn != null) {
             cancelWarBtn.active = live && attackerLeader;
-            cancelWarBtn.setTooltip(cancelWarBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            cancelWarBtn.setTooltip(cancelWarBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected)));
         }
         if (occupyBtn != null) {
             occupyBtn.active = live && attackerLeader;
-            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected)));
         }
         if (annexBtn != null) {
             annexBtn.active = live && attackerLeader;
-            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live)));
+            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected)));
         }
         if (tributeLockedBtn != null) {
             tributeLockedBtn.active = false;
@@ -210,10 +208,41 @@ public class WarListScreen extends Screen {
         }
     }
 
-    private static Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar) {
+    private Component placeSiegeDenial(boolean hasSelection) {
+        if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
+        if (selected.state() == WarState.RESOLVED || selected.state() == WarState.CANCELLED) return text("gui.bannermod.war_list.tooltip.war_closed");
+        return sideAuthorityDenial(selected);
+    }
+
+    private Component declareDenial() {
+        Player player = Minecraft.getInstance().player;
+        UUID actor = player == null ? null : player.getUUID();
+        for (PoliticalEntityRecord entity : WarClientState.entities()) {
+            if (PoliticalEntityAuthority.canAct(actor, false, entity) && !entity.status().canDeclareOffensiveWar()) {
+                return text("gui.bannermod.war.denial.attacker_status", entity.status().name());
+            }
+        }
+        if (!WarClientState.entities().isEmpty()) {
+            return PoliticalEntityAuthority.denialReason(actor, false, WarClientState.entities().get(0));
+        }
+        return text("gui.bannermod.war_list.tooltip.no_declarer");
+    }
+
+    private Component sideAuthorityDenial(WarDeclarationRecord war) {
+        Player player = Minecraft.getInstance().player;
+        UUID actor = player == null ? null : player.getUUID();
+        PoliticalEntityRecord attacker = WarClientState.entityById(war.attackerPoliticalEntityId());
+        PoliticalEntityRecord defender = WarClientState.entityById(war.defenderPoliticalEntityId());
+        if (PoliticalEntityAuthority.canAct(actor, false, attacker)) return PoliticalEntityAuthority.denialReason(actor, false, defender);
+        return PoliticalEntityAuthority.denialReason(actor, false, attacker);
+    }
+
+    private Component outcomeLockedTooltip(boolean hasSelection, boolean liveWar, @Nullable WarDeclarationRecord war) {
         if (!hasSelection) return text("gui.bannermod.war_list.tooltip.select_war");
         if (!liveWar) return text("gui.bannermod.war_list.tooltip.war_closed");
-        return text("gui.bannermod.war_list.tooltip.attacker_leader_required");
+        PoliticalEntityRecord attacker = war == null ? null : WarClientState.entityById(war.attackerPoliticalEntityId());
+        Player player = Minecraft.getInstance().player;
+        return PoliticalEntityAuthority.denialReason(player == null ? null : player.getUUID(), false, attacker);
     }
 
     @Nullable
@@ -247,8 +276,16 @@ public class WarListScreen extends Screen {
         renderBattleWindowBanner(graphics);
         renderList(graphics, mouseX, mouseY);
         renderDetailPanel(graphics);
+        renderActionFeedback(graphics);
 
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderActionFeedback(GuiGraphics graphics) {
+        Component feedback = WarClientState.lastActionFeedback();
+        if (feedback == null || feedback.getString().isBlank()) return;
+        graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), W - 18),
+                guiLeft + 8, guiTop + 28, 0xFFFFDD88, false);
     }
 
     private void renderBattleWindowBanner(GuiGraphics graphics) {

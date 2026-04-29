@@ -5,6 +5,7 @@ import com.talhanation.bannermod.war.audit.WarAuditLogSavedData;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -40,6 +41,13 @@ public final class WarAllyService {
                 return PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED;
             }
             return name().toLowerCase(java.util.Locale.ROOT);
+        }
+
+        public Component component() {
+            if (this == NOT_LEADER) {
+                return Component.translatable(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED_KEY);
+            }
+            return Component.translatable("gui.bannermod.war.ally_denial." + token());
         }
     }
 

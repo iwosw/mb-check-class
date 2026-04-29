@@ -216,9 +216,9 @@ War Room is the main in-game UI for war and politics:
 
 `Place siege here` is enabled only when you are the leader of one of the war's sides and the war is not `RESOLVED`/`CANCELLED`. It sends `MessagePlaceSiegeStandardHere`, and the server validates against the same rules as `/bannermod siege place`.
 
-`Declare war` opens a small War Room wizard where a state leader picks attacker, defender, goal, and optional casus belli text. The server still applies the same validation and cooldown denial reasons as `/bannermod war declare`, and the command remains available.
+`Declare war` opens a small War Room wizard where a state leader picks attacker, defender, goal, and optional casus belli text. Disabled buttons and the War Room footer show the server's denial reason: leader-only authority, republic co-leader authority, monarchy blocking co-leaders, peaceful/status limits, or declaration cooldowns. The command remains available and uses the same server checks.
 
-War outcome buttons are server-authoritative. `Cancel war`, `Occupy here`, and `Annex here` unlock for the attacking state leader on live wars and report success or denial in chat. `Tribute: op only` is visibly locked for normal leaders; forced tribute/peace/vassalization/demilitarization remain admin outcomes.
+War outcome buttons are server-authoritative. `Cancel war`, `Occupy here`, and `Annex here` unlock for the attacking state leader on live wars and report success or denial in the War Room footer as well as chat. `Tribute: op only` is visibly locked for normal leaders; forced tribute/peace/vassalization/demilitarization remain admin outcomes.
 
 If an occupation outcome starts on claim chunks, players can see `OCCUPIED` in the claim HUD when standing in the occupied claim and see occupation lines in the War Room detail panel. Occupation is server-authoritative: the occupied owner loses manual block/entity control in the occupied claim chunks, while the occupier's political entity can act there; occupation tax remains visible in the War Room as `tax=t...`.
 
