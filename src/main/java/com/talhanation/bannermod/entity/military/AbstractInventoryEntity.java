@@ -33,6 +33,8 @@ import static net.minecraft.world.entity.EquipmentSlot.*;
 
 public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
 
+    private static final String RECRUIT_ITEMS_TAG = "RecruitItems";
+
 
     //iv slots
     //4 = offhand
@@ -69,24 +71,24 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
 
     public void addAdditionalSaveData(CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
+        nbt.remove("Items");
         ListTag listnbt = new ListTag();
         for (int i = 0; i < this.inventory.getContainerSize(); ++i) {
             ItemStack itemstack = this.inventory.getItem(i);
             if (!itemstack.isEmpty()) {
-                CompoundTag compoundnbt = new CompoundTag();
+                CompoundTag compoundnbt = ((CompoundTag) itemstack.save(this.registryAccess())).copy();
                 compoundnbt.putByte("Slot", (byte) i);
-                itemstack.save(this.registryAccess(), compoundnbt);
                 listnbt.add(compoundnbt);
             }
         }
 
-        nbt.put("Items", listnbt);
+        nbt.put(RECRUIT_ITEMS_TAG, listnbt);
         nbt.putInt("BeforeItemSlot", this.getBeforeItemSlot());
     }
 
     public void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
-        ListTag listnbt = nbt.getList("Items", 10);//muss 10 sein amk sonst nix save
+        ListTag listnbt = nbt.contains(RECRUIT_ITEMS_TAG) ? nbt.getList(RECRUIT_ITEMS_TAG, 10) : nbt.getList("Items", 10);//muss 10 sein amk sonst nix save
         this.createInventory();
 
         for (int i = 0; i < listnbt.size(); ++i) {
@@ -359,6 +361,10 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
         EquipmentSlot slot = itemStack.getEquipmentSlot();
         if (slot != null) {
             return slot;
+        }
+        Equipable equipable = Equipable.get(itemStack);
+        if (equipable != null) {
+            return equipable.getEquipmentSlot();
         }
         return itemStack.canPerformAction(net.neoforged.neoforge.common.ItemAbilities.SHIELD_BLOCK) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
     }
