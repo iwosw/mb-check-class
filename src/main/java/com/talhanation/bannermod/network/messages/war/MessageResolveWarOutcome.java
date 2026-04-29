@@ -15,6 +15,7 @@ import com.talhanation.bannermod.war.rp.WarNoticeService;
 import com.talhanation.bannermod.war.runtime.ClaimRepublisher;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRuntime;
+import com.talhanation.bannermod.war.runtime.WarGoalType;
 import com.talhanation.bannermod.war.runtime.WarOutcomeApplier;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
@@ -60,7 +61,7 @@ public class MessageResolveWarOutcome implements BannerModMessage<MessageResolve
         WarDeclarationRuntime declarations = WarRuntimeContext.declarations(level);
         Optional<WarDeclarationRecord> warOpt = declarations.byId(this.warId);
         if (warOpt.isEmpty()) {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.war_not_found"));
+            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.not_found"));
             return;
         }
         WarDeclarationRecord war = warOpt.get();
@@ -68,28 +69,32 @@ public class MessageResolveWarOutcome implements BannerModMessage<MessageResolve
         PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
         Optional<PoliticalEntityRecord> attacker = registry.byId(war.attackerPoliticalEntityId());
         if (action == Action.TRIBUTE && !player.hasPermissions(2)) {
-            sendFeedback(player, Component.translatable("gui.bannermod.war_list.tooltip.op_only"));
+            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.op_only", actionName(action)));
             return;
         }
         if (attacker.isEmpty() || !PoliticalEntityAuthority.canAct(player, attacker.get())) {
             sendFeedback(player, PoliticalEntityAuthority.denialReason(player.getUUID(), player.hasPermissions(2), attacker.orElse(null)));
             return;
         }
+        if (!isOutcomeSupportedForGoal(action, war.goalType())) {
+            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.unsupported", actionName(action), war.goalType().name()));
+            return;
+        }
 
         WarOutcomeApplier.Result result = apply(action, player, level, war);
         if (!result.valid()) {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.outcome", result.reason()));
+            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.rejected", actionName(action), result.reason()));
             return;
         }
 
         WarDeclarationRecord finalWar = declarations.byId(war.id()).orElse(war);
         if (action == Action.CANCEL) {
             WarNoticeService.broadcastCancelled(player.server, finalWar, registry);
-            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.war_cancelled"));
+            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.accepted.cancel"));
         } else {
             String outcomeName = result.outcome() == null ? "RESOLVED" : result.outcome().name();
             WarNoticeService.broadcastOutcome(player.server, finalWar, registry, outcomeName);
-            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.war_resolved", outcomeName));
+            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.accepted.resolved", outcomeName));
         }
         sendSnapshot(player, level, registry);
     }
@@ -98,6 +103,19 @@ public class MessageResolveWarOutcome implements BannerModMessage<MessageResolve
         player.sendSystemMessage(message);
         BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
                 new MessageToClientWarActionFeedback(message));
+    }
+
+    static boolean isOutcomeSupportedForGoal(Action action, WarGoalType goal) {
+        return switch (action) {
+            case CANCEL -> true;
+            case TRIBUTE -> goal == WarGoalType.TRIBUTE;
+            case OCCUPY -> goal == WarGoalType.OCCUPATION;
+            case ANNEX -> goal == WarGoalType.ANNEX_LIMITED_CHUNKS;
+        };
+    }
+
+    private static Component actionName(Action action) {
+        return Component.translatable("chat.bannermod.war_outcome.action." + action.name().toLowerCase(java.util.Locale.ROOT));
     }
 
     private static WarOutcomeApplier.Result apply(Action action, ServerPlayer player, ServerLevel level, WarDeclarationRecord war) {
