@@ -90,7 +90,7 @@ Citizens can fill building vacancies and convert into workers or recruits when t
 
 The worker command screen (`X`) supports simple group orders: follow, guard, move to position, stop.
 
-Governors expose the settlement's status, citizen count, taxes, incidents, treasury data, policy buttons, and a read-only logistics panel. Use the logistics panel to check pending, claimed, and recently completed work orders, shortage blockers, stockpile capacity, missing goods, and the current project hint before digging through logs. Promote an eligible owned recruit from its inventory when it has enough experience and is tied to a friendly claimed settlement.
+Governors expose the settlement's mirrored server snapshot: loading/stale/fresh state, citizen count, taxes, incidents, treasury data, policy buttons, and a read-only logistics panel. If the mirror says loading or stale, wait for the server refresh before trusting the panel; policy buttons explain why they are disabled until the server can validate the change. Promote an eligible owned recruit from its inventory when it has enough experience and is tied to a friendly claimed settlement.
 
 The logistics panel also labels the settlement's strategic role and route cost. Farms plus storage can make a surplus hub, market plus routes can make a junction market, fort plus route storage can make a chokepoint fort, and ports/water access become a water gate. Landlocked settlements with food or material production may show a specialty such as preserved food or worked materials. These labels are warnings and planning hints first: they expose logistics objectives and loyalty pressure before applying destructive penalties.
 
