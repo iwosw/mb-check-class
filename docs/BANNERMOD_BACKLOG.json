@@ -4916,8 +4916,8 @@
     {
       "id": "SHIPS-002D",
       "title": "Surface sea-trade route progress and failures to players",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Players need to understand when sea trade is moving goods, waiting for a ship, blocked by cargo capacity, or completed.",
       "scope": [
         "Expose ship-backed route status lines through settlement snapshots and update player-facing guides/almanac for the Small Ships sea-trade loop and failure states."
@@ -4930,8 +4930,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Settlement feedback status lines: focused BannerModSettlementServiceTest seaTradeStatusLinesExposeExecutionProgressAndFailures passed, covering loading, travelling, unloading, completed, missing-ship, and blocked-cargo route states. 2) Snapshot/client propagation: focused BannerModSettlementClientMirrorTest governorViewCopiesSeaTradeStatusLinesIntoLogisticsLines passed, proving settlement snapshot sea-trade lines reach governor logistics feedback. 3) Player-facing docs: MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, docs/BANNERMOD_ALMANAC.html, and in-game almanac localization describe the Small Ships sea-trade loop and failure states. 4) compileJava passed; no GameTests touched, so compileGameTestJava was not required. 5) tools/backlog validate passed before closure."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-003A",
