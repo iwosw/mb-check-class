@@ -18,8 +18,8 @@ public class ClaimOverlayRenderer {
 
     private boolean dataChanged = true;
 
-    public void render(GuiGraphics guiGraphics, Minecraft minecraft, RecruitsClaim claim, HudOverlayCoordinator.OverlayState state, float alpha, int panelWidth, int x, int y, boolean underSiege, boolean occupied) {
-        if (claim == null || state == HudOverlayCoordinator.OverlayState.HIDDEN) return;
+    public void render(GuiGraphics guiGraphics, Minecraft minecraft, RecruitsClaim claim, HudOverlayCoordinator.OverlayState state, ClaimAuthorityStatus authorityStatus, float alpha, int panelWidth, int x, int y, boolean underSiege, boolean occupied) {
+        if (state == HudOverlayCoordinator.OverlayState.HIDDEN) return;
 
         Font font = minecraft.font;
         int panelHeight = (state == HudOverlayCoordinator.OverlayState.FULL) ? PANEL_HEIGHT_FULL : PANEL_HEIGHT_COMPACT;
@@ -27,15 +27,16 @@ public class ClaimOverlayRenderer {
         int bgRawAlpha = underSiege ? SIEGE_BACKGROUND_ALPHA : (occupied ? OCCUPATION_BACKGROUND_ALPHA : BACKGROUND_ALPHA);
         int bgAlpha = (int)(bgRawAlpha * alpha);
 
-        int chrome = underSiege ? 0xFF3030 : (occupied ? 0xBB8A30 : 0x808080);
-        int backgroundColor = (bgAlpha << 24) | (chrome & 0x00FFFFFF);
+        int chrome = underSiege ? 0xFF3030 : (occupied ? 0xBB8A30 : authorityStatus.chromeColor());
+        int backgroundColor = claim == null ? applyAlpha(authorityStatus.backgroundColor(), alpha) : (bgAlpha << 24) | (chrome & 0x00FFFFFF);
 
         guiGraphics.fill(x, y, x + panelWidth, y + panelHeight, backgroundColor);
+        guiGraphics.renderOutline(x, y, panelWidth, panelHeight, withAlpha(authorityStatus.chromeColor(), alpha));
 
         if (state == HudOverlayCoordinator.OverlayState.FULL) {
-            renderNormalFullContent(guiGraphics, claim, x, y, panelWidth, panelHeight, font, alpha);
+            renderNormalFullContent(guiGraphics, claim, authorityStatus, x, y, panelWidth, font, alpha);
         } else {
-            renderNormalCompactContent(guiGraphics, claim, x, y, panelWidth, panelHeight, font, alpha);
+            renderNormalCompactContent(guiGraphics, claim, authorityStatus, x, y, panelWidth, panelHeight, font, alpha);
         }
 
         if (underSiege) {
@@ -72,15 +73,21 @@ public class ClaimOverlayRenderer {
         guiGraphics.drawString(font, truncated, x + (panelWidth - consequenceWidth) / 2, badgeY + 10, textColor, true);
     }
 
-    private void renderNormalFullContent(GuiGraphics guiGraphics, RecruitsClaim claim, int x, int y, int width, int height, Font font, float alpha) {
+    private void renderNormalFullContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, int x, int y, int width, Font font, float alpha) {
         int textAlpha = (int)(0xFF * alpha);
         int textColor = (textAlpha << 24) | 0xFFFFFF;
 
-        String claimName = truncateText(font, claim.getName(), width - 80);
+        String claimName = claim == null
+                ? Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString()
+                : claim.getName();
+        claimName = truncateText(font, claimName, width - 80);
         guiGraphics.drawString(font, claimName, x + 60, y + 10, textColor, false);
 
+        String authorityLabel = Component.translatable(authorityStatus.labelKey()).getString();
+        guiGraphics.drawString(font, truncateText(font, authorityLabel, width - 80), x + 60, y + 21, withAlpha(authorityStatus.textColor(), alpha), false);
 
-        if (claim.getPlayerInfo() != null) {
+
+        if (claim != null && claim.getPlayerInfo() != null) {
             String claimOwner = truncateText(font, claim.getPlayerInfo().getName(), width - 80);
 
             PoseStack poseStack = guiGraphics.pose();
@@ -98,11 +105,14 @@ public class ClaimOverlayRenderer {
         }
     }
 
-    private void renderNormalCompactContent(GuiGraphics guiGraphics, RecruitsClaim claim, int x, int y, int width, int height, Font font, float alpha) {
+    private void renderNormalCompactContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, int x, int y, int width, int height, Font font, float alpha) {
         int textAlpha = (int)(0xFF * alpha);
         int textColor = (textAlpha << 24) | 0xFFFFFF;
 
-        String displayText = truncateText(font, claim.getName(), width - 20);
+        String displayText = claim == null
+                ? Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString()
+                : claim.getName();
+        displayText = truncateText(font, displayText, width - 20);
 
         int textWidth = font.width(displayText);
         int textX = x + (width - textWidth) / 2;
@@ -118,6 +128,17 @@ public class ClaimOverlayRenderer {
             text = text.substring(0, text.length() - 1);
         }
         return text + "...";
+    }
+
+    private int applyAlpha(int color, float alpha) {
+        int colorAlpha = (color >>> 24) & 0xFF;
+        int adjustedAlpha = (int)(colorAlpha * alpha);
+        return (adjustedAlpha << 24) | (color & 0x00FFFFFF);
+    }
+
+    private int withAlpha(int color, float alpha) {
+        int adjustedAlpha = (int)(0xFF * alpha);
+        return (adjustedAlpha << 24) | (color & 0x00FFFFFF);
     }
 
     public void markDataChanged() {
