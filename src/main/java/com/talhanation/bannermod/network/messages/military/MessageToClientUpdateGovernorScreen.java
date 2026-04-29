@@ -27,6 +27,14 @@ public class MessageToClientUpdateGovernorScreen implements BannerModMessage<Mes
         this.envelope = envelope;
     }
 
+    public UUID recruit() {
+        return this.recruit;
+    }
+
+    public Envelope envelope() {
+        return this.envelope;
+    }
+
     @Override
     public PacketFlow getExecutingSide() {
         return BannerModMessage.clientbound();

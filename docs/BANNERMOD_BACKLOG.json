@@ -3096,8 +3096,8 @@
     {
       "id": "SYNC-004",
       "title": "Verify settlement snapshot refresh paths",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "SYNC-001 requires proof that login, open-screen, and mutation refresh paths update the client mirror.",
       "scope": [
         "Add focused verification for settlement snapshot delivery on login, screen open, and server-side mutation refresh."
@@ -3110,8 +3110,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: focused tests prove login, screen-open, and mutation-refresh settlement client snapshot paths. Verification: ./gradlew compileJava passed; ./gradlew compileGameTestJava passed; ./gradlew test --tests com.talhanation.bannermod.client.settlement.BannerModSettlementClientMirrorTest --tests com.talhanation.bannermod.events.RecruitGovernorWorkflowTest --tests com.talhanation.bannermod.network.messages.military.MessageToClientUpdateGovernorScreenTest passed, covering LOGIN/MUTATION_REFRESH mirror replacement, SCREEN_OPEN/LOGIN/MUTATION_REFRESH workflow envelopes, and MessageToClientUpdateGovernorScreen payload roundtrip."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-010",
