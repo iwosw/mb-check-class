@@ -4171,8 +4171,8 @@
     {
       "id": "RENDER-012",
       "title": "Add render and UI regression verification",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "A full render/UI rewrite needs observable checks beyond compile success to catch broken screens and overlays.",
       "scope": [
         "Add or update the cheapest feasible automated and manual verification for rewritten screens, HUD overlays, entity renderers, banner rendering, and world-map route rendering."
@@ -4192,8 +4192,14 @@
         "RENDER-011"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) compileJava passed after all render/UI rewrites. 2) Available client-safe render/UI tests passed: RenderUiVerificationInventoryTest, RecruitRendererParitySourceTest, RecruitCosmeticLayerSourceTest, BannerRenderParityTest, ClientRenderPrimitivesTest, and WorldMapRouteUiVerificationTest. 3) Recruit renderer base checked by RecruitRendererParitySourceTest for human/villager model selection, texture selection, nameplates, and profiling. 4) Cosmetic recruit layers checked by RecruitCosmeticLayerSourceTest for team color, biome textures, companion markers, custom head APIs, and packed ARGB render colors. 5) Banner preview and siege standard rendering checked by BannerRenderParityTest for base color, pattern layers, political color cue, dynamic cloth, and no duplicate static cloth. 6) Fishing bobber/string and work-area outlines checked by ClientRenderPrimitivesTest for emitted visible vertices, line-box edges, colors, and normals. 7) World-map route UI checked by WorldMapRouteUiVerificationTest for route display, waypoint popups, scroll/zoom, selection, and CommandIntentDispatcher dispatch path. 8) Trade/hiring and group/player screens are covered by their done prerequisite tasks plus compileJava; no additional dedicated client-safe tests existed. 9) HUD overlap checks covered by RenderUiVerificationInventoryTest: overlays register above hotbar, hide with hidden GUI/debug/player-list, start at TOP_SAFE_MARGIN, right-anchor with RIGHT_SAFE_MARGIN and Math.max(6), stack battle-window -> siege-zone -> claim panels, and guard synced war state with WarClientState.hasSnapshot."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-013",
