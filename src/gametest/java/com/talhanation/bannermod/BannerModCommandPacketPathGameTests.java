@@ -1,10 +1,16 @@
 package com.talhanation.bannermod;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentLog;
+import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.gametest.support.RecruitsCommandGameTestSupport;
 import com.talhanation.bannermod.network.messages.military.MessageFaceCommand;
+import com.talhanation.bannermod.network.messages.military.MessageFollowGui;
+import com.talhanation.bannermod.network.messages.military.MessageFormationMapMoveOrder;
+import com.talhanation.bannermod.network.messages.military.MessageMovement;
 import com.talhanation.bannermod.network.messages.military.MessageRangedFire;
 import com.talhanation.bannermod.network.messages.military.MessageUpkeepPos;
 import net.minecraft.core.BlockPos;
@@ -26,6 +32,9 @@ public class BannerModCommandPacketPathGameTests {
     private static final UUID RANGED_OUTSIDER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000804");
     private static final UUID UPKEEP_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000805");
     private static final UUID UPKEEP_OUTSIDER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000806");
+    private static final UUID MOVEMENT_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000807");
+    private static final UUID GUI_MOVEMENT_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000808");
+    private static final UUID MAP_MOVE_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000809");
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
@@ -95,6 +104,87 @@ public class BannerModCommandPacketPathGameTests {
 
         helper.assertTrue(recruit.getUpkeepPos() == null,
                 "Expected a spoofed outsider upkeep packet to leave recruit upkeep unchanged");
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void movementPacketPathCoversStatesZeroThroughEightViaDispatcher(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer owner = commandSender(level, MOVEMENT_OWNER_UUID, "movement-owner", helper, -45.0F);
+        AbstractRecruitEntity recruit = commandRecruit(helper, MOVEMENT_OWNER_UUID, "Movement Packet Recruit");
+        CommandIntentLog.instance().clearFor(owner.getUUID());
+
+        for (int state = 0; state <= 8; state++) {
+            recruit.setFollowState(0);
+            recruit.isInFormation = true;
+            recruit.clearMovePos();
+            recruit.setShouldMovePos(false);
+
+            MessageMovement.dispatchToServer(owner, owner.getUUID(), RecruitsCommandGameTestSupport.TARGET_GROUP_UUID, state, 0, false);
+
+            CommandIntentLog.Entry entry = CommandIntentLog.instance().recentFor(owner.getUUID()).get(0);
+            helper.assertTrue(entry.intent() instanceof CommandIntent.Movement,
+                    "Expected movement packet state " + state + " to enter the command-intent dispatcher");
+            CommandIntent.Movement movement = (CommandIntent.Movement) entry.intent();
+            helper.assertTrue(movement.movementState() == state && movement.targetPos() == null && entry.actorCount() == 1,
+                    "Expected movement packet state " + state + " to preserve state and actor count");
+            helper.assertFalse(recruit.isInFormation,
+                    "Expected non-formation movement state " + state + " to clear formation membership");
+            if (state == MovementCommandState.HOLD_OWNER_POSITION) {
+                helper.assertTrue(recruit.getFollowState() == MovementCommandState.BACK_TO_POSITION,
+                        "Expected hold-owner movement state to preserve the legacy hold-at-owner follow state");
+            } else if (state <= MovementCommandState.PROTECT) {
+                helper.assertTrue(recruit.getFollowState() == state,
+                        "Expected movement state " + state + " to set the matching recruit follow state");
+            }
+        }
+
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void guiMovementPacketPathUsesDispatcher(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer owner = commandSender(level, GUI_MOVEMENT_OWNER_UUID, "gui-movement-owner", helper, -45.0F);
+        AbstractRecruitEntity recruit = commandRecruit(helper, GUI_MOVEMENT_OWNER_UUID, "Gui Movement Recruit");
+        CommandIntentLog.instance().clearFor(owner.getUUID());
+
+        MessageFollowGui.dispatchToServer(owner, recruit.getUUID(), MovementCommandState.FOLLOW);
+
+        CommandIntentLog.Entry entry = CommandIntentLog.instance().recentFor(owner.getUUID()).get(0);
+        helper.assertTrue(entry.intent() instanceof CommandIntent.Movement,
+                "Expected GUI movement packet to enter the command-intent dispatcher");
+        CommandIntent.Movement movement = (CommandIntent.Movement) entry.intent();
+        helper.assertTrue(movement.movementState() == MovementCommandState.FOLLOW && movement.formation() == 0 && entry.actorCount() == 1,
+                "Expected GUI movement packet to dispatch a single-recruit non-formation movement intent");
+        helper.assertTrue(recruit.getFollowState() == MovementCommandState.FOLLOW,
+                "Expected GUI movement packet to preserve follow-state semantics");
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void formationMapMovePacketPreservesExplicitTargetViaDispatcher(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer owner = commandSender(level, MAP_MOVE_OWNER_UUID, "map-move-owner", helper, -45.0F);
+        AbstractRecruitEntity recruit = commandRecruit(helper, MAP_MOVE_OWNER_UUID, "Map Move Recruit");
+        BlockPos target = helper.absolutePos(new BlockPos(7, 2, 7));
+        int expectedY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, target.getX(), target.getZ());
+        BlockPos expectedMoveTarget = new BlockPos(target.getX(), expectedY, target.getZ());
+        CommandIntentLog.instance().clearFor(owner.getUUID());
+
+        MessageFormationMapMoveOrder.dispatchToServer(owner, recruit.getUUID(), null, target);
+
+        CommandIntentLog.Entry entry = CommandIntentLog.instance().recentFor(owner.getUUID()).get(0);
+        helper.assertTrue(entry.intent() instanceof CommandIntent.Movement,
+                "Expected formation map move packet to enter the command-intent dispatcher");
+        CommandIntent.Movement movement = (CommandIntent.Movement) entry.intent();
+        helper.assertTrue(movement.movementState() == MovementCommandState.MOVE_TO_POSITION && movement.targetPos() != null,
+                "Expected map move packet to preserve explicit move-to-position target");
+        helper.assertTrue(expectedMoveTarget.equals(recruit.getMovePos()) && recruit.getShouldMovePos(),
+                "Expected explicit map target to set recruit move position without a player pick lookup");
         helper.succeed();
     }
 
