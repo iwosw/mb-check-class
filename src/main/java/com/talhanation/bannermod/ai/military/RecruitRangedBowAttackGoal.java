@@ -2,8 +2,8 @@ package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.entity.military.BowmanEntity;
+import com.talhanation.bannermod.entity.military.RecruitRangedCombatService;
 import net.minecraft.core.BlockPos;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -51,14 +51,7 @@ public class RecruitRangedBowAttackGoal<T extends BowmanEntity> extends Goal {
             }
 
             this.target = livingentity;
-            float distance = this.target.distanceTo(this.recruit);
-
-            boolean canTackMovePos = canAttackMovePos();
-            boolean shouldRanged = this.recruit.getShouldRanged();
-            boolean canAttack = this.recruit.canAttack(target);
-            boolean notPassive = this.recruit.getState() != 3;
-            boolean notNeedsToGetFood = !this.recruit.needsToGetFood();
-            return distance >= stopRange && canTackMovePos && notNeedsToGetFood && canAttack && notPassive && shouldRanged;
+            return RecruitRangedCombatService.canUseRangedTarget(this.recruit, target, stopRange, this::canAttackMovePos);
         } else {
             return false;
         }
@@ -74,7 +67,7 @@ public class RecruitRangedBowAttackGoal<T extends BowmanEntity> extends Goal {
     }
 
     private boolean hasArrows(){
-        return !consumeArrows || this.recruit.getInventory().hasAnyMatching(item -> item.is(ItemTags.ARROWS));
+        return RecruitRangedCombatService.hasArrowAmmo(this.recruit, consumeArrows);
     }
 
     public boolean canContinueToUse() {

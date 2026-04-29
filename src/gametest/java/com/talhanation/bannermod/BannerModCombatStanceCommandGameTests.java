@@ -7,13 +7,19 @@ import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.BowmanEntity;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
+import com.talhanation.bannermod.entity.military.RecruitRangedCombatService;
 import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.gametest.support.RecruitsCommandGameTestSupport;
 import com.talhanation.bannermod.network.messages.military.MessageCombatStance;
 import com.talhanation.bannermod.registry.military.ModEntityTypes;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -115,5 +121,93 @@ public class BannerModCombatStanceCommandGameTests {
                 "Expected shield-wall crossbowmen to refuse a target beyond the tight formation leash");
 
         helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void rangedBowShotSpawnsProjectileAndAmmoRulesRemainObservable(GameTestHelper helper) {
+        BowmanEntity bowman = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
+                helper,
+                ModEntityTypes.BOWMAN.get(),
+                RecruitsBattleGameTestSupport.WEST_RANGED_LEFT_POS,
+                "Ammo Archer",
+                RecruitsCommandGameTestSupport.TARGET_GROUP_UUID
+        );
+        AbstractRecruitEntity target = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
+                helper,
+                ModEntityTypes.RECRUIT.get(),
+                RecruitsBattleGameTestSupport.EAST_RANGED_LEFT_POS,
+                "Arrow Target",
+                RecruitsCommandGameTestSupport.FOREIGN_OWNER_UUID
+        );
+        removeInventoryArrows(bowman);
+        helper.assertFalse(RecruitRangedCombatService.hasArrowAmmo(bowman, true),
+                "Expected required-ammo check to reject a bowman without arrows");
+
+        bowman.getInventory().setItem(6, new ItemStack(Items.ARROW, 1));
+        helper.assertTrue(RecruitRangedCombatService.hasArrowAmmo(bowman, true),
+                "Expected required-ammo check to accept a bowman with arrows");
+
+        int projectilesBefore = countArrowsInHarness(helper);
+        bowman.performRangedAttack(target, 1.0F);
+
+        helper.assertTrue(countArrowsInHarness(helper) == projectilesBefore + 1,
+                "Expected bow ranged attack to add one arrow projectile");
+        bowman.consumeArrow();
+        helper.assertTrue(countInventoryArrows(bowman) == 0,
+                "Expected recruit arrow consumption to remove one ammo item");
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void crossbowRangedGoalRejectsFriendlyTargets(GameTestHelper helper) {
+        CrossBowmanEntity crossBowman = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
+                helper,
+                ModEntityTypes.CROSSBOWMAN.get(),
+                RecruitsBattleGameTestSupport.WEST_RANGED_RIGHT_POS,
+                "Authority Crossbow",
+                RecruitsCommandGameTestSupport.TARGET_GROUP_UUID
+        );
+        AbstractRecruitEntity friendlyTarget = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
+                helper,
+                ModEntityTypes.RECRUIT.get(),
+                RecruitsBattleGameTestSupport.EAST_RANGED_RIGHT_POS,
+                "Friendly Target",
+                RecruitsCommandGameTestSupport.TARGET_GROUP_UUID
+        );
+        crossBowman.setShouldRanged(true);
+        crossBowman.setTarget(friendlyTarget);
+
+        RecruitRangedCrossbowAttackGoal crossbowGoal = new RecruitRangedCrossbowAttackGoal(crossBowman, 4.0D);
+
+        helper.assertFalse(crossbowGoal.canUse(),
+                "Expected ranged crossbow goal to reject targets blocked by recruit authority rules");
+        helper.succeed();
+    }
+
+    private static int countInventoryArrows(AbstractRecruitEntity recruit) {
+        int count = 0;
+        for (int i = 0; i < recruit.getInventory().getContainerSize(); i++) {
+            ItemStack stack = recruit.getInventory().getItem(i);
+            if (stack.is(Items.ARROW)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
+    private static void removeInventoryArrows(AbstractRecruitEntity recruit) {
+        for (int i = 0; i < recruit.getInventory().getContainerSize(); i++) {
+            if (recruit.getInventory().getItem(i).is(Items.ARROW)) {
+                recruit.getInventory().setItem(i, ItemStack.EMPTY);
+            }
+        }
+    }
+
+    private static int countArrowsInHarness(GameTestHelper helper) {
+        return helper.getLevel()
+                .getEntitiesOfClass(AbstractArrow.class, new AABB(helper.absolutePos(new BlockPos(0, 0, 0))).inflate(32.0D))
+                .size();
     }
 }
