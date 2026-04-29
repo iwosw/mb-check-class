@@ -87,6 +87,12 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', 'bannermod_game_009'
         }
 
+        gameTestServerGame010 {
+            type = 'gameTestServer'
+            gameDirectory = project.file('run_gametest_game_010')
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'bannermod_game_010'
+        }
+
         data {
             data()
             gameDirectory = project.file('run')

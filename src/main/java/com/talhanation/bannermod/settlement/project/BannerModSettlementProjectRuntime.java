@@ -6,7 +6,9 @@ import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +25,7 @@ public final class BannerModSettlementProjectRuntime {
 
     private final BannerModSettlementProjectScheduler scheduler;
     private final BannerModBuildAreaProjectBridge bridge;
+    private final Map<UUID, ProjectAssignment> assignmentsByBuildArea = new HashMap<>();
 
     BannerModSettlementProjectRuntime(BannerModSettlementProjectScheduler scheduler,
                                       BannerModBuildAreaProjectBridge bridge) {
@@ -91,7 +94,9 @@ public final class BannerModSettlementProjectRuntime {
         BannerModBuildAreaProjectBridge.BuildAreaResolver safeResolver = resolver == null
                 ? new BannerModBuildAreaProjectBridge.NoopBuildAreaResolver()
                 : resolver;
-        return bridge.attemptAssignment(scheduler, claimUuid, gameTime, safeResolver);
+        Optional<ProjectAssignment> assignment = bridge.attemptAssignment(scheduler, claimUuid, gameTime, safeResolver);
+        assignment.ifPresent(resolved -> assignmentsByBuildArea.put(resolved.buildAreaUuid(), resolved));
+        return assignment;
     }
 
     /**
@@ -111,5 +116,45 @@ public final class BannerModSettlementProjectRuntime {
     /** Defensive copy of the scheduler's current queue for {@code claimUuid}. */
     public List<PendingProject> snapshot(UUID claimUuid) {
         return new ArrayList<>(scheduler.snapshot(claimUuid));
+    }
+
+    public Optional<ProjectAssignment> assignmentForBuildArea(UUID buildAreaUuid) {
+        if (buildAreaUuid == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(assignmentsByBuildArea.get(buildAreaUuid));
+    }
+
+    public Optional<ProjectAssignment> onBuildAreaStarted(UUID buildAreaUuid) {
+        return updateBuildAreaPhase(buildAreaUuid, AssignmentPhase.IN_PROGRESS);
+    }
+
+    public Optional<ProjectAssignment> onBuildAreaCompleted(UUID buildAreaUuid) {
+        return updateBuildAreaPhase(buildAreaUuid, AssignmentPhase.COMPLETED);
+    }
+
+    public static void onBuildAreaStarted(ServerLevel level, UUID buildAreaUuid) {
+        if (level != null && buildAreaUuid != null) {
+            forServer(level).onBuildAreaStarted(buildAreaUuid);
+        }
+    }
+
+    public static void onBuildAreaCompleted(ServerLevel level, UUID buildAreaUuid) {
+        if (level != null && buildAreaUuid != null) {
+            forServer(level).onBuildAreaCompleted(buildAreaUuid);
+        }
+    }
+
+    private Optional<ProjectAssignment> updateBuildAreaPhase(UUID buildAreaUuid, AssignmentPhase phase) {
+        ProjectAssignment current = assignmentsByBuildArea.get(buildAreaUuid);
+        if (current == null) {
+            return Optional.empty();
+        }
+        if (current.phase() == AssignmentPhase.COMPLETED) {
+            return Optional.of(current);
+        }
+        ProjectAssignment updated = current.withPhase(phase);
+        assignmentsByBuildArea.put(buildAreaUuid, updated);
+        return Optional.of(updated);
     }
 }
