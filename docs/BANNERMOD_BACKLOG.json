@@ -2923,10 +2923,13 @@
         "A before-and-after profiling run shows improved large-crowd recruit rendering while close-range selected recruits remain readable."
       ],
       "dependencies": [
-        "PERF-010",
-        "VANILLA-013"
+        "PERF-011A"
       ],
       "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Implemented a minimal distant crowd cut by moving the crowd impostor threshold from 56 to 48 blocks and added a renderer source guard that keeps 32-block armor/layer and 16-block crowded-nameplate readability thresholds below the impostor cutoff; compileJava and focused renderer source test pass. Remaining acceptance requires a real client before/after large-crowd profiling run, which is blocked in this headless API session."
+        },
         {
           "date": "2026-04-29",
           "text": "Held open: renderer cutoff branch exists but acceptance requires PERF-011A real client before/after large-crowd profiling; API/headless session cannot provide visual selected-recruit readability proof."
