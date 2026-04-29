@@ -1897,8 +1897,8 @@
     {
       "id": "UX-006",
       "title": "Add player UI for revolts and remaining war outcomes",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Revolts and several war outcomes are still primarily command or admin flows, leaving a major strategy surface without coherent in-game UI for normal players.",
       "scope": [
         "War Room or related screens must support player-facing revolt interaction, remaining outcome selection, tribute-related flows, and clear authority feedback for those actions."
@@ -1907,14 +1907,20 @@
         "Normal player war flows for revolts and supported outcomes can be completed through in-game UI with clear authority and cooldown feedback; verification covers declare, occupy, revolt, and remaining outcome interactions."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed child chain UX-007, UX-008, and UX-009. Revolt interaction is available in War Room through operator-controlled pending revolt resolution with allowed/denied verification; supported outcome selection including occupy/annex/tribute is exposed in War Room with server-authoritative accepted/denied feedback; declaration/outcome/siege/ally authority and cooldown denials are visible in-screen with localized reasons. Verification on merged branch: compileJava, compileGameTestJava, processResources, RevoltInteractionServiceTest, MessageResolveWarOutcomeTest, WarOutcomeApplierTest, PoliticalEntityAuthorityTest, WarCooldownPolicyTest, and WarCooldownPolicyImmunityTest passed; player guides and almanac were updated."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UX-007",
         "UX-008",
         "UX-009",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-001",
@@ -1945,8 +1951,8 @@
     {
       "id": "GAME-002",
       "title": "Turn sea-trade summaries into a real production and consumption loop",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Sea trade is currently represented mostly as summary math and recommendation text, not a materially meaningful production and consumption gameplay system.",
       "scope": [
         "Sea trade must consume and produce real goods or equivalent transport state, interact with settlement logistics, and expose player-visible bottlenecks and results through gameplay rather than hints alone."
@@ -1955,14 +1961,20 @@
         "Sea-trade routes affect real goods flow and settlement state; players can observe production, transport, and consumption consequences; verification covers at least one end-to-end sea-trade loop."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance satisfied by completed sea-trade chain SHIPS-002 and SHIPS-003. Sea-trade execution now moves real goods through StorageArea/TransportContainerExchange-backed source, carrier cargo, and destination containers; settlement snapshots/governor logistics expose loading/travelling/unloading/completed/missing-carrier/blocked-cargo state, carrier assignment, cargo progress, and failure reasons so players can observe production/transport/consumption consequences. Verification on merged branch: compileJava, compileGameTestJava, processResources, BannerModSettlementServiceTest, and BannerModSettlementClientMirrorTest passed; player guides and almanac were updated."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "SHIPS-001",
         "SHIPS-002",
         "SHIPS-003",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-003",
@@ -5172,7 +5184,7 @@
     {
       "id": "PERF-011A",
       "title": "Run PERF-011 client large-crowd profiling proof",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-04-29",
       "why": "PERF-011 cannot honestly close until a real client before/after profiling run proves the distant recruit renderer cut improves large crowds without harming close-range selected readability.",
       "scope": [
@@ -5184,7 +5196,12 @@
         "Close-range selected recruits remain readable in the same client verification pass."
       ],
       "dependencies": [],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Batch execution reached PERF-011A as the only remaining ready task, but acceptance requires a real client before/after large-crowd recruit render profiling run and close-range selected-recruit readability check. This API session cannot perform that runtime client profiling, so the task remains open and unclosed."
+        }
+      ],
       "verification": [],
       "evidence": []
     }
