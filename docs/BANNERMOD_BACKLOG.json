@@ -4375,7 +4375,12 @@
       "dependencies": [
         "VANILLA-001"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-04-29",
+          "text": "Follow-up GameTest coverage added in BannerModRecruitTargetingGameTests for protected claim target rejection/drop and war-authorized target retention. Verification attempted with tools/ai-context-proxy/bin/ctx log -- ./gradlew verifyGameTestStage, but the supported GameTest gate failed before scenarios ran because VillagerEvents.villagerTrades read a config value before config load during server resource startup. compileJava and compileGametestJava both passed."
+        }
+      ],
       "verification": [
         {
           "date": "2026-04-29",
