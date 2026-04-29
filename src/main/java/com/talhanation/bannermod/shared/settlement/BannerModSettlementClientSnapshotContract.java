@@ -33,6 +33,8 @@ public final class BannerModSettlementClientSnapshotContract {
     public enum SnapshotState {
         /** Client has requested data but has no usable payload for the claim yet. */
         LOADING,
+        /** Server answered that no settlement/governor payload exists for the requested context. */
+        EMPTY,
         /** Payload matches the server version included in this envelope. */
         READY,
         /** Payload may be rendered read-only while the client asks the server for a newer version. */
@@ -61,16 +63,20 @@ public final class BannerModSettlementClientSnapshotContract {
         public Envelope {
             Objects.requireNonNull(trigger, "trigger");
             Objects.requireNonNull(state, "state");
-            if (state == SnapshotState.LOADING && payload != null) {
-                throw new IllegalArgumentException("loading snapshots must not carry payload");
+            if ((state == SnapshotState.LOADING || state == SnapshotState.EMPTY) && payload != null) {
+                throw new IllegalArgumentException("loading or empty snapshots must not carry payload");
             }
-            if (state != SnapshotState.LOADING && payload == null) {
+            if (state != SnapshotState.LOADING && state != SnapshotState.EMPTY && payload == null) {
                 throw new IllegalArgumentException("ready or stale snapshots require payload");
             }
         }
 
         public static Envelope loading(long createdAtGameTime, RefreshTrigger trigger) {
             return new Envelope(CURRENT_VERSION, 0L, createdAtGameTime, trigger, SnapshotState.LOADING, NO_STALE_MARKER, null);
+        }
+
+        public static Envelope empty(long serverVersion, long createdAtGameTime, RefreshTrigger trigger) {
+            return new Envelope(CURRENT_VERSION, serverVersion, createdAtGameTime, trigger, SnapshotState.EMPTY, NO_STALE_MARKER, null);
         }
 
         public static Envelope ready(long serverVersion, long createdAtGameTime, RefreshTrigger trigger, Payload payload) {

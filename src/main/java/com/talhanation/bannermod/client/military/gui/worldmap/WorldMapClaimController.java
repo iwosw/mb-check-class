@@ -50,6 +50,7 @@ final class WorldMapClaimController {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoPayment(player.getUUID(), cost));
         ClientManager.recruitsClaims.add(newClaim);
         ClientManager.markClaimsChanged();
+        ClientManager.markClaimsStale();
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(newClaim));
     }
 
@@ -61,6 +62,7 @@ final class WorldMapClaimController {
 
         RecruitsClaim neighborClaim = getNeighborClaim(screen.selectedChunk);
         if (neighborClaim == null) return;
+        ClientManager.markClaimsStale();
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClaimIntent(MessageClaimIntent.Action.ADD_CHUNK, neighborClaim.getUUID(), screen.selectedChunk));
     }
 

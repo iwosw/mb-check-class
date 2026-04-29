@@ -203,6 +203,7 @@ public class WorldMapScreen extends Screen {
         guiGraphics.disableScissor();
 
         renderCoordinatesAndZoom(guiGraphics);
+        renderClaimSyncStatus(guiGraphics);
         renderFPS(guiGraphics);
 
         // Buttons (+ and ⚙)
@@ -224,6 +225,29 @@ public class WorldMapScreen extends Screen {
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         guiGraphics.fill(0, 0, width, height, DARK_GRAY_BG);
+    }
+
+    private void renderClaimSyncStatus(GuiGraphics guiGraphics) {
+        Component status;
+        int color;
+        if (!ClientManager.hasClaimsSnapshot) {
+            status = Component.translatable("gui.bannermod.map.claim_state.waiting_sync");
+            color = 0xFFAAAAAA;
+        } else if (ClientManager.claimsSnapshotStale) {
+            status = Component.translatable("gui.bannermod.map.claim_state.stale");
+            color = 0xFFFFD36A;
+        } else if (ClientManager.recruitsClaims.isEmpty()) {
+            status = Component.translatable("gui.bannermod.map.claim_state.empty");
+            color = 0xFF8FA8FF;
+        } else {
+            return;
+        }
+        int panelWidth = Math.min(220, this.width - 20);
+        int panelX = 10;
+        int panelY = 34;
+        guiGraphics.fill(panelX, panelY, panelX + panelWidth, panelY + 18, 0xAA101010);
+        guiGraphics.renderOutline(panelX, panelY, panelWidth, 18, color);
+        guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(status.getString(), panelWidth - 10), panelX + 5, panelY + 5, color, false);
     }
 
     private void renderMapTiles(GuiGraphics guiGraphics) {

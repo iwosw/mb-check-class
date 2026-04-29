@@ -34,7 +34,6 @@ class CitizenRoleControllerTest {
         assertEquals(CitizenRole.RECRUIT, recruitController.role());
         assertEquals(CitizenRole.WORKER, workerController.role());
         recruitController.onRecoveredControl(new CitizenRoleContext(CitizenRole.RECRUIT, new StubCitizenCore(), null, null, null));
-        workerController.onBoundWorkAreaRemembered(new CitizenRoleContext(CitizenRole.WORKER, new StubCitizenCore(), null, null, null));
     }
 
     private static void assertMethod(Class<?> type, String name, Class<?> returnType, Class<?>... parameterTypes) throws Exception {

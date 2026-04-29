@@ -52,6 +52,7 @@ public class MessageToClientUpdateClaim implements BannerModMessage<MessageToCli
                 }
 
                 ClientManager.markClaimsChanged();
+                ClientManager.markClaimsSynchronized();
 
                 NeoForge.EVENT_BUS.post(new ClientClaimEvent.DataUpdated(newClaim, isCurrentClaim));
                 return;
@@ -60,6 +61,7 @@ public class MessageToClientUpdateClaim implements BannerModMessage<MessageToCli
 
         ClientManager.recruitsClaims.add(newClaim);
         ClientManager.markClaimsChanged();
+        ClientManager.markClaimsSynchronized();
         NeoForge.EVENT_BUS.post(
                 new ClientClaimEvent.DataUpdated(newClaim, false));
     }

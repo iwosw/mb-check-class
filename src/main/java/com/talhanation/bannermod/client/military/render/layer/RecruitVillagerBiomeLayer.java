@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 
 
 public class RecruitVillagerBiomeLayer extends RenderLayer<AbstractRecruitEntity, HumanoidModel<AbstractRecruitEntity>> {
+    private static final int FULL_WHITE = 0xFFFFFFFF;
 
     private static final ResourceLocation[] BIOME_TEXTURE = {
             ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/entity/villager/biome/villager_desert.png"),
@@ -30,14 +31,14 @@ public class RecruitVillagerBiomeLayer extends RenderLayer<AbstractRecruitEntity
         super(renderer);
     }
 
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int p_117722_, AbstractRecruitEntity recruit, float p_117724_, float p_117725_, float p_117726_, float p_117727_, float p_117728_, float p_117729_) {
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, AbstractRecruitEntity recruit, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         if(recruit.isInvisible() || !RecruitRenderLod.shouldRenderCosmeticModelLayer(recruit)){
             RecruitRenderProfiling.layerSkipped("biome");
             return;
         }
         RecruitRenderProfiling.textureStateSwitch("biome");
         long start = RecruitRenderProfiling.start();
-        this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(BIOME_TEXTURE[recruit.getBiome()])), p_117722_, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+        this.getParentModel().renderToBuffer(poseStack, bufferSource.getBuffer(RenderType.entityCutout(BIOME_TEXTURE[recruit.getBiome()])), packedLight, OverlayTexture.NO_OVERLAY, FULL_WHITE);
         RecruitRenderProfiling.layerDuration("biome", start);
     }
 }

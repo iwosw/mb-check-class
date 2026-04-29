@@ -10,6 +10,7 @@ import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity
 import com.talhanation.bannermod.network.messages.civilian.MessageRotateWorkArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateOwner;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateWorkArea;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -39,6 +40,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
     private Button destroy;
     private Button rotateLeft;
     private Button rotateRight;
+    private long workAreaPendingUntilTick;
 
     public Player player;
     public AbstractWorkAreaEntity workArea;
@@ -78,6 +80,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                 }
                 Vec3 newPos = workArea.position().relative(player.getDirection(), x);
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                this.markWorkAreaPending();
                 this.onAreaMoved();
             }
         ));
@@ -92,6 +95,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                         }
                         Vec3 newPos = workArea.position().relative(player.getDirection().getOpposite(), x);
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                        this.markWorkAreaPending();
                         this.onAreaMoved();
                     }
         ));
@@ -106,6 +110,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                 }
                 Vec3 newPos = workArea.position().relative(player.getDirection().getCounterClockWise(), x);
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                this.markWorkAreaPending();
                 this.onAreaMoved();
             }
         ));
@@ -120,6 +125,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                 }
                 Vec3 newPos = workArea.position().relative(player.getDirection().getClockWise(), x);
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                this.markWorkAreaPending();
                 this.onAreaMoved();
             }
         ));
@@ -136,6 +142,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
             btn -> {
                 this.workArea.showBox = true;
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRotateWorkArea(this.workArea.getUUID(), false));
+                this.markWorkAreaPending();
                 this.onAreaMoved();
             }
         ));
@@ -144,6 +151,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
             btn -> {
                 this.workArea.showBox = true;
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageRotateWorkArea(this.workArea.getUUID(), true));
+                this.markWorkAreaPending();
                 this.onAreaMoved();
             }
         ));
@@ -155,6 +163,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                 int delta = hasShiftDown() ? 5 : 1;
                 Vec3 newPos = new Vec3(workArea.getX(), workArea.getY() + delta, workArea.getZ());
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                this.markWorkAreaPending();
                 this.onAreaMoved();
             }
         ));
@@ -166,6 +175,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                 int delta = hasShiftDown() ? 5 : 1;
                 Vec3 newPos = new Vec3(workArea.getX(), workArea.getY() - delta, workArea.getZ());
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateWorkArea(this.workArea.getUUID(), this.workArea.getCustomName().getString(), newPos, false));
+                this.markWorkAreaPending();
                 this.onAreaMoved();
             }
         ));
@@ -189,6 +199,7 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                             (playerInfo) -> {
                                 this.playerInfo = playerInfo;
                                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateOwner(this.workArea.getUUID(), playerInfo));
+                                this.markWorkAreaPending();
                                 this.workArea.setPlayerName(playerInfo.getName());
                                 this.workArea.setPlayerUUID(playerInfo.getUUID());
                                 minecraft.setScreen(this);
@@ -198,6 +209,30 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
                 }
             ));
         }
+    }
+
+    private void markWorkAreaPending() {
+        this.workAreaPendingUntilTick = this.player.tickCount + 60L;
+    }
+
+    @Override
+    public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        super.renderForeground(guiGraphics, mouseX, mouseY, delta);
+        Component status;
+        int color;
+        if (this.player.tickCount < this.workAreaPendingUntilTick) {
+            status = Component.translatable("gui.bannermod.work_area.state.stale");
+            color = 0xFFFFD36A;
+        } else if (this.workArea.getPlayerUUID() == null) {
+            status = Component.translatable("gui.bannermod.work_area.state.empty_owner");
+            color = 0xFF8FA8FF;
+        } else {
+            status = Component.translatable("gui.bannermod.work_area.state.ready");
+            color = FONT_COLOR;
+        }
+        guiGraphics.fill(this.x - 100, this.y + 66, this.x + 100, this.y + 84, 0xAA101010);
+        guiGraphics.renderOutline(this.x - 100, this.y + 66, 200, 18, color);
+        guiGraphics.drawCenteredString(this.font, status, this.x, this.y + 71, color);
     }
 
     public void onAreaMoved() {}

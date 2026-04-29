@@ -1,7 +1,9 @@
 package com.talhanation.bannermod.shared.settlement;
 
 import com.talhanation.bannermod.events.ClaimEvents;
+import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementService;
 import net.minecraft.core.BlockPos;
@@ -21,6 +23,7 @@ public final class BannerModSettlementRefreshSupport {
             return;
         }
         INVOCATIONS.incrementAndGet();
+        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(new net.minecraft.world.level.ChunkPos(pos));
         BannerModSettlementService.refreshClaimAt(
                 level,
                 ClaimEvents.recruitsClaimManager,
@@ -28,6 +31,9 @@ public final class BannerModSettlementRefreshSupport {
                 BannerModGovernorManager.get(level),
                 pos
         );
+        if (claim != null) {
+            RecruitEvents.syncGovernorMutationRefresh(level, claim);
+        }
     }
 
     /**

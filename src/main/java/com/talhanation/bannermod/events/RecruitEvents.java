@@ -184,8 +184,13 @@ public class RecruitEvents {
         if(event.getEntity() instanceof Player player){
             if (player instanceof ServerPlayer serverPlayer) {
                 RecruitWorldLifecycleService.syncPlayerJoin(serverPlayer, recruitsPlayerUnitManager, recruitsGroupsManager);
+                RecruitGovernorWorkflow.syncGovernorSnapshotsOnLogin(serverPlayer);
             }
         }
+    }
+
+    public static void syncGovernorMutationRefresh(ServerLevel level, RecruitsClaim claim) {
+        RecruitGovernorWorkflow.syncGovernorMutationRefresh(level, claim);
     }
 
     @SubscribeEvent

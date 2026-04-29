@@ -47,6 +47,8 @@ public abstract class AsyncPathNavigation extends PathNavigation {
     private boolean deferredPathEntityTarget;
     private int deferredPathReachRange;
     private float deferredPathFollowRange;
+    private boolean pendingTrueAsyncPath;
+    private double pendingTrueAsyncSpeedModifier;
     private final AtomicLong pathEpoch = new AtomicLong();
     private final AtomicLong submitAcceptedCount = new AtomicLong();
     private final AtomicLong commitDiscardEntityGoneCount = new AtomicLong();
@@ -271,6 +273,10 @@ public abstract class AsyncPathNavigation extends PathNavigation {
         this.path = committedPath;
         this.targetPos = target;
         this.reachRange = reachRange;
+        if (this.pendingTrueAsyncPath) {
+            this.startFollowingPath(this.pendingTrueAsyncSpeedModifier);
+            this.pendingTrueAsyncPath = false;
+        }
         this.resetStuckTimeout();
     }
 
@@ -319,6 +325,7 @@ public abstract class AsyncPathNavigation extends PathNavigation {
             return new TrueAsyncRequest(false, null);
         }
 
+        this.pendingTrueAsyncPath = true;
         this.lastTrueAsyncRequestGameTime = gameTime;
         RuntimeProfilingCounters.increment("pathfinding.true_async.request.enqueued");
         return new TrueAsyncRequest(true, this.path);
@@ -395,6 +402,10 @@ public abstract class AsyncPathNavigation extends PathNavigation {
     public boolean moveTo(@Nullable Path p_26537_, double p_26538_) {
         if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) return false;
         if (p_26537_ == null) {
+            if (this.pendingTrueAsyncPath) {
+                this.pendingTrueAsyncSpeedModifier = p_26538_;
+                return true;
+            }
             this.path = null;
             return false;
         }
@@ -413,12 +424,25 @@ public abstract class AsyncPathNavigation extends PathNavigation {
             if(this.path.getNodeCount() <= 0) return false;
         }
 
-        this.speedModifier = p_26538_;
+        this.pendingTrueAsyncPath = false;
+        this.startFollowingPath(p_26538_);
+
+        return true;
+    }
+
+    @Override
+    public void stop() {
+        this.incrementPathEpoch();
+        this.pendingTrueAsyncPath = false;
+        this.clearDeferredPathRequest();
+        super.stop();
+    }
+
+    private void startFollowingPath(double speedModifier) {
+        this.speedModifier = speedModifier;
         Vec3 vec3 = this.getTempMobPos();
         this.lastStuckCheck = this.tick;
         this.lastStuckCheckPos = vec3;
-
-        return true;
     }
 
 

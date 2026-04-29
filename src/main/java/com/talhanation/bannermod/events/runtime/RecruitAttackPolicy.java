@@ -12,6 +12,7 @@ final class RecruitAttackPolicy {
 
     static boolean canAttack(LivingEntity attacker, LivingEntity target) {
         if (target == null || !target.isAlive()) return false;
+        if (!RecruitTargetAuthority.canTargetUnderClaimAuthority(attacker, target)) return false;
         if (target instanceof Player player) return canAttackPlayer(attacker, player);
         AbstractRecruitEntity targetRecruit = RecruitEntityAccess.asRecruit(target);
         if (targetRecruit != null) return canAttackRecruit(attacker, targetRecruit);

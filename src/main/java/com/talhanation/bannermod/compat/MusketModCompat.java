@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public final class MedievalBoomsticksCompat {
+public final class MusketModCompat {
     private static final String MOD_ID = "musketmod";
     private static final ResourceLocation CARTRIDGE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "cartridge");
     private static final Map<String, FirearmContract> SUPPORTED_FIREARMS = Map.of(
@@ -26,7 +26,7 @@ public final class MedievalBoomsticksCompat {
             "pistol", new FirearmContract(CARTRIDGE, PistolWeapon::new)
     );
 
-    private MedievalBoomsticksCompat() {
+    private MusketModCompat() {
     }
 
     public static boolean isSupportedRecruitFirearm(ItemStack stack) {
@@ -37,7 +37,7 @@ public final class MedievalBoomsticksCompat {
         return isSupportedRecruitFirearm(stack) || isAmmo(stack, CARTRIDGE);
     }
 
-    public static boolean isMedievalBoomsticksItem(ItemStack stack) {
+    public static boolean isMusketModItem(ItemStack stack) {
         ResourceLocation id = itemId(stack);
         return id != null && MOD_ID.equals(id.getNamespace());
     }
@@ -75,12 +75,12 @@ public final class MedievalBoomsticksCompat {
                 return ticks;
             }
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            BannerModMain.LOGGER.info("Medieval Boomsticks reload duration API was not found");
+            BannerModMain.LOGGER.info("Ewewukek's Musket Mod reload duration API was not found");
         }
         return defaultDuration;
     }
 
-    public static boolean fireWithBoomsticks(AbstractRecruitEntity shooter, double x, double y, double z) {
+    public static boolean fireWithMusketMod(AbstractRecruitEntity shooter, double x, double y, double z) {
         ItemStack stack = shooter.getMainHandItem();
         if (!isSupportedRecruitFirearm(stack)) {
             return false;
@@ -98,7 +98,7 @@ public final class MedievalBoomsticksCompat {
             shooter.damageMainHandItem();
             return true;
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            BannerModMain.LOGGER.info("Medieval Boomsticks mob firing API was not found");
+            BannerModMain.LOGGER.info("Ewewukek's Musket Mod mob firing API was not found");
             return false;
         }
     }

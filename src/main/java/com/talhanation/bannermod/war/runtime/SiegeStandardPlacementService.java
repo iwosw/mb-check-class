@@ -7,6 +7,7 @@ import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryRuntime;
+import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -165,5 +166,13 @@ public final class SiegeStandardPlacementService {
             case DUPLICATE_POSITION -> "A siege standard already exists at that position.";
             case RUNTIME_REJECTED -> "Failed to place siege standard.";
         };
+    }
+
+    public static Component describeComponent(Outcome outcome) {
+        if (outcome == Outcome.NOT_LEADER) {
+            return Component.translatable(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED_KEY);
+        }
+        return Component.translatable("gui.bannermod.war.siege_denial."
+                + outcome.name().toLowerCase(java.util.Locale.ROOT));
     }
 }

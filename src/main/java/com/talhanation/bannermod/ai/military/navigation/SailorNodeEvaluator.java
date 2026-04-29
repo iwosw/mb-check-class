@@ -117,7 +117,8 @@ public class SailorNodeEvaluator extends SwimNodeEvaluator {
     }
 
     public @NotNull Node getStart() {
-        AABB boundingBox = this.mob.getVehicle().getBoundingBox();
+        Entity vehicle = this.mob.getVehicle();
+        AABB boundingBox = vehicle != null ? vehicle.getBoundingBox() : this.mob.getBoundingBox();
 
         double nodeX = boundingBox.minX; // Kein unnötiges Berechnen mehr!
         double nodeZ = boundingBox.minZ; // Kein unnötiges Berechnen mehr!

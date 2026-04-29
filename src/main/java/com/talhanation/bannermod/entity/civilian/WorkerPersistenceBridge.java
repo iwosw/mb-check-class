@@ -10,7 +10,6 @@ final class WorkerPersistenceBridge {
     }
 
     static void writeWorkerData(AbstractWorkerEntity worker, CompoundTag nbt) {
-        worker.controlAccess().rememberCurrentWorkAreaBinding();
         nbt.putInt("farmedItems", worker.farmedItems);
         if (worker.lastStorage != null) {
             nbt.putUUID("lastStorage", worker.lastStorage);

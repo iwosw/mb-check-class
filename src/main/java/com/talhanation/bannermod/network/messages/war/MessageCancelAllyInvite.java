@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.network.messages.war;
 
 import com.talhanation.bannermod.war.runtime.WarAllyService;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
@@ -38,10 +40,16 @@ public class MessageCancelAllyInvite implements BannerModMessage<MessageCancelAl
         if (level == null) return;
         WarAllyService.InviteResult result = WarAllyService.cancel(level, player, this.inviteId);
         if (result.ok()) {
-            player.sendSystemMessage(Component.literal("Invite cancelled."));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.ally_invite_cancelled"));
         } else {
-            player.sendSystemMessage(Component.literal("Cancel denied: " + result.outcome().token()));
+            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.cancel_invite", result.outcome().component()));
         }
+    }
+
+    private static void sendFeedback(ServerPlayer player, Component message) {
+        player.sendSystemMessage(message);
+        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
+                new MessageToClientWarActionFeedback(message));
     }
 
     @Override

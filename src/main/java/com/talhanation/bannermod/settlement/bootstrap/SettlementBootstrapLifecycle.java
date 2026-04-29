@@ -9,11 +9,9 @@ package com.talhanation.bannermod.settlement.bootstrap;
  * buildings after the fort must resolve an existing settlement record before they register
  * building records or vacancies.</p>
  *
- * <p>Automatic claim bootstrap is a compatibility/growth path for eligible existing claims that
- * have no workers yet. It may place a starter center and seed a builder plus free citizens, but it
- * does not by itself create a formal settlement record or profession vacancies. A claim becomes a
- * formal settlement only through {@link SettlementBootstrapService} or another path that writes a
- * {@link SettlementRecord}.</p>
+ * <p>Automatic claim bootstrap is a compatibility/growth path for eligible existing claims. It
+ * places a starter center when needed, then delegates to {@link SettlementBootstrapService} so the
+ * formal record, starter workers, and free citizens match manual founding.</p>
  */
 public enum SettlementBootstrapLifecycle {
     /** Claim ownership and authority position are resolved before any settlement state is written. */

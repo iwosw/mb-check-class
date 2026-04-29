@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.RecruitsScreenBase;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
@@ -15,6 +16,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -151,6 +153,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
                     this.claim.setBlockBreakingAllowed(this.allowBlockBreaking);
 
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(this.claim));
+                    ClientManager.markClaimsStale();
 
                     this.minecraft.setScreen(this.parent);
                 });
@@ -173,6 +176,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
 
     public void checkSaveActive(){
         this.saveButton.active = playerInfo != null;
+        this.saveButton.setTooltip(this.saveButton.active ? null : Tooltip.create(Component.translatable("gui.bannermod.claim.disabled.no_owner")));
     }
 
     private void onTextInput(String string) {
@@ -195,6 +199,20 @@ public class ClaimEditScreen extends RecruitsScreenBase {
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         super.renderForeground(guiGraphics, mouseX, mouseY, delta);
+
+        Component status;
+        int color;
+        if (ClientManager.claimsSnapshotStale) {
+            status = Component.translatable("gui.bannermod.claim.state.stale");
+            color = 0xFFFFD36A;
+        } else if (claim.getClaimedChunks().isEmpty()) {
+            status = Component.translatable("gui.bannermod.claim.state.empty");
+            color = 0xFF8FA8FF;
+        } else {
+            status = Component.translatable("gui.bannermod.claim.state.ready", claim.getClaimedChunks().size());
+            color = FONT_COLOR;
+        }
+        guiGraphics.drawString(font, status, x - 70, y - 130, color, false);
 
         renderClaimMiniMapAreaFramed(guiGraphics, claimMiniX + x, claimMiniY + y , 140, 70, this.claim);
     }

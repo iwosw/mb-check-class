@@ -175,11 +175,15 @@
         </table>
         <h3>Default controls</h3>
         <p><span class="kbd">M</span> opens the world map. <span class="kbd">U</span> opens the War Room. <span class="kbd">R</span> opens recruit command controls. <span class="kbd">X</span> opens worker command controls.</p>
+        <p>World-map routes live in the top-left <span class="kbd">Routes</span> control: press <span class="kbd">+</span>, select the route, then right-click explored chunks to add waypoints. Disabled waypoint actions explain whether a route must be selected or the map spot is not explored/loaded. For claims, right-click a nearby Overworld chunk and use <span class="kbd">Claim chunk</span>; disabled claim actions now explain waiting sync, stale edits, unclaimable chunks, or missing neighbor authority. <span class="kbd">Claim Area</span> is disabled so the server validates expansion one chunk at a time.</p>
         <div class="callout blue">Claims are Overworld-only. Nether and End chunks at matching X/Z coordinates are not protected by Overworld claims.</div>
+        <div class="callout blue">In the Overworld, the small top-right claim HUD labels normal play territory as friendly, hostile, or unclaimed. It stacks below battle/siege chips and does not replace server-side claim permission checks. Denied protected-space actions also show a short localized system message for friendly locks, hostile protection, or unclaimed wilderness rules.</div>
         <div class="ru">
           <h3>Коротко по-русски</h3>
           <p><strong>Клейм</strong> - защищенная земля в обычном мире. <strong>Поселение</strong> - живая база с фортом, домами, складами, рынком, рабочими и жителями. <strong>Государство</strong> - твоя политическая сторона для войн, союзов и управления.</p>
           <p>Клавиши: <span class="kbd">M</span> карта, <span class="kbd">U</span> War Room, <span class="kbd">R</span> команды рекрутов, <span class="kbd">X</span> команды рабочих.</p>
+          <p>Маршруты на карте находятся в блоке <span class="kbd">Маршруты</span> слева сверху: нажми <span class="kbd">+</span>, выбери маршрут и ставь точки ПКМ по исследованным чанкам. Отключенные действия объясняют, нужен ли выбранный маршрут или исследованный/загруженный чанк. Для клеймов нажми ПКМ по соседнему чанку обычного мира и выбери <span class="kbd">Claim chunk</span>; <span class="kbd">Claim Area</span> отключен, чтобы сервер проверял расширение по одному чанку.</p>
+          <p>В Overworld маленький HUD клейма справа сверху пишет: своя, враждебная или ничейная территория. Он стоит ниже индикаторов боя/осады и не заменяет серверные проверки прав.</p>
         </div>
       </article>
 
@@ -191,7 +195,7 @@
           <li>Craft the two settlement tools.</li>
           <li>Build a <code>Starter Fort</code>. This is the keystone; no settlement appears without it.</li>
           <li>Use the surveyor to mark anchor and zones. Validate by right-clicking air.</li>
-          <li>On success, BannerMod creates or binds a claim, creates a <code>SettlementRecord</code>, spawns starter workers, and spawns four free citizens for vacancies.</li>
+          <li>On success, BannerMod creates or binds a claim, creates a <code>SettlementRecord</code>, spawns starter workers, and spawns four free citizens for vacancies. Existing claims that auto-bootstrap through worker growth use the same record and starter population model.</li>
         </ol>
         <h3>Tool recipes</h3>
         <p><strong>Settlement Surveyor Tool:</strong> 2 sticks, 2 oak planks, 1 iron ingot in a stairs-shaped pattern.</p>
@@ -289,11 +293,12 @@
 
       <article class="page" id="p6" data-page="6">
         <h2>6. Economy And Logistics</h2>
-        <p>The governor logistics panel is the best in-game ledger. It shows pending/claimed/completed work orders, shortages, stockpile capacity, missing goods, project hints, strategic role, route cost, specialties, war objectives, loyalty pressure, and the current tax obligation.</p>
+        <p>The governor logistics panel reads a server-synced settlement mirror. War, claim, governor, and work-area screens label loading, stale, empty, and ready states; wait for a fresh mirror before trusting the numbers. Policy buttons and disabled map actions explain why they are unavailable until the server can validate a change.</p>
         <p>Read taxes as <strong>collected / due</strong>. Satisfied taxes fund the treasury this heartbeat; unpaid taxes show why payment failed and warn that treasury growth, upkeep, and defense funding can stall.</p>
         <h3>Storage routes</h3>
         <p>Storage Area route fields use <code>Apply route</code>. The screen validates destination UUID, item filters, amount, and priority before sending. Valid entries show destination or blocked reason.</p>
         <p>On long land routes, eligible merchants/couriers may automatically ride a nearby unoccupied horse or other server-approved mount. If no mount is available, they keep hauling on foot; route clear/failure makes them dismount. Right-click a worker to inspect mounted state, walking reason, and active fallback route behavior.</p>
+        <p>Ship-backed sea routes use compatible Small Ships carriers when present, but BannerMod does not require that mod at compile time. The governor logistics mirror shows route id, carrier id or <code>unassigned</code>, phase, cargo progress, and reason. Needs ship means no carrier is bound; blocked cargo names source shortage, empty load, full destination, or carrier failure.</p>
         <h3>Strategic roles</h3>
         <ul>
           <li><span class="tag">surplus hub</span> farms plus storage.</li>
@@ -309,7 +314,7 @@
           <li>If a route is single and important, defend it: it is a future war objective.</li>
           <li>If a port exists, use it as a strategic gate, not just a warehouse.</li>
         </ul>
-        <div class="ru"><p><strong>Экономика:</strong> склад показывает ресурсы, рынок связывает торговлю, вода удешевляет снабжение, один маршрут уязвим, landlocked-поселение должно специализироваться. Налоги читаются как собрано/требуется: оплачено пополняет казну, не оплачено показывает причину и риск остановки жалованья и обороны.</p></div>
+        <div class="ru"><p><strong>Экономика:</strong> склад показывает ресурсы, рынок связывает торговлю, вода удешевляет снабжение, один маршрут уязвим, landlocked-поселение должно специализироваться. Морские маршруты с кораблем показывают в логистике губернатора: загрузка, в пути, разгрузка, завершен, нужен корабль или груз заблокирован. Налоги читаются как собрано/требуется: оплачено пополняет казну, не оплачено показывает причину и риск остановки жалованья и обороны.</p></div>
       </article>
     </section>
 
@@ -396,21 +401,22 @@
         <h3>Main buttons</h3>
         <ul>
           <li><strong>States:</strong> state list/detail/actions.</li>
-          <li><strong>Declare war:</strong> choose attacker, defender, goal, casus belli.</li>
-          <li><strong>Cancel / Occupy / Annex:</strong> server-authoritative outcomes.</li>
+          <li><strong>Declare war:</strong> choose attacker, defender, goal, casus belli; disabled buttons and the footer explain leader, co-leader, government-form, status, and cooldown denials.</li>
+          <li><strong>Cancel / Occupy / Annex / Tribute:</strong> server-authoritative outcomes. Buttons lock with reasons when the selected war goal, authority, or operator status does not allow them; accepted/denied feedback appears in the War Room footer and chat.</li>
+          <li><strong>Revolt won / Revolt failed:</strong> operator-only manual revolt resolution with server denial feedback.</li>
           <li><strong>Allies:</strong> invite, accept, decline, or cancel ally invites before war activation.</li>
           <li><strong>Place siege here:</strong> plants a standard after server validation.</li>
         </ul>
         <h3>War commands</h3>
         <p><code>/bannermod war declare</code>, <code>list</code>, <code>info</code>, <code>cancel</code>, <code>whitepeace</code>, <code>tribute</code>, <code>vassalize</code>, <code>demilitarize</code>, <code>occupations</code>, and <code>revolts</code> mirror UI/admin flows.</p>
-        <p>Revolt rows in the War Room explain why pressure exists, which occupied chunk matters during an open battle window, and the aftermath after success or failure.</p>
+        <p>Revolt rows in the War Room explain why pressure exists, which occupied chunk matters during an open battle window, and the aftermath after success or failure. Operators can resolve the first pending revolt on the selected war from the same screen; normal players see disabled buttons and server-side denial if they attempt the packet path.</p>
         <h3>Occupation control</h3>
         <p>When occupation covers claim chunks, the claim HUD shows <span class="tag">OCCUPIED</span> and War Room details list the occupied chunks. The server locks the occupied owner's manual block/entity actions in those chunks and lets the occupier's political entity control them.</p>
         <h3>Battle windows</h3>
         <p>The top banner tells whether battle is open or closed and when it changes. PvP war damage requires active/in-siege war state, open battle window, and registered participants.</p>
         <h3>Allies</h3>
         <p>Allies are consent-based before war activation: invite, accept, decline, or cancel. Peaceful entities cannot join attackers.</p>
-        <div class="ru"><p><strong>Война:</strong> War Room показывает фазы, стороны, цели, союзников и кнопки итогов. Строки восстаний объясняют давление, целевой чанк и итог после успеха или провала. Союзы требуют согласия. Некоторые исходы доступны только операторам.</p></div>
+        <div class="ru"><p><strong>Война:</strong> War Room показывает фазы, стороны, цели, союзников и кнопки итогов. Кнопки блокируются с причиной, если цель войны, полномочия или права оператора не подходят. Строки восстаний объясняют давление, целевой чанк и итог после успеха или провала. Союзы требуют согласия. Некоторые исходы доступны только операторам.</p></div>
         <div class="ru"><p><strong>Война:</strong> War Room показывает фазы, стороны, цели, союзников, оккупации, кнопки итогов и строку последствий для налога оккупации, давления восстания или итога дани. При оккупации HUD клейма пишет «ОККУПИРОВАНО», а сервер передает ручной контроль блоков/сущностей оккупанту. Союзы требуют согласия. Некоторые исходы доступны только операторам.</p></div>
       </article>
     </section>

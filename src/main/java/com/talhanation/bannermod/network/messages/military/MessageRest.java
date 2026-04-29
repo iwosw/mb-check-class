@@ -2,8 +2,6 @@ package com.talhanation.bannermod.network.messages.military;
 
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
-import com.talhanation.bannermod.entity.military.RecruitIndex;
-import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
@@ -35,15 +33,13 @@ public class MessageRest implements BannerModMessage<MessageRest> {
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> list = this.group == null
-                ? RecruitIndex.instance().ownerInRange(serverPlayer.getCommandSenderWorld(), this.player, serverPlayer.position(), 100.0D)
-                : RecruitIndex.instance().groupInRange(serverPlayer.getCommandSenderWorld(), this.group, serverPlayer.position(), 100.0D);
-        if (list == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            list = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, serverPlayer.getBoundingBox().inflate(100));
-        }
+        dispatchToServer(serverPlayer, this.player, this.group, this.should);
+    }
+
+    public static void dispatchToServer(ServerPlayer serverPlayer, UUID playerUuid, UUID group, boolean should) {
+        List<AbstractRecruitEntity> list = RecruitCommandTargetResolver.resolveGroupTargets(serverPlayer, playerUuid, group, "rest");
         for (AbstractRecruitEntity recruits : list) {
-                CommandEvents.onRestCommand(serverPlayer, this.player, recruits, group, should);
+                CommandEvents.onRestCommand(serverPlayer, recruits.getOwnerUUID(), recruits, group, should);
         }
     }
     public MessageRest fromBytes(FriendlyByteBuf buf) {

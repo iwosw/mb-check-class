@@ -2,18 +2,15 @@ package com.talhanation.bannermod.client.military.render.layer;
 
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.VillagerHeadModel;
-import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.entity.SheepRenderer;
 
 public class RecruitArmorLayer extends HumanoidModel {
-    public RecruitArmorLayer(ModelPart p_170677_) {
-        super(p_170677_);
+    public RecruitArmorLayer(ModelPart root) {
+        super(root);
     }
-    //VillagerModel
+
     public static LayerDefinition createOuterArmorLayer() {
         MeshDefinition meshdefinition = HumanoidModel.createMesh(new CubeDeformation(1.0F), 0.0F);
         PartDefinition partdefinition = meshdefinition.getRoot();

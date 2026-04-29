@@ -23,6 +23,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.scores.Team;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -165,7 +166,7 @@ public final class HudOverlayCoordinator {
         if (RecruitsClientConfig.DisableClaimGUIOverlay.get()) return;
 
         float alpha = calculateAlpha();
-        if (alpha <= 0.01f || ClientManager.currentClaim == null) return;
+        if (alpha <= 0.01f) return;
 
         ClientOverlayEvent.RenderPre renderPre = new ClientOverlayEvent.RenderPre(graphics, ClientManager.currentClaim, currentState, alpha);
         NeoForge.EVENT_BUS.post(renderPre);
@@ -173,9 +174,16 @@ public final class HudOverlayCoordinator {
 
         boolean underSiege = WarClientState.hasSnapshot() && WarClientState.isClaimUnderSiege(ClientManager.currentClaim);
         boolean occupied = WarClientState.hasSnapshot() && WarClientState.isClaimChunkOccupied(ClientManager.currentClaim, lastPlayerChunk);
+        ClaimAuthorityStatus authorityStatus = ClaimAuthorityStatus.classify(playerTeamName(mc.player), ClientManager.currentClaim);
         int x = Math.max(6, mc.getWindow().getGuiScaledWidth() - RIGHT_SAFE_MARGIN - CLAIM_PANEL_WIDTH);
-        claimRenderer.render(graphics, mc, ClientManager.currentClaim, currentState, alpha, CLAIM_PANEL_WIDTH, x, y, underSiege, occupied);
+        claimRenderer.render(graphics, mc, ClientManager.currentClaim, currentState, authorityStatus, alpha, CLAIM_PANEL_WIDTH, x, y, underSiege, occupied);
         NeoForge.EVENT_BUS.post(new ClientOverlayEvent.RenderPost(graphics, ClientManager.currentClaim, currentState, alpha));
+    }
+
+    @Nullable
+    private static String playerTeamName(Player player) {
+        Team team = player.getTeam();
+        return team == null ? null : team.getName();
     }
 
     private static int renderRightChip(GuiGraphics graphics, Font font, int screenWidth, int y, Component label, int textColor, int bgColor) {
@@ -214,7 +222,9 @@ public final class HudOverlayCoordinator {
             updateCachedData(newClaim);
         } else if (previousClaim != null && newClaim == null) {
             NeoForge.EVENT_BUS.post(new ClientClaimEvent.Leave(previousClaim, null));
-            transitionToState(OverlayState.HIDDEN, true);
+            claimEntryTime = System.currentTimeMillis();
+            transitionToState(OverlayState.FULL, true);
+            updateCachedData(null);
         } else if (previousClaim != null && newClaim != null && !previousClaim.equals(newClaim)) {
             NeoForge.EVENT_BUS.post(new ClientClaimEvent.Leave(previousClaim, newClaim));
             NeoForge.EVENT_BUS.post(new ClientClaimEvent.Enter(newClaim, previousClaim));
@@ -270,7 +280,14 @@ public final class HudOverlayCoordinator {
     }
 
     private void updateOverlayState() {
-        if (ClientManager.currentClaim == null) return;
+        if (ClientManager.currentClaim == null) {
+            long timeInUnclaimed = System.currentTimeMillis() - claimEntryTime;
+            OverlayState desiredState = timeInUnclaimed < FULL_DISPLAY_DURATION ? OverlayState.FULL : OverlayState.COMPACT;
+            if (currentState != desiredState) {
+                transitionToState(desiredState, true);
+            }
+            return;
+        }
 
         if (WarClientState.hasSnapshot() && WarClientState.isClaimUnderSiege(ClientManager.currentClaim)) {
             if (currentState != OverlayState.FULL) transitionToState(OverlayState.FULL, true);

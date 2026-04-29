@@ -12,6 +12,7 @@ import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.ChunkPos;
 
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ public final class WarClientState {
     private static Map<UUID, OccupationRecord> occupationsById = Map.of();
     private static int version = 0;
     private static boolean hasSnapshot = false;
+    private static Component lastActionFeedback = Component.empty();
 
     private WarClientState() {
     }
@@ -163,6 +165,14 @@ public final class WarClientState {
         return hasSnapshot;
     }
 
+    public static Component lastActionFeedback() {
+        return lastActionFeedback;
+    }
+
+    public static void setLastActionFeedback(Component feedback) {
+        lastActionFeedback = feedback == null ? Component.empty() : feedback;
+    }
+
     public static void clear() {
         entities = List.of();
         wars = List.of();
@@ -173,6 +183,7 @@ public final class WarClientState {
         revolts = List.of();
         entitiesById = Map.of();
         occupationsById = Map.of();
+        lastActionFeedback = Component.empty();
         hasSnapshot = false;
         version++;
     }

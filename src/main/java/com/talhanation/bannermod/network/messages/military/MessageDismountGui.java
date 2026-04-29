@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.network.messages.military;
 
+import com.talhanation.bannermod.army.command.RecruitCommandAuthority;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
@@ -31,8 +32,8 @@ public class MessageDismountGui implements BannerModMessage<MessageDismountGui> 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.uuid, 16.0D);
-        if (recruit != null) {
-            CommandEvents.onDismountButton(player, recruit, null);
+        if (recruit != null && RecruitCommandAuthority.canDirectlyControl(serverPlayer, recruit)) {
+            CommandEvents.onDismountButton(recruit.getOwnerUUID(), recruit, null);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.network.messages.military.MessageClaimIntent;
 import com.talhanation.bannermod.network.messages.military.MessageTeleportPlayer;
 import net.minecraft.network.chat.Component;
@@ -15,6 +16,10 @@ final class WorldMapClaimMenuActions {
     private static final Component TEXT_REMOVE_CHUNK_ADMIN = Component.translatable("gui.recruits.map.remove_chunk_admin");
     private static final Component TEXT_DELETE_CLAIM_ADMIN = Component.translatable("gui.recruits.map.delete_claim_admin");
     private static final Component TEXT_TELEPORT_ADMIN = Component.translatable("gui.recruits.map.teleport_admin");
+    private static final Component TEXT_DISABLED_SYNC = Component.translatable("gui.recruits.map.disabled.waiting_sync");
+    private static final Component TEXT_DISABLED_STALE = Component.translatable("gui.recruits.map.disabled.stale");
+    private static final Component TEXT_DISABLED_NOT_LEADER = Component.translatable("gui.recruits.map.disabled.not_claim_leader");
+    private static final Component TEXT_DISABLED_UNCLAIMABLE = Component.translatable("gui.recruits.map.disabled.unclaimable_chunk");
 
     private final WorldMapScreen screen;
 
@@ -23,9 +28,16 @@ final class WorldMapClaimMenuActions {
     }
 
     void addEntries(WorldMapContextMenu menu, ItemStack claimChunkCost, ItemStack claimAreaCost) {
-        menu.addEntry(TEXT_CLAIM_CHUNK.getString(),
-                () -> screen.canClaimChunk(screen.selectedChunk)
-                        && screen.isPlayerClaimLeader(screen.getNeighborClaim(screen.selectedChunk)),
+        boolean claimsReady = ClientManager.hasClaimsSnapshot && !ClientManager.claimsSnapshotStale;
+        boolean canClaimChunk = claimsReady && screen.canClaimChunk(screen.selectedChunk);
+        boolean isNeighborLeader = canClaimChunk && screen.isPlayerClaimLeader(screen.getNeighborClaim(screen.selectedChunk));
+        Component claimChunkDisabledReason = !ClientManager.hasClaimsSnapshot ? TEXT_DISABLED_SYNC
+                : ClientManager.claimsSnapshotStale ? TEXT_DISABLED_STALE
+                : !canClaimChunk ? TEXT_DISABLED_UNCLAIMABLE
+                : TEXT_DISABLED_NOT_LEADER;
+        menu.addMaybeDisabledEntry(TEXT_CLAIM_CHUNK,
+                () -> isNeighborLeader,
+                claimChunkDisabledReason,
                 WorldMapScreen::claimChunk,
                 claimChunkCost,
                 "bufferzone, chunk"
@@ -75,11 +87,13 @@ final class WorldMapClaimMenuActions {
 
     private void removeSelectedChunk(WorldMapScreen screen) {
         if (!screen.selectedClaim.containsChunk(screen.selectedChunk)) return;
+        ClientManager.markClaimsStale();
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClaimIntent(MessageClaimIntent.Action.REMOVE_CHUNK, screen.selectedClaim.getUUID(), screen.selectedChunk));
         screen.selectedChunk = null;
     }
 
     private void deleteSelectedClaim(WorldMapScreen screen) {
+        ClientManager.markClaimsStale();
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClaimIntent(MessageClaimIntent.Action.DELETE, screen.selectedClaim.getUUID(), screen.selectedChunk));
         screen.selectedClaim = null;
     }

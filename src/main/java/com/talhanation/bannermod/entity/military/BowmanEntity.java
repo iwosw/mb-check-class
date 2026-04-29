@@ -5,27 +5,16 @@ import com.talhanation.bannermod.config.RecruitsServerConfig;
 import com.talhanation.bannermod.ai.military.RecruitMoveTowardsTargetGoal;
 import com.talhanation.bannermod.ai.military.RecruitStrategicFire;
 import com.talhanation.bannermod.ai.military.RecruitRangedBowAttackGoal;
-import com.talhanation.bannermod.util.AttackUtil;
 import com.talhanation.bannermod.persistence.military.RecruitsPatrolSpawn;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.Mth;
 
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.Vec3;
@@ -97,55 +86,7 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
     public void performRangedAttack(@NotNull LivingEntity target, float v) {
         if(this.level().isClientSide()) return;
         if (this.getMainHandItem().getItem() instanceof BowItem) {
-
-            if(AttackUtil.canPerformHorseAttack(this, target)){
-                if(target.getVehicle() instanceof LivingEntity) {
-                    target = (LivingEntity) target.getVehicle();
-                }
-            }
-
-            ItemStack itemstack = this.getProjectile(this.getItemInHand(InteractionHand.MAIN_HAND));
-
-            AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemstack, v, this.getMainHandItem());
-
-            int powerLevel = getEnchantmentLevel(Enchantments.POWER, itemstack);
-            arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + this.arrowDamageModifier());
-
-            int punchLevel = getEnchantmentLevel(Enchantments.PUNCH, itemstack);
-            // Knockback is applied through vanilla enchantment effects in 1.21.
-
-            int fireLevel = getEnchantmentLevel(Enchantments.FLAME, itemstack);
-            if (fireLevel > 0) arrow.igniteForSeconds(5.0F);
-
-            double distance = this.distanceToSqr(target.getX(), target.getY(), target.getZ());
-            double heightDiff = target.getY() - this.getY();
-
-            double d0 = target.getX() - this.getX();
-            double d1 = target.getY() - arrow.getY() + target.getEyeHeight();
-            double d2 = target.getZ() - this.getZ();
-            double d3 = Mth.sqrt((float) (d0 * d0 + d2 * d2));
-
-            double angle = IRangedRecruit.getAngleDistanceModifier(distance, 47, 4) + IRangedRecruit.getAngleHeightModifier(distance, heightDiff, 1.00D) / 100;
-            float force = 1.90F + IRangedRecruit.getForceDistanceModifier(distance, 1.90F);
-            double morale = this.getMorale();
-            float accuracy = Math.max(6 - (float) (0.1F * morale), 0);
-            //BannerModMain.LOGGER.info("Distance: " + distance);
-                                                //angle   = 0.196F           //force     //accuracy 0 = 100%
-            arrow.shoot(d0, d1 + d3 * angle, d2, force, accuracy);
-
-            if(RecruitsServerConfig.RangedRecruitsNeedArrowsToShoot.get()){
-                int k = getEnchantmentLevel(Enchantments.INFINITY, this.getMainHandItem());
-                if (k == 0) {
-                    this.consumeArrow();
-                    arrow.pickup = AbstractArrow.Pickup.ALLOWED;
-                }
-            }
-
-            this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-
-            this.getCommandSenderWorld().addFreshEntity(arrow);
-
-            this.damageMainHandItem();
+            RecruitRangedCombatService.fireBowAtTarget(this, target, v);
         }
     }
 
@@ -153,47 +94,10 @@ public class BowmanEntity extends AbstractStrategicFireRecruitEntity implements 
         return 1.0D;
     }
 
-    private int getEnchantmentLevel(ResourceKey<Enchantment> enchantment, ItemStack stack) {
-        return EnchantmentHelper.getItemEnchantmentLevel(
-                this.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(enchantment),
-                stack
-        );
-    }
-
     public void performRangedAttackXYZ(double x, double y, double z, float v, float angle, float force) {
         if(this.level().isClientSide()) return;
         if (this.getMainHandItem().getItem() instanceof BowItem) {
-            ItemStack itemstack = this.getProjectile(this.getItemInHand(InteractionHand.MAIN_HAND));
-
-            AbstractArrow arrow = ProjectileUtil.getMobArrow(this, itemstack, v, this.getMainHandItem());
-
-            int powerLevel = getEnchantmentLevel(Enchantments.POWER, itemstack);
-            if (powerLevel > 0) arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + this.arrowDamageModifier());
-
-            int punchLevel = getEnchantmentLevel(Enchantments.PUNCH, itemstack);
-            // Knockback is applied through vanilla enchantment effects in 1.21.
-
-            int fireLevel = getEnchantmentLevel(Enchantments.FLAME, itemstack);
-            if (fireLevel > 0) arrow.igniteForSeconds(5.0F);
-
-            double d0 = x - this.getX();
-            double d1 = y - this.getY();
-            double d2 = z - this.getZ();
-            double d3 = Mth.sqrt((float) (d0 * d0 + d2 * d2));
-            double morale = this.getMorale();
-            float accuracy = 3F + Math.max(6 - (float) (0.1F * morale), 0);
-                                                     //angle            //force             //accuracy 0 = 100%
-            arrow.shoot(d0, d1 + d3 + angle, d2, force + 1.95F, accuracy);
-
-            this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-            this.getCommandSenderWorld().addFreshEntity(arrow);
-
-            if(RecruitsServerConfig.RangedRecruitsNeedArrowsToShoot.get()){
-                this.consumeArrow();
-                arrow.pickup = AbstractArrow.Pickup.ALLOWED;
-            }
-
-            this.damageMainHandItem();
+            RecruitRangedCombatService.fireBowAtPosition(this, x, y, z, v, angle, force);
         }
     }
 
