@@ -4343,8 +4343,8 @@
     {
       "id": "VANILLA-005",
       "title": "Rewrite node evaluator and path-type logic",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Custom NodeEvaluator code is sensitive to vanilla internals and should be replaced with focused BannerMod terrain/path-type rules.",
       "scope": [
         "Rewrite civilian, military, sailor, and recruit node evaluators/path-type decisions using explicit BannerMod rules and current 1.21 APIs."
@@ -4357,8 +4357,14 @@
         "VANILLA-003"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Pathing/path-type behavior: compileJava and compileGameTestJava passed; BannerModPathNodeEvaluatorGameTests.recruitEvaluatorPreservesCorePathTypes passed in verifyGameTestStage (not listed among failures), covering land WALKABLE, water WATER, closed wooden door DOOR_WOOD_CLOSED, fence FENCE, and lava LAVA. 2) Recruit traversal behavior: BannerModPathNodeEvaluatorGameTests.recruitEvaluatorAppliesRecruitTraversalCosts passed in verifyGameTestStage (not listed among failures), covering recruit water avoidance, door passability, blocked fence/lava, and fire hazard cost. 3) Obsolete copied bodies: civilian and military RecruitsPathNodeEvaluator now extend WalkNodeEvaluator and ctx search found no copied-body markers (Long2ObjectMap/Object2BooleanMap/checkNeighbourBlocks/getBlockPathTypeRaw/findAcceptedNode) in those evaluator files. verifyGameTestStage remains red only for unrelated tests: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, sharedownershipkeepsplayercycleauthorityaligned, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, courierusesnearbyhorseonsupportedroute."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-006",
