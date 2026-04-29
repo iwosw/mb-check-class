@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.network.messages.military;
 
-import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.army.command.CommandIntent;
+import com.talhanation.bannermod.army.command.CommandIntentDispatcher;
+import com.talhanation.bannermod.army.command.CommandIntentPriority;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
@@ -31,7 +33,11 @@ public class MessageFollowGui implements BannerModMessage<MessageFollowGui> {
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.uuid, 16.0D);
+        dispatchToServer(serverPlayer, this.uuid, this.state);
+    }
+
+    public static void dispatchToServer(ServerPlayer serverPlayer, UUID recruitUuid, int state) {
+        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, recruitUuid, 16.0D);
         if (recruit == null) {
             return;
         }
@@ -40,7 +46,7 @@ public class MessageFollowGui implements BannerModMessage<MessageFollowGui> {
                 serverPlayer.getUUID(),
                 serverPlayer.getTeam() == null ? null : serverPlayer.getTeam().getName(),
                 serverPlayer.hasPermissions(2),
-                this.uuid,
+                recruitUuid,
                 List.of(new CommandTargeting.RecruitSnapshot(
                         recruit.getUUID(),
                         recruit.getOwnerUUID(),
@@ -57,7 +63,16 @@ public class MessageFollowGui implements BannerModMessage<MessageFollowGui> {
             return;
         }
 
-        CommandEvents.onMovementCommandGUI(recruit, state);
+        CommandIntent intent = new CommandIntent.Movement(
+                serverPlayer.getCommandSenderWorld().getGameTime(),
+                CommandIntentPriority.NORMAL,
+                false,
+                state,
+                0,
+                false,
+                null
+        );
+        CommandIntentDispatcher.dispatch(serverPlayer, intent, List.of(recruit));
     }
 
     public MessageFollowGui fromBytes(FriendlyByteBuf buf) {

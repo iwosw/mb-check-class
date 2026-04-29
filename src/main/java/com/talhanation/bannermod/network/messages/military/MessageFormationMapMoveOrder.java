@@ -43,6 +43,10 @@ public class MessageFormationMapMoveOrder implements BannerModMessage<MessageFor
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer sender = context.getSender();
+        dispatchToServer(sender, contactId, groupId, target);
+    }
+
+    public static void dispatchToServer(ServerPlayer sender, UUID contactId, UUID groupId, BlockPos target) {
         if (sender == null || target == null || contactId == null) return;
         ServerLevel level = sender.serverLevel();
         BlockPos moveTarget = new BlockPos(
@@ -51,7 +55,7 @@ public class MessageFormationMapMoveOrder implements BannerModMessage<MessageFor
                 target.getZ()
         );
 
-        List<AbstractRecruitEntity> recruits = new ArrayList<>(resolveTargets(sender));
+        List<AbstractRecruitEntity> recruits = new ArrayList<>(resolveTargets(sender, contactId, groupId));
         recruits.removeIf(recruit -> !CommandHierarchy.canCommand(sender, recruit));
         if (recruits.isEmpty()) return;
 
@@ -68,7 +72,7 @@ public class MessageFormationMapMoveOrder implements BannerModMessage<MessageFor
         CommandIntentDispatcher.dispatch(sender, intent, recruits);
     }
 
-    private List<AbstractRecruitEntity> resolveTargets(ServerPlayer sender) {
+    private static List<AbstractRecruitEntity> resolveTargets(ServerPlayer sender, UUID contactId, UUID groupId) {
         if (groupId != null) {
             return RecruitCommandTargetResolver.resolveGroupTargets(sender, sender.getUUID(), groupId, "formation-map-move");
         }

@@ -4375,8 +4375,8 @@
     {
       "id": "VANILLA-006",
       "title": "Rewrite formation movement integration",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Formation movement must stay server-authoritative while pathing internals are replaced.",
       "scope": [
         "Rework movement/formation integration so regroup, come-to-me, move-to-position, forward/back, queue mode, and tight formation use the new navigation contract without bypassing command intent dispatch."
@@ -4390,8 +4390,14 @@
         "VANILLA-005"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Movement states 0-8: compileJava and compileGameTestJava passed; BannerModCommandPacketPathGameTests.movementPacketPathCoversStatesZeroThroughEightViaDispatcher passed inside verifyGameTestStage because it was not listed among failing tests after rerun. 2) Explicit target handling: BannerModCommandPacketPathGameTests.formationMapMovePacketPreservesExplicitTargetViaDispatcher passed inside verifyGameTestStage because it was not listed among failing tests after rerun, and the test asserts MessageFormationMapMoveOrder dispatches CommandIntent.Movement with targetPos and sets recruit MovePos from that explicit target. 3) Packet/UI bypass: MessageFollowGui now dispatches CommandIntent.Movement through CommandIntentDispatcher; search found no packet/client movement setMovePos or CommandEvents.onMovementCommand calls, only the service-side setMovePos in MovementFormationCommandService and unused legacy wrapper. 4) verifyGameTestStage remains red only from unrelated required tests: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, hostileorunclaimedsettlementsnevercreateworkers, authoredroutecouriermovesitemsbetweenstorageendpoints, sharedownershipkeepsplayercycleauthorityaligned, reconnectedownerrecoversauthorityafterownershiproundtrip, unmountedcourierinspectionreportsfootfallback, grouptransferupdatesgroupandmembersfromtrustedplayer, courierusesnearbyhorseonsupportedroute, workerdeathreleasesactiveworkorderclaim."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-007",
