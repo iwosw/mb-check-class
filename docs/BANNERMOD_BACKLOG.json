@@ -2946,8 +2946,8 @@
     {
       "id": "ARMY-005",
       "title": "Add queued intent parity for remaining command variants",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Queued command behavior must match immediate command behavior for all supported army command variants.",
       "scope": [
         "Implement or verify queue execution parity for movement, face, attack, aggro, stance, strategic fire, and siege-machine flows."
@@ -2960,8 +2960,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: focused queue parity coverage added for movement, face, attack, aggro, stance, strategic fire, and siege-machine command flows. compileJava passed; compileGameTestJava passed; focused CommandIntentQueueTest passed; verifyGameTestStage rerun no longer reports queuedcommandvariantsmatchimmediatefirstorderbehavior after the fix, but remains red from unrelated existing failures: primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, sharedownershipkeepsplayercycleauthorityaligned, grouptransferupdatesgroupandmembersfromtrustedplayer, unmountedcourierinspectionreportsfootfallback, reconnectedownerrecoversauthorityafterownershiproundtrip, courierusesnearbyhorseonsupportedroute, workerdeathreleasesactiveworkorderclaim."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "AUTH-006",
