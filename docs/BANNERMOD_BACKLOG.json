@@ -3064,8 +3064,8 @@
     {
       "id": "SYNC-003",
       "title": "Implement settlement client mirror and screen loading states",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Player-facing settlement UIs need coherent mirrored state instead of ad hoc placeholder requests.",
       "scope": [
         "Implement the client mirror for SYNC-002 snapshots and update relevant settlement/governor screens to render loading, stale, empty, and fresh states from it."
@@ -3078,8 +3078,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: relevant governor/settlement UI now opens in loading state from the client mirror, accepts server-synced ready/empty envelopes, marks the existing mirror stale after policy mutation until the next server refresh, and renders those states without reopening; focused test BannerModSettlementClientMirrorTest covers loading, empty, fresh, and stale formatting/action enablement; compileJava passed; compileGameTestJava not run because no GameTest sources were touched."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SYNC-004",
