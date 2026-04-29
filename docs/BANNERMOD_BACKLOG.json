@@ -3953,7 +3953,7 @@
     {
       "id": "RENDER-005",
       "title": "Rewrite banner and siege-standard rendering",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-29",
       "why": "Banner and siege-standard rendering touches changed vanilla banner APIs and should be replaced with a clear BannerMod-owned renderer.",
       "scope": [
@@ -3980,8 +3980,14 @@
           "text": "RENDER-005A evidence: compileJava passed; BannerRenderParityTest passed and verifies GUI banner preview base color/pattern forwarding, siege-standard dynamic banner cloth render path, political color cue fill/outline, and absence of static cloth geometry in siege_standard.json."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Banner previews and siege standards compile/render contract: RENDER-005A is done with recorded evidence; BannerRenderParityTest passed and covers GUI base color/pattern forwarding, dynamic siege-standard banner cloth, political color cue fill/outline, and no duplicate static cloth geometry. 2) compileJava passed. 3) Obsolete vanilla snippet check: SiegeStandardBlockEntityRenderer and BannerPatternRenderHelper were inspected; rendering delegates to BannerRenderer.renderPatterns via BannerPatternRenderHelper and uses owned cap fill/outline primitives rather than copied obsolete banner renderer bodies."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-006",
