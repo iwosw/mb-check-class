@@ -2624,8 +2624,8 @@
     {
       "id": "SHIPS-003",
       "title": "Show sea-trade carrier route state and failure reasons",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Ship-backed sea trade will still feel opaque if players cannot see which carrier is assigned, whether it is loading, traveling, blocked, or failed, and why a route is stalled.",
       "scope": [
         "Add player-facing route state for ship-backed sea trade, including carrier assignment, cargo progress, transit state, and actionable failure reasons in the relevant settlement, logistics, or trade UI surfaces."
@@ -2639,8 +2639,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Players can inspect ship-backed route state in governor logistics: focused tests cover server-authored sea-trade status lines with route id, carrier assignment/unassigned state, current phase, cargo progress, successful route, missing-carrier state, and destination-full blocked reason. 2) Failure/stall reasons are localized for EN/RU, including explicit destination-full and no-carrier reasons. 3) Route state updates are sourced from the existing server sea-trade execution records surfaced through settlement snapshots/client mirror. 4) Verification: merged branch passed compileJava, compileGameTestJava, processResources, BannerModSettlementServiceTest, and BannerModSettlementClientMirrorTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "MERCH-002",
@@ -2744,8 +2750,8 @@
     {
       "id": "UX-007",
       "title": "Add War Room revolt interaction flow",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "A player-facing revolt system is still incomplete until War Room exposes the actual revolt interactions instead of only passive text or slash-command knowledge.",
       "scope": [
         "Add the relevant revolt interaction flow to War Room or the equivalent screen, including action availability, pending-state display, and server-authoritative feedback."
@@ -2759,14 +2765,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) War Room now exposes pending revolt resolution controls for the selected war, allowing operator users to mark the first pending revolt as won or failed through UI rather than chat. 2) Availability/denial feedback is localized and server-authoritative through MessageResolveRevolt and RevoltInteractionService; non-operators are denied and pending state/occupation are preserved. 3) Verification: merged branch passed compileJava, compileGameTestJava, processResources, and RevoltInteractionServiceTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-008",
       "title": "Add UI for tribute and remaining war outcome selection",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "War outcome UX remains incomplete while tribute-related and remaining supported outcome choices are still partly command-shaped or admin-shaped instead of coherent in-screen interactions.",
       "scope": [
         "Extend War Room or outcome panels so supported tribute and remaining outcome choices are selectable in UI with clear authority, cooldown, and denial feedback."
@@ -2780,14 +2792,20 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) War Room outcome buttons now gate cancel/occupy/annex/tribute by selected war state, matching war goal, attacking-side authority, and operator requirement for tribute. 2) Unsupported/admin-only paths are visibly locked with localized disabled reasons, and outcome requests report accepted/denied feedback through chat and the War Room feedback line. 3) Verification: merged branch passed compileJava, compileGameTestJava, processResources, MessageResolveWarOutcomeTest, and WarOutcomeApplierTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-009",
       "title": "Explain war authority and cooldown denials in-screen",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "War interactions are still too opaque if denial reasons only reach chat or are inferred from disabled controls without an explicit why, especially for leadership, co-leader, cooldown, and government-form restrictions.",
       "scope": [
         "Surface explicit in-screen denial reasons for war declaration, outcome, ally, and revolt actions where authority or cooldown rules block the player. Reuse existing server-authoritative policy text where possible."
@@ -2800,8 +2818,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) War Room and related war screens now show in-screen server-authoritative feedback for declare war, siege placement, ally invite/respond/cancel, and war outcomes, avoiding chat-only denial feedback. 2) Disabled tooltips distinguish leader-only, republic co-leader, monarchy-blocked co-leader, missing state, status, cooldown, closed-war, unsupported-goal, and op-only denials. 3) Verification: merged branch passed compileJava, compileGameTestJava, processResources, PoliticalEntityAuthorityTest, WarCooldownPolicyTest, and WarCooldownPolicyImmunityTest; player guides and almanac were updated."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "PROC-001",
