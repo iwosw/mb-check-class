@@ -84,7 +84,7 @@ public class BannerModMultiplayerAuthorityConflictGameTests {
     @GameTest(template = "harness_empty")
     public static void teammateAndAdminRecruitCommandsUseSameAuthorityAsOwner(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        Player owner = createPlayer(helper, level, OWNER_UUID, "authority-owner-team");
+        ServerPlayer owner = (ServerPlayer) createPlayer(helper, level, OWNER_UUID, "authority-owner-team");
         ServerPlayer teammate = (ServerPlayer) createPlayer(helper, level, TEAMMATE_UUID, "authority-teammate");
         ServerPlayer admin = createAdminPlayer(helper, level, ADMIN_UUID, "authority-admin");
         RecruitsBattleGameTestSupport.BattleSquad squad = RecruitsBattleGameTestSupport.spawnRecoveryPair(
@@ -97,10 +97,15 @@ public class BannerModMultiplayerAuthorityConflictGameTests {
         for (AbstractRecruitEntity recruit : squad.recruits()) {
             RecruitsCommandGameTestSupport.prepareForCommand(recruit, RecruitsCommandGameTestSupport.TARGET_GROUP_UUID);
         }
+
+        MessageFollowGui.dispatchToServer(owner, squad.recruits().get(0).getUUID(), 1);
+        helper.assertTrue(squad.recruits().get(0).getFollowState() == 1,
+                "Expected owner single-recruit GUI command to retain canonical owner authority");
+
         BannerModDedicatedServerGameTestSupport.joinTeam(level, COMMAND_TEAM, owner, teammate, squad.recruits().get(0), squad.recruits().get(1));
 
-        MessageFollowGui.dispatchToServer(teammate, squad.recruits().get(0).getUUID(), 1);
-        helper.assertTrue(squad.recruits().get(0).getFollowState() == 1,
+        MessageFollowGui.dispatchToServer(teammate, squad.recruits().get(1).getUUID(), 1);
+        helper.assertTrue(squad.recruits().get(1).getFollowState() == 1,
                 "Expected teammate single-recruit GUI command to follow canonical team authority");
 
         MessageRest.dispatchToServer(admin, admin.getUUID(), RecruitsCommandGameTestSupport.TARGET_GROUP_UUID, true);

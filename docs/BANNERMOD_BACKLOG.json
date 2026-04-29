@@ -3021,8 +3021,8 @@
     {
       "id": "AUTH-008",
       "title": "Test command authority hierarchy",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "AUTH-005 closure requires verification for owner, teammate, and nation-level command cases.",
       "scope": [
         "Add focused tests covering owner, teammate, admin override, and nation-level supported or denied command authority flows."
@@ -3035,8 +3035,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Owner/teammate/admin/nation hierarchy coverage: ./gradlew test --tests com.talhanation.bannermod.network.messages.military.CommandTargetingAuthorityTest passed, covering owner, teammate, outsider-admin override, and explicitly unsupported nation/outsider denial through CommandHierarchy and CommandTargeting. 2) Packet-path/GameTest coverage: src/gametest/java/com/talhanation/bannermod/BannerModMultiplayerAuthorityConflictGameTests.java now explicitly exercises owner and teammate MessageFollowGui paths, admin MessageRest path, and unsupported nation/outsider MessageRest denial; ./gradlew compileGameTestJava passed. 3) compileJava passed. 4) ./gradlew verifyGameTestStage was run; it failed on unrelated non-authority tests (primaryzonematrixallowsdisjointzoneswithinoverlappingbounds, mountedcourierinspectionreportsmountedtransport, authoredroutecouriermovesitemsbetweenstorageendpoints, grouptransferupdatesgroupandmembersfromtrustedplayer, reconnectedownerrecoversauthorityafterownershiproundtrip, sharedownershipkeepsplayercycleauthorityaligned, courierusesnearbyhorseonsupportedroute, workerdeathreleasesactiveworkorderclaim), with no AUTH-008 authority GameTests listed as failed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "SYNC-002",
@@ -3090,8 +3096,8 @@
     {
       "id": "SYNC-004",
       "title": "Verify settlement snapshot refresh paths",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "SYNC-001 requires proof that login, open-screen, and mutation refresh paths update the client mirror.",
       "scope": [
         "Add focused verification for settlement snapshot delivery on login, screen open, and server-side mutation refresh."
@@ -3104,8 +3110,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Acceptance: focused tests prove login, screen-open, and mutation-refresh settlement client snapshot paths. Verification: ./gradlew compileJava passed; ./gradlew compileGameTestJava passed; ./gradlew test --tests com.talhanation.bannermod.client.settlement.BannerModSettlementClientMirrorTest --tests com.talhanation.bannermod.events.RecruitGovernorWorkflowTest --tests com.talhanation.bannermod.network.messages.military.MessageToClientUpdateGovernorScreenTest passed, covering LOGIN/MUTATION_REFRESH mirror replacement, SCREEN_OPEN/LOGIN/MUTATION_REFRESH workflow envelopes, and MessageToClientUpdateGovernorScreen payload roundtrip."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-010",
@@ -3133,8 +3145,8 @@
     {
       "id": "UX-011",
       "title": "Expose route and waypoint discovery in world-map UI",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Players need in-game affordances and explanations for route and waypoint flows without relying on external docs.",
       "scope": [
         "Add Minecraft-native route and waypoint explanations, enabled/disabled reasons, and visible entry points in the world-map flow."
@@ -3147,8 +3159,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Localized in-game world-map affordances added: top-left Routes help/status panel explains + route creation, route selection, and right-click waypoint creation/use; route buttons have localized tooltips; right-click Add Waypoint remains visible when unavailable with localized no-route or unexplored/unloaded-chunk reasons. 2) Server authority preserved: only existing WorldMapRouteMutationController/ClientManager route-save and waypoint mutation paths are reused; no client-side server gameplay validation was added or bypassed. 3) Player workflow docs updated in MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html. 4) Verification passed: ctx log -- ./gradlew compileJava; ctx log -- ./gradlew test --tests com.talhanation.bannermod.client.military.gui.worldmap.WorldMapRouteUiVerificationTest; ctx log -- jq empty modified lang JSON files; tools/backlog validate."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-012",
