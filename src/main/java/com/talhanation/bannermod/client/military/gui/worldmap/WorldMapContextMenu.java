@@ -49,6 +49,9 @@ public class WorldMapContextMenu {
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action, ItemStack itemStack, String tag) {
         entries.add(new ContextMenuEntry(Component.literal(text), condition, action, itemStack, tag, null));
     }
+    public void addEntry(Component text, BooleanSupplier condition, Consumer<WorldMapScreen> action, String tag) {
+        entries.add(new ContextMenuEntry(text, condition, action, ItemStack.EMPTY, tag, null));
+    }
     public void addEntry(String text, BooleanSupplier condition, Consumer<WorldMapScreen> action, String tag) {
         entries.add(new ContextMenuEntry(Component.literal(text), condition, action, ItemStack.EMPTY, tag, null));
     }
