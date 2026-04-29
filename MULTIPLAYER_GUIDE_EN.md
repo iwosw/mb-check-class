@@ -30,6 +30,8 @@ Rebind in `Options → Controls → Key Binds → BannerMod / Workers`. Defaults
 
 On the world map (`M`), use the top-left `Routes` control to create a route with `+`, select it, then right-click explored map chunks to add waypoints. The map shows disabled reasons when a waypoint cannot be placed, such as no selected route or an unexplored/unloaded chunk.
 
+During normal play in the Overworld, the small top-right claim HUD shows the current territory as friendly, hostile, or unclaimed. It sits under battle/siege chips and away from chat, crosshair, and the hotbar; server-side claim rules still decide whether actions are allowed.
+
 ## First 10 Minutes (no admin tools)
 
 1. Pick a place for your base and claim at least one chunk in the Overworld. Open the map with `M`, right-click the chunk you want, choose `Claim chunk`. The `Claim Area` map action is intentionally disabled; expand by claiming nearby chunks one at a time so the server validates each edit. Claim cost and currency are server-defined (`AllowClaiming` must be true) and shown in the menu itself. Claim protection is Overworld-only; matching Nether or End X/Z chunks are not protected by Overworld claims.
