@@ -53,7 +53,7 @@ public final class RecruitRangedCombatService {
             projectileStack = Items.ARROW.getDefaultInstance();
         }
         AbstractArrow arrow = ProjectileUtil.getMobArrow(shooter, projectileStack, drawPower, shooter.getMainHandItem());
-        applyBowEnchantments(shooter, projectileStack, arrow);
+        applyBowEnchantments(shooter, projectileStack, arrow, true);
 
         double distance = shooter.distanceToSqr(resolvedTarget.getX(), resolvedTarget.getY(), resolvedTarget.getZ());
         double heightDiff = resolvedTarget.getY() - shooter.getY();
@@ -77,7 +77,7 @@ public final class RecruitRangedCombatService {
             projectileStack = Items.ARROW.getDefaultInstance();
         }
         AbstractArrow arrow = ProjectileUtil.getMobArrow(shooter, projectileStack, drawPower, shooter.getMainHandItem());
-        applyBowEnchantments(shooter, projectileStack, arrow);
+        applyBowEnchantments(shooter, projectileStack, arrow, false);
 
         double d0 = x - shooter.getX();
         double d1 = y - shooter.getY();
@@ -90,9 +90,11 @@ public final class RecruitRangedCombatService {
         finishBowShot(shooter, arrow);
     }
 
-    private static void applyBowEnchantments(BowmanEntity shooter, ItemStack projectileStack, AbstractArrow arrow) {
+    private static void applyBowEnchantments(BowmanEntity shooter, ItemStack projectileStack, AbstractArrow arrow, boolean alwaysApplyBaseBonus) {
         int powerLevel = getEnchantmentLevel(shooter, Enchantments.POWER, projectileStack);
-        arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + shooter.arrowDamageModifier());
+        if (alwaysApplyBaseBonus || powerLevel > 0) {
+            arrow.setBaseDamage(arrow.getBaseDamage() + (double) powerLevel * 0.5D + 0.5D + shooter.arrowDamageModifier());
+        }
 
         int fireLevel = getEnchantmentLevel(shooter, Enchantments.FLAME, projectileStack);
         if (fireLevel > 0) {
