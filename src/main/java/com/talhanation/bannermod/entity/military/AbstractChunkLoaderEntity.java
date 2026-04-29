@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public abstract class AbstractChunkLoaderEntity extends BowmanEntity {
-    private static final TicketController CHUNK_TICKETS = new TicketController(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "recruits_chunk_loader"));
+    static final TicketController CHUNK_TICKETS = new TicketController(ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "recruits_chunk_loader"));
     private Optional<RecruitsChunk> loadedChunk = Optional.empty();
 
     public AbstractChunkLoaderEntity(EntityType<? extends AbstractChunkLoaderEntity> entityType, Level world) {
