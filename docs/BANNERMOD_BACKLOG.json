@@ -4422,8 +4422,8 @@
     {
       "id": "VANILLA-010",
       "title": "Rewrite entity interaction helpers",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Entity helper methods around equipment, mounts, leash, spawn, and inventory often drift across Minecraft versions when copied from vanilla behavior.",
       "scope": [
         "Rewrite recruit entity helper flows for equipment slots, spawn data, mounts/saddles, leash behavior, item pickup/use, and inventory serialization around current public APIs."
@@ -4436,8 +4436,14 @@
         "VANILLA-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "Audited recruit flows for spawn data, equipment slots, mounts/saddles, leash behavior, item pickup/use, and inventory serialization. Replaced obsolete copied equipment-slot/replacement helper logic in AbstractInventoryEntity with current ItemStack/Mob APIs while preserving recruit inventory mirroring. Verified with tools/ai-context-proxy/bin/ctx log -- ./gradlew compileJava: BUILD SUCCESSFUL."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "VANILLA-011",

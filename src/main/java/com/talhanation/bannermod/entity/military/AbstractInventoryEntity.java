@@ -8,10 +8,8 @@ import com.talhanation.bannermod.ai.pathfinding.AsyncPathfinderMob;
 import com.talhanation.bannermod.util.RegistryLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
@@ -22,12 +20,8 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
 import org.jetbrains.annotations.NotNull;
@@ -362,115 +356,16 @@ public abstract class AbstractInventoryEntity extends AsyncPathfinderMob {
     }
     @NotNull
     public EquipmentSlot getEquipmentSlotForItem(ItemStack itemStack) {
-        final EquipmentSlot slot = itemStack.getEquipmentSlot();
-        if (slot != null) return slot; // FORGE: Allow modders to set a non-default equipment slot for a stack; e.g. a non-armor chestplate-slot item
-        Item item = itemStack.getItem();
-        if (!itemStack.is(Items.CARVED_PUMPKIN) && (!(item instanceof BlockItem) || !(((BlockItem)item).getBlock() instanceof AbstractSkullBlock))) {
-            if (item instanceof ArmorItem) {
-                return ((ArmorItem)item).getEquipmentSlot();
-            }
-            else if (itemStack.is(Items.ELYTRA)) {
-                return EquipmentSlot.CHEST;
-            }
-            else if(item instanceof SwordItem) {
-                return EquipmentSlot.MAINHAND;
-            }
-            else {
-                return itemStack.canPerformAction(net.neoforged.neoforge.common.ItemAbilities.SHIELD_BLOCK)? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
-            }
-        } else {
-            return EquipmentSlot.HEAD;
+        EquipmentSlot slot = itemStack.getEquipmentSlot();
+        if (slot != null) {
+            return slot;
         }
+        return itemStack.canPerformAction(net.neoforged.neoforge.common.ItemAbilities.SHIELD_BLOCK) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
     }
 
     @Override
     protected boolean canReplaceCurrentItem(@NotNull ItemStack replacer, ItemStack current) {
-        if (current.isEmpty()) {
-            return true;
-        } else if (current.getItem() instanceof DiggerItem digger && replacer.getItem() instanceof SwordItem) {
-
-            double swordDamage = getMainHandAttackDamage(replacer);
-            double diggerDamage = getMainHandAttackDamage(current);
-            if (diggerDamage != swordDamage) {
-                return diggerDamage < swordDamage;
-            }
-            return this.canReplaceEqualItem(replacer, current);
-        }
-
-        else if (replacer.getItem() instanceof SwordItem) {
-            if (!(current.getItem() instanceof SwordItem)) {
-                return true;
-            } else {
-                double replacerDamage = getMainHandAttackDamage(replacer);
-                double currentDamage = getMainHandAttackDamage(current);
-                if (replacerDamage != currentDamage) {
-                    return replacerDamage > currentDamage;
-                } else {
-                    return this.canReplaceEqualItem(replacer, current);
-                }
-            }
-        }
-
-        else if (replacer.getItem() instanceof BowItem && current.getItem() instanceof BowItem) {
-            return this.canReplaceEqualItem(replacer, current);
-        }
-
-        else if (replacer.getItem() instanceof CrossbowItem && current.getItem() instanceof CrossbowItem) {
-            return this.canReplaceEqualItem(replacer, current);
-        }
-
-        else if (replacer.getItem() instanceof ArmorItem) {
-            if (hasBindingCurse(current)) {
-                return false;
-            } else if (!(current.getItem() instanceof ArmorItem)) {
-                return true;
-            } else {
-                ArmorItem armoritem = (ArmorItem)replacer.getItem();
-                ArmorItem armoritem1 = (ArmorItem)current.getItem();
-                if (armoritem.getDefense() != armoritem1.getDefense()) {
-                    return armoritem.getDefense() > armoritem1.getDefense();
-                } else if (armoritem.getToughness() != armoritem1.getToughness()) {
-                    return armoritem.getToughness() > armoritem1.getToughness();
-                } else {
-                    return this.canReplaceEqualItem(replacer, current);
-                }
-            }
-        } else {
-            if (replacer.getItem() instanceof DiggerItem) {
-                if (current.getItem() instanceof BlockItem) {
-                    return true;
-                }
-
-                if (current.getItem() instanceof DiggerItem) {
-                    DiggerItem diggeritem = (DiggerItem)replacer.getItem();
-                    DiggerItem diggeritem1 = (DiggerItem)current.getItem();
-                    double replacerDamage = getMainHandAttackDamage(replacer);
-                    double currentDamage = getMainHandAttackDamage(current);
-                    if (replacerDamage != currentDamage) {
-                        return replacerDamage > currentDamage;
-                    }
-
-                    return this.canReplaceEqualItem(replacer, current);
-                }
-            }
-
-            return false;
-        }
-    }
-
-    private static double getMainHandAttackDamage(ItemStack stack) {
-        return stack.getAttributeModifiers().compute(0.0D, EquipmentSlot.MAINHAND);
-    }
-
-    private boolean hasBindingCurse(ItemStack stack) {
-        return getEnchantmentLevel(Enchantments.BINDING_CURSE, stack) > 0;
-    }
-
-    private int getEnchantmentLevel(ResourceKey<Enchantment> enchantment, ItemStack stack) {
-        return EnchantmentHelper.getItemEnchantmentLevel(
-                this.level().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(enchantment),
-                stack
-        );
+        return super.canReplaceCurrentItem(replacer, current);
     }
 
 
