@@ -1826,8 +1826,8 @@
     {
       "id": "UX-003",
       "title": "Add disabled-reason and loading-state UX across critical screens",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "War, claim, governor, and work-area screens often hide unavailable actions or show thin failure states, forcing players to infer authority, sync, or range problems from chat or silence.",
       "scope": [
         "Critical screens must surface why actions are unavailable, distinguish waiting-for-sync from empty state, and show consistent loading and stale-data feedback."
@@ -1836,7 +1836,12 @@
         "Disabled actions explain why they are unavailable; waiting-for-sync, empty, and stale states are visually distinct on the main war, claim, governor, and work-area screens; focused verification covers representative denial and loading cases."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Disabled actions explain why unavailable: claim map/menu now surfaces localized reasons for waiting sync, stale claims, unclaimable chunks, missing neighbor authority, and missing claim owner; governor policy buttons expose enabled/disabled tooltips. 2) Waiting/empty/stale/ready states are visually distinct on representative critical screens: WarListScreen, claim map/edit, GovernorScreen, and WorkAreaScreen render separate localized state labels/outlines. 3) Focused verification: merged branch passed ctx log -- ./gradlew compileJava compileGameTestJava plus focused unit smoke command; player-facing UI changes documented in MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UI-003",
@@ -1845,7 +1850,8 @@
         "UI-006",
         "SYNC-001",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "UX-004",
@@ -2117,8 +2123,8 @@
     {
       "id": "ARCH-004",
       "title": "Modularize packet registration beyond the giant network bootstrap",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "BannerModNetworkBootstrap carries a large order-sensitive shared packet catalog, which is hard to audit for authority, maintain safely, or evolve by subsystem.",
       "scope": [
         "Packet registration must be split into modular catalogs or equivalent subsystem registrations with explicit ownership, stable IDs, and easier authority review."
@@ -2127,7 +2133,12 @@
         "Network registration is organized by subsystem with preserved wire compatibility where required; packet ownership and authority review become tractable; verification proves the active packet set still registers and works."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Network registration is organized by subsystem catalogs for military, civilian, and war packets while BannerModNetworkBootstrap preserves the existing public arrays and registers catalogs in the original military -> civilian -> war order, so wire IDs remain stable. 2) Packet ownership and authority review are tractable through subsystem catalog files under network/catalog. 3) Verification: merged branch passed compileJava/compileGameTestJava and focused BannerModIntegratedRuntimeSmokeTest in the combined Gradle command."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-001",
@@ -2136,7 +2147,8 @@
         "AUTH-004",
         "AUTH-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARCH-005",
@@ -2164,8 +2176,8 @@
     {
       "id": "ARCH-006",
       "title": "Retire legacy worker current-area assignment state",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Live worker AI still carries legacy current-area style assignment state instead of treating validated-building records as the clear authoritative assignment source.",
       "scope": [
         "Worker assignment and work-goal selection must move toward one authoritative assignment model backed by validated-building or equivalent canonical records, removing redundant legacy state."
@@ -2174,12 +2186,18 @@
         "Worker assignment uses one authoritative source of truth; redundant legacy current-area state is removed or reduced to a derived cache; verification covers assignment, reload, and job execution behavior."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Worker assignment now uses boundWorkAreaUuid/resident assignment as the authoritative source: ValidatedBuildingRecord no longer persists/reloads assignedCitizenIds, settlement building snapshot records start unassigned and are populated by resident assignment, and legacy current-area remember callback/tick/save path was removed. 2) The remaining currentWorkAreaCache is a derived cache only. 3) Verification: merged branch passed compileJava/compileGameTestJava plus focused BannerModSettlementServiceTest, JobHandlerRegistryTest, and CitizenRoleControllerTest in the combined Gradle command; GameTest constructor fallout was fixed and committed."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "ARCH-007",
@@ -2209,8 +2227,8 @@
     {
       "id": "TEST-001",
       "title": "Add authority GameTests for transfer and admin packets",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "Critical authority gaps were found in recruit transfer, group transfer, world-map teleport, and work-area owner packets, and those live packet paths currently lack focused scenario coverage.",
       "scope": [
         "Dedicated-server GameTests must exercise allowed and denied flows for recruit transfer, group transfer, teleport, and work-area owner packets using real sender identity and multiplayer authority conditions."
@@ -2219,7 +2237,12 @@
         "Each targeted packet has focused tests that fail on spoofed or unauthorized use and pass for legitimate authority; the tests run through the real server packet path, not only helper methods."
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Added packet-path GameTests for recruit transfer, group transfer, world-map teleport, and work-area owner packets. 2) Tests encode/decode packets and execute the NeoForge server payload path with sender context, covering unauthorized/spoofed denial and legitimate authority success. 3) Verification: merged branch passed compileJava and compileGameTestJava; runGameTestServer was attempted and remains red only on known unrelated failures, with no new PacketAuthorityGameTests listed among failures."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-001",
@@ -2228,7 +2251,8 @@
         "AUTH-004",
         "AUTH-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "TEST-002",
