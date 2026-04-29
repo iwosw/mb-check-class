@@ -3247,8 +3247,8 @@
     {
       "id": "GAME-011",
       "title": "Add in-world claim boundary and authority cues",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-29",
       "why": "GAME-004 needs protected territory to be legible from normal world play, not only the map screen.",
       "scope": [
         "Add restrained in-world boundary or authority feedback for claims, including ownership cues that are visible during common play without cluttering HUD or world visuals."
@@ -3260,8 +3260,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Normal-play claim HUD now renders localized friendly/hostile/unclaimed authority labels in the existing top-right overlay stack, with friendly matching the server-side scoreboard-team claim ownership rule and hostile covering other owned claims; unclaimed renders for no claim/no owner. 2) Overlap check: reused HudOverlayCoordinator top-right stack below battle-window and siege-zone chips, with right margin/top safe margin, no chat/hotbar/crosshair/boss-bar overlap introduced. 3) Localization/docs check: en_us and ru_ru keys added; EN/RU guides and almanac updated. 4) Verification: focused ClaimAuthorityStatusTest passed; ./gradlew compileJava passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "GAME-012",
