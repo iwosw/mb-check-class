@@ -192,15 +192,6 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     }
 
     /////////////////////////////////// TICK/////////////////////////////////////////
-    /*
-    protected @NotNull PathNavigation createNavigation(@NotNull Level level) {
-        return new DebugSyncWorkerPathNavigation(this, level);//TODO ONLY TO TEST NODE EVALUATOR
-    }
-
-    public @NotNull PathNavigation getNavigation() {
-        return this.navigation;//TODO REMOVE)
-    }
-    */
 
     public boolean isWorking(){
         return this.stateAccess.isWorking();

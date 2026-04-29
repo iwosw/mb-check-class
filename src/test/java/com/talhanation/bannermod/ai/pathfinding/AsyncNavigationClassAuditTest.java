@@ -1,13 +1,10 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
-import com.talhanation.bannermod.ai.civilian.DebugSyncWorkerPathNavigation;
 import com.talhanation.bannermod.ai.military.navigation.RecruitPathNavigation;
 import com.talhanation.bannermod.ai.military.navigation.RecruitsHorsePathNavigation;
 import com.talhanation.bannermod.ai.military.navigation.SailorPathNavigation;
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -43,13 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *       captain is riding a {@code Boat}; {@code SailorPathNavigation} extends
  *       {@link AsyncWaterBoundPathNavigation}, which is itself an
  *       {@link AsyncPathNavigation} subtype.</li>
- *   <li>The lone surviving {@code GroundPathNavigation} subclass —
- *       {@link DebugSyncWorkerPathNavigation} — is explicitly marked TEST-ONLY in its source
- *       comment and the {@code AbstractWorkerEntity#createNavigation} override that would
- *       wire it in is commented out. The class stays in-tree as a debug seam for node-
- *       evaluator development; the production worker hierarchy goes through
- *       {@code RecruitPathNavigation} via {@code AbstractChunkLoaderEntity → BowmanEntity → …
- *       → AbstractRecruitEntity}.</li>
+ *   <li>No BannerMod worker navigation override remains in production; the worker hierarchy
+ *       goes through {@code RecruitPathNavigation} via {@code AbstractChunkLoaderEntity →
+ *       BowmanEntity → … → AbstractRecruitEntity}.</li>
  *   <li>{@code FishingBobberEntity} (Projectile) and {@code AbstractWorkAreaEntity} (Entity)
  *       have no {@code PathNavigation} at all — they don't navigate.</li>
  * </ul>
@@ -90,15 +83,4 @@ class AsyncNavigationClassAuditTest {
                 "AsyncWaterBoundPathNavigation is the base of SailorPathNavigation; must stay async.");
     }
 
-    @Test
-    void debugSyncWorkerPathNavigationIsExplicitlySync() {
-        // The one surviving sync nav. AbstractWorkerEntity's createNavigation override that
-        // would wire this in is commented out, so production never sees it. Keeping it
-        // in-tree as a debug seam is fine; we only assert it stays clearly non-async so a
-        // future reader does not mistake it for the production worker navigation.
-        assertTrue(GroundPathNavigation.class.isAssignableFrom(DebugSyncWorkerPathNavigation.class),
-                "DebugSyncWorkerPathNavigation is a debug GroundPathNavigation seam for node-evaluator work.");
-        assertFalse(AsyncPathNavigation.class.isAssignableFrom(DebugSyncWorkerPathNavigation.class),
-                "DebugSyncWorkerPathNavigation must remain explicitly sync; flipping it to async would silently change every worker mob if AbstractWorkerEntity's createNavigation override were ever reactivated.");
-    }
 }
