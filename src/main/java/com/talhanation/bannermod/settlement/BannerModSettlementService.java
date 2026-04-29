@@ -1195,14 +1195,33 @@ public final class BannerModSettlementService {
         };
         return "gui.bannermod.governor.logistics.sea_trade." + statusKey + " "
                 + shortRouteId(record.routeId()) + " "
+                + carrierLabel(record.boundCarrierId()) + " "
+                + failureReasonKey(record.failureReason()) + " "
                 + seaTradeFilterLabel(record) + " "
                 + record.cargoCount() + " "
                 + record.requestedCount();
     }
 
+    private static String carrierLabel(@Nullable UUID carrierId) {
+        return carrierId == null ? "unassigned" : shortRouteId(carrierId);
+    }
+
+    private static String failureReasonKey(String failureReason) {
+        if (failureReason == null || failureReason.isBlank()) {
+            return "gui.bannermod.governor.logistics.sea_trade.reason.none";
+        }
+        return switch (failureReason) {
+            case BannerModSeaTradeExecutionRecord.FAILURE_NO_CARRIER -> "gui.bannermod.governor.logistics.sea_trade.reason.no_carrier";
+            case BannerModSeaTradeExecutionRecord.FAILURE_NO_CARGO_LOADED -> "gui.bannermod.governor.logistics.sea_trade.reason.no_cargo_loaded";
+            case BannerModSeaTradeExecutionRecord.FAILURE_SOURCE_SHORTAGE -> "gui.bannermod.governor.logistics.sea_trade.reason.source_shortage";
+            case BannerModSeaTradeExecutionRecord.FAILURE_DESTINATION_FULL -> "gui.bannermod.governor.logistics.sea_trade.reason.destination_full";
+            default -> "gui.bannermod.governor.logistics.sea_trade.reason.carrier_failed";
+        };
+    }
+
     private static String shortRouteId(UUID routeId) {
         String value = routeId.toString().replace("-", "");
-        return value.substring(Math.max(0, value.length() - 8));
+        return value.substring(Math.max(0, value.length() - 4));
     }
 
     private static String seaTradeFilterLabel(BannerModSeaTradeExecutionRecord record) {

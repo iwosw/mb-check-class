@@ -12,12 +12,15 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BannerModSettlementServiceTest {
 
@@ -394,13 +397,25 @@ class BannerModSettlementServiceTest {
         );
 
         assertEquals(List.of(
-                "gui.bannermod.governor.logistics.sea_trade.loading 00003201 minecraft:wheat 0 16",
-                "gui.bannermod.governor.logistics.sea_trade.travelling 00003202 minecraft:wheat 8 16",
-                "gui.bannermod.governor.logistics.sea_trade.unloading 00003203 minecraft:wheat 8 16",
-                "gui.bannermod.governor.logistics.sea_trade.completed 00003204 minecraft:wheat 0 16",
-                "gui.bannermod.governor.logistics.sea_trade.missing_ship 00003205 minecraft:wheat 0 16",
-                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 00003206 minecraft:wheat 4 16"
+                "gui.bannermod.governor.logistics.sea_trade.loading 3201 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.travelling 3202 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.unloading 3203 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.completed 3204 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.missing_ship 3205 unassigned gui.bannermod.governor.logistics.sea_trade.reason.no_carrier minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 3206 2201 gui.bannermod.governor.logistics.sea_trade.reason.destination_full minecraft:wheat 4 16"
         ), lines.subList(0, 6));
+    }
+
+    @Test
+    void seaTradeStatusLocalizationCoversSuccessfulAndBlockedRoutes() throws Exception {
+        String enUs = Files.readString(Path.of("src/main/resources/assets/bannermod/lang/en_us.json"));
+        String ruRu = Files.readString(Path.of("src/main/resources/assets/bannermod/lang/ru_ru.json"));
+
+        for (String lang : List.of(enUs, ruRu)) {
+            assertTrue(lang.contains("gui.bannermod.governor.logistics.sea_trade.completed"));
+            assertTrue(lang.contains("gui.bannermod.governor.logistics.sea_trade.blocked_cargo"));
+            assertTrue(lang.contains("gui.bannermod.governor.logistics.sea_trade.reason.destination_full"));
+        }
     }
 
     @Test
@@ -572,7 +587,9 @@ class BannerModSettlementServiceTest {
                                                                    String failureReason) {
         return new BannerModSeaTradeExecutionRecord(
                 UUID.fromString(routeId),
-                UUID.randomUUID(),
+                BannerModSeaTradeExecutionRecord.FAILURE_NO_CARRIER.equals(failureReason)
+                        ? null
+                        : UUID.fromString("00000000-0000-0000-0000-000000002201"),
                 sourceId,
                 destinationId,
                 filter,

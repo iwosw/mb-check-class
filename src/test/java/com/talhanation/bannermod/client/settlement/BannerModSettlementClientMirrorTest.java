@@ -95,12 +95,12 @@ class BannerModSettlementClientMirrorTest {
         UUID claimId = UUID.randomUUID();
         BannerModSettlementClientMirror mirror = new BannerModSettlementClientMirror();
         List<String> seaTradeLines = List.of(
-                "gui.bannermod.governor.logistics.sea_trade.loading 00003201 minecraft:wheat 0 16",
-                "gui.bannermod.governor.logistics.sea_trade.travelling 00003202 minecraft:wheat 8 16",
-                "gui.bannermod.governor.logistics.sea_trade.unloading 00003203 minecraft:wheat 8 16",
-                "gui.bannermod.governor.logistics.sea_trade.completed 00003204 minecraft:wheat 0 16",
-                "gui.bannermod.governor.logistics.sea_trade.missing_ship 00003205 minecraft:wheat 0 16",
-                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 00003206 minecraft:wheat 4 16"
+                "gui.bannermod.governor.logistics.sea_trade.loading 3201 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.travelling 3202 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.unloading 3203 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 8 16",
+                "gui.bannermod.governor.logistics.sea_trade.completed 3204 2201 gui.bannermod.governor.logistics.sea_trade.reason.none minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.missing_ship 3205 unassigned gui.bannermod.governor.logistics.sea_trade.reason.no_carrier minecraft:wheat 0 16",
+                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 3206 2201 gui.bannermod.governor.logistics.sea_trade.reason.destination_full minecraft:wheat 4 16"
         );
         BannerModSettlementSnapshot settlement = settlementWithSeaTradeLines(claimId, seaTradeLines);
         BannerModGovernorSnapshot governor = BannerModGovernorSnapshot.create(claimId, new ChunkPos(3, 4), "blue");

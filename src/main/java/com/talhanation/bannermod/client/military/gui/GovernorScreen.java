@@ -173,7 +173,13 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         if (parts.length == 0) {
             return Component.empty();
         }
-        return Component.translatable(parts[0], (Object[]) Arrays.copyOfRange(parts, 1, parts.length));
+        Object[] args = Arrays.copyOfRange(parts, 1, parts.length);
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof String value && value.startsWith("gui.bannermod.")) {
+                args[i] = Component.translatable(value);
+            }
+        }
+        return Component.translatable(parts[0], args);
     }
 
     private void updatePolicyButtons(BannerModSettlementClientMirror.GovernorView state) {

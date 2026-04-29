@@ -150,7 +150,7 @@ If the settlement lacks resources, check:
 - a source of goods exists;
 - trade is not blocked by war, ownership, or server configuration.
 
-Port or sea-entry points can now drive the Small Ships sea-trade loop when a server has compatible ship carriers available. The settlement snapshot and governor logistics panel show each ship-backed route as loading, travelling, unloading, completed, needs ship, or blocked cargo. `Needs ship` means the route has no bound carrier; `blocked cargo` means loading found no matching goods or unloading could not fit the cargo at the destination. There is no compile-time Small Ships requirement, so servers without that integration still show normal route hints without spawning ship work.
+Port or sea-entry points can now drive the Small Ships sea-trade loop when a server has compatible ship carriers available. The settlement snapshot and governor logistics panel show each ship-backed route with route id, carrier id or `unassigned`, phase, cargo progress, and reason. `Needs ship` means the route has no bound carrier; `blocked cargo` explains source shortage, no loaded cargo, destination full, or carrier failure. There is no compile-time Small Ships requirement, so servers without that integration still show normal route hints without spawning ship work.
 
 The governor screen shows the current tax obligation as collected/due. A friendly settlement that pays shows the obligation as satisfied and adds to treasury; if a siege or settlement mismatch blocks payment, the same line turns unpaid and explains that treasury growth, upkeep, and defense funding can stall.
 

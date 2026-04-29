@@ -298,7 +298,7 @@
         <h3>Storage routes</h3>
         <p>Storage Area route fields use <code>Apply route</code>. The screen validates destination UUID, item filters, amount, and priority before sending. Valid entries show destination or blocked reason.</p>
         <p>On long land routes, eligible merchants/couriers may automatically ride a nearby unoccupied horse or other server-approved mount. If no mount is available, they keep hauling on foot; route clear/failure makes them dismount. Right-click a worker to inspect mounted state, walking reason, and active fallback route behavior.</p>
-        <p>Ship-backed sea routes use compatible Small Ships carriers when present, but BannerMod does not require that mod at compile time. The governor logistics mirror shows the route as loading, travelling, unloading, completed, needs ship, or blocked cargo. Needs ship means no carrier is bound; blocked cargo means the source had no matching goods or the destination could not accept the carried stack.</p>
+        <p>Ship-backed sea routes use compatible Small Ships carriers when present, but BannerMod does not require that mod at compile time. The governor logistics mirror shows route id, carrier id or <code>unassigned</code>, phase, cargo progress, and reason. Needs ship means no carrier is bound; blocked cargo names source shortage, empty load, full destination, or carrier failure.</p>
         <h3>Strategic roles</h3>
         <ul>
           <li><span class="tag">surplus hub</span> farms plus storage.</li>
