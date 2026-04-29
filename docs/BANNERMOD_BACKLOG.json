@@ -3974,6 +3974,10 @@
         {
           "date": "2026-04-29",
           "text": "RENDER-005A evidence added: focused BannerRenderParityTest, compileJava, and processResources passed; final closure still depends on in-game visual confirmation of banner preview and siege-standard rendering."
+        },
+        {
+          "date": "2026-04-29",
+          "text": "RENDER-005A evidence: compileJava passed; BannerRenderParityTest passed and verifies GUI banner preview base color/pattern forwarding, siege-standard dynamic banner cloth render path, political color cue fill/outline, and absence of static cloth geometry in siege_standard.json."
         }
       ],
       "verification": [],
@@ -4724,7 +4728,7 @@
     {
       "id": "RENDER-005A",
       "title": "Verify banner and siege-standard visual parity",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-29",
       "why": "RENDER-005 code compiles, but banner previews and siege standards need visual confirmation for base colors, pattern layers, political cues, and removal of duplicate cloth.",
       "scope": [
@@ -4742,8 +4746,14 @@
           "text": "Automated non-production banner parity guard merged from feature/render-005a: BannerRenderParityTest covers base color, pattern layers, political cue, and no duplicate static cloth; compileJava, processResources, focused test passed. Interactive client smoke was not run, so visual observation acceptance remains open."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-29",
+          "result": "1) Banner preview parity: BannerRenderParityTest passed and verifies BannerRenderer keeps BannerItem base color plus DataComponents.BANNER_PATTERNS and forwards both to BannerPatternRenderHelper. 2) Siege-standard parity: BannerRenderParityTest passed and verifies SiegeStandardBlockEntityRenderer resolves political color, maps it to nearest DyeColor, renders dynamic banner cloth through BannerPatternRenderHelper, renders cap fill/outline as the political cue, and siege_standard.json has no obsolete cloth/#cloth geometry. 3) compileJava passed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-29"
     },
     {
       "id": "RENDER-006A",
