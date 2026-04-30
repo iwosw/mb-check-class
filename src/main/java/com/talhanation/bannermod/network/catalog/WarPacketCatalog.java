@@ -20,8 +20,6 @@ import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
 
 /** War and political runtime packet catalog, registered after civilian packets. */
 public final class WarPacketCatalog {
-    public static final String NAME = "war";
-
     public static final Class<?>[] MESSAGES = {
         MessageToClientUpdateWarState.class,
         MessageToClientWarActionFeedback.class,
@@ -42,7 +40,7 @@ public final class WarPacketCatalog {
         MessageSetPoliticalEntityStatus.class,
     };
 
-    public static final PacketCatalog CATALOG = new PacketCatalog(NAME, MESSAGES);
+    public static final PacketCatalog CATALOG = new PacketCatalog(MESSAGES);
 
     private WarPacketCatalog() {
     }

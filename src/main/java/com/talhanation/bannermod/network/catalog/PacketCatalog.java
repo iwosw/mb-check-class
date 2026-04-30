@@ -4,16 +4,10 @@ import de.maxhenkel.corelib.CommonRegistry;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public final class PacketCatalog {
-    private final String name;
     private final Class<?>[] messages;
 
-    public PacketCatalog(String name, Class<?>[] messages) {
-        this.name = name;
+    public PacketCatalog(Class<?>[] messages) {
         this.messages = messages;
-    }
-
-    public String name() {
-        return name;
     }
 
     public Class<?>[] messages() {
