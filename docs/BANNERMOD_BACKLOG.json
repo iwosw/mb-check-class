@@ -5380,7 +5380,7 @@
       "id": "PERF-011A",
       "title": "Run PERF-011 client large-crowd profiling proof",
       "status": "in_progress",
-      "updated": "2026-04-29",
+      "updated": "2026-04-30",
       "why": "PERF-011 cannot honestly close until a real client before/after profiling run proves the distant recruit renderer cut improves large crowds without harming close-range selected readability.",
       "scope": [
         "Run a controlled client large-crowd recruit render profiling scenario against the pre-cut baseline and the PERF-011 implementation.",
@@ -5395,6 +5395,10 @@
         {
           "date": "2026-04-29",
           "text": "Batch execution reached PERF-011A as the only remaining ready task, but acceptance requires a real client before/after large-crowd recruit render profiling run and close-range selected-recruit readability check. This API session cannot perform that runtime client profiling, so the task remains open and unclosed."
+        },
+        {
+          "date": "2026-04-30",
+          "text": "Resumed on feature/cleanup-batch-9 to determine whether existing profiling evidence already satisfies the before/after proof requirement."
         }
       ],
       "verification": [],
