@@ -2557,8 +2557,8 @@
     {
       "id": "DOC-004",
       "title": "Refresh player guides and almanac for shipped mechanics",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Root player guides and the almanac are stale on zone roles, revolt behavior, occupation tax, battle-window HUD, and other player-facing mechanics, which breaks the documented gameplay contract.",
       "scope": [
         "The English and Russian multiplayer guides plus the almanac must match current mechanics, HUD surfaces, and supported commands or UI, and stale nonexistent concepts must be removed."
@@ -2566,8 +2566,18 @@
       "acceptance": [
         "Player guides and almanac match the live behavior for current settlement, war, revolt, occupation, HUD, and zone-role mechanics; nonexistent concepts are removed; verification cross-checks docs against active code and screens."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-8 as the final open task; goal is a last code-vs-guides/almanac audit and any remaining doc drift cleanup."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) Root guides MULTIPLAYER_GUIDE_EN.md / MULTIPLAYER_GUIDE_RU.md and docs/BANNERMOD_ALMANAC.html were audited against current settlement, war, revolt, occupation-tax, battle-window HUD, claim/world-map, and surveyor GUI code paths; 2) no remaining stale or nonexistent player-facing concepts were found in the audited DOC-004 scope, so no further doc edits were necessary; 3) current cleanup integration branches remained green on ./gradlew test and ./gradlew verifyGameTestStage."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UX-005",
@@ -2579,7 +2589,8 @@
         "MERCH-002",
         "BOOM-004",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "PERF-009",
@@ -2612,8 +2623,8 @@
     {
       "id": "BOOM-001",
       "title": "Make recruits fire Ewewukek Musket Mod projectiles and ammo",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Recruits can currently equip and use Ewewukek's Musket Mod weapons, but the live attack path still falls back to arrow-style projectile behavior instead of using the mod's bullet or firearm semantics, which breaks both balance and fantasy.",
       "scope": [
         "Add an explicit compatibility path for Ewewukek's Musket Mod ranged weapons so recruit attacks spawn the correct projectile type, consume the correct ammo, and respect the mod's firearm timing or reload semantics where exposed. Keep unsupported weapons on a safe fallback path instead of silently pretending bullets are arrows."
@@ -2628,8 +2639,14 @@
         "VANILLA-013"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) Supported recruit firearms are routed through the musketmod compat path in MusketModCompat / PistolWeapon / RecruitRangedMusketAttackGoal instead of arrow-style fallback; 2) BOOM-003A runtime verification passed with musketmod present via ./gradlew runGameTestServer in the dedicated BOOM-003A worktree, proving mod-correct projectile spawn, reload cadence, cartridge consumption, and no-ammo denial for a supported pistol; 3) BannerModRecruitFirearmStatusTest covers the unsupported firearm edge state and ammo-status distinction; 4) cleanup integration branches remained green on ./gradlew test and ./gradlew verifyGameTestStage."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "SHIPS-001",
@@ -2734,8 +2751,8 @@
     {
       "id": "BOOM-003",
       "title": "Route recruit firearm attacks through Musket Mod projectile and reload semantics",
-      "status": "in_progress",
-      "updated": "2026-04-29",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Even with weapon detection, recruit attacks remain wrong until the live ranged attack path uses Ewewukek's Musket Mod projectile creation, reload timing, and firing semantics instead of arrow-style behavior.",
       "scope": [
         "Integrate supported Ewewukek's Musket Mod firearms into recruit attack execution so projectile spawn, reload cadence, ammo checks, and no-ammo denial use the mod's firearm rules where exposed. Preserve safe server-authoritative fallback for unsupported edge cases."
@@ -2757,14 +2774,20 @@
           "text": "Correction after scope clarification: keep Ewewukek's Musket Mod (musketmod) as the only firearm compatibility target. Do not integrate Medieval Boomsticks, Johannes Renaissance Rebirth, or other firearm mods in this slice."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) Existing recruit firearm compat code routes supported musketmod firearms through the dedicated recruit firearm path in CrossBowmanEntity / RecruitRangedMusketAttackGoal / MusketModCompat; 2) BOOM-003A runtime verification passed with musketmod present via ./gradlew runGameTestServer in the dedicated worktree, providing the projectile/reload/ammo proof BOOM-003 required; 3) current cleanup integration branches have remained green on ./gradlew test and ./gradlew verifyGameTestStage."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "BOOM-004",
       "title": "Expose recruit firearm compatibility and ammo state in player feedback",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Players need to understand whether a recruit firearm is truly supported, has valid ammo, or is falling back, otherwise musketmod integration will look randomly broken even after the runtime path is fixed.",
       "scope": [
         "Add player-facing feedback for supported firearm status, missing ammo, and unsupported weapon fallback in the relevant recruit inventory, command, or combat feedback surfaces. Keep the messages localized and server-authoritative."
@@ -2777,9 +2800,20 @@
         "BOOM-003",
         "VANILLA-013"
       ],
-      "progress": [],
-      "verification": [],
-      "evidence": []
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-8 after BOOM-003/003A closure; goal is localized player-facing recruit firearm support/ammo/fallback feedback that unlocks BOOM-001 and DOC-004."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) RecruitInventoryScreen now shows localized firearm support/ammo/fallback status using the existing recruit main-hand item plus inventory state through BannerModRecruitFirearmStatus; 2) ./gradlew compileJava and ./gradlew test --tests com.talhanation.bannermod.shared.military.BannerModRecruitFirearmStatusTest passed on feature/boom-004; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html were updated for the supported workflow; 4) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-8."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "SHIPS-003",
@@ -5040,8 +5074,8 @@
     {
       "id": "BOOM-003A",
       "title": "Verify Musket Mod recruit firearm combat flow",
-      "status": "in_progress",
-      "updated": "2026-04-29",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "BOOM-003 code now routes supported recruit firearms through Ewewukek's Musket Mod, but the remaining acceptance proof requires an observable firearm combat flow with the optional mod active.",
       "scope": [
         "Run or add a focused runtime/GameTest/manual verification path for one supported Ewewukek's Musket Mod firearm covering projectile spawn, reload or fire cadence, and no-ammo denial after the merged BOOM-003 routing."
@@ -5060,10 +5094,20 @@
         {
           "date": "2026-04-29",
           "text": "Correction after scope clarification: verification should target only Ewewukek's Musket Mod (musketmod). Medieval Boomsticks and Renaissance Rebirth remain out of scope."
+        },
+        {
+          "date": "2026-04-30",
+          "text": "Resumed on feature/cleanup-batch-8 for honest musketmod-present runtime verification using the locally cached musketmod jar."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) For honest optional-mod verification, the cached musketmod jar /home/user/.gradle/caches/modules-2/files-2.1/curse.maven/ewewukeks-musket-mod-354562/5779561/f1c3f65ba2a6a7d0bd6e4a66011fbbfc4d3485fe/ewewukeks-musket-mod-354562-5779561.jar was placed into run_gametest/mods in the dedicated BOOM-003A worktree; 2) ./gradlew runGameTestServer passed there with musketmod present, satisfying the focused firearm combat verification path instead of a skip-only runtime; 3) this provides the runtime projectile/reload/no-ammo proof BOOM-003 needed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "MERCH-002A",
