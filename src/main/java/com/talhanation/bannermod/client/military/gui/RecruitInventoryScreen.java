@@ -12,6 +12,7 @@ import com.talhanation.bannermod.entity.military.*;
 import com.talhanation.bannermod.inventory.military.RecruitInventoryMenu;
 import com.talhanation.bannermod.network.messages.military.*;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
+import com.talhanation.bannermod.shared.military.BannerModRecruitFirearmStatus;
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
@@ -78,6 +79,9 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TEXT_MOUNT = Component.translatable("gui.recruits.command.text.mount");
     private static final MutableComponent TEXT_CLEAR_UPKEEP = Component.translatable("gui.recruits.inv.text.clearUpkeep");
     private static final MutableComponent TOOLTIP_STANCE = Component.translatable("gui.recruits.inv.tooltip.combat_stance");
+    private static final MutableComponent TEXT_FIREARM_SUPPORTED = Component.translatable("gui.recruits.inv.info.firearm_supported");
+    private static final MutableComponent TEXT_FIREARM_UNSUPPORTED = Component.translatable("gui.recruits.inv.info.firearm_unsupported");
+    private static final MutableComponent TEXT_FIREARM_AMMO_MISSING = Component.translatable("gui.recruits.inv.info.firearm_ammo_missing");
 
     private static final MutableComponent TEXT_PROMOTE = Component.translatable("gui.recruits.inv.text.promote");
     private static final MutableComponent TEXT_SPECIAL = Component.translatable("gui.recruits.inv.text.special");
@@ -85,6 +89,9 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TOOLTIP_DISABLED_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote_disabled");
     private static final MutableComponent TOOLTIP_SPECIAL = Component.translatable("gui.recruits.inv.tooltip.special");
     private static final int fontColor = 4210752;
+    private static final int firearmSupportedColor = 0x3A7A2A;
+    private static final int firearmWarningColor = 0xD2A12D;
+    private static final int firearmUnsupportedColor = 0xA33A2A;
     private final AbstractRecruitEntity recruit;
     private final Inventory playerInventory;
     private RecruitsGroup currentGroup;
@@ -451,6 +458,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         guiGraphics.drawString(font, "" + moral, k + gap, l + 40, fontColor, false);
         guiGraphics.drawString(font, "Hunger:", k, l + 50, fontColor, false);
         guiGraphics.drawString(font, "" + hunger, k + gap, l + 50, fontColor, false);
+        renderFirearmStatus(guiGraphics, k, l + 60);
         guiGraphics.pose().popPose();
 
         /*
@@ -561,6 +569,38 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         CombatStance[] stances = CombatStance.values();
         int index = stance == null ? 0 : stance.ordinal();
         return stances[(index + 1) % stances.length];
+    }
+
+    private void renderFirearmStatus(GuiGraphics guiGraphics, int x, int y) {
+        if (!(this.recruit instanceof CrossBowmanEntity)) {
+            return;
+        }
+
+        BannerModRecruitFirearmStatus.FirearmInspection status = BannerModRecruitFirearmStatus.inspect(this.recruit.getMainHandItem(), this.recruit.getInventory());
+        if (!status.visible()) {
+            return;
+        }
+
+        Component firearmValue = status.state() == BannerModRecruitFirearmStatus.FirearmState.UNSUPPORTED
+                ? TEXT_FIREARM_UNSUPPORTED
+                : TEXT_FIREARM_SUPPORTED;
+        int firearmColor = switch (status.state()) {
+            case SUPPORTED -> firearmSupportedColor;
+            case MISSING_AMMO -> firearmWarningColor;
+            case UNSUPPORTED -> firearmUnsupportedColor;
+            case NONE -> fontColor;
+        };
+        guiGraphics.drawString(font, Component.translatable("gui.recruits.inv.info.firearm_status", firearmValue), x, y, firearmColor, false);
+
+        if (status.state() == BannerModRecruitFirearmStatus.FirearmState.UNSUPPORTED) {
+            return;
+        }
+
+        Component ammoValue = status.hasAmmo()
+                ? Component.translatable("gui.recruits.inv.info.firearm_ammo_count", status.ammoCount())
+                : TEXT_FIREARM_AMMO_MISSING;
+        int ammoColor = status.hasAmmo() ? firearmSupportedColor : firearmWarningColor;
+        guiGraphics.drawString(font, Component.translatable("gui.recruits.inv.info.ammo_status", ammoValue), x, y + 10, ammoColor, false);
     }
 
     private static Component stanceLabel(CombatStance stance) {
