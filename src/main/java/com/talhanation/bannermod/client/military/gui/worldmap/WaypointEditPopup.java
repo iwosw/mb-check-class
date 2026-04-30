@@ -15,6 +15,12 @@ public class WaypointEditPopup {
     private static final int TEXT_MUTED = 0xAAAAAA;
     private static final int BTN_H = 14;
     private static final int BTN_W = 62;
+    private static final Component TEXT_ACTION = Component.translatable("gui.recruits.map.waypoint.action");
+    private static final Component TEXT_ACTION_NONE = Component.translatable("gui.recruits.map.waypoint.action.none");
+    private static final Component TEXT_ACTION_WAIT = Component.translatable("gui.recruits.map.waypoint.action.wait");
+    private static final Component TEXT_SECONDS = Component.translatable("gui.recruits.map.waypoint.seconds");
+    private static final Component TEXT_CONFIRM = Component.translatable("gui.recruits.map.common.ok");
+    private static final Component TEXT_CANCEL = Component.translatable("gui.recruits.map.common.cancel");
 
     private final WorldMapScreen parent;
     private final WorldMapRouteMutationController routeController;
@@ -114,15 +120,15 @@ public class WaypointEditPopup {
                 px + WIDTH / 2, py + 6, TEXT_COLOR);
 
         int rowY = py + 22;
-        guiGraphics.drawString(Minecraft.getInstance().font, "Action:", px + 8, rowY + 3, TEXT_MUTED, false);
+        guiGraphics.drawString(Minecraft.getInstance().font, TEXT_ACTION, px + 8, rowY + 3, TEXT_MUTED, false);
 
-        renderActionButton(guiGraphics, mouseX, mouseY, "None", null, px + 56, rowY);
-        renderActionButton(guiGraphics, mouseX, mouseY, "Wait", RecruitsRoute.WaypointAction.Type.WAIT, px + 56 + BTN_W + 4, rowY);
+        renderActionButton(guiGraphics, mouseX, mouseY, TEXT_ACTION_NONE, null, px + 56, rowY);
+        renderActionButton(guiGraphics, mouseX, mouseY, TEXT_ACTION_WAIT, RecruitsRoute.WaypointAction.Type.WAIT, px + 56 + BTN_W + 4, rowY);
 
         if (actionType == RecruitsRoute.WaypointAction.Type.WAIT) {
             ensureWaitField();
             int fieldY = rowY + 20;
-            guiGraphics.drawString(Minecraft.getInstance().font, "Seconds:", px + 8, fieldY + 2, TEXT_MUTED, false);
+            guiGraphics.drawString(Minecraft.getInstance().font, TEXT_SECONDS, px + 8, fieldY + 2, TEXT_MUTED, false);
             int fieldX = px + 66;
             int fieldW = 54;
             guiGraphics.fill(fieldX - 1, fieldY - 1, fieldX + fieldW + 1, fieldY + 13, 0x80303030);
@@ -131,19 +137,19 @@ public class WaypointEditPopup {
         }
 
         int btnY = py + HEIGHT - 18;
-        renderButton(guiGraphics, mouseX, mouseY, "OK",     px + 8,           btnY, 80, BTN_H);
-        renderButton(guiGraphics, mouseX, mouseY, "Cancel", px + WIDTH - 88,  btnY, 80, BTN_H);
+        renderButton(guiGraphics, mouseX, mouseY, TEXT_CONFIRM, px + 8,          btnY, 80, BTN_H);
+        renderButton(guiGraphics, mouseX, mouseY, TEXT_CANCEL,  px + WIDTH - 88, btnY, 80, BTN_H);
     }
 
     private void renderActionButton(GuiGraphics guiGraphics, int mouseX, int mouseY,
-                                     String label, RecruitsRoute.WaypointAction.Type type,
+                                     Component label, RecruitsRoute.WaypointAction.Type type,
                                      int x, int y) {
         WorldMapRenderPrimitives.button(guiGraphics, Minecraft.getInstance().font, mouseX, mouseY,
                 x, y, BTN_W, BTN_H, label, TEXT_COLOR, actionType == type);
     }
 
     private void renderButton(GuiGraphics guiGraphics, int mouseX, int mouseY,
-                               String label, int x, int y, int w, int h) {
+                              Component label, int x, int y, int w, int h) {
         WorldMapRenderPrimitives.button(guiGraphics, Minecraft.getInstance().font, mouseX, mouseY,
                 x, y, w, h, label, TEXT_COLOR, false);
     }
