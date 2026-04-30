@@ -36,6 +36,7 @@ public class BannerModCommandQueueParityGameTests {
         ServerPlayer owner = commandSender(level, helper);
 
         assertMovementParity(helper, owner);
+        assertFormationMovementParity(helper, owner);
         assertFaceParity(helper, owner);
         assertAttackParity(helper, owner);
         assertAggroParity(helper, owner);
@@ -60,6 +61,29 @@ public class BannerModCommandQueueParityGameTests {
                         && immediate.getShouldMovePos() == queued.getShouldMovePos()
                         && immediate.getMovePos().equals(queued.getMovePos()),
                 "Expected queued movement to match immediate move-to-position state");
+    }
+
+    private static void assertFormationMovementParity(GameTestHelper helper, ServerPlayer owner) {
+        CommandIntentQueueRuntime.instance().clearAllForTest();
+        AbstractRecruitEntity immediate = recruit(helper, RecruitsBattleGameTestSupport.WEST_FRONTLINE_POS, "Immediate Formation Movement");
+        AbstractRecruitEntity queued = recruit(helper, RecruitsBattleGameTestSupport.WEST_FLANK_POS, "Queued Formation Movement");
+        Vec3 target = Vec3.atCenterOf(helper.absolutePos(new BlockPos(8, 2, 8)));
+
+        CommandIntentDispatcher.dispatch(owner,
+                new CommandIntent.Movement(owner.level().getGameTime(), CommandIntentPriority.NORMAL, false,
+                        MovementCommandState.MOVE_TO_POSITION, 1, false, target),
+                List.of(immediate));
+        CommandIntentDispatcher.dispatch(owner,
+                new CommandIntent.Movement(owner.level().getGameTime(), CommandIntentPriority.NORMAL, true,
+                        MovementCommandState.MOVE_TO_POSITION, 1, false, target),
+                List.of(queued));
+
+        helper.assertTrue(immediate.isInFormation == queued.isInFormation
+                        && immediate.getFollowState() == queued.getFollowState()
+                        && immediate.getHoldPos().distanceToSqr(queued.getHoldPos()) < 1.0D
+                        && immediate.getHoldPos().distanceToSqr(target) < 64.0D
+                        && queued.getHoldPos().distanceToSqr(target) < 64.0D,
+                "Expected queued formation movement to match immediate formation placement state");
     }
 
     private static void assertFaceParity(GameTestHelper helper, ServerPlayer owner) {
