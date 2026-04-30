@@ -109,8 +109,6 @@ public class BannerModMain {
         if (dist == Dist.CLIENT) {
             modEventBus.addListener(BannerModMain.this::clientSetup);
             modEventBus.addListener(HudOverlayCoordinator::registerOverlays);
-            modEventBus.addListener(com.talhanation.bannermod.registry.military.ModScreens::registerMenuScreens);
-            modEventBus.addListener(com.talhanation.bannermod.registry.civilian.ModMenuTypes::registerMenuScreens);
             modEventBus.addListener(com.talhanation.bannermod.registry.military.ModShortcuts::registerBindings);
             modEventBus.addListener(com.talhanation.bannermod.registry.civilian.ModShortcuts::registerBindings);
         }

@@ -20,6 +20,7 @@ import com.talhanation.bannermod.war.runtime.WarState;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -41,17 +42,30 @@ import java.util.UUID;
  * "Open Attacker / Defender" buttons that route into {@link PoliticalEntityInfoScreen}.</p>
  */
 public class WarListScreen extends Screen {
-    private static final int W = 380;
-    private static final int H = 252;
-    private static final int ROW_H = 16;
-    private static final int LIST_VISIBLE = 10;
-    private static final int LIST_TOP_OFFSET = 36;
-    private static final int DETAIL_TOP_OFFSET = 36;
+    private static final int MIN_BOOK_W = 392;
+    private static final int MAX_BOOK_W = 940;
+    private static final int MIN_BOOK_H = 220;
+    private static final int MAX_BOOK_H = 560;
+    private static final int ROW_H = 18;
+    private static final int BUTTON_H = 18;
+    private static final int BOOK_BORDER = 10;
+    private static final int BOOK_BG = 0xFFE8C98E;
+    private static final int PAGE_BG = 0xFFF2D9A3;
+    private static final int PAGE_SHADE = 0xFFE0BC78;
+    private static final int LEATHER = 0xFF4A2D18;
+    private static final int LEATHER_DARK = 0xFF24150D;
+    private static final int INK = 0xFF2D1B0F;
+    private static final int INK_MUTED = 0xFF6C5030;
+    private static final int GOLD = 0xFFFFD36A;
+    private static final int WAX = 0xFF8E2E24;
 
     private final Screen parent;
 
     private int guiLeft;
     private int guiTop;
+    private int guiW;
+    private int guiH;
+    private int listVisible = 10;
     private int scrollOffset = 0;
     private List<WarDeclarationRecord> wars = List.of();
     private int observedWarStateVersion = -1;
@@ -83,41 +97,23 @@ public class WarListScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        this.guiLeft = (this.width - W) / 2;
-        this.guiTop = (this.height - H) / 2;
-        int detailX = guiLeft + 200;
-        int detailY = guiTop + H - 60;
+        updateGeometry();
 
-        openAttackerBtn = Button.builder(text("gui.bannermod.war_list.attacker_info"), btn -> openEntity(selected != null ? selected.attackerPoliticalEntityId() : null))
-                .bounds(detailX, detailY, 80, 18).build();
-        openDefenderBtn = Button.builder(text("gui.bannermod.war_list.defender_info"), btn -> openEntity(selected != null ? selected.defenderPoliticalEntityId() : null))
-                .bounds(detailX + 88, detailY, 80, 18).build();
-        statesBtn = Button.builder(text("gui.bannermod.war_list.states"), btn -> this.minecraft.setScreen(new PoliticalEntityListScreen(this)))
-                .bounds(detailX, detailY + 22, 80, 18).build();
-        placeSiegeBtn = Button.builder(text("gui.bannermod.war_list.place_siege"), btn -> placeSiegeHere())
-                .bounds(detailX, detailY + 44, 80, 18).build();
-        refreshBtn = Button.builder(text("gui.bannermod.common.refresh"), btn -> refresh())
-                .bounds(detailX + 88, detailY + 22, 80, 18).build();
-        closeBtn = Button.builder(text("gui.bannermod.common.close"), btn -> onClose())
-                .bounds(detailX + 88, detailY + 44, 80, 18).build();
+        openAttackerBtn = actionButton(4, text("gui.bannermod.war_list.attacker_info"), btn -> openEntity(selected != null ? selected.attackerPoliticalEntityId() : null));
+        openDefenderBtn = actionButton(5, text("gui.bannermod.war_list.defender_info"), btn -> openEntity(selected != null ? selected.defenderPoliticalEntityId() : null));
+        statesBtn = actionButton(0, text("gui.bannermod.war_list.states"), btn -> this.minecraft.setScreen(new PoliticalEntityListScreen(this)));
+        placeSiegeBtn = actionButton(6, text("gui.bannermod.war_list.place_siege"), btn -> placeSiegeHere());
+        refreshBtn = actionButton(1, text("gui.bannermod.common.refresh"), btn -> refresh());
+        closeBtn = actionButton(13, text("gui.bannermod.common.close"), btn -> onClose());
 
-        int alliesY = guiTop + LIST_TOP_OFFSET + LIST_VISIBLE * ROW_H + 4;
-        alliesBtn = Button.builder(text("gui.bannermod.war_list.allies"), btn -> openAllies())
-                .bounds(guiLeft + 8, alliesY, 184, 18).build();
-        declareBtn = Button.builder(text("gui.bannermod.war_list.declare"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)))
-                .bounds(guiLeft + 8, alliesY + 22, 184, 18).build();
-        cancelWarBtn = Button.builder(text("gui.bannermod.war_list.cancel"), btn -> sendOutcome(MessageResolveWarOutcome.Action.CANCEL))
-                .bounds(detailX, detailY - 46, 80, 18).build();
-        occupyBtn = Button.builder(text("gui.bannermod.war_list.occupy"), btn -> sendOutcome(MessageResolveWarOutcome.Action.OCCUPY))
-                .bounds(detailX + 88, detailY - 46, 80, 18).build();
-        annexBtn = Button.builder(text("gui.bannermod.war_list.annex"), btn -> sendOutcome(MessageResolveWarOutcome.Action.ANNEX))
-                .bounds(detailX, detailY - 24, 80, 18).build();
-        tributeLockedBtn = Button.builder(text("gui.bannermod.war_list.tribute_locked"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE))
-                .bounds(detailX + 88, detailY - 24, 80, 18).build();
-        revoltSuccessBtn = Button.builder(text("gui.bannermod.war_list.revolt.resolve_success"), btn -> sendRevolt(RevoltState.SUCCESS))
-                .bounds(detailX, detailY - 68, 80, 18).build();
-        revoltFailBtn = Button.builder(text("gui.bannermod.war_list.revolt.resolve_fail"), btn -> sendRevolt(RevoltState.FAILED))
-                .bounds(detailX + 88, detailY - 68, 80, 18).build();
+        alliesBtn = actionButton(3, text("gui.bannermod.war_list.allies"), btn -> openAllies());
+        declareBtn = actionButton(2, text("gui.bannermod.war_list.declare"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)));
+        cancelWarBtn = actionButton(7, text("gui.bannermod.war_list.cancel"), btn -> sendOutcome(MessageResolveWarOutcome.Action.CANCEL));
+        occupyBtn = actionButton(8, text("gui.bannermod.war_list.occupy"), btn -> sendOutcome(MessageResolveWarOutcome.Action.OCCUPY));
+        annexBtn = actionButton(9, text("gui.bannermod.war_list.annex"), btn -> sendOutcome(MessageResolveWarOutcome.Action.ANNEX));
+        tributeLockedBtn = actionButton(10, text("gui.bannermod.war_list.tribute_locked"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE));
+        revoltSuccessBtn = actionButton(11, text("gui.bannermod.war_list.revolt.resolve_success"), btn -> sendRevolt(RevoltState.SUCCESS));
+        revoltFailBtn = actionButton(12, text("gui.bannermod.war_list.revolt.resolve_fail"), btn -> sendRevolt(RevoltState.FAILED));
 
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
@@ -135,6 +131,122 @@ public class WarListScreen extends Screen {
         addRenderableWidget(closeBtn);
 
         refresh();
+    }
+
+    private Button actionButton(int index, Component label, Button.OnPress onPress) {
+        return new MedievalButton(actionButtonX(index), actionButtonY(index), actionButtonW(), BUTTON_H, label, onPress);
+    }
+
+    private void updateGeometry() {
+        int viewportW = Math.max(1, this.width - 12);
+        int viewportH = Math.max(1, this.height - 12);
+        int minW = Math.min(MIN_BOOK_W, viewportW);
+        int minH = Math.min(MIN_BOOK_H, viewportH);
+        this.guiW = Math.min(MAX_BOOK_W, Math.max(minW, this.width - 28));
+        this.guiH = Math.min(MAX_BOOK_H, Math.max(minH, this.height - 24));
+        this.guiLeft = (this.width - guiW) / 2;
+        this.guiTop = (this.height - guiH) / 2;
+        this.listVisible = computeListVisible();
+    }
+
+    private int innerX() {
+        return guiLeft + BOOK_BORDER + 8;
+    }
+
+    private int innerW() {
+        return guiW - (BOOK_BORDER + 8) * 2;
+    }
+
+    private int pageGap() {
+        return Math.max(12, guiW / 54);
+    }
+
+    private int contentTop() {
+        return guiTop + 38;
+    }
+
+    private int contentBottom() {
+        return actionLedgerTop() - 8;
+    }
+
+    private int leftPageX() {
+        return innerX();
+    }
+
+    private int leftPageW() {
+        int available = innerW() - pageGap();
+        int preferred = available * 2 / 5;
+        int min = Math.min(136, Math.max(80, available / 2));
+        int max = Math.max(min, Math.min(330, available - 136));
+        return clamp(preferred, min, max);
+    }
+
+    private int rightPageX() {
+        return leftPageX() + leftPageW() + pageGap();
+    }
+
+    private int rightPageW() {
+        return innerW() - leftPageW() - pageGap();
+    }
+
+    private int listX() {
+        return leftPageX() + 8;
+    }
+
+    private int listY() {
+        return contentTop() + 24;
+    }
+
+    private int listW() {
+        return Math.max(80, leftPageW() - 16);
+    }
+
+    private int listH() {
+        return Math.max(ROW_H, contentBottom() - listY() - 8);
+    }
+
+    private int computeListVisible() {
+        return Math.max(1, listH() / ROW_H);
+    }
+
+    private int actionLedgerTop() {
+        return guiTop + guiH - actionLedgerH() - 8;
+    }
+
+    private int actionLedgerH() {
+        return 18 + actionRows() * (BUTTON_H + 4);
+    }
+
+    private int actionColumns() {
+        return clamp(Math.max(2, actionLedgerW() / 112), 2, 7);
+    }
+
+    private int actionRows() {
+        int columns = actionColumns();
+        return (14 + columns - 1) / columns;
+    }
+
+    private int actionLedgerX() {
+        return innerX();
+    }
+
+    private int actionLedgerW() {
+        return innerW();
+    }
+
+    private int actionButtonW() {
+        int columns = actionColumns();
+        return Math.max(64, (actionLedgerW() - 16 - (columns - 1) * 6) / columns);
+    }
+
+    private int actionButtonX(int index) {
+        int column = index % actionColumns();
+        return actionLedgerX() + 8 + column * (actionButtonW() + 6);
+    }
+
+    private int actionButtonY(int index) {
+        int row = index / actionColumns();
+        return actionLedgerTop() + 16 + row * (BUTTON_H + 4);
     }
 
     @Override
@@ -174,7 +286,7 @@ public class WarListScreen extends Screen {
         if (selected != null) {
             this.selected = wars.stream().filter(w -> w.id().equals(selected.id())).findFirst().orElse(null);
         }
-        int maxScroll = Math.max(0, wars.size() - LIST_VISIBLE);
+        int maxScroll = Math.max(0, wars.size() - listVisible);
         this.scrollOffset = clamp(this.scrollOffset, 0, maxScroll);
         this.observedWarStateVersion = WarClientState.version();
         updateButtonsState();
@@ -331,12 +443,9 @@ public class WarListScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(graphics, mouseX, mouseY, partialTick);
-        graphics.fill(0, 0, width, height, 0xFF101010);
-        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
-        graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
-
-        int titleY = guiTop + 6;
-        graphics.drawCenteredString(font, text("gui.bannermod.war_list.active_wars", wars.size()).getString(), guiLeft + W / 2, titleY, 0xFFFFFF);
+        graphics.fill(0, 0, width, height, 0x66000000);
+        renderBookFrame(graphics);
+        renderHeader(graphics);
 
         renderBattleWindowBanner(graphics);
         renderList(graphics, mouseX, mouseY);
@@ -350,72 +459,115 @@ public class WarListScreen extends Screen {
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
     }
 
+    private void renderBookFrame(GuiGraphics graphics) {
+        graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + guiW + 4, guiTop + guiH + 5, 0x66000000);
+        graphics.fill(guiLeft, guiTop, guiLeft + guiW, guiTop + guiH, LEATHER_DARK);
+        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + guiW - 2, guiTop + guiH - 2, LEATHER);
+        graphics.fill(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiLeft + guiW - BOOK_BORDER, guiTop + guiH - BOOK_BORDER, BOOK_BG);
+        graphics.renderOutline(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiW - BOOK_BORDER * 2, guiH - BOOK_BORDER * 2, 0xFF7A4C24);
+
+        int pageY = contentTop();
+        int pageH = Math.max(36, contentBottom() - pageY);
+        renderParchmentPanel(graphics, leftPageX(), pageY, leftPageW(), pageH);
+        renderParchmentPanel(graphics, rightPageX(), pageY, rightPageW(), pageH);
+
+        int spineX = leftPageX() + leftPageW() + pageGap() / 2 - 1;
+        graphics.fill(spineX, pageY + 3, spineX + 2, pageY + pageH - 3, PAGE_SHADE);
+        graphics.fill(spineX + 2, pageY + 3, spineX + 3, pageY + pageH - 3, 0x88FFF3C5);
+
+        renderParchmentPanel(graphics, actionLedgerX(), actionLedgerTop(), actionLedgerW(), actionLedgerH());
+    }
+
+    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
+        graphics.fill(x, y, x + w, y + h, PAGE_BG);
+        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
+        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
+        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
+        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
+        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
+    }
+
+    private void renderHeader(GuiGraphics graphics) {
+        graphics.drawCenteredString(font, text("gui.bannermod.war_list.book_title").getString(), guiLeft + guiW / 2, guiTop + 9, GOLD);
+        int half = Math.max(40, innerW() / 2 - 8);
+        graphics.drawString(font,
+                font.plainSubstrByWidth(text("gui.bannermod.war_list.active_wars", wars.size()).getString(), half),
+                innerX() + 4, guiTop + 25, INK_MUTED, false);
+        graphics.drawString(font,
+                text("gui.bannermod.war_list.ledger_title").getString(),
+                actionLedgerX() + 8, actionLedgerTop() + 5, INK_MUTED, false);
+    }
+
     private void renderActionFeedback(GuiGraphics graphics) {
         Component feedback = WarClientState.lastActionFeedback();
         if (feedback == null || feedback.getString().isBlank()) return;
-        graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), W - 18),
-                guiLeft + 8, guiTop + 28, 0xFFFFDD88, false);
+        int labelRight = actionLedgerX() + 8 + font.width(text("gui.bannermod.war_list.ledger_title")) + 8;
+        int maxW = Math.max(40, actionLedgerX() + actionLedgerW() - labelRight - 8);
+        graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), maxW), labelRight, actionLedgerTop() + 5, WAX, false);
     }
 
     private void renderBattleWindowBanner(GuiGraphics graphics) {
         BattleWindowClock.Phase phase = BattleWindowClock.compute(
                 WarClientState.schedule(), ZonedDateTime.now());
-        String text = BattleWindowDisplay.formatPhase(phase);
-        int color = phase instanceof BattleWindowClock.Phase.Open ? 0xFF55FF55 : 0xFFAAAAAA;
+        String text = font.plainSubstrByWidth(BattleWindowDisplay.formatPhase(phase), Math.max(40, innerW() / 2 - 8));
+        int color = phase instanceof BattleWindowClock.Phase.Open ? 0xFF276E28 : INK_MUTED;
         graphics.drawString(font,
-                font.plainSubstrByWidth(text, W - 16),
-                guiLeft + 8, guiTop + 20, color, false);
+                text,
+                innerX() + innerW() - font.width(text) - 4, guiTop + 25, color, false);
     }
 
     private void renderList(GuiGraphics graphics, int mouseX, int mouseY) {
-        int listX = guiLeft + 8;
-        int listY = guiTop + LIST_TOP_OFFSET;
-        int listW = 184;
-        int listH = LIST_VISIBLE * ROW_H;
-        graphics.fill(listX, listY, listX + listW, listY + listH, 0x60000000);
+        int listX = listX();
+        int listY = listY();
+        int listW = listW();
+        int listH = listVisible * ROW_H;
+        graphics.drawString(font, text("gui.bannermod.war_list.list_title").getString(), listX, contentTop() + 8, INK, false);
+        graphics.fill(listX, listY, listX + listW, listY + listH, 0x22FFFFFF);
+        graphics.renderOutline(listX, listY, listW, listH, PAGE_SHADE);
 
-        int rendered = Math.min(LIST_VISIBLE, Math.max(0, wars.size() - scrollOffset));
+        int rendered = Math.min(listVisible, Math.max(0, wars.size() - scrollOffset));
         for (int i = 0; i < rendered; i++) {
             WarDeclarationRecord war = wars.get(scrollOffset + i);
             int rowY = listY + i * ROW_H;
             boolean hovered = mouseX >= listX && mouseX < listX + listW && mouseY >= rowY && mouseY < rowY + ROW_H;
             boolean isSelected = selected != null && selected.id().equals(war.id());
 
-            int rowBg = isSelected ? 0xFF3B5BFF : (hovered ? 0x60FFFFFF : 0);
+            int rowBg = isSelected ? 0x669E3A23 : (hovered ? 0x33FFFFFF : 0);
             if (rowBg != 0) {
-                graphics.fill(listX + 1, rowY, listX + listW - 1, rowY + ROW_H, rowBg);
+                graphics.fill(listX + 1, rowY + 1, listX + listW - 1, rowY + ROW_H - 1, rowBg);
             }
 
             String stateBadge = "[" + localizedWarState(war.state()).getString() + "]";
             int stateColor = stateColor(war.state());
-            graphics.drawString(font, stateBadge, listX + 4, rowY + 4, stateColor, false);
+            graphics.drawString(font, stateBadge, listX + 4, rowY + 5, stateColor, false);
 
             String attackerName = entityName(war.attackerPoliticalEntityId());
             String defenderName = entityName(war.defenderPoliticalEntityId());
             String label = text("gui.bannermod.war_list.row", attackerName, defenderName).getString();
-            graphics.drawString(font, font.plainSubstrByWidth(label, listW - 80), listX + 80, rowY + 4, 0xFFFFFF, false);
+            int labelX = listX + 8 + font.width(stateBadge) + 4;
+            graphics.drawString(font, font.plainSubstrByWidth(label, Math.max(20, listX + listW - labelX - 4)), labelX, rowY + 5, INK, false);
         }
 
         if (wars.isEmpty()) {
             boolean hasSnapshot = WarClientState.hasSnapshot();
-            int color = hasSnapshot ? 0xFF8FA8FF : 0xFFAAAAAA;
+            int color = hasSnapshot ? INK_MUTED : 0xFF7C7164;
             String empty = text(hasSnapshot
                     ? "gui.bannermod.war_list.empty"
                     : "gui.bannermod.war_list.waiting_sync").getString();
-            graphics.renderOutline(listX + 8, listY + listH / 2 - 14, listW - 16, 28, color);
-            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + listH / 2 - 4, color);
+            graphics.renderOutline(listX + 8, listY + listH / 2 - 14, Math.max(20, listW - 16), 28, color);
+            graphics.drawCenteredString(font, font.plainSubstrByWidth(empty, Math.max(20, listW - 20)), listX + listW / 2, listY + listH / 2 - 4, color);
         }
     }
 
     private void renderDetailPanel(GuiGraphics graphics) {
-        int x = guiLeft + 200;
-        int y = guiTop + DETAIL_TOP_OFFSET;
-        int w = W - 200 - 8;
+        int x = rightPageX() + 8;
+        int y = contentTop() + 8;
+        int w = Math.max(40, rightPageW() - 16);
 
-        graphics.drawString(font, text("gui.bannermod.war_list.detail"), x, y, 0xFFFFFF, false);
+        graphics.drawString(font, text("gui.bannermod.war_list.detail"), x, y, INK, false);
         if (selected == null) {
-            graphics.drawString(font, text("gui.bannermod.war_list.select_war"), x, y + 14, 0xAAAAAA, false);
-            graphics.drawString(font, text("gui.bannermod.war_list.outcome_hint"), x, y + 28, 0x777777, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.war_list.select_war").getString(), w), x, y + 14, INK_MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.war_list.outcome_hint").getString(), w), x, y + 28, INK_MUTED, false);
             return;
         }
 
@@ -447,11 +599,11 @@ public class WarListScreen extends Screen {
             if (line >= maxLines) {
                 return;
             }
-            graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, 0xFFFFFF, false);
+            graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, INK, false);
             line++;
         }
         if (outcomeFeedback != null && line < maxLines) {
-            graphics.drawString(font, font.plainSubstrByWidth(outcomeFeedback.getString(), w), x, y + 14 + line * 11, 0xFFDDCC77, false);
+            graphics.drawString(font, font.plainSubstrByWidth(outcomeFeedback.getString(), w), x, y + 14 + line * 11, WAX, false);
             line++;
         }
         for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
@@ -468,7 +620,7 @@ public class WarListScreen extends Screen {
             }
             graphics.drawString(font,
                     font.plainSubstrByWidth(revoltObjectiveLine(revolt), w),
-                    x, y + 14 + line * 11, 0xFFAAAAAA, false);
+                    x, y + 14 + line * 11, INK_MUTED, false);
             line++;
             if (line >= maxLines) {
                 return;
@@ -484,7 +636,7 @@ public class WarListScreen extends Screen {
             String side = entityName(siege.sidePoliticalEntityId());
             String pos = siege.pos() == null ? text("gui.bannermod.common.unknown").getString() : siege.pos().toShortString();
             graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.war_list.standard", side, pos, siege.radius()).getString(), w),
-                    x, y + 14 + line * 11, 0xFFAAFFAA, false);
+                    x, y + 14 + line * 11, 0xFF2F6E2E, false);
             line++;
             if (line >= maxLines) {
                 return;
@@ -500,7 +652,7 @@ public class WarListScreen extends Screen {
             String suffix = occupation.chunks().size() > 1 ? " +" + (occupation.chunks().size() - 1) : "";
             graphics.drawString(font,
                     font.plainSubstrByWidth(text("gui.bannermod.war_list.occupation", entityName(occupation.occupierEntityId()), firstChunk, suffix, occupation.lastTaxedAtGameTime()).getString(), w),
-                    x, y + 14 + line * 11, 0xFFFFDD88, false);
+                    x, y + 14 + line * 11, 0xFF7A4C24, false);
             line++;
             if (line >= maxLines) {
                 return;
@@ -510,7 +662,7 @@ public class WarListScreen extends Screen {
 
     private int maxDetailLines(int titleY) {
         int firstLineY = titleY + 14;
-        int detailBottom = cancelWarBtn == null ? guiTop + H - 8 : cancelWarBtn.getY() - 6;
+        int detailBottom = contentBottom() - 8;
         if (detailBottom < firstLineY) {
             return 0;
         }
@@ -633,9 +785,9 @@ public class WarListScreen extends Screen {
 
     private int revoltLineColor(RevoltState state) {
         return switch (state) {
-            case PENDING -> 0xFFFFFF55;
-            case SUCCESS -> 0xFFAAFFAA;
-            case FAILED -> 0xFFFF8888;
+            case PENDING -> 0xFF806016;
+            case SUCCESS -> 0xFF2F6E2E;
+            case FAILED -> WAX;
         };
     }
 
@@ -656,20 +808,20 @@ public class WarListScreen extends Screen {
 
     private static int stateColor(WarState state) {
         return switch (state) {
-            case ACTIVE -> 0xFFFF5555;
-            case IN_SIEGE_WINDOW -> ChatFormatting.RED.getColor() == null ? 0xFFFF0000 : ChatFormatting.RED.getColor();
-            case DECLARED -> 0xFFFFFF55;
-            case RESOLVED, CANCELLED -> 0xFFAAAAAA;
+            case ACTIVE -> 0xFF9E2F1D;
+            case IN_SIEGE_WINDOW -> ChatFormatting.RED.getColor() == null ? 0xFF8E2E24 : ChatFormatting.RED.getColor();
+            case DECLARED -> 0xFF806016;
+            case RESOLVED, CANCELLED -> 0xFF6C6455;
         };
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            int listX = guiLeft + 8;
-            int listY = guiTop + LIST_TOP_OFFSET;
-            int listW = 184;
-            int listH = LIST_VISIBLE * ROW_H;
+            int listX = listX();
+            int listY = listY();
+            int listW = listW();
+            int listH = listVisible * ROW_H;
             if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + listH) {
                 int row = (int) ((mouseY - listY) / ROW_H);
                 int idx = scrollOffset + row;
@@ -686,9 +838,51 @@ public class WarListScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double delta) {
-        int max = Math.max(0, wars.size() - LIST_VISIBLE);
+        int listX = listX();
+        int listY = listY();
+        int listW = listW();
+        int listH = listVisible * ROW_H;
+        if (mouseX < listX || mouseX >= listX + listW || mouseY < listY || mouseY >= listY + listH) {
+            return super.mouseScrolled(mouseX, mouseY, scrollX, delta);
+        }
+        int max = Math.max(0, wars.size() - listVisible);
         scrollOffset = clamp(scrollOffset - (int) Math.signum(delta), 0, max);
         return true;
+    }
+
+    private static class MedievalButton extends Button {
+        MedievalButton(int x, int y, int width, int height, Component message, OnPress onPress) {
+            super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            int x = getX();
+            int y = getY();
+            int w = getWidth();
+            int h = getHeight();
+            boolean hovered = isHoveredOrFocused();
+            int border = active ? (hovered ? GOLD : PAGE_SHADE) : 0xFF7C6C55;
+            int fill = active ? (hovered ? 0xFF6A3D1F : LEATHER) : 0xFF4C3A28;
+
+            graphics.fill(x, y, x + w, y + h, LEATHER_DARK);
+            graphics.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
+            graphics.fill(x + 2, y + 2, x + w - 2, y + 4, 0x557A4C24);
+            graphics.renderOutline(x, y, w, h, border);
+            graphics.renderOutline(x + 1, y + 1, w - 2, h - 2, 0x661A100A);
+
+            Font font = Minecraft.getInstance().font;
+            String label = clippedLabel(font, getMessage().getString(), Math.max(4, w - 10));
+            int textColor = active ? GOLD : 0xFFB8A17A;
+            graphics.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, textColor);
+        }
+
+        private static String clippedLabel(Font font, String label, int maxWidth) {
+            if (font.width(label) <= maxWidth) return label;
+            String ellipsis = "...";
+            int textWidth = Math.max(1, maxWidth - font.width(ellipsis));
+            return font.plainSubstrByWidth(label, textWidth) + ellipsis;
+        }
     }
 
     private static int clamp(int v, int min, int max) {
