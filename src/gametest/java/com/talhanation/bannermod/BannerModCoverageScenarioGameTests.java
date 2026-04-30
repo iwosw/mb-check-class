@@ -13,7 +13,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.UUID;
 
-@GameTestHolder(BannerModMain.MOD_ID)
+@GameTestHolder("bannermod_coverage_inventory")
 public class BannerModCoverageScenarioGameTests {
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
