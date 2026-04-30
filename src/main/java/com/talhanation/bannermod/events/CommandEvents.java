@@ -2,6 +2,7 @@ package com.talhanation.bannermod.events;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 
 import com.talhanation.bannermod.ai.military.CombatStance;
+import com.talhanation.bannermod.army.command.RecruitSelectionRegistry;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.entity.military.*;
 import com.talhanation.bannermod.inventory.military.CommandMenu;
@@ -236,6 +237,11 @@ public class CommandEvents {
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         MovementFormationCommandService.initializePlayerCommandState(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        RecruitSelectionRegistry.instance().clear(event.getEntity().getUUID());
     }
 
     @SubscribeEvent
