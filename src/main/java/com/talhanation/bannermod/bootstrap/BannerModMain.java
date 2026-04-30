@@ -5,7 +5,9 @@ import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.events.DamageEvent;
 import com.talhanation.bannermod.events.PillagerEvents;
+import com.talhanation.bannermod.events.RecruitCombatEvents;
 import com.talhanation.bannermod.events.RecruitEvents;
+import com.talhanation.bannermod.events.RecruitLifecycleEvents;
 import com.talhanation.bannermod.events.VillagerEvents;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.events.civilian.SettlementMutationRefreshEvents;
@@ -130,7 +132,8 @@ public class BannerModMain {
         // recruitsPlayerUnitManager / recruitsGroupsManager fields read by AbstractRecruitEntity.
         // Without these, right-click-to-hire (and every other recruits-side flow) trips an NPE.
         // See 21-UAT.md gap "Right-clicking a recruit opens the Hire GUI without server-side crash".
-        NeoForge.EVENT_BUS.register(new RecruitEvents());
+        NeoForge.EVENT_BUS.register(new RecruitLifecycleEvents());
+        NeoForge.EVENT_BUS.register(new RecruitCombatEvents());
         NeoForge.EVENT_BUS.register(new com.talhanation.bannermod.events.RecruitShieldEvents());
         NeoForge.EVENT_BUS.register(new ClaimEvents());
         NeoForge.EVENT_BUS.register(new CommandEvents());
