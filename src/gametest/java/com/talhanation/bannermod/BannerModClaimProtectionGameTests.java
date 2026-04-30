@@ -108,6 +108,7 @@ public class BannerModClaimProtectionGameTests {
         BlockPos bucketTargetPos = helper.absolutePos(new BlockPos(5, 2, 2));
 
         BannerModDedicatedServerGameTestSupport.seedClaim(level, craftingPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
+        BannerModDedicatedServerGameTestSupport.seedClaim(level, bucketTargetPos, FRIENDLY_TEAM_ID, owner.getUUID(), owner.getScoreboardName());
         level.setBlockAndUpdate(craftingPos, Blocks.CRAFTING_TABLE.defaultBlockState());
         level.setBlockAndUpdate(bucketTargetPos, Blocks.STONE.defaultBlockState());
         hostile.setItemInHand(InteractionHand.MAIN_HAND, Items.STICK.getDefaultInstance());

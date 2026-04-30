@@ -55,7 +55,9 @@ public class WorldMapRenderGameTests {
         helper.assertTrue(chunkTile.contains("PIXELS_PER_BLOCK = 2")
                         && chunkTile.contains("TILE_BLOCK_SIZE")
                         && chunkTile.contains("TILE_PIXEL_SIZE")
-                        && !chunkTile.contains("NativeImage.read"),
+                        && chunkTile.contains("newInputStream(tileFile.toPath())")
+                        && chunkTile.contains("NativeImage.read(stream)")
+                        && !chunkTile.contains("NativeImage.read(tileFile"),
                 "Chunk tiles must separate world tile size from 2x texture resolution");
         helper.assertTrue(chunkImage.contains("getTerrainColor(level")
                         && chunkImage.contains("level.getBiome(pos).value().getGrassColor")
@@ -72,7 +74,7 @@ public class WorldMapRenderGameTests {
 
     private static String read(GameTestHelper helper, String relativePath) {
         try {
-            return Files.readString(ROOT.resolve(relativePath));
+            return Files.readString(ROOT.resolve(relativePath)).replace("\r\n", "\n");
         } catch (IOException e) {
             helper.fail("Could not read " + relativePath + ": " + e.getMessage());
             return "";
