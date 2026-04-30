@@ -53,7 +53,7 @@ public class MessageUpdateMerchant implements BannerModMessage<MessageUpdateMerc
         if (!MerchantAccessControl.canManage(merchant.getOwnerUUID(), player.getUUID(), player.hasPermissions(2))) {
             return;
         }
-        merchant.setCreative(this.isCreative);
+        merchant.setCreative(player.isCreative() && this.isCreative);
         merchant.setTrading(this.isTrading);
         merchant.setDailyRefresh(this.dailyRefresh);
     }
