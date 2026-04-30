@@ -5352,7 +5352,7 @@
     {
       "id": "ARCH-008",
       "title": "Decouple work-area entities from client screen construction",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "Active work-area entities currently mix world behavior, packet transport, and client screen construction, which makes the civilian authoring flow hard to reason about and hard to test. The same screens and mechanics should remain, but entity classes should stop owning client UI construction directly.",
       "scope": [
@@ -5366,17 +5366,28 @@
         "Focused verification or compile proof shows the refactor preserved behavior without removing authoring mechanics."
       ],
       "dependencies": [],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; refactor must preserve current work-area authoring screens and interaction mechanics; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/arch-008 after moving concrete work-area screen creation into WorkAreaScreenFactory; 2) code search confirmed active work-area entities no longer implement getScreen(Player) or construct screens directly; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with the same packet-based work-area screen opening flow preserved."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/entity/civilian/workarea/AbstractWorkAreaEntity.java:139-154",
         "src/main/java/com/talhanation/bannermod/entity/civilian/workarea/BuildArea.java:84-88"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "SET-006",
       "title": "Persist settlement project scheduler queues",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "Settlement project scheduling currently loses queued work on restart and silently drops overflow beyond the queue cap. The existing project mechanics should stay intact, but queue state must survive normal server lifecycle and overflow must become observable instead of silent loss.",
       "scope": [
@@ -5390,17 +5401,28 @@
         "Existing settlement project mechanics and ordering semantics remain intact under focused verification."
       ],
       "dependencies": [],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; persistence and overflow visibility only; existing settlement project mechanics must remain intact; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew test --tests com.talhanation.bannermod.settlement.project.BannerModSettlementProjectSchedulerTest --tests com.talhanation.bannermod.settlement.project.BannerModSettlementProjectPersistenceTest passed on feature/set-006; 2) ./gradlew compileJava passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 after making queue-cap overflow observable while leaving scheduler persistence and ordering behavior intact."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/settlement/project/BannerModSettlementProjectScheduler.java:32-39",
         "src/main/java/com/talhanation/bannermod/settlement/project/BannerModSettlementProjectScheduler.java:73-95"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "AUTH-022",
       "title": "Replace hidden claim friendliness team-name coupling",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "Claim friendliness currently depends on scoreboard team names matching political UUID strings, which is a brittle hidden identity contract. Friendly claim mechanics should remain the same for players, but the runtime must stop depending primarily on accidental team-name equality.",
       "scope": [
@@ -5414,17 +5436,28 @@
         "Focused verification covers the explicit relation path and any legacy fallback kept for compatibility."
       ],
       "dependencies": [],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; friendliness resolution hardening must preserve player-visible claim behavior; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/auth-022; 2) ./gradlew test --tests com.talhanation.bannermod.events.ClaimProtectionFeedbackTest passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with claim friendliness now resolving political entity context first and keeping the legacy team-name UUID fallback for compatibility."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/events/ClaimAccessQueries.java:38-42",
         "src/main/java/com/talhanation/bannermod/war/registry/PoliticalMembership.java:9-18"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "PERSIST-003",
       "title": "Isolate legacy citizen persistence compatibility",
-      "status": "open",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "The newer citizen layer still serializes directly back into legacy recruit/worker NBT fields, which keeps compatibility concerns interleaved with current runtime state handling. Compatibility must stay for existing worlds, but the boundary should become explicit and easier to reason about.",
       "scope": [
@@ -5438,13 +5471,24 @@
         "Focused verification or tests prove supported persistence round-trip compatibility remains intact."
       ],
       "dependencies": [],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; compatibility isolation only; active recruit and worker save fields must remain readable; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew test --tests com.talhanation.bannermod.citizen.CitizenPersistenceBridgeTest passed on feature/persist-003; 2) ./gradlew compileJava passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with worker-only boundWorkArea compatibility isolated from recruit legacy persistence."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/citizen/CitizenPersistenceBridge.java:16-41",
         "src/main/java/com/talhanation/bannermod/citizen/CitizenPersistenceBridge.java:79-111",
         "src/main/java/com/talhanation/bannermod/entity/military/RecruitPersistenceBridge.java:136-145"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     }
   ]
 }
