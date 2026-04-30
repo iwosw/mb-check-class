@@ -1917,8 +1917,8 @@
     {
       "id": "UX-005",
       "title": "Ship full in-game settlement onboarding",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "New-player settlement setup still depends too heavily on markdown docs and transient chat instructions for surveyor, starter fort, wand, citizens, and professions.",
       "scope": [
         "Settlement onboarding must be understandable from in-game tooltips, screens, guided feedback, and stateful prompts from first claim through staffed starter buildings and professions."
@@ -1926,14 +1926,25 @@
       "acceptance": [
         "A new player can found a starter settlement, register buildings, understand staffing, and reach first profession loops using in-game guidance alone; verification covers the full onboarding path step by step."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-4 after QA-001/GAME-005 closure; goal is full in-game settlement onboarding with no markdown dependency."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/ux-005 after adding a hybrid Surveyor onboarding GUI, localized onboarding hints, and item-based guided settlement feedback; 2) ./gradlew test --tests com.talhanation.bannermod.settlement.onboarding.SettlementOnboardingGuideTest passed on feature/ux-005; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html were updated to match the new Surveyor/onboarding flow; 4) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-4."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-005",
         "QA-001",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "UX-006",
@@ -2287,8 +2298,8 @@
     {
       "id": "ARCH-007",
       "title": "Reduce global static runtime managers",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Global statics for runtime managers and channels increase coupling, complicate testing, and hide lifecycle assumptions across claims, recruits, and client mirrors.",
       "scope": [
         "Runtime manager access should move behind clearer lifecycle-bound seams or service accessors, reducing mutable global state where it is not strictly required by Forge integration."
@@ -2296,8 +2307,18 @@
       "acceptance": [
         "Critical runtime managers are no longer reached through unnecessary mutable globals; lifecycle ownership is explicit; representative tests or verification prove the new access seams behave correctly."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-4 after ARCH-001/ARCH-003 closure; goal is to reduce remaining mutable global runtime manager access seams."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava and ./gradlew compileGameTestJava passed on feature/arch-007 after privatizing claim/recruit runtime manager globals behind lifecycle-owned accessors; 2) direct global-manager call sites were migrated to explicit accessors without changing runtime manager creation/save/load timing; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-4."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "ARCH-001",
@@ -2307,7 +2328,8 @@
         "ARCH-005",
         "ARCH-006",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "TEST-001",
