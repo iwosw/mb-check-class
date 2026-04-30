@@ -96,6 +96,13 @@ public final class CommandIntentQueueRuntime {
                 || intent instanceof CommandIntent.SiegeMachine;
     }
 
+    static boolean requiresLiveIssuer(CommandIntent intent) {
+        return intent instanceof CommandIntent.Movement
+                || intent instanceof CommandIntent.Face
+                || intent instanceof CommandIntent.Attack
+                || intent instanceof CommandIntent.StrategicFire;
+    }
+
     /**
      * Append {@code intent} to the queue of every actor. Applies the head immediately if the
      * queue was empty before the append. Returns the number of recruits whose queue was
@@ -122,8 +129,7 @@ public final class CommandIntentQueueRuntime {
                 issuerByRecruit.put(recruit.getUUID(), issuer.getUUID());
             }
             if (wasEmpty) {
-                startedAtByRecruit.put(recruit.getUUID(), gameTime);
-                applyHead(issuer, recruit, intent);
+                startHead(recruit.getUUID(), issuer, recruit, intent, gameTime);
             }
             modified++;
         }
@@ -158,6 +164,10 @@ public final class CommandIntentQueueRuntime {
                 continue;
             }
             Long startedAt = startedAtByRecruit.get(recruitUuid);
+            if (startedAt == null) {
+                startHead(recruitUuid, server, recruit, head.get(), gameTime);
+                continue;
+            }
             long activeTicks = startedAt == null ? 0L : Math.max(0L, gameTime - startedAt);
             if (isComplete(head.get(), recruit, activeTicks)) {
                 advanceIds.add(recruitUuid);
@@ -179,10 +189,35 @@ public final class CommandIntentQueueRuntime {
         }
         AbstractRecruitEntity recruit = findRecruit(server, recruitUuid);
         if (recruit == null) return;
+        startHead(recruitUuid, server, recruit, queue.head().orElseThrow(), gameTime);
+    }
+
+    private boolean startHead(UUID recruitUuid,
+                              @Nullable MinecraftServer server,
+                              AbstractRecruitEntity recruit,
+                              CommandIntent intent,
+                              long gameTime) {
         UUID issuerUuid = issuerByRecruit.get(recruitUuid);
-        ServerPlayer issuer = issuerUuid == null ? null : server.getPlayerList().getPlayer(issuerUuid);
+        ServerPlayer issuer = issuerUuid == null || server == null ? null : server.getPlayerList().getPlayer(issuerUuid);
+        return startHead(recruitUuid, issuer, recruit, intent, gameTime);
+    }
+
+    private boolean startHead(UUID recruitUuid,
+                              @Nullable ServerPlayer issuer,
+                              AbstractRecruitEntity recruit,
+                              CommandIntent intent,
+                              long gameTime) {
+        UUID issuerUuid = issuer != null ? issuer.getUUID() : issuerByRecruit.get(recruitUuid);
+        if (requiresLiveIssuer(intent) && issuer == null) {
+            startedAtByRecruit.remove(recruitUuid);
+            return false;
+        }
+        if (!applyHead(issuer, issuerUuid, recruit, intent)) {
+            startedAtByRecruit.remove(recruitUuid);
+            return false;
+        }
         startedAtByRecruit.put(recruitUuid, gameTime);
-        applyHead(issuer, recruit, queue.head().orElseThrow());
+        return true;
     }
 
     private static boolean isComplete(CommandIntent intent, AbstractRecruitEntity recruit, long activeTicks) {
@@ -203,39 +238,36 @@ public final class CommandIntentQueueRuntime {
         return true;
     }
 
-    private static void applyHead(@Nullable Player issuer, AbstractRecruitEntity recruit, CommandIntent intent) {
+    private static boolean applyHead(@Nullable Player issuer,
+                                     @Nullable UUID issuerUuid,
+                                     AbstractRecruitEntity recruit,
+                                     CommandIntent intent) {
         List<AbstractRecruitEntity> single = new ArrayList<>(1);
         single.add(recruit);
         if (intent instanceof CommandIntent.Movement move) {
-            if (issuer != null) {
-                CommandEvents.onMovementCommand(issuer, single, move.movementState(), move.formation(), move.tight(), move.targetPos());
-            }
+            if (issuer == null) return false;
+            CommandEvents.onMovementCommand(issuer, single, move.movementState(), move.formation(), move.tight(), move.targetPos());
         } else if (intent instanceof CommandIntent.Face face) {
-            if (issuer != null) {
-                CommandEvents.onFaceCommand(issuer, single, face.formation(), face.tight());
-            }
+            if (issuer == null) return false;
+            CommandEvents.onFaceCommand(issuer, single, face.formation(), face.tight());
         } else if (intent instanceof CommandIntent.Attack attack) {
-            if (issuer != null) {
-                CommandEvents.onAttackCommand(issuer, issuer.getUUID(), single, attack.groupUuid());
-            }
+            if (issuer == null) return false;
+            CommandEvents.onAttackCommand(issuer, issuer.getUUID(), single, attack.groupUuid());
         } else if (intent instanceof CommandIntent.StrategicFire fire) {
-            if (issuer != null) {
-                CommandEvents.onStrategicFireCommand(issuer, issuer.getUUID(), recruit, fire.groupUuid(), fire.shouldFire());
-            }
+            if (issuer == null) return false;
+            CommandEvents.onStrategicFireCommand(issuer, issuer.getUUID(), recruit, fire.groupUuid(), fire.shouldFire());
         } else if (intent instanceof CommandIntent.Aggro aggro) {
-            if (issuer != null) {
-                CommandEvents.onAggroCommand(issuer.getUUID(), recruit, aggro.state(), aggro.groupUuid(), aggro.fromGui());
-            }
+            if (issuerUuid == null) return false;
+            CommandEvents.onAggroCommand(issuerUuid, recruit, aggro.state(), aggro.groupUuid(), aggro.fromGui());
         } else if (intent instanceof CommandIntent.CombatStanceChange stanceChange) {
-            if (issuer != null) {
-                CommandEvents.onCombatStanceCommand(issuer.getUUID(), recruit, stanceChange.stance(), stanceChange.groupUuid());
-            }
+            if (issuerUuid == null) return false;
+            CommandEvents.onCombatStanceCommand(issuerUuid, recruit, stanceChange.stance(), stanceChange.groupUuid());
         } else if (intent instanceof CommandIntent.SiegeMachine siegeMachine) {
-            if (issuer != null) {
-                CommandEvents.onMountButton(
-                        issuer.getUUID(), recruit, siegeMachine.returnToKnownMount() ? null : siegeMachine.mountUuid(), siegeMachine.groupUuid());
-            }
+            if (issuerUuid == null) return false;
+            CommandEvents.onMountButton(
+                    issuerUuid, recruit, siegeMachine.returnToKnownMount() ? null : siegeMachine.mountUuid(), siegeMachine.groupUuid());
         }
+        return true;
     }
 
     private static AbstractRecruitEntity findRecruit(MinecraftServer server, UUID recruitUuid) {
