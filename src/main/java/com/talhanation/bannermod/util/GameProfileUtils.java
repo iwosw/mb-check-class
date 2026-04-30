@@ -23,4 +23,16 @@ public class GameProfileUtils {
         return playerInfo.getSkin().texture();
     }
 
+    public static String getPlayerName(UUID uuid) {
+        ClientPacketListener connection = mc.getConnection();
+        if (connection == null) {
+            return null;
+        }
+        PlayerInfo playerInfo = connection.getPlayerInfo(uuid);
+        if (playerInfo == null || playerInfo.getProfile() == null) {
+            return null;
+        }
+        return playerInfo.getProfile().getName();
+    }
+
 }

@@ -12,6 +12,7 @@ import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -109,7 +110,7 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         y += 12;
         int visibleIncidents = Math.min(1, state.incidents().size());
         for (int i = 0; i < visibleIncidents; i++) {
-            guiGraphics.drawString(font, Component.literal("- " + readableToken(state.incidents().get(i))), x, y, 4210752, false);
+            guiGraphics.drawString(font, text("gui.bannermod.governor.bullet", governorValue(state.incidents().get(i))), x, y, 4210752, false);
             y += 10;
         }
         if (state.incidents().isEmpty()) {
@@ -120,9 +121,9 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
             y += 10;
         }
         guiGraphics.drawString(font, text("gui.bannermod.governor.action_reason", text(state.actionReasonKey()).getString()), x, y, state.canUpdatePolicy() ? 0x2E5D32 : 0x8A1F11, false);
-        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.garrison", BannerModGovernorPolicy.GARRISON_PRIORITY.valueLabel(state.garrisonPriority())), leftPos + 10, topPos + 124, 4210752, false);
-        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.fortification", BannerModGovernorPolicy.FORTIFICATION_PRIORITY.valueLabel(state.fortificationPriority())), leftPos + 10, topPos + 148, 4210752, false);
-        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.tax", BannerModGovernorPolicy.TAX_PRESSURE.valueLabel(state.taxPressure())), leftPos + 10, topPos + 172, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.garrison", governorPolicyValue(state.garrisonPriority())), leftPos + 10, topPos + 124, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.fortification", governorPolicyValue(state.fortificationPriority())), leftPos + 10, topPos + 148, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.tax", governorPolicyValue(state.taxPressure())), leftPos + 10, topPos + 172, 4210752, false);
 
         int logisticsX = leftPos + 210;
         int logisticsY = topPos + 10;
@@ -135,22 +136,18 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         logisticsY += 4;
         guiGraphics.drawString(font, text("gui.bannermod.governor.advice"), logisticsX, logisticsY, 4210752, false);
         logisticsY += 12;
-        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.garrison", readableToken(state.garrisonRecommendation())), 26), logisticsX, logisticsY, 4210752, false);
+        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.garrison", governorValue(state.garrisonRecommendation())), 26), logisticsX, logisticsY, 4210752, false);
         logisticsY += 11;
-        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.fort", readableToken(state.fortificationRecommendation())), 26), logisticsX, logisticsY, 4210752, false);
+        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.fort", governorValue(state.fortificationRecommendation())), 26), logisticsX, logisticsY, 4210752, false);
         logisticsY += 11;
         for (int i = 0; i < Math.min(3, state.recommendations().size()); i++) {
-            guiGraphics.drawString(font, shorten(Component.literal("- " + readableToken(state.recommendations().get(i))), 26), logisticsX, logisticsY, 4210752, false);
+            guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.bullet", governorValue(state.recommendations().get(i))), 26), logisticsX, logisticsY, 4210752, false);
             logisticsY += 10;
         }
     }
 
     public static void applyUpdate(UUID recruitId, Envelope envelope) {
         SETTLEMENT_MIRROR.applyGovernorUpdate(recruitId, envelope);
-    }
-
-    private static String readableToken(String token) {
-        return token == null || token.isBlank() ? "none" : token.replace('_', ' ');
     }
 
     private static Component shorten(Component component, int maxLength) {
@@ -175,11 +172,54 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         }
         Object[] args = Arrays.copyOfRange(parts, 1, parts.length);
         for (int i = 0; i < args.length; i++) {
-            if (args[i] instanceof String value && value.startsWith("gui.bannermod.")) {
-                args[i] = Component.translatable(value);
+            if (args[i] instanceof String value) {
+                args[i] = governorValue(value);
             }
         }
         return Component.translatable(parts[0], args);
+    }
+
+    private static Component governorPolicyValue(int value) {
+        return governorValue(BannerModGovernorPolicy.GARRISON_PRIORITY.valueLabel(value));
+    }
+
+    private static Component governorValue(String value) {
+        if (value == null || value.isBlank()) {
+            return text("gui.bannermod.common.none");
+        }
+        if (value.startsWith("gui.bannermod.")) {
+            return text(value);
+        }
+        String key = switch (value) {
+            case "low" -> "gui.bannermod.governor.value.low";
+            case "balanced" -> "gui.bannermod.governor.value.balanced";
+            case "high" -> "gui.bannermod.governor.value.high";
+            case "hold_course" -> "gui.bannermod.governor.token.hold_course";
+            case "increase_garrison" -> "gui.bannermod.governor.token.increase_garrison";
+            case "strengthen_fortifications" -> "gui.bannermod.governor.token.strengthen_fortifications";
+            case "relieve_supply_pressure" -> "gui.bannermod.governor.token.relieve_supply_pressure";
+            case "hostile_claim" -> "gui.bannermod.governor.token.hostile_claim";
+            case "degraded_settlement" -> "gui.bannermod.governor.token.degraded_settlement";
+            case "unclaimed_settlement" -> "gui.bannermod.governor.token.unclaimed_settlement";
+            case "under_siege" -> "gui.bannermod.governor.token.under_siege";
+            case "worker_shortage" -> "gui.bannermod.governor.token.worker_shortage";
+            case "supply_blocked" -> "gui.bannermod.governor.token.supply_blocked";
+            case "recruit_upkeep_blocked" -> "gui.bannermod.governor.token.recruit_upkeep_blocked";
+            case "local_outpost" -> "gui.bannermod.governor.token.local_outpost";
+            case "water_gate" -> "gui.bannermod.governor.token.water_gate";
+            case "junction_market" -> "gui.bannermod.governor.token.junction_market";
+            case "chokepoint_fort" -> "gui.bannermod.governor.token.chokepoint_fort";
+            case "surplus_hub" -> "gui.bannermod.governor.token.surplus_hub";
+            default -> null;
+        };
+        if (key != null) {
+            return text(key);
+        }
+        ResourceLocation id = value.contains(":") ? ResourceLocation.tryParse(value) : ResourceLocation.tryParse("minecraft:" + value);
+        if (id != null && BuiltInRegistries.ITEM.containsKey(id)) {
+            return BuiltInRegistries.ITEM.get(id).getDescription();
+        }
+        return Component.literal(value.replace('_', ' '));
     }
 
     private void updatePolicyButtons(BannerModSettlementClientMirror.GovernorView state) {
