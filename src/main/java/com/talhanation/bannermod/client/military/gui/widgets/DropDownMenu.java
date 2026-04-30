@@ -143,9 +143,9 @@ public class DropDownMenu<T> extends AbstractWidget {
     protected void updateWidgetNarration(NarrationElementOutput narration) {
         narration.add(NarratedElementType.TITLE, Component.translatable(
                 "gui.bannermod.widget.dropdown.narration", getSelectedText(), options.size()));
-        if (isOpen) {
-            narration.add(NarratedElementType.USAGE, Component.translatable("gui.bannermod.widget.dropdown.open"));
-        }
+        narration.add(NarratedElementType.USAGE, Component.translatable(isOpen
+                ? "gui.bannermod.widget.dropdown.open"
+                : "gui.bannermod.widget.dropdown.closed"));
     }
 
     public boolean isOpen() { return isOpen; }
