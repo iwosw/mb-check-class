@@ -41,7 +41,7 @@ public class MessageUpdateClaim implements BannerModMessage<MessageUpdateClaim> 
         RecruitsClaim updatedClaim = RecruitsClaim.fromNBT(this.claimNBT);
         if(!RecruitsServerConfig.AllowClaiming.get()) return;
         if(sender.level().dimension() != Level.OVERWORLD) return;
-        if (ClaimEvents.recruitsClaimManager == null) return;
+        if (ClaimEvents.claimManager() == null) return;
 
         ServerLevel level = (ServerLevel) sender.getCommandSenderWorld();
         RecruitsClaim existingClaim = getExistingClaim(updatedClaim);
@@ -59,22 +59,22 @@ public class MessageUpdateClaim implements BannerModMessage<MessageUpdateClaim> 
             updatedClaim.setPlayer(existingClaim.getPlayerInfo());
             updatedClaim.setAdminClaim(existingClaim.isAdmin);
         }
-        if (ClaimEvents.recruitsClaimManager.isTownTooCloseToSameNationTown(
+        if (ClaimEvents.claimManager().isTownTooCloseToSameNationTown(
                 updatedClaim,
                 existingClaim,
                 RecruitsServerConfig.TownMinCenterDistance.get())) return;
 
-        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, updatedClaim);
+        ClaimEvents.claimManager().addOrUpdateClaim(level, updatedClaim);
     }
 
     static RecruitsClaim getExistingClaim(RecruitsClaim updatedClaim) {
-        if (updatedClaim == null || ClaimEvents.recruitsClaimManager == null) return null;
+        if (updatedClaim == null || ClaimEvents.claimManager() == null) return null;
         return getExistingClaim(updatedClaim.getUUID());
     }
 
     static RecruitsClaim getExistingClaim(UUID claimUuid) {
-        if (claimUuid == null || ClaimEvents.recruitsClaimManager == null) return null;
-        for (RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()) {
+        if (claimUuid == null || ClaimEvents.claimManager() == null) return null;
+        for (RecruitsClaim claim : ClaimEvents.claimManager().getAllClaims()) {
             if (claim.getUUID().equals(claimUuid)) {
                 return claim;
             }
@@ -95,9 +95,9 @@ public class MessageUpdateClaim implements BannerModMessage<MessageUpdateClaim> 
     }
 
     private static boolean overlapsOtherClaim(RecruitsClaim updatedClaim, RecruitsClaim existingClaim) {
-        if (updatedClaim == null || updatedClaim.isRemoved || ClaimEvents.recruitsClaimManager == null) return false;
+        if (updatedClaim == null || updatedClaim.isRemoved || ClaimEvents.claimManager() == null) return false;
         for (ChunkPos pos : updatedClaim.getClaimedChunks()) {
-            RecruitsClaim occupied = ClaimEvents.recruitsClaimManager.getClaim(pos);
+            RecruitsClaim occupied = ClaimEvents.claimManager().getClaim(pos);
             if (occupied != null && (existingClaim == null || !occupied.getUUID().equals(existingClaim.getUUID()))) {
                 return true;
             }

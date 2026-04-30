@@ -268,7 +268,7 @@ final class MovementFormationCommandService {
             recruits = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(AbstractRecruitEntity.class, commandBox);
         }
 
-        List<RecruitsGroup> groups = RecruitEvents.recruitsGroupsManager.getPlayerGroups(serverPlayer);
+        List<RecruitsGroup> groups = RecruitEvents.groupsManager().getPlayerGroups(serverPlayer);
         if (groups == null) {
             return;
         }

@@ -88,7 +88,7 @@ public class MessageAssignGroupToCompanion implements BannerModMessage<MessageAs
         group.leaderUUID = companionUUID;
         companionEntity.setGroupUUID(group.getUUID());
 
-        RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
+        RecruitEvents.groupsManager().broadCastGroupsToPlayer(serverPlayer);
     }
 
     static boolean canAssignCompanionGroup(ServerPlayer player, AbstractLeaderEntity companionEntity) {

@@ -32,7 +32,7 @@ public class MessageAssignNearbyRecruitsInGroup implements BannerModMessage<Mess
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup newGroup = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        RecruitsGroup newGroup = RecruitEvents.groupsManager().getGroup(groupUUID);
         if(newGroup == null) return;
 
         List<AbstractRecruitEntity> recruits = RecruitIndex.instance().ownerInRange(
@@ -55,9 +55,9 @@ public class MessageAssignNearbyRecruitsInGroup implements BannerModMessage<Mess
             }
         });
 
-        RecruitEvents.recruitsGroupsManager.addOrUpdateGroup(player.serverLevel(), player, newGroup);
+        RecruitEvents.groupsManager().addOrUpdateGroup(player.serverLevel(), player, newGroup);
 
-        RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
+        RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
     }
 
     public void setGroup(AbstractRecruitEntity recruit, RecruitsGroup group){
@@ -66,7 +66,7 @@ public class MessageAssignNearbyRecruitsInGroup implements BannerModMessage<Mess
         }
 
         group.addMember(recruit.getUUID());
-        RecruitsGroup oldGroup = RecruitEvents.recruitsGroupsManager.getGroup(recruit.getGroup());
+        RecruitsGroup oldGroup = RecruitEvents.groupsManager().getGroup(recruit.getGroup());
         if(oldGroup != null) oldGroup.removeMember(recruit.getUUID());
 
         recruit.setGroupUUID(groupUUID);

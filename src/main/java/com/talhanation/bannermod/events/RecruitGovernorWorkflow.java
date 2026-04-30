@@ -53,7 +53,7 @@ final class RecruitGovernorWorkflow {
             if (claim != null) {
                 BannerModSettlementService.refreshClaim(
                         serverLevel,
-                        ClaimEvents.recruitsClaimManager,
+                        ClaimEvents.claimManager(),
                         BannerModSettlementManager.get(serverLevel),
                         BannerModGovernorManager.get(serverLevel),
                         claim
@@ -170,9 +170,9 @@ final class RecruitGovernorWorkflow {
     }
 
     private static RecruitsClaim resolveClaim(AbstractRecruitEntity recruit) {
-        return ClaimEvents.recruitsClaimManager == null
+        return ClaimEvents.claimManager() == null
                 ? null
-                : ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(recruit.blockPosition()));
+                : ClaimEvents.claimManager().getClaim(new ChunkPos(recruit.blockPosition()));
     }
 
 }

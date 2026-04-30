@@ -69,10 +69,10 @@ public class MessageUpdateStorageArea implements BannerModMessage<MessageUpdateS
             player.sendSystemMessage(Component.literal(exception.getMessage()));
         }
 
-        if (player.level() instanceof ServerLevel serverLevel && ClaimEvents.recruitsClaimManager != null) {
+        if (player.level() instanceof ServerLevel serverLevel && ClaimEvents.claimManager() != null) {
             BannerModSettlementService.refreshClaimAt(
                     serverLevel,
-                    ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.claimManager(),
                     BannerModSettlementManager.get(serverLevel),
                     BannerModGovernorManager.get(serverLevel),
                     storageArea.blockPosition()

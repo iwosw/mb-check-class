@@ -157,7 +157,7 @@ public class BannerModSettlementFactionDegradationGameTests {
         String politicalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(
                 (ServerLevel) cropArea.level(), settlementFactionId);
         return BannerModSettlementBinding.resolveSettlementStatus(
-                ClaimEvents.recruitsClaimManager,
+                ClaimEvents.claimManager(),
                 cropArea.blockPosition(),
                 politicalEntityId
         );

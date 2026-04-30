@@ -63,11 +63,11 @@ final class RecruitTargetAuthority {
 
     @Nullable
     private static RecruitsClaim claimAt(ServerLevel level, LivingEntity target) {
-        if (ClaimEvents.recruitsClaimManager == null || level.dimension() != Level.OVERWORLD) {
+        if (ClaimEvents.claimManager() == null || level.dimension() != Level.OVERWORLD) {
             return null;
         }
         ChunkAccess access = level.getChunk(target.blockPosition());
-        return ClaimEvents.recruitsClaimManager.getClaim(access.getPos());
+        return ClaimEvents.claimManager().getClaim(access.getPos());
     }
 
     private static boolean occupiesClaim(ServerLevel level,

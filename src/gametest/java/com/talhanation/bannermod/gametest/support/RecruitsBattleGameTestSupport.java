@@ -121,8 +121,8 @@ public final class RecruitsBattleGameTestSupport {
             group.addMember(recruit.getUUID());
         }
 
-        if (RecruitEvents.recruitsGroupsManager != null && leader.level() instanceof ServerLevel serverLevel) {
-            RecruitEvents.recruitsGroupsManager.addPatrolGroup(group, serverLevel);
+        if (RecruitEvents.groupsManager() != null && leader.level() instanceof ServerLevel serverLevel) {
+            RecruitEvents.groupsManager().addPatrolGroup(group, serverLevel);
         }
 
         for (AbstractRecruitEntity recruit : recruits) {

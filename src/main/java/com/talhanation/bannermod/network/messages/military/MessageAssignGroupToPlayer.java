@@ -76,9 +76,9 @@ public class MessageAssignGroupToPlayer implements BannerModMessage<MessageAssig
             recruit.needsGroupUpdate = true;
         }
 
-        RecruitEvents.recruitsGroupsManager.save(serverLevel);
-        RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(sender);
-        RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverLevel, trustedNewOwner.getUUID());
+        RecruitEvents.groupsManager().save(serverLevel);
+        RecruitEvents.groupsManager().broadCastGroupsToPlayer(sender);
+        RecruitEvents.groupsManager().broadCastGroupsToPlayer(serverLevel, trustedNewOwner.getUUID());
         return true;
     }
 

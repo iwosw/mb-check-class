@@ -32,7 +32,7 @@ final class BannerModSettlementProjectWorldExecution {
         if (level == null
                 || claimUuid == null
                 || project == null
-                || ClaimEvents.recruitsClaimManager == null
+                || ClaimEvents.claimManager() == null
                 || (project.blockerReason() != ProjectBlocker.NONE && project.blockerReason() != ProjectBlocker.NO_SITE)) {
             return false;
         }
@@ -54,7 +54,7 @@ final class BannerModSettlementProjectWorldExecution {
     }
 
     private static RecruitsClaim resolveClaim(UUID claimUuid) {
-        for (RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()) {
+        for (RecruitsClaim claim : ClaimEvents.claimManager().getAllClaims()) {
             if (claim != null && claimUuid.equals(claim.getUUID())) {
                 return claim;
             }

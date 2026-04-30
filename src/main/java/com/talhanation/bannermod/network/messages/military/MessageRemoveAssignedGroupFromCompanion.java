@@ -40,7 +40,7 @@ public class MessageRemoveAssignedGroupFromCompanion implements BannerModMessage
         if (entity instanceof AbstractLeaderEntity companionEntity
                 && serverPlayer.getBoundingBox().inflate(100D).intersects(companionEntity.getBoundingBox())) {
 
-            RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(companionEntity.getGroup());
+            RecruitsGroup group = RecruitEvents.groupsManager().getGroup(companionEntity.getGroup());
             if(group == null) return;
             group.leaderUUID = null;
             companionEntity.setGroupUUID(group.getUUID());
@@ -54,7 +54,7 @@ public class MessageRemoveAssignedGroupFromCompanion implements BannerModMessage
             }
 
             companionEntity.army = null;
-            RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(serverPlayer);
+            RecruitEvents.groupsManager().broadCastGroupsToPlayer(serverPlayer);
 
             BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
         }

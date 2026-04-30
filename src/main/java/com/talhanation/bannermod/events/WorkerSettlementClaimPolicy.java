@@ -57,10 +57,10 @@ final class WorkerSettlementClaimPolicy {
     }
 
     static RecruitsClaim resolveClaim(BlockPos pos) {
-        if (ClaimEvents.recruitsClaimManager == null) {
+        if (ClaimEvents.claimManager() == null) {
             return null;
         }
-        return ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(pos));
+        return ClaimEvents.claimManager().getClaim(new ChunkPos(pos));
     }
 
     static BannerModSettlementBinding.Binding resolveSettlementBinding(Villager villager, RecruitsClaim claim) {
@@ -77,7 +77,7 @@ final class WorkerSettlementClaimPolicy {
                 factionId = teamName;
             }
         }
-        return BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, villager.blockPosition(), factionId);
+        return BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.claimManager(), villager.blockPosition(), factionId);
     }
 
     static BannerModSettlementBinding.Binding resolveClaimGrowthBinding(RecruitsClaim claim, String settlementFactionId) {

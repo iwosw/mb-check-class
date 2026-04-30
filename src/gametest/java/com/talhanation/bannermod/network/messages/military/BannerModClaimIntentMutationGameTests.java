@@ -43,7 +43,7 @@ public class BannerModClaimIntentMutationGameTests {
 
         helper.assertTrue(added, "Expected owner add intent to be accepted");
         helper.assertTrue(claim.containsChunk(addChunk), "Expected added chunk to be visible on the claim state");
-        helper.assertTrue(ClaimEvents.recruitsClaimManager.getClaim(addChunk) == claim, "Expected manager lookup to resolve the added chunk");
+        helper.assertTrue(ClaimEvents.claimManager().getClaim(addChunk) == claim, "Expected manager lookup to resolve the added chunk");
         helper.assertTrue(currencyCount(owner) == beforeAdd - cost, "Expected accepted add to charge configured claim currency");
         assertSavedClaimContains(helper, level, claim.getUUID(), addChunk, true);
 
@@ -51,7 +51,7 @@ public class BannerModClaimIntentMutationGameTests {
 
         helper.assertTrue(removed, "Expected owner remove intent to be accepted");
         helper.assertFalse(claim.containsChunk(addChunk), "Expected removed chunk to disappear from claim state");
-        helper.assertTrue(ClaimEvents.recruitsClaimManager.getClaim(addChunk) == null, "Expected removed chunk to disappear from manager lookup");
+        helper.assertTrue(ClaimEvents.claimManager().getClaim(addChunk) == null, "Expected removed chunk to disappear from manager lookup");
         assertSavedClaimContains(helper, level, claim.getUUID(), addChunk, false);
         helper.succeed();
     }
@@ -79,7 +79,7 @@ public class BannerModClaimIntentMutationGameTests {
         helper.assertTrue(currencyCount(other) == beforeDeniedAdd, "Expected denied add to leave currency untouched");
         helper.assertFalse(claim.containsChunk(addChunk), "Expected denied add to leave target chunk unclaimed");
         helper.assertTrue(claim.containsChunk(baseChunk), "Expected denied remove/delete to leave original chunk claimed");
-        helper.assertTrue(ClaimEvents.recruitsClaimManager.getClaim(baseChunk) == claim, "Expected denied delete to leave claim registered");
+        helper.assertTrue(ClaimEvents.claimManager().getClaim(baseChunk) == claim, "Expected denied delete to leave claim registered");
         assertSavedClaimContains(helper, level, claim.getUUID(), baseChunk, true);
         helper.succeed();
     }
@@ -128,8 +128,8 @@ public class BannerModClaimIntentMutationGameTests {
         boolean deleted = MessageClaimIntent.applyServerSide(owner, MessageClaimIntent.Action.DELETE, claim.getUUID(), baseChunk);
 
         helper.assertTrue(deleted, "Expected owner delete intent to be accepted");
-        helper.assertTrue(ClaimEvents.recruitsClaimManager.getClaim(baseChunk) == null, "Expected deleted claim chunk to be removed from manager lookup");
-        helper.assertFalse(ClaimEvents.recruitsClaimManager.getAllClaims().stream().anyMatch(saved -> saved.getUUID().equals(claim.getUUID())),
+        helper.assertTrue(ClaimEvents.claimManager().getClaim(baseChunk) == null, "Expected deleted claim chunk to be removed from manager lookup");
+        helper.assertFalse(ClaimEvents.claimManager().getAllClaims().stream().anyMatch(saved -> saved.getUUID().equals(claim.getUUID())),
                 "Expected deleted claim to be absent from manager claim list");
         assertSavedClaimExists(helper, level, claim.getUUID(), false);
         helper.succeed();
@@ -152,7 +152,7 @@ public class BannerModClaimIntentMutationGameTests {
     }
 
     private static void removeClaimAt(ServerLevel level, ChunkPos chunk) {
-        RecruitsClaim existing = ClaimEvents.recruitsClaimManager.getClaim(chunk);
+        RecruitsClaim existing = ClaimEvents.claimManager().getClaim(chunk);
         if (existing != null) {
             BannerModDedicatedServerGameTestSupport.removeClaim(level, existing);
         }
@@ -169,7 +169,7 @@ public class BannerModClaimIntentMutationGameTests {
     }
 
     private static void assertSavedClaimContains(GameTestHelper helper, ServerLevel level, UUID claimUuid, ChunkPos chunk, boolean expected) {
-        ClaimEvents.recruitsClaimManager.save(level);
+        ClaimEvents.claimManager().save(level);
         boolean actual = RecruitsClaimSaveData.get(level).getAllClaims().stream()
                 .filter(claim -> claim.getUUID().equals(claimUuid))
                 .anyMatch(claim -> claim.containsChunk(chunk));
@@ -177,7 +177,7 @@ public class BannerModClaimIntentMutationGameTests {
     }
 
     private static void assertSavedClaimExists(GameTestHelper helper, ServerLevel level, UUID claimUuid, boolean expected) {
-        ClaimEvents.recruitsClaimManager.save(level);
+        ClaimEvents.claimManager().save(level);
         boolean actual = RecruitsClaimSaveData.get(level).getAllClaims().stream()
                 .anyMatch(claim -> claim.getUUID().equals(claimUuid));
         helper.assertTrue(actual == expected, "Expected saved claim existence to be " + expected);

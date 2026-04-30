@@ -56,7 +56,7 @@ public class MessageClaimIntent implements BannerModMessage<MessageClaimIntent> 
             deny(player, "Claims can only be edited in the Overworld.");
             return false;
         }
-        if (ClaimEvents.recruitsClaimManager == null) return false;
+        if (ClaimEvents.claimManager() == null) return false;
         RecruitsClaim claim = MessageUpdateClaim.getExistingClaim(claimUuid);
         if (claim == null) {
             deny(player, "Claim not found on server.");
@@ -72,7 +72,7 @@ public class MessageClaimIntent implements BannerModMessage<MessageClaimIntent> 
             return false;
         }
         if (decoded == Action.ADD_CHUNK) {
-            if (ClaimEvents.recruitsClaimManager.getClaim(chunk) != null) {
+            if (ClaimEvents.claimManager().getClaim(chunk) != null) {
                 deny(player, "Chunk is already claimed.");
                 return false;
             }
@@ -88,7 +88,7 @@ public class MessageClaimIntent implements BannerModMessage<MessageClaimIntent> 
             charge(player, cost);
             claim.addChunk(chunk);
             recalculateCenter(claim);
-            ClaimEvents.recruitsClaimManager.addOrUpdateClaim((ServerLevel) player.getCommandSenderWorld(), claim);
+            ClaimEvents.claimManager().addOrUpdateClaim((ServerLevel) player.getCommandSenderWorld(), claim);
         } else if (decoded == Action.REMOVE_CHUNK) {
             if (!claim.containsChunk(chunk)) {
                 deny(player, "Chunk is not part of this claim.");
@@ -96,11 +96,11 @@ public class MessageClaimIntent implements BannerModMessage<MessageClaimIntent> 
             }
             claim.removeChunk(chunk);
             recalculateCenter(claim);
-            ClaimEvents.recruitsClaimManager.addOrUpdateClaim((ServerLevel) player.getCommandSenderWorld(), claim);
+            ClaimEvents.claimManager().addOrUpdateClaim((ServerLevel) player.getCommandSenderWorld(), claim);
         } else if (decoded == Action.DELETE) {
-            ClaimEvents.recruitsClaimManager.removeClaim(claim);
+            ClaimEvents.claimManager().removeClaim(claim);
         }
-        ClaimEvents.recruitsClaimManager.broadcastClaimsToAll((ServerLevel) player.getCommandSenderWorld());
+        ClaimEvents.claimManager().broadcastClaimsToAll((ServerLevel) player.getCommandSenderWorld());
         player.sendSystemMessage(Component.literal("Claim edit accepted: " + decoded.name().toLowerCase(java.util.Locale.ROOT)));
         return true;
     }

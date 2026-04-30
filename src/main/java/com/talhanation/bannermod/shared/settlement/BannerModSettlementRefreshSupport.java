@@ -19,14 +19,14 @@ public final class BannerModSettlementRefreshSupport {
     }
 
     public static void refreshSnapshot(ServerLevel level, @Nullable BlockPos pos) {
-        if (level == null || pos == null || ClaimEvents.recruitsClaimManager == null) {
+        if (level == null || pos == null || ClaimEvents.claimManager() == null) {
             return;
         }
         INVOCATIONS.incrementAndGet();
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(new net.minecraft.world.level.ChunkPos(pos));
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(new net.minecraft.world.level.ChunkPos(pos));
         BannerModSettlementService.refreshClaimAt(
                 level,
-                ClaimEvents.recruitsClaimManager,
+                ClaimEvents.claimManager(),
                 BannerModSettlementManager.get(level),
                 BannerModGovernorManager.get(level),
                 pos

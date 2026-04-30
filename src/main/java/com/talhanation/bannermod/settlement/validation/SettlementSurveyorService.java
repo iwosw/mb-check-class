@@ -95,10 +95,10 @@ public final class SettlementSurveyorService {
     private static SettlementRecord settlementForAnchor(ServerLevel level, ValidationSession session) {
         SettlementRegistryData registry = SettlementRegistryData.get(level);
         SettlementRecord settlement = registry.getSettlementAt(new ChunkPos(session.anchorPos()));
-        if (settlement != null || ClaimEvents.recruitsClaimManager == null) {
+        if (settlement != null || ClaimEvents.claimManager() == null) {
             return settlement;
         }
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(session.anchorPos()));
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(new ChunkPos(session.anchorPos()));
         return claim == null ? null : registry.getSettlementByClaimId(claim.getUUID());
     }
 

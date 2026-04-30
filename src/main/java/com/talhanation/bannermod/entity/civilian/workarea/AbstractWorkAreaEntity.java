@@ -250,7 +250,7 @@ public abstract class AbstractWorkAreaEntity extends Entity {
         }
 
         BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveSettlementStatus(
-                ClaimEvents.recruitsClaimManager,
+                ClaimEvents.claimManager(),
                 this.blockPosition(),
                 settlementFactionId
         );

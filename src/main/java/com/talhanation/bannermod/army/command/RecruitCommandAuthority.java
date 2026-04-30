@@ -25,10 +25,10 @@ public final class RecruitCommandAuthority {
     }
 
     public static boolean ownsGroup(ServerPlayer player, @Nullable UUID groupUuid) {
-        if (player == null || groupUuid == null || RecruitEvents.recruitsGroupsManager == null) {
+        if (player == null || groupUuid == null || RecruitEvents.groupsManager() == null) {
             return false;
         }
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUuid);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUuid);
         return group != null && player.getUUID().equals(group.getPlayerUUID());
     }
 
@@ -37,7 +37,7 @@ public final class RecruitCommandAuthority {
         if (!ownsGroup(player, groupUuid)) {
             return null;
         }
-        return RecruitEvents.recruitsGroupsManager.getGroup(groupUuid);
+        return RecruitEvents.groupsManager().getGroup(groupUuid);
     }
 
     public static List<UUID> filterOwnedGroups(ServerPlayer player, List<UUID> groupUuids) {

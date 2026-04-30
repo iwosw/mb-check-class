@@ -32,10 +32,10 @@ import java.util.*;
 public class RecruitEvents {
     static final Map<ServerLevel, RecruitsPatrolSpawn> RECRUIT_PATROL = new HashMap<>();
     static final Map<ServerLevel, PillagerPatrolSpawn> PILLAGER_PATROL = new HashMap<>();
-    public static RecruitsPlayerUnitManager recruitsPlayerUnitManager;
-    public static RecruitsGroupsManager recruitsGroupsManager;
+    private static RecruitsPlayerUnitManager recruitsPlayerUnitManager;
+    private static RecruitsGroupsManager recruitsGroupsManager;
 
-    public static MinecraftServer server;
+    private static MinecraftServer server;
     public static HashMap<Integer, EntityType<? extends AbstractRecruitEntity>> entitiesByProfession = new HashMap<>() {
         {
             put(0, ModEntityTypes.MESSENGER.get());
@@ -44,6 +44,26 @@ public class RecruitEvents {
             put(3, ModEntityTypes.CAPTAIN.get());
         }
     };
+
+    public static RecruitsPlayerUnitManager playerUnitManager() {
+        return recruitsPlayerUnitManager;
+    }
+
+    public static RecruitsGroupsManager groupsManager() {
+        return recruitsGroupsManager;
+    }
+
+    public static MinecraftServer server() {
+        return server;
+    }
+
+    static void installRuntime(MinecraftServer currentServer,
+                               RecruitsPlayerUnitManager currentPlayerUnitManager,
+                               RecruitsGroupsManager currentGroupsManager) {
+        server = currentServer;
+        recruitsPlayerUnitManager = currentPlayerUnitManager;
+        recruitsGroupsManager = currentGroupsManager;
+    }
 
     public static void promoteRecruit(AbstractRecruitEntity recruit, int profession, String name, ServerPlayer player) {
         if (!(recruit.getCommandSenderWorld() instanceof ServerLevel serverLevel)) {

@@ -34,7 +34,7 @@ public class MessageHire implements BannerModMessage<MessageHire> {
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUUID);
         AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 16.0D * 16.0D);
         if (recruit != null) {
             CommandEvents.handleRecruiting(player, group, recruit, true);

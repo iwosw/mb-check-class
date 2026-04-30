@@ -93,7 +93,7 @@ public final class WarRuntimeContext {
         return new OccupationTaxRuntime(
                 occupations(level),
                 com.talhanation.bannermod.governance.BannerModTreasuryManager.get(level),
-                com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager,
+                com.talhanation.bannermod.events.ClaimEvents.claimManager(),
                 audit(level)
         );
     }
@@ -110,7 +110,7 @@ public final class WarRuntimeContext {
                 com.talhanation.bannermod.war.config.WarServerConfig.lostTerritoryImmunityTicks(),
                 level,
                 com.talhanation.bannermod.governance.BannerModTreasuryManager.get(level),
-                com.talhanation.bannermod.events.ClaimEvents.recruitsClaimManager
+                com.talhanation.bannermod.events.ClaimEvents.claimManager()
         );
     }
 }
