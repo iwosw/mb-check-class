@@ -3,9 +3,11 @@ package com.talhanation.bannermod.settlement.prefab;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
+import com.talhanation.bannermod.settlement.onboarding.SettlementOnboardingGuide;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -104,6 +106,7 @@ public final class BuildingPlacementService {
 
         player.sendSystemMessage(Component.translatable(
                 "bannermod.prefab.place.ok", descriptor.displayKey()));
+        player.sendSystemMessage(SettlementOnboardingGuide.placementHint(descriptor).withStyle(ChatFormatting.YELLOW));
         return Result.PLACED;
     }
 

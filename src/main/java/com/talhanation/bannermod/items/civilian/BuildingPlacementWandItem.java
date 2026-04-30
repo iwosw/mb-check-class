@@ -244,6 +244,12 @@ public class BuildingPlacementWandItem extends Item {
             tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.taps", taps, needed)
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
+        tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.loop_1")
+                .withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.loop_2")
+                .withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("bannermod.prefab.wand.tooltip.loop_3")
+                .withStyle(ChatFormatting.YELLOW));
     }
 
     private static String readMode(ItemStack stack) {
