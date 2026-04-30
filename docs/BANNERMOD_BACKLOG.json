@@ -1886,8 +1886,8 @@
     {
       "id": "UX-004",
       "title": "Remove raw UUID and internal-value leakage from player UI",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Politics, war, claim, and governor screens still expose raw UUID fragments, enum internals, and hardcoded English that read like debug surfaces rather than shipped player UI.",
       "scope": [
         "Player-facing screens must render localized labels, human-readable identities, and interpreted state text instead of raw internal values across the active war, politics, claim, and governor surfaces."
@@ -1895,13 +1895,24 @@
       "acceptance": [
         "Target screens no longer expose raw UUIDs, enum internals, or hardcoded English for normal player flows; visible text comes from lang keys and player-friendly formatting; verification covers the main war and governance screens."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-3 after UI-007 closure; goal is to remove remaining raw UUID/internal-value leakage so TEST-005 can move."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/ux-004 after replacing raw UUID/internal-value UI output with localized realm/player-friendly labels across war, politics, claim, governor, and HUD surfaces; 2) review of the touched screens confirmed active detail/list/overlay flows now render localized names and interpreted status text instead of UUID fragments and enum internals; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-3."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UI-007",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "UX-005",
@@ -2104,8 +2115,8 @@
     {
       "id": "ARCH-001",
       "title": "Split RecruitEvents into smaller runtime services",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "RecruitEvents currently acts as a multi-responsibility runtime hub for lifecycle, sync, patrol, combat hooks, and server tick behavior, which makes changes risky and obscures invariants.",
       "scope": [
         "RecruitEvents must be decomposed into narrower services with explicit responsibilities and stable seams for lifecycle, sync, patrol, and combat integration while preserving behavior."
@@ -2113,15 +2124,26 @@
       "acceptance": [
         "Recruit runtime responsibilities are separated into smaller units with clear ownership and no behavior regression; core recruit flows still pass existing verification after the split."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-3 after ARMY-001 closure; goal is to split RecruitEvents into narrower runtime services without behavior regressions."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/arch-001 after splitting RecruitEvents event-bus responsibilities into RecruitLifecycleEvents and RecruitCombatEvents while preserving the static facade; 2) focused tests RecruitGovernorWorkflowTest and RecruitTargetAuthorityTest passed on feature/arch-001; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-3."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "AUTH-005",
         "ARMY-001",
         "ARMY-003",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "ARCH-002",
@@ -2152,8 +2174,8 @@
     {
       "id": "ARCH-003",
       "title": "Decompose settlement snapshot and orchestration services",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "BannerModSettlementService and BannerModSettlementOrchestrator each aggregate too many responsibilities, making settlement behavior hard to reason about, test, and evolve safely.",
       "scope": [
         "Settlement snapshot building, logistics derivation, staffing, project planning, home assignment, seller dispatch, and job orchestration must be split into smaller bounded services with explicit contracts."
@@ -2161,8 +2183,18 @@
       "acceptance": [
         "Settlement runtime responsibilities are decomposed into smaller services with clear inputs and outputs; behavior stays equivalent or intentionally improved; focused tests cover the extracted seams."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-3 after GAME-001/GAME-002/GAME-005/SYNC-001 closure; goal is to decompose settlement snapshot/orchestration responsibilities into bounded services."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/arch-003 after extracting settlement snapshot/orchestration responsibilities into explicit helper services; 2) focused tests BannerModSettlementServiceTest and BannerModSettlementOrchestratorTest passed on feature/arch-003; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-3 with existing public settlement entry points preserved."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-001",
@@ -2170,7 +2202,8 @@
         "GAME-005",
         "SYNC-001",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "ARCH-004",
@@ -2309,8 +2342,8 @@
     {
       "id": "TEST-002",
       "title": "Add end-to-end tests for formation command pipeline",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "The saved-formation command path and queued-intent execution rules are central gameplay flows but currently lack clear end-to-end coverage for parity and persistence.",
       "scope": [
         "Tests must exercise packet to intent to dispatcher to execution behavior for formation-aware movement and related queued commands, including saved formation preferences and queue parity."
@@ -2318,8 +2351,18 @@
       "acceptance": [
         "Formation-aware command flows are covered end to end for immediate and queued behavior; saved formation preferences are verified across reload or clone scenarios where intended; representative failure cases are covered."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-3 after ARMY-001 closure; goal is end-to-end command pipeline coverage for formation-aware immediate and queued flows."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) additive GameTests in BannerModCommandPacketPathGameTests and BannerModCommandQueueParityGameTests cover packet -> intent -> dispatcher -> execution for formation-aware immediate and queued command flows; 2) ./gradlew compileJava passed on feature/test-002; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-3."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "ARMY-001",
@@ -2327,7 +2370,8 @@
         "ARMY-003",
         "AUTH-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "TEST-003",
