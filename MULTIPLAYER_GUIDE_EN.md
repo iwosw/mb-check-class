@@ -182,6 +182,8 @@ Battle tips:
 
 You can set per-unit stances from the recruit's inventory (`RecruitInventoryScreen`); group stances live in the command screen. Recruit commands now report chat acknowledgements: accepted recruit count for immediate orders, rejected empty/no-eligible selections, replaced queued orders, or pending order counts when a queued command path is used.
 
+If a crossbowman is holding a musketmod gun, the recruit inventory now shows whether that firearm is supported, whether cartridges are present, or whether the gun is unsupported for recruit use. Check that feedback before assuming the recruit combat runtime is broken.
+
 ### Recruit command pipeline details
 
 Server-side military commands are normalized into `CommandIntent` records before they reach legacy command services. This matters because selection narrowing, queue mode, priority, and audit/logging hooks all live in the unified command path.
