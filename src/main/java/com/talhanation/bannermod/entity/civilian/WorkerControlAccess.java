@@ -62,12 +62,12 @@ final class WorkerControlAccess {
     }
 
     private void refreshSettlementSnapshot() {
-        if (!(this.worker.level() instanceof ServerLevel serverLevel) || ClaimEvents.recruitsClaimManager == null) {
+        if (!(this.worker.level() instanceof ServerLevel serverLevel) || ClaimEvents.claimManager() == null) {
             return;
         }
         BannerModSettlementService.refreshClaimAt(
                 serverLevel,
-                ClaimEvents.recruitsClaimManager,
+                ClaimEvents.claimManager(),
                 BannerModSettlementManager.get(serverLevel),
                 BannerModGovernorManager.get(serverLevel),
                 this.worker.blockPosition()

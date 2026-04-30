@@ -52,7 +52,7 @@ final class SettlementHeartbeatService {
             long startNanos = System.nanoTime();
             BannerModGovernorHeartbeat.BatchResult result = BannerModGovernorHeartbeat.runGovernedClaimHeartbeatBatch(
                     level,
-                    ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.claimManager(),
                     governorManager,
                     BannerModTreasuryManager.get(level),
                     governorMaintenanceCursor,
@@ -67,7 +67,7 @@ final class SettlementHeartbeatService {
             long startNanos = System.nanoTime();
             BannerModSettlementService.BatchResult result = BannerModSettlementService.refreshClaimsBatch(
                     level,
-                    ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.claimManager(),
                     settlementManager,
                     governorManager,
                     governorMaintenanceCursor,

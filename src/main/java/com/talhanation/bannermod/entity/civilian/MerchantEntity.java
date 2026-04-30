@@ -547,12 +547,12 @@ public class MerchantEntity extends AbstractWorkerEntity {
 
     private void refreshSettlementSnapshot() {
         MarketArea market = getCurrentMarketArea();
-        if (!(this.level() instanceof ServerLevel serverLevel) || market == null || ClaimEvents.recruitsClaimManager == null) {
+        if (!(this.level() instanceof ServerLevel serverLevel) || market == null || ClaimEvents.claimManager() == null) {
             return;
         }
         BannerModSettlementService.refreshClaimAt(
                 serverLevel,
-                ClaimEvents.recruitsClaimManager,
+                ClaimEvents.claimManager(),
                 BannerModSettlementManager.get(serverLevel),
                 BannerModGovernorManager.get(serverLevel),
                 market.blockPosition()

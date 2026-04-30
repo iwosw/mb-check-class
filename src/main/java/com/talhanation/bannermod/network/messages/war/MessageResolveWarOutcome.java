@@ -127,7 +127,7 @@ public class MessageResolveWarOutcome implements BannerModMessage<MessageResolve
             case OCCUPY -> applier.applyOccupy(war.id(), chunksAround(player.blockPosition(), 0), gameTime);
             case ANNEX -> {
                 ChunkPos centre = new ChunkPos(BlockPos.containing(player.position()));
-                RecruitsClaimManager claimManager = ClaimEvents.recruitsClaimManager;
+                RecruitsClaimManager claimManager = ClaimEvents.claimManager();
                 ClaimRepublisher publisher = claim -> claimManager.addOrUpdateClaim(level, claim);
                 RecruitsClaim claim = claimManager.getClaim(centre);
                 WarOutcomeApplier.Result result = applier.applyAnnex(war.id(), centre, gameTime, publisher);

@@ -46,7 +46,7 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             helper.assertTrue(worker != null, "Expected friendly-claim birth conversion to create a settlement worker through the live VillagerEvents seam");
             helper.assertTrue(worker != null && FRIENDLY_LEADER_UUID.equals(worker.getOwnerUUID()), "Expected the settlement-born worker to inherit the claim leader as owner");
             helper.assertTrue(worker != null && worker.getTeam() != null && FRIENDLY_TEAM_ID.equals(worker.getTeam().getName()), "Expected the settlement-born worker to join the friendly claim team");
-            helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, worker.blockPosition(), FRIENDLY_TEAM_ID).status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+            helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.claimManager(), worker.blockPosition(), FRIENDLY_TEAM_ID).status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                     "Expected the live shared settlement binding seam to remain FRIENDLY_CLAIM for the spawned worker");
         } finally {
             clearPhase30TestOverrides();
@@ -76,7 +76,7 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
 
             helper.assertTrue(firstWorker != null, "Expected friendly claim autonomous spawning to create one worker through the runtime seam");
             helper.assertTrue(secondWorker == null, "Expected the configured cooldown to block a second autonomous spawn in the same claim immediately after the first");
-            helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, claim.getCenter().getWorldPosition(), FRIENDLY_TEAM_ID + "_cooldown").status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+            helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.claimManager(), claim.getCenter().getWorldPosition(), FRIENDLY_TEAM_ID + "_cooldown").status() == BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                     "Expected the cooldown-bounded spawn scenario to stay rooted in a friendly claim binding");
         } finally {
             clearPhase30TestOverrides();
@@ -105,12 +105,12 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             BannerModDedicatedServerGameTestSupport.joinTeam(level, HOSTILE_TEAM_ID, hostileVillager);
 
             AbstractWorkerEntity hostileWorker = WorkersVillagerEvents.attemptBirthWorkerSpawn(level, hostileVillager);
-            BannerModSettlementBinding.Binding hostileBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, hostilePos, HOSTILE_TEAM_ID);
+            BannerModSettlementBinding.Binding hostileBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.claimManager(), hostilePos, HOSTILE_TEAM_ID);
 
             BlockPos unclaimedPos = helper.absolutePos(new BlockPos(18, 2, 2));
             Villager unclaimedVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(18, 2, 2), "phase30-unclaimed-villager");
             AbstractWorkerEntity unclaimedWorker = WorkersVillagerEvents.attemptSettlementWorkerSpawn(level, unclaimedVillager);
-            BannerModSettlementBinding.Binding unclaimedBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, unclaimedPos, FRIENDLY_TEAM_ID);
+            BannerModSettlementBinding.Binding unclaimedBinding = BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.claimManager(), unclaimedPos, FRIENDLY_TEAM_ID);
 
             helper.assertTrue(hostileWorker == null, "Expected hostile-claim villager conversion to be denied before any worker entity is created");
             helper.assertTrue(hostileBinding.status() == BannerModSettlementBinding.Status.DEGRADED_MISMATCH,

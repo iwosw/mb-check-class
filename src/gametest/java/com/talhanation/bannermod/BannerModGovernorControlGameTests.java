@@ -77,14 +77,14 @@ public class BannerModGovernorControlGameTests {
         BannerModGovernorService service = new BannerModGovernorService(BannerModGovernorManager.get(level));
         service.assignGovernor(claim, (net.minecraft.server.level.ServerPlayer) leader, recruit);
         BannerModDedicatedServerGameTestSupport.swapClaimFaction(level, claim, HOSTILE_TEAM_ID, HOSTILE_LEADER_UUID, "phase23-hostile-leader");
-        BannerModGovernorHeartbeat.runGovernedClaimHeartbeat(level, ClaimEvents.recruitsClaimManager, BannerModGovernorManager.get(level));
+        BannerModGovernorHeartbeat.runGovernedClaimHeartbeat(level, ClaimEvents.claimManager(), BannerModGovernorManager.get(level));
 
         var snapshot = BannerModGovernorManager.get(level).getSnapshot(claim.getUUID());
         helper.assertTrue(snapshot != null && snapshot.taxesCollected() == 0,
                 "Expected degraded governor control to stop normal tax collection after a hostile claim swap");
         helper.assertTrue(snapshot != null && snapshot.incidentTokens().contains("degraded_settlement"),
                 "Expected degraded governor control to publish an instability incident after claim loss");
-        helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.recruitsClaimManager, claimPos, FRIENDLY_TEAM_ID).status() == BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
+        helper.assertTrue(BannerModSettlementBinding.resolveSettlementStatus(ClaimEvents.claimManager(), claimPos, FRIENDLY_TEAM_ID).status() == BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
                 "Expected the live settlement binding seam to report DEGRADED_MISMATCH after the hostile swap");
         helper.succeed();
     }
@@ -103,7 +103,7 @@ public class BannerModGovernorControlGameTests {
         RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, FRIENDLY_TEAM_ID, FRIENDLY_LEADER_UUID, "phase23-report-leader");
         claim.addChunk(new ChunkPos(villagerPos));
         claim.addChunk(new ChunkPos(farmerPos));
-        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
+        ClaimEvents.claimManager().addOrUpdateClaim(level, claim);
         RecruitEntity recruit = BannerModGameTestSupport.spawnOwnedRecruit(helper, leader, new BlockPos(2, 2, 2));
         BannerModDedicatedServerGameTestSupport.assignRecruitToLeader(level, recruit, leader, FRIENDLY_TEAM_ID);
         BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(3, 2, 2), "phase23-villager");
@@ -113,7 +113,7 @@ public class BannerModGovernorControlGameTests {
 
         BannerModGovernorService service = new BannerModGovernorService(BannerModGovernorManager.get(level));
         service.assignGovernor(claim, (net.minecraft.server.level.ServerPlayer) leader, recruit);
-        BannerModGovernorHeartbeat.runGovernedClaimHeartbeat(level, ClaimEvents.recruitsClaimManager, BannerModGovernorManager.get(level));
+        BannerModGovernorHeartbeat.runGovernedClaimHeartbeat(level, ClaimEvents.claimManager(), BannerModGovernorManager.get(level));
 
         var snapshot = BannerModGovernorManager.get(level).getSnapshot(claim.getUUID());
         helper.assertTrue(snapshot != null && snapshot.taxesDue() > 0,

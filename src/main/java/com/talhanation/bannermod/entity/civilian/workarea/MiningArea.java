@@ -402,7 +402,7 @@ public class MiningArea extends AbstractWorkAreaEntity {
 
     private boolean allowsExcavation(BlockPos pos) {
         BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                ClaimEvents.recruitsClaimManager,
+                ClaimEvents.claimManager(),
                 pos,
                 this.getTeamStringID()
         );

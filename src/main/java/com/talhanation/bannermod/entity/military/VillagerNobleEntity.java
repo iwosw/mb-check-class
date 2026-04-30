@@ -177,7 +177,7 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
         this.isTrading(true);
         String stringID = player.getTeam() != null ? player.getTeam().getName() : "";
 
-        boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringID, player.getUUID());
+        boolean canHire = RecruitEvents.playerUnitManager().canPlayerRecruit(stringID, player.getUUID());
         BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> (ServerPlayer) player), new MessageToClientUpdateHireState(canHire));
         BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new MessageToClientOpenNobleTradeScreen(this));
     }
@@ -366,7 +366,6 @@ public class VillagerNobleEntity extends AbstractRecruitEntity {
     }
 
 }
-
 
 
 

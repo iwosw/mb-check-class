@@ -71,7 +71,7 @@ public class MessageHireFromNobleVillager implements BannerModMessage<MessageHir
             return;
         }
 
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUUID);
 
         if(this.needsVillager){
             Entity villagerEntity = serverLevel.getEntity(this.villagerUUID);
@@ -90,7 +90,7 @@ public class MessageHireFromNobleVillager implements BannerModMessage<MessageHir
         }
 
         String stringID = player.getTeam() != null ? player.getTeam().getName() : "";
-        boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringID, player.getUUID());
+        boolean canHire = RecruitEvents.playerUnitManager().canPlayerRecruit(stringID, player.getUUID());
         BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> player), new MessageToClientUpdateHireState(canHire));
     }
     public void createRecruit(ServerLevel serverLevel, Villager villager, VillagerNobleEntity villagerNoble, Player player, RecruitsGroup group){

@@ -82,7 +82,7 @@ public class GroupAssignmentAuthorityGameTests {
         AbstractRecruitEntity recruit = spawnOwnedRecruit(helper, OWNER_UUID, "Spoofed Transfer Recruit");
         RecruitsBattleGameTestSupport.assignFormationCohort(List.of(recruit), SPOOFED_TRANSFER_GROUP_UUID);
 
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(SPOOFED_TRANSFER_GROUP_UUID);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(SPOOFED_TRANSFER_GROUP_UUID);
         boolean transferred = MessageAssignGroupToPlayer.transferGroupToPlayer(
                 outsider,
                 SPOOFED_TRANSFER_GROUP_UUID,
@@ -104,7 +104,7 @@ public class GroupAssignmentAuthorityGameTests {
         AbstractRecruitEntity recruit = spawnOwnedRecruit(helper, OWNER_UUID, "Valid Transfer Recruit");
         RecruitsBattleGameTestSupport.assignFormationCohort(List.of(recruit), TRANSFER_GROUP_UUID);
 
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(TRANSFER_GROUP_UUID);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(TRANSFER_GROUP_UUID);
         boolean transferred = MessageAssignGroupToPlayer.transferGroupToPlayer(
                 owner,
                 TRANSFER_GROUP_UUID,

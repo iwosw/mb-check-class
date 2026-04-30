@@ -233,7 +233,7 @@ public final class WarDeclarationCommands {
         }
         ChunkPos centre = new ChunkPos(BlockPos.containing(context.getSource().getPosition()));
         WarOutcomeApplier applier = WarRuntimeContext.applierFor(level);
-        RecruitsClaimManager claimManager = ClaimEvents.recruitsClaimManager;
+        RecruitsClaimManager claimManager = ClaimEvents.claimManager();
         ClaimRepublisher publisher = c -> claimManager.addOrUpdateClaim(level, c);
         RecruitsClaim claim = claimManager.getClaim(centre);
         WarOutcomeApplier.Result result = applier.applyAnnex(war.id(), centre, level.getGameTime(), publisher);

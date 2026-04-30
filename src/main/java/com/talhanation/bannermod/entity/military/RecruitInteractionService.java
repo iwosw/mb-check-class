@@ -125,7 +125,7 @@ final class RecruitInteractionService {
             recruit.stopNavigation();
             Team ownerTeam = player.getTeam();
             String stringId = ownerTeam != null ? ownerTeam.getName() : "";
-            boolean canHire = RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID());
+            boolean canHire = RecruitEvents.playerUnitManager().canPlayerRecruit(stringId, player.getUUID());
             BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> serverPlayer), new MessageToClientUpdateHireState(canHire));
             BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
                 @Override

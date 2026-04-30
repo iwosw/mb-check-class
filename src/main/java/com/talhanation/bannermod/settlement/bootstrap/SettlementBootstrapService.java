@@ -169,10 +169,10 @@ public final class SettlementBootstrapService {
 
     @Nullable
     private static RecruitsClaim claimAt(BlockPos anchorPos) {
-        if (ClaimEvents.recruitsClaimManager == null) {
+        if (ClaimEvents.claimManager() == null) {
             return null;
         }
-        return ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(anchorPos));
+        return ClaimEvents.claimManager().getClaim(new ChunkPos(anchorPos));
     }
 
     private static boolean playerOwnsClaim(Player player, RecruitsClaim claim) {
@@ -189,7 +189,7 @@ public final class SettlementBootstrapService {
     }
 
     private static boolean isStarterTownTooCloseToSameNationTown(ServerLevel level, ServerPlayer player, BlockPos authorityPos) {
-        if (ClaimEvents.recruitsClaimManager == null) {
+        if (ClaimEvents.claimManager() == null) {
             return false;
         }
         UUID politicalEntityId = PoliticalMembership.entityIdFor(WarRuntimeContext.registry(level), player.getUUID());
@@ -200,7 +200,7 @@ public final class SettlementBootstrapService {
         ChunkPos center = new ChunkPos(authorityPos);
         candidate.addChunk(center);
         candidate.setCenter(center);
-        return ClaimEvents.recruitsClaimManager.isTownTooCloseToSameNationTown(
+        return ClaimEvents.claimManager().isTownTooCloseToSameNationTown(
                 candidate,
                 null,
                 RecruitsServerConfig.TownMinCenterDistance.get());
@@ -208,7 +208,7 @@ public final class SettlementBootstrapService {
 
     @Nullable
     private static RecruitsClaim createStarterClaim(ServerLevel level, ServerPlayer player, BlockPos authorityPos) {
-        if (ClaimEvents.recruitsClaimManager == null) {
+        if (ClaimEvents.claimManager() == null) {
             return null;
         }
         UUID politicalEntityId = PoliticalMembership.entityIdFor(WarRuntimeContext.registry(level), player.getUUID());
@@ -217,7 +217,7 @@ public final class SettlementBootstrapService {
         }
 
         ChunkPos anchorChunk = new ChunkPos(authorityPos);
-        RecruitsClaim existing = ClaimEvents.recruitsClaimManager.getClaim(anchorChunk);
+        RecruitsClaim existing = ClaimEvents.claimManager().getClaim(anchorChunk);
         if (existing != null) {
             return existing;
         }
@@ -226,13 +226,13 @@ public final class SettlementBootstrapService {
         claim.addChunk(anchorChunk);
         claim.setCenter(anchorChunk);
         claim.setPlayer(new RecruitsPlayerInfo(player.getUUID(), player.getName().getString()));
-        if (ClaimEvents.recruitsClaimManager.isTownTooCloseToSameNationTown(
+        if (ClaimEvents.claimManager().isTownTooCloseToSameNationTown(
                 claim,
                 null,
                 RecruitsServerConfig.TownMinCenterDistance.get())) {
             return null;
         }
-        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
+        ClaimEvents.claimManager().addOrUpdateClaim(level, claim);
         return claim;
     }
 

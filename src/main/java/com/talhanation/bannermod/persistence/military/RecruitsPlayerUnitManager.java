@@ -64,10 +64,10 @@ public class RecruitsPlayerUnitManager {
     }
 
     private RecruitPlayerUnitSaveData getLiveSaveData() {
-        if (RecruitEvents.server == null) {
+        if (RecruitEvents.server() == null) {
             return null;
         }
-        return RecruitPlayerUnitSaveData.get(RecruitEvents.server.overworld());
+        return RecruitPlayerUnitSaveData.get(RecruitEvents.server().overworld());
     }
 
     public boolean canPlayerRecruit(String stringId, UUID playerUUID) {

@@ -31,10 +31,10 @@ final class RecruitLifecycleService {
         recruit.setIsOwned(false);
         if (increaseCost) recruit.recalculateCost();
         if (recruit.getCommandSenderWorld().isClientSide()) return;
-        RecruitEvents.recruitsPlayerUnitManager.removeRecruits(recruit.getOwnerUUID(), 1);
+        RecruitEvents.playerUnitManager().removeRecruits(recruit.getOwnerUUID(), 1);
         recruit.setOwnerUUID(Optional.empty());
         if (recruit.getGroup() != null) {
-            RecruitEvents.recruitsGroupsManager.removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
+            RecruitEvents.groupsManager().removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
             recruit.setGroupUUID(null);
         }
     }
@@ -47,7 +47,7 @@ final class RecruitLifecycleService {
         }
         Team ownerTeam = player.getTeam();
         String stringId = ownerTeam != null ? ownerTeam.getName() : "";
-        if (!RecruitEvents.recruitsPlayerUnitManager.canPlayerRecruit(stringId, player.getUUID())) {
+        if (!RecruitEvents.playerUnitManager().canPlayerRecruit(stringId, player.getUUID())) {
             player.sendSystemMessage(recruitingMax);
             return false;
         }
@@ -62,10 +62,10 @@ final class RecruitLifecycleService {
         if (group != null) recruit.setGroupUUID(group.getUUID());
         recruit.despawnTimer = -1;
         if (!recruit.getCommandSenderWorld().isClientSide()) {
-            RecruitEvents.recruitsPlayerUnitManager.addRecruits(player.getUUID(), 1);
+            RecruitEvents.playerUnitManager().addRecruits(player.getUUID(), 1);
             if (group != null) {
-                RecruitEvents.recruitsGroupsManager.addMember(group.getUUID(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
-                RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
+                RecruitEvents.groupsManager().addMember(group.getUUID(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
+                RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
             }
         }
         if (message && !recruitedMessages.isEmpty()) {
@@ -81,10 +81,10 @@ final class RecruitLifecycleService {
             recruit.getOwner().sendSystemMessage(deathMessage);
         }
         if (recruit.getGroup() != null) {
-            RecruitEvents.recruitsGroupsManager.removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
+            RecruitEvents.groupsManager().removeMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
         }
         if (recruit.isOwned()) {
-            RecruitEvents.recruitsPlayerUnitManager.removeRecruits(recruit.getOwnerUUID(), 1);
+            RecruitEvents.playerUnitManager().removeRecruits(recruit.getOwnerUUID(), 1);
         }
     }
 
@@ -104,10 +104,10 @@ final class RecruitLifecycleService {
         recruit.needsGroupUpdate = false;
         if (recruit.getGroup() == null) return;
         UUID raw = recruit.getGroup();
-        UUID resolved = RecruitEvents.recruitsGroupsManager.resolveGroup(raw);
-        UUID finalGroup = RecruitEvents.recruitsGroupsManager.resolveRecruit(recruit.getUUID(), resolved);
+        UUID resolved = RecruitEvents.groupsManager().resolveGroup(raw);
+        UUID finalGroup = RecruitEvents.groupsManager().resolveRecruit(recruit.getUUID(), resolved);
         if (!finalGroup.equals(raw)) recruit.setGroupUUID(finalGroup);
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(finalGroup);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(finalGroup);
         if (group == null || !group.members.contains(recruit.getUUID())) {
             recruit.setGroupUUID(null);
             return;
@@ -124,10 +124,10 @@ final class RecruitLifecycleService {
     }
 
     static void assignToPlayer(AbstractRecruitEntity recruit, UUID newOwner, UUID newGroupUUID) {
-        RecruitsGroup currentGroup = RecruitEvents.recruitsGroupsManager.getGroup(recruit.getGroup());
+        RecruitsGroup currentGroup = RecruitEvents.groupsManager().getGroup(recruit.getGroup());
         if (currentGroup != null) currentGroup.removeMember(recruit.getUUID());
         recruit.setGroupUUID(newGroupUUID);
-        RecruitsGroup newGroup = RecruitEvents.recruitsGroupsManager.getGroup(newGroupUUID);
+        RecruitsGroup newGroup = RecruitEvents.groupsManager().getGroup(newGroupUUID);
         recruit.disband(null, false, false);
         recruit.setOwnerUUID(Optional.of(newOwner));
         if (recruit.getOwner() != null) {

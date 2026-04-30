@@ -62,10 +62,10 @@ public final class BannerModSettlementProjectRuntime {
     }
 
     public static BannerModBuildAreaProjectBridge.BuildAreaResolver buildAreaResolver(ServerLevel level) {
-        if (level == null || ClaimEvents.recruitsClaimManager == null) {
+        if (level == null || ClaimEvents.claimManager() == null) {
             return new BannerModBuildAreaProjectBridge.NoopBuildAreaResolver();
         }
-        return new BannerModBuildAreaProjectBridge.ClaimManagerBuildAreaResolver(level, ClaimEvents.recruitsClaimManager);
+        return new BannerModBuildAreaProjectBridge.ClaimManagerBuildAreaResolver(level, ClaimEvents.claimManager());
     }
 
     /**
