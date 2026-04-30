@@ -6,6 +6,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
@@ -31,6 +32,16 @@ final class WorldMapRenderPrimitives {
 
     static void button(GuiGraphics graphics, Font font, int mouseX, int mouseY,
                        int x, int y, int width, int height, String label,
+                       int labelColor, boolean selected) {
+        boolean hovered = contains(mouseX, mouseY, x, y, width, height);
+        int bg = selected ? 0xCC5A4025 : (hovered ? 0xCC4B3928 : 0xB82A2119);
+        graphics.fill(x, y, x + width, y + height, bg);
+        graphics.renderOutline(x, y, width, height, hovered || selected ? 0xFFE0B86A : 0xAA8A6A3A);
+        graphics.drawCenteredString(font, label, x + width / 2, y + (height - 8) / 2, labelColor);
+    }
+
+    static void button(GuiGraphics graphics, Font font, int mouseX, int mouseY,
+                       int x, int y, int width, int height, Component label,
                        int labelColor, boolean selected) {
         boolean hovered = contains(mouseX, mouseY, x, y, width, height);
         int bg = selected ? 0xCC5A4025 : (hovered ? 0xCC4B3928 : 0xB82A2119);

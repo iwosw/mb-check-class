@@ -17,7 +17,7 @@ final class WorldMapRouteToolbar {
     private static final int ROUTE_BTN_SIZE = 20;
     private static final int ROUTE_BTN_GAP = 3;
     private static final int HELP_W = 236;
-    private static final int HELP_H = 34;
+    private static final int HELP_H = 50;
     private static final Component TEXT_ROUTE_PLACEHOLDER = Component.translatable("gui.recruits.map.route.dropdown");
     private static final Component TEXT_ROUTE_HELP = Component.translatable("gui.recruits.map.route.help");
     private static final Component TEXT_ROUTE_HELP_SELECTED = Component.translatable("gui.recruits.map.route.help_selected");
