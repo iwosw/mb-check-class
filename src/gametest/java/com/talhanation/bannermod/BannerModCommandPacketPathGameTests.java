@@ -6,6 +6,7 @@ import com.talhanation.bannermod.army.command.CommandIntentLog;
 import com.talhanation.bannermod.army.command.MovementCommandState;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.events.CommandEvents;
+import com.talhanation.bannermod.gametest.support.PacketGameTestSupport;
 import com.talhanation.bannermod.gametest.support.RecruitsBattleGameTestSupport;
 import com.talhanation.bannermod.gametest.support.RecruitsCommandGameTestSupport;
 import com.talhanation.bannermod.network.messages.military.MessageFaceCommand;
@@ -13,6 +14,7 @@ import com.talhanation.bannermod.network.messages.military.MessageFollowGui;
 import com.talhanation.bannermod.network.messages.military.MessageFormationMapMoveOrder;
 import com.talhanation.bannermod.network.messages.military.MessageMovement;
 import com.talhanation.bannermod.network.messages.military.MessageRangedFire;
+import com.talhanation.bannermod.network.messages.military.MessageSaveFormationFollowMovement;
 import com.talhanation.bannermod.network.messages.military.MessageUpkeepPos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -23,6 +25,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
+import java.util.List;
 import java.util.UUID;
 
 @GameTestHolder(BannerModMain.MOD_ID)
@@ -230,6 +233,59 @@ public class BannerModCommandPacketPathGameTests {
         helper.assertTrue(first.getHoldPos().distanceToSqr(expectedCenter) < 64.0D
                         && second.getHoldPos().distanceToSqr(expectedCenter) < 64.0D,
                 "Expected formation slots to be placed near the explicit map target");
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty", batch = "vanilla011_movement_regression")
+    public static void saveFormationAndMapMovePacketsUseWirePathAndSavedPreferences(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer owner = commandSender(level, FORMATION_MAP_MOVE_OWNER_UUID, "formation-wire-owner", helper, -45.0F);
+        AbstractRecruitEntity first = commandRecruit(helper, FORMATION_MAP_MOVE_OWNER_UUID, "Formation Wire Recruit A");
+        AbstractRecruitEntity second = RecruitsBattleGameTestSupport.spawnConfiguredRecruit(
+                helper,
+                com.talhanation.bannermod.registry.military.ModEntityTypes.RECRUIT.get(),
+                RecruitsBattleGameTestSupport.WEST_FLANK_POS,
+                "Formation Wire Recruit B",
+                FORMATION_MAP_MOVE_OWNER_UUID
+        );
+        RecruitsCommandGameTestSupport.prepareForCommand(second, RecruitsCommandGameTestSupport.TARGET_GROUP_UUID);
+        RecruitsBattleGameTestSupport.assignFormationCohort(List.of(first, second), RecruitsCommandGameTestSupport.TARGET_GROUP_UUID);
+        BlockPos target = helper.absolutePos(new BlockPos(9, 2, 9));
+        int expectedY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, target.getX(), target.getZ());
+        Vec3 expectedCenter = Vec3.atCenterOf(new BlockPos(target.getX(), expectedY, target.getZ()));
+        CommandIntentLog.instance().clearFor(owner.getUUID());
+
+        PacketGameTestSupport.dispatchServerbound(owner,
+                new MessageSaveFormationFollowMovement(owner.getUUID(), List.of(RecruitsCommandGameTestSupport.TARGET_GROUP_UUID, UUID.randomUUID()), 1),
+                MessageSaveFormationFollowMovement::new);
+
+        helper.assertTrue(CommandEvents.getSavedFormation(owner) == 1,
+                "Expected save-formation packet to persist the sender's saved formation");
+        helper.assertTrue(CommandEvents.getSavedUUIDList(owner, "ActiveGroups").equals(List.of(RecruitsCommandGameTestSupport.TARGET_GROUP_UUID)),
+                "Expected save-formation packet to persist only owned active groups");
+
+        PacketGameTestSupport.dispatchServerbound(owner,
+                new MessageFormationMapMoveOrder(first.getUUID(), RecruitsCommandGameTestSupport.TARGET_GROUP_UUID, target),
+                MessageFormationMapMoveOrder::new);
+
+        CommandIntentLog.Entry entry = CommandIntentLog.instance().recentFor(owner.getUUID()).get(0);
+        helper.assertTrue(entry.intent() instanceof CommandIntent.Movement,
+                "Expected wire-decoded map move packet to enter the command-intent dispatcher");
+        CommandIntent.Movement movement = (CommandIntent.Movement) entry.intent();
+        helper.assertTrue(movement.movementState() == MovementCommandState.MOVE_TO_POSITION
+                        && movement.formation() == 1
+                        && movement.targetPos() != null
+                        && entry.actorCount() == 2,
+                "Expected wire-decoded map move packet to preserve saved formation, explicit target, and actor count");
+        helper.assertTrue(first.isInFormation && second.isInFormation,
+                "Expected saved-formation wire path to apply formation membership");
+        helper.assertTrue(first.getFollowState() == MovementCommandState.BACK_TO_POSITION
+                        && second.getFollowState() == MovementCommandState.BACK_TO_POSITION,
+                "Expected saved-formation wire path to preserve formation follow-state semantics");
+        helper.assertTrue(first.getHoldPos().distanceToSqr(expectedCenter) < 64.0D
+                        && second.getHoldPos().distanceToSqr(expectedCenter) < 64.0D,
+                "Expected saved-formation wire path to place formation slots near the explicit target");
         helper.succeed();
     }
 
