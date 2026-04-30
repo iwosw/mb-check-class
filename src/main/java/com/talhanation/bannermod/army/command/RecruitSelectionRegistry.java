@@ -15,8 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * commands target that subset instead of the broader group.</p>
  *
  * <p>The registry is in-memory only. Players who log out clear their entry on the server
- * disconnect hook (added in a follow-up; current slice leaves stale entries until manual
- * clear).</p>
+ * disconnect hook.</p>
  */
 public final class RecruitSelectionRegistry {
     private static final RecruitSelectionRegistry INSTANCE = new RecruitSelectionRegistry();
