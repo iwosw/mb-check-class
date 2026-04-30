@@ -2,6 +2,7 @@ package com.talhanation.bannermod.settlement.project;
 
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.settlement.growth.PendingProject;
+import com.talhanation.bannermod.settlement.growth.ProjectKind;
 import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
@@ -95,6 +96,17 @@ public final class BannerModSettlementProjectRuntime {
                 ? new BannerModBuildAreaProjectBridge.NoopBuildAreaResolver()
                 : resolver;
         Optional<ProjectAssignment> assignment = bridge.attemptAssignment(scheduler, claimUuid, gameTime, safeResolver);
+        if (assignment.isEmpty()
+                && ignoredLevel != null
+                && scheduler.peek(claimUuid)
+                .filter(project -> project.kind() == ProjectKind.NEW_BUILDING)
+                .isPresent()
+                && BannerModSettlementProjectWorldExecution.ensureExecutableTarget(
+                        ignoredLevel,
+                        claimUuid,
+                        scheduler.peek(claimUuid).orElse(null))) {
+            assignment = bridge.attemptAssignment(scheduler, claimUuid, gameTime, buildAreaResolver(ignoredLevel));
+        }
         assignment.ifPresent(resolved -> assignmentsByBuildArea.put(resolved.buildAreaUuid(), resolved));
         return assignment;
     }
