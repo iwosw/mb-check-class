@@ -432,8 +432,7 @@ public class WarListScreen extends Screen {
                 text("gui.bannermod.war_list.detail.revolts", revoltSummary(war.id())).getString(),
                 text("gui.bannermod.war_list.detail.revolt_ui").getString(),
                 text("gui.bannermod.war_list.detail.outcome_ui", outcomeStatus(war)).getString(),
-                text("gui.bannermod.war_list.detail.consequences", consequenceSummary(war)).getString(),
-                text("gui.bannermod.war_list.detail.id", shortId(war.id())).getString()
+                text("gui.bannermod.war_list.detail.consequences", consequenceSummary(war)).getString()
         };
         for (String s : body) {
             graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, 0xFFFFFF, false);
@@ -621,14 +620,8 @@ public class WarListScreen extends Screen {
     private String entityName(UUID id) {
         if (id == null) return text("gui.bannermod.common.unknown").getString();
         PoliticalEntityRecord entity = WarClientState.entityById(id);
-        if (entity == null) return shortId(id);
-        return entity.name().isBlank() ? shortId(id) : entity.name();
-    }
-
-    private static String shortId(UUID id) {
-        if (id == null) return "?";
-        String s = id.toString();
-        return s.length() > 8 ? s.substring(0, 8) : s;
+        if (entity == null) return text("gui.bannermod.common.unknown").getString();
+        return entity.name().isBlank() ? text("gui.bannermod.states.unnamed").getString() : entity.name();
     }
 
     private static int stateColor(WarState state) {

@@ -55,7 +55,7 @@ public class WarDeclareScreen extends Screen {
                 .bounds(guiLeft + 155, guiTop + 28, 135, 18).build();
         this.goalButton = Button.builder(Component.literal(""), btn -> cycleGoal())
                 .bounds(guiLeft + 10, guiTop + 58, 135, 18).build();
-        this.casusBelliBox = new EditBox(this.font, guiLeft + 155, guiTop + 58, 135, 18, Component.literal("Casus belli"));
+        this.casusBelliBox = new EditBox(this.font, guiLeft + 155, guiTop + 58, 135, 18, Component.translatable("gui.bannermod.war_declare.casus"));
         this.casusBelliBox.setMaxLength(96);
         addRenderableWidget(this.attackerButton);
         addRenderableWidget(this.defenderButton);
@@ -65,7 +65,7 @@ public class WarDeclareScreen extends Screen {
         this.declareButton = Button.builder(Component.translatable("gui.bannermod.war_list.declare"), btn -> declareWar())
                 .bounds(guiLeft + 10, guiTop + H - 28, 80, 18).build();
         addRenderableWidget(this.declareButton);
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), btn -> onClose())
+        addRenderableWidget(Button.builder(Component.translatable("gui.bannermod.common.cancel"), btn -> onClose())
                 .bounds(guiLeft + W - 90, guiTop + H - 28, 80, 18).build());
         updateButtons();
     }
@@ -116,9 +116,9 @@ public class WarDeclareScreen extends Screen {
     private void updateButtons() {
         PoliticalEntityRecord attacker = selectedAttacker();
         PoliticalEntityRecord defender = selectedDefender();
-        this.attackerButton.setMessage(Component.literal("Attacker: " + displayName(attacker)));
-        this.defenderButton.setMessage(Component.literal("Defender: " + displayName(defender)));
-        this.goalButton.setMessage(Component.literal("Goal: " + selectedGoal().name()));
+        this.attackerButton.setMessage(Component.translatable("gui.bannermod.war_declare.attacker", displayName(attacker)));
+        this.defenderButton.setMessage(Component.translatable("gui.bannermod.war_declare.defender", displayName(defender)));
+        this.goalButton.setMessage(Component.translatable("gui.bannermod.war_declare.goal", localizedGoal(selectedGoal())));
         this.attackerButton.active = this.attackers.size() > 1;
         this.defenderButton.active = this.defenders.size() > 1;
         this.declareButton.active = attacker != null && defender != null;
@@ -151,14 +151,22 @@ public class WarDeclareScreen extends Screen {
 
     private String displayName(PoliticalEntityRecord entity) {
         if (entity == null) {
-            return "none";
+            return Component.translatable("gui.bannermod.common.none").getString();
         }
-        return entity.name() == null || entity.name().isBlank() ? shortId(entity.id()) : entity.name();
+        return entity.name() == null || entity.name().isBlank()
+                ? Component.translatable("gui.bannermod.states.unnamed").getString()
+                : entity.name();
     }
 
-    private String shortId(UUID id) {
-        String value = id.toString();
-        return value.substring(0, Math.min(8, value.length()));
+    private Component localizedGoal(WarGoalType goalType) {
+        return switch (goalType) {
+            case TRIBUTE -> Component.translatable("gui.bannermod.war_list.goal.tribute");
+            case OCCUPATION -> Component.translatable("gui.bannermod.war_list.goal.occupation");
+            case ANNEX_LIMITED_CHUNKS -> Component.translatable("gui.bannermod.war_list.goal.annex_limited_chunks");
+            case VASSALIZATION -> Component.translatable("gui.bannermod.war_list.goal.vassalization");
+            case REGIME_CHANGE -> Component.translatable("gui.bannermod.war_list.goal.regime_change");
+            case WHITE_PEACE -> Component.translatable("gui.bannermod.war_list.goal.white_peace");
+        };
     }
 
     @Override

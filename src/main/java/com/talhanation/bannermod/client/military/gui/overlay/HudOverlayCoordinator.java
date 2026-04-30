@@ -36,6 +36,7 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.common.NeoForge;
 
 import javax.annotation.Nullable;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -147,7 +148,7 @@ public final class HudOverlayCoordinator {
         if (context == null) return y;
 
         Component headline = Component.translatable("gui.bannermod.hud.siege_zone", context.warName);
-        Component subline = Component.translatable("gui.bannermod.hud.siege_zone.details", context.sideName, context.siege.radius(), context.warState.name());
+        Component subline = Component.translatable("gui.bannermod.hud.siege_zone.details", context.sideName, context.siege.radius(), localizedWarState(context.warState));
         Font font = mc.font;
         int width = Math.max(font.width(headline), font.width(subline)) + 12;
         int height = 24;
@@ -332,7 +333,7 @@ public final class HudOverlayCoordinator {
         if (closed.nextWindow() == null) {
             return Component.translatable("gui.bannermod.hud.battle_window.none");
         }
-        String day = closed.nextWindow().dayOfWeek().name().substring(0, 3);
+        Component day = localizedDay(closed.nextWindow().dayOfWeek());
         String time = closed.nextWindow().startsAt().toString();
         return Component.translatable("gui.bannermod.hud.battle_window.next", day, time, formatDuration(closed.untilOpen()));
     }
@@ -431,12 +432,37 @@ public final class HudOverlayCoordinator {
     }
 
     private static String entityName(UUID id) {
-        if (id == null) return "?";
+        if (id == null) return Component.translatable("gui.bannermod.common.unknown").getString();
         PoliticalEntityRecord entity = WarClientState.entityById(id);
-        if (entity == null || entity.name().isBlank()) {
-            return id.toString().substring(0, 8);
+        if (entity == null) {
+            return Component.translatable("gui.bannermod.common.unknown").getString();
+        }
+        if (entity.name().isBlank()) {
+            return Component.translatable("gui.bannermod.states.unnamed").getString();
         }
         return entity.name();
+    }
+
+    private static Component localizedWarState(WarState state) {
+        return switch (state) {
+            case DECLARED -> Component.translatable("gui.bannermod.war_list.state.declared");
+            case ACTIVE -> Component.translatable("gui.bannermod.war_list.state.active");
+            case IN_SIEGE_WINDOW -> Component.translatable("gui.bannermod.war_list.state.in_siege_window");
+            case RESOLVED -> Component.translatable("gui.bannermod.war_list.state.resolved");
+            case CANCELLED -> Component.translatable("gui.bannermod.war_list.state.cancelled");
+        };
+    }
+
+    private static Component localizedDay(DayOfWeek day) {
+        return switch (day) {
+            case MONDAY -> Component.translatable("gui.bannermod.day.mon");
+            case TUESDAY -> Component.translatable("gui.bannermod.day.tue");
+            case WEDNESDAY -> Component.translatable("gui.bannermod.day.wed");
+            case THURSDAY -> Component.translatable("gui.bannermod.day.thu");
+            case FRIDAY -> Component.translatable("gui.bannermod.day.fri");
+            case SATURDAY -> Component.translatable("gui.bannermod.day.sat");
+            case SUNDAY -> Component.translatable("gui.bannermod.day.sun");
+        };
     }
 
     private void reset() {

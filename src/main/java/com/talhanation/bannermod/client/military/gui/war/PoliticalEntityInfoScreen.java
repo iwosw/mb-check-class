@@ -1,9 +1,12 @@
 package com.talhanation.bannermod.client.military.gui.war;
 
+import com.talhanation.bannermod.util.GameProfileUtils;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.runtime.WarDeclarationRecord;
+import com.talhanation.bannermod.war.runtime.WarGoalType;
+import com.talhanation.bannermod.war.runtime.WarState;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -34,7 +37,7 @@ public class PoliticalEntityInfoScreen extends Screen {
     private int scrollOffset = 0;
 
     public PoliticalEntityInfoScreen(@Nullable Screen parent, UUID entityId) {
-        super(Component.literal("State Info"));
+        super(text("gui.bannermod.states.info.title"));
         this.parent = parent;
         this.entityId = entityId;
     }
@@ -45,7 +48,7 @@ public class PoliticalEntityInfoScreen extends Screen {
         this.guiLeft = (this.width - W) / 2;
         this.guiTop = (this.height - H) / 2;
 
-        addRenderableWidget(Button.builder(Component.literal("Back"), btn -> onClose())
+        addRenderableWidget(Button.builder(text("gui.bannermod.common.back"), btn -> onClose())
                 .bounds(guiLeft + W - 80 - 8, guiTop + H - 24, 80, 18).build());
     }
 
@@ -57,38 +60,37 @@ public class PoliticalEntityInfoScreen extends Screen {
 
         PoliticalEntityRecord entity = WarClientState.entityById(entityId);
         if (entity == null) {
-            graphics.drawCenteredString(font, "Entity not found", guiLeft + W / 2, guiTop + 12, 0xFFFFAA55);
-            graphics.drawCenteredString(font, shortId(entityId), guiLeft + W / 2, guiTop + 28, 0xAAAAAA);
+            graphics.drawCenteredString(font, text("gui.bannermod.states.info.not_found"), guiLeft + W / 2, guiTop + 12, 0xFFFFAA55);
             super.render(graphics, mouseX, mouseY, partialTick);
             return;
         }
 
         int x = guiLeft + 8;
         int y = guiTop + 8;
-        graphics.drawString(font, entity.name().isBlank() ? shortId(entityId) : entity.name(), x, y, 0xFFFFFF, false);
-        graphics.drawString(font, "[" + entity.status().name() + "]", x, y + 12, statusColor(entity.status()), false);
+        graphics.drawString(font, displayName(entity), x, y, 0xFFFFFF, false);
+        graphics.drawString(font, text("gui.bannermod.states.info.status_badge", localizedStatus(entity.status())).getString(), x, y + 12, statusColor(entity.status()), false);
 
         y += 28;
-        graphics.drawString(font, "Leader: " + shortId(entity.leaderUuid()), x, y, 0xFFFFFF, false);
+        graphics.drawString(font, text("gui.bannermod.states.detail.leader", playerName(entity.leaderUuid())), x, y, 0xFFFFFF, false);
         y += 12;
-        graphics.drawString(font, "Co-leaders: " + entity.coLeaderUuids().size(), x, y, 0xFFFFFF, false);
+        graphics.drawString(font, text("gui.bannermod.states.detail.co_leaders", coLeaderSummary(entity)), x, y, 0xFFFFFF, false);
         y += 12;
-        graphics.drawString(font, "Capital: " + (entity.capitalPos() == null ? "(none)" : entity.capitalPos().toShortString()),
+        graphics.drawString(font, text("gui.bannermod.states.detail.capital", entity.capitalPos() == null ? text("gui.bannermod.common.none").getString() : entity.capitalPos().toShortString()),
                 x, y, 0xFFFFFF, false);
         y += 12;
-        graphics.drawString(font, "Color: " + (entity.color().isBlank() ? "(none)" : entity.color()), x, y, 0xFFFFFF, false);
+        graphics.drawString(font, text("gui.bannermod.states.detail.color", entity.color().isBlank() ? text("gui.bannermod.common.none").getString() : entity.color()), x, y, 0xFFFFFF, false);
         y += 12;
-        graphics.drawString(font, "Home region: " + (entity.homeRegion().isBlank() ? "(none)" : entity.homeRegion()),
+        graphics.drawString(font, text("gui.bannermod.states.detail.region", entity.homeRegion().isBlank() ? text("gui.bannermod.common.none").getString() : entity.homeRegion()),
                 x, y, 0xFFFFFF, false);
         y += 16;
 
-        graphics.drawString(font, "Charter:", x, y, 0xAAFFAA, false);
+        graphics.drawString(font, text("gui.bannermod.states.info.charter"), x, y, 0xAAFFAA, false);
         y += 11;
-        y = drawWrapped(graphics, entity.charter().isBlank() ? "(empty)" : entity.charter(), x, y, W - 16);
+        y = drawWrapped(graphics, entity.charter().isBlank() ? text("gui.bannermod.states.info.empty_text").getString() : entity.charter(), x, y, W - 16);
         y += 6;
-        graphics.drawString(font, "Ideology:", x, y, 0xAAAAFF, false);
+        graphics.drawString(font, text("gui.bannermod.states.info.ideology"), x, y, 0xAAAAFF, false);
         y += 11;
-        y = drawWrapped(graphics, entity.ideology().isBlank() ? "(empty)" : entity.ideology(), x, y, W - 16);
+        y = drawWrapped(graphics, entity.ideology().isBlank() ? text("gui.bannermod.states.info.empty_text").getString() : entity.ideology(), x, y, W - 16);
 
         renderInvolvedWarsFooter(graphics, entity);
 
@@ -102,12 +104,70 @@ public class PoliticalEntityInfoScreen extends Screen {
         }
         int x = guiLeft + 8;
         int y = guiTop + H - 24 - involved.size() * 11 - 14;
-        graphics.drawString(font, "Active wars: " + involved.size(), x, y, 0xFFFF7777, false);
+        graphics.drawString(font, text("gui.bannermod.states.info.active_wars", involved.size()), x, y, 0xFFFF7777, false);
         for (int i = 0; i < involved.size() && i < 4; i++) {
             WarDeclarationRecord war = involved.get(i);
-            String line = "  [" + war.state().name() + "] " + war.goalType().name() + " · id=" + shortId(war.id());
+            String line = text("gui.bannermod.states.info.war_line", localizedWarState(war.state()), localizedWarGoal(war.goalType())).getString();
             graphics.drawString(font, font.plainSubstrByWidth(line, W - 16), x, y + 11 + i * 11, 0xFFFFFF, false);
         }
+    }
+
+    private static Component text(String key, Object... args) {
+        return Component.translatable(key, args);
+    }
+
+    private static Component localizedStatus(PoliticalEntityStatus status) {
+        return switch (status) {
+            case SETTLEMENT -> text("gui.bannermod.states.status.settlement");
+            case STATE -> text("gui.bannermod.states.status.state");
+            case VASSAL -> text("gui.bannermod.states.status.vassal");
+            case PEACEFUL -> text("gui.bannermod.states.status.peaceful");
+        };
+    }
+
+    private static Component localizedWarState(WarState state) {
+        return switch (state) {
+            case DECLARED -> text("gui.bannermod.war_list.state.declared");
+            case ACTIVE -> text("gui.bannermod.war_list.state.active");
+            case IN_SIEGE_WINDOW -> text("gui.bannermod.war_list.state.in_siege_window");
+            case RESOLVED -> text("gui.bannermod.war_list.state.resolved");
+            case CANCELLED -> text("gui.bannermod.war_list.state.cancelled");
+        };
+    }
+
+    private static Component localizedWarGoal(WarGoalType goalType) {
+        return switch (goalType) {
+            case TRIBUTE -> text("gui.bannermod.war_list.goal.tribute");
+            case OCCUPATION -> text("gui.bannermod.war_list.goal.occupation");
+            case ANNEX_LIMITED_CHUNKS -> text("gui.bannermod.war_list.goal.annex_limited_chunks");
+            case VASSALIZATION -> text("gui.bannermod.war_list.goal.vassalization");
+            case REGIME_CHANGE -> text("gui.bannermod.war_list.goal.regime_change");
+            case WHITE_PEACE -> text("gui.bannermod.war_list.goal.white_peace");
+        };
+    }
+
+    private static String displayName(PoliticalEntityRecord entity) {
+        return entity.name().isBlank() ? text("gui.bannermod.states.unnamed").getString() : entity.name();
+    }
+
+    private static String playerName(@Nullable UUID id) {
+        if (id == null) {
+            return text("gui.bannermod.common.unknown").getString();
+        }
+        String name = GameProfileUtils.getPlayerName(id);
+        return name == null || name.isBlank() ? text("gui.bannermod.common.unknown").getString() : name;
+    }
+
+    private static String coLeaderSummary(PoliticalEntityRecord entity) {
+        if (entity.coLeaderUuids().isEmpty()) {
+            return text("gui.bannermod.common.none").getString();
+        }
+        List<String> names = new ArrayList<>();
+        for (int i = 0; i < Math.min(3, entity.coLeaderUuids().size()); i++) {
+            names.add(playerName(entity.coLeaderUuids().get(i)));
+        }
+        String suffix = entity.coLeaderUuids().size() > names.size() ? " +" + (entity.coLeaderUuids().size() - names.size()) : "";
+        return String.join(", ", names) + suffix;
     }
 
     private int drawWrapped(GuiGraphics graphics, String text, int x, int y, int maxWidth) {
@@ -125,12 +185,6 @@ public class PoliticalEntityInfoScreen extends Screen {
             case PEACEFUL -> 0xFF55AAFF;
             case SETTLEMENT -> 0xFFAAAAAA;
         };
-    }
-
-    private static String shortId(UUID id) {
-        if (id == null) return "?";
-        String s = id.toString();
-        return s.length() > 8 ? s.substring(0, 8) : s;
     }
 
     @Override

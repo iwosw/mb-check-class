@@ -2,8 +2,13 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.client.military.gui.component.BannerRenderer;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.war.client.WarClientState;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.UUID;
 
 public class ClaimInfoMenu {
     private final WorldMapScreen parent;
@@ -59,36 +64,52 @@ public class ClaimInfoMenu {
 
         int textY = y + 120;
         guiGraphics.drawString(parent.getMinecraft().font,
-                "Owner: " + (currentClaim.getOwnerPoliticalEntityId() != null ?
-                        currentClaim.getOwnerPoliticalEntityId() : "None"),
+                Component.translatable("gui.bannermod.claim.faction").getString() + ": " + ownerPoliticalEntityName(currentClaim.getOwnerPoliticalEntityId()),
                 x + 5, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
-                "Owner: " + (currentClaim.getPlayerInfo() != null ?
-                        currentClaim.getPlayerInfo().getName() : "Unknown"),
+                Component.translatable("gui.bannermod.claim.player").getString() + ": " + (currentClaim.getPlayerInfo() != null ?
+                        currentClaim.getPlayerInfo().getName() : Component.translatable("gui.bannermod.common.unknown").getString()),
                 x + 5, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
-                "Block-Place: " + currentClaim.isBlockPlacementAllowed(),
+                Component.translatable("gui.bannermod.claim.block_placing").getString() + ": " + boolText(currentClaim.isBlockPlacementAllowed()),
                 x + 5, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
-                "Block-Break: " + currentClaim.isBlockBreakingAllowed(),
+                Component.translatable("gui.bannermod.claim.block_breaking").getString() + ": " + boolText(currentClaim.isBlockBreakingAllowed()),
                 x + 5, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
-                "Block-Use: " + currentClaim.isBlockInteractionAllowed(),
+                Component.translatable("gui.bannermod.claim.block_interaction").getString() + ": " + boolText(currentClaim.isBlockInteractionAllowed()),
                 x + 5, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
-                "Chunks: " + currentClaim.getClaimedChunks().size() + "/50",
+                Component.translatable("gui.bannermod.claim.info.chunks", currentClaim.getClaimedChunks().size(), 50).getString(),
                 x + 5, textY, 0xFFFFFF);
 
+    }
+
+    private static String boolText(boolean value) {
+        return Component.translatable(value ? "gui.bannermod.claim.true" : "gui.bannermod.claim.false").getString();
+    }
+
+    private static String ownerPoliticalEntityName(UUID entityId) {
+        if (entityId == null) {
+            return Component.translatable("gui.bannermod.common.none").getString();
+        }
+        PoliticalEntityRecord entity = WarClientState.entityById(entityId);
+        if (entity == null) {
+            return Component.translatable("gui.bannermod.common.unknown").getString();
+        }
+        return entity.name().isBlank()
+                ? Component.translatable("gui.bannermod.states.unnamed").getString()
+                : entity.name();
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {

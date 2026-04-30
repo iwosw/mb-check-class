@@ -9,6 +9,7 @@ import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityC
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityColor;
 import com.talhanation.bannermod.network.messages.war.MessageSetPoliticalEntityStatus;
 import com.talhanation.bannermod.network.messages.war.MessageUpdateCoLeader;
+import com.talhanation.bannermod.util.GameProfileUtils;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.GovernmentForm;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
@@ -338,7 +339,7 @@ public class PoliticalEntityListScreen extends Screen {
                 text("gui.bannermod.states.detail.name", displayName(selected)).getString(),
                 text("gui.bannermod.states.detail.status", localizedStatus(selected.status())).getString(),
                 text("gui.bannermod.states.detail.government", localizedGovernmentForm(selected.governmentForm()), text(selected.governmentForm().coLeadersShareAuthority() ? "gui.bannermod.states.authority.shared" : "gui.bannermod.states.authority.leader_only")).getString(),
-                text("gui.bannermod.states.detail.leader", shortId(selected.leaderUuid())).getString(),
+                text("gui.bannermod.states.detail.leader", playerName(selected.leaderUuid())).getString(),
                 text("gui.bannermod.states.detail.co_leaders", coLeaderSummary(selected)).getString(),
                 text("gui.bannermod.states.detail.co_leader_authority", text(selected.governmentForm().coLeadersShareAuthority() ? "gui.bannermod.states.co_authority.active" : "gui.bannermod.states.co_authority.locked").getString()).getString(),
                 text("gui.bannermod.states.detail.capital", selected.capitalPos() == null ? text("gui.bannermod.common.none").getString() : selected.capitalPos().toShortString()).getString(),
@@ -381,12 +382,12 @@ public class PoliticalEntityListScreen extends Screen {
         if (entity.coLeaderUuids().isEmpty()) {
             return text("gui.bannermod.common.none").getString();
         }
-        List<String> ids = new ArrayList<>();
+        List<String> names = new ArrayList<>();
         for (int i = 0; i < Math.min(3, entity.coLeaderUuids().size()); i++) {
-            ids.add(shortId(entity.coLeaderUuids().get(i)));
+            names.add(playerName(entity.coLeaderUuids().get(i)));
         }
-        String suffix = entity.coLeaderUuids().size() > ids.size() ? " +" + (entity.coLeaderUuids().size() - ids.size()) : "";
-        return String.join(", ", ids) + suffix;
+        String suffix = entity.coLeaderUuids().size() > names.size() ? " +" + (entity.coLeaderUuids().size() - names.size()) : "";
+        return String.join(", ", names) + suffix;
     }
 
     private static int involvedWarCount(PoliticalEntityRecord entity) {
@@ -400,13 +401,15 @@ public class PoliticalEntityListScreen extends Screen {
     }
 
     private static String displayName(PoliticalEntityRecord entity) {
-        return entity.name().isBlank() ? shortId(entity.id()) : entity.name();
+        return entity.name().isBlank() ? text("gui.bannermod.states.unnamed").getString() : entity.name();
     }
 
-    private static String shortId(java.util.UUID id) {
-        if (id == null) return "?";
-        String s = id.toString();
-        return s.length() > 8 ? s.substring(0, 8) : s;
+    private static String playerName(@Nullable UUID id) {
+        if (id == null) {
+            return text("gui.bannermod.common.unknown").getString();
+        }
+        String name = GameProfileUtils.getPlayerName(id);
+        return name == null || name.isBlank() ? text("gui.bannermod.common.unknown").getString() : name;
     }
 
     private static int statusColor(PoliticalEntityStatus status) {
