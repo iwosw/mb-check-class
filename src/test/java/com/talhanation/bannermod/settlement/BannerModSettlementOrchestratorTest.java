@@ -194,6 +194,20 @@ class BannerModSettlementOrchestratorTest {
         assertEquals(List.of(first, second, third), nextCycleOrder);
     }
 
+    @Test
+    void claimTickServicePreservesSnapshotTickComposition() {
+        RecordingJobHandler handler = new RecordingJobHandler();
+        JobHandlerRegistry registry = new JobHandlerRegistry();
+        registry.register(handler);
+        BannerModSettlementOrchestrator.LevelRuntimeState state = BannerModSettlementOrchestrator.detachedStateForTests(registry);
+
+        BannerModSettlementClaimTickService.tickSnapshot(state, settlementSnapshot(NIGHT_TICK, true), null, null, NIGHT_TICK);
+
+        assertEquals(HOME, state.homeRuntime.homeFor(RESIDENT).orElseThrow().homeBuildingUuid());
+        assertTrue(state.sellerRuntime.phase(RESIDENT).isPresent());
+        assertFalse(state.projectRuntime.snapshot(CLAIM).isEmpty());
+    }
+
     private static BannerModSettlementSnapshot settlementSnapshot(long gameTime, boolean includeSellerDispatch) {
         BannerModSettlementResidentServiceContract serviceContract = new BannerModSettlementResidentServiceContract(
                 BannerModSettlementServiceActorState.LOCAL_BUILDING_SERVICE,
