@@ -176,8 +176,9 @@ public final class HudOverlayCoordinator {
         boolean underSiege = WarClientState.hasSnapshot() && WarClientState.isClaimUnderSiege(ClientManager.currentClaim);
         boolean occupied = WarClientState.hasSnapshot() && WarClientState.isClaimChunkOccupied(ClientManager.currentClaim, lastPlayerChunk);
         ClaimAuthorityStatus authorityStatus = ClaimAuthorityStatus.classify(playerTeamName(mc.player), ClientManager.currentClaim);
+        PoliticalEntityRecord ownerEntity = currentOwnerEntity(ClientManager.currentClaim);
         int x = Math.max(6, mc.getWindow().getGuiScaledWidth() - RIGHT_SAFE_MARGIN - CLAIM_PANEL_WIDTH);
-        claimRenderer.render(graphics, mc, ClientManager.currentClaim, currentState, authorityStatus, alpha, CLAIM_PANEL_WIDTH, x, y, underSiege, occupied);
+        claimRenderer.render(graphics, mc, ClientManager.currentClaim, currentState, authorityStatus, ownerEntity, alpha, CLAIM_PANEL_WIDTH, x, y, underSiege, occupied);
         NeoForge.EVENT_BUS.post(new ClientOverlayEvent.RenderPost(graphics, ClientManager.currentClaim, currentState, alpha));
     }
 
@@ -221,18 +222,44 @@ public final class HudOverlayCoordinator {
             claimEntryTime = System.currentTimeMillis();
             transitionToState(OverlayState.FULL, true);
             updateCachedData(newClaim);
+            displayClaimBoundaryFeedback(newClaim);
         } else if (previousClaim != null && newClaim == null) {
             NeoForge.EVENT_BUS.post(new ClientClaimEvent.Leave(previousClaim, null));
             claimEntryTime = System.currentTimeMillis();
             transitionToState(OverlayState.FULL, true);
             updateCachedData(null);
+            displayClaimBoundaryFeedback(null);
         } else if (previousClaim != null && newClaim != null && !previousClaim.equals(newClaim)) {
             NeoForge.EVENT_BUS.post(new ClientClaimEvent.Leave(previousClaim, newClaim));
             NeoForge.EVENT_BUS.post(new ClientClaimEvent.Enter(newClaim, previousClaim));
             claimEntryTime = System.currentTimeMillis();
             transitionToState(OverlayState.FULL, true);
             updateCachedData(newClaim);
+            displayClaimBoundaryFeedback(newClaim);
         }
+    }
+
+    @Nullable
+    private static PoliticalEntityRecord currentOwnerEntity(@Nullable RecruitsClaim claim) {
+        if (claim == null || claim.getOwnerPoliticalEntityId() == null || !WarClientState.hasSnapshot()) {
+            return null;
+        }
+        return WarClientState.entityById(claim.getOwnerPoliticalEntityId());
+    }
+
+    private void displayClaimBoundaryFeedback(@Nullable RecruitsClaim claim) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer player = mc.player;
+        if (player == null) {
+            return;
+        }
+        ClaimAuthorityStatus authorityStatus = ClaimAuthorityStatus.classify(playerTeamName(player), claim);
+        String wildernessLabel = Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString();
+        String territoryName = ClaimTerritoryText.territoryName(claim, currentOwnerEntity(claim), wildernessLabel);
+        Component message = claim == null
+                ? Component.translatable(authorityStatus.boundaryMessageKey())
+                : Component.translatable(authorityStatus.boundaryMessageKey(), territoryName);
+        player.displayClientMessage(message, true);
     }
 
     private void checkForDataChanges() {
