@@ -7,8 +7,6 @@ import com.talhanation.bannermod.network.messages.civilian.*;
  * Order is the legacy workers.WorkersMain setup order minus retired dead slots.
  */
 public final class CivilianPacketCatalog {
-    public static final String NAME = "civilian";
-
     public static final Class<?>[] MESSAGES = {
         MessageToClientOpenWorkAreaScreen.class,
         MessageUpdateWorkArea.class,
@@ -34,7 +32,7 @@ public final class CivilianPacketCatalog {
         MessageRequestRegisterBuilding.class,
     };
 
-    public static final PacketCatalog CATALOG = new PacketCatalog(NAME, MESSAGES);
+    public static final PacketCatalog CATALOG = new PacketCatalog(MESSAGES);
 
     private CivilianPacketCatalog() {
     }
