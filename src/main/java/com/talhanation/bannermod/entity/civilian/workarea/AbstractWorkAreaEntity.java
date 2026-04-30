@@ -9,7 +9,6 @@ import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWo
 import com.talhanation.bannermod.network.messages.civilian.WorkAreaAuthoringRules;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
-import net.minecraft.client.gui.screens.Screen;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,8 +27,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
@@ -417,8 +414,6 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     public abstract Item getRenderItem();
-    @OnlyIn(Dist.CLIENT)
-    public abstract Screen getScreen(Player player);
 
     @Override
     public void moveTo(double x, double y, double z, float yRot, float xRot) {

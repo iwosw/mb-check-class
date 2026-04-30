@@ -1,12 +1,10 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
-import com.talhanation.bannermod.client.civilian.gui.StorageAreaScreen;
 import com.talhanation.bannermod.entity.civilian.*;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsAuthoringState;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsBlockedReason;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsPriority;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRoute;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -14,14 +12,11 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.*;
 
@@ -82,11 +77,6 @@ public class StorageArea extends AbstractWorkAreaEntity {
         return Items.CHEST;
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public Screen getScreen(Player player) {
-        return new StorageAreaScreen(this, player);
-    }
     public void scanStorageBlocks(){
         if(area == null) area = this.getArea();
 

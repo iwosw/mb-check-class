@@ -7,8 +7,6 @@ import com.talhanation.bannermod.network.messages.military.*;
  * Order is the legacy recruits.Main setup order and must remain stable.
  */
 public final class MilitaryPacketCatalog {
-    public static final String NAME = "military";
-
     public static final Class<?>[] MESSAGES = {
         MessageMovement.class,
         MessageCommandScreen.class,
@@ -106,7 +104,7 @@ public final class MilitaryPacketCatalog {
         MessageFormationMapEngage.class,
     };
 
-    public static final PacketCatalog CATALOG = new PacketCatalog(NAME, MESSAGES);
+    public static final PacketCatalog CATALOG = new PacketCatalog(MESSAGES);
 
     private MilitaryPacketCatalog() {
     }

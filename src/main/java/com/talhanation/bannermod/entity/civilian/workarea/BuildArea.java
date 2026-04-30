@@ -1,7 +1,6 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.client.civilian.gui.BuildAreaScreen;
 import com.talhanation.bannermod.ai.civilian.BuilderBuildProgress;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
@@ -10,7 +9,6 @@ import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import com.talhanation.bannermod.settlement.project.BannerModSettlementProjectRuntime;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -23,7 +21,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -36,8 +33,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.*;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 
 import javax.annotation.Nullable;
@@ -79,12 +74,6 @@ public class BuildArea extends AbstractWorkAreaEntity {
     @Override
     public Item getRenderItem() {
         return Items.IRON_SHOVEL;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public Screen getScreen(Player player) {
-        return new BuildAreaScreen(this, player);
     }
 
     @Override

@@ -233,7 +233,7 @@ public class BannerModMultiplayerAuthorityConflictGameTests {
                                                                            MessageUpdateBuildArea update) {
         WorkAreaAuthoringRules.Decision decision = WorkAreaAuthoringRules.modifyDecision(true, buildArea.getAuthoringAccess(player));
         if (WorkAreaAuthoringRules.isAllowed(decision)) {
-            update.update(buildArea);
+            update.update(buildArea, player);
         }
         return decision;
     }

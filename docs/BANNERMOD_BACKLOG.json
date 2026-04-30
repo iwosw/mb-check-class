@@ -5207,6 +5207,288 @@
       ],
       "verification": [],
       "evidence": []
+    },
+    {
+      "id": "AUTH-020",
+      "title": "Make build-area place mode server-authoritative",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "Build-area updates currently trust a client-supplied creative/instant-place flag, which lets packet payloads choose server build execution mode. The creative Place mechanic must remain available for legitimate creative-admin flows, but the server must derive eligibility itself.",
+      "scope": [
+        "Derive instant-place eligibility from authoritative server-side player state in the build-area update path instead of trusting a packet boolean.",
+        "Preserve both existing player-visible flows: normal staged Build for non-creative users and instant Place for legitimate creative-authorized users.",
+        "Add focused regression verification for denied forged instant-place requests and preserved legitimate build/place flows."
+      ],
+      "acceptance": [
+        "A non-creative sender cannot trigger instant creative placement by forging the build-area update payload.",
+        "A legitimate creative-authorized sender can still use the Place flow, and a normal sender can still start the existing staged Build flow.",
+        "Cheapest relevant verification passes and explicitly covers both preserved mechanics and denied escalation."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in first parallel cleanup batch; mechanic-preserving authority hardening only; dedicated worktree execution started."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/auth-020 after the server-authoritative build-area update; 2) multiplayer build-area GameTest helpers now route through MessageUpdateBuildArea.update(buildArea, player), preserving the authority seam; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1; code inspection confirms instant Place now requires the real sender to be creative while normal staged Build remains intact."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/client/civilian/gui/BuildAreaScreen.java:281-287",
+        "src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateBuildArea.java:99-106",
+        "src/main/java/com/talhanation/bannermod/entity/civilian/workarea/BuildArea.java:157-217"
+      ],
+      "doneDate": "2026-04-30"
+    },
+    {
+      "id": "AUTH-021",
+      "title": "Make merchant creative controls server-authoritative",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "Merchant management packets currently let the client choose merchant creative mode directly. The mechanic itself should stay available where intended, but the server must derive creative eligibility from the real sender state instead of trusting the payload.",
+      "scope": [
+        "Move merchant creative-mode eligibility to server-authoritative sender checks while keeping owner/admin management rules intact.",
+        "Preserve existing merchant trading and daily-refresh controls for authorized managers without widening access.",
+        "Add focused regression verification for denied forged creative toggles and preserved legitimate management flows."
+      ],
+      "acceptance": [
+        "A non-creative sender cannot enable merchant creative mode by forging the management packet.",
+        "An authorized sender who legitimately meets the creative/admin requirement can still use creative merchant mode, and normal merchant management toggles still work.",
+        "Cheapest relevant verification passes and explicitly covers both preserved mechanics and denied escalation."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in first parallel cleanup batch; mechanic-preserving authority hardening only; dedicated worktree execution started."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/auth-021 after the merchant authority hardening; 2) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1; 3) code inspection of MessageUpdateMerchant confirms merchant creative mode now requires the real sender to be creative while trading and daily-refresh management logic stays unchanged."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateMerchant.java:52-58",
+        "src/main/java/com/talhanation/bannermod/entity/civilian/MerchantAccessControl.java:10-18"
+      ],
+      "doneDate": "2026-04-30"
+    },
+    {
+      "id": "ARMY-020",
+      "title": "Clear stale recruit selection state on disconnect",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "RecruitSelectionRegistry explicitly documents missing disconnect cleanup, so selection state can outlive the player session and leak stale command targeting assumptions. Cleanup should preserve in-session selection mechanics while removing stale server memory after logout.",
+      "scope": [
+        "Hook player disconnect/logout lifecycle so recruit selection entries are cleared when the session ends.",
+        "Preserve existing in-session selection behavior and normal command narrowing while ensuring reconnect starts clean unless the player reselects recruits.",
+        "Add focused verification for selection cleanup and preserved same-session selection use."
+      ],
+      "acceptance": [
+        "When a player disconnects, the server-side selection registry no longer retains that player's selected recruit UUIDs.",
+        "After reconnect, selection-driven commands start from an empty selection until the player explicitly selects recruits again.",
+        "Existing same-session selection-based command behavior remains intact under focused verification."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in first parallel cleanup batch; cleanup preserves in-session selection mechanics; dedicated worktree execution started."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew test --tests com.talhanation.bannermod.army.command.RecruitSelectionRegistryTest passed on feature/army-020; 2) ./gradlew compileJava passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with logout cleanup wired through PlayerLoggedOutEvent and same-session selection behavior preserved."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/army/command/RecruitSelectionRegistry.java:17-19"
+      ],
+      "doneDate": "2026-04-30"
+    },
+    {
+      "id": "NET-004",
+      "title": "Remove dead packet registrar scaffolding",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "The live network bootstrap still carries empty registrar shims and a thin packet-catalog wrapper layer that add indirection without gameplay value. Removing dead scaffolding should simplify the network surface without changing packet coverage, order, or mechanics.",
+      "scope": [
+        "Remove unused empty registrar shim classes and simplify packet bootstrap/catalog plumbing where it adds no behavioral value.",
+        "Preserve live packet registration order, payload compatibility, and all existing gameplay mechanics.",
+        "Verify compile success and behaviorally equivalent active packet registration coverage after the simplification."
+      ],
+      "acceptance": [
+        "Active packet bootstrap no longer depends on empty registrar shims or redundant dead wrapper layers.",
+        "Live packet registration coverage and observable behavior remain equivalent for the current civilian, military, and war catalogs.",
+        "compileJava passes and verification shows no mechanics were removed or packet paths dropped."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in first parallel cleanup batch; dead scaffolding removal only; packet behavior and mechanics must remain unchanged."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/net-004; 2) diff review confirmed packet bootstrap order and catalog message arrays stayed unchanged while only dead registrar scaffolding was removed; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/network/catalog/PacketCatalog.java:6-28",
+        "src/main/java/com/talhanation/bannermod/network/messages/civilian/WorkersNetworkRegistrar.java",
+        "src/main/java/com/talhanation/bannermod/network/messages/military/RecruitsNetworkRegistrar.java"
+      ],
+      "doneDate": "2026-04-30"
+    },
+    {
+      "id": "ARCH-008",
+      "title": "Decouple work-area entities from client screen construction",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "Active work-area entities currently mix world behavior, packet transport, and client screen construction, which makes the civilian authoring flow hard to reason about and hard to test. The same screens and mechanics should remain, but entity classes should stop owning client UI construction directly.",
+      "scope": [
+        "Move work-area screen construction behind a dedicated client-side factory or registry instead of per-entity client screen methods.",
+        "Keep current work-area interaction, permissions, and opened screens behaviorally equivalent for players.",
+        "Verify that interacting with supported work areas still opens the same screens without entity classes importing concrete client screens."
+      ],
+      "acceptance": [
+        "Supported work-area interactions still open the same player-facing screens and preserve existing authoring mechanics.",
+        "Active work-area entity classes no longer construct concrete client screens directly.",
+        "Focused verification or compile proof shows the refactor preserved behavior without removing authoring mechanics."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; refactor must preserve current work-area authoring screens and interaction mechanics; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/arch-008 after moving concrete work-area screen creation into WorkAreaScreenFactory; 2) code search confirmed active work-area entities no longer implement getScreen(Player) or construct screens directly; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with the same packet-based work-area screen opening flow preserved."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/entity/civilian/workarea/AbstractWorkAreaEntity.java:139-154",
+        "src/main/java/com/talhanation/bannermod/entity/civilian/workarea/BuildArea.java:84-88"
+      ],
+      "doneDate": "2026-04-30"
+    },
+    {
+      "id": "SET-006",
+      "title": "Persist settlement project scheduler queues",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "Settlement project scheduling currently loses queued work on restart and silently drops overflow beyond the queue cap. The existing project mechanics should stay intact, but queue state must survive normal server lifecycle and overflow must become observable instead of silent loss.",
+      "scope": [
+        "Persist per-claim settlement project scheduler queues through the existing SavedData/runtime lifecycle without changing project ordering semantics.",
+        "Keep the current per-claim cap and priority behavior unless changed explicitly, but make overflow loss observable through logs, diagnostics, or player-safe feedback.",
+        "Verify restart-safe queue restoration and preserved queue ordering semantics under focused checks."
+      ],
+      "acceptance": [
+        "Queued settlement projects survive a normal save-stop-start cycle and restore in the same per-claim priority order.",
+        "When a claim exceeds the queue cap, the loss is no longer silent: verification can observe the overflow handling path.",
+        "Existing settlement project mechanics and ordering semantics remain intact under focused verification."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; persistence and overflow visibility only; existing settlement project mechanics must remain intact; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew test --tests com.talhanation.bannermod.settlement.project.BannerModSettlementProjectSchedulerTest --tests com.talhanation.bannermod.settlement.project.BannerModSettlementProjectPersistenceTest passed on feature/set-006; 2) ./gradlew compileJava passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 after making queue-cap overflow observable while leaving scheduler persistence and ordering behavior intact."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/settlement/project/BannerModSettlementProjectScheduler.java:32-39",
+        "src/main/java/com/talhanation/bannermod/settlement/project/BannerModSettlementProjectScheduler.java:73-95"
+      ],
+      "doneDate": "2026-04-30"
+    },
+    {
+      "id": "AUTH-022",
+      "title": "Replace hidden claim friendliness team-name coupling",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "Claim friendliness currently depends on scoreboard team names matching political UUID strings, which is a brittle hidden identity contract. Friendly claim mechanics should remain the same for players, but the runtime must stop depending primarily on accidental team-name equality.",
+      "scope": [
+        "Introduce an explicit claim-friendliness/political-relation helper that resolves same-entity friendliness without relying primarily on raw scoreboard team name equality.",
+        "Preserve current friendly claim behavior for valid political memberships and maintain a compatibility fallback where required for legacy worlds.",
+        "Verify representative friendly and non-friendly claim checks under the new explicit relation path."
+      ],
+      "acceptance": [
+        "Friendly claim access still works for legitimate same-entity relationships after the change, without requiring the primary check to be raw team-name equals political-UUID string.",
+        "Non-friendly entities remain denied under the same representative scenarios that are denied today.",
+        "Focused verification covers the explicit relation path and any legacy fallback kept for compatibility."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; friendliness resolution hardening must preserve player-visible claim behavior; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/auth-022; 2) ./gradlew test --tests com.talhanation.bannermod.events.ClaimProtectionFeedbackTest passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with claim friendliness now resolving political entity context first and keeping the legacy team-name UUID fallback for compatibility."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/events/ClaimAccessQueries.java:38-42",
+        "src/main/java/com/talhanation/bannermod/war/registry/PoliticalMembership.java:9-18"
+      ],
+      "doneDate": "2026-04-30"
+    },
+    {
+      "id": "PERSIST-003",
+      "title": "Isolate legacy citizen persistence compatibility",
+      "status": "done",
+      "updated": "2026-04-30",
+      "why": "The newer citizen layer still serializes directly back into legacy recruit/worker NBT fields, which keeps compatibility concerns interleaved with current runtime state handling. Compatibility must stay for existing worlds, but the boundary should become explicit and easier to reason about.",
+      "scope": [
+        "Isolate legacy recruit/worker field translation behind narrower compatibility seams while preserving current save compatibility for active worlds.",
+        "Make the canonical-vs-legacy persistence boundary explicit in the active citizen persistence flow without removing supported fields.",
+        "Verify that active recruit and worker persistence still round-trips the currently supported fields after the isolation."
+      ],
+      "acceptance": [
+        "Current recruit and worker save data remains readable after the refactor, with no supported persistence fields dropped.",
+        "The active citizen persistence path exposes a clearer canonical-versus-legacy compatibility boundary than the current direct field interleave.",
+        "Focused verification or tests prove supported persistence round-trip compatibility remains intact."
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up in second parallel cleanup batch; compatibility isolation only; active recruit and worker save fields must remain readable; branching from feature/cleanup-batch-1."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew test --tests com.talhanation.bannermod.citizen.CitizenPersistenceBridgeTest passed on feature/persist-003; 2) ./gradlew compileJava passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with worker-only boundWorkArea compatibility isolated from recruit legacy persistence."
+        }
+      ],
+      "evidence": [
+        "src/main/java/com/talhanation/bannermod/citizen/CitizenPersistenceBridge.java:16-41",
+        "src/main/java/com/talhanation/bannermod/citizen/CitizenPersistenceBridge.java:79-111",
+        "src/main/java/com/talhanation/bannermod/entity/military/RecruitPersistenceBridge.java:136-145"
+      ],
+      "doneDate": "2026-04-30"
     }
   ]
 }

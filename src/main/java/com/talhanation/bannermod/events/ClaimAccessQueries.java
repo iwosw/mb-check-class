@@ -1,7 +1,9 @@
 package com.talhanation.bannermod.events;
 
+import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
+import com.talhanation.bannermod.war.WarRuntimeContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -36,8 +38,16 @@ final class ClaimAccessQueries {
     }
 
     static boolean isFriendlyToClaim(LivingEntity livingEntity, RecruitsClaim claim) {
+        if (claim.getOwnerPoliticalEntityId() == null) {
+            return false;
+        }
+        if (livingEntity.level() instanceof ServerLevel serverLevel) {
+            if (claim.getOwnerPoliticalEntityId().equals(
+                    RecruitPoliticalContext.politicalEntityIdOf(livingEntity, WarRuntimeContext.registry(serverLevel)))) {
+                return true;
+            }
+        }
         return livingEntity.getTeam() != null
-                && claim.getOwnerPoliticalEntityId() != null
                 && livingEntity.getTeam().getName().equals(claim.getOwnerPoliticalEntityId().toString());
     }
 }
