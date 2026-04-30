@@ -17,6 +17,7 @@ import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.registry.PoliticalRegistryValidation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -30,14 +31,29 @@ import java.util.List;
 import java.util.UUID;
 
 public class PoliticalEntityListScreen extends Screen {
-    private static final int W = 360;
-    private static final int H = 220;
-    private static final int ROW_H = 16;
-    private static final int LIST_VISIBLE = 9;
+    private static final int MIN_BOOK_W = 392;
+    private static final int MAX_BOOK_W = 760;
+    private static final int MIN_BOOK_H = 220;
+    private static final int MAX_BOOK_H = 520;
+    private static final int ROW_H = 18;
+    private static final int BUTTON_H = 18;
+    private static final int BOOK_BORDER = 10;
+    private static final int BOOK_BG = 0xFFE8C98E;
+    private static final int PAGE_BG = 0xFFF2D9A3;
+    private static final int PAGE_SHADE = 0xFFE0BC78;
+    private static final int LEATHER = 0xFF4A2D18;
+    private static final int LEATHER_DARK = 0xFF24150D;
+    private static final int INK = 0xFF2D1B0F;
+    private static final int INK_MUTED = 0xFF6C5030;
+    private static final int GOLD = 0xFFFFD36A;
+    private static final int WAX = 0xFF8E2E24;
 
     private final Screen parent;
     private int guiLeft;
     private int guiTop;
+    private int guiW;
+    private int guiH;
+    private int listVisible = 8;
     private int scrollOffset;
     private List<PoliticalEntityRecord> entities = List.of();
     private int observedWarStateVersion = -1;
@@ -68,34 +84,128 @@ public class PoliticalEntityListScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        this.guiLeft = (this.width - W) / 2;
-        this.guiTop = (this.height - H) / 2;
-        addRenderableWidget(Button.builder(text("gui.bannermod.states.create"), btn -> openCreateDialog())
-                .bounds(guiLeft + 8, guiTop + H - 24, 60, 18).build());
-        this.renameButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.rename"), btn -> openRenameDialog())
-                .bounds(guiLeft + 72, guiTop + H - 24, 64, 18).build());
-        this.setCapitalButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.capital_here"), btn -> setCapitalHere())
-                .bounds(guiLeft + 140, guiTop + H - 24, 84, 18).build());
-        this.toggleFormButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.toggle_form"), btn -> toggleGovernmentForm())
-                .bounds(guiLeft + 228, guiTop + H - 24, 96, 18).build());
-        // Second row of leader-only mutators (color / charter). Placed above the bottom row to
-        // keep the spatial separation between "create / rename / capital / form" identity ops
-        // and the "presentation" ops (color / charter) so the leader's eyes don't get tangled.
-        this.setColorButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.color"), btn -> openColorDialog())
-                .bounds(guiLeft + 8, guiTop + H - 44, 60, 18).build());
-        this.setCharterButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.charter"), btn -> openCharterDialog())
-                .bounds(guiLeft + 72, guiTop + H - 44, 80, 18).build());
-        this.addCoLeaderButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.add_co_leader"), btn -> openCoLeaderDialog(true))
-                .bounds(guiLeft + 156, guiTop + H - 44, 96, 18).build());
-        this.removeCoLeaderButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.remove_co_leader"), btn -> openCoLeaderDialog(false))
-                .bounds(guiLeft + 256, guiTop + H - 44, 86, 18).build());
-        this.promoteStateButton = addRenderableWidget(Button.builder(text("gui.bannermod.states.promote_state"), btn -> promoteToState())
-                .bounds(guiLeft + 346, guiTop + H - 44, 96, 18).build());
-        addRenderableWidget(Button.builder(text("gui.bannermod.common.refresh"), btn -> refresh())
-                .bounds(guiLeft + W - 172, guiTop + H - 64, 80, 18).build());
-        addRenderableWidget(Button.builder(text("gui.bannermod.common.back"), btn -> onClose())
-                .bounds(guiLeft + W - 86, guiTop + H - 24, 80, 18).build());
+        updateGeometry();
+        addRenderableWidget(actionButton(0, text("gui.bannermod.states.create"), btn -> openCreateDialog()));
+        this.renameButton = addRenderableWidget(actionButton(1, text("gui.bannermod.states.rename"), btn -> openRenameDialog()));
+        this.setCapitalButton = addRenderableWidget(actionButton(2, text("gui.bannermod.states.capital_here"), btn -> setCapitalHere()));
+        this.toggleFormButton = addRenderableWidget(actionButton(3, text("gui.bannermod.states.toggle_form"), btn -> toggleGovernmentForm()));
+        this.setColorButton = addRenderableWidget(actionButton(4, text("gui.bannermod.states.color"), btn -> openColorDialog()));
+        this.setCharterButton = addRenderableWidget(actionButton(5, text("gui.bannermod.states.charter"), btn -> openCharterDialog()));
+        this.addCoLeaderButton = addRenderableWidget(actionButton(6, text("gui.bannermod.states.add_co_leader"), btn -> openCoLeaderDialog(true)));
+        this.removeCoLeaderButton = addRenderableWidget(actionButton(7, text("gui.bannermod.states.remove_co_leader"), btn -> openCoLeaderDialog(false)));
+        this.promoteStateButton = addRenderableWidget(actionButton(8, text("gui.bannermod.states.promote_state"), btn -> promoteToState()));
+        addRenderableWidget(actionButton(9, text("gui.bannermod.common.refresh"), btn -> refresh()));
+        addRenderableWidget(actionButton(10, text("gui.bannermod.common.back"), btn -> onClose()));
         refresh();
+    }
+
+    private Button actionButton(int index, Component label, Button.OnPress onPress) {
+        return new MedievalButton(actionButtonX(index), actionButtonY(index), actionButtonW(), BUTTON_H, label, onPress);
+    }
+
+    private void updateGeometry() {
+        int viewportW = Math.max(1, this.width - 12);
+        int viewportH = Math.max(1, this.height - 12);
+        int minW = Math.min(MIN_BOOK_W, viewportW);
+        int minH = Math.min(MIN_BOOK_H, viewportH);
+        this.guiW = Math.min(MAX_BOOK_W, Math.max(minW, this.width - 28));
+        this.guiH = Math.min(MAX_BOOK_H, Math.max(minH, this.height - 24));
+        this.guiLeft = (this.width - guiW) / 2;
+        this.guiTop = (this.height - guiH) / 2;
+        this.listVisible = Math.max(1, listH() / ROW_H);
+    }
+
+    private int innerX() {
+        return guiLeft + BOOK_BORDER + 8;
+    }
+
+    private int innerW() {
+        return guiW - (BOOK_BORDER + 8) * 2;
+    }
+
+    private int pageGap() {
+        return Math.max(12, guiW / 54);
+    }
+
+    private int contentTop() {
+        return guiTop + 38;
+    }
+
+    private int contentBottom() {
+        return actionLedgerTop() - 8;
+    }
+
+    private int leftPageX() {
+        return innerX();
+    }
+
+    private int leftPageW() {
+        int available = innerW() - pageGap();
+        return clamp(available * 2 / 5, 136, Math.max(136, available - 148));
+    }
+
+    private int rightPageX() {
+        return leftPageX() + leftPageW() + pageGap();
+    }
+
+    private int rightPageW() {
+        return innerW() - leftPageW() - pageGap();
+    }
+
+    private int listX() {
+        return leftPageX() + 8;
+    }
+
+    private int listY() {
+        return contentTop() + 24;
+    }
+
+    private int listW() {
+        return Math.max(80, leftPageW() - 16);
+    }
+
+    private int listH() {
+        return Math.max(ROW_H, contentBottom() - listY() - 8);
+    }
+
+    private int actionLedgerTop() {
+        return guiTop + guiH - actionLedgerH() - 8;
+    }
+
+    private int actionLedgerH() {
+        return 18 + actionRows() * (BUTTON_H + 4);
+    }
+
+    private int actionColumns() {
+        return clamp(Math.max(2, actionLedgerW() / 108), 2, 6);
+    }
+
+    private int actionRows() {
+        int columns = actionColumns();
+        return (11 + columns - 1) / columns;
+    }
+
+    private int actionLedgerX() {
+        return innerX();
+    }
+
+    private int actionLedgerW() {
+        return innerW();
+    }
+
+    private int actionButtonW() {
+        int columns = actionColumns();
+        return Math.max(64, (actionLedgerW() - 16 - (columns - 1) * 6) / columns);
+    }
+
+    private int actionButtonX(int index) {
+        int column = index % actionColumns();
+        return actionLedgerX() + 8 + column * (actionButtonW() + 6);
+    }
+
+    private int actionButtonY(int index) {
+        int row = index / actionColumns();
+        return actionLedgerTop() + 16 + row * (BUTTON_H + 4);
     }
 
     @Override
@@ -111,7 +221,7 @@ public class PoliticalEntityListScreen extends Screen {
         if (this.selected != null) {
             this.selected = WarClientState.entityById(this.selected.id());
         }
-        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, Math.max(0, entities.size() - LIST_VISIBLE)));
+        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, Math.max(0, entities.size() - listVisible)));
         this.observedWarStateVersion = WarClientState.version();
         updateLeaderButtons();
     }
@@ -290,10 +400,9 @@ public class PoliticalEntityListScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(graphics, mouseX, mouseY, partialTick);
-        graphics.fill(0, 0, width, height, 0xFF101010);
-        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
-        graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
-        graphics.drawCenteredString(font, text("gui.bannermod.states.heading").getString(), guiLeft + W / 2, guiTop + 7, 0xFFFFFF);
+        graphics.fill(0, 0, width, height, 0x66000000);
+        renderBookFrame(graphics);
+        renderHeader(graphics);
         renderList(graphics, mouseX, mouseY);
         renderDetails(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -304,40 +413,44 @@ public class PoliticalEntityListScreen extends Screen {
     }
 
     private void renderList(GuiGraphics graphics, int mouseX, int mouseY) {
-        int listX = guiLeft + 8;
-        int listY = guiTop + 26;
-        int listW = 156;
-        graphics.fill(listX, listY, listX + listW, listY + LIST_VISIBLE * ROW_H, 0x60000000);
-        int rendered = Math.min(LIST_VISIBLE, Math.max(0, entities.size() - scrollOffset));
+        int listX = listX();
+        int listY = listY();
+        int listW = listW();
+        int listH = listVisible * ROW_H;
+        graphics.drawString(font, text("gui.bannermod.states.heading").getString(), listX, contentTop() + 8, INK, false);
+        graphics.fill(listX, listY, listX + listW, listY + listH, 0x22FFFFFF);
+        graphics.renderOutline(listX, listY, listW, listH, PAGE_SHADE);
+        int rendered = Math.min(listVisible, Math.max(0, entities.size() - scrollOffset));
         for (int i = 0; i < rendered; i++) {
             PoliticalEntityRecord entity = entities.get(scrollOffset + i);
             int rowY = listY + i * ROW_H;
             boolean hovered = mouseX >= listX && mouseX < listX + listW && mouseY >= rowY && mouseY < rowY + ROW_H;
             boolean picked = selected != null && selected.id().equals(entity.id());
             if (picked || hovered) {
-                graphics.fill(listX + 1, rowY, listX + listW - 1, rowY + ROW_H, picked ? 0xFF3B5BFF : 0x60FFFFFF);
+                graphics.fill(listX + 1, rowY + 1, listX + listW - 1, rowY + ROW_H - 1, picked ? 0x669E3A23 : 0x33FFFFFF);
             }
             graphics.drawString(font, localizedStatus(entity.status()), listX + 4, rowY + 4, statusColor(entity.status()), false);
-            graphics.drawString(font, font.plainSubstrByWidth(" " + displayName(entity), listW - 76), listX + 76, rowY + 4, 0xFFFFFF, false);
+            graphics.drawString(font, font.plainSubstrByWidth(" " + displayName(entity), Math.max(20, listW - 76)), listX + 76, rowY + 4, INK, false);
         }
         if (entities.isEmpty()) {
             String empty = text(WarClientState.hasSnapshot()
                     ? "gui.bannermod.states.empty"
                     : "gui.bannermod.states.waiting_sync").getString();
-            graphics.drawCenteredString(font, empty, listX + listW / 2, listY + 62, 0xAAAAAA);
+            graphics.renderOutline(listX + 8, listY + listH / 2 - 14, Math.max(20, listW - 16), 28, INK_MUTED);
+            graphics.drawCenteredString(font, font.plainSubstrByWidth(empty, Math.max(20, listW - 20)), listX + listW / 2, listY + listH / 2 - 4, INK_MUTED);
         }
     }
 
     private void renderDetails(GuiGraphics graphics) {
-        int x = guiLeft + 174;
-        int y = guiTop + 28;
-        int w = W - 182;
-        graphics.drawString(font, text("gui.bannermod.states.detail"), x, y, 0xFFFFFF, false);
+        int x = rightPageX() + 8;
+        int y = contentTop() + 8;
+        int w = Math.max(40, rightPageW() - 16);
+        graphics.drawString(font, text("gui.bannermod.states.detail"), x, y, INK, false);
         if (selected == null) {
-            graphics.drawString(font, text("gui.bannermod.states.select_state"), x, y + 14, 0xAAAAAA, false);
-            graphics.drawString(font, text("gui.bannermod.states.help.settlement"), x, y + 30, 0xAAAAAA, false);
-            graphics.drawString(font, text("gui.bannermod.states.help.claim"), x, y + 42, 0xAAAAAA, false);
-            graphics.drawString(font, text("gui.bannermod.states.help.state"), x, y + 54, 0xAAAAAA, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.select_state").getString(), w), x, y + 14, INK_MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.help.settlement").getString(), w), x, y + 30, INK_MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.help.claim").getString(), w), x, y + 42, INK_MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.help.state").getString(), w), x, y + 54, INK_MUTED, false);
             return;
         }
         String[] lines = {
@@ -352,15 +465,65 @@ public class PoliticalEntityListScreen extends Screen {
                 text("gui.bannermod.states.detail.region", selected.homeRegion().isBlank() ? text("gui.bannermod.common.none").getString() : selected.homeRegion()).getString(),
                 text("gui.bannermod.states.detail.wars", involvedWarCount(selected)).getString()
         };
-        for (int i = 0; i < lines.length; i++) {
-            graphics.drawString(font, font.plainSubstrByWidth(lines[i], w), x, y + 14 + i * 12, 0xFFFFFF, false);
+        int maxLines = maxDetailLines(y);
+        for (int i = 0; i < lines.length && i < maxLines; i++) {
+            graphics.drawString(font, font.plainSubstrByWidth(lines[i], w), x, y + 14 + i * 12, INK, false);
         }
         int reqY = y + 14 + lines.length * 12 + 6;
-        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirements").getString(), w), x, reqY, 0xFFD77A, false);
-        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_fort").getString(), w), x, reqY + 12, 0xAAAAAA, false);
-        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_storage").getString(), w), x, reqY + 24, 0xAAAAAA, false);
-        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_market").getString(), w), x, reqY + 36, 0xAAAAAA, false);
-        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.server_checked").getString(), w), x, reqY + 48, 0x888888, false);
+        if (reqY + 48 <= contentBottom() - 8) {
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirements").getString(), w), x, reqY, WAX, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_fort").getString(), w), x, reqY + 12, INK_MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_storage").getString(), w), x, reqY + 24, INK_MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.requirement_market").getString(), w), x, reqY + 36, INK_MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.progression.server_checked").getString(), w), x, reqY + 48, 0xFF7C7164, false);
+        }
+    }
+
+    private void renderBookFrame(GuiGraphics graphics) {
+        graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + guiW + 4, guiTop + guiH + 5, 0x66000000);
+        graphics.fill(guiLeft, guiTop, guiLeft + guiW, guiTop + guiH, LEATHER_DARK);
+        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + guiW - 2, guiTop + guiH - 2, LEATHER);
+        graphics.fill(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiLeft + guiW - BOOK_BORDER, guiTop + guiH - BOOK_BORDER, BOOK_BG);
+        graphics.renderOutline(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiW - BOOK_BORDER * 2, guiH - BOOK_BORDER * 2, 0xFF7A4C24);
+
+        int pageY = contentTop();
+        int pageH = Math.max(36, contentBottom() - pageY);
+        renderParchmentPanel(graphics, leftPageX(), pageY, leftPageW(), pageH);
+        renderParchmentPanel(graphics, rightPageX(), pageY, rightPageW(), pageH);
+
+        int spineX = leftPageX() + leftPageW() + pageGap() / 2 - 1;
+        graphics.fill(spineX, pageY + 3, spineX + 2, pageY + pageH - 3, PAGE_SHADE);
+        graphics.fill(spineX + 2, pageY + 3, spineX + 3, pageY + pageH - 3, 0x88FFF3C5);
+
+        renderParchmentPanel(graphics, actionLedgerX(), actionLedgerTop(), actionLedgerW(), actionLedgerH());
+    }
+
+    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
+        graphics.fill(x, y, x + w, y + h, PAGE_BG);
+        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
+        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
+        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
+        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
+        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
+    }
+
+    private void renderHeader(GuiGraphics graphics) {
+        graphics.drawCenteredString(font, text("gui.bannermod.states.heading").getString(), guiLeft + guiW / 2, guiTop + 9, GOLD);
+        graphics.drawString(font,
+                font.plainSubstrByWidth(title.getString(), Math.max(40, innerW() / 2 - 8)),
+                innerX() + 4, guiTop + 25, INK_MUTED, false);
+        graphics.drawString(font,
+                text("gui.bannermod.war_list.ledger_title").getString(),
+                actionLedgerX() + 8, actionLedgerTop() + 5, INK_MUTED, false);
+    }
+
+    private int maxDetailLines(int titleY) {
+        int firstLineY = titleY + 14;
+        int detailBottom = contentBottom() - 8;
+        if (detailBottom < firstLineY) {
+            return 0;
+        }
+        return ((detailBottom - firstLineY) / 12) + 1;
     }
 
     private static Component text(String key, Object... args) {
@@ -429,10 +592,11 @@ public class PoliticalEntityListScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            int listX = guiLeft + 8;
-            int listY = guiTop + 26;
-            int listW = 156;
-            if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + LIST_VISIBLE * ROW_H) {
+            int listX = listX();
+            int listY = listY();
+            int listW = listW();
+            int listH = listVisible * ROW_H;
+            if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + listH) {
                 int idx = scrollOffset + (int) ((mouseY - listY) / ROW_H);
                 if (idx >= 0 && idx < entities.size()) {
                     selected = entities.get(idx);
@@ -446,9 +610,55 @@ public class PoliticalEntityListScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double delta) {
-        int max = Math.max(0, entities.size() - LIST_VISIBLE);
-        scrollOffset = Math.max(0, Math.min(max, scrollOffset - (int) Math.signum(delta)));
+        int listX = listX();
+        int listY = listY();
+        int listW = listW();
+        int listH = listVisible * ROW_H;
+        if (mouseX < listX || mouseX >= listX + listW || mouseY < listY || mouseY >= listY + listH) {
+            return super.mouseScrolled(mouseX, mouseY, scrollX, delta);
+        }
+        int max = Math.max(0, entities.size() - listVisible);
+        scrollOffset = clamp(scrollOffset - (int) Math.signum(delta), 0, max);
         return true;
+    }
+
+    private static class MedievalButton extends Button {
+        MedievalButton(int x, int y, int width, int height, Component message, OnPress onPress) {
+            super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            int x = getX();
+            int y = getY();
+            int w = getWidth();
+            int h = getHeight();
+            boolean hovered = isHoveredOrFocused();
+            int border = active ? (hovered ? GOLD : PAGE_SHADE) : 0xFF7C6C55;
+            int fill = active ? (hovered ? 0xFF6A3D1F : LEATHER) : 0xFF4C3A28;
+
+            graphics.fill(x, y, x + w, y + h, LEATHER_DARK);
+            graphics.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
+            graphics.fill(x + 2, y + 2, x + w - 2, y + 4, 0x557A4C24);
+            graphics.renderOutline(x, y, w, h, border);
+            graphics.renderOutline(x + 1, y + 1, w - 2, h - 2, 0x661A100A);
+
+            Font font = Minecraft.getInstance().font;
+            String label = clippedLabel(font, getMessage().getString(), Math.max(4, w - 10));
+            int textColor = active ? GOLD : 0xFFB8A17A;
+            graphics.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, textColor);
+        }
+
+        private static String clippedLabel(Font font, String label, int maxWidth) {
+            if (font.width(label) <= maxWidth) return label;
+            String ellipsis = "...";
+            int textWidth = Math.max(1, maxWidth - font.width(ellipsis));
+            return font.plainSubstrByWidth(label, textWidth) + ellipsis;
+        }
+    }
+
+    private static int clamp(int v, int min, int max) {
+        return Math.max(min, Math.min(max, v));
     }
 
     @Override
