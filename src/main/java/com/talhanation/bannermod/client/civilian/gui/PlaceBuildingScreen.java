@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.items.civilian.BuildingPlacementWandItem;
+import com.talhanation.bannermod.settlement.onboarding.SettlementOnboardingGuide;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefab;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabDescriptor;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefabRegistry;
@@ -8,6 +9,7 @@ import com.talhanation.bannermod.util.ItemStackComponentData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
@@ -76,8 +78,11 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
             int buttonY = topY + row * (BUTTON_HEIGHT + BUTTON_SPACING);
 
             Component label = buildButtonLabel(descriptor);
-            this.addRenderableWidget(new ExtendedButton(buttonX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, label,
+            ExtendedButton button = this.addRenderableWidget(new ExtendedButton(buttonX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, label,
                     btn -> onSelect(descriptor)));
+            button.setTooltip(Tooltip.create(Component.translatable(descriptor.descriptionKey())
+                    .append(Component.literal("\n"))
+                    .append(SettlementOnboardingGuide.placementHint(descriptor))));
         }
 
         int navY = topY + BUTTONS_PER_COLUMN * (BUTTON_HEIGHT + BUTTON_SPACING) + 8;
@@ -115,7 +120,7 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
                 .append(Component.literal("  "))
                 .append(Component.literal(dims))
                 .append(Component.literal("  "))
-                .append(Component.literal(descriptor.profession().name()));
+                .append(SettlementOnboardingGuide.professionLabel(descriptor.profession()));
     }
 
     private void onSelect(BuildingPrefabDescriptor descriptor) {
@@ -137,11 +142,14 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
         Component title = Component.translatable("bannermod.prefab.wand.title");
         int titleWidth = this.font.width(title);
         graphics.drawString(this.font, title, (this.width - titleWidth) / 2, 10, 0xFFFFFFFF, true);
+        Component subtitle = Component.translatable("bannermod.prefab.wand.screen.subtitle");
+        int subtitleWidth = this.font.width(subtitle);
+        graphics.drawString(this.font, subtitle, (this.width - subtitleWidth) / 2, 22, 0xFFE8C87A, false);
 
         if (this.pageCount > 1) {
             String pageText = (this.page + 1) + " / " + this.pageCount;
             int pageWidth = this.font.width(pageText);
-            graphics.drawString(this.font, pageText, (this.width - pageWidth) / 2, 22, 0xFFAAAAAA, false);
+            graphics.drawString(this.font, pageText, (this.width - pageWidth) / 2, 34, 0xFFAAAAAA, false);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
