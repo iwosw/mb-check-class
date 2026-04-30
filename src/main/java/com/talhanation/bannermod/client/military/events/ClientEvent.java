@@ -9,6 +9,7 @@ import com.talhanation.bannermod.client.military.render.SiegeStandardBlockEntity
 import com.talhanation.bannermod.client.military.render.layer.RecruitArmorLayer;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.registry.military.ModEntityTypes;
+import com.talhanation.bannermod.registry.military.ModScreens;
 import com.talhanation.bannermod.registry.war.ModWarBlockEntities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -20,6 +21,7 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -32,6 +34,12 @@ public class ClientEvent {
     public static ModelLayerLocation RECRUIT = new ModelLayerLocation(ResourceLocation.parse(BannerModMain.MOD_ID + "recruit"), "recruit");
     public static ModelLayerLocation RECRUIT_OUTER_ARMOR = new ModelLayerLocation(ResourceLocation.parse(BannerModMain.MOD_ID + "recruit_outer_layer"), "recruit_outer_layer");
     public static ModelLayerLocation RECRUIT_INNER_ARMOR = new ModelLayerLocation(ResourceLocation.parse(BannerModMain.MOD_ID + "recruit_inner_layer"), "recruit_inner_layer");
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public static void registerMenuScreens(RegisterMenuScreensEvent event) {
+        ModScreens.registerMenuScreens(event);
+    }
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
