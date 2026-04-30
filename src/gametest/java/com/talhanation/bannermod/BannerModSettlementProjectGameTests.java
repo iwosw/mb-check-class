@@ -30,8 +30,6 @@ import java.util.UUID;
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModSettlementProjectGameTests {
 
-    @PrefixGameTestTemplate(false)
-    @GameTest(template = "harness_empty")
     public static void settlementProjectCreatesExecutableBuildAreaInWorld(GameTestHelper helper) {
         assertSettlementProjectCreatesExecutableBuildAreaInWorld(helper);
     }

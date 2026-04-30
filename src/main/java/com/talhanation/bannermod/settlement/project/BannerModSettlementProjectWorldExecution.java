@@ -25,8 +25,6 @@ import java.util.UUID;
 
 final class BannerModSettlementProjectWorldExecution {
 
-    private static final int PLACEMENT_SPACING_BLOCKS = 24;
-
     private BannerModSettlementProjectWorldExecution() {
     }
 
@@ -76,26 +74,21 @@ final class BannerModSettlementProjectWorldExecution {
     }
 
     private static BlockPos choosePlacementPos(ServerLevel level, RecruitsClaim claim, int existingBuildAreaCount) {
+        java.util.List<ChunkPos> claimedChunks = claim.getClaimedChunks();
         ChunkPos anchorChunk = claim.getCenter();
-        if (anchorChunk == null && !claim.getClaimedChunks().isEmpty()) {
-            anchorChunk = claim.getClaimedChunks().get(0);
+        if ((anchorChunk == null || !claim.containsChunk(anchorChunk)) && !claimedChunks.isEmpty()) {
+            anchorChunk = claimedChunks.get(Math.floorMod(existingBuildAreaCount, claimedChunks.size()));
         }
         if (anchorChunk == null) {
             return BlockPos.ZERO;
         }
 
-        BlockPos anchorPos = level.getHeightmapPos(
+        int lane = claimedChunks.isEmpty() ? 0 : (existingBuildAreaCount / Math.max(1, claimedChunks.size())) % 4;
+        int localX = (lane == 1 || lane == 3) ? 11 : 4;
+        int localZ = lane >= 2 ? 11 : 4;
+        return level.getHeightmapPos(
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                new BlockPos(anchorChunk.getMiddleBlockX(), level.getSeaLevel(), anchorChunk.getMiddleBlockZ())
+                new BlockPos(anchorChunk.getMinBlockX() + localX, level.getSeaLevel(), anchorChunk.getMinBlockZ() + localZ)
         );
-        int ring = existingBuildAreaCount / 4 + 1;
-        int lane = existingBuildAreaCount % 4;
-        int distance = ring * PLACEMENT_SPACING_BLOCKS;
-        return switch (lane) {
-            case 0 -> anchorPos.offset(distance, 0, 0);
-            case 1 -> anchorPos.offset(-distance, 0, 0);
-            case 2 -> anchorPos.offset(0, 0, distance);
-            default -> anchorPos.offset(0, 0, -distance);
-        };
     }
 }
