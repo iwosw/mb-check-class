@@ -7,6 +7,7 @@ import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
+import com.talhanation.bannermod.war.registry.PoliticalEntityStatus;
 import com.talhanation.bannermod.war.runtime.BattleWindowClock;
 import com.talhanation.bannermod.war.runtime.BattleWindowDisplay;
 import com.talhanation.bannermod.war.runtime.OccupationRecord;
@@ -254,7 +255,7 @@ public class WarListScreen extends Screen {
         UUID actor = player == null ? null : player.getUUID();
         for (PoliticalEntityRecord entity : WarClientState.entities()) {
             if (PoliticalEntityAuthority.canAct(actor, false, entity) && !entity.status().canDeclareOffensiveWar()) {
-                return text("gui.bannermod.war.denial.attacker_status", entity.status().name());
+                return text("gui.bannermod.war.denial.attacker_status", localizedPoliticalStatus(entity.status()));
             }
         }
         if (!WarClientState.entities().isEmpty()) {
@@ -380,7 +381,7 @@ public class WarListScreen extends Screen {
                 graphics.fill(listX + 1, rowY, listX + listW - 1, rowY + ROW_H, rowBg);
             }
 
-            String stateBadge = "[" + war.state().name() + "]";
+            String stateBadge = "[" + localizedWarState(war.state()).getString() + "]";
             int stateColor = stateColor(war.state());
             graphics.drawString(font, stateBadge, listX + 4, rowY + 4, stateColor, false);
 
@@ -418,8 +419,8 @@ public class WarListScreen extends Screen {
         String[] body = {
                 text("gui.bannermod.war_list.detail.attacker", entityName(war.attackerPoliticalEntityId())).getString(),
                 text("gui.bannermod.war_list.detail.defender", entityName(war.defenderPoliticalEntityId())).getString(),
-                text("gui.bannermod.war_list.detail.state", war.state().name()).getString(),
-                text("gui.bannermod.war_list.detail.goal", war.goalType().name()).getString(),
+                text("gui.bannermod.war_list.detail.state", localizedWarState(war.state())).getString(),
+                text("gui.bannermod.war_list.detail.goal", localizedWarGoal(war.goalType())).getString(),
                 text("gui.bannermod.war_list.detail.casus", war.casusBelli().isEmpty() ? text("gui.bannermod.common.none").getString() : war.casusBelli()).getString(),
                 text("gui.bannermod.war_list.detail.declared", war.declaredAtGameTime()).getString(),
                 text("gui.bannermod.war_list.detail.earliest", war.earliestActivationGameTime()).getString(),
@@ -489,6 +490,36 @@ public class WarListScreen extends Screen {
 
     private static Component text(String key, Object... args) {
         return Component.translatable(key, args);
+    }
+
+    private static Component localizedWarState(WarState state) {
+        return switch (state) {
+            case DECLARED -> text("gui.bannermod.war_list.state.declared");
+            case ACTIVE -> text("gui.bannermod.war_list.state.active");
+            case IN_SIEGE_WINDOW -> text("gui.bannermod.war_list.state.in_siege_window");
+            case RESOLVED -> text("gui.bannermod.war_list.state.resolved");
+            case CANCELLED -> text("gui.bannermod.war_list.state.cancelled");
+        };
+    }
+
+    private static Component localizedWarGoal(WarGoalType goalType) {
+        return switch (goalType) {
+            case TRIBUTE -> text("gui.bannermod.war_list.goal.tribute");
+            case OCCUPATION -> text("gui.bannermod.war_list.goal.occupation");
+            case ANNEX_LIMITED_CHUNKS -> text("gui.bannermod.war_list.goal.annex_limited_chunks");
+            case VASSALIZATION -> text("gui.bannermod.war_list.goal.vassalization");
+            case REGIME_CHANGE -> text("gui.bannermod.war_list.goal.regime_change");
+            case WHITE_PEACE -> text("gui.bannermod.war_list.goal.white_peace");
+        };
+    }
+
+    private static Component localizedPoliticalStatus(PoliticalEntityStatus status) {
+        return switch (status) {
+            case SETTLEMENT -> text("gui.bannermod.states.status.settlement");
+            case STATE -> text("gui.bannermod.states.status.state");
+            case VASSAL -> text("gui.bannermod.states.status.vassal");
+            case PEACEFUL -> text("gui.bannermod.states.status.peaceful");
+        };
     }
 
     private String occupationSummary(UUID warId) {

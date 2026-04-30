@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
@@ -55,7 +56,7 @@ public class BuildAreaScreen extends WorkAreaScreen {
     public int areaDepthSize;
     public List< ItemStack> requiredItems = new ArrayList<>();
     public DisplayTextItemScrollDropDownMenu requiredItemsDropDownMenu;
-    private String statusText = "Ready.";
+    private Component statusText = text("gui.workers.build.status.ready");
     private int statusColor = 0xFFAAAAAA;
     public BuildAreaScreen(BuildArea buildArea, Player player) {
         super(buildArea.getCustomName(), buildArea, player);
@@ -96,7 +97,7 @@ public class BuildAreaScreen extends WorkAreaScreen {
         int boxHeight = 20;
         y = y - 20;
         //MODE
-        modeScanButton = addRenderableWidget(new ActivateableButton(x - buttonWidth - 101, y - previewHeight / 2 + 130, buttonWidth, buttonHeight, Component.literal("Scan"),
+        modeScanButton = addRenderableWidget(new ActivateableButton(x - buttonWidth - 101, y - previewHeight / 2 + 130, buttonWidth, buttonHeight, text("gui.workers.build.mode.scan"),
                 btn -> {
                     this.mode = Mode.SCAN;
 
@@ -106,7 +107,7 @@ public class BuildAreaScreen extends WorkAreaScreen {
         ));
         modeScanButton.active = this.mode == Mode.SCAN;
 
-        modeLoadButton = addRenderableWidget(new ActivateableButton(x - buttonWidth - 101 , y - previewHeight / 2 + 130 + buttonHeight, buttonWidth, buttonHeight, Component.literal("Load"),
+        modeLoadButton = addRenderableWidget(new ActivateableButton(x - buttonWidth - 101 , y - previewHeight / 2 + 130 + buttonHeight, buttonWidth, buttonHeight, text("gui.workers.build.mode.load"),
                 btn -> {
                     this.mode = Mode.LOAD;
 
@@ -213,7 +214,7 @@ public class BuildAreaScreen extends WorkAreaScreen {
                 scanNameEditBox.setResponder(this::checkScanNameUpdate);
                 this.addRenderableWidget(scanNameEditBox);
 
-                scanButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y - buttonHeight / 2 + 130, buttonWidth, buttonHeight, Component.literal("Scan Area"),
+                scanButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y - buttonHeight / 2 + 130, buttonWidth, buttonHeight, text("gui.workers.build.action.scan_area"),
                         btn ->{
                             this.performClientScan();
                             this.checkScanButtonActive();
@@ -222,7 +223,7 @@ public class BuildAreaScreen extends WorkAreaScreen {
                         }
                 ));
 
-                saveButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y + 182, buttonWidth, buttonHeight, Component.literal("Save"),
+                saveButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y + 182, buttonWidth, buttonHeight, text("gui.workers.build.action.save"),
                         btn -> StructureManager.saveStructureToFile(this.scanNameEditBox.getValue(), this.structureNBT)
                 ));
                 saveButton.active = false;
@@ -260,35 +261,35 @@ public class BuildAreaScreen extends WorkAreaScreen {
                                 this.structureNBT = tag;
                                 this.structure    = StructureManager.parseStructureFromNBT(tag);
                                 this.setStructure(this.structure, this.structureNBT);
-                                setStatus("Loaded structure: " + (this.structure == null ? 0 : this.structure.size()) + " block(s).", 0xFFAAFFAA);
+                                setStatus(text("gui.workers.build.status.loaded_structure", this.structure == null ? 0 : this.structure.size()), 0xFFAAFFAA);
                                 checkBuildButtonActive();
                                 this.setButtons();
                             } else {
-                                setStatus("Load rejected: scan file could not be read.", 0xFFFF8888);
+                                setStatus(text("gui.workers.build.status.load_rejected"), 0xFFFF8888);
                             }
                         }
                 );
                 addRenderableWidget(structureOptions);
 
-                buildButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y + 182, buttonWidth, buttonHeight, Component.literal("Build"),
+                buildButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y + 182, buttonWidth, buttonHeight, text("gui.workers.build.action.build"),
                         btn -> {
                             if (!validateStructureForBuild(false)) return;
-                            setStatus("Build request sent. Required blocks are listed at right.", 0xFFAAFFAA);
+                            setStatus(text("gui.workers.build.status.build_sent"), 0xFFAAFFAA);
                             WorkersRuntime.channel().sendToServer(new MessageUpdateBuildArea(this.buildArea.getUUID(), areaWidthSize, areaHeightSize, areaDepthSize, this.structureNBT, true, false));
                         }
                 ));
 
                 if(player.isCreative()){
-                    placeButton = addRenderableWidget(new ExtendedButton(x - buttonWidth/2 + buttonWidth, y + 182, buttonWidth, buttonHeight, Component.literal("Place"),
+                    placeButton = addRenderableWidget(new ExtendedButton(x - buttonWidth/2 + buttonWidth, y + 182, buttonWidth, buttonHeight, text("gui.workers.build.action.place"),
                             btn -> {
                                 if (!validateStructureForBuild(true)) return;
-                                setStatus("Creative place request sent.", 0xFFAAFFAA);
+                                setStatus(text("gui.workers.build.status.place_sent"), 0xFFAAFFAA);
                                 WorkersRuntime.channel().sendToServer(new MessageUpdateBuildArea(this.buildArea.getUUID(), areaWidthSize, areaHeightSize, areaDepthSize, this.structureNBT, true, true));
                             }
                     ));
                 }
 
-                requiredItemsDropDownMenu = new DisplayTextItemScrollDropDownMenu(ItemStack.EMPTY, "Blocks", x + 101 , y + 60, 110, boxHeight, requiredItems, null);
+                requiredItemsDropDownMenu = new DisplayTextItemScrollDropDownMenu(ItemStack.EMPTY, text("gui.workers.build.required_blocks").getString(), x + 101 , y + 60, 110, boxHeight, requiredItems, null);
                 requiredItemsDropDownMenu.setBgFillSelected(FastColor.ARGB32.color(255, 139, 139, 139));
                 requiredItemsDropDownMenu.setCanSelectItem(false);
                 requiredItemsDropDownMenu.setResetCount(false);
@@ -308,9 +309,9 @@ public class BuildAreaScreen extends WorkAreaScreen {
         int blackboxHeight = 20;
         int blackBoxPosX = x - 201;
         int blackBoxPosY = y + 100;
-        addRenderableWidget(new BlackShowingTextField(blackBoxPosX, blackBoxPosY + 21, blackboxWidth, blackboxHeight, Component.literal("Width:")));
-        addRenderableWidget(new BlackShowingTextField(blackBoxPosX, blackBoxPosY + 41, blackboxWidth, blackboxHeight, Component.literal("Height:")));
-        addRenderableWidget(new BlackShowingTextField(blackBoxPosX, blackBoxPosY + 61, blackboxWidth, blackboxHeight, Component.literal("Depth:")));
+        addRenderableWidget(new BlackShowingTextField(blackBoxPosX, blackBoxPosY + 21, blackboxWidth, blackboxHeight, text("gui.workers.build.dimension.width")));
+        addRenderableWidget(new BlackShowingTextField(blackBoxPosX, blackBoxPosY + 41, blackboxWidth, blackboxHeight, text("gui.workers.build.dimension.height")));
+        addRenderableWidget(new BlackShowingTextField(blackBoxPosX, blackBoxPosY + 61, blackboxWidth, blackboxHeight, text("gui.workers.build.dimension.depth")));
         addRenderableWidget(new BlackShowingTextField(blackBoxPosX + blackboxWidth, blackBoxPosY + 21, blackboxWidth2, blackboxHeight, Component.literal("" + areaWidthSize)));
         addRenderableWidget(new BlackShowingTextField(blackBoxPosX + blackboxWidth, blackBoxPosY + 41, blackboxWidth2, blackboxHeight, Component.literal("" + areaHeightSize)));
         addRenderableWidget(new BlackShowingTextField(blackBoxPosX + blackboxWidth, blackBoxPosY + 61, blackboxWidth2, blackboxHeight, Component.literal("" + areaDepthSize)));
@@ -343,29 +344,37 @@ public class BuildAreaScreen extends WorkAreaScreen {
         boolean active = this.structure == null;
         scanButton.active = active;
         scanButton.visible = active;
+        scanButton.setTooltip(active ? null : Tooltip.create(text("gui.workers.build.tooltip.scan_complete")));
     }
     private void checkBuildButtonActive() {
         if(this.buildButton == null) return;
 
         this.buildButton.active = this.structure != null && !this.structure.isEmpty();
-        if(placeButton != null) this.placeButton.active = this.buildButton.active;
+        this.buildButton.setTooltip(this.buildButton.active ? null : Tooltip.create(text("gui.workers.build.tooltip.need_structure")));
+        if(placeButton != null) {
+            this.placeButton.active = this.buildButton.active;
+            this.placeButton.setTooltip(this.placeButton.active ? null : Tooltip.create(text("gui.workers.build.tooltip.need_structure")));
+        }
     }
 
     private void checkSaveButtonActive(String s) {
         if(this.saveButton == null) return;
 
         this.saveButton.active = this.structure != null && s != null && s.length() >= 3;
+        this.saveButton.setTooltip(this.saveButton.active ? null : Tooltip.create(text(this.structure == null
+                ? "gui.workers.build.tooltip.need_scan_before_save"
+                : "gui.workers.build.tooltip.need_name")));
     }
 
     private void performClientScan() {
         Level level = Minecraft.getInstance().level;
         if (level == null) return;
         if (this.scanNameEditBox == null || this.scanNameEditBox.getValue().trim().length() < 3) {
-            setStatus("Scan rejected: name must be at least 3 characters.", 0xFFFF8888);
+            setStatus(text("gui.workers.build.status.scan_rejected_name"), 0xFFFF8888);
             return;
         }
         if (!dimensionsValid()) {
-            setStatus("Scan rejected: dimensions must stay between 3 and 32.", 0xFFFF8888);
+            setStatus(text("gui.workers.build.status.invalid_dimensions_scan"), 0xFFFF8888);
             return;
         }
 
@@ -373,27 +382,27 @@ public class BuildAreaScreen extends WorkAreaScreen {
         this.structure = StructureManager.parseStructureFromNBT(structureNBT);
         this.structurePreview.setStructure(structure, structureNBT);
         if (this.structure == null || this.structure.isEmpty()) {
-            setStatus("Scan found no buildable blocks.", 0xFFFF8888);
+            setStatus(text("gui.workers.build.status.scan_empty"), 0xFFFF8888);
         } else {
-            setStatus("Scan accepted: " + this.structure.size() + " block(s).", 0xFFAAFFAA);
+            setStatus(text("gui.workers.build.status.scan_accepted", this.structure.size()), 0xFFAAFFAA);
         }
     }
 
     private boolean validateStructureForBuild(boolean creativePlace) {
         if (!dimensionsValid()) {
-            setStatus("Build rejected: dimensions must stay between 3 and 32.", 0xFFFF8888);
+            setStatus(text("gui.workers.build.status.invalid_dimensions_build"), 0xFFFF8888);
             return false;
         }
         if (this.structureNBT == null || this.structureNBT.isEmpty() || !this.structureNBT.contains("blocks", Tag.TAG_LIST)) {
-            setStatus("Build rejected: scan or load a structure first.", 0xFFFF8888);
+            setStatus(text("gui.workers.build.status.need_structure"), 0xFFFF8888);
             return false;
         }
         if (this.structure == null || this.structure.isEmpty()) {
-            setStatus("Build rejected: structure has no blocks.", 0xFFFF8888);
+            setStatus(text("gui.workers.build.status.no_blocks"), 0xFFFF8888);
             return false;
         }
         if (!creativePlace && this.requiredItems != null && !this.requiredItems.isEmpty()) {
-            setStatus("Build ready: gather required blocks listed at right.", 0xFFFFFF88);
+            setStatus(text("gui.workers.build.status.need_materials"), 0xFFFFFF88);
         }
         return true;
     }
@@ -404,9 +413,13 @@ public class BuildAreaScreen extends WorkAreaScreen {
                 && areaDepthSize >= 3 && areaDepthSize <= 32;
     }
 
-    private void setStatus(String statusText, int color) {
-        this.statusText = statusText == null ? "" : statusText;
+    private void setStatus(Component statusText, int color) {
+        this.statusText = statusText == null ? Component.empty() : statusText;
         this.statusColor = color;
+    }
+
+    private static Component text(String key, Object... args) {
+        return Component.translatable(key, args);
     }
 
     @Override

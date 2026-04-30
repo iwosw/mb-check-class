@@ -19,7 +19,7 @@ public class PoliticalEntityNameInputScreen extends Screen {
     private static final int H = 96;
 
     private final Screen parent;
-    private final String prompt;
+    private final Component prompt;
     private final String initialValue;
     private final Consumer<String> onSubmit;
     private final int maxLength;
@@ -29,8 +29,8 @@ public class PoliticalEntityNameInputScreen extends Screen {
     private EditBox editBox;
 
     public PoliticalEntityNameInputScreen(Screen parent,
-                                          String title,
-                                          String prompt,
+                                          Component title,
+                                          Component prompt,
                                           String initialValue,
                                           Consumer<String> onSubmit) {
         this(parent, title, prompt, initialValue, onSubmit, 32, false);
@@ -43,15 +43,15 @@ public class PoliticalEntityNameInputScreen extends Screen {
      *     value (e.g. clearing the field) vs. a "do nothing" guard like for renames.
      */
     public PoliticalEntityNameInputScreen(Screen parent,
-                                          String title,
-                                          String prompt,
+                                          Component title,
+                                          Component prompt,
                                           String initialValue,
                                           Consumer<String> onSubmit,
                                           int maxLength,
                                           boolean allowEmpty) {
-        super(Component.literal(title));
+        super(title);
         this.parent = parent;
-        this.prompt = prompt == null ? "" : prompt;
+        this.prompt = prompt == null ? Component.empty() : prompt;
         this.initialValue = initialValue == null ? "" : initialValue;
         this.onSubmit = onSubmit;
         this.maxLength = Math.max(1, maxLength);
@@ -72,9 +72,9 @@ public class PoliticalEntityNameInputScreen extends Screen {
         addRenderableWidget(this.editBox);
         setInitialFocus(this.editBox);
 
-        addRenderableWidget(Button.builder(Component.literal("Submit"), btn -> submit())
+        addRenderableWidget(Button.builder(Component.translatable("gui.bannermod.common.submit"), btn -> submit())
                 .bounds(guiLeft + 10, guiTop + H - 26, 80, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), btn -> onClose())
+        addRenderableWidget(Button.builder(Component.translatable("gui.bannermod.common.cancel"), btn -> onClose())
                 .bounds(guiLeft + W - 90, guiTop + H - 26, 80, 18).build());
     }
 
@@ -101,7 +101,7 @@ public class PoliticalEntityNameInputScreen extends Screen {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
-        graphics.drawCenteredString(font, this.title.getString(), guiLeft + W / 2, guiTop + 8, 0xFFFFFF);
+        graphics.drawCenteredString(font, this.title, guiLeft + W / 2, guiTop + 8, 0xFFFFFF);
         graphics.drawString(font, this.prompt, guiLeft + 10, guiTop + 24, 0xCCCCCC, false);
         super.render(graphics, mouseX, mouseY, partialTick);
     }

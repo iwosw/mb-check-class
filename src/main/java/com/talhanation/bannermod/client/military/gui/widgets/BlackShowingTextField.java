@@ -31,6 +31,6 @@ public class BlackShowingTextField extends AbstractWidget {
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narration) {
-        narration.add(NarratedElementType.TITLE, getMessage());
+        narration.add(NarratedElementType.TITLE, Component.translatable("gui.bannermod.widget.status.narration", getMessage()));
     }
 }
