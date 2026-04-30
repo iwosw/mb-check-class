@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ChunkTile {
     private static final int EMPTY_TILE_COLOR = 0xFF1A1A1A;
@@ -34,7 +35,19 @@ public class ChunkTile {
     public void loadOrCreate(File tileFile) {
         Minecraft mc = Minecraft.getInstance();
 
-        if (tileFile.exists() && tileFile.length() > 0) {
+        try {
+            if (tileFile.exists() && tileFile.length() > 0) {
+                try (InputStream stream = java.nio.file.Files.newInputStream(tileFile.toPath())) {
+                    this.image = NativeImage.read(stream);
+                }
+                if (this.image.getWidth() != TILE_PIXEL_SIZE || this.image.getHeight() != TILE_PIXEL_SIZE) {
+                    this.image.close();
+                    this.image = null;
+                    this.needsUpdate = true;
+                }
+            }
+        } catch (IOException ignored) {
+            this.image = null;
             this.needsUpdate = true;
         }
 
@@ -115,7 +128,8 @@ public class ChunkTile {
 
     public void render(net.minecraft.client.gui.GuiGraphics guiGraphics, int x, int y, int size) {
         if (this.textureId != null) {
-            guiGraphics.blit(this.textureId, x, y, 0, 0, size, size, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE);
+            guiGraphics.blit(this.textureId, x, y, size, size, 0, 0,
+                    TILE_PIXEL_SIZE, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE);
         }
     }
 
