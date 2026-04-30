@@ -39,7 +39,7 @@ class WarAllyInvitePickerScreen extends Screen {
     private List<PoliticalEntityRecord> options = List.of();
 
     WarAllyInvitePickerScreen(Screen parent, WarDeclarationRecord war, WarSide side) {
-        super(Component.literal("Invite Ally"));
+        super(Component.translatable("gui.bannermod.war_allies.invite_picker.title"));
         this.parent = parent;
         this.war = war;
         this.side = side;
@@ -59,7 +59,7 @@ class WarAllyInvitePickerScreen extends Screen {
         }
         this.options = eligible;
 
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), btn -> onClose())
+        addRenderableWidget(Button.builder(Component.translatable("gui.bannermod.common.cancel"), btn -> onClose())
                 .bounds(guiLeft + W - 80, guiTop + H - 28, 70, 18).build());
     }
 
@@ -90,7 +90,7 @@ class WarAllyInvitePickerScreen extends Screen {
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
 
-        graphics.drawCenteredString(font, "Invite to " + side.name(),
+        graphics.drawCenteredString(font, Component.translatable("gui.bannermod.war_allies.invite_picker.header", localizedWarSide(side)),
                 guiLeft + W / 2, guiTop + 6, 0xFFFFFF);
 
         int listX = guiLeft + 8;
@@ -100,7 +100,7 @@ class WarAllyInvitePickerScreen extends Screen {
         graphics.fill(listX, listY, listX + listW, listY + listH, 0x60000000);
 
         if (options.isEmpty()) {
-            graphics.drawCenteredString(font, "No eligible political entities.",
+            graphics.drawCenteredString(font, Component.translatable("gui.bannermod.war_allies.invite_picker.empty"),
                     listX + listW / 2, listY + listH / 2 - 4, 0xAAAAAA);
         } else {
             int rendered = Math.min(LIST_VISIBLE, Math.max(0, options.size() - scrollOffset));
@@ -112,8 +112,9 @@ class WarAllyInvitePickerScreen extends Screen {
                 if (hovered) {
                     graphics.fill(listX + 1, rowY, listX + listW - 1, rowY + ROW_H, 0x60FFFFFF);
                 }
-                String label = (candidate.name().isBlank() ? "(unnamed)" : candidate.name())
-                        + "  [" + candidate.status().name() + "]";
+                String label = Component.translatable("gui.bannermod.war_allies.invite_picker.row",
+                        candidate.name().isBlank() ? Component.translatable("gui.bannermod.states.unnamed") : Component.literal(candidate.name()),
+                        localizedStatus(candidate.status())).getString();
                 graphics.drawString(font, font.plainSubstrByWidth(label, listW - 8),
                         listX + 4, rowY + 4, 0xFFFFFF, false);
             }
@@ -167,5 +168,21 @@ class WarAllyInvitePickerScreen extends Screen {
     @Nullable
     public WarSide side() {
         return side;
+    }
+
+    private static Component localizedStatus(PoliticalEntityStatus status) {
+        return switch (status) {
+            case SETTLEMENT -> Component.translatable("gui.bannermod.states.status.settlement");
+            case STATE -> Component.translatable("gui.bannermod.states.status.state");
+            case VASSAL -> Component.translatable("gui.bannermod.states.status.vassal");
+            case PEACEFUL -> Component.translatable("gui.bannermod.states.status.peaceful");
+        };
+    }
+
+    private static Component localizedWarSide(WarSide side) {
+        return switch (side) {
+            case ATTACKER -> Component.translatable("gui.bannermod.war.side.attacker");
+            case DEFENDER -> Component.translatable("gui.bannermod.war.side.defender");
+        };
     }
 }

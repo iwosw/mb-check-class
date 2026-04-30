@@ -135,97 +135,13 @@ public final class BannerModSettlementService {
     static BannerModSettlementSnapshot buildSnapshot(ServerLevel level,
                                                      RecruitsClaim claim,
                                                      @Nullable BannerModGovernorManager governorManager) {
-        ChunkPos anchorChunk = resolveAnchorChunk(claim);
-        BannerModGovernorSnapshot governorSnapshot = governorManager == null ? null : governorManager.getSnapshot(claim.getUUID());
-        String settlementFactionId = claim.getOwnerPoliticalEntityId() != null
-                ? claim.getOwnerPoliticalEntityId().toString()
-                : governorSnapshot == null ? null : governorSnapshot.settlementFactionId();
-
-        List<BannerModSettlementResidentRecord> residents = collectResidents(level, claim, governorSnapshot, settlementFactionId);
-        List<BannerModSettlementBuildingRecord> buildings = collectBuildings(level, claim);
-        BannerModSettlementMarketState marketState = collectMarketState(level, claim);
-        List<StorageArea> storageAreas = collectStorageAreas(level, claim);
-        List<BannerModSeaTradeEntrypoint> liveSeaTradeEntrypoints = collectLiveSeaTradeEntrypoints(storageAreas);
-        List<BannerModSeaTradeExecutionRecord> localSeaTradeExecutions = collectLocalSeaTradeExecutions(level, storageAreas);
-        BannerModSeaTradeSummary.Summary seaTradeSummary = BannerModSeaTradeSummary.summarise(liveSeaTradeEntrypoints);
-        ReservationSignalSeed reservationSignalSeed = summarizeReservationSignalSeed(
-                buildings,
-                collectLocalLogisticsRoutes(storageAreas),
-                BannerModLogisticsRuntime.service().listReservations()
-        );
-        Set<UUID> localBuildingUuids = new LinkedHashSet<>();
-        for (BannerModSettlementBuildingRecord building : buildings) {
-            localBuildingUuids.add(building.buildingUuid());
-        }
-        residents = applyResidentAssignmentSemantics(residents, localBuildingUuids);
-        residents = applyResidentServiceContracts(residents, buildings);
-        residents = applyResidentJobDefinitions(residents, buildings);
-        buildings = applyAssignedResidents(buildings, residents);
-        marketState = applySellerDispatchSeed(marketState, residents, buildings);
-        residents = applyResidentJobTargetSelectionSeeds(residents, marketState);
-        BannerModSettlementStockpileSummary stockpileSummary = summarizeStockpiles(buildings, liveSeaTradeEntrypoints);
-        BannerModSettlementDesiredGoodsSeed desiredGoodsSeed = summarizeDesiredGoods(buildings, stockpileSummary, marketState, seaTradeSummary);
-        BannerModSettlementProjectCandidateSeed projectCandidateSeed = summarizeProjectCandidate(
-                buildings,
-                stockpileSummary,
-                desiredGoodsSeed,
-                marketState,
-                governorSnapshot != null && governorSnapshot.governorRecruitUuid() != null,
-                settlementFactionId != null && !settlementFactionId.isBlank()
-        );
-        BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed = summarizeTradeRouteHandoffSeed(stockpileSummary, marketState, desiredGoodsSeed, reservationSignalSeed, seaTradeSummary, localSeaTradeExecutions);
-        BannerModSettlementSupplySignalState supplySignalState = summarizeSupplySignals(desiredGoodsSeed, stockpileSummary, marketState, residents, buildings, reservationSignalSeed, seaTradeSummary);
-        int residentCapacity = 0;
-        int workplaceCapacity = 0;
-        int assignedWorkerCount = 0;
-        int assignedResidentCount = 0;
-        int unassignedWorkerCount = 0;
-        int missingWorkAreaAssignmentCount = 0;
-        for (BannerModSettlementBuildingRecord building : buildings) {
-            residentCapacity += Math.max(0, building.residentCapacity());
-            workplaceCapacity += Math.max(0, building.workplaceSlots());
-            assignedWorkerCount += Math.max(0, building.assignedWorkerCount());
-        }
-        for (BannerModSettlementResidentRecord resident : residents) {
-            if (resident.role() != BannerModSettlementResidentRole.CONTROLLED_WORKER) {
-                continue;
-            }
-            switch (resident.assignmentState()) {
-                case ASSIGNED_LOCAL_BUILDING -> assignedResidentCount++;
-                case UNASSIGNED -> unassignedWorkerCount++;
-                case ASSIGNED_MISSING_BUILDING -> missingWorkAreaAssignmentCount++;
-                default -> {
-                }
-            }
-        }
-
-        return new BannerModSettlementSnapshot(
-                claim.getUUID(),
-                anchorChunk.x,
-                anchorChunk.z,
-                settlementFactionId,
-                level.getGameTime(),
-                residentCapacity,
-                workplaceCapacity,
-                assignedWorkerCount,
-                assignedResidentCount,
-                unassignedWorkerCount,
-                missingWorkAreaAssignmentCount,
-                stockpileSummary,
-                marketState,
-                desiredGoodsSeed,
-                projectCandidateSeed,
-                tradeRouteHandoffSeed,
-                supplySignalState,
-                residents,
-                buildings
-        );
+        return BannerModSettlementSnapshotBuilder.buildSnapshot(level, claim, governorManager);
     }
 
-    private static List<BannerModSettlementResidentRecord> collectResidents(ServerLevel level,
-                                                                            RecruitsClaim claim,
-                                                                            @Nullable BannerModGovernorSnapshot governorSnapshot,
-                                                                            @Nullable String settlementFactionId) {
+    static List<BannerModSettlementResidentRecord> collectResidents(ServerLevel level,
+                                                                    RecruitsClaim claim,
+                                                                    @Nullable BannerModGovernorSnapshot governorSnapshot,
+                                                                    @Nullable String settlementFactionId) {
         Map<UUID, BannerModSettlementResidentRecord> residents = new LinkedHashMap<>();
         for (Villager villager : level.getEntitiesOfClass(Villager.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()))) {
             residents.put(villager.getUUID(), new BannerModSettlementResidentRecord(
@@ -491,8 +407,8 @@ public final class BannerModSettlementService {
         return updatedResidents;
     }
 
-    private static List<BannerModSettlementBuildingRecord> collectBuildings(ServerLevel level,
-                                                                             RecruitsClaim claim) {
+    static List<BannerModSettlementBuildingRecord> collectBuildings(ServerLevel level,
+                                                                    RecruitsClaim claim) {
         List<BannerModSettlementBuildingRecord> buildings = new ArrayList<>();
         List<AbstractWorkAreaEntity> workAreas = collectWorkAreas(level, claim, AbstractWorkAreaEntity.class);
         for (AbstractWorkAreaEntity workArea : workAreas) {
@@ -1034,8 +950,8 @@ public final class BannerModSettlementService {
         );
     }
 
-    private static BannerModSettlementMarketState collectMarketState(ServerLevel level,
-                                                                     RecruitsClaim claim) {
+    static BannerModSettlementMarketState collectMarketState(ServerLevel level,
+                                                             RecruitsClaim claim) {
         List<BannerModSettlementMarketRecord> markets = new ArrayList<>();
         for (MarketArea marketArea : collectWorkAreas(level, claim, MarketArea.class)) {
             marketArea.scanContainers();
@@ -1050,8 +966,8 @@ public final class BannerModSettlementService {
         return summarizeMarketState(markets);
     }
 
-    private static List<StorageArea> collectStorageAreas(ServerLevel level,
-                                                          RecruitsClaim claim) {
+    static List<StorageArea> collectStorageAreas(ServerLevel level,
+                                                 RecruitsClaim claim) {
         return collectWorkAreas(level, claim, StorageArea.class);
     }
 
@@ -1068,18 +984,18 @@ public final class BannerModSettlementService {
         return level.getEntitiesOfClass(type, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
     }
 
-    private static List<BannerModSeaTradeEntrypoint> collectLiveSeaTradeEntrypoints(List<StorageArea> storageAreas) {
+    static List<BannerModSeaTradeEntrypoint> collectLiveSeaTradeEntrypoints(List<StorageArea> storageAreas) {
         return BannerModLogisticsRuntime.listSeaTradeEntrypoints(storageAreas);
     }
 
-    private static List<BannerModLogisticsRoute> collectLocalLogisticsRoutes(List<StorageArea> storageAreas) {
+    static List<BannerModLogisticsRoute> collectLocalLogisticsRoutes(List<StorageArea> storageAreas) {
         return storageAreas.stream()
                 .map(StorageArea::getAuthoredLogisticsRoute)
                 .flatMap(Optional::stream)
                 .toList();
     }
 
-    private static List<BannerModSeaTradeExecutionRecord> collectLocalSeaTradeExecutions(ServerLevel level, List<StorageArea> storageAreas) {
+    static List<BannerModSeaTradeExecutionRecord> collectLocalSeaTradeExecutions(ServerLevel level, List<StorageArea> storageAreas) {
         Set<UUID> storageAreaIds = storageAreas.stream()
                 .map(StorageArea::getUUID)
                 .collect(java.util.stream.Collectors.toSet());
@@ -1367,7 +1283,7 @@ public final class BannerModSettlementService {
         return typeKey == null ? workArea.getType().toString() : typeKey.toString();
     }
 
-    private static ChunkPos resolveAnchorChunk(RecruitsClaim claim) {
+    static ChunkPos resolveAnchorChunk(RecruitsClaim claim) {
         if (claim.getCenter() != null) {
             return claim.getCenter();
         }

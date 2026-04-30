@@ -52,7 +52,7 @@ public class WarAlliesScreen extends Screen {
     private Button closeBtn;
 
     public WarAlliesScreen(@Nullable Screen parent, UUID warId) {
-        super(Component.literal("War Allies"));
+        super(Component.translatable("gui.bannermod.war_allies.title"));
         this.parent = parent;
         this.warId = warId;
     }
@@ -144,10 +144,11 @@ public class WarAlliesScreen extends Screen {
 
         WarDeclarationRecord war = currentWar();
         String header = war == null
-                ? "War not found"
-                : "Allies — " + entityName(war.attackerPoliticalEntityId())
-                        + " vs " + entityName(war.defenderPoliticalEntityId())
-                        + "  [" + war.state().name() + "]";
+                ? Component.translatable("gui.bannermod.war_allies.not_found").getString()
+                : Component.translatable("gui.bannermod.war_allies.header",
+                entityName(war.attackerPoliticalEntityId()),
+                entityName(war.defenderPoliticalEntityId()),
+                localizedWarState(war.state())).getString();
         graphics.drawCenteredString(font, header, guiLeft + W / 2, guiTop + 6, 0xFFFFFF);
 
         renderList(graphics, mouseX, mouseY);
@@ -170,7 +171,7 @@ public class WarAlliesScreen extends Screen {
         graphics.fill(listX, listY, listX + listW, listY + listH, 0x60000000);
 
         if (rows.isEmpty()) {
-            graphics.drawCenteredString(font, "No allies, no invites.",
+            graphics.drawCenteredString(font, Component.translatable("gui.bannermod.war_allies.empty"),
                     listX + listW / 2, listY + listH / 2 - 4, 0xAAAAAA);
             return;
         }
@@ -281,16 +282,28 @@ public class WarAlliesScreen extends Screen {
     }
 
     private String entityName(@Nullable UUID id) {
-        if (id == null) return "(unknown)";
+        if (id == null) return Component.translatable("gui.bannermod.common.unknown").getString();
         PoliticalEntityRecord entity = WarClientState.entityById(id);
-        if (entity == null || entity.name().isBlank()) return shortId(id);
+        if (entity == null) return Component.translatable("gui.bannermod.common.unknown").getString();
+        if (entity.name().isBlank()) return Component.translatable("gui.bannermod.states.unnamed").getString();
         return entity.name();
     }
 
-    private static String shortId(UUID id) {
-        if (id == null) return "?";
-        String s = id.toString();
-        return s.length() > 8 ? s.substring(0, 8) : s;
+    private static Component localizedWarState(WarState state) {
+        return switch (state) {
+            case DECLARED -> Component.translatable("gui.bannermod.war_list.state.declared");
+            case ACTIVE -> Component.translatable("gui.bannermod.war_list.state.active");
+            case IN_SIEGE_WINDOW -> Component.translatable("gui.bannermod.war_list.state.in_siege_window");
+            case RESOLVED -> Component.translatable("gui.bannermod.war_list.state.resolved");
+            case CANCELLED -> Component.translatable("gui.bannermod.war_list.state.cancelled");
+        };
+    }
+
+    private static Component localizedWarSide(WarSide side) {
+        return switch (side) {
+            case ATTACKER -> Component.translatable("gui.bannermod.war.side.attacker");
+            case DEFENDER -> Component.translatable("gui.bannermod.war.side.defender");
+        };
     }
 
     @Nullable
@@ -322,19 +335,19 @@ public class WarAlliesScreen extends Screen {
                 String name = screen.entityName(invite.inviteePoliticalEntityId());
                 String tag;
                 if (WarAlliesScreen.isLeaderOf(invite.inviteePoliticalEntityId(), local)) {
-                    tag = " (left-click: accept · right-click / DEL: decline)";
+                    tag = Component.translatable("gui.bannermod.war_allies.row.invite.accept_decline").getString();
                 } else if (WarAlliesScreen.isLeaderOf(
                         screen.currentWar() == null
                                 ? null
                                 : screen.currentWar().mainSideEntityId(side),
                         local)) {
-                    tag = " (click to cancel)";
+                    tag = Component.translatable("gui.bannermod.war_allies.row.invite.cancel").getString();
                 } else {
                     tag = "";
                 }
-                return "[INVITE " + side.name() + "] " + name + tag;
+                return Component.translatable("gui.bannermod.war_allies.row.invite", localizedWarSide(side), name).getString() + tag;
             }
-            return "[ALLY " + side.name() + "] " + screen.entityName(allyEntityId);
+            return Component.translatable("gui.bannermod.war_allies.row.ally", localizedWarSide(side), screen.entityName(allyEntityId)).getString();
         }
 
         int color() {
