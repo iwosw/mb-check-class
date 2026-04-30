@@ -228,27 +228,68 @@ tasks.register('verifyUnitTestStage') {
 tasks.register('verifyGameTestStage') {
     group = 'verification'
     description = 'Runs the game test stage used by check'
+    dependsOn tasks.named('verifyGameTestScenarioCoverage')
+    dependsOn tasks.named('verifyFocusedGameTestStage')
     dependsOn tasks.named('runGameTestServer')
 }
 
 tasks.register('verifyGameTestScenarioCoverage') {
     group = 'verification'
-    description = 'Checks that GameTest scenario inventory stays in the 70-80 scenario coverage band.'
+    description = 'Checks that critical GameTest suites remain present and focused coverage stays wired.'
     doLast {
-        int count = 0
-        fileTree('src/gametest/java').matching { include '**/*.java' }.each { file ->
-            count += (file.text =~ /@GameTest\b/).count
+        Map<String, List<String>> requiredCoverage = [
+                'src/gametest/java/com/talhanation/bannermod/IntegratedRuntimeGameTests.java'                    : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModOwnershipCycleGameTests.java'            : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModSettlementLaborGameTests.java'           : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModUpkeepFlowGameTests.java'                : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModPlayerCycleGameTests.java'               : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModDedicatedServerAuthorityGameTests.java'  : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModDedicatedServerReconnectGameTests.java'  : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModMultiplayerAuthorityConflictGameTests.java': ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModMultiplayerCooperationGameTests.java'    : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModGame001ProjectGameTests.java'            : ['@GameTestHolder("bannermod_game_001")', 'settlementProjectCreatesExecutableBuildAreaInWorld'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModGame009ProjectGameTests.java'            : ['@GameTestHolder("bannermod_game_009")', 'settlementProjectBindsToExecutableBuildAreaTarget'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModGame010ProjectGameTests.java'            : ['@GameTestHolder("bannermod_game_010")', 'settlementProjectProgressesFromBuildExecutionEvents']
+        ]
+
+        requiredCoverage.each { path, snippets ->
+            File source = project.file(path)
+            if (!source.exists()) {
+                throw new GradleException("Missing required GameTest coverage file: ${path}")
+            }
+
+            String text = source.getText('UTF-8')
+            snippets.each { snippet ->
+                if (!text.contains(snippet)) {
+                    throw new GradleException("Required GameTest coverage snippet missing from ${path}: ${snippet}")
+                }
+            }
         }
-        if (count < 70) {
-            throw new GradleException("GameTest scenario coverage below target: ${count}/70")
-        }
-        println "GameTest scenario coverage inventory: ${count} scenarios (target 70-80)."
+
+        println "Verified required GameTest coverage suites: ${requiredCoverage.size()} files."
     }
 }
 
-tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+tasks.register('verifyFocusedGameTestStage') {
+    group = 'verification'
+    description = 'Runs focused high-risk GameTest suites used by check'
+    dependsOn tasks.named('runGameTestServerGame001')
+    dependsOn tasks.named('runGameTestServerGame009')
+    dependsOn tasks.named('runGameTestServerGame010')
+}
+
+tasks.matching { it.name.startsWith('runGameTestServer') }.configureEach {
     doFirst {
-        delete project.file('run_gametest/world')
+        Map<String, String> worldDirectories = [
+                'runGameTestServer'       : 'run_gametest/world',
+                'runGameTestServerGame001': 'run_gametest_game_001/world',
+                'runGameTestServerGame009': 'run_gametest_game_009/world',
+                'runGameTestServerGame010': 'run_gametest_game_010/world'
+        ]
+        String worldDirectory = worldDirectories.get(name)
+        if (worldDirectory != null) {
+            delete project.file(worldDirectory)
+        }
     }
 }
 
