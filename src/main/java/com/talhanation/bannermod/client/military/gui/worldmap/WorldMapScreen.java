@@ -3,20 +3,18 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.army.map.FormationMapContact;
 import com.talhanation.bannermod.army.map.FormationMapRelation;
 import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.compat.SmallShips;
+import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -25,7 +23,6 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
-import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -34,7 +31,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class WorldMapScreen extends Screen {
-    private static final ResourceLocation MAP_ICONS = ResourceLocation.parse("textures/map/map_icons.png");
     private final ChunkTileManager tileManager;
     private final WorldMapClaimController claimController;
     private final Player player;
@@ -42,6 +38,8 @@ public class WorldMapScreen extends Screen {
     private static final double MAX_SCALE = 10.0;
     private static final double DEFAULT_SCALE = 2.0;
     private static final double SCALE_STEP = 0.1;
+    private static final int MAX_VISIBLE_TILE_UPDATES_PER_FRAME = 4;
+    private static final long VISIBLE_TILE_UPDATE_COOLDOWN_MS = 1000L;
     private static final int CHUNK_HIGHLIGHT_COLOR = 0x40FFFFFF;
     private static final int CHUNK_SELECTION_COLOR = 0xFFFFFFFF;
     private static final int DARK_GRAY_BG = 0xFF101010;
@@ -62,6 +60,7 @@ public class WorldMapScreen extends Screen {
     int snapshotWorldX = 0;
     int snapshotWorldZ = 0;
     private final WorldMapRouteInteractionLayer routeInteractionLayer;
+    private long lastMapRenderDebugLogTime = 0;
 
     public WorldMapScreen() {
         super(Component.literal(""));
@@ -128,7 +127,9 @@ public class WorldMapScreen extends Screen {
         if (minecraft.level != null && player != null) {
             tileManager.initialize(minecraft.level);
             centerOnPlayer();
-            tileManager.updateCurrentTile(true);
+            if (RecruitsClientConfig.UpdateMapTiles.get()) {
+                tileManager.updateCurrentTile(false);
+            }
         }
         claimInfoMenu.init();
         routeInteractionLayer.init();
@@ -146,10 +147,8 @@ public class WorldMapScreen extends Screen {
 
     public void centerOnPlayer() {
         if (player != null) {
-            int chunkX = player.chunkPosition().x;
-            int chunkZ = player.chunkPosition().z;
-            offsetX = -(chunkX * 16 * scale) + width / 2.0;
-            offsetZ = -(chunkZ * 16 * scale) + height / 2.0;
+            offsetX = width / 2.0 - player.getX() * scale;
+            offsetZ = height / 2.0 - player.getZ() * scale;
         }
     }
 
@@ -165,6 +164,7 @@ public class WorldMapScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
+        guiGraphics.flush();
 
         guiGraphics.enableScissor(0, 0, width, height);
 
@@ -210,8 +210,6 @@ public class WorldMapScreen extends Screen {
         // Buttons (+ and ⚙)
         routeInteractionLayer.renderUi(guiGraphics, mouseX, mouseY, partialTicks);
 
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
-
         contextMenu.render(guiGraphics, this);
 
         if (selectedClaim != null && claimInfoMenu.isVisible()) {
@@ -252,7 +250,7 @@ public class WorldMapScreen extends Screen {
     }
 
     private void renderMapTiles(GuiGraphics guiGraphics) {
-        double tileSize = ChunkTile.TILE_PIXEL_SIZE;
+        double tileSize = ChunkTile.TILE_BLOCK_SIZE;
         double scaledTileSize = tileSize * scale;
 
         double leftEdge = -offsetX;
@@ -265,11 +263,33 @@ public class WorldMapScreen extends Screen {
         int startTileZ = (int) Math.floor(topEdge / scaledTileSize - 0.5);
         int endTileZ = (int) Math.ceil(bottomEdge / scaledTileSize + 0.5);
 
+        boolean updateVisibleTiles = RecruitsClientConfig.UpdateMapTiles.get() && !isNavigatingMap();
+        int centerTileX = (int) Math.floor(((width / 2.0) - offsetX) / scaledTileSize);
+        int centerTileZ = (int) Math.floor(((height / 2.0) - offsetZ) / scaledTileSize);
+        int visibleUpdates = 0;
+        int visibleTiles = 0;
+        int renderedTiles = 0;
+        int nullTextureTiles = 0;
+        if (updateVisibleTiles && tileManager.updateTileIfStale(centerTileX, centerTileZ, VISIBLE_TILE_UPDATE_COOLDOWN_MS)) {
+            visibleUpdates++;
+        }
+
         for (int tileZ = startTileZ; tileZ <= endTileZ; tileZ++) {
             for (int tileX = startTileX; tileX <= endTileX; tileX++) {
+                visibleTiles++;
+                if (updateVisibleTiles
+                        && visibleUpdates < MAX_VISIBLE_TILE_UPDATES_PER_FRAME
+                        && (tileX != centerTileX || tileZ != centerTileZ)
+                        && tileManager.updateTileIfStale(tileX, tileZ, VISIBLE_TILE_UPDATE_COOLDOWN_MS)) {
+                    visibleUpdates++;
+                }
+
                 ChunkTile tile = tileManager.getOrCreateTile(tileX, tileZ);
                 ResourceLocation textureId = tile.getTextureId();
-                if (textureId == null) continue;
+                if (textureId == null) {
+                    nullTextureTiles++;
+                    continue;
+                }
 
                 double tileWorldX = tileX * scaledTileSize + offsetX;
                 double tileWorldZ = tileZ * scaledTileSize + offsetZ;
@@ -292,8 +312,44 @@ public class WorldMapScreen extends Screen {
                 RenderSystem.defaultBlendFunc();
                 guiGraphics.blit(textureId, x, z, 0, 0, size, size,
                         ChunkTile.TILE_PIXEL_SIZE, ChunkTile.TILE_PIXEL_SIZE);
+                renderedTiles++;
             }
         }
+        logMapRenderDebugIfDue(startTileX, endTileX, startTileZ, endTileZ, centerTileX, centerTileZ,
+                visibleTiles, renderedTiles, nullTextureTiles, visibleUpdates, updateVisibleTiles);
+    }
+
+    private void logMapRenderDebugIfDue(int startTileX, int endTileX, int startTileZ, int endTileZ,
+                                        int centerTileX, int centerTileZ, int visibleTiles,
+                                        int renderedTiles, int nullTextureTiles, int visibleUpdates,
+                                        boolean updateVisibleTiles) {
+        long now = System.currentTimeMillis();
+        if (now - lastMapRenderDebugLogTime < 2000L) return;
+        lastMapRenderDebugLogTime = now;
+        String dimension = minecraft.level == null ? "null" : minecraft.level.dimension().location().toString();
+        String playerChunk = player == null ? "null" : player.chunkPosition().toString();
+        BannerModMain.LOGGER.info(
+                "[WorldMap] render dim={} playerChunk={} gui={}x{} scale={} offset=({}, {}) tilesX={}..{} tilesZ={}..{} center={}_{} visibleTiles={} renderedTiles={} nullTextures={} updatedThisFrame={} updateEnabled={} configUpdate={} navigating={}",
+                dimension,
+                playerChunk,
+                width,
+                height,
+                scale,
+                Math.round(offsetX),
+                Math.round(offsetZ),
+                startTileX,
+                endTileX,
+                startTileZ,
+                endTileZ,
+                centerTileX,
+                centerTileZ,
+                visibleTiles,
+                renderedTiles,
+                nullTextureTiles,
+                visibleUpdates,
+                updateVisibleTiles,
+                RecruitsClientConfig.UpdateMapTiles.get(),
+                isNavigatingMap());
     }
 
     public void addWaypointAtClicked() {
@@ -328,8 +384,8 @@ public class WorldMapScreen extends Screen {
     private void renderPlayerPosition(GuiGraphics guiGraphics) {
         double playerWorldX = player.getX();
         double playerWorldZ = player.getZ();
-        int pixelX = (int) (offsetX + playerWorldX * scale);
-        int pixelZ = (int) (offsetZ + playerWorldZ * scale);
+        int pixelX = WorldMapRenderPrimitives.screenX(playerWorldX, offsetX, scale);
+        int pixelZ = WorldMapRenderPrimitives.screenZ(playerWorldZ, offsetZ, scale);
 
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
@@ -360,22 +416,16 @@ public class WorldMapScreen extends Screen {
     }
 
     private void renderPlayerIcon(PoseStack pose, GuiGraphics guiGraphics) {
-        pose.mulPose(Axis.ZP.rotationDegrees(player.getYRot()));
-        pose.scale(5.0f, 5.0f, 5.0f);
-        int iconIndex = 0;
-        float u0 = (iconIndex % 16) / 16f;
-        float v0 = (iconIndex / 16) / 16f;
-        float u1 = u0 + 1f / 16f;
-        float v1 = v0 + 1f / 16f;
-        guiGraphics.flush();
-        VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.text(MAP_ICONS));
-        Matrix4f matrix = pose.last().pose();
-        int light = 0xF000F0;
-        int color = 0xFFFFFFFF;
-        consumer.addVertex(matrix, -1f, 1f, 0f).setColor(color).setUv(u0, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
-        consumer.addVertex(matrix, 1f, 1f, 0f).setColor(color).setUv(u1, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
-        consumer.addVertex(matrix, 1f, -1f, 0f).setColor(color).setUv(u1, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
-        consumer.addVertex(matrix, -1f, -1f, 0f).setColor(color).setUv(u0, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+        pose.mulPose(Axis.ZP.rotationDegrees(180.0f + player.getYRot()));
+        int outline = 0xDD101820;
+        int fill = 0xFFE8F4FF;
+        WorldMapRenderPrimitives.solidLine(guiGraphics, 0, -6, -5, 5, outline);
+        WorldMapRenderPrimitives.solidLine(guiGraphics, 0, -6, 5, 5, outline);
+        WorldMapRenderPrimitives.solidLine(guiGraphics, -5, 5, 0, 2, outline);
+        WorldMapRenderPrimitives.solidLine(guiGraphics, 5, 5, 0, 2, outline);
+        WorldMapRenderPrimitives.solidLine(guiGraphics, 0, -4, -3, 3, fill);
+        WorldMapRenderPrimitives.solidLine(guiGraphics, 0, -4, 3, 3, fill);
+        guiGraphics.fill(-1, 1, 2, 4, fill);
     }
 
     private void renderPlayerNameTag(GuiGraphics guiGraphics, int pixelX, int pixelZ) {

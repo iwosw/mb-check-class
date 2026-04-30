@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.ai.military.compat;
 
-import com.talhanation.bannermod.compat.*;
+import com.talhanation.bannermod.compat.IWeapon;
+import com.talhanation.bannermod.compat.MusketModCompat;
+import com.talhanation.bannermod.compat.MusketWeapon;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
 import com.talhanation.bannermod.entity.military.RecruitRangedCombatService;
 import com.talhanation.bannermod.util.AttackUtil;
@@ -152,7 +154,7 @@ public class RecruitRangedMusketAttackGoal extends Goal {
                         }
 
                         case AIMING -> {
-                            this.crossBowman.getLookControl().setLookAt(Vec3.atCenterOf(pos));
+                            this.crossBowman.getLookControl().setLookAt(pos.getCenter());
                             this.crossBowman.setAggressive(true);
                             this.seeTime++;
 
@@ -163,7 +165,7 @@ public class RecruitRangedMusketAttackGoal extends Goal {
                         }
 
                         case SHOOT -> {
-                            this.crossBowman.getLookControl().setLookAt(Vec3.atCenterOf(pos));
+                            this.crossBowman.getLookControl().setLookAt(pos.getCenter());
                             this.weapon.performRangedAttackIWeapon(this.crossBowman, pos.getX(), pos.getY(), pos.getZ(), weapon.getProjectileSpeed());
                             this.weapon.setLoaded(crossBowman.getMainHandItem(), false);
 

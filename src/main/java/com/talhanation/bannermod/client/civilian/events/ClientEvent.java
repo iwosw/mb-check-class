@@ -8,17 +8,25 @@ import com.talhanation.bannermod.client.civilian.render.WorkerAreaRenderer;
 import com.talhanation.bannermod.client.civilian.render.WorkerVillagerRenderer;
 import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
+import com.talhanation.bannermod.registry.civilian.ModMenuTypes;
 import com.talhanation.bannermod.client.civilian.render.WorkerHumanRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.common.EventBusSubscriber;
 
 @EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD , value = Dist.CLIENT)
 public class ClientEvent {
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public static void registerMenuScreens(RegisterMenuScreensEvent event) {
+        ModMenuTypes.registerMenuScreens(event);
+    }
+
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void entityRenderersEvent(EntityRenderersEvent.RegisterRenderers event) {
