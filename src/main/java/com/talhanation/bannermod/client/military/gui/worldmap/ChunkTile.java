@@ -89,7 +89,7 @@ public class ChunkTile {
 
     public void render(net.minecraft.client.gui.GuiGraphics guiGraphics, int x, int y, int size) {
         if (this.textureId != null) {
-            guiGraphics.blit(this.textureId, x, y, 0, 0, size, size, size, size);
+            guiGraphics.blit(this.textureId, x, y, 0, 0, size, size, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE);
         }
     }
 

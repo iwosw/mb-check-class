@@ -8,7 +8,6 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.world.level.Level;
@@ -28,8 +27,9 @@ public class BannerModAlmanacItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
+        ensureBookContent(stack);
         if (!level.isClientSide) {
-            player.openItemGui(createBookStack(), hand);
+            player.openItemGui(stack, hand);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
@@ -40,16 +40,14 @@ public class BannerModAlmanacItem extends Item {
         tooltip.add(Component.translatable("item.bannermod.banner_almanac.tooltip.scope"));
     }
 
-    private static ItemStack createBookStack() {
-        ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
-        book.set(DataComponents.ITEM_NAME, Component.translatable("item.bannermod.banner_almanac"));
+    private static void ensureBookContent(ItemStack stack) {
+        stack.set(DataComponents.ITEM_NAME, Component.translatable("item.bannermod.banner_almanac"));
 
         List<Filterable<Component>> pages = new ArrayList<>();
         for (int page = 1; page <= PAGE_COUNT; page++) {
             pages.add(Filterable.passThrough(Component.translatable("item.bannermod.banner_almanac.page_" + page)));
         }
-        book.set(DataComponents.WRITTEN_BOOK_CONTENT,
+        stack.set(DataComponents.WRITTEN_BOOK_CONTENT,
                 new WrittenBookContent(Filterable.passThrough(BOOK_TITLE), BOOK_AUTHOR, 0, pages, true));
-        return book;
     }
 }

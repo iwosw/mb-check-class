@@ -289,7 +289,8 @@ public class WorldMapScreen extends Screen {
                 RenderSystem.setShaderTexture(0, textureId);
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
-                guiGraphics.blit(textureId, x, z, 0, 0, size, size, size, size);
+                guiGraphics.blit(textureId, x, z, 0, 0, size, size,
+                        ChunkTile.TILE_PIXEL_SIZE, ChunkTile.TILE_PIXEL_SIZE);
             }
         }
     }
