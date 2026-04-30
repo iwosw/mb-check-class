@@ -1,8 +1,6 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
-import com.talhanation.bannermod.client.civilian.gui.AnimalPenAreaScreen;
 import com.talhanation.bannermod.entity.civilian.AnimalFarmerEntity;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -14,12 +12,9 @@ import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.animal.horse.Mule;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Stack;
 
@@ -89,12 +84,6 @@ public class AnimalPenArea extends AbstractWorkAreaEntity {
         super.tick();
         if(this.getCommandSenderWorld().isClientSide()) return;
         if(breedTime > 0) breedTime--;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public Screen getScreen(Player player) {
-        return new AnimalPenAreaScreen(this, player);
     }
 
     public boolean isWorkerPerfectCandidate(AnimalFarmerEntity animalWorker) {

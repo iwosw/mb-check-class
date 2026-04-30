@@ -2,13 +2,11 @@ package com.talhanation.bannermod.entity.civilian.workarea;
 
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.events.ClaimEvents;
-import com.talhanation.bannermod.client.civilian.gui.MiningAreaScreen;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.ai.civilian.MiningClaimExcavationRules;
 import com.talhanation.bannermod.ai.civilian.MiningPatternPlanner;
 import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -17,7 +15,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -25,8 +22,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.Tags;
 import net.minecraft.core.registries.BuiltInRegistries;
 
@@ -87,11 +82,6 @@ public class MiningArea extends AbstractWorkAreaEntity {
         return Items.IRON_PICKAXE;
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public Screen getScreen(Player player) {
-        return new MiningAreaScreen(this, player);
-    }
     @Override
     public AABB createArea() {
         Direction facing = getFacing();
