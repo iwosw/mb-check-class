@@ -26,13 +26,13 @@ public class StorageAreaScreen extends WorkAreaScreen {
     private static final MutableComponent TEXT_FISHERMAN = Component.translatable("gui.workers.checkbox.fisherman");
 
     private static final Component TEXT_STORAGE_NAME = Component.translatable("entity.workers.storage");;
-    private static final Component TEXT_ROUTE_DESTINATION = Component.literal("Route destination UUID");
-    private static final Component TEXT_ROUTE_FILTER = Component.literal("Route filter item ids");
-    private static final Component TEXT_ROUTE_COUNT = Component.literal("Route count");
-    private static final Component TEXT_ROUTE_PRIORITY = Component.literal("Route priority");
-    private static final Component TEXT_APPLY_ROUTE = Component.literal("Apply route");
-    private static final Component TEXT_PORT_ENTRYPOINT = Component.literal("Port entrypoint");
-    private static final Component TEXT_ROUTE_BLOCKED = Component.literal("Blocked state");
+    private static final Component TEXT_ROUTE_DESTINATION = Component.translatable("gui.workers.storage.route.destination");
+    private static final Component TEXT_ROUTE_FILTER = Component.translatable("gui.workers.storage.route.filter");
+    private static final Component TEXT_ROUTE_COUNT = Component.translatable("gui.workers.storage.route.count");
+    private static final Component TEXT_ROUTE_PRIORITY = Component.translatable("gui.workers.storage.route.priority");
+    private static final Component TEXT_APPLY_ROUTE = Component.translatable("gui.workers.storage.route.apply");
+    private static final Component TEXT_PORT_ENTRYPOINT = Component.translatable("gui.workers.storage.route.port_entrypoint");
+    private static final Component TEXT_ROUTE_BLOCKED = Component.translatable("gui.workers.storage.route.blocked_state");
     public final StorageArea storageArea;
     private boolean replant;
     private boolean stripLogs;
@@ -64,7 +64,7 @@ public class StorageAreaScreen extends WorkAreaScreen {
     public String routeCount;
     public String routePriority;
     public boolean portEntrypoint;
-    private String routeStatus = "Route changes apply only when you press Apply route.";
+    private Component routeStatus = text("gui.workers.storage.route.status.pending_apply");
     private int routeStatusColor = 0xFFAAAAAA;
     public StorageAreaScreen(StorageArea storageArea, Player player) {
         super(storageArea.getCustomName(), storageArea, player);
@@ -290,14 +290,45 @@ public class StorageAreaScreen extends WorkAreaScreen {
             if (this.routeCountEditBox != null) this.routeCountEditBox.setValue(this.routeCount);
             if (this.routePriorityEditBox != null) this.routePriorityEditBox.setValue(this.routePriority);
             this.routeStatus = parsed.destinationStorageAreaId() == null
-                    ? "Route disabled: no destination selected."
-                    : "Route valid: destination " + shortId(parsed.destinationStorageAreaId()) + ", count " + parsed.requestedCount() + ", " + parsed.priority().name() + ".";
+                    ? text("gui.workers.storage.route.status.disabled_no_destination")
+                    : text("gui.workers.storage.route.status.valid", shortId(parsed.destinationStorageAreaId()), parsed.requestedCount(), priorityName(parsed.priority()));
             this.routeStatusColor = parsed.destinationStorageAreaId() == null ? 0xFFFFFF88 : 0xFFAAFFAA;
             sendMessage();
         } catch (IllegalArgumentException exception) {
-            this.routeStatus = exception.getMessage();
+            this.routeStatus = routeErrorText(exception.getMessage());
             this.routeStatusColor = 0xFFFF8888;
         }
+    }
+
+    private static Component routeErrorText(String message) {
+        if ("Route destination must be a valid storage-area UUID.".equals(message)) {
+            return text("gui.workers.storage.route.error.invalid_destination");
+        }
+        if ("Route requested count must be greater than 0.".equals(message)) {
+            return text("gui.workers.storage.route.error.count_positive");
+        }
+        if ("Route requested count must be a whole number.".equals(message)) {
+            return text("gui.workers.storage.route.error.count_whole");
+        }
+        if ("Route priority must be HIGH, NORMAL, or LOW.".equals(message)) {
+            return text("gui.workers.storage.route.error.priority");
+        }
+        if ("Route filter must be a comma-separated list of item ids.".equals(message)) {
+            return text("gui.workers.storage.route.error.filter");
+        }
+        return Component.literal(message == null ? "" : message);
+    }
+
+    private static Component priorityName(com.talhanation.bannermod.shared.logistics.BannerModLogisticsPriority priority) {
+        return switch (priority) {
+            case HIGH -> text("gui.workers.storage.route.priority.high");
+            case NORMAL -> text("gui.workers.storage.route.priority.normal");
+            case LOW -> text("gui.workers.storage.route.priority.low");
+        };
+    }
+
+    private static Component text(String key, Object... args) {
+        return Component.translatable(key, args);
     }
 
     private static String shortId(java.util.UUID uuid) {
@@ -315,11 +346,19 @@ public class StorageAreaScreen extends WorkAreaScreen {
         guiGraphics.drawString(font, TEXT_ROUTE_COUNT, labelX, labelY + 48, 4210752, false);
         guiGraphics.drawString(font, TEXT_ROUTE_PRIORITY, labelX + 80, labelY + 48, 4210752, false);
         guiGraphics.drawString(font, TEXT_ROUTE_BLOCKED, labelX, labelY + 100, 4210752, false);
-        guiGraphics.drawString(font, Component.literal("Destination: " + (this.routeDestination == null || this.routeDestination.isBlank() ? "none" : this.routeDestination)), labelX, labelY + 112, 4210752, false);
-        guiGraphics.drawString(font, Component.literal(this.routeStatus), labelX, labelY + 124, this.routeStatusColor, false);
-        guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedReasonToken().isBlank() ? "Blocked: none" : "Blocked: " + this.storageArea.getRouteBlockedReasonToken()), labelX, labelY + 136, 4210752, false);
+        Component destination = this.routeDestination == null || this.routeDestination.isBlank()
+                ? text("gui.workers.storage.route.destination_value", text("gui.bannermod.common.none"))
+                : text("gui.workers.storage.route.destination_value", this.routeDestination);
+        guiGraphics.drawString(font, destination, labelX, labelY + 112, 4210752, false);
+        guiGraphics.drawString(font, this.routeStatus, labelX, labelY + 124, this.routeStatusColor, false);
+        boolean blocked = !this.storageArea.getRouteBlockedReasonToken().isBlank() || !this.storageArea.getRouteBlockedMessage().isBlank();
+        guiGraphics.drawString(font,
+                this.storageArea.getRouteBlockedReasonToken().isBlank()
+                        ? text("gui.workers.storage.route.blocked_value", text("gui.bannermod.common.none"))
+                        : text("gui.workers.storage.route.blocked_value", this.storageArea.getRouteBlockedReasonToken()),
+                labelX, labelY + 136, blocked ? 0xFFFF8888 : 4210752, false);
         if (!this.storageArea.getRouteBlockedMessage().isBlank()) {
-            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 148, 4210752, false);
+            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 148, 0xFFFF8888, false);
         }
     }
 

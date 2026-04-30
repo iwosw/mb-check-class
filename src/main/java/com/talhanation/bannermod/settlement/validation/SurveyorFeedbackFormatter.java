@@ -30,7 +30,7 @@ public final class SurveyorFeedbackFormatter {
         }
     }
 
-    private static Component buildingTypeLabel(BuildingType type) {
+    public static Component buildingTypeLabel(BuildingType type) {
         BuildingType safeType = type == null ? BuildingType.HOUSE : type;
         return Component.translatable("bannermod.surveyor.building_type." + safeType.name().toLowerCase(Locale.ROOT));
     }

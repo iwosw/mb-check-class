@@ -170,7 +170,7 @@ public final class BannerModBuildAreaProjectBridge {
         ));
     }
 
-    private static List<BuildArea> collectBuildAreas(ServerLevel level, RecruitsClaim claim) {
+    static List<BuildArea> collectBuildAreas(ServerLevel level, RecruitsClaim claim) {
         WorkAreaIndex index = WorkAreaIndex.instance();
         if (index.sizeFor(level.dimension()) > 0) {
             return index.queryInChunks(level, claim.getClaimedChunks(), BuildArea.class).stream()

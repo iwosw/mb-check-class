@@ -118,8 +118,8 @@ public class PoliticalEntityListScreen extends Screen {
     private void openCreateDialog() {
         Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
                 this,
-                "Create state",
-                "Pick a name (3–32 chars):",
+                text("gui.bannermod.states.dialog.create.title"),
+                text("gui.bannermod.states.dialog.create.prompt"),
                 "",
                 this::sendCreate
         ));
@@ -130,8 +130,8 @@ public class PoliticalEntityListScreen extends Screen {
         UUID id = this.selected.id();
         Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
                 this,
-                "Rename state",
-                "New name (3–32 chars):",
+                text("gui.bannermod.states.dialog.rename.title"),
+                text("gui.bannermod.states.dialog.rename.prompt"),
                 this.selected.name(),
                 newName -> sendRename(id, newName)
         ));
@@ -161,8 +161,8 @@ public class PoliticalEntityListScreen extends Screen {
         // 9 chars: optional '#' + up to 8 hex digits (covers AARRGGBB).
         Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
                 this,
-                "State color",
-                "Hex color (RRGGBB or AARRGGBB; empty to clear):",
+                text("gui.bannermod.states.dialog.color.title"),
+                text("gui.bannermod.states.dialog.color.prompt"),
                 this.selected.color(),
                 value -> sendColor(id, value),
                 9,
@@ -175,8 +175,8 @@ public class PoliticalEntityListScreen extends Screen {
         UUID id = this.selected.id();
         Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
                 this,
-                "State charter",
-                "Charter text (max " + PoliticalRegistryValidation.MAX_CHARTER_LENGTH + " chars; empty to clear):",
+                text("gui.bannermod.states.dialog.charter.title"),
+                text("gui.bannermod.states.dialog.charter.prompt", PoliticalRegistryValidation.MAX_CHARTER_LENGTH),
                 this.selected.charter(),
                 value -> sendCharter(id, value),
                 PoliticalRegistryValidation.MAX_CHARTER_LENGTH,
@@ -189,8 +189,8 @@ public class PoliticalEntityListScreen extends Screen {
         UUID id = this.selected.id();
         Minecraft.getInstance().setScreen(new PoliticalEntityNameInputScreen(
                 this,
-                add ? "Add co-leader" : "Remove co-leader",
-                "Player UUID:",
+                text(add ? "gui.bannermod.states.dialog.co_leader_add.title" : "gui.bannermod.states.dialog.co_leader_remove.title"),
+                text("gui.bannermod.states.dialog.co_leader.prompt"),
                 "",
                 value -> sendCoLeader(id, value, add),
                 36,
@@ -311,7 +311,7 @@ public class PoliticalEntityListScreen extends Screen {
             if (picked || hovered) {
                 graphics.fill(listX + 1, rowY, listX + listW - 1, rowY + ROW_H, picked ? 0xFF3B5BFF : 0x60FFFFFF);
             }
-            graphics.drawString(font, entity.status().name(), listX + 4, rowY + 4, statusColor(entity.status()), false);
+            graphics.drawString(font, localizedStatus(entity.status()), listX + 4, rowY + 4, statusColor(entity.status()), false);
             graphics.drawString(font, font.plainSubstrByWidth(" " + displayName(entity), listW - 76), listX + 76, rowY + 4, 0xFFFFFF, false);
         }
         if (entities.isEmpty()) {
@@ -336,8 +336,8 @@ public class PoliticalEntityListScreen extends Screen {
         }
         String[] lines = {
                 text("gui.bannermod.states.detail.name", displayName(selected)).getString(),
-                text("gui.bannermod.states.detail.status", selected.status().name()).getString(),
-                text("gui.bannermod.states.detail.government", selected.governmentForm().name(), text(selected.governmentForm().coLeadersShareAuthority() ? "gui.bannermod.states.authority.shared" : "gui.bannermod.states.authority.leader_only").getString()).getString(),
+                text("gui.bannermod.states.detail.status", localizedStatus(selected.status())).getString(),
+                text("gui.bannermod.states.detail.government", localizedGovernmentForm(selected.governmentForm()), text(selected.governmentForm().coLeadersShareAuthority() ? "gui.bannermod.states.authority.shared" : "gui.bannermod.states.authority.leader_only")).getString(),
                 text("gui.bannermod.states.detail.leader", shortId(selected.leaderUuid())).getString(),
                 text("gui.bannermod.states.detail.co_leaders", coLeaderSummary(selected)).getString(),
                 text("gui.bannermod.states.detail.co_leader_authority", text(selected.governmentForm().coLeadersShareAuthority() ? "gui.bannermod.states.co_authority.active" : "gui.bannermod.states.co_authority.locked").getString()).getString(),
@@ -359,6 +359,22 @@ public class PoliticalEntityListScreen extends Screen {
 
     private static Component text(String key, Object... args) {
         return Component.translatable(key, args);
+    }
+
+    private static Component localizedGovernmentForm(GovernmentForm form) {
+        return switch (form) {
+            case MONARCHY -> text("gui.bannermod.states.government.monarchy");
+            case REPUBLIC -> text("gui.bannermod.states.government.republic");
+        };
+    }
+
+    private static Component localizedStatus(PoliticalEntityStatus status) {
+        return switch (status) {
+            case SETTLEMENT -> text("gui.bannermod.states.status.settlement");
+            case STATE -> text("gui.bannermod.states.status.state");
+            case VASSAL -> text("gui.bannermod.states.status.vassal");
+            case PEACEFUL -> text("gui.bannermod.states.status.peaceful");
+        };
     }
 
     private String coLeaderSummary(PoliticalEntityRecord entity) {

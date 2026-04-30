@@ -48,7 +48,7 @@ public class ItemWithLabelWidget extends AbstractWidget {
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narration) {
-        narration.add(NarratedElementType.TITLE, label);
+        narration.add(NarratedElementType.TITLE, Component.translatable("gui.bannermod.widget.label.narration", label));
         if (!itemStack.isEmpty()) {
             narration.add(NarratedElementType.USAGE, itemStack.getHoverName());
         }

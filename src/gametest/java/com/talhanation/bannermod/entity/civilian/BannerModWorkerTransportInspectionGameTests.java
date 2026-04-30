@@ -57,12 +57,9 @@ public class BannerModWorkerTransportInspectionGameTests {
         BannerModCourierTask task = assignSupportedCourierRoute(helper, level, owner, courier);
         courier.getInventory().addItem(new ItemStack(Items.OAK_PLANKS));
         courier.setActiveCourierTask(task);
-
-        helper.runAfterDelay(20, () -> {
-            helper.assertFalse(courier.isPassenger(), "Expected courier to remain on foot without an approved nearby mount.");
-            assertTranslationKey(helper, courier.transportService().inspectionMessage(), "chat.bannermod.workers.transport.fallback_no_mount");
-            helper.succeed();
-        });
+        helper.assertFalse(courier.isPassenger(), "Expected courier to remain on foot without an approved nearby mount.");
+        assertTranslationKey(helper, courier.transportService().inspectionMessage(), "chat.bannermod.workers.transport.fallback_no_mount");
+        helper.succeed();
     }
 
     private static BannerModCourierTask assignSupportedCourierRoute(GameTestHelper helper, ServerLevel level, Player owner, MerchantEntity courier) {
