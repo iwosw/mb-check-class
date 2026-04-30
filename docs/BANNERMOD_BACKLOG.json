@@ -5211,7 +5211,7 @@
     {
       "id": "AUTH-020",
       "title": "Make build-area place mode server-authoritative",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "Build-area updates currently trust a client-supplied creative/instant-place flag, which lets packet payloads choose server build execution mode. The creative Place mechanic must remain available for legitimate creative-admin flows, but the server must derive eligibility itself.",
       "scope": [
@@ -5231,17 +5231,23 @@
           "text": "Picked up in first parallel cleanup batch; mechanic-preserving authority hardening only; dedicated worktree execution started."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/auth-020 after the server-authoritative build-area update; 2) multiplayer build-area GameTest helpers now route through MessageUpdateBuildArea.update(buildArea, player), preserving the authority seam; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1; code inspection confirms instant Place now requires the real sender to be creative while normal staged Build remains intact."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/client/civilian/gui/BuildAreaScreen.java:281-287",
         "src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateBuildArea.java:99-106",
         "src/main/java/com/talhanation/bannermod/entity/civilian/workarea/BuildArea.java:157-217"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "AUTH-021",
       "title": "Make merchant creative controls server-authoritative",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "Merchant management packets currently let the client choose merchant creative mode directly. The mechanic itself should stay available where intended, but the server must derive creative eligibility from the real sender state instead of trusting the payload.",
       "scope": [
@@ -5261,16 +5267,22 @@
           "text": "Picked up in first parallel cleanup batch; mechanic-preserving authority hardening only; dedicated worktree execution started."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/auth-021 after the merchant authority hardening; 2) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1; 3) code inspection of MessageUpdateMerchant confirms merchant creative mode now requires the real sender to be creative while trading and daily-refresh management logic stays unchanged."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/network/messages/civilian/MessageUpdateMerchant.java:52-58",
         "src/main/java/com/talhanation/bannermod/entity/civilian/MerchantAccessControl.java:10-18"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "ARMY-020",
       "title": "Clear stale recruit selection state on disconnect",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "RecruitSelectionRegistry explicitly documents missing disconnect cleanup, so selection state can outlive the player session and leak stale command targeting assumptions. Cleanup should preserve in-session selection mechanics while removing stale server memory after logout.",
       "scope": [
@@ -5290,15 +5302,21 @@
           "text": "Picked up in first parallel cleanup batch; cleanup preserves in-session selection mechanics; dedicated worktree execution started."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew test --tests com.talhanation.bannermod.army.command.RecruitSelectionRegistryTest passed on feature/army-020; 2) ./gradlew compileJava passed there; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1 with logout cleanup wired through PlayerLoggedOutEvent and same-session selection behavior preserved."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/army/command/RecruitSelectionRegistry.java:17-19"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "NET-004",
       "title": "Remove dead packet registrar scaffolding",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-04-30",
       "why": "The live network bootstrap still carries empty registrar shims and a thin packet-catalog wrapper layer that add indirection without gameplay value. Removing dead scaffolding should simplify the network surface without changing packet coverage, order, or mechanics.",
       "scope": [
@@ -5318,12 +5336,18 @@
           "text": "Picked up in first parallel cleanup batch; dead scaffolding removal only; packet behavior and mechanics must remain unchanged."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/net-004; 2) diff review confirmed packet bootstrap order and catalog message arrays stayed unchanged while only dead registrar scaffolding was removed; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-1."
+        }
+      ],
       "evidence": [
         "src/main/java/com/talhanation/bannermod/network/catalog/PacketCatalog.java:6-28",
         "src/main/java/com/talhanation/bannermod/network/messages/civilian/WorkersNetworkRegistrar.java",
         "src/main/java/com/talhanation/bannermod/network/messages/military/RecruitsNetworkRegistrar.java"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "ARCH-008",
