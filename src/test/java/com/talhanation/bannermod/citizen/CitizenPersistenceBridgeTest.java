@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CitizenPersistenceBridgeTest {
@@ -16,10 +18,12 @@ class CitizenPersistenceBridgeTest {
     @Test
     void recruitLegacyKeysHydrateIntoOneCitizenSnapshotWithoutDroppingInventory() {
         UUID ownerId = UUID.randomUUID();
+        UUID workerOnlyBoundWorkAreaId = UUID.randomUUID();
         CompoundTag legacy = new CompoundTag();
         legacy.putUUID("OwnerUUID", ownerId);
         legacy.putInt("FollowState", 2);
         legacy.putBoolean("isOwned", true);
+        legacy.putUUID("boundWorkArea", workerOnlyBoundWorkAreaId);
         legacy.putBoolean("ShouldHoldPos", true);
         legacy.putDouble("HoldPosX", 1.5D);
         legacy.putDouble("HoldPosY", 64.0D);
@@ -31,6 +35,7 @@ class CitizenPersistenceBridgeTest {
         assertEquals(ownerId, snapshot.ownerUuid());
         assertEquals(2, snapshot.followState());
         assertTrue(snapshot.owned());
+        assertNull(snapshot.boundWorkAreaUuid());
         assertEquals(new Vec3(1.5D, 64.0D, -2.5D), snapshot.holdPos());
         assertEquals(1, snapshot.inventoryData().getList("Items", 10).size());
     }
@@ -83,6 +88,7 @@ class CitizenPersistenceBridgeTest {
         assertEquals(6, recruitLegacy.getInt("FollowState"));
         assertTrue(recruitLegacy.getBoolean("ShouldHoldPos"));
         assertEquals(2.0D, recruitLegacy.getDouble("HoldPosX"));
+        assertFalse(recruitLegacy.hasUUID("boundWorkArea"));
 
         assertEquals(ownerId, workerLegacy.getUUID("OwnerUUID"));
         assertEquals(boundWorkAreaId, workerLegacy.getUUID("boundWorkArea"));
