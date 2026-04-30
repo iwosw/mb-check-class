@@ -1415,6 +1415,7 @@
   "bannermod.surveyor.validation.failed": "Проверка %s провалена.",
   "bannermod.surveyor.validation.blocker": "Блокер: %s",
   "bannermod.surveyor.validation.passed": "Проверка %s пройдена.",
+  "bannermod.surveyor.validation.registered": "%s проверено и зарегистрировано. Вместимость: %s | Качество: %s",
   "bannermod.surveyor.validation.summary": "Вместимость: %s | Качество: %s",
   "bannermod.surveyor.validation.warning": "Предупреждение: %s",
   "bannermod.surveyor.building_type.starter_fort": "стартовый форт",

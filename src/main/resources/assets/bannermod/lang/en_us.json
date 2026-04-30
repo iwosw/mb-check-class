@@ -1501,6 +1501,7 @@
   "bannermod.surveyor.validation.failed": "Validation failed for %s.",
   "bannermod.surveyor.validation.blocker": "Blocker: %s",
   "bannermod.surveyor.validation.passed": "Validation passed for %s.",
+  "bannermod.surveyor.validation.registered": "%s validated and registered. Capacity: %s | Quality: %s",
   "bannermod.surveyor.validation.summary": "Capacity: %s | Quality: %s",
   "bannermod.surveyor.validation.warning": "Warning: %s",
   "bannermod.surveyor.building_type.starter_fort": "starter fort",
