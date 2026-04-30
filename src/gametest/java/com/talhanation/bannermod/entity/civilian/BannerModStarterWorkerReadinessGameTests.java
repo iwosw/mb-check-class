@@ -1,0 +1,176 @@
+package com.talhanation.bannermod.entity.civilian;
+
+import com.talhanation.bannermod.BannerModDedicatedServerGameTestSupport;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.config.WorkersServerConfig;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.settlement.building.BuildingDefinitionRegistry;
+import com.talhanation.bannermod.settlement.building.BuildingType;
+import com.talhanation.bannermod.settlement.building.ZoneRole;
+import com.talhanation.bannermod.settlement.building.ZoneSelection;
+import com.talhanation.bannermod.settlement.bootstrap.BootstrapResult;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapService;
+import com.talhanation.bannermod.settlement.validation.BuildingValidationRequest;
+import com.talhanation.bannermod.settlement.validation.BuildingValidationResult;
+import com.talhanation.bannermod.settlement.validation.DefaultBuildingValidator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+
+import java.util.List;
+import java.util.UUID;
+
+@GameTestHolder(BannerModMain.MOD_ID)
+public class BannerModStarterWorkerReadinessGameTests {
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty", timeoutTicks = 160)
+    public static void starterBootstrapSeedsRealWorkerAssignmentsAndWaitingReasons(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        WorkersServerConfig.setTestOverride(WorkersServerConfig.EnableClaimWorkerGrowth, false);
+        Player leader = createLeader(helper, level,
+                UUID.fromString("00000000-0000-0000-0000-000000021001"),
+                "qa001-starter-leader",
+                "qa001_starter_team",
+                new BlockPos(1, 2, 1));
+        BlockPos fortOrigin = new BlockPos(20, 2, 20);
+        BlockPos anchor = fortOrigin.offset(5, 1, 5);
+
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(
+                level, anchor, "qa001_starter_team", leader.getUUID(), leader.getScoreboardName());
+        helper.assertTrue(claim != null, "Expected bootstrap test claim to seed successfully.");
+
+        buildValidFort(level, fortOrigin);
+        buildStarterField(level, new BlockPos(27, 2, 27));
+        BuildingValidationResult fortValidation = validateStarterFort(level, fortOrigin, anchor);
+        helper.assertTrue(fortValidation.valid(), "Expected prepared fort fixture to validate as STARTER_FORT.");
+
+        BootstrapResult result = SettlementBootstrapService.bootstrapSettlement(level, leader, fortValidation);
+        helper.assertTrue(result.success(), "Expected starter fort bootstrap to succeed.");
+
+        helper.succeedWhen(() -> {
+            FarmerEntity farmer = singleWorker(helper, level, FarmerEntity.class, anchor);
+            MinerEntity miner = singleWorker(helper, level, MinerEntity.class, anchor);
+            LumberjackEntity lumberjack = singleWorker(helper, level, LumberjackEntity.class, anchor);
+            BuilderEntity builder = singleWorker(helper, level, BuilderEntity.class, anchor);
+
+            assertAssignmentOrIdleReason(helper, farmer, "farmer_no_area");
+
+            assertIdleReason(helper, miner, "miner_no_area");
+            assertIdleReason(helper, lumberjack, "lumberjack_no_area");
+            assertIdleReason(helper, builder, "builder_no_area");
+            WorkersServerConfig.clearAllTestOverrides();
+        });
+    }
+
+    private static Player createLeader(GameTestHelper helper,
+                                       ServerLevel level,
+                                       UUID playerId,
+                                       String name,
+                                       String teamId,
+                                       BlockPos relativePos) {
+        Player player = BannerModDedicatedServerGameTestSupport.createFakeServerPlayer(level, playerId, name);
+        BannerModDedicatedServerGameTestSupport.ensureFaction(level, teamId, playerId, name);
+        BannerModDedicatedServerGameTestSupport.joinTeam(level, teamId, player);
+        BlockPos absolute = helper.absolutePos(relativePos);
+        player.moveTo(absolute.getX() + 0.5D, absolute.getY(), absolute.getZ() + 0.5D, 0.0F, 0.0F);
+        return player;
+    }
+
+    private static BuildingValidationResult validateStarterFort(ServerLevel level, BlockPos fortOrigin, BlockPos anchor) {
+        return new DefaultBuildingValidator(new BuildingDefinitionRegistry()).validate(
+                level,
+                null,
+                new BuildingValidationRequest(
+                        new UUID(0L, 0L),
+                        BuildingType.STARTER_FORT,
+                        anchor,
+                        List.of(
+                                new ZoneSelection(ZoneRole.AUTHORITY_POINT, anchor, anchor, anchor),
+                                new ZoneSelection(ZoneRole.INTERIOR, fortOrigin.offset(1, 1, 1), fortOrigin.offset(8, 1, 8), anchor)
+                        )
+                )
+        );
+    }
+
+    private static <T extends AbstractWorkerEntity> T singleWorker(GameTestHelper helper,
+                                                                   ServerLevel level,
+                                                                   Class<T> workerType,
+                                                                   BlockPos anchor) {
+        List<T> workers = level.getEntitiesOfClass(workerType, new AABB(anchor).inflate(24.0D));
+        helper.assertTrue(workers.size() == 1,
+                "Expected exactly one starter " + workerType.getSimpleName() + ", found " + workers.size() + ".");
+        return workers.get(0);
+    }
+
+    private static void assertIdleReason(GameTestHelper helper, AbstractWorkerEntity worker, String expectedReason) {
+        WorkerControlStatus status = worker.controlAccess().workStatus();
+        helper.assertTrue(status.kind() == WorkerControlStatus.Kind.IDLE,
+                "Expected idle work status for " + worker.getName().getString() + ".");
+        helper.assertTrue(expectedReason.equals(status.reasonToken()),
+                "Expected idle reason " + expectedReason + " for " + worker.getName().getString() + ", got " + status.reasonToken() + ".");
+    }
+
+    private static void assertAssignmentOrIdleReason(GameTestHelper helper, AbstractWorkerEntity worker, String expectedIdleReason) {
+        if (worker.getCurrentWorkArea() != null) {
+            return;
+        }
+        assertIdleReason(helper, worker, expectedIdleReason);
+    }
+
+    private static void buildValidFort(ServerLevel level, BlockPos origin) {
+        int minX = origin.getX();
+        int minY = origin.getY();
+        int minZ = origin.getZ();
+        int maxX = minX + 9;
+        int maxY = minY + 4;
+        int maxZ = minZ + 9;
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                level.setBlockAndUpdate(new BlockPos(x, minY, z), Blocks.STONE_BRICKS.defaultBlockState());
+            }
+        }
+
+        for (int y = minY + 1; y <= maxY; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    boolean wall = x == minX || x == maxX || z == minZ || z == maxZ;
+                    if (y == maxY) {
+                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.STONE_BRICKS.defaultBlockState());
+                    } else if (wall) {
+                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.COBBLESTONE.defaultBlockState());
+                    } else {
+                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+        }
+
+        level.setBlockAndUpdate(origin.offset(0, 1, 5), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(origin.offset(0, 2, 5), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(origin.offset(6, 1, 5), Blocks.WHITE_BANNER.defaultBlockState());
+    }
+
+    private static void buildStarterField(ServerLevel level, BlockPos waterCenter) {
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dz = -4; dz <= 4; dz++) {
+                BlockPos groundPos = waterCenter.offset(dx, 0, dz);
+                BlockPos cropPos = groundPos.above();
+                if (dx == 0 && dz == 0) {
+                    level.setBlockAndUpdate(groundPos, Blocks.WATER.defaultBlockState());
+                    level.setBlockAndUpdate(cropPos, Blocks.AIR.defaultBlockState());
+                } else {
+                    level.setBlockAndUpdate(groundPos, Blocks.FARMLAND.defaultBlockState());
+                    level.setBlockAndUpdate(cropPos, Blocks.WHEAT.defaultBlockState());
+                }
+            }
+        }
+    }
+}

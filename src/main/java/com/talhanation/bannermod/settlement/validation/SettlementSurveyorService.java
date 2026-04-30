@@ -78,8 +78,11 @@ public final class SettlementSurveyorService {
         );
         ValidatedBuildingRegistryData.get(level).registerBuilding(record);
         PrefabAutoStaffingRuntime.registerValidatedBuildingVacancy(record);
-        player.sendSystemMessage(Component.literal(
-                "Building validated: " + type.name() + " (capacity " + result.capacity() + ", quality " + result.qualityScore() + ")")
+        player.sendSystemMessage(Component.translatable(
+                "bannermod.surveyor.validation.registered",
+                SurveyorFeedbackFormatter.buildingTypeLabel(type),
+                result.capacity(),
+                result.qualityScore())
                 .withStyle(ChatFormatting.GREEN));
         player.sendSystemMessage(Component.literal(PrefabAutoStaffingRuntime.describeManualVacancy(type)).withStyle(ChatFormatting.YELLOW));
     }
