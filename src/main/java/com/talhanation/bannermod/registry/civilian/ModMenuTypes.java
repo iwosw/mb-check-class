@@ -13,6 +13,7 @@ import com.talhanation.bannermod.inventory.civilian.MerchantTradeContainer;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import org.apache.logging.log4j.LogManager;
@@ -20,13 +21,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -36,9 +32,10 @@ public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENU_TYPES =
             DeferredRegister.create(Registries.MENU, BannerModMain.MOD_ID);
 
-    public static void registerMenus() {
-        registerMenu(MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE.get(), MerchantAddEditTradeScreen::new);
-        registerMenu(MERCHANT_TRADE_CONTAINER_TYPE.get(), MerchantTradeScreen::new);
+    public static void registerMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE.get(), MerchantAddEditTradeScreen::new);
+        event.register(MERCHANT_TRADE_CONTAINER_TYPE.get(), MerchantTradeScreen::new);
+        logger.info("Civilian MenuScreens registered");
     }
 
     public static final DeferredHolder<MenuType<?>, MenuType<MerchantAddEditTradeContainer>> MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE =
@@ -60,16 +57,6 @@ public class ModMenuTypes {
                 }
                 return new MerchantTradeContainer(windowId, merchant, inv);
             }));
-
-    /**
-     * Registers a menuType/container with a screen constructor.
-     * It has a try/catch block because the Forge screen constructor fails silently.
-     */
-    private static <M extends AbstractContainerMenu, U extends Screen & MenuAccess<M>> void registerMenu(
-            MenuType<? extends M> menuType, ScreenConstructor<M, U> screenConstructor) {
-        // NeoForge 1.21 registers menu screens through RegisterMenuScreensEvent.
-        // This legacy helper is kept as a compile-only shim until screen registration is rewired.
-    }
 
     @Nullable
     private static AbstractWorkerEntity getRecruitByUUID(Player player, UUID uuid) {

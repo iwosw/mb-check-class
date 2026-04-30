@@ -8,14 +8,11 @@ import com.talhanation.bannermod.entity.military.AssassinLeaderEntity;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.inventory.military.*;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.phys.AABB;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -32,14 +29,14 @@ public class ModScreens {
     private static final Logger logger = LogManager.getLogger(BannerModMain.MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, BannerModMain.MOD_ID);
 
-    public static void registerMenus() {
-        registerMenu(RECRUIT_CONTAINER_TYPE.get(), RecruitInventoryScreen::new);
-        registerMenu(DEBUG_CONTAINER_TYPE.get(), DebugInvScreen::new);
-        registerMenu(COMMAND_CONTAINER_TYPE.get(), CommandScreen::new);
-        registerMenu(ASSASSIN_CONTAINER_TYPE.get(), AssassinLeaderScreen::new);
-        registerMenu(HIRE_CONTAINER_TYPE.get(), RecruitHireScreen::new);
-        registerMenu(PROMOTE.get(), PromoteScreen::new);
-        registerMenu(GOVERNOR.get(), GovernorScreen::new);
+    public static void registerMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(RECRUIT_CONTAINER_TYPE.get(), RecruitInventoryScreen::new);
+        event.register(DEBUG_CONTAINER_TYPE.get(), DebugInvScreen::new);
+        event.register(COMMAND_CONTAINER_TYPE.get(), CommandScreen::new);
+        event.register(ASSASSIN_CONTAINER_TYPE.get(), AssassinLeaderScreen::new);
+        event.register(HIRE_CONTAINER_TYPE.get(), RecruitHireScreen::new);
+        event.register(PROMOTE.get(), PromoteScreen::new);
+        event.register(GOVERNOR.get(), GovernorScreen::new);
 
         logger.info("MenuScreens registered");
     }
@@ -214,17 +211,6 @@ public class ModScreens {
                     return null;
                 }
             }));
-
-    /**
-     * Registers a menuType/container with a screen constructor.
-     *
-     * It has a try/catch block because the Forge screen constructor fails silently.
-     */
-    private static <M extends AbstractContainerMenu, U extends Screen & MenuAccess<M>> void registerMenu(MenuType<? extends M> menuType, MenuScreens.ScreenConstructor<M, U> screenConstructor) {
-        // NeoForge 1.21 registers menu screens through RegisterMenuScreensEvent.
-        // This legacy helper is kept as a compile-only shim until screen registration is rewired.
-    }
-
 
     @Nullable
     public static AbstractRecruitEntity getRecruitByUUID(Player player, UUID uuid) {

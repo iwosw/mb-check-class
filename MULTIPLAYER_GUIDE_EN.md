@@ -37,7 +37,7 @@ During normal play in the Overworld, the small top-right claim HUD shows the cur
 1. Pick a place for your base and claim at least one chunk in the Overworld. Open the map with `M`, right-click the chunk you want, choose `Claim chunk`, then expand by claiming nearby chunks one at a time so the server validates each edit. Claim cost and currency are server-defined (`AllowClaiming` must be true) and shown in the menu itself. Claim protection is Overworld-only; matching Nether or End X/Z chunks are not protected by Overworld claims.
 2. Create a state so your claim has a side: type `/bannermod state create <name>` in chat (e.g. `/bannermod state create Karl-City`). You become its leader. Inspect with `/bannermod state info <id-fragment>` or open the War Room (`U`) and click `States`.
 3. Craft `Settlement Surveyor Tool` and `Building Placement Wand`. Both items are added by the mod and are how you validate your starter fort and register buildings. The surveyor recipe is 2 sticks, 2 oak planks and 1 iron ingot in a stairs-shaped pattern. The wand recipe is one gold block over one stick.
-4. Place a `Starter Fort` — the keystone building, no settlement spawns without one. Build it manually or use a prefab, then use the `Settlement Surveyor Tool`: right-click in the air to open the survey board, or shift+right-click any block to reopen it while aiming at your build. Choose mode/role there, normal right-click the anchor block, then normal right-click corners of each required zone in the world. The starter fort must include `AUTHORITY_POINT` and `INTERIOR`; the anchor should be inside the authority area. The item tooltip and survey board now mirror these exact controls. When the session is filled, use the board's `Validate` button.
+4. Place a `Starter Fort` — the keystone building, no settlement spawns without one. Build it manually or use a prefab, then use the `Settlement Surveyor Tool`: right-click in the air to open the survey board, or shift+right-click any block to reopen it while aiming at your build. Choose mode/role there, normal right-click the anchor block, then normal right-click corners of each required zone in the world. Global blockers are: no selected zone, a missing required role, zone volume `<= 0` or `> 262,144`, anchor outside every selected zone, or for non-fort modes no settlement at the anchor/claim. The starter fort requires `AUTHORITY_POINT` and `INTERIOR`; keep the anchor inside at least one selected zone and ideally inside the authority zone too. The current validator warns, instead of blocking, when the authority zone exists but does not cover the anchor. `INTERIOR` means the usable air volume: air at feet, air at head, solid floor below; roof coverage checks for any roof block 2-8 blocks above those walkable cells. When the session is filled, use the board's `Validate` button.
 5. After a successful starter-fort validation the settlement bootstraps automatically: a `SettlementRecord` is created, a starter claim is added if needed, starter workers spawn near the anchor (farmer, miner, lumberjack, builder), and four free citizens spawn for vacancy jobs. Eligible existing claims that auto-bootstrap from worker growth now use the same settlement record and starter population model. The farmer is ready immediately because bootstrap seeds a starter crop area. The miner, lumberjack, and builder are intentionally waiting until you create/register a mine, lumber camp, and architect workshop/build area; the bootstrap message and follow-up onboarding prompts now point you at those exact next actions. Free citizens are a separate population source, not the same thing as these starter workers.
 6. For other buildings use the `Building Placement Wand`. The wand has 3 modes: `PLACE` (place a prefab), `VALIDATE` (verify what's already built), `REGISTER` (save a player-built template). Shift+right-click in the air cycles mode. The selector screen now shows each prefab's staffing role in the starter loop. Start with `Storage`, then `Farm`, then `Homes`, then `Market`, and later add `Mine`, `Lumber Camp`, and `Architect Workshop`. Manual farm, mine, lumber camp, and architect workshop validation now shows the profession vacancy it creates.
 7. Nearby unassigned citizens only convert after they physically reach a registered building anchor with an open vacancy. Watch the surveyor/wand feedback after founding or validating buildings: it now tells you which vacancy opened and which building type is the next safe expansion step.
@@ -111,6 +111,36 @@ The settlement stack is not a single magic block. It is a pipeline of records an
 
 Practical implication: if a mechanic is not visible in the governor/logistics panel, first check whether the building exists in the settlement snapshot. Use surveyor inspect mode on the anchor, re-register with the wand if needed, and make sure the building is inside the correct claim.
 
+### Surveyor validator reference
+
+Global rules:
+
+- at least one zone must be selected;
+- required roles depend on mode: `STARTER_FORT = AUTHORITY_POINT + INTERIOR`, `HOUSE = INTERIOR + SLEEPING`, `FARM = WORK_ZONE`, `MINE = WORK_ZONE`, `LUMBER_CAMP = WORK_ZONE`, `SMITHY = INTERIOR + WORK_ZONE`, `STORAGE = STORAGE`, `ARCHITECT_WORKSHOP = INTERIOR + WORK_ZONE`;
+- every zone volume must be `> 0` and `<= 262,144` blocks;
+- the anchor must be inside at least one selected zone;
+- every non-fort mode also requires an existing settlement at the anchor or claim;
+- inside one settlement, `INTERIOR`, `SLEEPING`, and `WORK_ZONE` cannot overlap the same primary roles of another building type.
+
+`INTERIOR` semantics:
+
+- mark the usable air volume, not just the walls;
+- a walkable cell counts only when the feet block is air, the head block is air, and the block below is solid;
+- roof coverage means any non-air block 2 to 8 blocks above a walkable cell;
+- the entrance hint looks for a 2-block-high boundary opening with outside air adjacent.
+
+Per-building thresholds:
+
+- `STARTER_FORT`: both required zones; warnings only if authority zone misses anchor, no banner is near anchor, interior has fewer than `64` walkable cells, roof coverage is below `80%`, or entrance is unclear; success bootstraps the settlement.
+- `HOUSE`: at least `8` walkable interior cells, at least `70%` roof coverage, and at least one bed. Beds are accepted in `SLEEPING`, within 1 block of `SLEEPING`, in `INTERIOR`, within 1 block of `INTERIOR`, or anywhere within `12` blocks of anchor. Unclear entrance is a warning only.
+- `FARM`: anchor within `24` blocks of `WORK_ZONE`; at least `24` farmland/crop-capable blocks; capacity scales by `48` valid field blocks.
+- `MINE`: anchor within `32` blocks of `WORK_ZONE`; at least `24` valid face blocks from stone, deepslate, cobblestone, or ores; sky-exposed anchor is a warning only; capacity scales by `64` valid face blocks.
+- `LUMBER_CAMP`: anchor within `32` blocks of `WORK_ZONE`; productivity must be `>= 12`, where productivity is `logs + saplings/2`; capacity scales by `productivity / 12`.
+- `SMITHY`: at least `70%` roof coverage, at least one anvil, at least one furnace or blast furnace, and at least one anvil-furnace pair within `4` blocks.
+- `STORAGE`: at least one chest or barrel block entity inside the `STORAGE` zone.
+- `ARCHITECT_WORKSHOP`: at least `16` walkable interior cells, at least `70%` roof coverage, and at least one crafting table in the `WORK_ZONE`.
+- `INSPECT_EXISTING`: reads type, state, capacity, quality, and vacancy hint from a validated anchor; it does not create a building.
+
 ### Building and vacancy reference
 
 - `HOUSE`: adds resident capacity. It does not create a worker job by itself.
@@ -120,7 +150,8 @@ Practical implication: if a mechanic is not visible in the governor/logistics pa
 - `LUMBER_CAMP`: creates a lumberjack vacancy and contributes to material-production role signals.
 - `ARCHITECT_WORKSHOP`: creates a builder vacancy and contributes to construction/project signals.
 - `SMITHY`: contributes material-production infrastructure; use it as part of a developed material settlement.
-- `STARTER_FORT`: founding and promotion infrastructure. It must have the required authority/interior zones.
+- `STARTER_FORT`: founding and promotion infrastructure. Missing required zones blocks validation; banner/roof/entrance quality issues only warn.
+- `MARKET`: not a surveyor validator mode. Register it with the `Building Placement Wand` in `REGISTER` mode; it is still required for state promotion.
 
 Prefab professions also exist for `MERCHANT`, `FISHERMAN`, `ANIMAL_FARMER`, `SHEPHERD`, and recruit roles (`RECRUIT_SWORDSMAN`, `RECRUIT_ARCHER`, `RECRUIT_PIKEMAN`, `RECRUIT_CROSSBOW`, `RECRUIT_CAVALRY`). Those are prefab/staffing declarations; the settlement still needs valid ownership, vacancies, and available citizens.
 

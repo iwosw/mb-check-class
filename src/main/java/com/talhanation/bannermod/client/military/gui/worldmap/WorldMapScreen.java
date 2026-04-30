@@ -128,6 +128,7 @@ public class WorldMapScreen extends Screen {
         if (minecraft.level != null && player != null) {
             tileManager.initialize(minecraft.level);
             centerOnPlayer();
+            tileManager.updateCurrentTile(true);
         }
         claimInfoMenu.init();
         routeInteractionLayer.init();
