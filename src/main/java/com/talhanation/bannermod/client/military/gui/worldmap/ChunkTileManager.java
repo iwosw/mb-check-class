@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.military.gui.worldmap;
 
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.world.level.ChunkPos;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 public class ChunkTileManager {
     private static final long TILE_SAVE_COOLDOWN_MS = 2000;
+    private static final long DEBUG_LOG_COOLDOWN_MS = 2000;
     private static ChunkTileManager instance;
     private final Map<String, ChunkTile> loadedTiles = new HashMap<>();
     private final Minecraft mc = Minecraft.getInstance();
@@ -20,6 +22,7 @@ public class ChunkTileManager {
     private final Map<String, Long> lastUpdateTimes = new HashMap<>();
     private final Map<String, Long> lastSaveTimes = new HashMap<>();
     private long lastNeighborUpdateTime = 0;
+    private long lastDebugLogTime = 0;
     private int lastUpdatedNeighborIndex = 0;
 
     public static ChunkTileManager getInstance() {
@@ -32,6 +35,7 @@ public class ChunkTileManager {
         String worldName = detectStorageId();
         this.worldMapDir = new File(mc.gameDirectory, "recruits/worldmap/" + worldName);
         this.worldMapDir.mkdirs();
+        BannerModMain.LOGGER.info("[WorldMap] initialized tile storage at {}", this.worldMapDir.getAbsolutePath());
     }
 
     public void updateCurrentTile() {
@@ -81,13 +85,25 @@ public class ChunkTileManager {
         lastUpdatedNeighborIndex++;
     }
 
-    private void updateTile(int tileX, int tileZ) {
+    private TileUpdateStats updateTile(int tileX, int tileZ) {
         ChunkTile tile = getOrCreateTile(tileX, tileZ);
         File tileFile = getTileFile(tileX, tileZ);
-        updateOnlyLoadedChunks(tile);
+        TileUpdateStats stats = updateOnlyLoadedChunks(tile);
         long currentTime = System.currentTimeMillis();
+        tile.uploadIfNeeded();
         saveTileIfDue(tile, tileFile, currentTime);
         lastUpdateTimes.put(tileX + "_" + tileZ, currentTime);
+        logTileUpdateIfDue(tileX, tileZ, stats, tileFile, currentTime);
+        return stats;
+    }
+
+    public boolean updateTileIfStale(int tileX, int tileZ, long maxAgeMs) {
+        String key = tileX + "_" + tileZ;
+        Long lastUpdate = lastUpdateTimes.get(key);
+        if (lastUpdate != null && System.currentTimeMillis() - lastUpdate < maxAgeMs) return false;
+
+        updateTile(tileX, tileZ);
+        return true;
     }
 
     private void saveTileIfDue(ChunkTile tile, File tileFile, long currentTime) {
@@ -99,22 +115,57 @@ public class ChunkTileManager {
         lastSaveTimes.put(key, currentTime);
     }
 
-    private void updateOnlyLoadedChunks(ChunkTile tile) {
-        if (mc.level == null || mc.player == null) return;
+    private TileUpdateStats updateOnlyLoadedChunks(ChunkTile tile) {
+        if (mc.level == null || mc.player == null) return TileUpdateStats.EMPTY;
 
         int startChunkX = ChunkTile.tileToChunkCoord(tile.getTileX());
         int startChunkZ = ChunkTile.tileToChunkCoord(tile.getTileZ());
+        int loadedChunks = 0;
+        int meaningfulChunks = 0;
+        int changedChunks = 0;
+        int firstMeaningfulPixels = 0;
+        int firstSamplePixel = 0;
 
         for (int cz = 0; cz < ChunkTile.TILE_SIZE; cz++) {
             for (int cx = 0; cx < ChunkTile.TILE_SIZE; cx++) {
                 ChunkPos chunkPos = new ChunkPos(startChunkX + cx, startChunkZ + cz);
                 if (isChunkLoaded(chunkPos)) {
+                    loadedChunks++;
                     ChunkImage chunkImage = new ChunkImage(mc.level, chunkPos);
-                    tile.updateFromChunkImage(chunkImage, cx, cz);
+                    if (chunkImage.isMeaningful()) {
+                        meaningfulChunks++;
+                        if (firstMeaningfulPixels == 0) {
+                            firstMeaningfulPixels = chunkImage.getMeaningfulPixelCount();
+                            firstSamplePixel = chunkImage.getSamplePixel();
+                        }
+                    }
+                    if (tile.updateFromChunkImage(chunkImage, cx, cz)) {
+                        changedChunks++;
+                    }
                     chunkImage.close();
                 }
             }
         }
+        return new TileUpdateStats(loadedChunks, meaningfulChunks, changedChunks, firstMeaningfulPixels, firstSamplePixel);
+    }
+
+    private void logTileUpdateIfDue(int tileX, int tileZ, TileUpdateStats stats, File tileFile, long currentTime) {
+        if (currentTime - lastDebugLogTime < DEBUG_LOG_COOLDOWN_MS) return;
+        lastDebugLogTime = currentTime;
+        String dimension = mc.level == null ? "null" : mc.level.dimension().location().toString();
+        String playerChunk = mc.player == null ? "null" : mc.player.chunkPosition().toString();
+        BannerModMain.LOGGER.info(
+                "[WorldMap] update tile={}_{} dim={} playerChunk={} loadedChunks={} meaningfulChunks={} changedChunks={} firstPixels={} samplePixel=0x{} file={}",
+                tileX,
+                tileZ,
+                dimension,
+                playerChunk,
+                stats.loadedChunks,
+                stats.meaningfulChunks,
+                stats.changedChunks,
+                stats.firstMeaningfulPixels,
+                Integer.toHexString(stats.firstSamplePixel),
+                tileFile.getAbsolutePath());
     }
 
     private boolean isChunkLoaded(ChunkPos chunkPos) {
@@ -154,7 +205,14 @@ public class ChunkTileManager {
     }
 
     private File getTileFile(int tileX, int tileZ) {
+        if (worldMapDir == null) {
+            initialize(mc.level);
+        }
         return new File(worldMapDir, tileX + "_" + tileZ + ".png");
+    }
+
+    private record TileUpdateStats(int loadedChunks, int meaningfulChunks, int changedChunks, int firstMeaningfulPixels, int firstSamplePixel) {
+        private static final TileUpdateStats EMPTY = new TileUpdateStats(0, 0, 0, 0, 0);
     }
 
     public void close() {

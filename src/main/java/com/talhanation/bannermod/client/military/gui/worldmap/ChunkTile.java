@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ChunkTile {
     private static final int EMPTY_TILE_COLOR = 0xFF1A1A1A;
@@ -17,9 +18,13 @@ public class ChunkTile {
     private DynamicTexture texture;
     private ResourceLocation textureId;
     private boolean needsUpdate = false;
+    private boolean textureDirty = false;
 
     public static final int TILE_SIZE = 10;
-    public static final int PIXELS_PER_CHUNK = 16;
+    public static final int BLOCKS_PER_CHUNK = 16;
+    public static final int PIXELS_PER_BLOCK = 2;
+    public static final int PIXELS_PER_CHUNK = BLOCKS_PER_CHUNK * PIXELS_PER_BLOCK;
+    public static final int TILE_BLOCK_SIZE = TILE_SIZE * BLOCKS_PER_CHUNK;
     public static final int TILE_PIXEL_SIZE = TILE_SIZE * PIXELS_PER_CHUNK;
 
     public ChunkTile(int tileX, int tileZ) {
@@ -32,16 +37,18 @@ public class ChunkTile {
 
         try {
             if (tileFile.exists() && tileFile.length() > 0) {
-                byte[] fileData = java.nio.file.Files.readAllBytes(tileFile.toPath());
-                this.image = NativeImage.read(fileData);
-                if (this.image.getWidth() != TILE_PIXEL_SIZE ||
-                        this.image.getHeight() != TILE_PIXEL_SIZE) {
+                try (InputStream stream = java.nio.file.Files.newInputStream(tileFile.toPath())) {
+                    this.image = NativeImage.read(stream);
+                }
+                if (this.image.getWidth() != TILE_PIXEL_SIZE || this.image.getHeight() != TILE_PIXEL_SIZE) {
                     this.image.close();
                     this.image = null;
+                    this.needsUpdate = true;
                 }
             }
         } catch (IOException ignored) {
             this.image = null;
+            this.needsUpdate = true;
         }
 
         if (this.image == null) {
@@ -78,8 +85,8 @@ public class ChunkTile {
         return true;
     }
 
-    public void updateFromChunkImage(ChunkImage chunkImage, int chunkXInTile, int chunkZInTile) {
-        if (this.image == null || chunkImage == null || !chunkImage.isMeaningful()) return;
+    public boolean updateFromChunkImage(ChunkImage chunkImage, int chunkXInTile, int chunkZInTile) {
+        if (this.image == null || chunkImage == null || !chunkImage.isMeaningful()) return false;
 
         NativeImage chunkImg = chunkImage.getNativeImage();
         int startX = chunkXInTile * PIXELS_PER_CHUNK;
@@ -98,9 +105,16 @@ public class ChunkTile {
             }
         }
 
-        if (!changed) return;
-        this.texture.upload();
+        if (!changed) return false;
+        this.textureDirty = true;
         this.needsUpdate = true;
+        return true;
+    }
+
+    public void uploadIfNeeded() {
+        if (!this.textureDirty || this.texture == null) return;
+        this.texture.upload();
+        this.textureDirty = false;
     }
 
     public void saveToFile(File tileFile) {
@@ -114,7 +128,8 @@ public class ChunkTile {
 
     public void render(net.minecraft.client.gui.GuiGraphics guiGraphics, int x, int y, int size) {
         if (this.textureId != null) {
-            guiGraphics.blit(this.textureId, x, y, 0, 0, size, size, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE);
+            guiGraphics.blit(this.textureId, x, y, size, size, 0, 0,
+                    TILE_PIXEL_SIZE, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE);
         }
     }
 

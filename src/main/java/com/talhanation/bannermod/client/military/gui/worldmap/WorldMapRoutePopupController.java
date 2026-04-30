@@ -61,26 +61,26 @@ final class WorldMapRoutePopupController {
     }
 
     boolean keyPressed(int keyCode) {
-        if (waypointEditPopup.isVisible()) {
+        if (waypointEditPopup != null && waypointEditPopup.isVisible()) {
             return waypointEditPopup.keyPressed(keyCode);
         }
-        if (routeEditPopup.isVisible()) {
+        if (routeEditPopup != null && routeEditPopup.isVisible()) {
             return routeEditPopup.keyPressed(keyCode);
         }
-        if (routeNamePopup.isVisible()) {
+        if (routeNamePopup != null && routeNamePopup.isVisible()) {
             return routeNamePopup.keyPressed(keyCode);
         }
         return false;
     }
 
     boolean charTyped(char chr, int modifiers) {
-        if (waypointEditPopup.isVisible()) {
+        if (waypointEditPopup != null && waypointEditPopup.isVisible()) {
             return waypointEditPopup.charTyped(chr);
         }
-        if (routeEditPopup.isVisible()) {
+        if (routeEditPopup != null && routeEditPopup.isVisible()) {
             return routeEditPopup.charTyped(chr, modifiers);
         }
-        if (routeNamePopup.isVisible()) {
+        if (routeNamePopup != null && routeNamePopup.isVisible()) {
             return routeNamePopup.charTyped(chr, modifiers);
         }
         return false;
