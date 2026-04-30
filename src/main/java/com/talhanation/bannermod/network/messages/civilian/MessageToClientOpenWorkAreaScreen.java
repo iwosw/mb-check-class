@@ -1,11 +1,13 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
+import com.talhanation.bannermod.client.civilian.gui.WorkAreaScreenFactory;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -50,7 +52,13 @@ public class MessageToClientOpenWorkAreaScreen implements BannerModMessage<Messa
             return;
         }
 
-        Minecraft.getInstance().setScreen(areaEntity.getScreen(player));
+        Screen screen = WorkAreaScreenFactory.create(areaEntity, player);
+        if (screen == null) {
+            player.sendSystemMessage(Component.translatable("gui.workers.area.authoring.open_failed"));
+            return;
+        }
+
+        Minecraft.getInstance().setScreen(screen);
     }
 
     @Override

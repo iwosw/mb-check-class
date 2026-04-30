@@ -1,8 +1,6 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
-import com.talhanation.bannermod.client.civilian.gui.CropAreaScreen;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -10,15 +8,12 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.Stack;
 
@@ -65,11 +60,6 @@ public class CropArea extends AbstractWorkAreaEntity {
         return Items.IRON_HOE;
     }
 
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public Screen getScreen(Player player) {
-        return new CropAreaScreen(this, player);
-    }
     public void scanBreakArea(){
         if(area == null) area = this.getArea();
 

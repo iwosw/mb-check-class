@@ -1,9 +1,7 @@
 package com.talhanation.bannermod.entity.civilian.workarea;
 
-import com.talhanation.bannermod.client.civilian.gui.LumberAreaScreen;
 import com.talhanation.bannermod.entity.civilian.LumberjackEntity;
 import com.talhanation.bannermod.persistence.civilian.Tree;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,13 +12,10 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.*;
 
@@ -74,12 +69,6 @@ public class LumberArea extends AbstractWorkAreaEntity {
 
     public Item getRenderItem(){
         return Items.IRON_AXE;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public Screen getScreen(Player player) {
-        return new LumberAreaScreen(this, player);
     }
 
     public boolean isWorkerPerfectCandidate(LumberjackEntity lumberjack) {
