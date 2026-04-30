@@ -17,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -28,6 +29,58 @@ import java.util.UUID;
 
 @GameTestHolder(BannerModMain.MOD_ID)
 public class BannerModSettlementProjectGameTests {
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void settlementProjectCreatesExecutableBuildAreaInWorld(GameTestHelper helper) {
+        assertSettlementProjectCreatesExecutableBuildAreaInWorld(helper);
+    }
+
+    static void assertSettlementProjectCreatesExecutableBuildAreaInWorld(GameTestHelper helper) {
+        WorkAreaIndex.instance().clearAllForTest();
+        ServerLevel level = helper.getLevel();
+        Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(
+                level,
+                new BlockPos(2, 2, 2),
+                "project-live-claim",
+                player.getUUID(),
+                player.getName().getString()
+        );
+
+        PendingProject project = new PendingProject(
+                UUID.randomUUID(),
+                ProjectKind.NEW_BUILDING,
+                null,
+                BannerModSettlementBuildingCategory.GENERAL,
+                BannerModSettlementBuildingProfileSeed.GENERAL,
+                100,
+                level.getGameTime(),
+                20,
+                ProjectBlocker.NONE
+        );
+
+        BannerModSettlementProjectRuntime runtime = BannerModSettlementProjectRuntime.forServer(level);
+        ProjectAssignment assignment = BannerModSettlementProjectRuntime.tickClaim(
+                level,
+                claim.getUUID(),
+                List.of(project)
+        ).orElseThrow();
+
+        helper.assertTrue(assignment.phase() == AssignmentPhase.SEARCHING_BUILDER,
+                "Expected live project execution to bind a prefab-backed BuildArea immediately");
+        Entity entity = level.getEntity(assignment.buildAreaUuid());
+        helper.assertTrue(entity instanceof BuildArea,
+                "Expected project execution to create a real BuildArea entity in-world");
+        BuildArea buildArea = (BuildArea) entity;
+        helper.assertTrue(buildArea.hasStructureTemplate(),
+                "Expected spawned project BuildArea to carry a real structure template");
+        helper.assertTrue(buildArea.hasPendingBuildWork(),
+                "Expected spawned project BuildArea to expose actionable world build work");
+        helper.assertTrue(runtime.assignmentForBuildArea(buildArea.getUUID()).isPresent(),
+                "Expected GAME-009 assignment tracking to reuse the spawned live BuildArea");
+        helper.succeed();
+    }
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
