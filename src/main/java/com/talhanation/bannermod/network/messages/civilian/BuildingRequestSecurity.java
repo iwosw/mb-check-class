@@ -40,10 +40,10 @@ final class BuildingRequestSecurity {
         if (player.isCreative() && player.hasPermissions(2)) {
             return true;
         }
-        if (ClaimEvents.recruitsClaimManager == null) {
+        if (ClaimEvents.claimManager() == null) {
             return true;
         }
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(pos));
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(new ChunkPos(pos));
         if (claim == null) {
             return true;
         }

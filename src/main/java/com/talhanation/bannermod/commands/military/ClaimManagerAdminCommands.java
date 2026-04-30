@@ -55,7 +55,7 @@ final class ClaimManagerAdminCommands {
                                 return 0;
                             }
 
-                            ClaimEvents.recruitsClaimManager.removeClaim(claim);
+                            ClaimEvents.claimManager().removeClaim(claim);
                             ctx.getSource().sendSuccess(() ->
                                     Component.literal("Claim [" + claim + "] is now deleted."), false);
                             broadcastClaims(ctx.getSource());
@@ -115,15 +115,15 @@ final class ClaimManagerAdminCommands {
     }
 
     private static void broadcastClaims(CommandSourceStack source) {
-        ClaimEvents.recruitsClaimManager.broadcastClaimsToAll(source.getLevel());
+        ClaimEvents.claimManager().broadcastClaimsToAll(source.getLevel());
     }
 
     private static RecruitsClaim getClaimAtPlayerPosition(ServerPlayer player) {
         ChunkPos chunkPos = player.chunkPosition();
-        return RecruitsClaimManager.getClaimAt(chunkPos, ClaimEvents.recruitsClaimManager.getAllClaims().stream().toList());
+        return RecruitsClaimManager.getClaimAt(chunkPos, ClaimEvents.claimManager().getAllClaims().stream().toList());
     }
 
     private static RecruitsClaim getPlayerClaim(ServerPlayer player) {
-        return ClaimEvents.recruitsClaimManager.getClaim(player.chunkPosition());
+        return ClaimEvents.claimManager().getClaim(player.chunkPosition());
     }
 }

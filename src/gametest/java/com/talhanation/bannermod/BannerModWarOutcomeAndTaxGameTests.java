@@ -74,8 +74,8 @@ public class BannerModWarOutcomeAndTaxGameTests {
         UUID defenderClaimOwnerId = setup.defenderEntityId;
         setup.attackerClaim.setOwnerPoliticalEntityId(attackerClaimOwnerId);
         setup.defenderClaim.setOwnerPoliticalEntityId(defenderClaimOwnerId);
-        ClaimEvents.recruitsClaimManager.testInsertClaim(setup.attackerClaim);
-        ClaimEvents.recruitsClaimManager.testInsertClaim(setup.defenderClaim);
+        ClaimEvents.claimManager().testInsertClaim(setup.attackerClaim);
+        ClaimEvents.claimManager().testInsertClaim(setup.defenderClaim);
         seedTreasury(level, setup.defenderClaim, 100);
         // Ensure the occupier has a destination ledger.
         seedTreasury(level, setup.attackerClaim, 0);
@@ -232,7 +232,7 @@ public class BannerModWarOutcomeAndTaxGameTests {
 
     private static int treasuryBalanceForEntity(ServerLevel level, UUID politicalEntityId) {
         int total = 0;
-        for (RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()) {
+        for (RecruitsClaim claim : ClaimEvents.claimManager().getAllClaims()) {
             if (politicalEntityId.equals(claim.getOwnerPoliticalEntityId())) {
                 total += BannerModTreasuryManager.get(level).getLedger(claim.getUUID()).treasuryBalance();
             }

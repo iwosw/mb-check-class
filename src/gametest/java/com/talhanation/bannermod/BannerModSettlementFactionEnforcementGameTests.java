@@ -54,7 +54,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             worker.setCurrentWorkArea(cropArea);
 
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                    ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.claimManager(),
                     workAreaPos,
                     friendlyPoliticalEntityId
             );
@@ -91,7 +91,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
 
             boolean placed = attemptWorkAreaPlacement(level, hostilePlayer, workAreaPos);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                    ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.claimManager(),
                     workAreaPos,
                     hostilePoliticalEntityId
             );
@@ -120,8 +120,8 @@ public class BannerModSettlementFactionEnforcementGameTests {
             BlockPos workAreaPos = helper.absolutePos(new BlockPos(2, 2, 2));
             clearCropArea(level, workAreaPos);
 
-            if (ClaimEvents.recruitsClaimManager != null) {
-                RecruitsClaim existingClaim = ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(workAreaPos));
+            if (ClaimEvents.claimManager() != null) {
+                RecruitsClaim existingClaim = ClaimEvents.claimManager().getClaim(new ChunkPos(workAreaPos));
                 if (existingClaim != null) {
                     BannerModDedicatedServerGameTestSupport.removeClaim(level, existingClaim);
                 }
@@ -130,7 +130,7 @@ public class BannerModSettlementFactionEnforcementGameTests {
             String friendlyPoliticalEntityId = BannerModDedicatedServerGameTestSupport.politicalEntityIdString(level, FRIENDLY_TEAM_ID);
             boolean placed = attemptWorkAreaPlacement(level, player, workAreaPos);
             BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveFactionStatus(
-                    ClaimEvents.recruitsClaimManager,
+                    ClaimEvents.claimManager(),
                     workAreaPos,
                     friendlyPoliticalEntityId
             );
@@ -204,11 +204,11 @@ public class BannerModSettlementFactionEnforcementGameTests {
         if (!WorkersServerConfig.shouldWorkAreaOnlyBeInFactionClaim()) {
             return true;
         }
-        if (player.getTeam() == null || ClaimEvents.recruitsClaimManager == null) {
+        if (player.getTeam() == null || ClaimEvents.claimManager() == null) {
             return false;
         }
         ChunkPos chunkPos = new ChunkPos(targetPos);
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(chunkPos);
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(chunkPos);
         return claim != null
                 && claim.containsChunk(chunkPos)
                 && claim.getOwnerPoliticalEntityId() != null

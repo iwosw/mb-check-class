@@ -92,7 +92,7 @@ public final class BannerModDedicatedServerGameTestSupport {
         ensureClaimManager(level);
         UUID politicalEntityId = ensureFaction(level, factionId, leaderId, leaderName);
         ChunkPos chunkPos = new ChunkPos(pos);
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(chunkPos);
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(chunkPos);
         if (claim == null) {
             claim = new RecruitsClaim(factionId, politicalEntityId);
             claim.setCenter(chunkPos);
@@ -105,13 +105,13 @@ public final class BannerModDedicatedServerGameTestSupport {
         claim.setBlockPlacementAllowed(false);
         claim.setBlockBreakingAllowed(false);
         claim.addChunk(chunkPos);
-        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
+        ClaimEvents.claimManager().addOrUpdateClaim(level, claim);
         return claim;
     }
 
     public static void removeClaim(ServerLevel level, RecruitsClaim claim) {
         ensureClaimManager(level);
-        ClaimEvents.recruitsClaimManager.removeClaim(claim);
+        ClaimEvents.claimManager().removeClaim(claim);
     }
 
     /**
@@ -133,7 +133,7 @@ public final class BannerModDedicatedServerGameTestSupport {
         claim.setName(factionId);
         claim.setOwnerPoliticalEntityId(politicalEntityId);
         claim.setPlayer(new RecruitsPlayerInfo(leaderId, leaderName));
-        ClaimEvents.recruitsClaimManager.addOrUpdateClaim(level, claim);
+        ClaimEvents.claimManager().addOrUpdateClaim(level, claim);
         return claim;
     }
 
@@ -186,9 +186,10 @@ public final class BannerModDedicatedServerGameTestSupport {
     }
 
     private static void ensureClaimManager(ServerLevel level) {
-        if (ClaimEvents.recruitsClaimManager == null) {
-            ClaimEvents.recruitsClaimManager = new RecruitsClaimManager();
-            ClaimEvents.recruitsClaimManager.load(level);
+        if (ClaimEvents.claimManager() == null) {
+            RecruitsClaimManager claimManager = new RecruitsClaimManager();
+            claimManager.load(level);
+            ClaimEvents.installClaimManagerForTests(claimManager);
         }
     }
 }

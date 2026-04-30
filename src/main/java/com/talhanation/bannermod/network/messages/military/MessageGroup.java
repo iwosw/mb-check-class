@@ -42,11 +42,11 @@ public class MessageGroup implements BannerModMessage<MessageGroup> {
         RecruitsGroup newGroup = RecruitCommandAuthority.ownedGroup(player, groupUUID);
         if (newGroup == null) return;
 
-        RecruitsGroup oldGroup = RecruitEvents.recruitsGroupsManager.getGroup(recruit.getGroup());
+        RecruitsGroup oldGroup = RecruitEvents.groupsManager().getGroup(recruit.getGroup());
         if(oldGroup != null && newGroup != null && oldGroup.getUUID().equals(newGroup.getUUID())) return;
 
-        if(oldGroup != null) RecruitEvents.recruitsGroupsManager.removeMember(oldGroup.getUUID(), recruit.getUUID(), player.serverLevel());
-        RecruitEvents.recruitsGroupsManager.addMember(newGroup.getUUID(), recruit.getUUID(), player.serverLevel());
+        if(oldGroup != null) RecruitEvents.groupsManager().removeMember(oldGroup.getUUID(), recruit.getUUID(), player.serverLevel());
+        RecruitEvents.groupsManager().addMember(newGroup.getUUID(), recruit.getUUID(), player.serverLevel());
 
         recruit.setGroupUUID(newGroup.getUUID());
     }

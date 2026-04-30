@@ -79,7 +79,7 @@ public class PacketAuthorityGameTests {
         createPlayer(helper, level, RECIPIENT_UUID, "packet-group-recipient");
         AbstractRecruitEntity recruit = spawnOwnedRecruit(helper, OWNER_UUID, "Packet Group Recruit");
         RecruitsBattleGameTestSupport.assignFormationCohort(List.of(recruit), GROUP_UUID);
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(GROUP_UUID);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(GROUP_UUID);
 
         PacketGameTestSupport.dispatchServerbound(outsider,
                 new MessageAssignGroupToPlayer(OWNER_UUID, new RecruitsPlayerInfo(RECIPIENT_UUID, "spoofed-recipient"), GROUP_UUID),

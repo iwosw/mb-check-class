@@ -172,7 +172,7 @@ public class RecruitsPatrolSpawn {
         group.leaderUUID = leader.getUUID();
 
         // Register group in manager so it persists and can be queried
-        RecruitEvents.recruitsGroupsManager.addPatrolGroup(group, world);
+        RecruitEvents.groupsManager().addPatrolGroup(group, world);
 
         leader.setGroupUUID(group.getUUID());
 

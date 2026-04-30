@@ -37,7 +37,7 @@ public class MessageDeleteClaim implements BannerModMessage<MessageDeleteClaim> 
         if (sender == null) return;
         if (!RecruitsServerConfig.AllowClaiming.get()) return;
         if (sender.level().dimension() != Level.OVERWORLD) return;
-        if (ClaimEvents.recruitsClaimManager == null) return;
+        if (ClaimEvents.claimManager() == null) return;
 
         UUID claimUuid = claimUuid(this.claimNBT);
         if (claimUuid == null) return;
@@ -51,8 +51,8 @@ public class MessageDeleteClaim implements BannerModMessage<MessageDeleteClaim> 
                 existingClaim,
                 MessageUpdateClaim.resolvePoliticalOwner(sender, existingClaim))) return;
 
-        ClaimEvents.recruitsClaimManager.removeClaim(existingClaim);
-        ClaimEvents.recruitsClaimManager.broadcastClaimsToAll((ServerLevel) context.getSender().getCommandSenderWorld());
+        ClaimEvents.claimManager().removeClaim(existingClaim);
+        ClaimEvents.claimManager().broadcastClaimsToAll((ServerLevel) context.getSender().getCommandSenderWorld());
     }
 
     private static UUID claimUuid(CompoundTag tag) {

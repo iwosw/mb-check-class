@@ -32,12 +32,12 @@ public class MessageMergeGroup implements BannerModMessage<MessageMergeGroup> {
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup groupToMerge = RecruitEvents.recruitsGroupsManager.getGroup(mergeUUID);
-        RecruitsGroup baseGroup = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        RecruitsGroup groupToMerge = RecruitEvents.groupsManager().getGroup(mergeUUID);
+        RecruitsGroup baseGroup = RecruitEvents.groupsManager().getGroup(groupUUID);
 
         if(groupToMerge == null || baseGroup == null) return;
 
-        RecruitEvents.recruitsGroupsManager.mergeGroups(groupToMerge, baseGroup, player.serverLevel());
+        RecruitEvents.groupsManager().mergeGroups(groupToMerge, baseGroup, player.serverLevel());
     }
 
     public MessageMergeGroup fromBytes(FriendlyByteBuf buf) {

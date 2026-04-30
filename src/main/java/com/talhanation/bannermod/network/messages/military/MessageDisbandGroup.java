@@ -37,12 +37,12 @@ public class MessageDisbandGroup implements BannerModMessage<MessageDisbandGroup
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup group = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUUID);
         if(group == null) return;
 
         group.setDisbandContext(new RecruitsGroup.DisbandContext(true, keepTeam, true));
 
-        RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
+        RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
 
         List<AbstractRecruitEntity> list = null;
         if (player.getCommandSenderWorld() instanceof ServerLevel serverLevel) {

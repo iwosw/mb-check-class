@@ -16,10 +16,8 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 public class RecruitLifecycleEvents {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        RecruitEvents.server = event.getServer();
-        RecruitWorldLifecycleService.RecruitManagers managers = RecruitWorldLifecycleService.initializeManagers(RecruitEvents.server);
-        RecruitEvents.recruitsPlayerUnitManager = managers.playerUnitManager();
-        RecruitEvents.recruitsGroupsManager = managers.groupsManager();
+        RecruitWorldLifecycleService.RecruitManagers managers = RecruitWorldLifecycleService.initializeManagers(event.getServer());
+        RecruitEvents.installRuntime(event.getServer(), managers.playerUnitManager(), managers.groupsManager());
     }
 
     @SubscribeEvent
@@ -31,9 +29,9 @@ public class RecruitLifecycleEvents {
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
         RecruitWorldLifecycleService.saveManagers(
-                RecruitEvents.server,
-                RecruitEvents.recruitsPlayerUnitManager,
-                RecruitEvents.recruitsGroupsManager
+                RecruitEvents.server(),
+                RecruitEvents.playerUnitManager(),
+                RecruitEvents.groupsManager()
         );
 
         AsyncPathProcessor.shutdown();
@@ -43,9 +41,9 @@ public class RecruitLifecycleEvents {
     @SubscribeEvent
     public void onWorldSave(LevelEvent.Save event) {
         RecruitWorldLifecycleService.saveManagers(
-                RecruitEvents.server,
-                RecruitEvents.recruitsPlayerUnitManager,
-                RecruitEvents.recruitsGroupsManager
+                RecruitEvents.server(),
+                RecruitEvents.playerUnitManager(),
+                RecruitEvents.groupsManager()
         );
     }
 
@@ -58,8 +56,8 @@ public class RecruitLifecycleEvents {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             RecruitWorldLifecycleService.syncPlayerJoin(
                     serverPlayer,
-                    RecruitEvents.recruitsPlayerUnitManager,
-                    RecruitEvents.recruitsGroupsManager
+                    RecruitEvents.playerUnitManager(),
+                    RecruitEvents.groupsManager()
             );
             RecruitGovernorWorkflow.syncGovernorSnapshotsOnLogin(serverPlayer);
         }

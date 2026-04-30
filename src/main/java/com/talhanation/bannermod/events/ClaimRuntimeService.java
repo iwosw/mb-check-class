@@ -10,26 +10,26 @@ import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
 final class ClaimRuntimeService {
     void onServerStarting(ServerStartingEvent event) {
-        ClaimEvents.server = event.getServer();
-        ServerLevel level = ClaimEvents.server.overworld();
+        ServerLevel level = event.getServer().overworld();
 
-        ClaimEvents.recruitsClaimManager = new RecruitsClaimManager();
-        ClaimEvents.recruitsClaimManager.load(level);
+        RecruitsClaimManager claimManager = new RecruitsClaimManager();
+        claimManager.load(level);
+        ClaimEvents.installRuntime(event.getServer(), claimManager);
     }
 
     void onServerStopping(ServerStoppingEvent event) {
-        ClaimEvents.recruitsClaimManager.save(ClaimEvents.server.overworld());
+        ClaimEvents.claimManager().save(ClaimEvents.server().overworld());
     }
 
     void onWorldSave(LevelEvent.Save event) {
-        ClaimEvents.recruitsClaimManager.save(ClaimEvents.server.overworld());
+        ClaimEvents.claimManager().save(ClaimEvents.server().overworld());
     }
 
     void onPlayerJoin(EntityJoinLevelEvent event) {
         if(event.getLevel().isClientSide()) return;
 
         if(event.getEntity() instanceof ServerPlayer player){
-            ClaimEvents.recruitsClaimManager.sendClaimsToPlayer(player);
+            ClaimEvents.claimManager().sendClaimsToPlayer(player);
         }
     }
 }

@@ -56,7 +56,7 @@ public class MessageSetLeaderGroup implements BannerModMessage<MessageSetLeaderG
         RecruitsGroup group = RecruitCommandAuthority.ownedGroup(player, groupUUID);
         if (group == null) return;
         leader.setGroupUUID(group.getUUID());
-        RecruitEvents.recruitsGroupsManager.broadCastGroupsToPlayer(player);
+        RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
     }
 
     static boolean canApplyLeaderGroup(ServerPlayer player, AbstractLeaderEntity leader, @Nullable UUID groupUUID) {

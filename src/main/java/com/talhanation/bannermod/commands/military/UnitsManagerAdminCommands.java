@@ -56,17 +56,17 @@ final class UnitsManagerAdminCommands {
     }
 
     private static int getUnitsCount(ServerPlayer player) {
-        if (RecruitEvents.recruitsPlayerUnitManager != null) {
-            return RecruitEvents.recruitsPlayerUnitManager.getRecruitCount(player.getUUID());
+        if (RecruitEvents.playerUnitManager() != null) {
+            return RecruitEvents.playerUnitManager().getRecruitCount(player.getUUID());
         }
 
         return 0;
     }
 
     private static int setUnitsCount(CommandContext<CommandSourceStack> context, ServerPlayer player, int amount) {
-        if (RecruitEvents.recruitsPlayerUnitManager != null) {
-            RecruitEvents.recruitsPlayerUnitManager.setRecruitCount(player, amount);
-            RecruitEvents.recruitsPlayerUnitManager.save(context.getSource().getLevel());
+        if (RecruitEvents.playerUnitManager() != null) {
+            RecruitEvents.playerUnitManager().setRecruitCount(player, amount);
+            RecruitEvents.playerUnitManager().save(context.getSource().getLevel());
             context.getSource().sendSuccess(() ->
                     Component.literal("The recruits count of " + player.getName().getString() + " has been set to " + amount + "."), false);
             return 1;

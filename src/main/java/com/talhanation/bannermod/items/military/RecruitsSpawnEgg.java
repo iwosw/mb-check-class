@@ -214,7 +214,7 @@ public class RecruitsSpawnEgg extends DeferredSpawnEggItem {
         recruit.setPos(pos.getX() + 0.5, pos.getY() + 1 , pos.getZ() + 0.5);
 
         if(recruit.getGroup() != null){
-            RecruitEvents.recruitsGroupsManager.addMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
+            RecruitEvents.groupsManager().addMember(recruit.getGroup(), recruit.getUUID(), (ServerLevel) recruit.getCommandSenderWorld());
         }
     }
 }

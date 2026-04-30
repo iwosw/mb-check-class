@@ -28,11 +28,11 @@ public class MessageSplitGroup implements BannerModMessage<MessageSplitGroup> {
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup groupToSplit = RecruitEvents.recruitsGroupsManager.getGroup(groupUUID);
+        RecruitsGroup groupToSplit = RecruitEvents.groupsManager().getGroup(groupUUID);
 
         if(groupToSplit == null) return;
 
-        RecruitEvents.recruitsGroupsManager.splitGroup(groupToSplit, player.serverLevel());
+        RecruitEvents.groupsManager().splitGroup(groupToSplit, player.serverLevel());
     }
 
     public MessageSplitGroup fromBytes(FriendlyByteBuf buf) {

@@ -22,8 +22,25 @@ import java.util.List;
 
 public class ClaimEvents {
 
-    public static MinecraftServer server;
-    public static RecruitsClaimManager recruitsClaimManager;
+    private static MinecraftServer server;
+    private static RecruitsClaimManager recruitsClaimManager;
+
+    public static MinecraftServer server() {
+        return server;
+    }
+
+    public static RecruitsClaimManager claimManager() {
+        return recruitsClaimManager;
+    }
+
+    static void installRuntime(MinecraftServer currentServer, RecruitsClaimManager currentClaimManager) {
+        server = currentServer;
+        recruitsClaimManager = currentClaimManager;
+    }
+
+    public static void installClaimManagerForTests(RecruitsClaimManager currentClaimManager) {
+        recruitsClaimManager = currentClaimManager;
+    }
 
     private final ClaimRuntimeService runtimeService = new ClaimRuntimeService();
     private final ClaimQueueTickService queueTickService = new ClaimQueueTickService();
@@ -59,12 +76,12 @@ public class ClaimEvents {
     @SubscribeEvent
     public void onServerTick(ServerTickEvent.Post event){
         queueTickService.recordServerTickDuration();
-        if (server == null || recruitsClaimManager == null) return;
+        if (server() == null || claimManager() == null) return;
 
-        ServerLevel level = server.overworld();
+        ServerLevel level = server().overworld();
         if(level == null || level.isClientSide()) return;
 
-        queueTickService.tickCommandQueue(server, level);
+        queueTickService.tickCommandQueue(server(), level);
         settlementHeartbeatService.tick(level);
         queueTickService.tickBuildingInvalidationQueue(level);
     }

@@ -30,6 +30,9 @@ public final class CivilianPacketCatalog {
         MessageRequestPlaceBuilding.class,
         MessageRequestValidateBuilding.class,
         MessageRequestRegisterBuilding.class,
+        MessageSetSurveyorMode.class,
+        MessageSetSurveyorRole.class,
+        MessageValidateSurveyorSession.class,
     };
 
     public static final PacketCatalog CATALOG = new PacketCatalog(MESSAGES);

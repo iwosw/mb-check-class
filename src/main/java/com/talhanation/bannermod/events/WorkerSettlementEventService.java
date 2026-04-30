@@ -60,11 +60,11 @@ final class WorkerSettlementEventService {
     }
 
     static void runClaimWorkerGrowthPass(ServerLevel level) {
-        if (level == null || ClaimEvents.recruitsClaimManager == null) {
+        if (level == null || ClaimEvents.claimManager() == null) {
             return;
         }
 
-        for (RecruitsClaim claim : ClaimEvents.recruitsClaimManager.getAllClaims()) {
+        for (RecruitsClaim claim : ClaimEvents.claimManager().getAllClaims()) {
             if (claim == null || claim.getOwnerPoliticalEntityId() == null) {
                 continue;
             }

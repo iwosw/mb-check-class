@@ -11,6 +11,7 @@ import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.building.BuildingValidationState;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRegistryData;
+import com.talhanation.bannermod.settlement.onboarding.SettlementOnboardingGuide;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -54,6 +55,9 @@ public final class SettlementSurveyorService {
             BootstrapResult bootstrap = SettlementBootstrapService.bootstrapSettlement(level, player, result);
             player.sendSystemMessage(Component.literal(bootstrap.message()).withStyle(
                     bootstrap.success() ? ChatFormatting.GREEN : ChatFormatting.RED));
+            if (bootstrap.success()) {
+                SettlementOnboardingGuide.sendFoundingGuidance(player, level, bootstrap.settlement());
+            }
             return;
         }
         if (result.snapshot() == null) {
@@ -85,15 +89,16 @@ public final class SettlementSurveyorService {
                 result.qualityScore())
                 .withStyle(ChatFormatting.GREEN));
         player.sendSystemMessage(Component.literal(PrefabAutoStaffingRuntime.describeManualVacancy(type)).withStyle(ChatFormatting.YELLOW));
+        SettlementOnboardingGuide.sendRegisteredBuildingGuidance(player, level, settlementAtAnchor, type);
     }
 
     private static SettlementRecord settlementForAnchor(ServerLevel level, ValidationSession session) {
         SettlementRegistryData registry = SettlementRegistryData.get(level);
         SettlementRecord settlement = registry.getSettlementAt(new ChunkPos(session.anchorPos()));
-        if (settlement != null || ClaimEvents.recruitsClaimManager == null) {
+        if (settlement != null || ClaimEvents.claimManager() == null) {
             return settlement;
         }
-        RecruitsClaim claim = ClaimEvents.recruitsClaimManager.getClaim(new ChunkPos(session.anchorPos()));
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(new ChunkPos(session.anchorPos()));
         return claim == null ? null : registry.getSettlementByClaimId(claim.getUUID());
     }
 
