@@ -2499,8 +2499,8 @@
     {
       "id": "TEST-006",
       "title": "Replace count-only GameTest theater with meaningful quality gates",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "The current scenario-count task measures quantity rather than scenario value and is not wired into the main verification path, which weakens confidence in a green build.",
       "scope": [
         "Verification gates must reward meaningful scenario coverage, wire the right checks into the main build path, and remove or demote count-only theater that does not reflect gameplay risk."
@@ -2508,8 +2508,18 @@
       "acceptance": [
         "Check or equivalent verification fails when critical scenario coverage or focused high-risk suites are missing, not merely when an arbitrary count changes; the quality gate behavior is documented and exercised."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-7 after TEST-005 closure; goal is to replace count-only GameTest theater with a meaningful enforced quality gate."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) verifyGameTestStage now depends on the main GameTest namespace run, focused high-risk suites (game001/game009/game010), and a meaningful source-level coverage presence gate instead of an arbitrary total-count threshold; 2) ./gradlew compileJava compileGameTestJava test verifyGameTestScenarioCoverage verifyFocusedGameTestStage passed on feature/test-006; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-7."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "TEST-001",
@@ -2518,7 +2528,8 @@
         "TEST-004",
         "TEST-005",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "DOC-003",
