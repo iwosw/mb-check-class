@@ -2,13 +2,14 @@ package com.talhanation.bannermod.client.military.gui.overlay;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 public class ClaimOverlayRenderer {
-    private static final int PANEL_HEIGHT_FULL = 45;
+    private static final int PANEL_HEIGHT_FULL = 54;
     private static final int PANEL_HEIGHT_COMPACT = 15;
     private static final int BACKGROUND_ALPHA = 0x0F;
     private static final int SIEGE_BACKGROUND_ALPHA = 0x70;
@@ -18,7 +19,7 @@ public class ClaimOverlayRenderer {
 
     private boolean dataChanged = true;
 
-    public void render(GuiGraphics guiGraphics, Minecraft minecraft, RecruitsClaim claim, HudOverlayCoordinator.OverlayState state, ClaimAuthorityStatus authorityStatus, float alpha, int panelWidth, int x, int y, boolean underSiege, boolean occupied) {
+    public void render(GuiGraphics guiGraphics, Minecraft minecraft, RecruitsClaim claim, HudOverlayCoordinator.OverlayState state, ClaimAuthorityStatus authorityStatus, @javax.annotation.Nullable PoliticalEntityRecord ownerEntity, float alpha, int panelWidth, int x, int y, boolean underSiege, boolean occupied) {
         if (state == HudOverlayCoordinator.OverlayState.HIDDEN) return;
 
         Font font = minecraft.font;
@@ -34,9 +35,9 @@ public class ClaimOverlayRenderer {
         guiGraphics.renderOutline(x, y, panelWidth, panelHeight, withAlpha(authorityStatus.chromeColor(), alpha));
 
         if (state == HudOverlayCoordinator.OverlayState.FULL) {
-            renderNormalFullContent(guiGraphics, claim, authorityStatus, x, y, panelWidth, font, alpha);
+            renderNormalFullContent(guiGraphics, claim, authorityStatus, ownerEntity, x, y, panelWidth, font, alpha);
         } else {
-            renderNormalCompactContent(guiGraphics, claim, authorityStatus, x, y, panelWidth, panelHeight, font, alpha);
+            renderNormalCompactContent(guiGraphics, claim, authorityStatus, ownerEntity, x, y, panelWidth, panelHeight, font, alpha);
         }
 
         if (underSiege) {
@@ -73,12 +74,13 @@ public class ClaimOverlayRenderer {
         guiGraphics.drawString(font, truncated, x + (panelWidth - consequenceWidth) / 2, badgeY + 10, textColor, true);
     }
 
-    private void renderNormalFullContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, int x, int y, int width, Font font, float alpha) {
+    private void renderNormalFullContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, PoliticalEntityRecord ownerEntity, int x, int y, int width, Font font, float alpha) {
         int textAlpha = (int)(0xFF * alpha);
         int textColor = (textAlpha << 24) | 0xFFFFFF;
+        String wildernessLabel = Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString();
 
         String claimName = claim == null
-                ? Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString()
+                ? wildernessLabel
                 : claim.getName();
         claimName = truncateText(font, claimName, width - 80);
         guiGraphics.drawString(font, claimName, x + 60, y + 10, textColor, false);
@@ -86,16 +88,19 @@ public class ClaimOverlayRenderer {
         String authorityLabel = Component.translatable(authorityStatus.labelKey()).getString();
         guiGraphics.drawString(font, truncateText(font, authorityLabel, width - 80), x + 60, y + 21, withAlpha(authorityStatus.textColor(), alpha), false);
 
-
-        if (claim != null && claim.getPlayerInfo() != null) {
-            String claimOwner = truncateText(font, claim.getPlayerInfo().getName(), width - 80);
+        if (claim != null) {
+            String ownerLabel = Component.translatable(
+                    "gui.bannermod.claim_overlay.owner",
+                    ClaimTerritoryText.ownerName(claim, ownerEntity)
+            ).getString();
+            String claimOwner = truncateText(font, ownerLabel, (width - 80) * 2);
 
             PoseStack poseStack = guiGraphics.pose();
             poseStack.pushPose();
             try {
                 float scale = 0.5f;
                 int originalX = x + 60;
-                int originalY = y + 20;
+                int originalY = y + 33;
                 poseStack.translate(originalX, originalY, 0);
                 poseStack.scale(scale, scale, 1.0f);
                 guiGraphics.drawString(font, claimOwner, 0, 10, 0xAAAAAA, false);
@@ -105,13 +110,18 @@ public class ClaimOverlayRenderer {
         }
     }
 
-    private void renderNormalCompactContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, int x, int y, int width, int height, Font font, float alpha) {
+    private void renderNormalCompactContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, PoliticalEntityRecord ownerEntity, int x, int y, int width, int height, Font font, float alpha) {
         int textAlpha = (int)(0xFF * alpha);
         int textColor = (textAlpha << 24) | 0xFFFFFF;
+        String wildernessLabel = Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString();
 
         String displayText = claim == null
-                ? Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString()
-                : claim.getName();
+                ? wildernessLabel
+                : Component.translatable(
+                        "gui.bannermod.claim_overlay.compact",
+                        Component.translatable(authorityStatus.compactLabelKey()).getString(),
+                        ClaimTerritoryText.territoryName(claim, ownerEntity, wildernessLabel)
+                ).getString();
         displayText = truncateText(font, displayText, width - 20);
 
         int textWidth = font.width(displayText);

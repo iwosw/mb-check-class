@@ -1829,8 +1829,8 @@
     {
       "id": "UX-002",
       "title": "Finish claim-area flow and route and waypoint discoverability",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "The world map advertises claim-area and route or waypoint interactions, but some affordances are incomplete or weakly explained, which makes the flow feel broken or hidden.",
       "scope": [
         "Claim-area functionality must either be fully implemented or removed from player UI, and route or waypoint flows need discoverable in-game affordances, explanations, and guide coverage."
@@ -1842,16 +1842,26 @@
         {
           "date": "2026-04-28",
           "text": "Split into UX-010 claim-area affordance resolution, UX-011 route/waypoint discoverability, and UX-012 verification/docs; parent remains open until every visible map action is functional or intentionally absent and flows are discoverable in-game."
+        },
+        {
+          "date": "2026-04-30",
+          "text": "Resumed on feature/cleanup-batch-5 after UX-010/011/012 closure; goal is to fully close world-map claim/route/waypoint discoverability and unlock TEST-005."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava test --tests com.talhanation.bannermod.client.military.gui.worldmap.WorldMapRouteUiVerificationTest passed on feature/ux-002 after removing the non-functional Claim Area affordance and strengthening in-game route/waypoint discoverability; 2) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html were updated to match the shipped world-map flow; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-5."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UX-010",
         "UX-011",
         "UX-012",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "UX-003",
@@ -2068,8 +2078,8 @@
     {
       "id": "GAME-004",
       "title": "Give claims stronger in-world representation and boundary feedback",
-      "status": "in_progress",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Claims strongly affect permissions but remain mostly abstract chunk records plus overlays, leaving territory control under-materialized in the world itself.",
       "scope": [
         "Claims need stronger in-world boundary or authority feedback, clearer ownership cues, and interaction feedback that makes protected space legible without relying only on the map screen."
@@ -2081,15 +2091,25 @@
         {
           "date": "2026-04-28",
           "text": "Split into GAME-011 territory boundary/authority cues and GAME-012 protected-space interaction feedback; parent remains open until friendly, hostile, and unclaimed reads are verified."
+        },
+        {
+          "date": "2026-04-30",
+          "text": "Resumed on feature/cleanup-batch-5 after GAME-011/012 closure; goal is to make claim territory legible in-world and unblock DOC-004."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) ./gradlew compileJava passed on feature/game-004 after adding stronger in-world claim owner/territory HUD text and boundary-crossing feedback; 2) focused tests ClaimAuthorityStatusTest, ClaimTerritoryTextTest, and ClaimProtectionFeedbackTest passed there; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html were refreshed; 4) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-5."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "GAME-011",
         "GAME-012",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "GAME-005",
