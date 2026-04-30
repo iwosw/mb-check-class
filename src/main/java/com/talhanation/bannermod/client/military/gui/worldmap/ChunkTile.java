@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.IOException;
 
 public class ChunkTile {
+    private static final int EMPTY_TILE_COLOR = 0xFF1A1A1A;
+    private static final int EMPTY_TILE_GRID_COLOR = 0xFF252525;
+
     private final int tileX, tileZ;
     private NativeImage image;
     private DynamicTexture texture;
@@ -43,14 +46,36 @@ public class ChunkTile {
 
         if (this.image == null) {
             this.image = new NativeImage(NativeImage.Format.RGBA, TILE_PIXEL_SIZE, TILE_PIXEL_SIZE, false);
-            for (int i = 0; i < TILE_PIXEL_SIZE * TILE_PIXEL_SIZE; i++) {
-                this.image.setPixelRGBA(i % TILE_PIXEL_SIZE, i / TILE_PIXEL_SIZE, 0x00000000);
-            }
+            fillEmptyTile();
+            this.needsUpdate = true;
+        } else if (isFullyTransparent()) {
+            fillEmptyTile();
             this.needsUpdate = true;
         }
 
         this.texture = new DynamicTexture(this.image);
+        this.texture.upload();
         this.textureId = mc.getTextureManager().register("chunktile_" + tileX + "_" + tileZ, this.texture);
+    }
+
+    private void fillEmptyTile() {
+        for (int z = 0; z < TILE_PIXEL_SIZE; z++) {
+            for (int x = 0; x < TILE_PIXEL_SIZE; x++) {
+                boolean gridLine = x % PIXELS_PER_CHUNK == 0 || z % PIXELS_PER_CHUNK == 0;
+                this.image.setPixelRGBA(x, z, gridLine ? EMPTY_TILE_GRID_COLOR : EMPTY_TILE_COLOR);
+            }
+        }
+    }
+
+    private boolean isFullyTransparent() {
+        for (int z = 0; z < TILE_PIXEL_SIZE; z++) {
+            for (int x = 0; x < TILE_PIXEL_SIZE; x++) {
+                if ((this.image.getPixelRGBA(x, z) >>> 24) != 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public void updateFromChunkImage(ChunkImage chunkImage, int chunkXInTile, int chunkZInTile) {

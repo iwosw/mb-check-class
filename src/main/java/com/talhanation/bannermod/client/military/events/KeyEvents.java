@@ -32,7 +32,7 @@ public class KeyEvents {
         if (clientPlayerEntity == null)
             return;
 
-        if (ModShortcuts.COMMAND_SCREEN_KEY.isDown()) {
+        if (ModShortcuts.COMMAND_SCREEN_KEY != null && ModShortcuts.COMMAND_SCREEN_KEY.consumeClick()) {
             CommandEvents.openCommandScreen(clientPlayerEntity);
         }
 

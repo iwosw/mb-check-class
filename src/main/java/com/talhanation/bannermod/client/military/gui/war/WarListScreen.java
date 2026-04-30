@@ -330,6 +330,7 @@ public class WarListScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.fill(0, 0, width, height, 0xFF101010);
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
@@ -343,6 +344,10 @@ public class WarListScreen extends Screen {
         renderActionFeedback(graphics);
 
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
     }
 
     private void renderActionFeedback(GuiGraphics graphics) {
@@ -415,6 +420,10 @@ public class WarListScreen extends Screen {
         }
 
         WarDeclarationRecord war = selected;
+        int maxLines = maxDetailLines(y);
+        if (maxLines <= 0) {
+            return;
+        }
         int line = 0;
         String[] body = {
                 text("gui.bannermod.war_list.detail.attacker", entityName(war.attackerPoliticalEntityId())).getString(),
@@ -435,27 +444,33 @@ public class WarListScreen extends Screen {
                 text("gui.bannermod.war_list.detail.consequences", consequenceSummary(war)).getString()
         };
         for (String s : body) {
+            if (line >= maxLines) {
+                return;
+            }
             graphics.drawString(font, font.plainSubstrByWidth(s, w), x, y + 14 + line * 11, 0xFFFFFF, false);
             line++;
         }
-        if (outcomeFeedback != null && line < 18) {
+        if (outcomeFeedback != null && line < maxLines) {
             graphics.drawString(font, font.plainSubstrByWidth(outcomeFeedback.getString(), w), x, y + 14 + line * 11, 0xFFDDCC77, false);
             line++;
         }
         for (RevoltRecord revolt : WarClientState.revoltsForWar(war.id())) {
+            if (line >= maxLines) {
+                return;
+            }
             int color = revoltLineColor(revolt.state());
             graphics.drawString(font,
                     font.plainSubstrByWidth(revoltPressureLine(revolt), w),
                     x, y + 14 + line * 11, color, false);
             line++;
-            if (line >= 18) {
+            if (line >= maxLines) {
                 return;
             }
             graphics.drawString(font,
                     font.plainSubstrByWidth(revoltObjectiveLine(revolt), w),
                     x, y + 14 + line * 11, 0xFFAAAAAA, false);
             line++;
-            if (line >= 18) {
+            if (line >= maxLines) {
                 return;
             }
         }
@@ -463,16 +478,22 @@ public class WarListScreen extends Screen {
             if (!siege.warId().equals(war.id())) {
                 continue;
             }
+            if (line >= maxLines) {
+                return;
+            }
             String side = entityName(siege.sidePoliticalEntityId());
             String pos = siege.pos() == null ? text("gui.bannermod.common.unknown").getString() : siege.pos().toShortString();
             graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.war_list.standard", side, pos, siege.radius()).getString(), w),
                     x, y + 14 + line * 11, 0xFFAAFFAA, false);
             line++;
-            if (line >= 18) {
+            if (line >= maxLines) {
                 return;
             }
         }
         for (OccupationRecord occupation : WarClientState.occupationsForWar(war.id())) {
+            if (line >= maxLines) {
+                return;
+            }
             String firstChunk = occupation.chunks().isEmpty()
                     ? text("gui.bannermod.war_list.chunk_unknown").getString()
                     : text("gui.bannermod.war_list.chunk", occupation.chunks().get(0).x, occupation.chunks().get(0).z).getString();
@@ -481,10 +502,19 @@ public class WarListScreen extends Screen {
                     font.plainSubstrByWidth(text("gui.bannermod.war_list.occupation", entityName(occupation.occupierEntityId()), firstChunk, suffix, occupation.lastTaxedAtGameTime()).getString(), w),
                     x, y + 14 + line * 11, 0xFFFFDD88, false);
             line++;
-            if (line >= 18) {
+            if (line >= maxLines) {
                 return;
             }
         }
+    }
+
+    private int maxDetailLines(int titleY) {
+        int firstLineY = titleY + 14;
+        int detailBottom = cancelWarBtn == null ? guiTop + H - 8 : cancelWarBtn.getY() - 6;
+        if (detailBottom < firstLineY) {
+            return 0;
+        }
+        return ((detailBottom - firstLineY) / 11) + 1;
     }
 
     private static Component text(String key, Object... args) {

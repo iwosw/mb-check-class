@@ -289,6 +289,7 @@ public class PoliticalEntityListScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.fill(0, 0, width, height, 0xFF101010);
         graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
         graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
@@ -296,6 +297,10 @@ public class PoliticalEntityListScreen extends Screen {
         renderList(graphics, mouseX, mouseY);
         renderDetails(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
     }
 
     private void renderList(GuiGraphics graphics, int mouseX, int mouseY) {
