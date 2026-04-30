@@ -55,11 +55,10 @@ public class SettlementSurveyorToolItem extends Item {
         BlockPos clicked = context.getClickedPos();
 
         if (player.isShiftKeyDown()) {
-            if (!level.isClientSide) {
-                ZoneRole nextRole = cycleSelectedRole(stack);
-                player.sendSystemMessage(Component.translatable("bannermod.surveyor.role", roleLabel(nextRole)).withStyle(ChatFormatting.YELLOW));
+            if (level.isClientSide) {
+                openScreen(context.getHand());
             }
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
         if (level.isClientSide) {
@@ -155,14 +154,6 @@ public class SettlementSurveyorToolItem extends Item {
         SurveyorMode[] modes = SurveyorMode.values();
         int idx = mode.ordinal();
         return modes[(idx + 1) % modes.length];
-    }
-
-    private static ZoneRole cycleSelectedRole(ItemStack stack) {
-        ZoneRole[] roles = ZoneRole.values();
-        ZoneRole current = selectedRole(stack);
-        ZoneRole next = roles[(current.ordinal() + 1) % roles.length];
-        setSelectedRole(stack, next);
-        return next;
     }
 
     public static void setSelectedRole(ItemStack stack, ZoneRole role) {

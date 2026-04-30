@@ -1,26 +1,17 @@
 package com.talhanation.bannermod.items.citizen;
 
-import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 
 import java.util.function.Supplier;
 
 /**
- * Single spawn egg for the unified {@link CitizenEntity}. Reads an optional
- * {@code EntityTag.CitizenProfession} string from the stack NBT and applies
- * it via {@link CitizenEntity#switchProfession(CitizenProfession)} so a
- * picked-up citizen retains their role when re-spawned.
+ * Single spawn egg for the unified {@link CitizenEntity}. Profession data is
+ * written into the egg's entity NBT so the normal spawn-egg placement path
+ * can restore it while still preserving vanilla placement/finalization.
  */
 public class CitizenSpawnEgg extends DeferredSpawnEggItem {
 
@@ -33,38 +24,6 @@ public class CitizenSpawnEgg extends DeferredSpawnEggItem {
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
-        Level level = context.getLevel();
-        if (level.isClientSide()) {
-            return InteractionResult.SUCCESS;
-        }
-
-        ItemStack stack = context.getItemInHand();
-        BlockPos pos = context.getClickedPos();
-        EntityType<?> type = this.getType(stack);
-        Entity entity = type.create(level);
-        if (!(entity instanceof CitizenEntity citizen)) {
-            return super.useOn(context);
-        }
-
-        citizen.moveTo(pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, 0F, 0F);
-        level.addFreshEntity(citizen);
-
-        CompoundTag entityTag = readEntityTag(stack);
-        if (entityTag != null && entityTag.contains("CitizenProfession")) {
-            CitizenProfession profession = CitizenProfession.fromTagName(entityTag.getString("CitizenProfession"));
-            if (profession != CitizenProfession.NONE) {
-                citizen.switchProfession(profession);
-            }
-        }
-
-        if (context.getPlayer() != null && !context.getPlayer().isCreative()) {
-            stack.shrink(1);
-        }
-        return InteractionResult.SUCCESS;
-    }
-
-    private static CompoundTag readEntityTag(ItemStack stack) {
-        CustomData data = stack.get(DataComponents.ENTITY_DATA);
-        return data == null ? null : data.copyTag();
+        return super.useOn(context);
     }
 }

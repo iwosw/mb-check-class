@@ -119,10 +119,9 @@ public class ChunkImage {
         for (int i = 0; i < 256; i++) {
             int pixel = this.image.getPixelRGBA(i % 16, i / 16);
             int alpha = (pixel >> 24) & 0xFF;
-            int rgb = pixel & 0x00FFFFFF;
-            if (alpha > 0 && rgb != 0) meaningful++;
+            if (alpha > 0) meaningful++;
         }
-        return meaningful >= 25; // ~10% von 256
+        return meaningful >= 25;
     }
 
     public void close() {
