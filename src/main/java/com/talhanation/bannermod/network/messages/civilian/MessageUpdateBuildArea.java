@@ -64,7 +64,7 @@ public class MessageUpdateBuildArea implements BannerModMessage<MessageUpdateBui
             return;
         }
 
-        this.update(buildArea);
+        this.update(buildArea, player);
         player.sendSystemMessage(Component.literal(build ? "Build Area build request accepted." : "Build Area scan settings accepted."));
         WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), buildArea.blockPosition());
     }
@@ -96,13 +96,14 @@ public class MessageUpdateBuildArea implements BannerModMessage<MessageUpdateBui
         return null;
     }
 
-    public void update(BuildArea buildArea){
+    public void update(BuildArea buildArea, ServerPlayer player){
         buildArea.setWidthSize(this.xSize);
         buildArea.setHeightSize(this.ySize);
         buildArea.setDepthSize(this.zSize);
         buildArea.setStructureNBT(this.structureNBT);
         if(build){
-            buildArea.setStartBuild(this.isCreative);
+            boolean creativePlace = this.isCreative && player.isCreative();
+            buildArea.setStartBuild(creativePlace);
         } else {
             buildArea.clearPlannedBuild();
         }
