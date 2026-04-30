@@ -2464,8 +2464,8 @@
     {
       "id": "TEST-005",
       "title": "Add regression coverage for critical UI gating and sync states",
-      "status": "open",
-      "updated": "2026-04-28",
+      "status": "done",
+      "updated": "2026-04-30",
       "why": "Key player-facing regressions such as missing hotkeys, waiting-for-sync confusion, and hidden action gating currently slip through because almost no automated coverage targets those logic surfaces.",
       "scope": [
         "Introduce focused automated coverage for keybinding handling, visible action gating, waiting-for-sync state selection, and other non-render logic behind critical screens."
@@ -2473,8 +2473,18 @@
       "acceptance": [
         "The worker hotkey, world-map gating, war sync-state selection, and similar critical UI logic surfaces are covered by automated tests or equivalent deterministic verification; regressions in those paths fail fast."
       ],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-04-30",
+          "text": "Picked up on feature/cleanup-batch-6 after UX-002/UX-004 closure; goal is focused regression coverage for world-map gating, hotkey handling, and war sync-state selection so TEST-006 can open."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-04-30",
+          "result": "1) added CriticalUiStateVerificationTest and expanded WarClientStateTest to cover worker hotkey wiring, world-map action gating, waiting-for-sync vs stale vs empty UI states, and war action-feedback reset semantics; 2) ./gradlew compileJava and ./gradlew test --tests com.talhanation.bannermod.client.military.gui.CriticalUiStateVerificationTest --tests com.talhanation.bannermod.war.client.WarClientStateTest passed on feature/test-005; 3) ./gradlew test and ./gradlew verifyGameTestStage passed on feature/cleanup-batch-6."
+        }
+      ],
       "evidence": [],
       "dependencies": [
         "UX-001",
@@ -2483,7 +2493,8 @@
         "UX-004",
         "SYNC-001",
         "VANILLA-013"
-      ]
+      ],
+      "doneDate": "2026-04-30"
     },
     {
       "id": "TEST-006",

@@ -5,6 +5,7 @@ import com.talhanation.bannermod.war.runtime.OccupationRecord;
 import com.talhanation.bannermod.war.runtime.RevoltRecord;
 import com.talhanation.bannermod.war.runtime.RevoltState;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -179,5 +180,21 @@ class WarClientStateTest {
         assertTrue(WarClientState.occupations().isEmpty());
         assertTrue(WarClientState.revolts().isEmpty());
         assertTrue(WarClientState.revoltsForWar(UUID.randomUUID()).isEmpty());
+    }
+
+    @Test
+    void clearAlsoResetsLastActionFeedback() {
+        WarClientState.setLastActionFeedback(Component.literal("Updated"));
+
+        WarClientState.clear();
+
+        assertTrue(WarClientState.lastActionFeedback().getString().isBlank());
+    }
+
+    @Test
+    void nullFeedbackNormalizesToEmptyComponent() {
+        WarClientState.setLastActionFeedback(null);
+
+        assertTrue(WarClientState.lastActionFeedback().getString().isBlank());
     }
 }
