@@ -1,10 +1,12 @@
 package com.talhanation.bannermod.settlement.project;
 
 import com.talhanation.bannermod.settlement.growth.PendingProject;
+import com.mojang.logging.LogUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
@@ -23,19 +25,17 @@ import java.util.UUID;
  * Server-side in-memory queue of {@link PendingProject} entries, keyed by claim UUID.
  *
  * <p>Slice C-only concerns: bounded ingestion from the growth evaluator, bookkeeping,
- * and hand-off to {@link BannerModBuildAreaProjectBridge}. No persistence yet.
+ * hand-off to {@link BannerModBuildAreaProjectBridge}, and NBT round-trip persistence
+ * through {@link BannerModSettlementProjectSavedData}.
  *
  * <p>Thread model: expected to be touched from the server thread only. No internal
  * synchronization is provided.
- *
- * <pre>
- * // TODO persistence: scheduler contents should survive server restarts.
- * //                   Candidate home: SavedData alongside BannerModSettlementManager.
- * </pre>
  */
 public final class BannerModSettlementProjectScheduler {
 
-    /** Upper bound on queued projects per claim; extra {@link #submit} calls silently drop. */
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    /** Upper bound on queued projects per claim; extra {@link #submit} calls are rejected. */
     public static final int PER_CLAIM_QUEUE_CAP = 16;
 
     @Nullable
@@ -88,6 +88,7 @@ public final class BannerModSettlementProjectScheduler {
             ordered = new ArrayList<>(ordered.subList(0, PER_CLAIM_QUEUE_CAP));
         }
         if (!ordered.contains(project)) {
+            reportOverflow(claimUuid, project, queue.size(), "submit");
             return;
         }
         queue.clear();
@@ -131,6 +132,7 @@ public final class BannerModSettlementProjectScheduler {
         }
         Deque<PendingProject> queue = queues.computeIfAbsent(claimUuid, k -> new ArrayDeque<>());
         if (queue.size() >= PER_CLAIM_QUEUE_CAP) {
+            reportOverflow(claimUuid, project, queue.size(), "requeueFront");
             return;
         }
         queue.addFirst(project);
@@ -250,11 +252,21 @@ public final class BannerModSettlementProjectScheduler {
                 }
                 UUID claimUuid = queueTag.getUUID("Claim");
                 Deque<PendingProject> queue = queues.computeIfAbsent(claimUuid, ignored -> new ArrayDeque<>());
+                int dropped = 0;
                 for (Tag projectEntry : queueTag.getList("Projects", Tag.TAG_COMPOUND)) {
                     if (queue.size() >= PER_CLAIM_QUEUE_CAP) {
-                        break;
+                        dropped++;
+                        continue;
                     }
                     queue.addLast(PendingProject.fromTag((CompoundTag) projectEntry));
+                }
+                if (dropped > 0) {
+                    LOGGER.warn(
+                            "Settlement project scheduler dropped {} persisted queue entries for claim {} while restoring; cap={}",
+                            dropped,
+                            claimUuid,
+                            PER_CLAIM_QUEUE_CAP
+                    );
                 }
                 if (queue.isEmpty()) {
                     queues.remove(claimUuid);
@@ -302,6 +314,17 @@ public final class BannerModSettlementProjectScheduler {
     @Nullable
     ServerLevel level() {
         return level;
+    }
+
+    private void reportOverflow(UUID claimUuid, PendingProject project, int existingQueueSize, String source) {
+        LOGGER.warn(
+                "Settlement project scheduler rejected project {} for claim {} from {} because queue cap {} is full (existing={})",
+                project.projectId(),
+                claimUuid,
+                source,
+                PER_CLAIM_QUEUE_CAP,
+                existingQueueSize
+        );
     }
 
     private void markDirty() {
