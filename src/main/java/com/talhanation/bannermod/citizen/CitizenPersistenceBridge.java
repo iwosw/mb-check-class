@@ -10,27 +10,27 @@ public final class CitizenPersistenceBridge {
     public static final String TAG_CITIZEN_PROFESSION = "CitizenProfession";
     public static final String TAG_CITIZEN_ROLE = "CitizenRole";
 
+    private static final LegacyShape RECRUIT_LEGACY = new LegacyShape(false);
+    private static final LegacyShape WORKER_LEGACY = new LegacyShape(true);
+
     private CitizenPersistenceBridge() {
     }
 
     public static CitizenStateSnapshot fromRecruitLegacy(CompoundTag legacy) {
-        return fromLegacy(legacy);
+        return fromLegacy(legacy, RECRUIT_LEGACY);
     }
 
     public static CitizenStateSnapshot fromWorkerLegacy(CompoundTag legacy) {
-        return fromLegacy(legacy);
+        return fromLegacy(legacy, WORKER_LEGACY);
     }
 
     public static CompoundTag writeRecruitLegacy(CitizenStateSnapshot snapshot, CompoundTag target) {
-        writeSharedLegacy(snapshot, target);
+        writeLegacy(snapshot, target, RECRUIT_LEGACY);
         return target;
     }
 
     public static CompoundTag writeWorkerLegacy(CitizenStateSnapshot snapshot, CompoundTag target) {
-        writeSharedLegacy(snapshot, target);
-        if (snapshot.boundWorkAreaUuid() != null) {
-            target.putUUID("boundWorkArea", snapshot.boundWorkAreaUuid());
-        }
+        writeLegacy(snapshot, target, WORKER_LEGACY);
         return target;
     }
 
@@ -40,13 +40,16 @@ public final class CitizenPersistenceBridge {
         target.putString(TAG_CITIZEN_ROLE, resolved.coarseRole().name());
     }
 
-    private static CitizenStateSnapshot fromLegacy(CompoundTag legacy) {
+    private static CitizenStateSnapshot fromLegacy(CompoundTag legacy, LegacyShape shape) {
         CitizenStateSnapshot.Builder builder = CitizenStateSnapshot.builder()
                 .ownerUuid(readUuid(legacy, "OwnerUUID"))
                 .followState(legacy.getInt("FollowState"))
                 .owned(legacy.getBoolean("isOwned"))
-                .boundWorkAreaUuid(readUuid(legacy, "boundWorkArea"))
                 .inventoryData(copyInventoryData(legacy));
+
+        if (shape.supportsBoundWorkArea()) {
+            builder.boundWorkAreaUuid(readUuid(legacy, "boundWorkArea"));
+        }
 
         if (legacy.contains("HoldPosX") && legacy.contains("HoldPosY") && legacy.contains("HoldPosZ")) {
             builder.holdPos(new Vec3(
@@ -76,7 +79,7 @@ public final class CitizenPersistenceBridge {
         return snapshot;
     }
 
-    private static void writeSharedLegacy(CitizenStateSnapshot snapshot, CompoundTag target) {
+    private static void writeLegacy(CitizenStateSnapshot snapshot, CompoundTag target, LegacyShape shape) {
         if (snapshot.ownerUuid() != null) {
             target.putUUID("OwnerUUID", snapshot.ownerUuid());
         }
@@ -107,7 +110,14 @@ public final class CitizenPersistenceBridge {
             target.putInt("MovePosZ", snapshot.movePos().getZ());
         }
 
+        if (shape.supportsBoundWorkArea() && snapshot.boundWorkAreaUuid() != null) {
+            target.putUUID("boundWorkArea", snapshot.boundWorkAreaUuid());
+        }
+
         copyInventoryData(snapshot.inventoryData(), target);
+    }
+
+    private record LegacyShape(boolean supportsBoundWorkArea) {
     }
 
     private static UUID readUuid(CompoundTag legacy, String key) {
