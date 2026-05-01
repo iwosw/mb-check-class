@@ -327,6 +327,7 @@ public final class PrefabAutoStaffingRuntime {
             case MINE -> BuildingPrefabProfession.MINER;
             case LUMBER_CAMP -> BuildingPrefabProfession.LUMBERJACK;
             case ARCHITECT_WORKSHOP -> BuildingPrefabProfession.BUILDER;
+            case BARRACKS -> BuildingPrefabProfession.RECRUIT_SWORDSMAN;
             default -> BuildingPrefabProfession.NONE;
         };
     }
@@ -341,6 +342,9 @@ public final class PrefabAutoStaffingRuntime {
         }
         if (type == BuildingType.LUMBER_CAMP) {
             return vacancySlotsFor(LumberCampPrefab.ID, profession);
+        }
+        if (type == BuildingType.BARRACKS) {
+            return vacancySlotsFor(BarracksPrefab.ID, profession);
         }
         return profession == BuildingPrefabProfession.NONE ? 0 : 1;
     }

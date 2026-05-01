@@ -112,6 +112,7 @@ public final class SettlementSurveyorService {
             case SMITHY -> BuildingType.SMITHY;
             case STORAGE -> BuildingType.STORAGE;
             case ARCHITECT_BUILDER -> BuildingType.ARCHITECT_WORKSHOP;
+            case BARRACKS -> BuildingType.BARRACKS;
             case INSPECT_EXISTING -> null;
         };
     }

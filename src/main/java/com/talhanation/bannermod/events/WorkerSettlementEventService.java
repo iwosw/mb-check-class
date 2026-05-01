@@ -5,19 +5,12 @@ import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
-import com.talhanation.bannermod.settlement.bootstrap.BootstrapResult;
-import com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapService;
-import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
-import com.talhanation.bannermod.settlement.bootstrap.SettlementRegistryData;
-import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.war.runtime.WarSiegeQueries;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.entity.npc.Villager;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.entity.citizen.CitizenIndex;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 
@@ -28,14 +21,12 @@ import java.util.UUID;
 
 final class WorkerSettlementEventService {
     private static final Map<UUID, Long> CLAIM_WORKER_GROWTH_SPAWN_TIMES = new HashMap<>();
-    private static final Map<UUID, Boolean> CLAIM_SETTLEMENT_BOOTSTRAPPED = new HashMap<>();
 
     private WorkerSettlementEventService() {
     }
 
     static void resetRuntimeState() {
         CLAIM_WORKER_GROWTH_SPAWN_TIMES.clear();
-        CLAIM_SETTLEMENT_BOOTSTRAPPED.clear();
         WorkerSettlementSpawnRuntime.reset();
     }
 
@@ -64,7 +55,6 @@ final class WorkerSettlementEventService {
             if (claim == null || claim.getOwnerPoliticalEntityId() == null) {
                 continue;
             }
-            bootstrapClaimSettlement(level, claim);
             mobilizeCitizensIfClaimUnderSiege(level, claim);
             attemptClaimWorkerGrowth(level, claim, claim.getOwnerPoliticalEntityId().toString(), level.getGameTime());
         }
@@ -113,46 +103,6 @@ final class WorkerSettlementEventService {
             return true;
         }
         return entity.coLeaderUuids().contains(playerUuid);
-    }
-
-    private static void bootstrapClaimSettlement(ServerLevel level, RecruitsClaim claim) {
-        UUID claimId = claim.getUUID();
-        if (claimId == null || CLAIM_SETTLEMENT_BOOTSTRAPPED.containsKey(claimId)) {
-            return;
-        }
-
-        BannerModSettlementBinding.Binding binding = WorkerSettlementClaimPolicy.resolveClaimGrowthBinding(claim, claim.getOwnerPoliticalEntityId().toString());
-        if (!BannerModSettlementBinding.allowsSettlementOperation(binding)) {
-            return;
-        }
-
-        BlockPos anchorPos = resolveClaimAnchorPos(level, claim);
-        SettlementRegistryData registry = SettlementRegistryData.get(level);
-        SettlementRecord existing = registry.getSettlementByClaimId(claimId);
-        if (existing == null) {
-            existing = registry.getSettlementAt(new ChunkPos(anchorPos));
-        }
-        if (existing != null) {
-            CLAIM_SETTLEMENT_BOOTSTRAPPED.put(claimId, true);
-            return;
-        }
-
-        BootstrapResult result = SettlementBootstrapService.bootstrapClaimSettlement(level, claim, anchorPos);
-        if (result.success()) {
-            CLAIM_SETTLEMENT_BOOTSTRAPPED.put(claimId, true);
-        }
-    }
-
-    private static BlockPos resolveClaimAnchorPos(ServerLevel level, RecruitsClaim claim) {
-        ChunkPos anchorChunk = claim.getCenter();
-        if (anchorChunk == null && !claim.getClaimedChunks().isEmpty()) {
-            anchorChunk = claim.getClaimedChunks().get(0);
-        }
-        if (anchorChunk == null) {
-            return BlockPos.ZERO;
-        }
-        BlockPos chunkCenter = new BlockPos(anchorChunk.getMiddleBlockX(), level.getSeaLevel(), anchorChunk.getMiddleBlockZ());
-        return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, chunkCenter);
     }
 
     static AbstractWorkerEntity attemptClaimWorkerGrowth(ServerLevel level,

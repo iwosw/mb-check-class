@@ -314,28 +314,14 @@ public class BannerModBuildingInvalidationGameTests {
     public static void fortBootstrapCreatesSettlementRecord(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
-        BlockPos fortOrigin = new BlockPos(20, 2, 20);
-        BlockPos anchor = fortOrigin.offset(5, 1, 5);
+        BlockPos anchor = new BlockPos(30, 2, 30);
 
         RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(
                 level, anchor, "bootstrap_test_faction", player.getUUID(), player.getName().getString());
         helper.assertTrue(claim != null, "Expected claim seeding for fort bootstrap test.");
 
-        buildValidFort(level, fortOrigin);
-        DefaultBuildingValidator validator = new DefaultBuildingValidator(new BuildingDefinitionRegistry());
-        BuildingValidationResult fortValidation = validator.validate(
-                level,
-                null,
-                new BuildingValidationRequest(
-                        new java.util.UUID(0L, 0L),
-                        BuildingType.STARTER_FORT,
-                        anchor,
-                        List.of(
-                                new ZoneSelection(ZoneRole.AUTHORITY_POINT, anchor, anchor, anchor),
-                                new ZoneSelection(ZoneRole.INTERIOR, fortOrigin.offset(1, 1, 1), fortOrigin.offset(8, 1, 8), anchor)
-                        )
-                )
-        );
+        BannerModStarterFortGameTestSupport.buildValidFort(level, anchor);
+        BuildingValidationResult fortValidation = BannerModStarterFortGameTestSupport.validateStarterFort(level, anchor);
         helper.assertTrue(fortValidation.valid(), "Expected prepared fort fixture to pass STARTER_FORT validation.");
 
         BootstrapResult result = SettlementBootstrapService.bootstrapSettlement(level, player, fortValidation);
@@ -350,26 +336,9 @@ public class BannerModBuildingInvalidationGameTests {
 
     @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty")
-    public static void manualAndAutomaticBootstrapConvergeOnStarterData(GameTestHelper helper) {
+    public static void claimGrowthDoesNotAutoBootstrapSettlementRecord(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         WorkersServerConfig.setTestOverride(WorkersServerConfig.EnableClaimWorkerGrowth, false);
-
-        ServerPlayer manualLeader = createLeader(helper, level,
-                UUID.fromString("00000000-0000-0000-0000-000000014001"),
-                "game014-manual-leader",
-                "game014_manual_faction",
-                new BlockPos(1, 2, 1));
-        BlockPos fortOrigin = new BlockPos(20, 2, 20);
-        BlockPos manualAnchor = fortOrigin.offset(5, 1, 5);
-        RecruitsClaim manualClaim = BannerModDedicatedServerGameTestSupport.seedClaim(
-                level, manualAnchor, "game014_manual_faction", manualLeader.getUUID(), manualLeader.getScoreboardName());
-
-        buildValidFort(level, fortOrigin);
-        BuildingValidationResult fortValidation = validateStarterFort(level, fortOrigin, manualAnchor);
-        helper.assertTrue(fortValidation.valid(), "Expected manual STARTER_FORT fixture to validate.");
-        BootstrapResult manualResult = SettlementBootstrapService.bootstrapSettlement(level, manualLeader, fortValidation);
-        helper.assertTrue(manualResult.success(), "Expected manual surveyor bootstrap to create a settlement.");
-        BootstrapFootprint manualFootprint = footprint(level, manualClaim, manualResult.settlement());
 
         ServerPlayer automaticLeader = createLeader(helper, level,
                 UUID.fromString("00000000-0000-0000-0000-000000014002"),
@@ -382,11 +351,8 @@ public class BannerModBuildingInvalidationGameTests {
 
         WorkersVillagerEvents.runClaimWorkerGrowthPass(level);
         SettlementRecord automaticSettlement = SettlementRegistryData.get(level).getSettlementByClaimId(automaticClaim.getUUID());
-        helper.assertTrue(automaticSettlement != null, "Expected automatic claim bootstrap to create a settlement record.");
-        BootstrapFootprint automaticFootprint = footprint(level, automaticClaim, automaticSettlement);
-
-        helper.assertTrue(manualFootprint.sameStarterDataAs(automaticFootprint),
-                "Expected manual and automatic bootstrap to create matching active records, worker set, citizens, and profession state.");
+        helper.assertTrue(automaticSettlement == null,
+                "Expected claim growth to leave claimed land unbootstrapped until a validated starter fort exists.");
         WorkersServerConfig.clearAllTestOverrides();
         helper.succeed();
     }
@@ -424,19 +390,7 @@ public class BannerModBuildingInvalidationGameTests {
     }
 
     private static BuildingValidationResult validateStarterFort(ServerLevel level, BlockPos fortOrigin, BlockPos anchor) {
-        return new DefaultBuildingValidator(new BuildingDefinitionRegistry()).validate(
-                level,
-                null,
-                new BuildingValidationRequest(
-                        new UUID(0L, 0L),
-                        BuildingType.STARTER_FORT,
-                        anchor,
-                        List.of(
-                                new ZoneSelection(ZoneRole.AUTHORITY_POINT, anchor, anchor, anchor),
-                                new ZoneSelection(ZoneRole.INTERIOR, fortOrigin.offset(1, 1, 1), fortOrigin.offset(8, 1, 8), anchor)
-                        )
-                )
-        );
+        return BannerModStarterFortGameTestSupport.validateStarterFort(level, anchor);
     }
 
     private static BootstrapFootprint footprint(ServerLevel level, RecruitsClaim claim, SettlementRecord settlement) {
@@ -583,39 +537,6 @@ public class BannerModBuildingInvalidationGameTests {
     }
 
     private static void buildValidFort(ServerLevel level, BlockPos origin) {
-        int minX = origin.getX();
-        int minY = origin.getY();
-        int minZ = origin.getZ();
-        int maxX = minX + 9;
-        int maxY = minY + 4;
-        int maxZ = minZ + 9;
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                level.setBlockAndUpdate(new BlockPos(x, minY, z), Blocks.STONE_BRICKS.defaultBlockState());
-            }
-        }
-
-        for (int y = minY + 1; y <= maxY; y++) {
-            for (int x = minX; x <= maxX; x++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    boolean wall = x == minX || x == maxX || z == minZ || z == maxZ;
-                    if (y == maxY) {
-                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.STONE_BRICKS.defaultBlockState());
-                    } else if (wall) {
-                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.COBBLESTONE.defaultBlockState());
-                    } else {
-                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState());
-                    }
-                }
-            }
-        }
-
-        // Entrance at wall edge
-        level.setBlockAndUpdate(origin.offset(0, 1, 5), Blocks.AIR.defaultBlockState());
-        level.setBlockAndUpdate(origin.offset(0, 2, 5), Blocks.AIR.defaultBlockState());
-
-        // Banner near anchor
-        level.setBlockAndUpdate(origin.offset(6, 1, 5), Blocks.WHITE_BANNER.defaultBlockState());
+        BannerModStarterFortGameTestSupport.buildValidFort(level, origin);
     }
 }

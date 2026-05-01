@@ -9,5 +9,6 @@ public enum SurveyorMode {
     SMITHY,
     STORAGE,
     ARCHITECT_BUILDER,
+    BARRACKS,
     INSPECT_EXISTING
 }
