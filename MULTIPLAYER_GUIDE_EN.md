@@ -131,6 +131,7 @@ Board and HUD guidance:
 - the selected role now shows both its gameplay job and the kind of blocks that belong inside that volume;
 - floating role labels are rendered above the hologram guide boxes so you can match the colored volume to its purpose;
 - `Actions -> Pin Hologram` keeps the current anchored preview visible on your client even after the surveyor tool is no longer in hand.
+- the Build Area preview board now explicitly tells you when it is still empty, whether you should scan or load next, and how to rotate/reset the preview model.
 
 `INTERIOR` semantics:
 
@@ -162,6 +163,7 @@ Per-building thresholds:
 - `SMITHY`: contributes material-production infrastructure; use it as part of a developed material settlement.
 - `STARTER_FORT`: founding and promotion infrastructure. Missing required zones blocks validation; banner/roof/entrance quality issues only warn.
 - `MARKET`: not a surveyor validator mode. Register it with the `Building Placement Wand` in `REGISTER` mode; it is still required for state promotion.
+- the wand's prefab board now keeps the chosen plan highlighted on the item; after selection, close the board and right-click the target block. Placement and registration still stay server-authoritative.
 
 Prefab professions also exist for `MERCHANT`, `FISHERMAN`, `ANIMAL_FARMER`, `SHEPHERD`, and recruit roles (`RECRUIT_SWORDSMAN`, `RECRUIT_ARCHER`, `RECRUIT_PIKEMAN`, `RECRUIT_CROSSBOW`, `RECRUIT_CAVALRY`). Those are prefab/staffing declarations; the settlement still needs valid ownership, vacancies, and available citizens.
 
