@@ -56,7 +56,7 @@ State management is driven by slash commands:
 - `/bannermod state setcapital <entity> [pos]` — set the capital. Without `pos` it uses the caller's position.
 - `/bannermod state status <entity> <status>` — change status (`SETTLEMENT`, `STATE`, `VASSAL`, `PEACEFUL`). Promotion to `STATE` requires the settlement to register a starter fort or town hall, storage, and market — otherwise the command returns `infrastructure_insufficient`.
 
-The same actions (Create / Rename / Capital here / Government form toggle) live in the War Room (`U`). Leaders can also use `Add co-leader` / `Remove co` with a player UUID; the state detail panel shows the current co-leaders and whether their authority is active. The `→ Republic` / `→ Monarchy` button is leader-only and switches government form:
+The same actions (Create / Rename / Capital here / Government form toggle) live in the War Room (`U`). The state screens now show an in-screen ledger line before you click: waiting for sync, select-a-realm first, read-only authority lock, or the next server-checked step. Leaders can also use `Add co-leader` / `Remove co` with a player UUID; the state detail panel shows the current co-leaders and whether their authority is active. The `→ Republic` / `→ Monarchy` button is leader-only and switches government form:
 
 - `MONARCHY`: leader-only authority for key decisions.
 - `REPUBLIC`: co-leaders also gain authority for shared political actions such as status, capital, color, charter, claim editing, ally invites, siege placement, and legal war outcomes.
@@ -293,8 +293,9 @@ From the War Room (`U`):
 1. Select an active war in the list.
 2. Click the `Allies for selected war` button below the list — `WarAlliesScreen` opens.
 3. If you are the leader of one of the main sides, `Invite to Attacker` / `Invite to Defender` are active. They open a picker — the list of political entities legal to invite (the client mirrors the same `WarAllyPolicy` the server uses, so main sides, entities already in the war, and `PEACEFUL` entities trying to join the attacker side are filtered out).
-4. Clicking a row sends the invite.
-5. The leader of the invited state sees the invite in the list; left-click accepts (`MessageRespondAllyInvite` accept), DEL/BACKSPACE declines. The leader of the inviting side sees the same row with a `(click to cancel)` hint.
+4. Both the allies screen and the picker now show a visible ledger hint for the next step: waiting for sync, open the correct side's roster, accept/decline a pending invite, or click a realm to send the invite.
+5. Clicking a row sends the invite.
+6. The leader of the invited state sees the invite in the list; left-click accepts (`MessageRespondAllyInvite` accept), DEL/BACKSPACE declines. The leader of the inviting side sees the same row with a visible cancel hint.
 
 Slash commands provide the same flow without UI:
 
