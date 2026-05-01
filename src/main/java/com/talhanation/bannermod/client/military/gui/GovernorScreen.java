@@ -79,7 +79,12 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, 0xE0C6B98D);
         guiGraphics.fill(leftPos + 3, topPos + 3, leftPos + imageWidth - 3, topPos + imageHeight - 3, 0xF0E6D8B8);
+        guiGraphics.fill(leftPos + 8, topPos + 8, leftPos + 194, topPos + 115, 0x30FFFFFF);
+        guiGraphics.fill(leftPos + 8, topPos + 118, leftPos + 194, topPos + imageHeight - 8, 0x30C08A52);
         guiGraphics.fill(leftPos + 202, topPos + 22, leftPos + imageWidth - 8, topPos + imageHeight - 8, 0x503B2F20);
+        guiGraphics.renderOutline(leftPos + 8, topPos + 8, 186, 107, 0x6B4A2A);
+        guiGraphics.renderOutline(leftPos + 8, topPos + 118, 186, imageHeight - 126, 0x6B4A2A);
+        guiGraphics.renderOutline(leftPos + 202, topPos + 22, imageWidth - 210, imageHeight - 30, 0x6B4A2A);
     }
 
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {

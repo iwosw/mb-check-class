@@ -26,8 +26,14 @@ public class MessengerAnswerScreen extends RecruitsScreenBase {
 
     private final RecruitsPlayerInfo playerInfo;
     private static final MutableComponent BUTTON_OK = Component.translatable("gui.recruits.inv.text.ok_messenger");
+    private static final Component TITLE = Component.translatable("gui.recruits.messenger.answer_title");
+    private static final Component LABEL_FROM = Component.translatable("gui.recruits.messenger.answer_from");
+    private static final Component LABEL_TO = Component.translatable("gui.recruits.messenger.answer_to");
+    private static final Component LABEL_REPLY = Component.translatable("gui.recruits.messenger.answer_reply");
+    private Button okButton;
+    private boolean acknowledged;
     public MessengerAnswerScreen(MessengerEntity messenger, Player player, String message, RecruitsPlayerInfo playerInfo) {
-        super(Component.literal(""), 197,250);
+        super(TITLE, 197,250);
         this.player = player;
         this.messenger = messenger;
         this.message = message;
@@ -54,11 +60,11 @@ public class MessengerAnswerScreen extends RecruitsScreenBase {
     }
 
     private void setOKButton() {
-        Button sendButton = addRenderableWidget(new ExtendedButton(guiLeft + 33, guiTop + ySize - 50, 128, 20, BUTTON_OK,
+        this.okButton = addRenderableWidget(new ExtendedButton(guiLeft + 33, guiTop + ySize - 50, 128, 20, BUTTON_OK,
                 button -> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAnswerMessenger(messenger.getUUID()));
-
-                    onClose();
+                    this.acknowledged = true;
+                    this.okButton.active = false;
                 }
         ));
     }
@@ -76,26 +82,36 @@ public class MessengerAnswerScreen extends RecruitsScreenBase {
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         RenderSystem.setShaderTexture(0, TEXTURE);
         guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
+        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 8, xSize - 16, 24);
+        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 36, xSize - 16, 175);
+        drawDarkInset(guiGraphics, guiLeft + 24, guiTop + ySize - 80, xSize - 48, 18);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         String targetPlayer = playerInfo.getName();
         String owner = this.messenger.getOwnerName();
-        String unit = "min";
         int rawtime = this.messenger.getWaitingTime();
         int time = rawtime / 20;
-        if (time <= 100) unit = "sec";
-        else time = time / 60;
+        Component timeLine = time <= 100
+                ? Component.translatable("gui.recruits.messenger.answer_time_seconds", time)
+                : Component.translatable("gui.recruits.messenger.answer_time_minutes", time / 60);
 
-        //Info
-        int fontColor = 4210752;
-        guiGraphics.drawString(font, "From:", guiLeft + 9, guiTop + 9, fontColor, false);
-        guiGraphics.drawString(font, "To:", guiLeft + 9,  guiTop + 20, fontColor, false);
-        guiGraphics.drawString(font, "" + owner, guiLeft + 50,  guiTop + 9, fontColor, false);
-        guiGraphics.drawString(font, "" + targetPlayer, guiLeft + 50,  guiTop + 20, fontColor, false);
-
-        guiGraphics.drawString(font, "Time: " + time + unit, guiLeft + 130, guiTop + 9, fontColor, false);
+        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 14, FONT_COLOR, false);
+        guiGraphics.drawString(font, LABEL_FROM, guiLeft + 14, guiTop + 44, FONT_COLOR, false);
+        guiGraphics.drawString(font, LABEL_TO, guiLeft + 14,  guiTop + 56, FONT_COLOR, false);
+        guiGraphics.drawString(font, owner, guiLeft + 48,  guiTop + 44, FONT_COLOR, false);
+        guiGraphics.drawString(font, targetPlayer, guiLeft + 48,  guiTop + 56, FONT_COLOR, false);
+        guiGraphics.drawString(font, timeLine, guiLeft + 14, guiTop + 68, 0x6E5A45, false);
+        guiGraphics.drawString(font, LABEL_REPLY, guiLeft + 14, guiTop + 86, FONT_COLOR, false);
+        guiGraphics.drawString(font,
+                acknowledged
+                        ? Component.translatable("gui.recruits.messenger.answer_status.accepted")
+                        : Component.translatable("gui.recruits.messenger.answer_status.ready"),
+                guiLeft + 30,
+                guiTop + ySize - 75,
+                acknowledged ? 0x2E5D32 : 0x6E5A45,
+                false);
 
         if(!messenger.getMainHandItem().isEmpty()){
             guiGraphics.renderFakeItem(messenger.getMainHandItem(), guiLeft + 120, guiTop + ySize - 48);

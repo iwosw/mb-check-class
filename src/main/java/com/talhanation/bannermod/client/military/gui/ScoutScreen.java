@@ -23,8 +23,11 @@ public class ScoutScreen extends RecruitsScreenBase {
     private ScoutEntity.State task;
     private static final MutableComponent SCOUTING = Component.translatable("gui.recruits.inv.text.scoutScoutTask");
     private static final MutableComponent TOOLTIP_SCOUTING = Component.translatable("gui.recruits.inv.tooltip.scoutScoutTask");
+    private static final Component SUBTITLE = Component.translatable("gui.recruits.scout.subtitle");
     private RecruitsCheckBox checkBoxScouting;
     public boolean scouting;
+    private Component statusLine = Component.empty();
+    private int statusColor = FONT_COLOR;
     public ScoutScreen(ScoutEntity scout, Player player) {
         super(TITLE, 195,160);
         this.player = player;
@@ -46,10 +49,25 @@ public class ScoutScreen extends RecruitsScreenBase {
         (bool) -> {
                 this.scouting = bool;
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageScoutTask(scout.getUUID(), scouting ? 1 : 0));
+                this.statusLine = Component.translatable(scouting
+                        ? "gui.recruits.scout.status.accepted_start"
+                        : "gui.recruits.scout.status.accepted_stop");
+                this.statusColor = 0x2E5D32;
             }
         );
         checkBoxScouting.setTooltip(Tooltip.create(TOOLTIP_SCOUTING));
         addRenderableWidget(checkBoxScouting);
+        updateStatusLine();
+    }
+
+    private void updateStatusLine() {
+        if (this.statusColor == 0x2E5D32 && this.statusLine != Component.empty()) {
+            return;
+        }
+        this.statusLine = Component.translatable(scouting
+                ? "gui.recruits.scout.status.active"
+                : "gui.recruits.scout.status.idle");
+        this.statusColor = scouting ? 0x2E5D32 : 0x6E5A45;
     }
 
     @Override
@@ -58,9 +76,14 @@ public class ScoutScreen extends RecruitsScreenBase {
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         RenderSystem.setShaderTexture(0, TEXTURE);
         guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
+        drawFramedPanel(guiGraphics, guiLeft + 18, guiTop + 20, xSize - 36, 44);
+        drawDarkInset(guiGraphics, guiLeft + 24, guiTop + 108, xSize - 48, 18);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 8, FONT_COLOR, false);
+        guiGraphics.drawString(font, SUBTITLE, guiLeft + xSize / 2 - font.width(SUBTITLE) / 2, guiTop + 33, FONT_COLOR, false);
+        guiGraphics.drawString(font, statusLine, guiLeft + 28, guiTop + 114, statusColor, false);
     }
 }

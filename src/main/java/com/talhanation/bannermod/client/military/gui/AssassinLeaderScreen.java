@@ -26,10 +26,8 @@ import java.awt.*;
 public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
     private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/assassin_gui.png");
 
-    private static final MutableComponent TEXT_HEALTH = Component.literal("gui.recruits.inv.health");
-    private static final MutableComponent TEXT_LEVEL = Component.literal("gui.recruits.inv.level");
-    private static final MutableComponent TEXT_GROUP = Component.literal("gui.recruits.inv.group");
-    private static final MutableComponent TEXT_KILLS = Component.literal("gui.recruits.inv.kills");
+    private static final MutableComponent TITLE = Component.translatable("gui.recruits.assassin.title");
+    private static final MutableComponent STATUS = Component.translatable("gui.recruits.assassin.status.unavailable");
 
     private static final int fontColor = 4210752;
 
@@ -93,14 +91,11 @@ public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.renderLabels(guiGraphics, mouseX, mouseY);
-        /*
-        int k = 79;//rechst links
-        int l = 19;//höhe
-        font.draw(matrixStack, playerInventory.getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor);
-        String count = String.valueOf(assassinLeaderEntity.getCount());
-        font.draw(matrixStack, "Assassin Count:", k - 70, l + 35, fontColor);
-        font.draw(matrixStack, count, k - 55, l + 45, fontColor);
-     */
+        guiGraphics.drawString(font, TITLE, 10, 8, fontColor, false);
+        guiGraphics.drawString(font, Component.translatable("gui.recruits.assassin.count", this.count, assassinLeaderEntity.getMaxAssassinCount()), 10, 28, fontColor, false);
+        guiGraphics.drawString(font, Component.translatable("gui.recruits.assassin.cost_each", assassinLeaderEntity.getAssassinCosts()), 10, 40, fontColor, false);
+        guiGraphics.drawString(font, Component.translatable("gui.recruits.assassin.cost_total", assassinLeaderEntity.calculateAssassinateCosts(this.count, assassinLeaderEntity.getAssassinCosts())), 10, 52, fontColor, false);
+        guiGraphics.drawString(font, STATUS, 10, 70, 0x8A1F11, false);
     }
 
 
@@ -117,7 +112,10 @@ public class AssassinLeaderScreen extends ScreenBase<AssassinLeaderMenu> {
             return true;
         }
 
-        return textField.keyPressed(key, a, b) || textField.canConsumeInput() || super.keyPressed(key, a, b);
+        if (textField != null && (textField.keyPressed(key, a, b) || textField.canConsumeInput())) {
+            return true;
+        }
+        return super.keyPressed(key, a, b);
     }
 
     @Override

@@ -52,6 +52,17 @@ public abstract class RecruitsScreenBase extends Screen{
 
     }
 
+    protected void drawFramedPanel(GuiGraphics guiGraphics, int x, int y, int width, int height) {
+        guiGraphics.fill(x, y, x + width, y + height, 0xD08C6741);
+        guiGraphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xF0E4D5B2);
+        guiGraphics.renderOutline(x, y, width, height, 0x6B4A2A);
+    }
+
+    protected void drawDarkInset(GuiGraphics guiGraphics, int x, int y, int width, int height) {
+        guiGraphics.fill(x, y, x + width, y + height, 0x80412F1D);
+        guiGraphics.renderOutline(x, y, width, height, 0x6B4A2A);
+    }
+
     public int getGuiLeft() {
         return guiLeft;
     }

@@ -31,11 +31,19 @@ public class MessengerScreen extends RecruitsScreenBase {
     private final MessengerEntity messenger;
     private MultiLineEditBox textFieldMessage;
     private SelectedPlayerWidget selectedPlayerWidget;
+    private Button sendButton;
+    private boolean sendAccepted;
+    private Component dispatchStatus = Component.empty();
+    private int dispatchStatusColor = FONT_COLOR;
     private static final MutableComponent TOOLTIP_MESSENGER = Component.translatable("gui.recruits.inv.tooltip.messenger");
     private static final MutableComponent BUTTON_SEND_MESSENGER = Component.translatable("gui.recruits.inv.text.send_messenger");
-    private static final int fontColor = 4210752;
+    private static final Component TITLE = Component.translatable("gui.recruits.messenger.compose_title");
+    private static final Component LABEL_PLAYER = Component.translatable("gui.recruits.messenger.compose_player");
+    private static final Component LABEL_MESSAGE = Component.translatable("gui.recruits.messenger.compose_message");
+    private static final Component LABEL_PARCEL = Component.translatable("gui.recruits.messenger.compose_parcel");
+    private static final Component LABEL_EMPTY_PARCEL = Component.translatable("gui.recruits.messenger.compose_no_parcel");
     public MessengerScreen(MessengerEntity messenger, Player player) {
-        super(Component.literal(""), 197,250);
+        super(TITLE, 197,250);
         this.player = player;
         this.messenger = messenger;
     }
@@ -58,6 +66,7 @@ public class MessengerScreen extends RecruitsScreenBase {
     }
     public void tick() {
         super.tick();
+        updateDispatchState();
     }
 
     public boolean mouseClicked(double p_100753_, double p_100754_, int p_100755_) {
@@ -74,18 +83,19 @@ public class MessengerScreen extends RecruitsScreenBase {
         this.textFieldMessage.setValue(messenger.getMessage());
         addRenderableWidget(textFieldMessage);
 
-        Button sendButton = addRenderableWidget(new ExtendedButton(guiLeft + 33, guiTop + ySize - 52 , 128, 20, BUTTON_SEND_MESSENGER,
+        this.sendButton = addRenderableWidget(new ExtendedButton(guiLeft + 33, guiTop + ySize - 52 , 128, 20, BUTTON_SEND_MESSENGER,
                 button -> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSendMessenger(messenger.getUUID(), playerInfo, textFieldMessage.getValue(), true));
-                    this.onClose();
+                    this.sendAccepted = true;
+                    updateDispatchState();
                 }
         ));
-        sendButton.setTooltip(Tooltip.create(TOOLTIP_MESSENGER));
-        sendButton.active = playerInfo != null;
+        this.sendButton.setTooltip(Tooltip.create(TOOLTIP_MESSENGER));
 
         if(playerInfo != null){
             this.selectedPlayerWidget = new SelectedPlayerWidget(font, guiLeft + 33, guiTop + ySize - 235, 128, 20, Component.literal("x"), // Button label
                     () -> {
+                        sendAccepted = false;
                         playerInfo = null;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSendMessenger(messenger.getUUID(), playerInfo, textFieldMessage.getValue(), false));
                         this.selectedPlayerWidget.setPlayer(null, null);
@@ -100,9 +110,11 @@ public class MessengerScreen extends RecruitsScreenBase {
         {
             Button selectPlayerButton = addRenderableWidget(new ExtendedButton(guiLeft + 33, guiTop + ySize - 235, 128, 20, SelectPlayerScreen.TITLE,
                     button -> {
+                        sendAccepted = false;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageSendMessenger(messenger.getUUID(), playerInfo, textFieldMessage.getValue(), false));
                         minecraft.setScreen(new SelectPlayerScreen(this, player, SelectPlayerScreen.TITLE, SelectPlayerScreen.BUTTON_SELECT, SelectPlayerScreen.BUTTON_SELECT_TOOLTIP, false, PlayersList.FilterType.NONE,
                                 (playerInfo) -> {
+                                    sendAccepted = false;
                                     MessengerScreen.playerInfo = playerInfo;
                                     minecraft.setScreen(this);
                                 }
@@ -112,6 +124,36 @@ public class MessengerScreen extends RecruitsScreenBase {
             ));
             selectPlayerButton.setTooltip(Tooltip.create(TOOLTIP_MESSENGER));
         }
+        updateDispatchState();
+    }
+
+    private void updateDispatchState() {
+        if (this.sendButton == null || this.textFieldMessage == null) {
+            return;
+        }
+        boolean hasRecipient = playerInfo != null;
+        boolean hasMessage = !this.textFieldMessage.getValue().isBlank();
+        if (this.sendAccepted) {
+            this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.accepted");
+            this.dispatchStatusColor = 0x2E5D32;
+            this.sendButton.active = false;
+            return;
+        }
+        if (!hasRecipient) {
+            this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.select_player");
+            this.dispatchStatusColor = 0x8A1F11;
+            this.sendButton.active = false;
+            return;
+        }
+        if (!hasMessage) {
+            this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.write_message");
+            this.dispatchStatusColor = 0x8A1F11;
+            this.sendButton.active = false;
+            return;
+        }
+        this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.ready");
+        this.dispatchStatusColor = 0x2E5D32;
+        this.sendButton.active = true;
     }
 
     public void onClose(){
@@ -125,17 +167,23 @@ public class MessengerScreen extends RecruitsScreenBase {
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         RenderSystem.setShaderTexture(0, TEXTURE);
         guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
+        drawFramedPanel(guiGraphics, guiLeft + 12, guiTop + 18, xSize - 24, 26);
+        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 48, xSize - 16, 158);
+        drawDarkInset(guiGraphics, guiLeft + 24, guiTop + ySize - 80, xSize - 48, 18);
     }
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        int fontColor = 4210752;
-
-        guiGraphics.drawString(font, "Player:", guiLeft + 5, guiTop + 5, fontColor, false);
-        guiGraphics.drawString(font, "Message:", guiLeft + 5, guiTop + 35, fontColor, false);
+        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 6, FONT_COLOR, false);
+        guiGraphics.drawString(font, LABEL_PLAYER, guiLeft + 16, guiTop + 24, FONT_COLOR, false);
+        guiGraphics.drawString(font, LABEL_MESSAGE, guiLeft + 16, guiTop + 52, FONT_COLOR, false);
+        guiGraphics.drawString(font, dispatchStatus, guiLeft + 28, guiTop + ySize - 75, dispatchStatusColor, false);
 
         if(!messenger.getMainHandItem().isEmpty()){
+            guiGraphics.drawString(font, LABEL_PARCEL, guiLeft + 120, guiTop + ySize - 75, FONT_COLOR, false);
             guiGraphics.renderFakeItem(messenger.getMainHandItem(), guiLeft + 140, guiTop + ySize - 48);
             guiGraphics.renderItemDecorations(font, messenger.getMainHandItem(),guiLeft + 140, guiTop + ySize - 48);
+        } else {
+            guiGraphics.drawString(font, LABEL_EMPTY_PARCEL, guiLeft + 110, guiTop + ySize - 48, 0x6E5A45, false);
         }
     }
 }
