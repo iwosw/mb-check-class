@@ -60,30 +60,12 @@ public class MusketBayonetWeapon implements IWeapon {
     }
 
     public boolean isLoaded(ItemStack stack) {
-        try {
-            Class<?> musketItemClass = Class.forName("ewewukek.musketmod.MusketItem");
-
-            Method musketItemIsLoaded = musketItemClass.getMethod("isLoaded", ItemStack.class);
-            return (boolean) musketItemIsLoaded.invoke(musketItemClass, stack);
-        }
-        catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            BannerModMain.LOGGER.info("MusketItem was not found");
-            return false;
-        }
+        return MusketModCompat.isLoaded(stack);
     }
 
     @Override
     public void setLoaded(ItemStack stack, boolean loaded) {
-        try {
-            Class<?> musketItemClass = Class.forName("ewewukek.musketmod.MusketItem");
-
-            Method musketItemSetLoaded = musketItemClass.getMethod("setLoaded", ItemStack.class, boolean.class);
-
-            musketItemSetLoaded.invoke(musketItemClass, stack, loaded);
-        }
-        catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            BannerModMain.LOGGER.info("MusketItem was not found");
-        }
+        MusketModCompat.setLoaded(stack, loaded);
     }
 
 

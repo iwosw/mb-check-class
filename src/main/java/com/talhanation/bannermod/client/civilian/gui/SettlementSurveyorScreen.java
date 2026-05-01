@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.civilian.render.SettlementSurveyorPinnedPreviewState;
 import com.talhanation.bannermod.items.civilian.SettlementSurveyorToolItem;
 import com.talhanation.bannermod.network.messages.civilian.MessageModifySurveyorSession;
 import com.talhanation.bannermod.network.messages.civilian.MessageSetSurveyorMode;
@@ -56,6 +57,7 @@ public class SettlementSurveyorScreen extends Screen {
     private Button cancelCornerButton;
     private Button clearRoleButton;
     private Button resetMarksButton;
+    private Button pinPreviewButton;
     private boolean actionsMenuOpen;
 
     public SettlementSurveyorScreen(InteractionHand hand) {
@@ -103,6 +105,9 @@ public class SettlementSurveyorScreen extends Screen {
         this.resetMarksButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 44, menuWidth, 20,
                 Component.translatable("bannermod.surveyor.screen.action.reset_all"),
                 button -> performAction(MessageModifySurveyorSession.Action.RESET_ALL_MARKS)));
+        this.pinPreviewButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 66, menuWidth, 20,
+                Component.translatable("bannermod.surveyor.screen.action.pin_preview"),
+                button -> togglePinnedPreview()));
         syncButtons();
     }
 
@@ -159,6 +164,18 @@ public class SettlementSurveyorScreen extends Screen {
 
     private void performAction(MessageModifySurveyorSession.Action action) {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageModifySurveyorSession(this.hand, action));
+        this.actionsMenuOpen = false;
+        syncButtons();
+    }
+
+    private void togglePinnedPreview() {
+        ItemStack stack = currentStack();
+        ValidationSession session = SurveyorSessionCodec.read(stack);
+        if (SettlementSurveyorPinnedPreviewState.hasPinnedPreview()) {
+            SettlementSurveyorPinnedPreviewState.clear();
+        } else if (minecraft != null && minecraft.level != null && SettlementSurveyorPinnedPreviewState.canPin(session)) {
+            SettlementSurveyorPinnedPreviewState.pin(minecraft.level, session, SettlementSurveyorToolItem.selectedRole(stack));
+        }
         this.actionsMenuOpen = false;
         syncButtons();
     }
@@ -220,6 +237,20 @@ public class SettlementSurveyorScreen extends Screen {
             this.resetMarksButton.setTooltip(Tooltip.create(Component.translatable(
                     hasAnyMarks ? "bannermod.surveyor.screen.action.reset_all.tooltip" : "bannermod.surveyor.screen.action.reset_all.disabled")));
         }
+        if (this.pinPreviewButton != null) {
+            boolean hasAnchor = session != null && !session.anchorPos().equals(BlockPos.ZERO);
+            boolean pinned = SettlementSurveyorPinnedPreviewState.hasPinnedPreview();
+            this.pinPreviewButton.visible = this.actionsMenuOpen;
+            this.pinPreviewButton.active = pinned || hasAnchor;
+            this.pinPreviewButton.setMessage(Component.translatable(
+                    pinned ? "bannermod.surveyor.screen.action.unpin_preview" : "bannermod.surveyor.screen.action.pin_preview"));
+            this.pinPreviewButton.setTooltip(Tooltip.create(Component.translatable(
+                    pinned
+                            ? "bannermod.surveyor.screen.action.unpin_preview.tooltip"
+                            : hasAnchor
+                            ? "bannermod.surveyor.screen.action.pin_preview.tooltip"
+                            : "bannermod.surveyor.screen.action.pin_preview.disabled")));
+        }
     }
 
     @Override
@@ -235,9 +266,9 @@ public class SettlementSurveyorScreen extends Screen {
         graphics.fill(left + 1, top + 1, left + panelWidth - 1, top + PANEL_HEIGHT - 1, PANEL_INNER_COLOR);
         graphics.renderOutline(left, top, panelWidth, PANEL_HEIGHT, PANEL_OUTLINE_COLOR);
         if (this.actionsMenuOpen) {
-            graphics.fill(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuLeft() + actionMenuWidth() + 4, actionMenuTop() + 68, PANEL_COLOR);
-            graphics.fill(actionMenuLeft() - 3, actionMenuTop() - 3, actionMenuLeft() + actionMenuWidth() + 3, actionMenuTop() + 67, PANEL_INNER_COLOR);
-            graphics.renderOutline(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 72, PANEL_OUTLINE_COLOR);
+            graphics.fill(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuLeft() + actionMenuWidth() + 4, actionMenuTop() + 90, PANEL_COLOR);
+            graphics.fill(actionMenuLeft() - 3, actionMenuTop() - 3, actionMenuLeft() + actionMenuWidth() + 3, actionMenuTop() + 89, PANEL_INNER_COLOR);
+            graphics.renderOutline(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 94, PANEL_OUTLINE_COLOR);
         }
 
         ItemStack stack = currentStack();
@@ -250,6 +281,10 @@ public class SettlementSurveyorScreen extends Screen {
 
         int infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.capture_hint"), contentX, top + 74, contentWidth, MUTED_TEXT_COLOR);
         infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.current_role", SettlementSurveyorToolItem.roleLabel(selectedRole), roleHint(selectedRole)), contentX, infoY + 4, contentWidth, TEXT_COLOR);
+        if (mode != SurveyorMode.INSPECT_EXISTING) {
+            infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.role_purpose", rolePurpose(selectedRole)), contentX, infoY + 4, contentWidth, MUTED_TEXT_COLOR);
+            infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.role_blocks", roleBuildHint(mode, selectedRole)), contentX, infoY + 2, contentWidth, MUTED_TEXT_COLOR);
+        }
         infoY = drawWrapped(graphics, currentStep(mode, session), contentX, infoY + 4, contentWidth, PENDING_COLOR);
         graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.anchor",
                 session == null || session.anchorPos().equals(BlockPos.ZERO) ? "-" : session.anchorPos().toShortString()), contentX, infoY + 4, TEXT_COLOR, true);
@@ -364,6 +399,14 @@ public class SettlementSurveyorScreen extends Screen {
         return Component.translatable("bannermod.surveyor.role_hint." + (role == null ? ZoneRole.INTERIOR : role).name().toLowerCase(Locale.ROOT));
     }
 
+    private Component rolePurpose(ZoneRole role) {
+        return SurveyorModeGuidance.rolePurpose(role);
+    }
+
+    private Component roleBuildHint(SurveyorMode mode, ZoneRole role) {
+        return SurveyorModeGuidance.roleBuildHint(mode, role);
+    }
+
     private Component currentStep(SurveyorMode mode, @Nullable ValidationSession session) {
         if (session == null || session.anchorPos().equals(BlockPos.ZERO)) {
             return Component.translatable("bannermod.surveyor.screen.next.anchor");
@@ -429,14 +472,14 @@ public class SettlementSurveyorScreen extends Screen {
 
     private int actionMenuTop() {
         int actionY = panelTop() + PANEL_HEIGHT - 30;
-        return actionY - 70;
+        return actionY - 92;
     }
 
     private boolean insideActionMenu(double mouseX, double mouseY) {
         return mouseX >= actionMenuLeft() - 4
                 && mouseX <= actionMenuLeft() + actionMenuWidth() + 4
                 && mouseY >= actionMenuTop() - 4
-                && mouseY <= actionMenuTop() + 68;
+                && mouseY <= actionMenuTop() + 90;
     }
 
     private int panelLeft() {
