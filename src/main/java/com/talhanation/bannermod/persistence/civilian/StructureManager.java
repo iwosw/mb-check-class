@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -171,12 +172,25 @@ public class StructureManager {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry)) {
                     if (containsNbt(entry)) return true;
-                } else if (entry.getFileName().toString().endsWith(".nbt")) {
+                } else if (StructureTemplateLoader.supportedExtensions.stream()
+                        .anyMatch(ext -> entry.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(ext))) {
                     return true;
                 }
             }
         } catch (IOException ignored) {}
         return false;
+    }
+
+    public static BlockState resolveBlockState(CompoundTag blockTag) {
+        if (blockTag.contains("state", Tag.TAG_COMPOUND) && !blockTag.getCompound("state").isEmpty()) {
+            return NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), blockTag.getCompound("state"));
+        }
+
+        ResourceLocation blockId = ResourceLocation.tryParse(blockTag.getString("block"));
+        if (blockId == null) {
+            return null;
+        }
+        return BuiltInRegistries.BLOCK.getOptional(blockId).map(Block::defaultBlockState).orElse(null);
     }
 
     public static List<ScannedBlock> parseStructureFromNBT(CompoundTag root) {
@@ -186,11 +200,9 @@ public class StructureManager {
         ListTag blockList = root.getList("blocks", Tag.TAG_COMPOUND);
         for (Tag tag : blockList) {
             CompoundTag blockTag = (CompoundTag) tag;
-            BlockState state;
-            if (blockTag.contains("state") && !blockTag.getCompound("state").isEmpty()) {
-                state = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), blockTag.getCompound("state"));
-            } else {
-                state = BuiltInRegistries.BLOCK.get(ResourceLocation.tryParse(blockTag.getString("block"))).defaultBlockState();
+            BlockState state = resolveBlockState(blockTag);
+            if (state == null) {
+                continue;
             }
             BlockPos relPos = new BlockPos(blockTag.getInt("x"), blockTag.getInt("y"), blockTag.getInt("z"));
             CompoundTag be = blockTag.contains("blockEntity") ? blockTag.getCompound("blockEntity") : null;
