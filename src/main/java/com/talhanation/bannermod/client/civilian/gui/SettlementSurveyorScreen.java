@@ -10,6 +10,7 @@ import com.talhanation.bannermod.network.messages.civilian.MessageSetSurveyorRol
 import com.talhanation.bannermod.network.messages.civilian.MessageValidateSurveyorSession;
 import com.talhanation.bannermod.settlement.building.ZoneRole;
 import com.talhanation.bannermod.settlement.building.ZoneSelection;
+import com.talhanation.bannermod.settlement.validation.SurveyorDraftSuggestionService;
 import com.talhanation.bannermod.settlement.validation.SurveyorModeGuidance;
 import com.talhanation.bannermod.settlement.validation.SurveyorMode;
 import com.talhanation.bannermod.settlement.validation.SurveyorSessionCodec;
@@ -56,6 +57,7 @@ public class SettlementSurveyorScreen extends Screen {
     private Button actionsButton;
     private Button closeButton;
     private Button cancelCornerButton;
+    private Button suggestDraftButton;
     private Button clearRoleButton;
     private Button resetMarksButton;
     private Button pinPreviewButton;
@@ -101,16 +103,19 @@ public class SettlementSurveyorScreen extends Screen {
         this.cancelCornerButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop, menuWidth, 20,
                 Component.translatable("bannermod.surveyor.screen.action.cancel_corner"),
                 button -> performAction(MessageModifySurveyorSession.Action.CANCEL_PENDING_CORNER)));
-        this.clearRoleButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 22, menuWidth, 20,
+        this.suggestDraftButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 22, menuWidth, 20,
+                Component.translatable("bannermod.surveyor.screen.action.suggest_draft"),
+                button -> performAction(MessageModifySurveyorSession.Action.SUGGEST_DRAFT_ZONES)));
+        this.clearRoleButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 44, menuWidth, 20,
                 Component.translatable("bannermod.surveyor.screen.action.clear_role"),
                 button -> performAction(MessageModifySurveyorSession.Action.CLEAR_CURRENT_ROLE)));
-        this.resetMarksButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 44, menuWidth, 20,
+        this.resetMarksButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 66, menuWidth, 20,
                 Component.translatable("bannermod.surveyor.screen.action.reset_all"),
                 button -> performAction(MessageModifySurveyorSession.Action.RESET_ALL_MARKS)));
-        this.pinPreviewButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 66, menuWidth, 20,
+        this.pinPreviewButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 88, menuWidth, 20,
                 Component.translatable("bannermod.surveyor.screen.action.pin_preview"),
                 button -> togglePinnedPreview()));
-        this.guidePreviewButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 88, menuWidth, 20,
+        this.guidePreviewButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 110, menuWidth, 20,
                 Component.empty(),
                 button -> performAction(MessageModifySurveyorSession.Action.TOGGLE_GUIDE_PREVIEW)));
         syncButtons();
@@ -227,6 +232,22 @@ public class SettlementSurveyorScreen extends Screen {
             this.cancelCornerButton.setTooltip(Tooltip.create(Component.translatable(
                     hasPendingCorner ? "bannermod.surveyor.screen.action.cancel_corner.tooltip" : "bannermod.surveyor.screen.action.cancel_corner.disabled")));
         }
+        if (this.suggestDraftButton != null) {
+            boolean hasAnchor = session != null && !session.anchorPos().equals(BlockPos.ZERO);
+            boolean hasPendingCorner = SettlementSurveyorToolItem.hasPendingCorner(stack);
+            boolean supported = SurveyorDraftSuggestionService.supportsDraftSuggestion(mode);
+            boolean missingRole = SurveyorModeGuidance.nextMissingRole(mode, session) != null;
+            this.suggestDraftButton.visible = this.actionsMenuOpen && supported;
+            this.suggestDraftButton.active = hasAnchor && !hasPendingCorner && missingRole;
+            this.suggestDraftButton.setTooltip(Tooltip.create(Component.translatable(
+                    !hasAnchor
+                            ? "bannermod.surveyor.screen.action.suggest_draft.disabled_anchor"
+                            : hasPendingCorner
+                            ? "bannermod.surveyor.screen.action.suggest_draft.disabled_corner"
+                            : !missingRole
+                            ? "bannermod.surveyor.screen.action.suggest_draft.disabled_complete"
+                            : "bannermod.surveyor.screen.action.suggest_draft.tooltip")));
+        }
         if (this.clearRoleButton != null) {
             boolean hasRoleZone = SettlementSurveyorToolItem.hasZoneForSelectedRole(stack);
             this.clearRoleButton.visible = this.actionsMenuOpen;
@@ -286,9 +307,9 @@ public class SettlementSurveyorScreen extends Screen {
         graphics.fill(left + 1, top + 1, left + panelWidth - 1, top + PANEL_HEIGHT - 1, PANEL_INNER_COLOR);
         graphics.renderOutline(left, top, panelWidth, PANEL_HEIGHT, PANEL_OUTLINE_COLOR);
         if (this.actionsMenuOpen) {
-            graphics.fill(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuLeft() + actionMenuWidth() + 4, actionMenuTop() + 112, PANEL_COLOR);
-            graphics.fill(actionMenuLeft() - 3, actionMenuTop() - 3, actionMenuLeft() + actionMenuWidth() + 3, actionMenuTop() + 111, PANEL_INNER_COLOR);
-            graphics.renderOutline(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 116, PANEL_OUTLINE_COLOR);
+            graphics.fill(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuLeft() + actionMenuWidth() + 4, actionMenuTop() + 134, PANEL_COLOR);
+            graphics.fill(actionMenuLeft() - 3, actionMenuTop() - 3, actionMenuLeft() + actionMenuWidth() + 3, actionMenuTop() + 133, PANEL_INNER_COLOR);
+            graphics.renderOutline(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 138, PANEL_OUTLINE_COLOR);
         }
 
         ItemStack stack = currentStack();
