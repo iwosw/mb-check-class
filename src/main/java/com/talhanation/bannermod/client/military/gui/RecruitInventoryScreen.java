@@ -88,6 +88,10 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TOOLTIP_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote");
     private static final MutableComponent TOOLTIP_DISABLED_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote_disabled");
     private static final MutableComponent TOOLTIP_SPECIAL = Component.translatable("gui.recruits.inv.tooltip.special");
+    private static final MutableComponent TOOLTIP_CURRENT_STATE = Component.translatable("gui.recruits.inv.tooltip.current_state");
+    private static final MutableComponent SECTION_DISCIPLINE = Component.translatable("gui.recruits.inv.section.discipline");
+    private static final MutableComponent SECTION_ORDERS = Component.translatable("gui.recruits.inv.section.orders");
+    private static final MutableComponent SECTION_DETAILS = Component.translatable("gui.recruits.inv.section.details");
     private static final int fontColor = 4210752;
     private static final int firearmSupportedColor = 0x3A7A2A;
     private static final int firearmWarningColor = 0xD2A12D;
@@ -132,7 +136,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                 }
             });
-        buttonPassive.setTooltip(Tooltip.create(TOOLTIP_PASSIVE));
+        buttonPassive.setTooltip(Tooltip.create(recruit.getState() == 3 ? TOOLTIP_CURRENT_STATE : TOOLTIP_PASSIVE));
+        buttonPassive.active = recruit.getState() != 3;
         addRenderableWidget(buttonPassive);
 
         // NEUTRAL
@@ -144,7 +149,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
                 });
-        buttonNeutral.setTooltip(Tooltip.create(TOOLTIP_NEUTRAL));
+        buttonNeutral.setTooltip(Tooltip.create(recruit.getState() == 0 ? TOOLTIP_CURRENT_STATE : TOOLTIP_NEUTRAL));
+        buttonNeutral.active = recruit.getState() != 0;
         addRenderableWidget(buttonNeutral);
 
         //AGGRESSIVE
@@ -156,8 +162,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
                 });
-        buttonAggressive.setTooltip(Tooltip.create(TOOLTIP_AGGRESSIVE));
-        buttonAggressive.active = !(recruit instanceof VillagerNobleEntity);
+        buttonAggressive.setTooltip(Tooltip.create(recruit.getState() == 1 ? TOOLTIP_CURRENT_STATE : TOOLTIP_AGGRESSIVE));
+        buttonAggressive.active = !(recruit instanceof VillagerNobleEntity) && recruit.getState() != 1;
         addRenderableWidget(buttonAggressive);
 
         //RAID
@@ -169,8 +175,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
                 });
-        buttonRaid.setTooltip(Tooltip.create(TOOLTIP_RAID));
-        buttonRaid.active = !(recruit instanceof VillagerNobleEntity);
+        buttonRaid.setTooltip(Tooltip.create(recruit.getState() == 2 ? TOOLTIP_CURRENT_STATE : TOOLTIP_RAID));
+        buttonRaid.active = !(recruit instanceof VillagerNobleEntity) && recruit.getState() != 2;
         addRenderableWidget(buttonRaid);
 
         //CLEAR TARGET
@@ -202,7 +208,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonWander.setTooltip(Tooltip.create(TOOLTIP_WANDER));
+        buttonWander.setTooltip(Tooltip.create(recruit.getFollowState() == 0 ? TOOLTIP_CURRENT_STATE : TOOLTIP_WANDER));
+        buttonWander.active = recruit.getFollowState() != 0;
         addRenderableWidget(buttonWander);
 
 
@@ -215,8 +222,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonFollow.setTooltip(Tooltip.create(TOOLTIP_FOLLOW));
-        buttonFollow.active = !(recruit instanceof VillagerNobleEntity);
+        buttonFollow.setTooltip(Tooltip.create(recruit.getFollowState() == 1 ? TOOLTIP_CURRENT_STATE : TOOLTIP_FOLLOW));
+        buttonFollow.active = !(recruit instanceof VillagerNobleEntity) && recruit.getFollowState() != 1;
         addRenderableWidget(buttonFollow);
 
 
@@ -229,7 +236,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonHoldPos.setTooltip(Tooltip.create(TOOLTIP_HOLD_POS));
+        buttonHoldPos.setTooltip(Tooltip.create(recruit.getFollowState() == 2 ? TOOLTIP_CURRENT_STATE : TOOLTIP_HOLD_POS));
+        buttonHoldPos.active = recruit.getFollowState() != 2;
         addRenderableWidget(buttonHoldPos);
 
 
@@ -242,7 +250,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonBackToPos.setTooltip(Tooltip.create(TOOLTIP_BACK_TO_POS));
+        buttonBackToPos.setTooltip(Tooltip.create(recruit.getFollowState() == 3 ? TOOLTIP_CURRENT_STATE : TOOLTIP_BACK_TO_POS));
+        buttonBackToPos.active = recruit.getFollowState() != 3;
         addRenderableWidget(buttonBackToPos);
 
 
@@ -255,8 +264,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonHoldMyPos.setTooltip(Tooltip.create(TOOLTIP_HOLD_MY_POS));
-        buttonHoldMyPos.active = !(recruit instanceof VillagerNobleEntity);
+        buttonHoldMyPos.setTooltip(Tooltip.create(recruit.getFollowState() == 4 ? TOOLTIP_CURRENT_STATE : TOOLTIP_HOLD_MY_POS));
+        buttonHoldMyPos.active = !(recruit instanceof VillagerNobleEntity) && recruit.getFollowState() != 4;
         addRenderableWidget(buttonHoldMyPos);
 
         //Dismount
@@ -435,6 +444,9 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
         guiGraphics.drawString(font, recruit.getDisplayName().getVisualOrderText(), 8, 5, fontColor, false);
         guiGraphics.drawString(font, playerInventory.getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
+        guiGraphics.drawString(font, SECTION_DISCIPLINE, 8, 17, 0x5B4A32, false);
+        guiGraphics.drawString(font, SECTION_DETAILS, 79, 17, 0x5B4A32, false);
+        guiGraphics.drawString(font, SECTION_ORDERS, 79, 76, 0x5B4A32, false);
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().scale(0.7F, 0.7F, 1F);

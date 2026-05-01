@@ -211,6 +211,8 @@ The command screen (`R`) shows order buttons:
 - formation: read from the player's saved formation (Formation tab);
 - stance: `LOOSE`, `LINE_HOLD`, `SHIELD_WALL`.
 
+The recruit command, recruit inventory, hiring, rename, promotion, and group-management screens now keep a compact footer/status line in view. If a button is disabled, read that line or its tooltip first: it tells you whether you still need to select a company/player, aim at ground or a unit, type a name, or save the company before using secondary actions.
+
 Stances change behavior and shield mitigation:
 
 - `LOOSE`: normal flexible behavior, shield blocks ~45% of incoming damage.

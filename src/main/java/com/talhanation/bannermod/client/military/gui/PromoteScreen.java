@@ -5,6 +5,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.inventory.military.PromoteContainer;
 import com.talhanation.bannermod.network.messages.military.*;
 import de.maxhenkel.corelib.inventory.ScreenBase;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -55,6 +56,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     private static final MutableComponent BUTTON_ROGUE = Component.translatable("gui.bannermod.inv.text.rogue");
     private static final MutableComponent TOOLTIP_ROGUE = Component.translatable("gui.bannermod.inv.tooltip.rogue");
+    private static final MutableComponent NAME_LABEL = Component.translatable("gui.recruits.promote.name_label");
 
     //private boolean keepTeam;
 
@@ -147,6 +149,22 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
         professionButton.setTooltip(Tooltip.create(buttonTooltip));
         professionButton.active = active;
         return professionButton;
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        super.renderLabels(guiGraphics, mouseX, mouseY);
+        guiGraphics.drawString(font, NAME_LABEL, 16, 3, 0xB59A6A, false);
+        guiGraphics.drawString(font, recruit.getDisplayName(), 16, 28, 0xF0E6D2, false);
+
+        Component status = recruit.getXpLevel() >= 7
+                ? Component.translatable("gui.recruits.promote.status.ready")
+                : recruit.getXpLevel() >= 5
+                ? Component.translatable("gui.recruits.promote.status.level7")
+                : recruit.getXpLevel() >= 3
+                ? Component.translatable("gui.recruits.promote.status.level5")
+                : Component.translatable("gui.recruits.promote.status.level3");
+        guiGraphics.drawString(font, status, 16, 236, 0xB59A6A, false);
     }
 
     @Override

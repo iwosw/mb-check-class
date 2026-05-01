@@ -42,6 +42,10 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
 
     private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/command_gui.png");
     private static final MutableComponent TEXT_EVERYONE = Component.translatable("gui.recruits.command.text.everyone");
+    private static final MutableComponent TEXT_ACTIVE_GROUPS = Component.translatable("gui.recruits.command.status.groups");
+    private static final MutableComponent TEXT_NEEDS_GROUP = Component.translatable("gui.recruits.command.status.no_group");
+    private static final MutableComponent TEXT_NEEDS_BLOCK = Component.translatable("gui.recruits.command.status.block_target");
+    private static final MutableComponent TEXT_NEEDS_ENTITY = Component.translatable("gui.recruits.command.status.entity_target");
     private static final int fontColor = 16250871;
     public final Player player;
     public BlockPos rayBlockPos;
@@ -443,8 +447,22 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
 
         String tipAllGroups = TEXT_SELECT_ALL_GROUPS().getString();
         String tipScroll = TEXT_SCROLL_CATEGORIES().getString();
+        String activeGroups = Component.translatable("gui.recruits.command.status.groups", getActiveGroups().size(), getGroups().size()).getString();
+        Component categoryStatus = currentCategory == null ? Component.empty() : currentCategory.getToolTipName();
+        Component targetStatus = getActiveGroups().isEmpty()
+                ? TEXT_NEEDS_GROUP
+                : rayBlockPos == null
+                ? TEXT_NEEDS_BLOCK
+                : rayEntity == null
+                ? TEXT_NEEDS_ENTITY
+                : Component.empty();
         guiGraphics.drawString(font, tipAllGroups, xTipPos, yTipPos, FONT_COLOR, false);
         guiGraphics.drawString(font, tipScroll, xTipPos, yTipPos + 15, FONT_COLOR, false);
+        guiGraphics.drawString(font, activeGroups, 10, 177, 0xF0E6D2, false);
+        guiGraphics.drawString(font, categoryStatus, 10, 189, 0xB59A6A, false);
+        if (!targetStatus.getString().isEmpty()) {
+            guiGraphics.drawString(font, targetStatus, 10, 201, 0xB59A6A, false);
+        }
 
     }
 
