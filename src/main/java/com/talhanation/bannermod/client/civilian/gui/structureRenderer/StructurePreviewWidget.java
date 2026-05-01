@@ -36,6 +36,14 @@ import java.util.List;
 
 public class StructurePreviewWidget extends AbstractWidget {
 
+    private static final int FRAME_DARK = 0xD42A1D14;
+    private static final int FRAME_PARCHMENT = 0xD5B79262;
+    private static final int FRAME_INNER = 0xEE17110D;
+    private static final int FRAME_BORDER = 0xFFC49A55;
+    private static final int TITLE_COLOR = 0xFFF4D8A1;
+    private static final int TEXT_COLOR = 0xFFF1E6C7;
+    private static final int MUTED_TEXT_COLOR = 0xFFD7BE85;
+
     private List<ScannedBlock> structure = new ArrayList<>();
     private CompoundTag structureNBT;
     private float rotationX = 25;
@@ -64,8 +72,20 @@ public class StructurePreviewWidget extends AbstractWidget {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        guiGraphics.fill(getX() - 1, getY() - 1, getX() + getWidth() + 1, getY() + getHeight() + 1, 0xFF555555);
-        guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), 0xFF222222);
+        guiGraphics.fill(getX() - 2, getY() - 2, getX() + getWidth() + 2, getY() + getHeight() + 2, FRAME_DARK);
+        guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), FRAME_PARCHMENT);
+        guiGraphics.fill(getX() + 2, getY() + 14, getX() + getWidth() - 2, getY() + getHeight() - 2, FRAME_INNER);
+        guiGraphics.renderOutline(getX() - 1, getY() - 1, getWidth() + 2, getHeight() + 2, FRAME_BORDER);
+        guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.workers.build.preview.title"), getX() + 6, getY() + 4, TITLE_COLOR, false);
+
+        if (structure == null || structure.isEmpty() || structureNBT == null || structureNBT.isEmpty()) {
+            int centerX = getX() + getWidth() / 2;
+            int centerY = getY() + getHeight() / 2;
+            guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("gui.workers.build.preview.empty"), centerX, centerY - 10, TEXT_COLOR);
+            guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("gui.workers.build.preview.next"), centerX, centerY + 2, MUTED_TEXT_COLOR);
+            guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("gui.workers.build.preview.controls"), centerX, getY() + getHeight() - 11, MUTED_TEXT_COLOR);
+            return;
+        }
 
         int screenHeight = Minecraft.getInstance().getWindow().getHeight();
         int scale = (int) Minecraft.getInstance().getWindow().getGuiScale();
@@ -80,6 +100,7 @@ public class StructurePreviewWidget extends AbstractWidget {
         renderStructurePreview(guiGraphics.pose(), getX() + getWidth() / 2, getY() + getHeight() / 2, partialTicks);
 
         RenderSystem.disableScissor();
+        guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("gui.workers.build.preview.controls"), getX() + getWidth() / 2, getY() + getHeight() - 11, MUTED_TEXT_COLOR);
     }
 
     @SuppressWarnings("unchecked")
@@ -152,7 +173,7 @@ public class StructurePreviewWidget extends AbstractWidget {
                 poseStack,
                 bufferSource.getBuffer(RenderType.lines()),
                 new AABB(0, 0, 0, 1, 2, 1).inflate(0.01),
-                1.0f, 0.0f, 0.0f, 1.0f
+                0.95f, 0.62f, 0.16f, 1.0f
         );
         poseStack.popPose();
 
