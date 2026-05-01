@@ -331,6 +331,7 @@ What happens around a siege standard:
 - The default control pool is 100. Damage is clamped and applied through `SiegeObjectivePolicy.applyDamage`; when it reaches zero, the standard is destroyed/removed.
 - Same-side recruits use the siege escort goal: if idle and too far from a friendly standard, they drift back toward it.
 - Enemy-side recruits use the siege objective attack goal: they can path to enemy standards, look at them, and apply periodic objective damage.
+- Siege-machine and cannon blasts now trim terrain damage to tighter breach-sized holes instead of deleting large wall sections with one hit; repeated shots still matter for breaking an approach.
 - The strategic logistics panel can name related war objectives: stockpile, route junction, water gate, and surplus store. These tell both sides what is worth attacking or defending.
 - Player PvP rules are stricter than recruit objective logic: player war damage requires an active/in-siege war, open battle window, and registered participants.
 
