@@ -5806,7 +5806,7 @@
     {
       "id": "UI-011",
       "title": "Rewrite remaining military and war UI surfaces",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-05-01",
       "why": "War room, army, diplomacy, and command surfaces carry high-stakes multiplayer decisions; any leftover generic or visually weak presentation here increases misclicks and hides denial reasons players need during combat or politics.",
       "scope": [
@@ -5820,11 +5820,123 @@
         "Player-facing docs reflect any changed command, diplomacy, or war-room workflow before the task is closed."
       ],
       "dependencies": [
+        "UI-011A",
+        "UI-011B",
+        "UI-011C",
+        "UI-011D"
+      ],
+      "progress": [
+        {
+          "date": "2026-05-02",
+          "text": "Backlog execution found UI-011 too broad for a single safe rewrite slice: UI-009 lists recruit command/inventory, group/player, messenger/specialist, and war/political screen families. Split the remaining work into UI-011A through UI-011D so each branch can be implemented, verified, and reviewed with limited diffs."
+        }
+      ],
+      "verification": [],
+      "evidence": [
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-011A",
+      "title": "Restyle recruit command and inventory screens",
+      "status": "open",
+      "updated": "2026-05-02",
+      "why": "The recruit command, inventory, hiring, promotion, rename, and confirmation screens are the core army-management loop and should be brought to the Minecraft-native style in one focused slice.",
+      "scope": [
+        "Restyle CommandScreen, RecruitInventoryScreen, RecruitHireScreen, GovernorScreen, PromoteScreen, RenameRecruitScreen, RecruitMoreScreen, and ConfirmScreen to the documented Minecraft-native visual language.",
+        "Add or tighten visible next-step, stale/empty-state, server-authoritative feedback, and disabled-reason cues for the primary actions flagged by UI-009.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the changed recruit-management workflow needs player-facing explanation."
+      ],
+      "acceptance": [
+        "The listed recruit-management screens no longer read as generic dashboard panels and remain readable at common Minecraft GUI scales.",
+        "Primary recruit-management actions expose visible next-step, denial, pending, or accepted-feedback states instead of silent failures.",
+        "Player-facing docs reflect any changed recruit command, hiring, inventory, promotion, rename, or confirmation workflow before closure."
+      ],
+      "dependencies": [
         "UI-009"
       ],
       "progress": [],
       "verification": [],
       "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt",
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-011B",
+      "title": "Restyle military group and player selection screens",
+      "status": "open",
+      "updated": "2026-05-02",
+      "why": "Group and player selection screens decide ownership, assignment, and command targeting, so they need clear selected-state and denial feedback without mixing into unrelated recruit inventory work.",
+      "scope": [
+        "Restyle RecruitsGroupListScreen, EditOrAddGroupScreen, SelectGroupScreen, and SelectPlayerScreen to the documented Minecraft-native visual language.",
+        "Add or tighten stale/loading/empty states, selected-state clarity, and denial reasons for group creation, assignment, and player selection actions.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the changed group/player workflow needs player-facing explanation."
+      ],
+      "acceptance": [
+        "The listed group/player screens no longer read as generic dashboard panels and remain readable at common Minecraft GUI scales.",
+        "Primary group and player-selection actions expose visible empty, selected, denial, or accepted-feedback states instead of unclear state changes.",
+        "Player-facing docs reflect any changed group or player-selection workflow before closure."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt",
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-011C",
+      "title": "Restyle messenger and specialist military screens",
+      "status": "open",
+      "updated": "2026-05-02",
+      "why": "Messenger, noble, patrol, scout, and assassin screens are specialized military actions with hardcoded strings and weak feedback that should be localized and restyled as one focused non-war-room slice.",
+      "scope": [
+        "Restyle MessengerMainScreen, MessengerScreen, MessengerAnswerScreen, NobleTradeScreen, PatrolLeaderScreen, ScoutScreen, and AssassinLeaderScreen to the documented Minecraft-native visual language.",
+        "Replace remaining hardcoded player-facing strings where flagged, and add missing next-step, stale/loading/empty-state, or denial feedback for specialist actions.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the changed messenger, noble, patrol, scout, or assassin workflow needs player-facing explanation."
+      ],
+      "acceptance": [
+        "The listed messenger/specialist screens no longer read as generic dashboard panels and remain readable at common Minecraft GUI scales.",
+        "Hardcoded player-facing strings flagged by UI-009 are localized, and primary specialist actions expose next-step or denial feedback.",
+        "Player-facing docs reflect any changed specialist military workflow before closure."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt",
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-011D",
+      "title": "Restyle war room and political screens",
+      "status": "open",
+      "updated": "2026-05-02",
+      "why": "War room and political screens carry high-stakes diplomacy and war decisions, so their state hierarchy, disabled reasons, and server-authoritative feedback should be handled as a dedicated slice.",
+      "scope": [
+        "Restyle WarListScreen, WarDeclareScreen, WarAlliesScreen, WarAllyInvitePickerScreen, PoliticalEntityListScreen, PoliticalEntityInfoScreen, and PoliticalEntityNameInputScreen to the documented Minecraft-native visual language.",
+        "Add or tighten stale/loading/empty states, selected-state clarity, disabled reasons, pending/success feedback, and denial messaging for war and political actions.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the changed war-room or political workflow needs player-facing explanation."
+      ],
+      "acceptance": [
+        "The listed war/political screens no longer read as generic dashboard panels and remain readable at common Minecraft GUI scales.",
+        "Primary war and political actions expose visible next-step, disabled-reason, pending, denied, or accepted-feedback states instead of silent failures.",
+        "Player-facing docs reflect any changed war-room or political workflow before closure."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt",
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
       ]
     },
