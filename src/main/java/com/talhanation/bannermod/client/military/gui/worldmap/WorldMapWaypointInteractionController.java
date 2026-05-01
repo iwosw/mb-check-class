@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.ChunkPos;
 
 import javax.annotation.Nullable;
@@ -63,8 +64,10 @@ final class WorldMapWaypointInteractionController {
         BlockPos finalPos = draggingWaypoint.getPosition();
         if (routeController.getSelectedRoute() != null && screen.canPlaceWaypointAt(finalPos.getX(), finalPos.getZ())) {
             routeController.saveSelectedRoute();
+            screen.showMapNotice(Component.translatable("gui.recruits.map.waypoint.feedback.moved"), 0xFF9FDB6B);
         } else if (dragOriginalPos != null) {
             draggingWaypoint.setPosition(dragOriginalPos);
+            screen.showMapNotice(Component.translatable("gui.recruits.map.waypoint.feedback.move_denied"), 0xFFFFD36A);
         }
 
         draggingWaypoint = null;
@@ -91,6 +94,7 @@ final class WorldMapWaypointInteractionController {
     void addWaypointAtClicked() {
         RecruitsRoute selectedRoute = routeController.getSelectedRoute();
         if (selectedRoute == null) {
+            screen.showMapNotice(Component.translatable("gui.recruits.map.route.disabled.no_route"), 0xFFFFD36A);
             return;
         }
 
@@ -98,11 +102,13 @@ final class WorldMapWaypointInteractionController {
         ChunkPos chunk = new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
         if (screen.getMinecraftInstance().level == null
                 || screen.getMinecraftInstance().level.getChunkSource().getChunk(chunk.x, chunk.z, false) == null) {
+            screen.showMapNotice(Component.translatable("gui.recruits.map.route.disabled.unexplored"), 0xFFFFD36A);
             return;
         }
 
         String name = "WP " + (selectedRoute.getWaypoints().size() + 1);
         routeController.mutateSelectedRoute(route -> route.addWaypoint(new RecruitsRoute.Waypoint(name, pos, null)));
+        screen.showMapNotice(Component.translatable("gui.recruits.map.waypoint.feedback.added"), 0xFF9FDB6B);
     }
 
     void openWaypointEditPopup(double mouseX, double mouseY) {
@@ -128,6 +134,7 @@ final class WorldMapWaypointInteractionController {
         }
 
         routeController.mutateSelectedRoute(route -> route.removeWaypoint(waypoint));
+        screen.showMapNotice(Component.translatable("gui.recruits.map.waypoint.feedback.removed"), 0xFFFF8A7A);
     }
 
     boolean isWaypointHoveredAt(double mouseX, double mouseY) {
