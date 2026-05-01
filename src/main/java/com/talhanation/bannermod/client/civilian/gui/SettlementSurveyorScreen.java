@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.civilian.SurveyorZonePalette;
 import com.talhanation.bannermod.client.civilian.render.SettlementSurveyorPinnedPreviewState;
 import com.talhanation.bannermod.items.civilian.SettlementSurveyorToolItem;
 import com.talhanation.bannermod.network.messages.civilian.MessageModifySurveyorSession;
@@ -280,7 +281,7 @@ public class SettlementSurveyorScreen extends Screen {
         graphics.drawString(this.font, this.title, contentX, top + 8, TITLE_COLOR, true);
 
         int infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.capture_hint"), contentX, top + 74, contentWidth, MUTED_TEXT_COLOR);
-        infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.current_role", SettlementSurveyorToolItem.roleLabel(selectedRole), roleHint(selectedRole)), contentX, infoY + 4, contentWidth, TEXT_COLOR);
+        infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.current_role", SettlementSurveyorToolItem.roleLabel(selectedRole), roleHint(selectedRole)), contentX, infoY + 4, contentWidth, SurveyorZonePalette.color(selectedRole));
         if (mode != SurveyorMode.INSPECT_EXISTING) {
             infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.role_purpose", rolePurpose(selectedRole)), contentX, infoY + 4, contentWidth, MUTED_TEXT_COLOR);
             infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.role_blocks", roleBuildHint(mode, selectedRole)), contentX, infoY + 2, contentWidth, MUTED_TEXT_COLOR);
@@ -333,7 +334,7 @@ public class SettlementSurveyorScreen extends Screen {
             boolean complete = hasRole(session, role);
             Component line = Component.literal(complete ? "[x] " : "[ ] ")
                     .append(SettlementSurveyorToolItem.roleLabel(role));
-            lineY = drawWrapped(graphics, line, x, lineY, width, complete ? COMPLETE_COLOR : PENDING_COLOR);
+            lineY = drawWrapped(graphics, line, x, lineY, width, complete ? SurveyorZonePalette.color(role) : PENDING_COLOR);
         }
         return lineY;
     }
@@ -352,7 +353,7 @@ public class SettlementSurveyorScreen extends Screen {
             Component line = SettlementSurveyorToolItem.roleLabel(selection.role())
                     .copy()
                     .append(Component.literal(": " + sizeX(selection) + "x" + sizeY(selection) + "x" + sizeZ(selection) + " @ " + selection.min().toShortString()));
-            lineY = drawWrapped(graphics, line, x, lineY, width, TEXT_COLOR);
+            lineY = drawWrapped(graphics, line, x, lineY, width, SurveyorZonePalette.color(selection.role()));
             shown++;
         }
         if (session.selections().size() > shown) {
@@ -368,7 +369,7 @@ public class SettlementSurveyorScreen extends Screen {
         lineY = drawWrapped(graphics, checklistLine(hasAnchor, Component.translatable("bannermod.surveyor.screen.check.anchor")), x, lineY, width, hasAnchor ? COMPLETE_COLOR : PENDING_COLOR);
         for (ZoneRole role : requiredRoles(mode)) {
             boolean complete = hasRole(session, role);
-            lineY = drawWrapped(graphics, checklistLine(complete, SettlementSurveyorToolItem.roleLabel(role)), x, lineY, width, complete ? COMPLETE_COLOR : PENDING_COLOR);
+            lineY = drawWrapped(graphics, checklistLine(complete, SettlementSurveyorToolItem.roleLabel(role)), x, lineY, width, complete ? SurveyorZonePalette.color(role) : PENDING_COLOR);
         }
         boolean ready = validationReady(mode, session);
         return drawWrapped(graphics, checklistLine(ready, Component.translatable("bannermod.surveyor.screen.check.ready")), x, lineY, width, ready ? COMPLETE_COLOR : PENDING_COLOR);
@@ -413,6 +414,9 @@ public class SettlementSurveyorScreen extends Screen {
         }
         ZoneRole nextMissingRole = SurveyorModeGuidance.nextMissingRole(mode, session);
         if (nextMissingRole != null) {
+            if (mode == SurveyorMode.BOOTSTRAP_FORT && nextMissingRole == ZoneRole.INTERIOR) {
+                return Component.translatable("bannermod.surveyor.screen.next.bootstrap_interior");
+            }
             return Component.translatable("bannermod.surveyor.screen.next.role", SettlementSurveyorToolItem.roleLabel(nextMissingRole), roleHint(nextMissingRole));
         }
         return Component.translatable("bannermod.surveyor.screen.next.validate");

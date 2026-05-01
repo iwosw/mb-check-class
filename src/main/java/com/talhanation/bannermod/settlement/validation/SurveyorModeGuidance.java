@@ -64,6 +64,9 @@ public final class SurveyorModeGuidance {
                 default -> "bannermod.surveyor.role_blocks.work_zone";
             };
         }
+        if (resolvedMode == SurveyorMode.BOOTSTRAP_FORT && resolvedRole == ZoneRole.INTERIOR) {
+            return "bannermod.surveyor.role_blocks.bootstrap_fort.interior";
+        }
         return switch (resolvedRole) {
             case AUTHORITY_POINT -> "bannermod.surveyor.role_blocks.authority_point";
             case INTERIOR -> "bannermod.surveyor.role_blocks.interior";
