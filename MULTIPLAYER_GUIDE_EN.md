@@ -84,7 +84,7 @@ Important checks:
 - the settlement must see the registered building or work area;
 - if a claim is captured, removed, or becomes mismatched, work can stop.
 
-Civilian work-area editors now show a sync state in the top-right corner, an explicit owner reminder when nobody is assigned yet, and per-screen hints for missing seeds/saplings or tunnel settings. Hold `Shift` while moving an area to nudge it by five blocks instead of one.
+Civilian work-area editors now show a sync state in the top-right corner, an explicit owner reminder when nobody is assigned yet, and per-screen hints for missing seeds/saplings or tunnel settings. Market and storage editors also spell out the next step directly in the settings panel: an open market without a merchant, a closed stall with a merchant assigned, a missing storage route destination, or a blocked courier route now show visible guidance instead of relying on guesswork. Hold `Shift` while moving an area to nudge it by five blocks instead of one.
 
 Settlements have internal work orders. Some order state already survives server reloads, including worker claims. Transport orders (`HAUL_RESOURCE`/`FETCH_INPUT`) carry source, destination, resource filter, and item count. Workers can claim, complete, cancel, or release jobs back to the settlement if abandoned.
 
@@ -92,7 +92,9 @@ Build Area screens show scan/build status at the bottom. Invalid names, empty sc
 
 The same Build Area load picker also accepts imported structure files from your Minecraft game directory under `workers/scan`. Supported files are `.nbt`, `.schem`, `.schematic`, and `.litematic`; put the file there, open the Build Area screen, switch to `Load`, and choose it from the existing folder list. Imported schematics stay sparse: BannerMod reads only the authored blocks from the file for preview, build execution, and required-material counts instead of filling the whole bounding box.
 
-Storage Area route fields use an explicit `Apply route` button. The screen validates destination UUID, item-id filters, count, and priority before sending, normalizes valid values, and shows the current destination/blocked reason without relying on close-to-save.
+Storage Area route fields use an explicit `Apply route` button. The screen validates destination UUID, item-id filters, count, and priority before sending, normalizes valid values, and shows the current destination, next-step hint, and blocked reason without relying on close-to-save.
+
+Merchant stalls now call out offer state inside the trade GUI itself: no posted offers, no selected offer, a closed offer, sold-out stock, or a full player inventory all show an immediate reason and next step. In the add/edit trade screen, the charter header now explains whether payment goods are missing, the sale item is missing, max trades is zero, or the offer is ready, so incomplete setup no longer fails silently.
 
 For long land storage routes, eligible merchants/couriers can automatically use a nearby unoccupied horse or server-approved mount. If no valid mount is available, they continue the same route on foot; clearing or failing the route makes them dismount. Right-click a worker to inspect whether it is mounted, why it is walking, and which fallback route behavior is active.
 

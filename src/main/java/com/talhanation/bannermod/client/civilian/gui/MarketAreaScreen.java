@@ -11,11 +11,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.List;
+
 public class MarketAreaScreen extends WorkAreaScreen {
 
     private static final MutableComponent TEXT_OPEN   = Component.translatable("gui.workers.checkbox.marketOpen");
     private static final MutableComponent TEXT_MERCHANT = Component.translatable("entity.workers.merchant");
-    private static final MutableComponent TEXT_SPACE = Component.translatable("gui.workers.text.space");
+    private static final MutableComponent TEXT_STALL_SPACE = Component.translatable("gui.workers.market.stall_space");
     private static final MutableComponent TEXT_NO_MERCHANT = Component.translatable("gui.workers.text.noMerchant");
     private static final MutableComponent TEXT_MERCHANT_PRESENT = Component.translatable("gui.workers.text.merchantPresent");
     public final MarketArea marketArea;
@@ -62,7 +64,7 @@ public class MarketAreaScreen extends WorkAreaScreen {
         int slots = marketArea.getTotalSlots();
 
         addRenderableWidget(new BlackShowingTextField(bx, by + 30, w, h, Component.literal( TEXT_MERCHANT.getString() + ":")));
-        addRenderableWidget(new BlackShowingTextField(bx, by + 50, w, h, Component.literal(TEXT_SPACE.getString() + ": ")));
+        addRenderableWidget(new BlackShowingTextField(bx, by + 50, w, h, Component.literal(TEXT_STALL_SPACE.getString() + ": ")));
         //addRenderableWidget(new BlackShowingTextField(bx, by + 61, w, h, Component.literal("Depth:")));
         addRenderableWidget(new BlackShowingTextField(bx + w/2, by + 30, w/2, h, Component.literal("" + merchantName)));
         addRenderableWidget(new BlackShowingTextField(bx + w/2, by + 50, w/2, h, Component.literal("" + slots)));
@@ -82,6 +84,24 @@ public class MarketAreaScreen extends WorkAreaScreen {
 
     public void sendMessage() {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMarketArea(marketArea.getUUID(), isOpen, marketName));
+    }
+
+    @Override
+    protected List<Component> getSettingSummaryLines() {
+        if (!this.marketArea.isBeingWorkedOn()) {
+            return List.of(
+                    Component.translatable("gui.workers.market.summary.capacity", this.marketArea.getTotalSlots()),
+                    Component.translatable(this.isOpen
+                            ? "gui.workers.market.summary.open_no_merchant"
+                            : "gui.workers.market.summary.closed_no_merchant")
+            );
+        }
+        return List.of(
+                Component.translatable("gui.workers.market.summary.capacity", this.marketArea.getTotalSlots()),
+                Component.translatable(this.isOpen
+                        ? "gui.workers.market.summary.ready"
+                        : "gui.workers.market.summary.closed_with_merchant")
+        );
     }
 
     @Override
