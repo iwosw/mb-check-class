@@ -5390,7 +5390,10 @@
         "Before/after profiling numbers show improved large-crowd recruit rendering on recruit.render counters.",
         "Close-range selected recruits remain readable in the same client verification pass."
       ],
-      "dependencies": [],
+      "dependencies": [
+        "PERF-011A1",
+        "PERF-011A2"
+      ],
       "progress": [
         {
           "date": "2026-04-29",
@@ -5399,8 +5402,55 @@
         {
           "date": "2026-04-30",
           "text": "Resumed on feature/cleanup-batch-9 to determine whether existing profiling evidence already satisfies the before/after proof requirement."
+        },
+        {
+          "date": "2026-05-02",
+          "text": "Backlog execution reached PERF-011A, but the task still requires two observable client runs: one against the pre-cut baseline and one against the implementation, plus manual selected-recruit readability confirmation. Split the remaining proof into PERF-011A1 and PERF-011A2 so each runtime pass has concrete acceptance instead of parking this parent half-done."
         }
       ],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PERF-011A1",
+      "title": "Capture baseline recruit crowd render profiling",
+      "status": "open",
+      "updated": "2026-05-02",
+      "why": "PERF-011A needs a real pre-cut baseline before the distant recruit renderer cut can be judged honestly.",
+      "scope": [
+        "Run the controlled large-crowd recruit render scenario on the pre-cut baseline commit e47650b0a54c64dc719ecb0427c682e0a9738105.",
+        "Reset and dump /recruits admin debugManager profiling counters around the scenario so recruit.render baseline numbers are recorded.",
+        "Record the scenario setup details needed to repeat the implementation run: world, position, recruit count, camera distance, selected recruit state, render distance, and any relevant graphics settings."
+      ],
+      "acceptance": [
+        "Baseline recruit.render counter values are recorded from a real client run on the pre-cut baseline.",
+        "The scenario setup is specific enough for PERF-011A2 to repeat against the implementation build."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PERF-011A2",
+      "title": "Capture implementation recruit crowd profiling and readability",
+      "status": "open",
+      "updated": "2026-05-02",
+      "why": "PERF-011A can close only after the PERF-011 implementation is measured against the same scenario and selected recruit readability is observed in-client.",
+      "scope": [
+        "Run the PERF-011 implementation against the same scenario recorded by PERF-011A1.",
+        "Reset and dump /recruits admin debugManager profiling counters around the implementation scenario and compare recruit.render values with PERF-011A1.",
+        "Manually check that close-range selected recruits remain readable with model, equipment, and nameplate cues intact."
+      ],
+      "acceptance": [
+        "Implementation recruit.render counter values improve versus the PERF-011A1 baseline for the controlled large-crowd scenario.",
+        "Close-range selected recruit readability is manually confirmed in the same client verification pass.",
+        "The before/after numbers and readability result are recorded back on PERF-011A."
+      ],
+      "dependencies": [
+        "PERF-011A1"
+      ],
+      "progress": [],
       "verification": [],
       "evidence": []
     },
