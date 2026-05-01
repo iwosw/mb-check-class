@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.gui.overlay;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public enum ClaimAuthorityStatus {
     FRIENDLY("gui.bannermod.claim_overlay.authority.friendly", "gui.bannermod.claim_overlay.compact.friendly", "actionbar.bannermod.claim_boundary.friendly", 0xFF77DD77, 0x226633, 0x80102010),
@@ -49,9 +50,12 @@ public enum ClaimAuthorityStatus {
         return backgroundColor;
     }
 
-    public static ClaimAuthorityStatus classify(@Nullable String playerTeamName, @Nullable RecruitsClaim claim) {
+    public static ClaimAuthorityStatus classify(@Nullable UUID playerUuid, @Nullable String playerTeamName, @Nullable RecruitsClaim claim) {
         if (claim == null || claim.getOwnerPoliticalEntityId() == null) {
             return UNCLAIMED;
+        }
+        if (claim.isTrustedPlayer(playerUuid)) {
+            return FRIENDLY;
         }
         return claim.getOwnerPoliticalEntityId().toString().equals(playerTeamName) ? FRIENDLY : HOSTILE;
     }

@@ -17,6 +17,7 @@ public class RecruitsClaim {
     private boolean allowBlockInteraction = false;
     private boolean allowBlockPlacement   = false;
     private boolean allowBlockBreaking    = false;
+    private final List<RecruitsPlayerInfo> trustedPlayers = new ArrayList<>();
     public ChunkPos center;
     public RecruitsPlayerInfo playerInfo;
     public boolean isAdmin;
@@ -92,6 +93,22 @@ public class RecruitsClaim {
         return allowBlockBreaking;
     }
 
+    public List<RecruitsPlayerInfo> getTrustedPlayers() {
+        return trustedPlayers;
+    }
+
+    public boolean isTrustedPlayer(@Nullable UUID playerUuid) {
+        if (playerUuid == null) {
+            return false;
+        }
+        for (RecruitsPlayerInfo trustedPlayer : this.trustedPlayers) {
+            if (trustedPlayer != null && playerUuid.equals(trustedPlayer.getUUID())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -116,6 +133,27 @@ public class RecruitsClaim {
         this.allowBlockBreaking = allow;
     }
 
+    public void setTrustedPlayers(@Nullable List<RecruitsPlayerInfo> players) {
+        this.trustedPlayers.clear();
+        if (players == null) {
+            return;
+        }
+        Set<UUID> seen = new LinkedHashSet<>();
+        for (RecruitsPlayerInfo player : players) {
+            if (player == null || player.getUUID() == null || !seen.add(player.getUUID())) {
+                continue;
+            }
+            this.trustedPlayers.add(new RecruitsPlayerInfo(player.getUUID(), player.getName()));
+        }
+    }
+
+    public void removeTrustedPlayer(@Nullable UUID playerUuid) {
+        if (playerUuid == null) {
+            return;
+        }
+        this.trustedPlayers.removeIf(player -> player != null && playerUuid.equals(player.getUUID()));
+    }
+
     @Override
     public String toString() {
         return this.getName();
@@ -127,6 +165,7 @@ public class RecruitsClaim {
         nbt.putString("name", name);
         if (ownerPoliticalEntityId != null) nbt.putUUID("ownerPoliticalEntity", ownerPoliticalEntityId);
         if (playerInfo != null) nbt.put("playerInfo", playerInfo.toNBT());
+        nbt.put("trustedPlayers", RecruitsPlayerInfo.toNBT(this.trustedPlayers).get("Players"));
         nbt.putBoolean("allowInteraction", allowBlockInteraction);
         nbt.putBoolean("allowPlacement", allowBlockPlacement);
         nbt.putBoolean("allowBreaking", allowBlockBreaking);
@@ -154,6 +193,11 @@ public class RecruitsClaim {
         RecruitsClaim claim = new RecruitsClaim(uuid, name, ownerPoliticalEntityId);
         RecruitsPlayerInfo playerInfo = RecruitsPlayerInfo.getFromNBT(nbt.getCompound("playerInfo"));
         if (playerInfo != null) claim.setPlayer(playerInfo);
+        if (nbt.contains("trustedPlayers", Tag.TAG_LIST)) {
+            CompoundTag trustedPlayersTag = new CompoundTag();
+            trustedPlayersTag.put("Players", nbt.getList("trustedPlayers", Tag.TAG_COMPOUND));
+            claim.setTrustedPlayers(RecruitsPlayerInfo.getListFromNBT(trustedPlayersTag));
+        }
 
 
         claim.setBlockInteractionAllowed(nbt.getBoolean("allowInteraction"));

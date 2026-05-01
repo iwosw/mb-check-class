@@ -211,7 +211,7 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     public WorkAreaAuthoringRules.AccessLevel getAuthoringAccess(Player player) {
-        return WorkAreaAuthoringRules.resolveAccess(this.isOwnedBy(player), this.isSameTeamMember(player), this.isAdminAuthor(player));
+        return WorkAreaAuthoringRules.resolveAccess(this.isOwnedBy(player), this.isSameTeamMember(player) || this.isTrustedSettlementMember(player), this.isAdminAuthor(player));
     }
 
     public boolean isOwnedBy(Player player) {
@@ -221,6 +221,14 @@ public abstract class AbstractWorkAreaEntity extends Entity {
 
     public boolean isSameTeamMember(Player player) {
         return player.getTeam() != null && player.getTeam().getName().equals(this.getTeamStringID());
+    }
+
+    public boolean isTrustedSettlementMember(Player player) {
+        if (player == null || ClaimEvents.claimManager() == null) {
+            return false;
+        }
+        com.talhanation.bannermod.persistence.military.RecruitsClaim claim = ClaimEvents.claimManager().getClaim(new net.minecraft.world.level.ChunkPos(this.blockPosition()));
+        return claim != null && claim.isTrustedPlayer(player.getUUID());
     }
 
     public boolean isAdminAuthor(Player player) {

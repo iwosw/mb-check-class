@@ -14,6 +14,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
+import java.util.List;
 import java.util.UUID;
 
 public class MiningAreaScreen extends WorkAreaScreen {
@@ -67,14 +68,14 @@ public class MiningAreaScreen extends WorkAreaScreen {
         int sizeButtonX = 120;
         int sizeButtonY = 130;
         addRenderableWidget(new ExtendedButton(x - boxWidth/2, y - previewHeight / 2 + 105, boxWidth, boxHeight,
-                Component.literal("Mode: " + this.miningMode.name()), btn -> {
+                Component.translatable("gui.bannermod.work_area.mining.mode", modeLabel(this.miningMode)), btn -> {
                     this.miningMode = nextMode(this.miningMode);
                     this.sendMessage();
                     this.setButtons();
                 }));
-        addRenderableWidget(new BlackShowingTextField(x - boxWidth/2, y - previewHeight / 2 + 130, boxWidth, boxHeight, Component.literal("width: " + areaXSize)));
-        addRenderableWidget(new BlackShowingTextField(x - boxWidth/2, y - previewHeight / 2 + 130 + boxHeight, boxWidth, boxHeight, Component.literal( "height: " + areaYSize)));
-        addRenderableWidget(new BlackShowingTextField(x - boxWidth/2, y - previewHeight / 2 + 130 + boxHeight*2, boxWidth, boxHeight, Component.literal("descent: " + descentStep)));
+        addRenderableWidget(new BlackShowingTextField(x - boxWidth/2, y - previewHeight / 2 + 130, boxWidth, boxHeight, Component.translatable("gui.bannermod.work_area.mining.width", areaXSize)));
+        addRenderableWidget(new BlackShowingTextField(x - boxWidth/2, y - previewHeight / 2 + 130 + boxHeight, boxWidth, boxHeight, Component.translatable("gui.bannermod.work_area.mining.height", areaYSize)));
+        addRenderableWidget(new BlackShowingTextField(x - boxWidth/2, y - previewHeight / 2 + 130 + boxHeight*2, boxWidth, boxHeight, Component.translatable("gui.bannermod.work_area.mining.descent", descentStep)));
 
         addRenderableWidget(new ExtendedButton(x - boxWidth/2 + sizeButtonX, y - previewHeight / 2 + sizeButtonY + 40, 20, 20, Component.literal("+"), btn -> {
             descentStep = Mth.clamp(descentStep + 1, 1, 8);
@@ -146,7 +147,7 @@ public class MiningAreaScreen extends WorkAreaScreen {
 
         if (this.miningMode == MiningPatternSettings.Mode.BRANCH) {
             int rowY = y - previewHeight / 2 + 155 + boxHeight * 3;
-            addRenderableWidget(new BlackShowingTextField(x - boxWidth / 2, rowY, boxWidth, boxHeight, Component.literal("spacing: " + branchSpacing)));
+            addRenderableWidget(new BlackShowingTextField(x - boxWidth / 2, rowY, boxWidth, boxHeight, Component.translatable("gui.bannermod.work_area.mining.spacing", branchSpacing)));
             addRenderableWidget(new ExtendedButton(x - boxWidth/2 + sizeButtonX, rowY, 20, 20, Component.literal("+"), btn -> {
                 branchSpacing = Mth.clamp(branchSpacing + 1, 1, 16);
                 this.sendMessage();
@@ -159,7 +160,7 @@ public class MiningAreaScreen extends WorkAreaScreen {
             }));
 
             int lengthY = rowY + boxHeight;
-            addRenderableWidget(new BlackShowingTextField(x - boxWidth / 2, lengthY, boxWidth, boxHeight, Component.literal("length: " + branchLength)));
+            addRenderableWidget(new BlackShowingTextField(x - boxWidth / 2, lengthY, boxWidth, boxHeight, Component.translatable("gui.bannermod.work_area.mining.length", branchLength)));
             addRenderableWidget(new ExtendedButton(x - boxWidth/2 + sizeButtonX, lengthY, 20, 20, Component.literal("+"), btn -> {
                 branchLength = Mth.clamp(branchLength + 1, 1, 32);
                 this.sendMessage();
@@ -195,6 +196,30 @@ public class MiningAreaScreen extends WorkAreaScreen {
                 branchLength,
                 descentStep
         ));
+        this.markWorkAreaPending();
+    }
+
+    @Override
+    protected List<Component> getSettingSummaryLines() {
+        if (this.miningMode == MiningPatternSettings.Mode.BRANCH) {
+            return List.of(
+                    Component.translatable("gui.bannermod.work_area.mining.summary"),
+                    Component.translatable("gui.bannermod.work_area.mining.branch_hint")
+            );
+        }
+        return List.of(
+                Component.translatable("gui.bannermod.work_area.mining.summary"),
+                Component.translatable("gui.bannermod.work_area.mining.mode_hint")
+        );
+    }
+
+    private Component modeLabel(MiningPatternSettings.Mode mode) {
+        return switch (mode) {
+            case CUSTOM -> Component.translatable("gui.bannermod.work_area.mining.mode.custom");
+            case MINE -> Component.translatable("gui.bannermod.work_area.mining.mode.mine");
+            case TUNNEL -> Component.translatable("gui.bannermod.work_area.mining.mode.tunnel");
+            case BRANCH -> Component.translatable("gui.bannermod.work_area.mining.mode.branch");
+        };
     }
     @Override
     public void mouseMoved(double x, double y) {

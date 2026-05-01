@@ -5689,7 +5689,7 @@
     {
       "id": "UI-009",
       "title": "Audit remaining player-facing UI style gaps",
-      "status": "open",
+      "status": "done",
       "updated": "2026-05-01",
       "why": "BannerMod has a documented Minecraft-native UI standard now, but many historical screens, HUD surfaces, and world previews were built across different phases and need one concrete audit pass before the remaining rewrites can be scheduled safely.",
       "scope": [
@@ -5703,16 +5703,27 @@
         "Follow-up backlog tasks exist for each rewrite slice needed to bring the remaining UI into compliance."
       ],
       "dependencies": [],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-05-01",
+          "text": "Recorded audit artifact at docs/UI-009_REMAINING_UI_AUDIT.txt with grouped settlement/civilian, military/war, and world-map/overlay findings; each listed surface includes file references and concrete style-guide gap categories; confirmed follow-up slices already exist as UI-010, UI-011, UI-012, and UI-013."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-05-01",
+          "result": "1) docs/UI-009_REMAINING_UI_AUDIT.txt now lists every remaining audited player-facing GUI, HUD, overlay, and placement-hologram surface with file references; 2) every flagged surface in that artifact names at least one concrete gap category from docs/AI_MINECRAFT_UI_STYLE_GUIDE.md; 3) follow-up backlog slices were verified as present: UI-010 for settlement/civilian, UI-011 for military/war, UI-012 for world-map/overlay, and UI-013 for final compliance verification."
+        }
+      ],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
-      ]
+      ],
+      "doneDate": "2026-05-01"
     },
     {
       "id": "UI-010",
       "title": "Rewrite remaining settlement and civilian UI surfaces",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-05-01",
       "why": "Settlement, worker, and building-management screens are some of the most frequently used player interfaces; any leftover generic or unclear surfaces here directly slow down onboarding and routine settlement play.",
       "scope": [
@@ -5726,9 +5737,17 @@
         "Player-facing docs reflect any changed settlement, survey, worker, or building UI workflow before the task is closed."
       ],
       "dependencies": [
-        "UI-009"
+        "UI-010A",
+        "UI-010B",
+        "UI-010C",
+        "UI-010D"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-01",
+          "text": "Split oversized settlement/civilian rewrite into child tasks UI-010A through UI-010D using the UI-009 audit groupings; no civilian UI rewrite landed in this parent slice; remaining work now lives in dedicated work-area, logistics/trade, build/placement, and surveyor/hologram child tasks."
+        }
+      ],
       "verification": [],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
@@ -5809,6 +5828,112 @@
       "verification": [],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-010A",
+      "title": "Restyle civilian work-area editor family",
+      "status": "done",
+      "updated": "2026-05-01",
+      "why": "The shared work-area editor flow still drives daily settlement actions, so its generic panels and weak feedback should be fixed as one coherent slice instead of being spread across unrelated rewrites.",
+      "scope": [
+        "Restyle WorkAreaScreen plus AnimalPenAreaScreen, CropAreaScreen, FishingAreaScreen, LumberAreaScreen, and MiningAreaScreen to the Minecraft-native parchment/wood/iron language from docs/AI_MINECRAFT_UI_STYLE_GUIDE.md.",
+        "Add the missing empty-state, selected-state, or next-step feedback identified by UI-009 for the primary actions on those area-editor screens without changing server authority.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the player-facing worker-area workflow changes."
+      ],
+      "acceptance": [
+        "WorkAreaScreen plus AnimalPenAreaScreen, CropAreaScreen, FishingAreaScreen, LumberAreaScreen, and MiningAreaScreen no longer read as generic dashboard panels and remain readable at common Minecraft GUI scales.",
+        "Each changed civilian area-editor screen exposes visible next-step, empty-state, or denial feedback for its primary actions instead of silent state changes.",
+        "Player-facing docs reflect any changed civilian work-area workflow before the task is closed."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-05-01",
+          "result": "1) ./gradlew compileJava passed; code inspection of WorkAreaScreen plus AnimalPenAreaScreen, CropAreaScreen, FishingAreaScreen, LumberAreaScreen, and MiningAreaScreen shows the family now renders inside one parchment/wood/iron panel layout with localized section labels and summaries instead of the old generic free-floating controls; 2) code inspection confirms visible next-step or empty-state feedback on each changed screen via the shared sync/owner status, crop/lumber empty inventory hints, fishing summary, animal-pen summary, and mining mode/tunnel summaries, while server-bound updates now mark the screen pending; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, docs/BANNERMOD_ALMANAC.html, and docs/STATUS.md were updated to reflect the changed civilian work-area editor cues."
+        }
+      ],
+      "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt"
+      ],
+      "doneDate": "2026-05-01"
+    },
+    {
+      "id": "UI-010B",
+      "title": "Restyle civilian logistics and trade screens",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "Market, storage, and merchant trade screens share the settlement logistics loop and need one focused rewrite slice for clearer inventory, routing, and trade feedback.",
+      "scope": [
+        "Restyle MarketAreaScreen, StorageAreaScreen, MerchantTradeScreen, and MerchantAddEditTradeScreen to the documented Minecraft-native visual language.",
+        "Add the missing empty/loading states, selected-state clarity, and next-step feedback identified by UI-009 for the logistics and trade actions on those screens.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the player-facing settlement logistics or merchant workflow changes."
+      ],
+      "acceptance": [
+        "MarketAreaScreen, StorageAreaScreen, MerchantTradeScreen, and MerchantAddEditTradeScreen no longer present as generic dashboard panels and remain readable at common Minecraft GUI scales.",
+        "Primary logistics and merchant actions on the changed screens show visible next-step, empty-state, or denial feedback instead of silent failures or unclear selection state.",
+        "Player-facing docs reflect any changed market, storage, or merchant workflow before the task is closed."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt"
+      ]
+    },
+    {
+      "id": "UI-010C",
+      "title": "Restyle civilian build and placement screens",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "Build-area authoring and placement preview are a separate player job from routine worker editing, so they need their own slice for structure preview readability and next-step guidance.",
+      "scope": [
+        "Restyle BuildAreaScreen, StructurePreviewWidget, and PlaceBuildingScreen to the Minecraft-native visual language documented in docs/AI_MINECRAFT_UI_STYLE_GUIDE.md.",
+        "Tighten stale/loading/empty-state handling plus next-step and server-authoritative feedback for scan, load, save, and placement actions called out by UI-009.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the player-facing building-placement workflow changes."
+      ],
+      "acceptance": [
+        "BuildAreaScreen, StructurePreviewWidget, and PlaceBuildingScreen are restyled away from generic dashboard presentation and remain readable at common Minecraft GUI scales.",
+        "Primary build and placement actions on the changed screens show visible next-step, stale/empty, or server-authoritative feedback instead of ambiguous state.",
+        "Player-facing docs reflect any changed building-preview or placement workflow before the task is closed."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt"
+      ]
+    },
+    {
+      "id": "UI-010D",
+      "title": "Restyle surveyor screen and civilian holograms",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "The surveyor screen and in-world hologram surfaces are read while the player is moving and building, so they need a dedicated slice for overlap, readability, and guidance fixes.",
+      "scope": [
+        "Restyle SettlementSurveyorScreen plus the audited civilian hologram and overlay surfaces: SettlementSurveyorSelectionRenderEvents, SettlementSurveyorGuidanceRenderEvents, and WorkerAreaRenderer.",
+        "Resolve the weak hologram readability and overlap risks identified by UI-009 while keeping server validation authoritative.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html if the player-facing surveyor or hologram workflow changes."
+      ],
+      "acceptance": [
+        "SettlementSurveyorScreen, SettlementSurveyorSelectionRenderEvents, SettlementSurveyorGuidanceRenderEvents, and WorkerAreaRenderer follow the documented Minecraft-native style, improve hologram readability, and avoid the audited overlap risks.",
+        "Changed surveyor and hologram flows show clearer next-step guidance without relying on client-only visuals as gameplay authority.",
+        "Player-facing docs reflect any changed surveyor or placement-hologram workflow before the task is closed."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/UI-009_REMAINING_UI_AUDIT.txt"
       ]
     }
   ]
