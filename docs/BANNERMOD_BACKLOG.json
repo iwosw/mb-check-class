@@ -5689,7 +5689,7 @@
     {
       "id": "UI-009",
       "title": "Audit remaining player-facing UI style gaps",
-      "status": "open",
+      "status": "done",
       "updated": "2026-05-01",
       "why": "BannerMod has a documented Minecraft-native UI standard now, but many historical screens, HUD surfaces, and world previews were built across different phases and need one concrete audit pass before the remaining rewrites can be scheduled safely.",
       "scope": [
@@ -5703,11 +5703,22 @@
         "Follow-up backlog tasks exist for each rewrite slice needed to bring the remaining UI into compliance."
       ],
       "dependencies": [],
-      "progress": [],
-      "verification": [],
+      "progress": [
+        {
+          "date": "2026-05-01",
+          "text": "Recorded audit artifact at docs/UI-009_REMAINING_UI_AUDIT.txt with grouped settlement/civilian, military/war, and world-map/overlay findings; each listed surface includes file references and concrete style-guide gap categories; confirmed follow-up slices already exist as UI-010, UI-011, UI-012, and UI-013."
+        }
+      ],
+      "verification": [
+        {
+          "date": "2026-05-01",
+          "result": "1) docs/UI-009_REMAINING_UI_AUDIT.txt now lists every remaining audited player-facing GUI, HUD, overlay, and placement-hologram surface with file references; 2) every flagged surface in that artifact names at least one concrete gap category from docs/AI_MINECRAFT_UI_STYLE_GUIDE.md; 3) follow-up backlog slices were verified as present: UI-010 for settlement/civilian, UI-011 for military/war, UI-012 for world-map/overlay, and UI-013 for final compliance verification."
+        }
+      ],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
-      ]
+      ],
+      "doneDate": "2026-05-01"
     },
     {
       "id": "UI-010",

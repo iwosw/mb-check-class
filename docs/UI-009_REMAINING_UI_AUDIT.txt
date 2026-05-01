@@ -1,0 +1,75 @@
+UI-009 Remaining UI Audit
+Date: 2026-05-01
+Source style guide: docs/AI_MINECRAFT_UI_STYLE_GUIDE.md
+
+Scope: active player-facing GUI, HUD, overlay, and placement-hologram surfaces under root client code.
+Excluded from this audit: non-player-facing debug/admin surface `src/main/java/com/talhanation/bannermod/client/military/gui/DebugInvScreen.java`.
+
+Settlement / civilian
+- WorkAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/WorkAreaScreen.java`): generic paneling; missing next-step feedback.
+- AnimalPenAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/AnimalPenAreaScreen.java`): generic paneling; missing next-step feedback.
+- BuildAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/BuildAreaScreen.java`): generic paneling; stale/loading/empty-state gap.
+- StructurePreviewWidget (`src/main/java/com/talhanation/bannermod/client/civilian/gui/structureRenderer/StructurePreviewWidget.java`): generic paneling; stale/loading/empty-state gap.
+- CropAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/CropAreaScreen.java`): generic paneling; stale/loading/empty-state gap.
+- FishingAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/FishingAreaScreen.java`): stale/loading/empty-state gap; missing next-step feedback.
+- LumberAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/LumberAreaScreen.java`): generic paneling; stale/loading/empty-state gap.
+- MarketAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/MarketAreaScreen.java`): generic paneling; missing next-step feedback.
+- MerchantTradeScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/MerchantTradeScreen.java`): generic paneling; stale/loading/empty-state gap.
+- MerchantAddEditTradeScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/MerchantAddEditTradeScreen.java`): generic paneling; missing next-step feedback.
+- MiningAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/MiningAreaScreen.java`): generic paneling; missing next-step feedback.
+- PlaceBuildingScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/PlaceBuildingScreen.java`): generic paneling; server-authoritative UX gap; missing next-step feedback.
+- SettlementSurveyorScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/SettlementSurveyorScreen.java`): generic paneling.
+- StorageAreaScreen (`src/main/java/com/talhanation/bannermod/client/civilian/gui/StorageAreaScreen.java`): generic paneling.
+- SettlementSurveyorSelectionRenderEvents (`src/main/java/com/talhanation/bannermod/client/civilian/render/SettlementSurveyorSelectionRenderEvents.java`): weak hologram readability.
+- SettlementSurveyorGuidanceRenderEvents (`src/main/java/com/talhanation/bannermod/client/civilian/render/SettlementSurveyorGuidanceRenderEvents.java`): weak hologram readability; overlap risk.
+- WorkerAreaRenderer (`src/main/java/com/talhanation/bannermod/client/civilian/render/WorkerAreaRenderer.java`): weak hologram readability.
+
+Military / war
+- CommandScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/CommandScreen.java`): generic paneling; missing next-step feedback.
+- RecruitInventoryScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/RecruitInventoryScreen.java`): generic paneling.
+- RecruitHireScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/RecruitHireScreen.java`): generic paneling; missing next-step feedback.
+- GovernorScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/GovernorScreen.java`): generic paneling; stale/loading/empty-state gap.
+- PromoteScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/PromoteScreen.java`): generic paneling; missing next-step feedback.
+- RenameRecruitScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/RenameRecruitScreen.java`): generic paneling; server-authoritative UX gap.
+- RecruitMoreScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/RecruitMoreScreen.java`): generic paneling; missing next-step feedback.
+- ConfirmScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/ConfirmScreen.java`): generic paneling.
+- RecruitsGroupListScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/group/RecruitsGroupListScreen.java`): generic paneling; stale/loading/empty-state gap.
+- EditOrAddGroupScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/group/EditOrAddGroupScreen.java`): generic paneling; missing denial reasons.
+- SelectGroupScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/group/SelectGroupScreen.java`): generic paneling; stale/loading/empty-state gap.
+- SelectPlayerScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/player/SelectPlayerScreen.java`): generic paneling; stale/loading/empty-state gap.
+- MessengerMainScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/MessengerMainScreen.java`): generic paneling; missing next-step feedback.
+- MessengerScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/MessengerScreen.java`): generic paneling; hardcoded strings; missing denial reasons.
+- MessengerAnswerScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/MessengerAnswerScreen.java`): generic paneling; hardcoded strings.
+- NobleTradeScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/NobleTradeScreen.java`): generic paneling.
+- PatrolLeaderScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/PatrolLeaderScreen.java`): generic paneling; missing next-step feedback.
+- ScoutScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/ScoutScreen.java`): generic paneling; missing next-step feedback.
+- AssassinLeaderScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/AssassinLeaderScreen.java`): generic paneling; hardcoded strings; stale/loading/empty-state gap.
+- WarListScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/war/WarListScreen.java`): generic paneling.
+- WarDeclareScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/war/WarDeclareScreen.java`): generic paneling.
+- WarAlliesScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/war/WarAlliesScreen.java`): generic paneling; stale/loading/empty-state gap.
+- WarAllyInvitePickerScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/war/WarAllyInvitePickerScreen.java`): generic paneling.
+- PoliticalEntityListScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/war/PoliticalEntityListScreen.java`): generic paneling.
+- PoliticalEntityInfoScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/war/PoliticalEntityInfoScreen.java`): generic paneling; stale/loading/empty-state gap.
+- PoliticalEntityNameInputScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/war/PoliticalEntityNameInputScreen.java`): generic paneling; missing denial reasons.
+
+World-map / overlay
+- WorldMapScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapScreen.java`): overlap risk; stale/loading/empty-state gap.
+- WorldMapContextMenu (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapContextMenu.java`): generic paneling.
+- ClaimInfoMenu (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/ClaimInfoMenu.java`): generic paneling; overlap risk.
+- ClaimEditScreen (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/ClaimEditScreen.java`): generic paneling; missing next-step feedback.
+- WorldMapRouteToolbar (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapRouteToolbar.java`): overlap risk.
+- RouteNamePopup (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/RouteNamePopup.java`): generic paneling; hardcoded strings.
+- RouteEditPopup (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/RouteEditPopup.java`): generic paneling; missing next-step feedback.
+- WaypointEditPopup (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WaypointEditPopup.java`): generic paneling; missing next-step feedback.
+- ClaimRenderer (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/ClaimRenderer.java`): overlap risk.
+- FormationMapOverlayRenderer (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/FormationMapOverlayRenderer.java`): overlap risk.
+- RouteRenderer (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/RouteRenderer.java`): overlap risk.
+- WorldMapMoveOrderMarker (`src/main/java/com/talhanation/bannermod/client/military/gui/worldmap/WorldMapMoveOrderMarker.java`): overlap risk; missing next-step feedback.
+- HudOverlayCoordinator (`src/main/java/com/talhanation/bannermod/client/military/gui/overlay/HudOverlayCoordinator.java`): overlap risk.
+- ClaimOverlayRenderer (`src/main/java/com/talhanation/bannermod/client/military/gui/overlay/ClaimOverlayRenderer.java`): overlap risk.
+
+Required follow-up slices already exist
+- UI-010: settlement/civilian rewrite slice.
+- UI-011: military/war rewrite slice.
+- UI-012: world-map/overlay and placement-preview rewrite slice.
+- UI-013: final compliance verification pass after the three rewrite slices land.
