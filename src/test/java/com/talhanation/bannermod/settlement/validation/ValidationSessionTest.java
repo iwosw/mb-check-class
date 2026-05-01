@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,5 +44,21 @@ class ValidationSessionTest {
         ValidationSession restored = ValidationSession.fromTag(tag);
 
         assertTrue(restored.showGuidePreview());
+    }
+
+    @Test
+    void upsertSelectionReplacesExistingRoleZone() {
+        ValidationSession session = new ValidationSession(
+                UUID.randomUUID(),
+                SurveyorMode.HOUSE,
+                new BlockPos(4, 70, 4),
+                List.of(new ZoneSelection(ZoneRole.SLEEPING, new BlockPos(1, 64, 1), new BlockPos(2, 65, 2), new BlockPos(2, 65, 2))),
+                true);
+
+        ValidationSession updated = session.upsertSelection(ZoneRole.SLEEPING, new BlockPos(5, 64, 5), new BlockPos(7, 65, 7), new BlockPos(6, 65, 6));
+
+        assertEquals(1, updated.selections().size());
+        assertEquals(new BlockPos(5, 64, 5), updated.selections().getFirst().min());
+        assertEquals(new BlockPos(7, 65, 7), updated.selections().getFirst().max());
     }
 }

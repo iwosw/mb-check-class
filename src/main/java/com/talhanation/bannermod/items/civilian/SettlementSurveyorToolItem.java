@@ -2,6 +2,7 @@ package com.talhanation.bannermod.items.civilian;
 
 import com.talhanation.bannermod.client.civilian.gui.SettlementSurveyorScreen;
 import com.talhanation.bannermod.settlement.building.ZoneRole;
+import com.talhanation.bannermod.settlement.validation.SurveyorDraftSuggestionService;
 import com.talhanation.bannermod.settlement.validation.SurveyorModeGuidance;
 import com.talhanation.bannermod.settlement.validation.SettlementSurveyorService;
 import com.talhanation.bannermod.settlement.validation.SurveyorMode;
@@ -218,6 +219,28 @@ public class SettlementSurveyorToolItem extends Item {
                         ? "bannermod.surveyor.guide_preview.enabled"
                         : "bannermod.surveyor.guide_preview.disabled")
                 .withStyle(updated.showGuidePreview() ? ChatFormatting.AQUA : ChatFormatting.YELLOW));
+    }
+
+    public static void suggestDraftZones(ServerPlayer player, ItemStack stack) {
+        if (player == null || stack == null) {
+            return;
+        }
+        ValidationSession session = SurveyorSessionCodec.read(stack);
+        if (session == null) {
+            player.sendSystemMessage(Component.translatable("bannermod.surveyor.no_session").withStyle(ChatFormatting.RED));
+            return;
+        }
+        SurveyorDraftSuggestionService.DraftSuggestionResult result = SurveyorDraftSuggestionService.suggest(player.serverLevel(), session);
+        switch (result.status()) {
+            case APPLIED -> {
+                ItemStackComponentData.update(stack, data -> data.remove(TAG_PENDING_CORNER));
+                SurveyorSessionCodec.write(stack, result.session());
+                player.sendSystemMessage(Component.translatable("bannermod.surveyor.draft_suggested", result.addedZones()).withStyle(ChatFormatting.AQUA));
+            }
+            case NO_MATCHES -> player.sendSystemMessage(Component.translatable("bannermod.surveyor.draft_none").withStyle(ChatFormatting.YELLOW));
+            case MISSING_ANCHOR -> player.sendSystemMessage(Component.translatable("bannermod.surveyor.draft_need_anchor").withStyle(ChatFormatting.YELLOW));
+            case UNSUPPORTED_MODE -> player.sendSystemMessage(Component.translatable("bannermod.surveyor.draft_unsupported").withStyle(ChatFormatting.YELLOW));
+        }
     }
 
     public static boolean hasPendingCorner(ItemStack stack) {
