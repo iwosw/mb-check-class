@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.civilian.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.civilian.SurveyorZonePalette;
 import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import com.talhanation.bannermod.items.civilian.SettlementSurveyorToolItem;
 import com.talhanation.bannermod.settlement.building.ZoneRole;
@@ -109,9 +110,9 @@ public final class SettlementSurveyorSelectionRenderEvents {
     }
 
     private static void renderSelection(PoseStack poseStack, VertexConsumer lines, ZoneSelection selection, boolean active) {
-        float[] color = colorFor(selection.role(), active);
+        float[] color = SurveyorZonePalette.rgb(selection.role());
         ClientRenderPrimitives.lineBox(poseStack, lines, selection.toAabb().inflate(active ? 0.05D : 0.025D),
-                color[0], color[1], color[2], color[3]);
+                color[0], color[1], color[2], active ? 1.0F : 0.88F);
         if (selection.marker() != null) {
             ClientRenderPrimitives.lineBox(poseStack, lines, blockBox(selection.marker()), color[0], color[1], color[2], 1.0F);
         }
@@ -121,19 +122,4 @@ public final class SettlementSurveyorSelectionRenderEvents {
         return new AABB(pos).inflate(0.035D);
     }
 
-    private static float[] colorFor(ZoneRole role, boolean active) {
-        if (active) {
-            return new float[]{1.0F, 0.72F, 0.18F, 1.0F};
-        }
-        return switch (role) {
-            case AUTHORITY_POINT -> new float[]{0.35F, 0.85F, 1.0F, 0.90F};
-            case INTERIOR -> new float[]{0.25F, 1.0F, 0.35F, 0.85F};
-            case SLEEPING -> new float[]{0.65F, 0.55F, 1.0F, 0.85F};
-            case WORK_ZONE -> new float[]{1.0F, 0.88F, 0.20F, 0.85F};
-            case FORT_PERIMETER -> new float[]{1.0F, 0.35F, 0.25F, 0.90F};
-            case ENTRANCE -> new float[]{1.0F, 1.0F, 1.0F, 0.90F};
-            case STORAGE -> new float[]{0.85F, 0.55F, 0.25F, 0.85F};
-            case PREFAB_FOOTPRINT -> new float[]{0.35F, 0.70F, 1.0F, 0.85F};
-        };
-    }
 }

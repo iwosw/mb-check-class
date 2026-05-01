@@ -17,6 +17,7 @@ final class WorldMapClaimMenuActions {
     private static final Component TEXT_DISABLED_SYNC = Component.translatable("gui.recruits.map.disabled.waiting_sync");
     private static final Component TEXT_DISABLED_STALE = Component.translatable("gui.recruits.map.disabled.stale");
     private static final Component TEXT_DISABLED_NOT_LEADER = Component.translatable("gui.recruits.map.disabled.not_claim_leader");
+    private static final Component TEXT_DISABLED_NO_CURRENCY = Component.translatable("gui.recruits.map.disabled.not_enough_currency");
     private static final Component TEXT_DISABLED_UNCLAIMABLE = Component.translatable("gui.recruits.map.disabled.unclaimable_chunk");
 
     private final WorldMapScreen screen;
@@ -29,12 +30,14 @@ final class WorldMapClaimMenuActions {
         boolean claimsReady = ClientManager.hasClaimsSnapshot && !ClientManager.claimsSnapshotStale;
         boolean canClaimChunk = claimsReady && screen.canClaimChunk(screen.selectedChunk);
         boolean isNeighborLeader = canClaimChunk && screen.isPlayerClaimLeader(screen.getNeighborClaim(screen.selectedChunk));
+        boolean canAffordClaimChunk = screen.canPlayerPay(ClientManager.configValueChunkCost, screen.getPlayer());
         Component claimChunkDisabledReason = !ClientManager.hasClaimsSnapshot ? TEXT_DISABLED_SYNC
                 : ClientManager.claimsSnapshotStale ? TEXT_DISABLED_STALE
                 : !canClaimChunk ? TEXT_DISABLED_UNCLAIMABLE
-                : TEXT_DISABLED_NOT_LEADER;
+                : !isNeighborLeader ? TEXT_DISABLED_NOT_LEADER
+                : TEXT_DISABLED_NO_CURRENCY;
         menu.addMaybeDisabledEntry(TEXT_CLAIM_CHUNK,
-                () -> isNeighborLeader,
+                () -> isNeighborLeader && canAffordClaimChunk,
                 claimChunkDisabledReason,
                 WorldMapScreen::claimChunk,
                 claimChunkCost,

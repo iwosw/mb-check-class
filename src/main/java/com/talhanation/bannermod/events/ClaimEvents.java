@@ -117,6 +117,10 @@ public class ClaimEvents {
         protectionEventService.onExplosion(event);
     }
     @SubscribeEvent
+    public void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        protectionEventService.onExplosionDetonate(event);
+    }
+    @SubscribeEvent
     public void onBlockInteract(PlayerInteractEvent.RightClickBlock event) {
         protectionEventService.onBlockInteract(event);
     }

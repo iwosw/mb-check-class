@@ -13,6 +13,7 @@ import net.minecraft.world.level.ChunkPos;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 final class WorldMapClaimController {
     private final WorldMapScreen screen;
@@ -69,15 +70,24 @@ final class WorldMapClaimController {
     @Nullable
     RecruitsClaim getNeighborClaim(ChunkPos chunk) {
         if (chunk == null) return null;
+        RecruitsClaim fallback = null;
         ChunkPos[] neighbors = {
                 new ChunkPos(chunk.x + 1, chunk.z), new ChunkPos(chunk.x - 1, chunk.z),
                 new ChunkPos(chunk.x, chunk.z + 1), new ChunkPos(chunk.x, chunk.z - 1)
         };
         for (ChunkPos neighbor : neighbors) {
             RecruitsClaim claim = ClientManager.getClaimAtChunk(neighbor);
-            if (claim != null) return claim;
+            if (claim == null) {
+                continue;
+            }
+            if (screen.isPlayerClaimLeader(claim)) {
+                return claim;
+            }
+            if (fallback == null) {
+                fallback = claim;
+            }
         }
-        return null;
+        return fallback;
     }
 
     void recalculateCenter(RecruitsClaim claim) {
@@ -123,8 +133,22 @@ final class WorldMapClaimController {
     }
 
     static boolean isInBufferZone(ChunkPos chunk) {
+        return isInBufferZone(chunk, null);
+    }
+
+    static boolean isInBufferZone(ChunkPos chunk, @Nullable RecruitsClaim expandingClaim) {
+        UUID expandingClaimId = expandingClaim == null ? null : expandingClaim.getUUID();
+        UUID expandingOwnerId = expandingClaim == null ? null : expandingClaim.getOwnerPoliticalEntityId();
         for (RecruitsClaim claim : ClientManager.recruitsClaims) {
-            if (claim.getOwnerPoliticalEntityId() == null) {
+            UUID ownerPoliticalEntityId = claim.getOwnerPoliticalEntityId();
+            if (ownerPoliticalEntityId == null) {
+                continue;
+            }
+            if (expandingClaimId != null && expandingClaimId.equals(claim.getUUID())) {
+                continue;
+            }
+            // Buffer zones stop you encroaching on other states, not extending your own claim edge.
+            if (expandingOwnerId != null && expandingOwnerId.equals(ownerPoliticalEntityId)) {
                 continue;
             }
             for (ChunkPos claimChunk : claim.getClaimedChunks()) {
@@ -142,7 +166,7 @@ final class WorldMapClaimController {
         if (ClientManager.getClaimAtChunk(pos) != null) return false;
         RecruitsClaim neighbor = getNeighborClaim(pos);
         if (neighbor == null || neighbor.getClaimedChunks().size() >= RecruitsClaim.MAX_SIZE) return false;
-        return !isInBufferZone(pos);
+        return !isInBufferZone(pos, neighbor);
     }
 
     boolean canClaimArea(List<ChunkPos> areaChunks) {
@@ -166,7 +190,7 @@ final class WorldMapClaimController {
         if (ClientManager.getClaimAtChunk(pos) != null) return false;
         RecruitsClaim neighbor = getNeighborClaim(pos);
         if (neighbor == null) return false;
-        return !isInBufferZone(pos);
+        return !isInBufferZone(pos, neighbor);
     }
 
     private boolean isPlayerTooFar(ChunkPos pos) {
