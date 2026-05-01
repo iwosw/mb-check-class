@@ -15,6 +15,11 @@ import java.util.List;
 import java.util.Set;
 
 public class ClaimRenderer {
+    private static final int LABEL_FILL = 0xB8201810;
+    private static final int LABEL_BORDER = 0xCC8A6A3A;
+    private static final int OUTLINE_SHADOW = 0xAA20150D;
+    private static final int SELECTED_BORDER = 0xFFF4E2B8;
+    private static final int SELECTED_SHADOW = 0xCC8A6A3A;
 
     public static void renderClaimsOverlay(GuiGraphics guiGraphics, RecruitsClaim selectedClaim, double offsetX, double offsetZ, double scale) {
         Minecraft minecraft = Minecraft.getInstance();
@@ -174,15 +179,19 @@ public class ClaimRenderer {
             if (z2 <= z1) z2 = z1 + 1;
 
             if (!hasTop) {
+                guiGraphics.fill(x1, z1, x2, z1 + thickness + 1, OUTLINE_SHADOW);
                 guiGraphics.fill(x1, z1, x2, z1 + thickness, outlineColor);
             }
             if (!hasBottom) {
+                guiGraphics.fill(x1, z2 - thickness - 1, x2, z2, OUTLINE_SHADOW);
                 guiGraphics.fill(x1, z2 - thickness, x2, z2, outlineColor);
             }
             if (!hasLeft) {
+                guiGraphics.fill(x1, z1, x1 + thickness + 1, z2, OUTLINE_SHADOW);
                 guiGraphics.fill(x1, z1, x1 + thickness, z2, outlineColor);
             }
             if (!hasRight) {
+                guiGraphics.fill(x2 - thickness - 1, z1, x2, z2, OUTLINE_SHADOW);
                 guiGraphics.fill(x2 - thickness, z1, x2, z2, outlineColor);
             }
         }
@@ -196,7 +205,8 @@ public class ClaimRenderer {
             chunkSet.add(chunk.x + "," + chunk.z);
         }
 
-        int borderColor = 0xFFFFFFFF;
+        int borderColor = SELECTED_BORDER;
+        int shadowColor = SELECTED_SHADOW;
         int borderThickness = Math.max(1, (int)(2 * scale / 2.0));
 
         for (ChunkPos chunk : claim.getClaimedChunks()) {
@@ -220,15 +230,19 @@ public class ClaimRenderer {
             int z2 = (int) Math.floor(offsetZ + worldZ2 * scale);
 
             if (!hasTop) {
+                guiGraphics.fill(x1, z1, x2, z1 + borderThickness + 1, shadowColor);
                 guiGraphics.fill(x1, z1, x2, z1 + borderThickness, borderColor);
             }
             if (!hasBottom) {
+                guiGraphics.fill(x1, z2 - borderThickness - 1, x2, z2, shadowColor);
                 guiGraphics.fill(x1, z2 - borderThickness, x2, z2, borderColor);
             }
             if (!hasLeft) {
+                guiGraphics.fill(x1, z1, x1 + borderThickness + 1, z2, shadowColor);
                 guiGraphics.fill(x1, z1, x1 + borderThickness, z2, borderColor);
             }
             if (!hasRight) {
+                guiGraphics.fill(x2 - borderThickness - 1, z1, x2, z2, shadowColor);
                 guiGraphics.fill(x2 - borderThickness, z1, x2, z2, borderColor);
             }
         }
@@ -265,11 +279,20 @@ public class ClaimRenderer {
 
         int textWidth = font.width(name);
         int textHeight = font.lineHeight;
+        int scaledTextWidth = Math.max(1, Math.round(textWidth * textScale));
+        int scaledTextHeight = Math.max(1, Math.round(textHeight * textScale));
+        int boxX = (int) Math.floor(pixelX - scaledTextWidth / 2.0) - 4;
+        int boxY = (int) Math.floor(pixelZ - scaledTextHeight / 2.0) - 2;
+        int boxWidth = scaledTextWidth + 8;
+        int boxHeight = scaledTextHeight + 4;
+
+        guiGraphics.fill(boxX, boxY, boxX + boxWidth, boxY + boxHeight, LABEL_FILL);
+        guiGraphics.renderOutline(boxX, boxY, boxWidth, boxHeight, explored ? LABEL_BORDER : 0xCC666666);
 
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
 
-        pose.translate(pixelX - (textWidth * textScale) / 2.0, pixelZ - (textHeight * textScale) / 2.0, 0);
+        pose.translate(pixelX - (textWidth * textScale) / 2.0, boxY + 2, 0);
 
         pose.scale(textScale, textScale, 1.0f);
 
