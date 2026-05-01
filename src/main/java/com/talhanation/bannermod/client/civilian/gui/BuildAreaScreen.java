@@ -31,6 +31,13 @@ import java.util.UUID;
 
 public class BuildAreaScreen extends WorkAreaScreen {
 
+    private static final int PANEL_WOOD = 0xB02B1C12;
+    private static final int PANEL_PARCHMENT = 0xD8C4A06B;
+    private static final int PANEL_INNER = 0xCC1B120C;
+    private static final int PANEL_BORDER = 0xFF8A683F;
+    private static final int PANEL_TITLE = 0xFFF4D8A1;
+    private static final int PANEL_TEXT = 0xFFE8D9BF;
+
     public final BuildArea buildArea;
     public Button scanButton;
     public Button buildButton;
@@ -70,8 +77,12 @@ public class BuildAreaScreen extends WorkAreaScreen {
             mode = Mode.LOAD;
             structure = StructureManager.parseStructureFromNBT(structureNBT);
             this.requiredItems = buildArea.getRequiredMaterials(structureNBT);
+            setStatus(text("gui.workers.build.status.loaded_structure", this.structure == null ? 0 : this.structure.size()), 0xFFAAFFAA);
         }
-        else mode = Mode.SCAN;
+        else {
+            mode = Mode.SCAN;
+            setModeHintStatus();
+        }
 
         this.areaWidthSize = buildArea.getWidthSize();
         this.areaHeightSize = buildArea.getHeightSize();
@@ -332,6 +343,15 @@ public class BuildAreaScreen extends WorkAreaScreen {
         structureNBT = new CompoundTag();
         if(this.structurePreview != null) structurePreview.setStructure(null, null);
         this.requiredItems = new ArrayList<>();
+        setModeHintStatus();
+    }
+
+    private void setModeHintStatus() {
+        if (this.mode == Mode.LOAD) {
+            setStatus(text("gui.workers.build.status.next_load"), PANEL_TEXT);
+        } else {
+            setStatus(text("gui.workers.build.status.next_scan"), PANEL_TEXT);
+        }
     }
 
 
@@ -455,9 +475,60 @@ public class BuildAreaScreen extends WorkAreaScreen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
-        guiGraphics.drawString(this.font, this.statusText, x - 100, y + 210, this.statusColor, false);
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        super.renderBackground(guiGraphics, mouseX, mouseY, delta);
+
+        int previewLeft = x - 110;
+        int previewTop = y + 74;
+        int dimensionsLeft = x - 214;
+        int dimensionsTop = y + 116;
+        int statusLeft = x - 110;
+        int statusTop = y + 198;
+
+        drawPanel(guiGraphics, previewLeft, previewTop, 220, 112);
+        drawPanel(guiGraphics, dimensionsLeft, dimensionsTop, 98, 72);
+        drawPanel(guiGraphics, statusLeft, statusTop, 220, 40);
+
+        if (this.mode == Mode.LOAD) {
+            drawPanel(guiGraphics, x + 96, y + 54, 120, 32);
+        }
+    }
+
+    @Override
+    public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        super.renderForeground(guiGraphics, mouseX, mouseY, delta);
+
+        int previewLeft = x - 110;
+        int previewTop = y + 74;
+        int statusLeft = x - 104;
+        int statusTop = y + 204;
+
+        guiGraphics.drawString(this.font, text("gui.workers.build.section.preview"), previewLeft + 6, previewTop + 4, PANEL_TITLE, false);
+        guiGraphics.drawString(this.font, text("gui.workers.build.section.dimensions"), x - 208, y + 120, PANEL_TITLE, false);
+        guiGraphics.drawString(this.font, text("gui.workers.build.section.status"), statusLeft, y + 202, PANEL_TITLE, false);
+        if (this.mode == Mode.LOAD) {
+            guiGraphics.drawString(this.font, text("gui.workers.build.section.materials"), x + 102, y + 58, PANEL_TITLE, false);
+        }
+
+        Component previewHint = this.mode == Mode.LOAD
+                ? text("gui.workers.build.preview.hint.load")
+                : text("gui.workers.build.preview.hint.scan");
+        drawWrapped(guiGraphics, previewHint, previewLeft + 108, previewTop + 4, 104, PANEL_TEXT);
+        drawWrapped(guiGraphics, this.statusText, statusLeft, statusTop + 10, 208, this.statusColor);
+    }
+
+    private void drawPanel(GuiGraphics guiGraphics, int left, int top, int width, int height) {
+        guiGraphics.fill(left, top, left + width, top + height, PANEL_WOOD);
+        guiGraphics.fill(left + 2, top + 2, left + width - 2, top + height - 2, PANEL_PARCHMENT);
+        guiGraphics.fill(left + 5, top + 16, left + width - 5, top + height - 5, PANEL_INNER);
+        guiGraphics.renderOutline(left, top, width, height, PANEL_BORDER);
+    }
+
+    private void drawWrapped(GuiGraphics guiGraphics, Component text, int x, int y, int width, int color) {
+        for (var line : this.font.split(text, width)) {
+            guiGraphics.drawString(this.font, line, x, y, color, false);
+            y += 9;
+        }
     }
 
     @Override

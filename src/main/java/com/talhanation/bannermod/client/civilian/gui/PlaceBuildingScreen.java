@@ -10,7 +10,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
@@ -29,7 +31,7 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
     private static final int BUTTON_WIDTH = PANEL_WIDTH - PANEL_PADDING * 2;
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_SPACING = 4;
-    private static final int BUTTONS_PER_COLUMN = 8;
+    private static final int BUTTONS_PER_COLUMN = 7;
     private static final int PANEL_BG = 0xCC2A2116;
     private static final int PANEL_INNER = 0xD63B2D1C;
     private static final int PANEL_BORDER = 0xFFC49A55;
@@ -44,6 +46,9 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
     private Button prevPageButton;
     private Button nextPageButton;
     private Button closeButton;
+    private ResourceLocation selectedPrefabId;
+    private Component selectionStatus = Component.translatable("bannermod.prefab.wand.screen.status.none");
+    private int selectionStatusColor = MUTED_TEXT_COLOR;
 
     public PlaceBuildingScreen(ItemStack wandStack) {
         super(Component.translatable("bannermod.prefab.wand.title"));
@@ -60,6 +65,7 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
         BuildingPrefabRegistry registry = BuildingPrefabRegistry.instance();
         registry.ensureDefaultsLoaded();
         this.prefabs = registry.all();
+        syncSelectionFromWand(registry);
 
         int total = this.prefabs.size();
         this.pageCount = Math.max(1, (int) Math.ceil(total / (double) BUTTONS_PER_COLUMN));
@@ -74,7 +80,7 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
         this.clearWidgets();
 
         int left = panelLeft();
-        int topY = panelTop() + 54;
+        int topY = panelTop() + 72;
         int startIndex = this.page * BUTTONS_PER_COLUMN;
         int endIndex = Math.min(startIndex + BUTTONS_PER_COLUMN, this.prefabs.size());
 
@@ -127,20 +133,48 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
                 btn -> this.onClose()));
     }
 
-    private static Component buildButtonLabel(BuildingPrefabDescriptor descriptor) {
-        return Component.translatable(descriptor.displayKey());
+    private Component buildButtonLabel(BuildingPrefabDescriptor descriptor) {
+        Component base = Component.translatable(descriptor.displayKey());
+        if (descriptor.id().equals(this.selectedPrefabId)) {
+            return Component.literal("> ").append(base).append(Component.literal(" <"));
+        }
+        return base;
+    }
+
+    private void syncSelectionFromWand(BuildingPrefabRegistry registry) {
+        CompoundTag tag = ItemStackComponentData.read(this.wandStack);
+        this.selectedPrefabId = null;
+        this.selectionStatus = Component.translatable("bannermod.prefab.wand.screen.status.none");
+        this.selectionStatusColor = MUTED_TEXT_COLOR;
+        if (tag == null || !tag.contains(BuildingPlacementWandItem.TAG_SELECTED_PREFAB)) {
+            return;
+        }
+
+        ResourceLocation selectedId = ResourceLocation.tryParse(tag.getString(BuildingPlacementWandItem.TAG_SELECTED_PREFAB));
+        if (selectedId == null) {
+            return;
+        }
+
+        registry.lookup(selectedId).ifPresent(prefab -> {
+            this.selectedPrefabId = selectedId;
+            this.selectionStatus = Component.translatable("bannermod.prefab.wand.screen.status.selected", Component.translatable(prefab.descriptor().displayKey()));
+            this.selectionStatusColor = TEXT_COLOR;
+        });
     }
 
     private void onSelect(BuildingPrefabDescriptor descriptor) {
         String id = descriptor.id().toString();
         ItemStackComponentData.update(this.wandStack, tag -> tag.putString(BuildingPlacementWandItem.TAG_SELECTED_PREFAB, id));
+        this.selectedPrefabId = descriptor.id();
 
         Minecraft mc = Minecraft.getInstance();
         Component name = Component.translatable(descriptor.displayKey());
+        this.selectionStatus = Component.translatable("bannermod.prefab.wand.screen.status.next", name);
+        this.selectionStatusColor = TITLE_COLOR;
+        rebuildPrefabButtons();
         if (mc.player != null) {
             mc.player.sendSystemMessage(Component.translatable("bannermod.prefab.wand.selected", name));
         }
-        this.onClose();
     }
 
     @Override
@@ -161,16 +195,27 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
         int subtitleWidth = this.font.width(subtitle);
         graphics.drawString(this.font, subtitle, (this.width - subtitleWidth) / 2, top + 22, MUTED_TEXT_COLOR, false);
         Component hint = Component.translatable("bannermod.prefab.wand.screen.hint");
-        int hintWidth = this.font.width(hint);
-        graphics.drawString(this.font, hint, (this.width - hintWidth) / 2, top + 34, TEXT_COLOR, false);
+        drawWrapped(graphics, hint, left + 12, top + 34, PANEL_WIDTH - 24, TEXT_COLOR);
+        drawWrapped(graphics, this.selectionStatus, left + 12, top + 52, PANEL_WIDTH - 24, this.selectionStatusColor);
 
         if (this.pageCount > 1) {
             String pageText = (this.page + 1) + " / " + this.pageCount;
             int pageWidth = this.font.width(pageText);
-            graphics.drawString(this.font, pageText, (this.width - pageWidth) / 2, top + 46, MUTED_TEXT_COLOR, false);
+            graphics.drawString(this.font, pageText, left + PANEL_WIDTH - pageWidth - 12, top + 10, MUTED_TEXT_COLOR, false);
+        }
+
+        if (this.prefabs.isEmpty()) {
+            graphics.drawCenteredString(this.font, Component.translatable("bannermod.prefab.wand.screen.empty"), this.width / 2, top + 140, TITLE_COLOR);
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private void drawWrapped(GuiGraphics graphics, Component text, int x, int y, int width, int color) {
+        for (var line : this.font.split(text, width)) {
+            graphics.drawString(this.font, line, x, y, color, false);
+            y += 9;
+        }
     }
 
     private int panelLeft() {
