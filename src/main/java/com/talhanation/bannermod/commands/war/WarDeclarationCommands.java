@@ -5,6 +5,8 @@ import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
@@ -30,8 +32,10 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public final class WarDeclarationCommands {
     private WarDeclarationCommands() {
@@ -40,9 +44,12 @@ public final class WarDeclarationCommands {
     public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("war")
                 .then(Commands.literal("declare")
-                        .then(Commands.argument("attacker", StringArgumentType.word())
-                                .then(Commands.argument("defender", StringArgumentType.word())
+                        .then(Commands.argument("attacker", StringArgumentType.string())
+                                .suggests(WarDeclarationCommands::suggestPoliticalEntities)
+                                .then(Commands.argument("defender", StringArgumentType.string())
+                                        .suggests(WarDeclarationCommands::suggestPoliticalEntities)
                                         .then(Commands.argument("goal", StringArgumentType.word())
+                                                .suggests(WarDeclarationCommands::suggestGoals)
                                                 .executes(ctx -> declare(ctx, ""))
                                                 .then(Commands.argument("casusBelli", StringArgumentType.greedyString())
                                                         .executes(ctx -> declare(ctx,
@@ -92,6 +99,34 @@ public final class WarDeclarationCommands {
                                 .then(Commands.argument("revoltId", StringArgumentType.word())
                                         .then(Commands.argument("outcome", StringArgumentType.word())
                                                 .executes(WarDeclarationCommands::revoltResolve)))));
+    }
+
+    private static CompletableFuture<Suggestions> suggestPoliticalEntities(
+            com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
+            SuggestionsBuilder builder
+    ) {
+        for (PoliticalEntityRecord entity : WarCommandSupport.registry(context).all()) {
+            if (entity == null) {
+                continue;
+            }
+            if (entity.name() != null && !entity.name().isBlank()) {
+                builder.suggest(StringArgumentType.escapeIfRequired(entity.name()));
+            }
+            if (entity.id() != null) {
+                builder.suggest(entity.id().toString());
+            }
+        }
+        return builder.buildFuture();
+    }
+
+    private static CompletableFuture<Suggestions> suggestGoals(
+            com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
+            SuggestionsBuilder builder
+    ) {
+        for (WarGoalType goal : WarGoalType.values()) {
+            builder.suggest(goal.name().toLowerCase(Locale.ROOT));
+        }
+        return builder.buildFuture();
     }
 
     private static int declare(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
