@@ -9,13 +9,9 @@ import com.talhanation.bannermod.settlement.bootstrap.BootstrapResult;
 import com.talhanation.bannermod.settlement.bootstrap.SettlementBootstrapService;
 import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
 import com.talhanation.bannermod.settlement.bootstrap.SettlementRegistryData;
-import com.talhanation.bannermod.settlement.prefab.BuildingPlacementService;
-import com.talhanation.bannermod.settlement.prefab.impl.BarracksPrefab;
-import com.talhanation.bannermod.settlement.prefab.impl.StoragePrefab;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.war.runtime.WarSiegeQueries;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -141,23 +137,9 @@ final class WorkerSettlementEventService {
             return;
         }
 
-        placeInitialCentralBuilding(level, claim, anchorPos);
         BootstrapResult result = SettlementBootstrapService.bootstrapClaimSettlement(level, claim, anchorPos);
         if (result.success()) {
             CLAIM_SETTLEMENT_BOOTSTRAPPED.put(claimId, true);
-        }
-    }
-
-    private static void placeInitialCentralBuilding(ServerLevel level, RecruitsClaim claim, BlockPos anchorPos) {
-        BuildingPlacementService.Result result = BuildingPlacementService.placeForClaim(
-                level,
-                claim,
-                BarracksPrefab.ID,
-                anchorPos,
-                Direction.SOUTH
-        );
-        if (result == BuildingPlacementService.Result.UNKNOWN_PREFAB) {
-            BuildingPlacementService.placeForClaim(level, claim, StoragePrefab.ID, anchorPos, Direction.SOUTH);
         }
     }
 
