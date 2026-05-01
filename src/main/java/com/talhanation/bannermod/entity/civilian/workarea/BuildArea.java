@@ -6,6 +6,7 @@ import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
 import com.talhanation.bannermod.persistence.civilian.BuildBlock;
 import com.talhanation.bannermod.persistence.civilian.BuildBlockParse;
+import com.talhanation.bannermod.persistence.civilian.StructureManager;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import com.talhanation.bannermod.settlement.project.BannerModSettlementProjectRuntime;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
@@ -178,8 +179,10 @@ public class BuildArea extends AbstractWorkAreaEntity {
                     .relative(right, width - 1 - relX)
                     .above(relY);
 
-            CompoundTag stateTag = blockTag.getCompound("state");
-            BlockState state = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), stateTag);
+            BlockState state = StructureManager.resolveBlockState(blockTag);
+            if (state == null || state.isAir()) {
+                continue;
+            }
             BlockState rotatedState = rotateBlockState(state, rotationSteps);
 
             if (isCreative) {
@@ -388,8 +391,10 @@ public class BuildArea extends AbstractWorkAreaEntity {
         for (Tag t : blockList) {
             CompoundTag blockTag = (CompoundTag) t;
 
-            CompoundTag stateTag = blockTag.getCompound("state");
-            BlockState state = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), stateTag);
+            BlockState state = StructureManager.resolveBlockState(blockTag);
+            if (state == null || state.isAir()) {
+                continue;
+            }
 
             Block block = state.getBlock();
             Item item = BuildBlockParse.parseBlock(block).getItem();

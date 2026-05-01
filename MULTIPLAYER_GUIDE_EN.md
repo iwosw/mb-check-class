@@ -90,6 +90,8 @@ Settlements have internal work orders. Some order state already survives server 
 
 Build Area screens show scan/build status at the bottom. Invalid names, empty scans, oversized dimensions, missing structure data, or server-side NBT/bounds rejection produce a visible reason; Build and creative Place requests also report accepted/rejected state in chat.
 
+The same Build Area load picker also accepts imported structure files from your Minecraft game directory under `workers/scan`. Supported files are `.nbt`, `.schem`, `.schematic`, and `.litematic`; put the file there, open the Build Area screen, switch to `Load`, and choose it from the existing folder list. Imported schematics stay sparse: BannerMod reads only the authored blocks from the file for preview, build execution, and required-material counts instead of filling the whole bounding box.
+
 Storage Area route fields use an explicit `Apply route` button. The screen validates destination UUID, item-id filters, count, and priority before sending, normalizes valid values, and shows the current destination/blocked reason without relying on close-to-save.
 
 For long land storage routes, eligible merchants/couriers can automatically use a nearby unoccupied horse or server-approved mount. If no valid mount is available, they continue the same route on foot; clearing or failing the route makes them dismount. Right-click a worker to inspect whether it is mounted, why it is walking, and which fallback route behavior is active.
