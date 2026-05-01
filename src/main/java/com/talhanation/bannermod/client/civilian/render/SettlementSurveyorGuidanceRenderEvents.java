@@ -15,25 +15,30 @@ import com.talhanation.bannermod.settlement.validation.SurveyorStructurePlans;
 import com.talhanation.bannermod.settlement.validation.SurveyorSessionCodec;
 import com.talhanation.bannermod.settlement.validation.ValidationSession;
 import net.minecraft.client.Camera;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 
@@ -60,16 +65,16 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         if (player == null || mc.level == null) {
             return;
         }
-        ItemStack stack = surveyorStack(player);
-        if (stack.isEmpty()) {
+        PreviewContext context = previewContext(mc, player);
+        if (context == null) {
             return;
         }
 
-        ValidationSession session = SurveyorSessionCodec.read(stack);
-        SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
-        ZoneRole selectedRole = SettlementSurveyorToolItem.selectedRole(stack);
+        ValidationSession session = context.session();
+        SurveyorMode mode = context.mode();
+        ZoneRole selectedRole = context.selectedRole();
         BlockPos anchor = session == null ? BlockPos.ZERO : session.anchorPos();
-        BlockPos target = targetedBlock(mc);
+        BlockPos target = context.target();
         if (anchor.equals(BlockPos.ZERO) && target == null) {
             return;
         }
@@ -90,26 +95,26 @@ public final class SettlementSurveyorGuidanceRenderEvents {
             }
         }
 
-        BlockPos pending = SettlementSurveyorToolItem.pendingCorner(stack);
+        BlockPos pending = context.pendingCorner();
         if (pending != null && target != null) {
-            lineBox(pose, lines, selectionBox(pending, target).inflate(0.04D), color(SettlementSurveyorToolItem.selectedRole(stack)), 1.0F);
+            lineBox(pose, lines, selectionBox(pending, target).inflate(0.04D), color(selectedRole), 1.0F);
         }
 
         BlockPos previewAnchor = anchor.equals(BlockPos.ZERO) ? target : anchor;
-        if (previewAnchor != null) {
+        if (previewAnchor != null && !previewAnchor.equals(BlockPos.ZERO)) {
             renderAnchorMarker(pose, lines, previewAnchor);
             if (mode == SurveyorMode.BOOTSTRAP_FORT) {
-                renderGuideBox(pose, lines, previewAnchor, ZoneRole.AUTHORITY_POINT, StarterFortPlan.AUTHORITY_GUIDE, session, selectedRole, 0.82F);
-                renderGuideBox(pose, lines, previewAnchor, ZoneRole.INTERIOR, StarterFortPlan.INTERIOR_GUIDE, session, selectedRole, 0.28F);
+                renderGuideBox(pose, lines, buffers, previewAnchor, ZoneRole.AUTHORITY_POINT, StarterFortPlan.AUTHORITY_GUIDE, session, selectedRole, 0.82F);
+                renderGuideBox(pose, lines, buffers, previewAnchor, ZoneRole.INTERIOR, StarterFortPlan.INTERIOR_GUIDE, session, selectedRole, 0.28F);
                 renderStarterFortPreview(pose, lines, previewAnchor);
             } else {
-                renderSurveyorPlanPreview(pose, lines, previewAnchor, mode, session, selectedRole);
+                renderSurveyorPlanPreview(pose, lines, buffers, previewAnchor, mode, session, selectedRole);
             }
         }
 
         RenderSystem.enableDepthTest();
         pose.popPose();
-        buffers.endBatch(RenderType.lines());
+        buffers.endBatch();
     }
 
     @SubscribeEvent
@@ -119,15 +124,15 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         if (player == null || mc.level == null || mc.screen != null) {
             return;
         }
-        ItemStack stack = surveyorStack(player);
-        if (stack.isEmpty()) {
+        PreviewContext context = previewContext(mc, player);
+        if (context == null) {
             return;
         }
 
-        ValidationSession session = SurveyorSessionCodec.read(stack);
-        SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
+        ValidationSession session = context.session();
+        SurveyorMode mode = context.mode();
         List<ZoneRole> requiredRoles = SurveyorModeGuidance.requiredRoles(mode);
-        ZoneRole selected = SettlementSurveyorToolItem.selectedRole(stack);
+        ZoneRole selected = context.selectedRole();
         GuiGraphics graphics = event.getGuiGraphics();
         int x = 8;
         int y = 38;
@@ -136,8 +141,14 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         int line = 11;
         boolean hasAnchor = session != null && !session.anchorPos().equals(BlockPos.ZERO);
         Component modeHint = modeHint(mode);
-        Component nextStep = currentStep(mode, session);
-        Component roleHelp = Component.translatable("bannermod.surveyor.hud.role_help", SettlementSurveyorToolItem.roleLabel(selected), roleHint(selected));
+        Component nextStep = context.pinned()
+                ? Component.translatable("bannermod.surveyor.hud.pinned_help")
+                : currentStep(mode, session);
+        Component roleHelp = context.pinned()
+                ? Component.translatable("bannermod.surveyor.hud.pinned")
+                : Component.translatable("bannermod.surveyor.hud.role_help", SettlementSurveyorToolItem.roleLabel(selected), roleHint(selected));
+        Component rolePurpose = Component.translatable("bannermod.surveyor.hud.role_purpose", SurveyorModeGuidance.rolePurpose(selected));
+        Component roleBlocks = Component.translatable("bannermod.surveyor.hud.role_blocks", SurveyorModeGuidance.roleBuildHint(mode, selected));
         ZoneSelection shown = hasAnchor ? findRole(session, selected) : null;
         Component dimensions = shown == null
                 ? Component.translatable("bannermod.surveyor.hud.dimensions.none", SettlementSurveyorToolItem.roleLabel(selected))
@@ -145,10 +156,12 @@ public final class SettlementSurveyorGuidanceRenderEvents {
                 SettlementSurveyorToolItem.roleLabel(selected), sizeX(shown), sizeY(shown), sizeZ(shown), shown.volume());
         int rows = 3
                 + wrappedLineCount(mc, modeHint, contentWidth)
+                + wrappedLineCount(mc, rolePurpose, contentWidth)
+                + wrappedLineCount(mc, roleBlocks, contentWidth)
                 + 1
                 + (hasAnchor
                 ? 1 + requiredRoles.size() + wrappedLineCount(mc, dimensions, contentWidth) + wrappedLineCount(mc, roleHelp, contentWidth) + wrappedLineCount(mc, nextStep, contentWidth)
-                : wrappedLineCount(mc, Component.translatable("bannermod.surveyor.hud.preview"), contentWidth));
+                : wrappedLineCount(mc, roleHelp, contentWidth) + wrappedLineCount(mc, Component.translatable("bannermod.surveyor.hud.preview"), contentWidth));
         int height = 16 + rows * line;
 
         graphics.fill(x, y, x + width, y + height, PANEL_BG);
@@ -162,9 +175,12 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         graphics.drawString(mc.font, Component.translatable("bannermod.surveyor.hud.role", SettlementSurveyorToolItem.roleLabel(selected)), x + 7, textY, color(selected), true);
         textY += line;
         textY = drawWrapped(graphics, mc, modeHint, x + 7, textY, contentWidth, PANEL_MUTED);
+        textY = drawWrapped(graphics, mc, rolePurpose, x + 7, textY, contentWidth, PANEL_TEXT);
+        textY = drawWrapped(graphics, mc, roleBlocks, x + 7, textY, contentWidth, PANEL_MUTED);
 
         textY = drawCheckLine(graphics, mc, x + 7, textY, hasAnchor, Component.translatable("bannermod.surveyor.hud.check.anchor"));
         if (!hasAnchor) {
+            textY = drawWrapped(graphics, mc, roleHelp, x + 7, textY, contentWidth, PANEL_MUTED);
             drawWrapped(graphics, mc, Component.translatable("bannermod.surveyor.hud.preview"), x + 7, textY, contentWidth, PANEL_MUTED);
             return;
         }
@@ -253,6 +269,36 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         return null;
     }
 
+    @Nullable
+    private static PreviewContext previewContext(Minecraft mc, LocalPlayer player) {
+        ItemStack stack = surveyorStack(player);
+        if (!stack.isEmpty()) {
+            ValidationSession session = SurveyorSessionCodec.read(stack);
+            SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
+            return new PreviewContext(
+                    session,
+                    mode,
+                    SettlementSurveyorToolItem.selectedRole(stack),
+                    SettlementSurveyorToolItem.pendingCorner(stack),
+                    targetedBlock(mc),
+                    false
+            );
+        }
+
+        SettlementSurveyorPinnedPreviewState.PinnedSurveyPreview pinnedPreview = SettlementSurveyorPinnedPreviewState.previewFor(mc.level);
+        if (pinnedPreview == null) {
+            return null;
+        }
+        return new PreviewContext(
+                pinnedPreview.session(),
+                pinnedPreview.session().mode(),
+                pinnedPreview.selectedRole(),
+                null,
+                null,
+                true
+        );
+    }
+
     private static void renderStarterFortPreview(PoseStack pose, VertexConsumer lines, BlockPos anchor) {
         float[] wood = rgb(0xD8A55A);
         float[] tower = rgb(0xF0C06A);
@@ -278,6 +324,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
 
     private static void renderSurveyorPlanPreview(PoseStack pose,
                                                   VertexConsumer lines,
+                                                  MultiBufferSource buffers,
                                                   BlockPos anchor,
                                                   SurveyorMode mode,
                                                   ValidationSession session,
@@ -290,7 +337,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
             lineBox(pose, lines, previewBox.box().toAabb(anchor), previewBox.color(), previewBox.alpha());
         }
         for (SurveyorStructurePlans.GuideBox guideBox : plan.guideBoxes()) {
-            renderGuideBox(pose, lines, anchor, guideBox.role(), guideBox.box(), session, selectedRole, guideBox.alpha());
+            renderGuideBox(pose, lines, buffers, anchor, guideBox.role(), guideBox.box(), session, selectedRole, guideBox.alpha());
         }
     }
 
@@ -305,6 +352,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
 
     private static void renderGuideBox(PoseStack pose,
                                        VertexConsumer lines,
+                                       MultiBufferSource buffers,
                                        BlockPos anchor,
                                        ZoneRole role,
                                        StarterFortPlan.RelativeBox box,
@@ -318,6 +366,37 @@ public final class SettlementSurveyorGuidanceRenderEvents {
                 ? Math.max(0.18F, baseAlpha - 0.16F)
                 : baseAlpha;
         lineBox(pose, lines, box.toAabb(anchor), color(role), alpha);
+        renderGuideLabel(pose, buffers, anchor, role, box);
+    }
+
+    private static void renderGuideLabel(PoseStack pose,
+                                         MultiBufferSource buffers,
+                                         BlockPos anchor,
+                                         ZoneRole role,
+                                         StarterFortPlan.RelativeBox box) {
+        Minecraft mc = Minecraft.getInstance();
+        Font font = mc.font;
+        AABB area = box.toAabb(anchor);
+        Vec3 center = area.getCenter();
+        double labelY = area.maxY + 0.55D + labelYOffset(role);
+        FormattedCharSequence label = SettlementSurveyorToolItem.roleLabel(role).getVisualOrderText();
+
+        pose.pushPose();
+        pose.translate(center.x, labelY, center.z);
+        pose.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
+        pose.scale(-0.025F, -0.025F, 0.025F);
+        float textX = -font.width(label) / 2.0F;
+        font.drawInBatch(label,
+                textX,
+                0.0F,
+                color(role),
+                false,
+                pose.last().pose(),
+                buffers,
+                Font.DisplayMode.SEE_THROUGH,
+                0x66000000,
+                LightTexture.FULL_BRIGHT);
+        pose.popPose();
     }
 
     private static AABB selectionBox(BlockPos a, BlockPos b) {
@@ -368,6 +447,14 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         };
     }
 
+    private static double labelYOffset(ZoneRole role) {
+        return switch (role) {
+            case AUTHORITY_POINT -> 0.9D;
+            case SLEEPING, STORAGE -> 0.4D;
+            default -> 0.0D;
+        };
+    }
+
     private static float[] rgb(int rgb) {
         return new float[]{((rgb >> 16) & 0xFF) / 255.0F, ((rgb >> 8) & 0xFF) / 255.0F, (rgb & 0xFF) / 255.0F};
     }
@@ -378,5 +465,13 @@ public final class SettlementSurveyorGuidanceRenderEvents {
 
     private static void lineBox(PoseStack pose, VertexConsumer lines, AABB box, float[] rgb, float alpha) {
         ClientRenderPrimitives.lineBox(pose, lines, box, rgb[0], rgb[1], rgb[2], alpha);
+    }
+
+    private record PreviewContext(@Nullable ValidationSession session,
+                                  SurveyorMode mode,
+                                  ZoneRole selectedRole,
+                                  @Nullable BlockPos pendingCorner,
+                                  @Nullable BlockPos target,
+                                  boolean pinned) {
     }
 }

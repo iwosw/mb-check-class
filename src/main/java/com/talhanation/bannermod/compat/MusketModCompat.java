@@ -80,6 +80,28 @@ public final class MusketModCompat {
         return defaultDuration;
     }
 
+    public static boolean isLoaded(ItemStack stack) {
+        try {
+            Class<?> gunItemClass = Class.forName("ewewukek.musketmod.GunItem");
+            Method isLoaded = gunItemClass.getMethod("isLoaded", ItemStack.class);
+            Object loaded = isLoaded.invoke(null, stack);
+            return loaded instanceof Boolean state && state;
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            BannerModMain.LOGGER.info("Ewewukek's Musket Mod loaded-state API was not found");
+            return false;
+        }
+    }
+
+    public static void setLoaded(ItemStack stack, boolean loaded) {
+        try {
+            Class<?> gunItemClass = Class.forName("ewewukek.musketmod.GunItem");
+            Method setLoaded = gunItemClass.getMethod("setLoaded", ItemStack.class, boolean.class);
+            setLoaded.invoke(null, stack, loaded);
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            BannerModMain.LOGGER.info("Ewewukek's Musket Mod loaded-state API was not found");
+        }
+    }
+
     public static boolean fireWithMusketMod(AbstractRecruitEntity shooter, double x, double y, double z) {
         ItemStack stack = shooter.getMainHandItem();
         if (!isSupportedRecruitFirearm(stack)) {

@@ -80,33 +80,12 @@ public class MusketWeapon implements IWeapon {
     }
 
     public boolean isLoaded(ItemStack stack) {
-        Boolean loaded = safelyResolveFallback(() -> {
-            Class<?> musketItemClass = Class.forName("ewewukek.musketmod.MusketItem");
-
-            Method musketItemIsLoaded = musketItemClass.getMethod("isLoaded", ItemStack.class);
-            return (boolean) musketItemIsLoaded.invoke(musketItemClass, stack);
-        }, Boolean.FALSE);
-
-        if (!loaded) {
-            logMissingCompat("MusketItem");
-        }
-        return loaded;
+        return MusketModCompat.isLoaded(stack);
     }
 
     @Override
     public void setLoaded(ItemStack stack, boolean loaded) {
-        boolean success = safelyResolveFallback(() -> {
-            Class<?> musketItemClass = Class.forName("ewewukek.musketmod.MusketItem");
-
-            Method musketItemSetLoaded = musketItemClass.getMethod("setLoaded", ItemStack.class, boolean.class);
-
-            musketItemSetLoaded.invoke(musketItemClass, stack, loaded);
-            return true;
-        }, Boolean.FALSE);
-
-        if (!success) {
-            logMissingCompat("MusketItem");
-        }
+        MusketModCompat.setLoaded(stack, loaded);
     }
 
     @Override

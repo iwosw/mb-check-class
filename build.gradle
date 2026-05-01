@@ -52,6 +52,85 @@ configurations {
 
 }
 
+def enableRenaissanceMusketsRuntime = (project.findProperty('enableRenaissanceMusketsRuntime') ?: 'false')
+        .toString()
+        .toBoolean()
+def newestMatchingFile = { File root, String includePattern ->
+    if (root == null || !root.exists()) {
+        return null
+    }
+    Set<File> matches = fileTree(root) {
+        include includePattern
+    }.files
+    return matches.isEmpty() ? null : matches.max { it.lastModified() }
+}
+def runtimeJarFile = { String path ->
+    return path == null || path.isBlank() ? null : project.file(path)
+}
+def renaissanceMusketsBridgeDir = project.file(
+        (project.findProperty('renaissanceMusketsBridgeDir') ?: "${System.getProperty('user.home')}/Downloads/mods").toString()
+)
+def renaissanceMusketsJarPath = (project.findProperty('renaissanceMusketsJar')
+        ?: "${System.getProperty('user.home')}/Downloads/RenaissanceMuskets 1.21-1.21.1.jar")
+        .toString()
+def renaissanceMusketsConnectorJarPath = (project.findProperty('renaissanceMusketsConnectorJar')
+        ?: newestMatchingFile(renaissanceMusketsBridgeDir, 'connector-*.jar')?.absolutePath
+        ?: '')
+        .toString()
+def renaissanceMusketsFabricApiJarPath = (project.findProperty('renaissanceMusketsFabricApiJar')
+        ?: newestMatchingFile(renaissanceMusketsBridgeDir, 'forgified-fabric-api-*.jar')?.absolutePath
+        ?: '')
+        .toString()
+def renaissanceMusketsClothConfigJarPath = (project.findProperty('renaissanceMusketsClothConfigJar')
+        ?: newestMatchingFile(renaissanceMusketsBridgeDir, 'cloth-config-*-neoforge.jar')?.absolutePath
+        ?: '')
+        .toString()
+def renaissanceMusketsRunDirs = [project.file('run/mods'), project.file('run_gametest/mods')]
+def connectorCleanClientJar = project.findProperty('connectorCleanClientJar')
+        ? project.file(project.property('connectorCleanClientJar').toString())
+        : newestMatchingFile(new File(gradle.gradleUserHomeDir, 'caches/ng_execute'), '**/client.jar')
+def connectorCleanServerJar = project.findProperty('connectorCleanServerJar')
+        ? project.file(project.property('connectorCleanServerJar').toString())
+        : newestMatchingFile(new File(gradle.gradleUserHomeDir, 'caches/ng_execute'), '**/server.jar')
+
+tasks.register('stageRenaissanceMusketsRuntimeMods') {
+    group = 'verification'
+    description = 'Stages a local RenaissanceMuskets jar into the NeoForge run mods folders when optional runtime verification is enabled.'
+    onlyIf { enableRenaissanceMusketsRuntime }
+    doLast {
+        List<File> runtimeJars = [
+                project.file(renaissanceMusketsJarPath),
+                runtimeJarFile(renaissanceMusketsConnectorJarPath),
+                runtimeJarFile(renaissanceMusketsFabricApiJarPath),
+                runtimeJarFile(renaissanceMusketsClothConfigJarPath)
+        ].findAll { it != null }
+        List<File> missingJars = runtimeJars.findAll { !it.exists() }
+        if (runtimeJars.size() != 4) {
+            throw new GradleException("RenaissanceMuskets runtime bridge jars were not fully resolved. Set -PrenaissanceMusketsConnectorJar, -PrenaissanceMusketsFabricApiJar, and -PrenaissanceMusketsClothConfigJar if your local files live elsewhere.")
+        }
+        if (connectorCleanClientJar == null || connectorCleanServerJar == null) {
+            throw new GradleException("Connector clean jars were not found under ${new File(gradle.gradleUserHomeDir, 'caches/ng_execute')}. Run ./gradlew compileJava once to warm the dev cache, or set -PconnectorCleanClientJar and -PconnectorCleanServerJar explicitly.")
+        }
+        if (!missingJars.isEmpty()) {
+            throw new GradleException("RenaissanceMuskets runtime dependencies were not found: ${missingJars*.path.join(', ')}. Set -PrenaissanceMusketsJar, -PrenaissanceMusketsConnectorJar, -PrenaissanceMusketsFabricApiJar, and -PrenaissanceMusketsClothConfigJar if your local files live elsewhere.")
+        }
+
+        renaissanceMusketsRunDirs.each { File modsDir ->
+            modsDir.mkdirs()
+            copy {
+                from runtimeJars
+                into modsDir
+            }
+        }
+
+        println "Staged RenaissanceMuskets runtime jars into ${renaissanceMusketsRunDirs*.path.join(', ')}: ${runtimeJars*.name.join(', ')}."
+    }
+}
+
+tasks.matching { it.name in ['runClient', 'runServer', 'runGameTestServer'] }.configureEach {
+    dependsOn tasks.named('stageRenaissanceMusketsRuntimeMods')
+}
+
 neoForge {
     version = project.neo_version
     accessTransformers = files('src/main/resources/META-INF/accesstransformer.cfg')
@@ -67,17 +146,26 @@ neoForge {
             gameDirectory = project.file('run')
             programArgument '--username'
             programArgument 'talhanation'
+            if (enableRenaissanceMusketsRuntime && connectorCleanClientJar != null) {
+                systemProperty 'connector.clean.path', connectorCleanClientJar.absolutePath
+            }
         }
 
         server {
             server()
             gameDirectory = project.file('run')
+            if (enableRenaissanceMusketsRuntime && connectorCleanServerJar != null) {
+                systemProperty 'connector.clean.path', connectorCleanServerJar.absolutePath
+            }
         }
 
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = project.file('run_gametest')
             systemProperty 'neoforge.enabledGameTestNamespaces', 'bannermod,bannermod_game_001,bannermod_game_009,bannermod_game_010'
+            if (enableRenaissanceMusketsRuntime && connectorCleanServerJar != null) {
+                systemProperty 'connector.clean.path', connectorCleanServerJar.absolutePath
+            }
         }
 
         data {
@@ -129,6 +217,7 @@ dependencies {
     compileOnly 'curse.maven:epic-knights-armor-and-weapons-509041:5254836'
     compileOnly 'curse.maven:architectury-api-419699:5137938'
     compileOnly 'curse.maven:cloth-config-348521:4973441'
+    // RenaissanceMuskets still registers as musketmod; local runtime verification can stage a Fabric jar via -PenableRenaissanceMusketsRuntime=true.
     compileOnly 'curse.maven:ewewukeks-musket-mod-354562:5779561'
     compileOnly 'curse.maven:worldedit-225608:4586218'
     compileOnly 'curse.maven:small-ships-450659:5566900'
@@ -229,6 +318,7 @@ tasks.register('verifyGameTestScenarioCoverage') {
                 'src/gametest/java/com/talhanation/bannermod/BannerModDedicatedServerReconnectGameTests.java'  : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
                 'src/gametest/java/com/talhanation/bannermod/BannerModMultiplayerAuthorityConflictGameTests.java': ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
                 'src/gametest/java/com/talhanation/bannermod/BannerModMultiplayerCooperationGameTests.java'    : ['@GameTestHolder(BannerModMain.MOD_ID)', '@GameTest'],
+                'src/gametest/java/com/talhanation/bannermod/BannerModMusketModFirearmGameTests.java'          : ['@GameTestHolder(BannerModMain.MOD_ID)', 'recruitMusketUsesMusketModProjectileReloadAndAmmoDenial', 'recruitBayonetMusketUsesMusketModProjectileReloadAndAmmoDenial', 'recruitScopedMusketUsesMusketModProjectileReloadAndAmmoDenial', 'recruitBlunderbussUsesMusketModProjectileReloadAndAmmoDenial', 'recruitPistolUsesMusketModProjectileReloadAndAmmoDenial'],
                 'src/gametest/java/com/talhanation/bannermod/BannerModGame001ProjectGameTests.java'            : ['@GameTestHolder("bannermod_game_001")', 'settlementProjectCreatesExecutableBuildAreaInWorld'],
                 'src/gametest/java/com/talhanation/bannermod/BannerModGame009ProjectGameTests.java'            : ['@GameTestHolder("bannermod_game_009")', 'settlementProjectBindsToExecutableBuildAreaTarget'],
                 'src/gametest/java/com/talhanation/bannermod/BannerModGame010ProjectGameTests.java'            : ['@GameTestHolder("bannermod_game_010")', 'settlementProjectProgressesFromBuildExecutionEvents']
