@@ -175,8 +175,8 @@ public final class HudOverlayCoordinator {
 
         boolean underSiege = WarClientState.hasSnapshot() && WarClientState.isClaimUnderSiege(ClientManager.currentClaim);
         boolean occupied = WarClientState.hasSnapshot() && WarClientState.isClaimChunkOccupied(ClientManager.currentClaim, lastPlayerChunk);
-        ClaimAuthorityStatus authorityStatus = ClaimAuthorityStatus.classify(mc.player.getUUID(), playerTeamName(mc.player), ClientManager.currentClaim);
         PoliticalEntityRecord ownerEntity = currentOwnerEntity(ClientManager.currentClaim);
+        ClaimAuthorityStatus authorityStatus = ClaimAuthorityStatus.classify(mc.player.getUUID(), playerTeamName(mc.player), ClientManager.currentClaim, ownerEntity);
         int x = Math.max(6, mc.getWindow().getGuiScaledWidth() - RIGHT_SAFE_MARGIN - CLAIM_PANEL_WIDTH);
         claimRenderer.render(graphics, mc, ClientManager.currentClaim, currentState, authorityStatus, ownerEntity, alpha, CLAIM_PANEL_WIDTH, x, y, underSiege, occupied);
         NeoForge.EVENT_BUS.post(new ClientOverlayEvent.RenderPost(graphics, ClientManager.currentClaim, currentState, alpha));
@@ -253,9 +253,10 @@ public final class HudOverlayCoordinator {
         if (player == null) {
             return;
         }
-        ClaimAuthorityStatus authorityStatus = ClaimAuthorityStatus.classify(player.getUUID(), playerTeamName(player), claim);
+        PoliticalEntityRecord ownerEntity = currentOwnerEntity(claim);
+        ClaimAuthorityStatus authorityStatus = ClaimAuthorityStatus.classify(player.getUUID(), playerTeamName(player), claim, ownerEntity);
         String wildernessLabel = Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString();
-        String territoryName = ClaimTerritoryText.territoryName(claim, currentOwnerEntity(claim), wildernessLabel);
+        String territoryName = ClaimTerritoryText.territoryName(claim, ownerEntity, wildernessLabel);
         Component message = claim == null
                 ? Component.translatable(authorityStatus.boundaryMessageKey())
                 : Component.translatable(authorityStatus.boundaryMessageKey(), territoryName);
