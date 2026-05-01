@@ -12,6 +12,9 @@ import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute;
+import com.talhanation.bannermod.war.client.WarClientState;
+import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -849,7 +852,15 @@ public class WorldMapScreen extends Screen {
 
         public boolean isPlayerClaimLeader(RecruitsClaim claim){
             if (player == null || claim == null) return false;
-            return claim.getPlayerInfo().getUUID().equals(player.getUUID());
+            if (claim.getPlayerInfo() != null && claim.getPlayerInfo().getUUID().equals(player.getUUID())) {
+                return true;
+            }
+            UUID ownerPoliticalEntityId = claim.getOwnerPoliticalEntityId();
+            if (ownerPoliticalEntityId == null) {
+                return false;
+            }
+            PoliticalEntityRecord ownerEntity = WarClientState.entityById(ownerPoliticalEntityId);
+            return PoliticalEntityAuthority.canAct(player.getUUID(), isPlayerAdminAndCreative(), ownerEntity);
         }
 
         public List<ChunkPos> getClaimArea(ChunkPos pos){
