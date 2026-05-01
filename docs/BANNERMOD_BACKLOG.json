@@ -5685,6 +5685,131 @@
         "src/main/java/com/talhanation/bannermod/entity/military/RecruitPersistenceBridge.java:136-145"
       ],
       "doneDate": "2026-04-30"
+    },
+    {
+      "id": "UI-009",
+      "title": "Audit remaining player-facing UI style gaps",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "BannerMod has a documented Minecraft-native UI standard now, but many historical screens, HUD surfaces, and world previews were built across different phases and need one concrete audit pass before the remaining rewrites can be scheduled safely.",
+      "scope": [
+        "Audit every remaining player-facing GUI, HUD, overlay, and placement hologram under root client code for gaps against docs/AI_MINECRAFT_UI_STYLE_GUIDE.md.",
+        "Record file-level findings grouped by execution slice: settlement/civilian, military/war, and world-map/overlay surfaces.",
+        "Confirm follow-up backlog tasks exist for each rewrite slice needed to close the audit."
+      ],
+      "acceptance": [
+        "An audit artifact or backlog progress note lists every remaining non-compliant player-facing UI surface with file references.",
+        "Each flagged surface names the exact style-guide gap it still violates, such as generic paneling, weak hologram readability, missing next-step feedback, missing denial reasons, or overlap risk.",
+        "Follow-up backlog tasks exist for each rewrite slice needed to bring the remaining UI into compliance."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-010",
+      "title": "Rewrite remaining settlement and civilian UI surfaces",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "Settlement, worker, and building-management screens are some of the most frequently used player interfaces; any leftover generic or unclear surfaces here directly slow down onboarding and routine settlement play.",
+      "scope": [
+        "Restyle every remaining settlement/civilian screen, list, and widget flagged by UI-009 so it matches the Minecraft-native parchment/wood/iron language in docs/AI_MINECRAFT_UI_STYLE_GUIDE.md.",
+        "Add or tighten empty, loading, selected, and disabled-reason states plus next-step feedback where those settlement/civilian screens still lack them.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html for any changed settlement, worker, or building UI workflow."
+      ],
+      "acceptance": [
+        "All settlement/civilian surfaces flagged by UI-009 are restyled away from generic dashboard presentation and remain readable at Minecraft GUI scales.",
+        "Each changed settlement/civilian screen exposes visible next-step or denial feedback for its primary actions and keeps EN/RU localization complete.",
+        "Player-facing docs reflect any changed settlement, survey, worker, or building UI workflow before the task is closed."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-011",
+      "title": "Rewrite remaining military and war UI surfaces",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "War room, army, diplomacy, and command surfaces carry high-stakes multiplayer decisions; any leftover generic or visually weak presentation here increases misclicks and hides denial reasons players need during combat or politics.",
+      "scope": [
+        "Restyle every remaining military, war, diplomacy, and command screen flagged by UI-009 to the Minecraft-native visual language required by docs/AI_MINECRAFT_UI_STYLE_GUIDE.md.",
+        "Add or tighten visible denial reasons, pending/success feedback, and compact information hierarchy for the primary military and war actions on those screens.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html for any changed military or war UI workflow that players must understand."
+      ],
+      "acceptance": [
+        "All military and war surfaces flagged by UI-009 are restyled to the documented Minecraft-native standard and no longer read like generic dashboard panels.",
+        "Primary military and war actions on changed screens show visible next-step, disabled-reason, or accepted-feedback states instead of silent failures.",
+        "Player-facing docs reflect any changed command, diplomacy, or war-room workflow before the task is closed."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-012",
+      "title": "Rewrite remaining world-map overlays and placement previews",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "World-map layers, HUD overlays, and placement holograms are read while the player is moving in-world, so any leftover clutter, overlap, or placeholder geometry here undermines the style guide's core readability rules even if the underlying screens are improved.",
+      "scope": [
+        "Restyle every remaining world-map surface, HUD overlay, and placement hologram flagged by UI-009 so it uses compact Minecraft-native information design and actual intended-shape previews instead of placeholder geometry.",
+        "Resolve any remaining overlap risks with hotbar, chat, crosshair, boss bars, debug text, or other BannerMod overlays identified during the audit.",
+        "Update MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html for any changed player-facing map, overlay, or hologram workflow."
+      ],
+      "acceptance": [
+        "All world-map, overlay, and hologram surfaces flagged by UI-009 render the intended shape clearly, follow the documented color grammar, and avoid identified overlap risks.",
+        "Changed overlays and previews remain readable while the player is moving and do not rely on client-only visuals as gameplay authority.",
+        "Player-facing docs reflect any changed map, overlay, or placement workflow before the task is closed."
+      ],
+      "dependencies": [
+        "UI-009"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-013",
+      "title": "Verify full UI style-guide compliance",
+      "status": "open",
+      "updated": "2026-05-01",
+      "why": "After the rewrite slices land, BannerMod still needs one explicit verification pass to ensure no audited UI surface was missed and that the final player-facing workflows are consistent across screens, HUD panels, and holograms.",
+      "scope": [
+        "Re-audit every player-facing UI surface covered by UI-009 after UI-010, UI-011, and UI-012 land.",
+        "Fix or split any last consistency gaps in typography, panel grammar, overlap handling, hologram readability, or action feedback uncovered during the final verification pass.",
+        "Refresh docs/STATUS.md and player guides if the final verification pass changes the shipped UI summary or workflow wording."
+      ],
+      "acceptance": [
+        "Every player-facing UI surface previously flagged by UI-009 is either brought into compliance or explicitly waived with rationale recorded in backlog progress or verification evidence.",
+        "Final verification confirms there are no remaining generic-dashboard panels, missing denial reasons on primary actions, or unresolved overlap risks in the audited surfaces.",
+        "docs/STATUS.md, MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html reflect the final shipped UI workflows before the task is closed."
+      ],
+      "dependencies": [
+        "UI-010",
+        "UI-011",
+        "UI-012"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
     }
   ]
 }

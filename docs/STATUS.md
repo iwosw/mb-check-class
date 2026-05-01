@@ -18,6 +18,7 @@ Last updated: 2026-04-28.
 - War runtime is partially live beyond declarations: outcome actions can create occupations/annexations/tribute/vassalization/demilitarization, occupation tax accrues from a server ticker, due revolts auto-resolve from objective presence during battle windows, and recruits can attack enemy siege standards or escort same-side standards.
 - Worker/settlement claim binding is being normalized away from legacy faction IDs toward political-entity UUIDs and scoreboard team names.
 - Manual validated farm, mine, lumber camp, and architect workshop buildings now create citizen profession vacancies and show the vacancy output during validation/inspection.
+- Settlement survey now explains zone purpose and expected build contents in-screen/HUD, renders role labels over hologram guide boxes, and can pin the anchored hologram client-side after the tool is put away; local RenaissanceMuskets optional-runtime wiring now stages Connector/Fabric bridge jars and passes live musket GameTests under `runGameTestServer` when the runtime property is enabled.
 - Claim deletion packets now resolve and delete only persisted server-side claims after the same owner/co-leader/admin authority check used by claim updates.
 - Face, ranged-fire, and upkeep military packets now use the real server sender UUID for authority instead of client-supplied owner UUID fields.
 - Leader group and companion group assignment packet paths now require direct recruit control and owned groups before mutating leader/group state.
