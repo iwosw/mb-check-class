@@ -38,11 +38,16 @@ public class WorldMapScreen extends Screen {
     private static final double MAX_SCALE = 10.0;
     private static final double DEFAULT_SCALE = 2.0;
     private static final double SCALE_STEP = 0.1;
-    private static final int MAX_VISIBLE_TILE_UPDATES_PER_FRAME = 4;
-    private static final long VISIBLE_TILE_UPDATE_COOLDOWN_MS = 1000L;
+    private static final int MAX_VISIBLE_TILE_UPDATES_PER_FRAME = 1;
+    private static final long VISIBLE_TILE_UPDATE_COOLDOWN_MS = 1800L;
     private static final int CHUNK_HIGHLIGHT_COLOR = 0x40FFFFFF;
     private static final int CHUNK_SELECTION_COLOR = 0xFFFFFFFF;
     private static final int DARK_GRAY_BG = 0xFF101010;
+    private static final int MAP_GRID_CHUNK = 0x286C8AA0;
+    private static final int MAP_GRID_TILE = 0x608A6A3A;
+    private static final int MAP_FRAME_DARK = 0xB0100C08;
+    private static final int MAP_FRAME_GOLD = 0xCCB8894A;
+    private static final int MAP_RETICLE = 0x99FFD36A;
 
     double offsetX = 0, offsetZ = 0;
     public static double scale = DEFAULT_SCALE;
@@ -169,6 +174,7 @@ public class WorldMapScreen extends Screen {
         guiGraphics.enableScissor(0, 0, width, height);
 
         renderMapTiles(guiGraphics);
+        renderMapGrid(guiGraphics);
         if (routeInteractionLayer.isClaimTransparencyEnabled() && routeInteractionLayer.hasSelectedRoute()) {
             ClaimRenderer.renderClaimsOverlayTransparent(guiGraphics, this.selectedClaim, this.offsetX, this.offsetZ, scale, width, height);
         } else {
@@ -203,6 +209,7 @@ public class WorldMapScreen extends Screen {
 
         guiGraphics.disableScissor();
 
+        renderMapChrome(guiGraphics);
         renderCoordinatesAndZoom(guiGraphics);
         renderClaimSyncStatus(guiGraphics);
         renderFPS(guiGraphics);
@@ -320,6 +327,110 @@ public class WorldMapScreen extends Screen {
                 visibleTiles, renderedTiles, nullTextureTiles, visibleUpdates, updateVisibleTiles);
     }
 
+    private void renderMapGrid(GuiGraphics guiGraphics) {
+        renderGridLayer(guiGraphics, 16, 8.0D, MAP_GRID_CHUNK);
+        renderGridLayer(guiGraphics, ChunkTile.TILE_BLOCK_SIZE, 22.0D, MAP_GRID_TILE);
+    }
+
+    private void renderGridLayer(GuiGraphics guiGraphics, int worldStep, double minPixelSpacing, int color) {
+        double spacing = worldStep * scale;
+        if (spacing < minPixelSpacing) return;
+
+        double leftWorld = -offsetX / scale;
+        double rightWorld = (width - offsetX) / scale;
+        double topWorld = -offsetZ / scale;
+        double bottomWorld = (height - offsetZ) / scale;
+
+        int firstX = (int) Math.floor(leftWorld / worldStep) * worldStep;
+        int firstZ = (int) Math.floor(topWorld / worldStep) * worldStep;
+
+        int lines = 0;
+        for (int worldX = firstX; worldX <= rightWorld + worldStep && lines < 512; worldX += worldStep, lines++) {
+            int screenX = WorldMapRenderPrimitives.screenX(worldX, offsetX, scale);
+            guiGraphics.vLine(screenX, 0, height, color);
+        }
+        lines = 0;
+        for (int worldZ = firstZ; worldZ <= bottomWorld + worldStep && lines < 512; worldZ += worldStep, lines++) {
+            int screenZ = WorldMapRenderPrimitives.screenZ(worldZ, offsetZ, scale);
+            guiGraphics.hLine(0, width, screenZ, color);
+        }
+    }
+
+    private void renderMapChrome(GuiGraphics guiGraphics) {
+        renderEdgeFrame(guiGraphics);
+        renderCenterReticle(guiGraphics);
+        renderCompassRose(guiGraphics);
+        renderScaleBar(guiGraphics);
+    }
+
+    private void renderEdgeFrame(GuiGraphics guiGraphics) {
+        guiGraphics.fill(0, 0, width, 5, MAP_FRAME_DARK);
+        guiGraphics.fill(0, height - 5, width, height, MAP_FRAME_DARK);
+        guiGraphics.fill(0, 0, 5, height, MAP_FRAME_DARK);
+        guiGraphics.fill(width - 5, 0, width, height, MAP_FRAME_DARK);
+        guiGraphics.renderOutline(4, 4, Math.max(1, width - 8), Math.max(1, height - 8), MAP_FRAME_GOLD);
+        guiGraphics.renderOutline(7, 7, Math.max(1, width - 14), Math.max(1, height - 14), 0x66301810);
+
+        drawCornerBrace(guiGraphics, 12, 12, 1, 1);
+        drawCornerBrace(guiGraphics, width - 13, 12, -1, 1);
+        drawCornerBrace(guiGraphics, 12, height - 13, 1, -1);
+        drawCornerBrace(guiGraphics, width - 13, height - 13, -1, -1);
+    }
+
+    private void drawCornerBrace(GuiGraphics guiGraphics, int x, int y, int sx, int sy) {
+        int len = 28;
+        guiGraphics.hLine(x, x + sx * len, y, MAP_FRAME_GOLD);
+        guiGraphics.vLine(x, y, y + sy * len, MAP_FRAME_GOLD);
+        guiGraphics.hLine(x, x + sx * 12, y + sy * 4, 0x887A4C24);
+        guiGraphics.vLine(x + sx * 4, y, y + sy * 12, 0x887A4C24);
+    }
+
+    private void renderCenterReticle(GuiGraphics guiGraphics) {
+        int cx = width / 2;
+        int cy = height / 2;
+        guiGraphics.hLine(cx - 18, cx - 7, cy, MAP_RETICLE);
+        guiGraphics.hLine(cx + 7, cx + 18, cy, MAP_RETICLE);
+        guiGraphics.vLine(cx, cy - 18, cy - 7, MAP_RETICLE);
+        guiGraphics.vLine(cx, cy + 7, cy + 18, MAP_RETICLE);
+        guiGraphics.renderOutline(cx - 5, cy - 5, 10, 10, 0x66FFD36A);
+    }
+
+    private void renderCompassRose(GuiGraphics guiGraphics) {
+        int cx = Math.max(64, width - 58);
+        int cy = 58;
+        WorldMapRenderPrimitives.panel(guiGraphics, cx - 30, cy - 30, 60, 60);
+        guiGraphics.hLine(cx - 18, cx + 18, cy, 0xAAE0BC78);
+        guiGraphics.vLine(cx, cy - 18, cy + 18, 0xAAE0BC78);
+        guiGraphics.drawCenteredString(font, "N", cx, cy - 26, 0xFFFFD36A);
+        guiGraphics.drawCenteredString(font, "S", cx, cy + 18, 0xFFB8A17A);
+        guiGraphics.drawString(font, "W", cx - 26, cy - 4, 0xFFB8A17A, false);
+        guiGraphics.drawString(font, "E", cx + 20, cy - 4, 0xFFB8A17A, false);
+    }
+
+    private void renderScaleBar(GuiGraphics guiGraphics) {
+        int blocks = chooseScaleBarBlocks();
+        int barWidth = Math.max(1, (int) Math.round(blocks * scale));
+        int x = 14;
+        int y = height - 31;
+        int panelWidth = Math.max(78, barWidth + 18);
+        WorldMapRenderPrimitives.panel(guiGraphics, x - 6, y - 9, panelWidth, 24);
+        guiGraphics.hLine(x, x + barWidth, y, 0xFFFFD36A);
+        guiGraphics.vLine(x, y - 4, y + 4, 0xFFFFD36A);
+        guiGraphics.vLine(x + barWidth, y - 4, y + 4, 0xFFFFD36A);
+        guiGraphics.drawString(font, blocks + "b", x, y + 5, 0xFFE0BC78, false);
+    }
+
+    private int chooseScaleBarBlocks() {
+        int[] candidates = {16, 32, 64, 128, 256, 512, 1024};
+        for (int blocks : candidates) {
+            double pixels = blocks * scale;
+            if (pixels >= 70.0D && pixels <= 140.0D) {
+                return blocks;
+            }
+        }
+        return scale < 1.0D ? 512 : 16;
+    }
+
     private void logMapRenderDebugIfDue(int startTileX, int endTileX, int startTileZ, int endTileZ,
                                         int centerTileX, int centerTileZ, int visibleTiles,
                                         int renderedTiles, int nullTextureTiles, int visibleUpdates,
@@ -391,10 +502,16 @@ public class WorldMapScreen extends Screen {
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
         pose.translate(pixelX, pixelZ, 0);
+        renderPlayerHalo(guiGraphics);
         if (player.getVehicle() instanceof Boat) renderPlayerBoat(pose, guiGraphics);
         else renderPlayerIcon(pose, guiGraphics);
         pose.popPose();
         renderPlayerNameTag(guiGraphics, pixelX, pixelZ);
+    }
+
+    private void renderPlayerHalo(GuiGraphics guiGraphics) {
+        guiGraphics.renderOutline(-8, -8, 16, 16, 0xAAFFD36A);
+        guiGraphics.renderOutline(-10, -10, 20, 20, 0x442D1B0F);
     }
 
     private void renderPlayerBoat(PoseStack pose, GuiGraphics guiGraphics) {
@@ -430,16 +547,14 @@ public class WorldMapScreen extends Screen {
     }
 
     private void renderPlayerNameTag(GuiGraphics guiGraphics, int pixelX, int pixelZ) {
-        if (player != null && scale > 1.5) {
+        if (player != null && scale > 1.0) {
             String playerName = player.getName().getString();
-            float textScale = (float) Math.min(1.0, scale / 1.25);
             int textWidth = font.width(playerName);
-            int textHeight = font.lineHeight;
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(pixelX - (textWidth * textScale) / 2.0, pixelZ - (textHeight * textScale) / 2.0 - 10, 0);
-            guiGraphics.pose().scale(textScale, textScale, 1.0f);
-            guiGraphics.drawString(font, playerName, 0, 0, 0xFFFFFF, false);
-            guiGraphics.pose().popPose();
+            int labelX = pixelX - textWidth / 2 - 4;
+            int labelY = pixelZ - 28;
+            guiGraphics.fill(labelX, labelY, labelX + textWidth + 8, labelY + 13, 0xB8201810);
+            guiGraphics.renderOutline(labelX, labelY, textWidth + 8, 13, 0x998A6A3A);
+            guiGraphics.drawString(font, playerName, labelX + 4, labelY + 3, 0xFFE8F4FF, false);
         }
     }
 

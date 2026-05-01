@@ -22,7 +22,7 @@ public class ChunkTile {
 
     public static final int TILE_SIZE = 10;
     public static final int BLOCKS_PER_CHUNK = 16;
-    public static final int PIXELS_PER_BLOCK = 2;
+    public static final int PIXELS_PER_BLOCK = 3;
     public static final int PIXELS_PER_CHUNK = BLOCKS_PER_CHUNK * PIXELS_PER_BLOCK;
     public static final int TILE_BLOCK_SIZE = TILE_SIZE * BLOCKS_PER_CHUNK;
     public static final int TILE_PIXEL_SIZE = TILE_SIZE * PIXELS_PER_CHUNK;
