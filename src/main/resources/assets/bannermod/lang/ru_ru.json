@@ -1713,6 +1713,7 @@
   "bannermod.onboarding.prefab_hint.mine": "Открытие профессии: здесь у стартового шахтера появится настоящее рабочее место.",
   "bannermod.onboarding.prefab_hint.lumber_camp": "Открытие профессии: здесь у стартового лесоруба появится настоящее рабочее место.",
   "bannermod.onboarding.prefab_hint.barracks": "Военное расширение: казарма создает рекрутские вакансии, а не гражданские работы.",
+  "bannermod.onboarding.prefab_hint.gatehouse": "Фортификационный префаб: ставь его так, чтобы проезд ворот смотрел на дорогу или подход к стене; это путь префабов через wand, а не валидация стартового форта через surveyor.",
   "bannermod.onboarding.prefab_hint.generic": "Роль персонала: %s.",
   "gui.bannermod.common.back": "Назад",
   "gui.bannermod.common.cancel": "Отмена",
@@ -2081,5 +2082,7 @@
   "bannermod.surveyor.tooltip.founding_2": "Построй Starter Fort: якорь + зоны AUTHORITY_POINT и INTERIOR.",
   "bannermod.surveyor.tooltip.founding_3": "ПКМ в воздухе валидирует; дальше расширяйся Building Placement Wand.",
   "gui.bannermod.inv.tooltip.siege_engineer_disabled": "Повышение до осадного инженера пока не реализовано.",
-  "chat.bannermod.promote.unsupported_profession": "Это повышение пока не поддерживается."
+  "chat.bannermod.promote.unsupported_profession": "Это повышение пока не поддерживается.",
+  "bannermod.prefab.gatehouse.name": "Надвратный дом",
+  "bannermod.prefab.gatehouse.description": "Крытый укрепленный вход с двумя башнями и сквозным проездом."
 }

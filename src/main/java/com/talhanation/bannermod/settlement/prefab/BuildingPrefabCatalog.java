@@ -4,6 +4,7 @@ import com.talhanation.bannermod.settlement.prefab.impl.AnimalPenPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.BarracksPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.FarmPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.FishingDockPrefab;
+import com.talhanation.bannermod.settlement.prefab.impl.GatehousePrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.HousePrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.LumberCampPrefab;
 import com.talhanation.bannermod.settlement.prefab.impl.MarketStallPrefab;
@@ -34,6 +35,7 @@ public final class BuildingPrefabCatalog {
         registry.register(new StoragePrefab());
         registry.register(new HousePrefab());
         registry.register(new BarracksPrefab());
+        registry.register(new GatehousePrefab());
         registry.register(new TownHallPrefab());
     }
 }

@@ -76,6 +76,8 @@ class SettlementOnboardingGuideTest {
                 translationKey(SettlementOnboardingGuide.placementHint(descriptor("lumber_camp", BuildingPrefabProfession.LUMBERJACK))));
         assertEquals("bannermod.onboarding.prefab_hint.barracks",
                 translationKey(SettlementOnboardingGuide.placementHint(descriptor("barracks", BuildingPrefabProfession.RECRUIT_SWORDSMAN))));
+        assertEquals("bannermod.onboarding.prefab_hint.gatehouse",
+                translationKey(SettlementOnboardingGuide.placementHint(descriptor("gatehouse", BuildingPrefabProfession.NONE))));
         assertEquals("bannermod.onboarding.prefab_hint.generic",
                 translationKey(SettlementOnboardingGuide.placementHint(descriptor("watchtower", BuildingPrefabProfession.NONE))));
     }
