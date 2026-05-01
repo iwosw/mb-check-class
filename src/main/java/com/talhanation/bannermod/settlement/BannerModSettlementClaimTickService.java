@@ -50,8 +50,10 @@ final class BannerModSettlementClaimTickService {
                 growthContext,
                 MAX_GROWTH_QUEUE_SIZE
         );
+        // Keep settlement founding/player progression manual: passive claim ticks may bind
+        // existing BuildAreas, but must not auto-spawn prefab-backed ones on their own.
         state.projectRuntime.tickClaim(
-                level,
+                null,
                 snapshot.claimUuid(),
                 growthQueue,
                 BannerModSettlementProjectRuntime.buildAreaResolver(level),
