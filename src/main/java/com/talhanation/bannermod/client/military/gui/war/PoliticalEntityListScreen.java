@@ -405,6 +405,7 @@ public class PoliticalEntityListScreen extends Screen {
         renderHeader(graphics);
         renderList(graphics, mouseX, mouseY);
         renderDetails(graphics);
+        renderActionLedger(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
@@ -515,6 +516,37 @@ public class PoliticalEntityListScreen extends Screen {
         graphics.drawString(font,
                 text("gui.bannermod.war_list.ledger_title").getString(),
                 actionLedgerX() + 8, actionLedgerTop() + 5, INK_MUTED, false);
+    }
+
+    private void renderActionLedger(GuiGraphics graphics) {
+        int x = actionLedgerX() + 8;
+        int y = actionLedgerTop() + 18;
+        int w = Math.max(40, actionLedgerW() - 16);
+        Component status = visibleActionStatus();
+        graphics.drawString(font, font.plainSubstrByWidth(status.getString(), w), x, y, INK, false);
+        Component feedback = WarClientState.lastActionFeedback();
+        if (feedback != null && !feedback.getString().isBlank()) {
+            graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), w), x, y + 12, WAX, false);
+        }
+    }
+
+    private Component visibleActionStatus() {
+        if (!WarClientState.hasSnapshot()) {
+            return text("gui.bannermod.states.waiting_sync");
+        }
+        if (selected == null) {
+            return text("gui.bannermod.states.action.select_realm");
+        }
+        if (canLocalPlayerAct(selected)) {
+            if (selected.status() != PoliticalEntityStatus.STATE) {
+                return text("gui.bannermod.states.action.server_checked_promotion");
+            }
+            return text("gui.bannermod.states.action.authorized");
+        }
+        if (isLocalPlayerLeader(selected)) {
+            return text("gui.bannermod.states.tooltip.need_authority");
+        }
+        return text("gui.bannermod.states.action.read_only");
     }
 
     private int maxDetailLines(int titleY) {
