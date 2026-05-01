@@ -25,6 +25,8 @@ public class ConfirmScreen extends RecruitsScreenBase {
     private static final MutableComponent BUTTON_YES = Component.translatable("gui.recruits.button.Yes");
     private static final MutableComponent BUTTON_NO = Component.translatable("gui.recruits.button.No");
     private static final MutableComponent BUTTON_BACK = Component.translatable("gui.recruits.button.back");
+    private static final MutableComponent STATUS_BINARY = Component.translatable("gui.recruits.confirm.status.binary");
+    private static final MutableComponent STATUS_TRINARY = Component.translatable("gui.recruits.confirm.status.trinary");
 
 
     public ConfirmScreen(Component title, Component text, Runnable yesAction, Runnable noAction) {
@@ -93,5 +95,6 @@ public class ConfirmScreen extends RecruitsScreenBase {
             guiGraphics.drawString(font, line, guiLeft + xSize / 2 - font.width(line) / 2, yPosition, FONT_COLOR, false);
             yPosition += lineHeight;
         }
+        guiGraphics.drawString(font, backAction == null ? STATUS_BINARY : STATUS_TRINARY, guiLeft + 8, guiTop + ySize - 38, 0x5B4A32, false);
     }
 }

@@ -13,6 +13,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.EnumSet;
+import java.util.List;
 
 public class StorageAreaScreen extends WorkAreaScreen {
 
@@ -334,6 +335,35 @@ public class StorageAreaScreen extends WorkAreaScreen {
     private static String shortId(java.util.UUID uuid) {
         String value = uuid.toString();
         return value.substring(0, Math.min(8, value.length()));
+    }
+
+    @Override
+    protected List<Component> getSettingSummaryLines() {
+        if (this.routeDestination == null || this.routeDestination.isBlank()) {
+            return List.of(
+                    text("gui.workers.storage.summary.depot_access"),
+                    text("gui.workers.storage.summary.route_missing")
+            );
+        }
+
+        if (!this.storageArea.getRouteBlockedMessage().isBlank()) {
+            return List.of(
+                    text("gui.workers.storage.summary.route_ready", this.routeDestination, this.routeCount),
+                    Component.literal(this.storageArea.getRouteBlockedMessage())
+            );
+        }
+
+        if (!this.storageArea.getRouteBlockedReasonToken().isBlank()) {
+            return List.of(
+                    text("gui.workers.storage.summary.route_ready", this.routeDestination, this.routeCount),
+                    text("gui.workers.storage.summary.route_blocked", this.storageArea.getRouteBlockedReasonToken())
+            );
+        }
+
+        return List.of(
+                text("gui.workers.storage.summary.depot_access"),
+                text("gui.workers.storage.summary.route_ready", this.routeDestination, this.routeCount)
+        );
     }
 
     @Override

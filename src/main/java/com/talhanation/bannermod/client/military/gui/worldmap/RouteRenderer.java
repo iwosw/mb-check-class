@@ -4,6 +4,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import com.talhanation.bannermod.persistence.military.RecruitsRoute.Waypoint;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 
@@ -14,9 +15,13 @@ public class RouteRenderer {
 
     private static final ResourceLocation MAP_ICONS = ResourceLocation.parse("textures/map/map_icons.png");
 
-    private static final int COLOR_NORMAL      = 0xFFFFFFFF; // white
-    private static final int COLOR_NOT_LOADED  = 0xFFFF4444; // red
-    private static final int ICON_INDEX        = 6;
+    private static final int COLOR_NORMAL = 0xFFF4E2B8;
+    private static final int COLOR_NOT_LOADED = 0xFFD07063;
+    private static final int LINE_SHADOW = 0xAA20150D;
+    private static final int COLOR_LINE = 0xFFE0B86A;
+    private static final int LABEL_FILL = 0xB8201810;
+    private static final int LABEL_BORDER = 0xAA8A6A3A;
+    private static final int ICON_INDEX = 6;
 
     // -------------------------------------------------------------------------
 
@@ -47,9 +52,7 @@ public class RouteRenderer {
         renderIconAt(guiGraphics, mouseX, mouseY, ICON_INDEX, COLOR_NORMAL);
         if (waypoint.getAction() != null) {
             String label = waypoint.getAction().toString();
-            int textWidth = Minecraft.getInstance().font.width(label);
-            guiGraphics.drawString(Minecraft.getInstance().font, label,
-                    mouseX - textWidth / 2, mouseY + 6, COLOR_NORMAL, false);
+            drawLabelChip(guiGraphics, label, mouseX, mouseY + 6, COLOR_NORMAL, LABEL_BORDER);
         }
     }
 
@@ -66,7 +69,9 @@ public class RouteRenderer {
             int z1 = WorldMapRenderPrimitives.screenZ(a.getPosition().getZ(), offsetZ, scale);
             int x2 = WorldMapRenderPrimitives.screenX(b.getPosition().getX(), offsetX, scale);
             int z2 = WorldMapRenderPrimitives.screenZ(b.getPosition().getZ(), offsetZ, scale);
-            WorldMapRenderPrimitives.solidLine(guiGraphics, x1, z1, x2, z2, 0xAAFFFFFF);
+            int lineColor = isChunkLoaded(a) && isChunkLoaded(b) ? COLOR_LINE : COLOR_NOT_LOADED;
+            WorldMapRenderPrimitives.solidLine(guiGraphics, x1, z1, x2, z2, LINE_SHADOW);
+            WorldMapRenderPrimitives.solidLine(guiGraphics, x1, z1 - 1, x2, z2 - 1, lineColor);
         }
     }
 
@@ -112,24 +117,19 @@ public class RouteRenderer {
 
         renderIconAt(guiGraphics, pixelX, pixelZ, ICON_INDEX, argb);
 
-        // Number label
         String numStr = String.valueOf(number);
-        int textWidth = Minecraft.getInstance().font.width(numStr);
-        guiGraphics.drawString(Minecraft.getInstance().font, numStr,
-                pixelX - textWidth / 2, pixelZ - 10, argb, false);
+        drawLabelChip(guiGraphics, numStr, pixelX, pixelZ - 12, argb, loaded ? LABEL_BORDER : COLOR_NOT_LOADED);
 
-        // Status / action label below icon, only when zoomed in and not being dragged
         if (scale > 2.0 && !isDragging) {
-            String label = null;
+            Component label = null;
             if (!loaded) {
-                label = "not loaded";
+                label = Component.translatable("gui.recruits.map.route.not_loaded");
             } else if (waypoint.getAction() != null) {
-                label = waypoint.getAction().toString();
+                label = Component.literal(waypoint.getAction().toString());
             }
             if (label != null) {
-                int labelW = Minecraft.getInstance().font.width(label);
-                guiGraphics.drawString(Minecraft.getInstance().font, label,
-                        pixelX - labelW / 2, pixelZ + 5, argb, false);
+                drawLabelChip(guiGraphics, label.getString(), pixelX, pixelZ + 6, argb,
+                        loaded ? LABEL_BORDER : COLOR_NOT_LOADED);
             }
         }
     }
@@ -149,6 +149,15 @@ public class RouteRenderer {
     private static void renderIconAt(GuiGraphics guiGraphics, int pixelX, int pixelZ,
                                      int iconIndex, int color) {
         WorldMapRenderPrimitives.texturedIcon(guiGraphics, MAP_ICONS, pixelX, pixelZ, iconIndex, 3.0F, color);
+    }
+
+    private static void drawLabelChip(GuiGraphics guiGraphics, String label, int centerX, int y, int textColor, int borderColor) {
+        Minecraft minecraft = Minecraft.getInstance();
+        int width = minecraft.font.width(label) + 6;
+        int x = centerX - width / 2;
+        guiGraphics.fill(x, y, x + width, y + 10, LABEL_FILL);
+        guiGraphics.renderOutline(x, y, width, 10, borderColor);
+        guiGraphics.drawString(minecraft.font, label, x + 3, y + 1, textColor, false);
     }
 
     // -------------------------------------------------------------------------

@@ -27,6 +27,8 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
     protected static final Component BUTTON_BACK = Component.translatable("gui.recruits.button.back");
     protected static Component BUTTON_TEXT;
     protected static Component TOOLTIP_BUTTON;
+    protected static final Component HINT_TEXT = Component.translatable("gui.recruits.list.hint.select_player");
+    protected static final Component ACTION_DISABLED_TOOLTIP = Component.translatable("gui.recruits.list.tooltip.action_disabled_player");
     protected static final int HEADER_SIZE = 16;
     protected static final int FOOTER_SIZE = 32;
     protected static final int SEARCH_HEIGHT = 16;
@@ -100,6 +102,7 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
                 this.init();
         });
         actionButton.active = false;
+        actionButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(ACTION_DISABLED_TOOLTIP));
 
         addRenderableWidget(backButton);
         addRenderableWidget(actionButton);
@@ -140,8 +143,12 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, this.getTitle(), width / 2 - font.width(this.getTitle()) / 2, guiTop + 5, 4210752, false);
-
         renderSearchableList(guiGraphics, playerList, searchBox, mouseX, mouseY, delta, HEADER_SIZE, UNIT_SIZE, units);
+
+        Component status = selected == null
+                ? HINT_TEXT
+                : Component.translatable("gui.recruits.list.status.player_selected", selected.getName());
+        guiGraphics.drawString(font, status, guiLeft + 8, guiTop + HEADER_SIZE + units * UNIT_SIZE + 9, 0x5B4A32, false);
     }
 
     private void checkSearchStringUpdate(String string) {
@@ -158,6 +165,7 @@ public class SelectPlayerScreen extends ListScreenBase implements IPlayerSelecti
         RecruitsPlayerEntry entry = playerList.getPlayerEntryAtPosition(x, y);
         this.selected = entry == null ? null : entry.getPlayerInfo();
         this.actionButton.active = selected != null;
+        this.actionButton.setTooltip(this.actionButton.active ? net.minecraft.client.gui.components.Tooltip.create(TOOLTIP_BUTTON) : net.minecraft.client.gui.components.Tooltip.create(ACTION_DISABLED_TOOLTIP));
 
         return flag;
     }

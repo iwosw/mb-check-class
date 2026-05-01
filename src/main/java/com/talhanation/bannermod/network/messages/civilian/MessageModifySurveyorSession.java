@@ -44,6 +44,8 @@ public class MessageModifySurveyorSession implements BannerModMessage<MessageMod
             case CANCEL_PENDING_CORNER -> SettlementSurveyorToolItem.cancelPendingCorner(player, stack);
             case CLEAR_CURRENT_ROLE -> SettlementSurveyorToolItem.clearSelectedRoleZone(player, stack);
             case RESET_ALL_MARKS -> SettlementSurveyorToolItem.resetAllMarks(player, stack);
+            case TOGGLE_GUIDE_PREVIEW -> SettlementSurveyorToolItem.toggleGuidePreview(player, stack);
+            case SUGGEST_DRAFT_ZONES -> SettlementSurveyorToolItem.suggestDraftZones(player, stack);
         }
     }
 
@@ -63,6 +65,8 @@ public class MessageModifySurveyorSession implements BannerModMessage<MessageMod
     public enum Action {
         CANCEL_PENDING_CORNER,
         CLEAR_CURRENT_ROLE,
-        RESET_ALL_MARKS
+        RESET_ALL_MARKS,
+        TOGGLE_GUIDE_PREVIEW,
+        SUGGEST_DRAFT_ZONES
     }
 }

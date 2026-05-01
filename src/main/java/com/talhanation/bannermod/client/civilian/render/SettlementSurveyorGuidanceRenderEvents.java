@@ -104,11 +104,11 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         BlockPos previewAnchor = anchor.equals(BlockPos.ZERO) ? target : anchor;
         if (previewAnchor != null && !previewAnchor.equals(BlockPos.ZERO)) {
             renderAnchorMarker(pose, lines, previewAnchor);
-            if (mode == SurveyorMode.BOOTSTRAP_FORT) {
+            if (context.showGuidePreview() && mode == SurveyorMode.BOOTSTRAP_FORT) {
                 renderGuideBox(pose, lines, buffers, previewAnchor, ZoneRole.AUTHORITY_POINT, StarterFortPlan.AUTHORITY_GUIDE, session, selectedRole, 0.82F);
                 renderGuideBox(pose, lines, buffers, previewAnchor, ZoneRole.INTERIOR, StarterFortPlan.INTERIOR_GUIDE, session, selectedRole, 0.28F);
                 renderStarterFortPreview(pose, lines, previewAnchor);
-            } else {
+            } else if (context.showGuidePreview()) {
                 renderSurveyorPlanPreview(pose, lines, buffers, previewAnchor, mode, session, selectedRole);
             }
         }
@@ -292,6 +292,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
                     SettlementSurveyorToolItem.selectedRole(stack),
                     SettlementSurveyorToolItem.pendingCorner(stack),
                     targetedBlock(mc),
+                    session == null || session.showGuidePreview(),
                     false
             );
         }
@@ -306,6 +307,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
                 pinnedPreview.selectedRole(),
                 null,
                 null,
+                pinnedPreview.session().showGuidePreview(),
                 true
         );
     }
@@ -474,6 +476,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
                                   ZoneRole selectedRole,
                                   @Nullable BlockPos pendingCorner,
                                   @Nullable BlockPos target,
+                                  boolean showGuidePreview,
                                   boolean pinned) {
     }
 }

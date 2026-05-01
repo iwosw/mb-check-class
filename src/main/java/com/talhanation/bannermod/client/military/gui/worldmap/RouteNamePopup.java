@@ -8,9 +8,16 @@ import org.lwjgl.glfw.GLFW;
 
 public class RouteNamePopup {
 
-    private static final int WIDTH = 200;
-    private static final int HEIGHT = 64;
+    private static final int WIDTH = 214;
+    private static final int HEIGHT = 94;
     private static final int TEXT_COLOR = 0xFFFFFF;
+    private static final Component TEXT_TITLE = Component.translatable("gui.recruits.map.route.create.title");
+    private static final Component TEXT_HINT = Component.translatable("gui.recruits.map.route.create.hint");
+    private static final Component TEXT_NAME = Component.translatable("gui.recruits.map.route.name");
+    private static final Component TEXT_CONFIRM = Component.translatable("gui.recruits.map.route.create.confirm");
+    private static final Component TEXT_CANCEL = Component.translatable("gui.recruits.map.common.cancel");
+    private static final Component TEXT_DISABLED_BLANK = Component.translatable("gui.recruits.map.route.disabled.blank_name");
+    private static final Component TEXT_FEEDBACK_CREATED = Component.translatable("gui.recruits.map.route.feedback.created");
 
     private final WorldMapScreen parent;
     private final WorldMapRouteMutationController routeController;
@@ -31,7 +38,7 @@ public class RouteNamePopup {
         int px = (parent.width - WIDTH) / 2;
         int py = (parent.height - HEIGHT) / 2;
         int fieldX = px + 8;
-        int fieldY = py + 20;
+        int fieldY = py + 46;
         int fieldW = WIDTH - 16;
 
         nameField = new EditBox(Minecraft.getInstance().font,
@@ -50,14 +57,18 @@ public class RouteNamePopup {
     }
 
     private void confirm() {
-        if (nameField == null || nameField.getValue().isBlank()) {
-            close();
+        if (!canConfirm()) {
             return;
         }
 
         routeController.createRoute(nameField.getValue().trim());
         parent.setSelectedRoute(routeController.getSelectedRoute());
+        parent.showMapNotice(TEXT_FEEDBACK_CREATED, 0xFF9FDB6B);
         close();
+    }
+
+    private boolean canConfirm() {
+        return nameField != null && !nameField.getValue().trim().isBlank();
     }
 
     public void tick() {
@@ -72,26 +83,32 @@ public class RouteNamePopup {
         guiGraphics.fill(0, 0, parent.width, parent.height, 0x88000000);
         WorldMapRenderPrimitives.panel(guiGraphics, px, py, WIDTH, HEIGHT);
 
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, "Route Name:",
+        guiGraphics.drawCenteredString(Minecraft.getInstance().font, TEXT_TITLE,
                 px + WIDTH / 2, py + 6, TEXT_COLOR);
+        guiGraphics.drawWordWrap(Minecraft.getInstance().font, TEXT_HINT, px + 8, py + 18, WIDTH - 16, 0xFFE6D6A8);
+        guiGraphics.drawString(Minecraft.getInstance().font, TEXT_NAME, px + 8, py + 34, 0xFFE0B86A, false);
 
         int fieldX = px + 8;
-        int fieldY = py + 20;
+        int fieldY = py + 46;
         int fieldW = WIDTH - 16;
         guiGraphics.fill(fieldX - 1, fieldY - 1, fieldX + fieldW + 1, fieldY + 15, 0x80303030);
         guiGraphics.renderOutline(fieldX - 1, fieldY - 1, fieldW + 2, 16, 0xAA8A6A3A);
 
         if (nameField != null) nameField.render(guiGraphics, mouseX, mouseY, 0);
 
+        Component status = canConfirm() ? TEXT_HINT : TEXT_DISABLED_BLANK;
+        int statusColor = canConfirm() ? 0xFFB8A17A : 0xFFFFD36A;
+        guiGraphics.drawWordWrap(Minecraft.getInstance().font, status, px + 8, py + 64, WIDTH - 16, statusColor);
+
         int btnY = py + HEIGHT - 18;
-        renderButton(guiGraphics, mouseX, mouseY, "OK",     px + 8,          btnY, 80, 14);
-        renderButton(guiGraphics, mouseX, mouseY, "Cancel", px + WIDTH - 88, btnY, 80, 14);
+        renderButton(guiGraphics, mouseX, mouseY, TEXT_CONFIRM, px + 8, btnY, 90, 14, canConfirm());
+        renderButton(guiGraphics, mouseX, mouseY, TEXT_CANCEL, px + WIDTH - 98, btnY, 90, 14, true);
     }
 
     private void renderButton(GuiGraphics guiGraphics, int mouseX, int mouseY,
-                               String label, int x, int y, int w, int h) {
+                               Component label, int x, int y, int w, int h, boolean enabled) {
         WorldMapRenderPrimitives.button(guiGraphics, Minecraft.getInstance().font, mouseX, mouseY,
-                x, y, w, h, label, TEXT_COLOR, false);
+                x, y, w, h, label, TEXT_COLOR, false, enabled);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY) {
@@ -111,11 +128,11 @@ public class RouteNamePopup {
 
         int btnY = py + HEIGHT - 18;
 
-        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + 8, btnY, 80, 14)) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + 8, btnY, 90, 14)) {
             confirm();
             return true;
         }
-        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + WIDTH - 88, btnY, 80, 14)) {
+        if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + WIDTH - 98, btnY, 90, 14)) {
             close();
             return true;
         }

@@ -39,6 +39,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
     private static final MutableComponent BUTTON_TRADE = Component.translatable("gui.workers.button.trade");
     private static final MutableComponent TEXT_CREATIVE = Component.translatable("gui.workers.text.creative");
     private static final MutableComponent TEXT_DAILY_REFRESH = Component.translatable("gui.workers.text.dailyRefresh");
+    private static final Component TITLE_STALL_LEDGER = Component.translatable("gui.workers.merchant.title");
     private static final int fontColor = 4210752;
     private final MerchantEntity merchantEntity;
     private final Player player;
@@ -68,7 +69,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
     private static final int TRADE_TITLE_Y = 58;
 
     public MerchantTradeScreen(MerchantTradeContainer tradeContainer, Inventory playerInventory, Component title) {
-        super(RESOURCE_LOCATION, tradeContainer, playerInventory, Component.literal("Trades"));
+        super(RESOURCE_LOCATION, tradeContainer, playerInventory, TITLE_STALL_LEDGER);
         this.tradeContainer = tradeContainer;
         this.merchantEntity = tradeContainer.getMerchantEntity();
         this.player = playerInventory.player;
@@ -321,6 +322,79 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
         }
     }
 
+    private Component text(String key, Object... args) {
+        return Component.translatable(key, args);
+    }
+
+    private int drawWrapped(GuiGraphics guiGraphics, Component text, int x, int y, int width, int color) {
+        for (var line : this.font.split(text, width)) {
+            guiGraphics.drawString(this.font, line, x, y, color, false);
+            y += 10;
+        }
+        return y;
+    }
+
+    private Component currentStatusText() {
+        if (this.tradeList == null || this.tradeList.children().isEmpty()) {
+            return text(this.isOwner
+                    ? "gui.workers.merchant.status.no_offers_owner"
+                    : "gui.workers.merchant.status.no_offers_customer");
+        }
+        if (this.selection == null) {
+            return text("gui.workers.merchant.status.select_offer");
+        }
+        if (!this.selection.enabled) {
+            return text("gui.workers.merchant.status.closed_offer");
+        }
+        if (this.selection.maxTrades != -1 && this.selection.currentTrades >= this.selection.maxTrades) {
+            return text("gui.workers.merchant.status.sold_out");
+        }
+        if (this.player.getInventory().getFreeSlot() == -1) {
+            return text("gui.workers.merchant.status.inventory_full");
+        }
+        return text("gui.workers.merchant.status.ready");
+    }
+
+    private Component currentHintText() {
+        if (this.tradeList == null || this.tradeList.children().isEmpty()) {
+            return text(this.isOwner
+                    ? "gui.workers.merchant.hint.no_offers_owner"
+                    : "gui.workers.merchant.hint.no_offers_customer");
+        }
+        if (this.selection == null) {
+            return text(this.isOwner
+                    ? "gui.workers.merchant.hint.select_offer_owner"
+                    : "gui.workers.merchant.hint.select_offer_customer");
+        }
+        if (!this.selection.enabled) {
+            return text(this.isOwner
+                    ? "gui.workers.merchant.hint.closed_offer_owner"
+                    : "gui.workers.merchant.hint.closed_offer_customer");
+        }
+        if (this.selection.maxTrades != -1 && this.selection.currentTrades >= this.selection.maxTrades) {
+            return text(this.isOwner
+                    ? "gui.workers.merchant.hint.sold_out_owner"
+                    : "gui.workers.merchant.hint.sold_out_customer");
+        }
+        if (this.player.getInventory().getFreeSlot() == -1) {
+            return text("gui.workers.merchant.hint.inventory_full");
+        }
+        return text(this.isOwner
+                ? "gui.workers.merchant.hint.ready_owner"
+                : "gui.workers.merchant.hint.ready_customer");
+    }
+
+    private int currentStatusColor() {
+        if (this.tradeList == null || this.tradeList.children().isEmpty() || this.selection == null) {
+            return 0xFFB58D4A;
+        }
+        if (!this.selection.enabled || (this.selection.maxTrades != -1 && this.selection.currentTrades >= this.selection.maxTrades)
+                || this.player.getInventory().getFreeSlot() == -1) {
+            return 0xFFB04A3A;
+        }
+        return 0xFF4C7A43;
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, float partialTicks) {
         this.hoveredTooltipStack = ItemStack.EMPTY;
@@ -340,6 +414,9 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                 ? merchantEntity.getDisplayName()
                 : Component.literal(merchantEntity.getDisplayName().getString() + " - " + marketName);
         guiGraphics.drawString(font, nameLabel, 92, 5, fontColor, false);
+
+        int hintY = drawWrapped(guiGraphics, currentStatusText(), 96, 20, 148, currentStatusColor());
+        drawWrapped(guiGraphics, currentHintText(), 96, hintY + 2, 148, 0xFF5D4630);
 
         guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 92, this.imageHeight - 96 + 2, fontColor, false);
     }

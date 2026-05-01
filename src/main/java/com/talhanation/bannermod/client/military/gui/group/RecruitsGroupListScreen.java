@@ -29,6 +29,10 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
     protected static final Component ADD_BUTTON = Component.translatable("gui.recruits.groups.add");
     protected static final Component EDIT_BUTTON = Component.translatable("gui.recruits.groups.edit");
     protected static final Component REMOVE_BUTTON = Component.translatable("gui.recruits.groups.remove");
+    protected static final Component HINT_TEXT = Component.translatable("gui.recruits.list.hint.manage_groups");
+    protected static final Component EDIT_DISABLED_TOOLTIP = Component.translatable("gui.recruits.list.tooltip.edit_disabled");
+    protected static final Component REMOVE_DISABLED_TOOLTIP = Component.translatable("gui.recruits.list.tooltip.remove_disabled");
+    protected static final Component ADD_DISABLED_TOOLTIP = Component.translatable("gui.recruits.list.tooltip.add_disabled");
     protected static final int HEADER_SIZE = 16;
     protected static final int FOOTER_SIZE = 32;
     protected static final int SEARCH_HEIGHT = 16;
@@ -124,6 +128,9 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
         this.editButton.active = selected != null;
         this.removeButton.active = selected != null;
         this.addButton.active = selected == null;
+        this.editButton.setTooltip(selected == null ? net.minecraft.client.gui.components.Tooltip.create(EDIT_DISABLED_TOOLTIP) : null);
+        this.removeButton.setTooltip(selected == null ? net.minecraft.client.gui.components.Tooltip.create(REMOVE_DISABLED_TOOLTIP) : null);
+        this.addButton.setTooltip(selected != null ? net.minecraft.client.gui.components.Tooltip.create(ADD_DISABLED_TOOLTIP) : null);
     }
 
     private Button createAddGroupButton(int x, int y) {
@@ -162,8 +169,12 @@ public class RecruitsGroupListScreen extends ListScreenBase implements IGroupSel
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, this.getTitle(), width / 2 - font.width(TITLE) / 2, guiTop + 5, 4210752, false);
-
         renderSearchableList(guiGraphics, groupList, searchBox, mouseX, mouseY, delta, HEADER_SIZE, UNIT_SIZE, units);
+
+        Component status = selected == null
+                ? HINT_TEXT
+                : Component.translatable("gui.recruits.list.status.group_selected", selected.getName());
+        guiGraphics.drawString(font, status, guiLeft + 8, guiTop + HEADER_SIZE + units * UNIT_SIZE + 9, 0x5B4A32, false);
     }
 
     private void checkSearchStringUpdate(String string) {

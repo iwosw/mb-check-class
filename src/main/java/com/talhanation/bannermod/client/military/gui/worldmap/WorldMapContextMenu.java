@@ -93,8 +93,7 @@ public class WorldMapContextMenu {
         int visibleEntries = (int) entries.stream().filter(e -> e.shouldShow(screen)).count();
         int height = visibleEntries * entryHeight;
 
-        guiGraphics.fill(x, y, x + width, y + height, 0xFF1A1A1A);
-        guiGraphics.renderOutline(x, y, width, height, 0xFF555555);
+        WorldMapRenderPrimitives.panel(guiGraphics, x, y, width, height);
 
         int entryY = y;
         Component hoveredDisabledReason = null;
@@ -104,7 +103,7 @@ public class WorldMapContextMenu {
                 if (hovered) hoveredEntryTag = entry.getTag();
                 if (hovered && entry.isDisabled()) hoveredDisabledReason = entry.disabledReason();
 
-                guiGraphics.fill(x, entryY, x + width, entryY + entryHeight, hovered ? 0xFF333333 : 0xFF1A1A1A);
+                guiGraphics.fill(x + 1, entryY, x + width - 1, entryY + entryHeight, hovered ? 0xAA4B3928 : 0x88261C15);
 
                 int textColor;
                 if (entry.isDisabled()) {
@@ -126,7 +125,13 @@ public class WorldMapContextMenu {
             }
         }
         if (hoveredDisabledReason != null) {
-            guiGraphics.renderTooltip(screen.getMinecraft().font, hoveredDisabledReason, (int) worldMapScreen.mouseX, (int) worldMapScreen.mouseY);
+            int hintHeight = 28;
+            int hintY = Math.min(worldMapScreen.height - hintHeight - 10, y + height + 4);
+            if (hintY <= y) {
+                hintY = Math.max(10, y - hintHeight - 4);
+            }
+            WorldMapRenderPrimitives.panel(guiGraphics, x, hintY, width, hintHeight);
+            guiGraphics.drawWordWrap(screen.getMinecraft().font, hoveredDisabledReason, x + 6, hintY + 6, width - 12, 0xFFFFD36A);
         }
     }
 

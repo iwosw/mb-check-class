@@ -33,21 +33,33 @@ final class WorldMapRenderPrimitives {
     static void button(GuiGraphics graphics, Font font, int mouseX, int mouseY,
                        int x, int y, int width, int height, String label,
                        int labelColor, boolean selected) {
+        button(graphics, font, mouseX, mouseY, x, y, width, height, label, labelColor, selected, true);
+    }
+
+    static void button(GuiGraphics graphics, Font font, int mouseX, int mouseY,
+                       int x, int y, int width, int height, String label,
+                       int labelColor, boolean selected, boolean enabled) {
         boolean hovered = contains(mouseX, mouseY, x, y, width, height);
-        int bg = selected ? 0xCC5A4025 : (hovered ? 0xCC4B3928 : 0xB82A2119);
+        int bg = !enabled ? 0x88221812 : selected ? 0xCC5A4025 : (hovered ? 0xCC4B3928 : 0xB82A2119);
         graphics.fill(x, y, x + width, y + height, bg);
-        graphics.renderOutline(x, y, width, height, hovered || selected ? 0xFFE0B86A : 0xAA8A6A3A);
-        graphics.drawCenteredString(font, label, x + width / 2, y + (height - 8) / 2, labelColor);
+        graphics.renderOutline(x, y, width, height, !enabled ? 0x665E4A2A : hovered || selected ? 0xFFE0B86A : 0xAA8A6A3A);
+        graphics.drawCenteredString(font, label, x + width / 2, y + (height - 8) / 2, enabled ? labelColor : 0xFF9A8661);
     }
 
     static void button(GuiGraphics graphics, Font font, int mouseX, int mouseY,
                        int x, int y, int width, int height, Component label,
                        int labelColor, boolean selected) {
+        button(graphics, font, mouseX, mouseY, x, y, width, height, label, labelColor, selected, true);
+    }
+
+    static void button(GuiGraphics graphics, Font font, int mouseX, int mouseY,
+                       int x, int y, int width, int height, Component label,
+                       int labelColor, boolean selected, boolean enabled) {
         boolean hovered = contains(mouseX, mouseY, x, y, width, height);
-        int bg = selected ? 0xCC5A4025 : (hovered ? 0xCC4B3928 : 0xB82A2119);
+        int bg = !enabled ? 0x88221812 : selected ? 0xCC5A4025 : (hovered ? 0xCC4B3928 : 0xB82A2119);
         graphics.fill(x, y, x + width, y + height, bg);
-        graphics.renderOutline(x, y, width, height, hovered || selected ? 0xFFE0B86A : 0xAA8A6A3A);
-        graphics.drawCenteredString(font, label, x + width / 2, y + (height - 8) / 2, labelColor);
+        graphics.renderOutline(x, y, width, height, !enabled ? 0x665E4A2A : hovered || selected ? 0xFFE0B86A : 0xAA8A6A3A);
+        graphics.drawCenteredString(font, label, x + width / 2, y + (height - 8) / 2, enabled ? labelColor : 0xFF9A8661);
     }
 
     static boolean contains(double mouseX, double mouseY, int x, int y, int width, int height) {

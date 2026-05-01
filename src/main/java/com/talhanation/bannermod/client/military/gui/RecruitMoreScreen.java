@@ -32,6 +32,7 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
     private static final MutableComponent ASSIGN_TO_PLAYER = Component.translatable("gui.recruits.team.assignNewOwner");
     private static final MutableComponent GROUP_SETTINGS = Component.translatable("gui.recruits.groups.settings");
     private static final MutableComponent RENAME = Component.translatable("gui.recruits.inv.rename");
+    private static final MutableComponent STATUS_TEXT = Component.translatable("gui.recruits.more.status");
     public RecruitMoreScreen(Screen parent, AbstractRecruitEntity recruit, Player player) {
         super(TITLE, 195,160);
         this.player = player;
@@ -109,6 +110,7 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 7, FONT_COLOR, false);
+        guiGraphics.drawString(font, STATUS_TEXT, guiLeft + 18, guiTop + 140, 0x5B4A32, false);
     }
 
 }

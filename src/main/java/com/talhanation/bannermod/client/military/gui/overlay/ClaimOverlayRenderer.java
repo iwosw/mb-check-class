@@ -11,6 +11,9 @@ import net.minecraft.network.chat.Component;
 public class ClaimOverlayRenderer {
     private static final int PANEL_HEIGHT_FULL = 54;
     private static final int PANEL_HEIGHT_COMPACT = 15;
+    private static final int PANEL_BACKGROUND = 0xD018140F;
+    private static final int PANEL_INNER_BACKGROUND = 0xC0100C09;
+    private static final int FRAME_COLOR = 0xFF3A3026;
     private static final int BACKGROUND_ALPHA = 0x0F;
     private static final int SIEGE_BACKGROUND_ALPHA = 0x70;
     private static final int OCCUPATION_BACKGROUND_ALPHA = 0x65;
@@ -28,16 +31,19 @@ public class ClaimOverlayRenderer {
         int bgRawAlpha = underSiege ? SIEGE_BACKGROUND_ALPHA : (occupied ? OCCUPATION_BACKGROUND_ALPHA : BACKGROUND_ALPHA);
         int bgAlpha = (int)(bgRawAlpha * alpha);
 
-        int chrome = underSiege ? 0xFF3030 : (occupied ? 0xBB8A30 : authorityStatus.chromeColor());
+        int chrome = underSiege ? 0xFF8B3A32 : (occupied ? 0xFF9B7A2D : authorityStatus.chromeColor());
         int backgroundColor = claim == null ? applyAlpha(authorityStatus.backgroundColor(), alpha) : (bgAlpha << 24) | (chrome & 0x00FFFFFF);
 
-        guiGraphics.fill(x, y, x + panelWidth, y + panelHeight, backgroundColor);
-        guiGraphics.renderOutline(x, y, panelWidth, panelHeight, withAlpha(authorityStatus.chromeColor(), alpha));
+        guiGraphics.fill(x, y, x + panelWidth, y + panelHeight, applyAlpha(PANEL_BACKGROUND, alpha));
+        guiGraphics.fill(x + 1, y + 1, x + panelWidth - 1, y + panelHeight - 1, applyAlpha(PANEL_INNER_BACKGROUND, alpha));
+        guiGraphics.fill(x + 3, y + 3, x + 7, y + panelHeight - 3, withAlpha(chrome, alpha));
+        guiGraphics.fill(x + 8, y + 3, x + panelWidth - 3, y + 6, backgroundColor);
+        guiGraphics.renderOutline(x, y, panelWidth, panelHeight, applyAlpha(FRAME_COLOR, alpha));
 
         if (state == HudOverlayCoordinator.OverlayState.FULL) {
-            renderNormalFullContent(guiGraphics, claim, authorityStatus, ownerEntity, x, y, panelWidth, font, alpha);
+            renderNormalFullContent(guiGraphics, claim, authorityStatus, ownerEntity, x, y, panelWidth, font, alpha, chrome);
         } else {
-            renderNormalCompactContent(guiGraphics, claim, authorityStatus, ownerEntity, x, y, panelWidth, panelHeight, font, alpha);
+            renderNormalCompactContent(guiGraphics, claim, authorityStatus, ownerEntity, x, y, panelWidth, panelHeight, font, alpha, chrome);
         }
 
         if (underSiege) {
@@ -74,32 +80,38 @@ public class ClaimOverlayRenderer {
         guiGraphics.drawString(font, truncated, x + (panelWidth - consequenceWidth) / 2, badgeY + 10, textColor, true);
     }
 
-    private void renderNormalFullContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, PoliticalEntityRecord ownerEntity, int x, int y, int width, Font font, float alpha) {
+    private void renderNormalFullContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, PoliticalEntityRecord ownerEntity, int x, int y, int width, Font font, float alpha, int chrome) {
         int textAlpha = (int)(0xFF * alpha);
         int textColor = (textAlpha << 24) | 0xFFFFFF;
         String wildernessLabel = Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString();
+        int sigilX = x + 12;
+        int sigilY = y + 15;
+
+        guiGraphics.fill(sigilX, sigilY, sigilX + 16, sigilY + 16, applyAlpha(0xC01A1511, alpha));
+        guiGraphics.renderOutline(sigilX, sigilY, 16, 16, withAlpha(chrome, alpha));
+        guiGraphics.drawString(font, authorityStatus.symbol(), sigilX + 5, sigilY + 4, withAlpha(authorityStatus.textColor(), alpha), false);
 
         String claimName = claim == null
                 ? wildernessLabel
                 : claim.getName();
-        claimName = truncateText(font, claimName, width - 80);
-        guiGraphics.drawString(font, claimName, x + 60, y + 10, textColor, false);
+        claimName = truncateText(font, claimName, width - 42);
+        guiGraphics.drawString(font, claimName, x + 34, y + 10, textColor, false);
 
         String authorityLabel = Component.translatable(authorityStatus.labelKey()).getString();
-        guiGraphics.drawString(font, truncateText(font, authorityLabel, width - 80), x + 60, y + 21, withAlpha(authorityStatus.textColor(), alpha), false);
+        guiGraphics.drawString(font, truncateText(font, authorityLabel, width - 42), x + 34, y + 22, withAlpha(authorityStatus.textColor(), alpha), false);
 
         if (claim != null) {
             String ownerLabel = Component.translatable(
                     "gui.bannermod.claim_overlay.owner",
                     ClaimTerritoryText.ownerName(claim, ownerEntity)
             ).getString();
-            String claimOwner = truncateText(font, ownerLabel, (width - 80) * 2);
+            String claimOwner = truncateText(font, ownerLabel, (width - 42) * 2);
 
             PoseStack poseStack = guiGraphics.pose();
             poseStack.pushPose();
             try {
                 float scale = 0.5f;
-                int originalX = x + 60;
+                int originalX = x + 34;
                 int originalY = y + 33;
                 poseStack.translate(originalX, originalY, 0);
                 poseStack.scale(scale, scale, 1.0f);
@@ -110,7 +122,7 @@ public class ClaimOverlayRenderer {
         }
     }
 
-    private void renderNormalCompactContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, PoliticalEntityRecord ownerEntity, int x, int y, int width, int height, Font font, float alpha) {
+    private void renderNormalCompactContent(GuiGraphics guiGraphics, RecruitsClaim claim, ClaimAuthorityStatus authorityStatus, PoliticalEntityRecord ownerEntity, int x, int y, int width, int height, Font font, float alpha, int chrome) {
         int textAlpha = (int)(0xFF * alpha);
         int textColor = (textAlpha << 24) | 0xFFFFFF;
         String wildernessLabel = Component.translatable("gui.bannermod.claim_overlay.unclaimed").getString();
@@ -122,12 +134,15 @@ public class ClaimOverlayRenderer {
                         Component.translatable(authorityStatus.compactLabelKey()).getString(),
                         ClaimTerritoryText.territoryName(claim, ownerEntity, wildernessLabel)
                 ).getString();
-        displayText = truncateText(font, displayText, width - 20);
+        displayText = truncateText(font, displayText, width - 38);
 
         int textWidth = font.width(displayText);
-        int textX = x + (width - textWidth) / 2;
+        int textX = x + 22 + Math.max(0, (width - 26 - textWidth) / 2);
         int textY = y + (height - 9) / 2;
 
+        guiGraphics.fill(x + 10, y + 3, x + 18, y + height - 3, applyAlpha(0xC01A1511, alpha));
+        guiGraphics.renderOutline(x + 10, y + 3, 8, height - 6, withAlpha(chrome, alpha));
+        guiGraphics.drawString(font, authorityStatus.symbol(), x + 12, textY, withAlpha(authorityStatus.textColor(), alpha), false);
         guiGraphics.drawString(font, displayText, textX, textY, textColor, false);
     }
 

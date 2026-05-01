@@ -11,7 +11,6 @@ import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -29,6 +28,7 @@ public class MerchantAddEditTradeScreen extends ScreenBase<MerchantAddEditTradeC
     private static final MutableComponent BUTTON_RESET = Component.translatable("gui.workers.button.reset");
     private static final MutableComponent TEXT_ALLOW_DAMAGED_ITEMS = Component.translatable("gui.workers.checkbox.allowDamagedCurrency");
     private static final MutableComponent TEXT_ENABLED = Component.translatable("gui.workers.checkbox.enabled");
+    private static final Component TITLE_TRADE_CHARTER = Component.translatable("gui.workers.merchant.edit_title");
     private static final int fontColor = 4210752;
     private final MerchantEntity merchantEntity;
     private final Player player;
@@ -45,8 +45,9 @@ public class MerchantAddEditTradeScreen extends ScreenBase<MerchantAddEditTradeC
     private int maxTrades;
     private boolean allowDamagedCurrency;
     private boolean enabled;
+
     public MerchantAddEditTradeScreen(MerchantAddEditTradeContainer tradeContainer, Inventory playerInventory, Component title) {
-        super(RESOURCE_LOCATION, tradeContainer, playerInventory, Component.literal("Add or Edit Merchant Trade"));
+        super(RESOURCE_LOCATION, tradeContainer, playerInventory, TITLE_TRADE_CHARTER);
         this.tradeContainer = tradeContainer;
         this.merchantEntity = tradeContainer.getMerchantEntity();
         this.player = playerInventory.player;
@@ -72,8 +73,8 @@ public class MerchantAddEditTradeScreen extends ScreenBase<MerchantAddEditTradeC
         int x = leftPos + 7;
         int y = topPos + 40;
 
-        addRenderableWidget(new BlackShowingTextField(x, y + 15, 120, 20, Component.literal("currentTrades:     " + formatValue(currentTrades) )));
-        addRenderableWidget(new BlackShowingTextField(x, y + 40, 120, 20, Component.literal("maxTrades:          " + formatValue(maxTrades))));
+        addRenderableWidget(new BlackShowingTextField(x, y + 15, 120, 20, Component.translatable("gui.workers.merchant.edit.current_trades", formatValue(currentTrades))));
+        addRenderableWidget(new BlackShowingTextField(x, y + 40, 120, 20, Component.translatable("gui.workers.merchant.edit.max_trades", formatValue(maxTrades))));
 
 
         int y2 = y + 65;
@@ -152,9 +153,44 @@ public class MerchantAddEditTradeScreen extends ScreenBase<MerchantAddEditTradeC
         return String.valueOf(x);
     }
 
+    private boolean canSaveTrade() {
+        return !this.tradeContainer.getCurrencyItem().isEmpty() && !this.tradeContainer.getTradeItem().isEmpty();
+    }
+
+    private int drawWrapped(GuiGraphics guiGraphics, Component text, int x, int y, int width, int color) {
+        for (var line : this.font.split(text, width)) {
+            guiGraphics.drawString(this.font, line, x, y, color, false);
+            y += 10;
+        }
+        return y;
+    }
+
+    private Component currentHintText() {
+        boolean hasCurrency = !this.tradeContainer.getCurrencyItem().isEmpty();
+        boolean hasTradeItem = !this.tradeContainer.getTradeItem().isEmpty();
+        if (!hasCurrency && !hasTradeItem) {
+            return Component.translatable("gui.workers.merchant.edit.hint.need_both_items");
+        }
+        if (!hasCurrency) {
+            return Component.translatable("gui.workers.merchant.edit.hint.need_currency");
+        }
+        if (!hasTradeItem) {
+            return Component.translatable("gui.workers.merchant.edit.hint.need_goods");
+        }
+        if (this.maxTrades == 0) {
+            return Component.translatable("gui.workers.merchant.edit.hint.zero_max_trades");
+        }
+        return Component.translatable("gui.workers.merchant.edit.hint.ready");
+    }
+
+    private int currentHintColor() {
+        return canSaveTrade() ? 0xFF4C7A43 : 0xFFB04A3A;
+    }
+
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         guiGraphics.drawString(font, title, 8, 5, fontColor, false);
+        drawWrapped(guiGraphics, currentHintText(), 8, 18, 160, currentHintColor());
         guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
     }
 }

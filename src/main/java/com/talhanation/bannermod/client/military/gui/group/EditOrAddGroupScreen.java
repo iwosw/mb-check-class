@@ -35,6 +35,7 @@ public class EditOrAddGroupScreen extends Screen {
     private int topPos;
     private int imageWidth;
     private int imageHeight;
+    private Button saveButton;
     private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final MutableComponent TEXT_CANCEL = Component.translatable("gui.recruits.groups.cancel");
     private static final MutableComponent TEXT_SAVE = Component.translatable("gui.recruits.groups.save");
@@ -51,6 +52,11 @@ public class EditOrAddGroupScreen extends Screen {
     private static final MutableComponent TOOLTIP_MERGE_GROUP = Component.translatable("gui.recruits.groups.tooltip.merge");
     private static final MutableComponent BUTTON_NEARBY = Component.translatable("gui.recruits.groups.nearby");
     private static final MutableComponent TOOLTIP_PUT_NEARBY = Component.translatable("gui.recruits.groups.tooltip.nearby");
+    private static final MutableComponent FIELD_NAME = Component.translatable("gui.recruits.groups.field_name");
+    private static final MutableComponent FIELD_BANNER = Component.translatable("gui.recruits.groups.field_banner");
+    private static final MutableComponent STATUS_CREATE = Component.translatable("gui.recruits.groups.status.new");
+    private static final MutableComponent MANAGE_DISABLED_TOOLTIP = Component.translatable("gui.recruits.groups.tooltip.manage_disabled");
+    private static final MutableComponent SAVE_DISABLED_TOOLTIP = Component.translatable("gui.recruits.groups.tooltip.save_disabled");
     private ImageSelectionDropdownMatrix imageDropdownMatrix;
     private ResourceLocation image;
     private final Player player;
@@ -107,6 +113,9 @@ public class EditOrAddGroupScreen extends Screen {
         );
         buttonDisbandGroup.setTooltip(Tooltip.create(TOOLTIP_DISBAND_GROUP));
         buttonDisbandGroup.active = groupToEdit != null;
+        if (groupToEdit == null) {
+            buttonDisbandGroup.setTooltip(Tooltip.create(MANAGE_DISABLED_TOOLTIP));
+        }
         addRenderableWidget(buttonDisbandGroup);
 
         Button buttonAssignGroup = new ExtendedButton(leftPos + 7, topPos + 70, 180, 20, ASSIGN_GROUP_TO_PLAYER,
@@ -120,6 +129,7 @@ public class EditOrAddGroupScreen extends Screen {
                 }
         );
         buttonAssignGroup.active = groupToEdit != null;
+        buttonAssignGroup.setTooltip(Tooltip.create(groupToEdit != null ? TOOLTIP_ASSIGN_GROUP_TO_PLAYER : MANAGE_DISABLED_TOOLTIP));
         addRenderableWidget(buttonAssignGroup);
 
         Button mergeButton = new ExtendedButton(leftPos + 7, topPos + 90, 90, 20, BUTTON_MERGE,
@@ -133,6 +143,9 @@ public class EditOrAddGroupScreen extends Screen {
         );
         mergeButton.setTooltip(Tooltip.create(TOOLTIP_MERGE_GROUP));
         mergeButton.active = groupToEdit != null;
+        if (groupToEdit == null) {
+            mergeButton.setTooltip(Tooltip.create(MANAGE_DISABLED_TOOLTIP));
+        }
         addRenderableWidget(mergeButton);
 
         Button splitButton = new ExtendedButton(leftPos + 97, topPos + 90, 90, 20, BUTTON_SPLIT,
@@ -142,6 +155,7 @@ public class EditOrAddGroupScreen extends Screen {
             }
         );
         splitButton.active = groupToEdit != null;
+        splitButton.setTooltip(Tooltip.create(groupToEdit != null ? TEXT_SPLIT : MANAGE_DISABLED_TOOLTIP));
         addRenderableWidget(splitButton);
 
         Button putRecruits = new ExtendedButton(leftPos + 7, topPos + 110, 180, 20, BUTTON_NEARBY,
@@ -152,9 +166,12 @@ public class EditOrAddGroupScreen extends Screen {
         );
         putRecruits.setTooltip(Tooltip.create(TOOLTIP_PUT_NEARBY));
         putRecruits.active = groupToEdit != null;
+        if (groupToEdit == null) {
+            putRecruits.setTooltip(Tooltip.create(MANAGE_DISABLED_TOOLTIP));
+        }
         addRenderableWidget(putRecruits);
 
-        this.addRenderableWidget(new ExtendedButton(leftPos + 7, topPos + 135, 90, 20, groupToEdit == null ? TEXT_ADD : TEXT_SAVE, button -> {
+        this.saveButton = this.addRenderableWidget(new ExtendedButton(leftPos + 7, topPos + 135, 90, 20, groupToEdit == null ? TEXT_ADD : TEXT_SAVE, button -> {
             if (groupToEdit == null) {
                 addGroup();
             } else {
@@ -203,6 +220,11 @@ public class EditOrAddGroupScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
+        boolean hasName = groupNameField != null && !groupNameField.getValue().trim().isEmpty();
+        if (saveButton != null) {
+            saveButton.active = hasName;
+            saveButton.setTooltip(hasName ? null : Tooltip.create(SAVE_DISABLED_TOOLTIP));
+        }
     }
 
     @Override
@@ -220,6 +242,12 @@ public class EditOrAddGroupScreen extends Screen {
 
     private void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, groupToEdit == null? TEXT_ADD_TITLE : TEXT_EDIT_TITLE, leftPos + 7, topPos + 5, fontColor, false);
+        guiGraphics.drawString(font, FIELD_NAME, leftPos + 7, topPos + 12, 0x5B4A32, false);
+        guiGraphics.drawString(font, FIELD_BANNER, leftPos + 170, topPos + 12, 0x5B4A32, false);
+        Component status = groupToEdit == null
+                ? STATUS_CREATE
+                : Component.translatable("gui.recruits.groups.status.edit", groupToEdit.getName());
+        guiGraphics.drawString(font, status, leftPos + 7, topPos + 40, 0x5B4A32, false);
     }
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
