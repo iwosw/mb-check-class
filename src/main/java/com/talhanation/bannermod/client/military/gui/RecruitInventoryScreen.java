@@ -38,9 +38,6 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TEXT_HEALTH = Component.translatable("gui.recruits.inv.health");
     private static final MutableComponent TEXT_LEVEL = Component.translatable("gui.recruits.inv.level");
     private static final MutableComponent TEXT_KILLS = Component.translatable("gui.recruits.inv.kills");
-    private static final Component TEXT_EXP = Component.translatable("gui.recruits.stat.exp");
-    private static final Component TEXT_MORALE = Component.translatable("gui.recruits.stat.morale");
-    private static final Component TEXT_HUNGER = Component.translatable("gui.recruits.stat.hunger");
     private static final MutableComponent TEXT_DISBAND = Component.translatable("gui.recruits.inv.text.disband");
     private static final MutableComponent TEXT_INFO_FOLLOW = Component.translatable("gui.recruits.inv.info.text.follow");
     private static final MutableComponent TEXT_INFO_WANDER = Component.translatable("gui.recruits.inv.info.text.wander");
@@ -91,11 +88,10 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TOOLTIP_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote");
     private static final MutableComponent TOOLTIP_DISABLED_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote_disabled");
     private static final MutableComponent TOOLTIP_SPECIAL = Component.translatable("gui.recruits.inv.tooltip.special");
-    private static final Component TOOLTIP_MORE = Component.translatable("gui.recruits.inv.tooltip.more");
-    private static final Component TOOLTIP_NOBLE_DISABLED = Component.translatable("gui.recruits.inv.tooltip.noble_disabled");
-    private static final Component TOOLTIP_CLEAR_UPKEEP_DISABLED = Component.translatable("gui.recruits.inv.tooltip.clearUpkeep_disabled");
-    private static final Component TEXT_GROUP_LOADING = Component.translatable("gui.recruits.inv.status.group_loading");
-    private static final Component TEXT_GROUP_LOCKED = Component.translatable("gui.recruits.inv.status.group_locked");
+    private static final MutableComponent TOOLTIP_CURRENT_STATE = Component.translatable("gui.recruits.inv.tooltip.current_state");
+    private static final MutableComponent SECTION_DISCIPLINE = Component.translatable("gui.recruits.inv.section.discipline");
+    private static final MutableComponent SECTION_ORDERS = Component.translatable("gui.recruits.inv.section.orders");
+    private static final MutableComponent SECTION_DETAILS = Component.translatable("gui.recruits.inv.section.details");
     private static final int fontColor = 4210752;
     private static final int firearmSupportedColor = 0x3A7A2A;
     private static final int firearmWarningColor = 0xD2A12D;
@@ -140,7 +136,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                 }
             });
-        buttonPassive.setTooltip(Tooltip.create(TOOLTIP_PASSIVE));
+        buttonPassive.setTooltip(Tooltip.create(recruit.getState() == 3 ? TOOLTIP_CURRENT_STATE : TOOLTIP_PASSIVE));
+        buttonPassive.active = recruit.getState() != 3;
         addRenderableWidget(buttonPassive);
 
         // NEUTRAL
@@ -152,7 +149,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
                 });
-        buttonNeutral.setTooltip(Tooltip.create(TOOLTIP_NEUTRAL));
+        buttonNeutral.setTooltip(Tooltip.create(recruit.getState() == 0 ? TOOLTIP_CURRENT_STATE : TOOLTIP_NEUTRAL));
+        buttonNeutral.active = recruit.getState() != 0;
         addRenderableWidget(buttonNeutral);
 
         //AGGRESSIVE
@@ -164,9 +162,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
                 });
-        buttonAggressive.setTooltip(Tooltip.create(TOOLTIP_AGGRESSIVE));
-        buttonAggressive.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(buttonAggressive);
+        buttonAggressive.setTooltip(Tooltip.create(recruit.getState() == 1 ? TOOLTIP_CURRENT_STATE : TOOLTIP_AGGRESSIVE));
+        buttonAggressive.active = !(recruit instanceof VillagerNobleEntity) && recruit.getState() != 1;
         addRenderableWidget(buttonAggressive);
 
         //RAID
@@ -178,9 +175,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
                 });
-        buttonRaid.setTooltip(Tooltip.create(TOOLTIP_RAID));
-        buttonRaid.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(buttonRaid);
+        buttonRaid.setTooltip(Tooltip.create(recruit.getState() == 2 ? TOOLTIP_CURRENT_STATE : TOOLTIP_RAID));
+        buttonRaid.active = !(recruit instanceof VillagerNobleEntity) && recruit.getState() != 2;
         addRenderableWidget(buttonRaid);
 
         //CLEAR TARGET
@@ -200,7 +196,6 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
             );
         buttonMount.setTooltip(Tooltip.create(TOOLTIP_MOUNT));
         buttonMount.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(buttonMount);
         addRenderableWidget(buttonMount);
 
 
@@ -213,7 +208,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonWander.setTooltip(Tooltip.create(TOOLTIP_WANDER));
+        buttonWander.setTooltip(Tooltip.create(recruit.getFollowState() == 0 ? TOOLTIP_CURRENT_STATE : TOOLTIP_WANDER));
+        buttonWander.active = recruit.getFollowState() != 0;
         addRenderableWidget(buttonWander);
 
 
@@ -226,9 +222,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonFollow.setTooltip(Tooltip.create(TOOLTIP_FOLLOW));
-        buttonFollow.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(buttonFollow);
+        buttonFollow.setTooltip(Tooltip.create(recruit.getFollowState() == 1 ? TOOLTIP_CURRENT_STATE : TOOLTIP_FOLLOW));
+        buttonFollow.active = !(recruit instanceof VillagerNobleEntity) && recruit.getFollowState() != 1;
         addRenderableWidget(buttonFollow);
 
 
@@ -241,7 +236,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonHoldPos.setTooltip(Tooltip.create(TOOLTIP_HOLD_POS));
+        buttonHoldPos.setTooltip(Tooltip.create(recruit.getFollowState() == 2 ? TOOLTIP_CURRENT_STATE : TOOLTIP_HOLD_POS));
+        buttonHoldPos.active = recruit.getFollowState() != 2;
         addRenderableWidget(buttonHoldPos);
 
 
@@ -254,7 +250,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonBackToPos.setTooltip(Tooltip.create(TOOLTIP_BACK_TO_POS));
+        buttonBackToPos.setTooltip(Tooltip.create(recruit.getFollowState() == 3 ? TOOLTIP_CURRENT_STATE : TOOLTIP_BACK_TO_POS));
+        buttonBackToPos.active = recruit.getFollowState() != 3;
         addRenderableWidget(buttonBackToPos);
 
 
@@ -267,9 +264,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
                 });
-        buttonHoldMyPos.setTooltip(Tooltip.create(TOOLTIP_HOLD_MY_POS));
-        buttonHoldMyPos.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(buttonHoldMyPos);
+        buttonHoldMyPos.setTooltip(Tooltip.create(recruit.getFollowState() == 4 ? TOOLTIP_CURRENT_STATE : TOOLTIP_HOLD_MY_POS));
+        buttonHoldMyPos.active = !(recruit instanceof VillagerNobleEntity) && recruit.getFollowState() != 4;
         addRenderableWidget(buttonHoldMyPos);
 
         //Dismount
@@ -292,7 +288,6 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         ));
         backToMount.setTooltip(Tooltip.create(TOOLTIP_BACK_TO_MOUNT));
         backToMount.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(backToMount);
         addRenderableWidget(backToMount);
 
         //CLEAR UPKEEP
@@ -300,11 +295,10 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                 button -> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClearUpkeepGui(recruit.getUUID()));
                     clearUpkeep.active = false;
-                    clearUpkeep.setTooltip(Tooltip.create(TOOLTIP_CLEAR_UPKEEP_DISABLED));
                 }
         ));
+        this.clearUpkeep.setTooltip(Tooltip.create(TOOLTIP_CLEAR_UPKEEP));
         this.clearUpkeep.active = this.recruit.hasUpkeep();
-        this.clearUpkeep.setTooltip(Tooltip.create(this.clearUpkeep.active ? TOOLTIP_CLEAR_UPKEEP : TOOLTIP_CLEAR_UPKEEP_DISABLED));
 
         this.stanceButton = addRenderableWidget(new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 7, 80, 20, Component.empty(),
                 button -> {
@@ -314,7 +308,6 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         ));
         this.stanceButton.setTooltip(Tooltip.create(TOOLTIP_STANCE));
         this.stanceButton.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(this.stanceButton);
         updateCombatStanceButton();
 
         //LISTEN
@@ -322,14 +315,12 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageListen(!recruit.getListen(), recruit.getUUID()));
          });
          leftListenButton.active = !(recruit instanceof VillagerNobleEntity);
-         setNobleDisabledTooltip(leftListenButton);
          addRenderableWidget(leftListenButton);
 
         rightListenButton = new ExtendedButton(leftPos + 77 + 81, topPos + 100, 12, 12, Component.literal(">"), button -> {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageListen(!recruit.getListen(), recruit.getUUID()));
         });
         rightListenButton.active = !(recruit instanceof VillagerNobleEntity);
-        setNobleDisabledTooltip(rightListenButton);
         addRenderableWidget(rightListenButton);
 
         //more
@@ -339,7 +330,6 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                 }
         );
         moreButton.active = !(recruit instanceof VillagerNobleEntity);
-        moreButton.setTooltip(Tooltip.create(moreButton.active ? TOOLTIP_MORE : TOOLTIP_NOBLE_DISABLED));
         addRenderableWidget(moreButton);
 
         if(recruit instanceof VillagerNobleEntity){
@@ -454,12 +444,9 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
         guiGraphics.drawString(font, recruit.getDisplayName().getVisualOrderText(), 8, 5, fontColor, false);
         guiGraphics.drawString(font, playerInventory.getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
-
-        if (ClientManager.groups == null || ClientManager.groups.isEmpty()) {
-            guiGraphics.drawString(font, TEXT_GROUP_LOADING, 77, 114, MilitaryGuiStyle.TEXT_WARN, false);
-        } else if (groupSelectionDropDownMenu != null && !groupSelectionDropDownMenu.canSelect) {
-            guiGraphics.drawString(font, TEXT_GROUP_LOCKED, 77, 114, MilitaryGuiStyle.TEXT_MUTED, false);
-        }
+        guiGraphics.drawString(font, SECTION_DISCIPLINE, 8, 17, 0x5B4A32, false);
+        guiGraphics.drawString(font, SECTION_DETAILS, 79, 17, 0x5B4A32, false);
+        guiGraphics.drawString(font, SECTION_ORDERS, 79, 76, 0x5B4A32, false);
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().scale(0.7F, 0.7F, 1F);
@@ -471,17 +458,17 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         //Info
 
 
-        guiGraphics.drawString(font, TEXT_HEALTH, k, l, fontColor, false);
+        guiGraphics.drawString(font, "Health:", k, l, fontColor, false);
         guiGraphics.drawString(font, "" + health, k + gap, l, fontColor, false);
-        guiGraphics.drawString(font, TEXT_LEVEL, k, l + 10, fontColor, false);
+        guiGraphics.drawString(font, "Lvl.:", k, l + 10, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getXpLevel(), k + gap, l + 10, fontColor, false);
-        guiGraphics.drawString(font, TEXT_EXP, k, l + 20, fontColor, false);
+        guiGraphics.drawString(font, "Exp.:", k, l + 20, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getXp(), k + gap, l + 20, fontColor, false);
-        guiGraphics.drawString(font, TEXT_KILLS, k, l + 30, fontColor, false);
+        guiGraphics.drawString(font, "Kills:", k, l + 30, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getKills(), k + gap, l + 30, fontColor, false);
-        guiGraphics.drawString(font, TEXT_MORALE, k, l + 40, fontColor, false);
+        guiGraphics.drawString(font, "Morale:", k, l + 40, fontColor, false);
         guiGraphics.drawString(font, "" + moral, k + gap, l + 40, fontColor, false);
-        guiGraphics.drawString(font, TEXT_HUNGER, k, l + 50, fontColor, false);
+        guiGraphics.drawString(font, "Hunger:", k, l + 50, fontColor, false);
         guiGraphics.drawString(font, "" + hunger, k + gap, l + 50, fontColor, false);
         renderFirearmStatus(guiGraphics, k, l + 60);
         guiGraphics.pose().popPose();
@@ -579,19 +566,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         int i = (this.width - this.imageWidth) / 2;
         int j = (this.height - this.imageHeight) / 2;
 
-        MilitaryGuiStyle.parchmentPanel(guiGraphics, i - 98, j + 2, 92, 222);
-        MilitaryGuiStyle.parchmentPanel(guiGraphics, i + 182, j + 2, 92, 222);
-        MilitaryGuiStyle.insetPanel(guiGraphics, i - 92, j + 8, 80, 205);
-        MilitaryGuiStyle.insetPanel(guiGraphics, i + 188, j + 8, 80, 205);
-        MilitaryGuiStyle.parchmentInset(guiGraphics, i + 73, j + 96, 100, 34);
-
         InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 10, j + 20, i + 90, j + 100, 30, 0.0F, (float)(i + 50) - mouseX, (float)(j + 25) - mouseY, this.recruit);
-    }
-
-    private void setNobleDisabledTooltip(Button button) {
-        if (this.recruit instanceof VillagerNobleEntity) {
-            button.setTooltip(Tooltip.create(TOOLTIP_NOBLE_DISABLED));
-        }
     }
 
     private void updateCombatStanceButton() {

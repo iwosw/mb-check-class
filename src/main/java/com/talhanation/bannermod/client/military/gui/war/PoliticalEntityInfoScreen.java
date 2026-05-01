@@ -28,6 +28,13 @@ import java.util.UUID;
 public class PoliticalEntityInfoScreen extends Screen {
     private static final int W = 320;
     private static final int H = 240;
+    private static final int LEATHER = 0xFF6F4728;
+    private static final int LEATHER_DARK = 0xFF3E2515;
+    private static final int PAGE_BG = 0xFFF3E2B6;
+    private static final int PAGE_SHADE = 0xFF7A5A33;
+    private static final int GOLD = 0xFFE0B45C;
+    private static final int INK = 0xFF2D2418;
+    private static final int INK_MUTED = 0xFF6C5B45;
 
     private final Screen parent;
     private final UUID entityId;
@@ -54,23 +61,26 @@ public class PoliticalEntityInfoScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fill(0, 0, width, height, 0xFF101010);
-        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
-        graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
+        graphics.fill(0, 0, width, height, 0x66000000);
+        graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + W + 4, guiTop + H + 5, 0x55000000);
+        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, LEATHER_DARK);
+        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + W - 2, guiTop + H - 2, LEATHER);
+        renderParchmentPanel(graphics, guiLeft + 8, guiTop + 18, W - 16, H - 50);
 
         PoliticalEntityRecord entity = WarClientState.entityById(entityId);
         if (entity == null) {
-            graphics.drawCenteredString(font, text("gui.bannermod.states.info.not_found"), guiLeft + W / 2, guiTop + 12, 0xFFFFAA55);
+            graphics.drawCenteredString(font, text("gui.bannermod.states.info.not_found"), guiLeft + W / 2, guiTop + 14, GOLD);
             super.render(graphics, mouseX, mouseY, partialTick);
             return;
         }
 
         int x = guiLeft + 8;
         int y = guiTop + 8;
-        graphics.drawString(font, displayName(entity), x, y, 0xFFFFFF, false);
+        graphics.drawCenteredString(font, displayName(entity), guiLeft + W / 2, y + 2, GOLD);
+        graphics.drawString(font, font.plainSubstrByWidth(text("gui.bannermod.states.info.subtitle").getString(), W - 32), guiLeft + 16, y + 16, INK_MUTED, false);
         graphics.drawString(font, text("gui.bannermod.states.info.status_badge", localizedStatus(entity.status())).getString(), x, y + 12, statusColor(entity.status()), false);
 
-        y += 28;
+        y += 40;
         graphics.drawString(font, text("gui.bannermod.states.detail.leader", playerName(entity.leaderUuid())), x, y, 0xFFFFFF, false);
         y += 12;
         graphics.drawString(font, text("gui.bannermod.states.detail.co_leaders", coLeaderSummary(entity)), x, y, 0xFFFFFF, false);
@@ -104,7 +114,7 @@ public class PoliticalEntityInfoScreen extends Screen {
         }
         int x = guiLeft + 8;
         int y = guiTop + H - 24 - involved.size() * 11 - 14;
-        graphics.drawString(font, text("gui.bannermod.states.info.active_wars", involved.size()), x, y, 0xFFFF7777, false);
+        graphics.drawString(font, text("gui.bannermod.states.info.active_wars", involved.size()), x, y, 0xFF8A3128, false);
         for (int i = 0; i < involved.size() && i < 4; i++) {
             WarDeclarationRecord war = involved.get(i);
             String line = text("gui.bannermod.states.info.war_line", localizedWarState(war.state()), localizedWarGoal(war.goalType())).getString();
@@ -185,6 +195,15 @@ public class PoliticalEntityInfoScreen extends Screen {
             case PEACEFUL -> 0xFF55AAFF;
             case SETTLEMENT -> 0xFFAAAAAA;
         };
+    }
+
+    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
+        graphics.fill(x, y, x + w, y + h, PAGE_BG);
+        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
+        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
+        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
+        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
+        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
     }
 
     @Override

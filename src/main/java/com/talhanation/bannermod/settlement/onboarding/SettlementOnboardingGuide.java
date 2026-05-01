@@ -58,6 +58,7 @@ public final class SettlementOnboardingGuide {
             case "mine" -> "bannermod.onboarding.prefab_hint.mine";
             case "lumber_camp" -> "bannermod.onboarding.prefab_hint.lumber_camp";
             case "barracks" -> "bannermod.onboarding.prefab_hint.barracks";
+            case "gatehouse" -> "bannermod.onboarding.prefab_hint.gatehouse";
             default -> "bannermod.onboarding.prefab_hint.generic";
         };
         return Component.translatable(key, professionLabel(descriptor.profession()));

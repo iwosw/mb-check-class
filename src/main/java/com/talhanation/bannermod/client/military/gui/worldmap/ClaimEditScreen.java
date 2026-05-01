@@ -156,13 +156,14 @@ public class ClaimEditScreen extends RecruitsScreenBase {
                     this.claim.setPlayer(playerInfo);
                     this.claim.setBlockInteractionAllowed(this.allowBlockInteracting);
                     this.claim.setBlockPlacementAllowed(this.allowBlockPlacing);
-                    this.claim.setBlockBreakingAllowed(this.allowBlockBreaking);
+                     this.claim.setBlockBreakingAllowed(this.allowBlockBreaking);
 
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(this.claim));
-                    ClientManager.markClaimsStale();
+                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateClaim(this.claim));
+                     ClientManager.markClaimsStale();
+                     this.parent.showMapNotice(Component.translatable("gui.bannermod.claim.feedback.save_sent"), 0xFFFFD36A);
 
-                    this.minecraft.setScreen(this.parent);
-                });
+                     this.minecraft.setScreen(this.parent);
+                 });
         addRenderableWidget(saveButton);
         this.checkSaveActive();
 
@@ -198,8 +199,8 @@ public class ClaimEditScreen extends RecruitsScreenBase {
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         super.renderBackground(guiGraphics, mouseX, mouseY, delta);
-        guiGraphics.fill(panelX - 1 + x, panelY - 1 + y, panelX + x  + panelWidth + 1, panelY + y + panelHeight + 1, 0xFF555555);
-        guiGraphics.fill(panelX + x, panelY + y, panelX + x + panelWidth, panelY + y + panelHeight, 0xFF222222);
+        WorldMapRenderPrimitives.panel(guiGraphics, panelX + x, panelY + y, panelWidth, panelHeight);
+        guiGraphics.fill(panelX + x + 1, panelY + y + 18, panelX + x + panelWidth - 1, panelY + y + 19, 0x665A4025);
     }
 
     @Override
@@ -219,6 +220,12 @@ public class ClaimEditScreen extends RecruitsScreenBase {
             color = FONT_COLOR;
         }
         guiGraphics.drawString(font, status, x - 70, y - 130, color, false);
+        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.player"), x - 70, y - 100, 0xFFE0B86A, false);
+        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim").copy().append(":"), x - 70, y - 72, 0xFFE0B86A, false);
+        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.diplomacy"), x - 70, y + 4, 0xFFE0B86A, false);
+        if (playerInfo == null) {
+            guiGraphics.drawWordWrap(font, Component.translatable("gui.bannermod.claim.disabled.no_owner"), x - 70, y + 92, 140, 0xFFFFD36A);
+        }
 
         renderClaimMiniMapAreaFramed(guiGraphics, claimMiniX + x, claimMiniY + y , 140, 70, this.claim);
     }

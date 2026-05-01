@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.military.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.messages.military.MessageDebugGui;
@@ -7,27 +8,29 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class RenameRecruitScreen extends Screen {
 
     private static final int fontColor = 4210752;
     private EditBox editBox;
+    private ExtendedButton saveButton;
     private final Screen parent;
     private final AbstractRecruitEntity recruit;
     private int leftPos;
     private int topPos;
     private int imageWidth;
     private int imageHeight;
+    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_small.png");
     private static final MutableComponent TEXT_CANCEL = Component.translatable("gui.recruits.groups.cancel");
     private static final MutableComponent TEXT_SAVE = Component.translatable("gui.recruits.groups.save");
     private static final MutableComponent TEXT_RENAME_RECRUIT = Component.translatable("gui.recruits.inv.rename");
-    private static final MutableComponent TEXT_RENAME_HINT = Component.translatable("gui.recruits.rename.hint");
-    private static final MutableComponent TEXT_RENAME_BLANK = Component.translatable("gui.recruits.rename.status.blank");
-    private static final MutableComponent TEXT_RENAME_SENT = Component.translatable("gui.recruits.rename.status.sent");
-    private Component status = TEXT_RENAME_HINT;
+    private static final MutableComponent TEXT_STATUS = Component.translatable("gui.recruits.rename.status");
+    private static final MutableComponent TOOLTIP_SAVE_DISABLED = Component.translatable("gui.recruits.rename.tooltip.save_disabled");
     public RenameRecruitScreen(Screen parent, AbstractRecruitEntity recruit) {
         super(Component.literal(""));
         this.recruit = recruit;
@@ -47,27 +50,21 @@ public class RenameRecruitScreen extends Screen {
         if (recruit != null) {
             editBox.setValue(recruit.getName().getString());
         }
-        editBox.setMaxLength(32);
-        editBox.setFocused(true);
+        editBox.setMaxLength(24);
         this.addRenderableWidget(editBox);
-        setInitialFocus(editBox);
+        this.setInitialFocus(editBox);
 
-        ExtendedButton saveButton = this.addRenderableWidget(new ExtendedButton(leftPos + 10, topPos + 55, 60, 20, TEXT_SAVE,
+        this.saveButton = this.addRenderableWidget(new ExtendedButton(leftPos + 10, topPos + 55, 60, 20, TEXT_SAVE,
             button -> {
-                String newName = editBox.getValue();
-                if (newName.isBlank()) {
-                    status = TEXT_RENAME_BLANK;
-                    return;
-                }
-                if (recruit != null) {
+                String newName = editBox.getValue().trim();
+                if (!newName.isEmpty()) {
+                    recruit.setCustomName(Component.literal(newName));
+
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDebugGui(99, recruit.getUUID(), newName));
-                    if (minecraft != null && minecraft.player != null) {
-                        minecraft.player.sendSystemMessage(TEXT_RENAME_SENT);
-                    }
+
                     this.minecraft.setScreen(this.parent);
                 }
         }));
-        saveButton.setTooltip(Tooltip.create(TEXT_RENAME_HINT));
 
         this.addRenderableWidget(new ExtendedButton(leftPos + 170, topPos + 55, 60, 20, TEXT_CANCEL, button -> {
             this.minecraft.setScreen(this.parent);
@@ -77,16 +74,21 @@ public class RenameRecruitScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
+        boolean hasName = editBox != null && !editBox.getValue().trim().isEmpty();
+        if (saveButton != null) {
+            saveButton.active = hasName;
+            saveButton.setTooltip(hasName ? null : Tooltip.create(TOOLTIP_SAVE_DISABLED));
+        }
     }
 
     private void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TEXT_RENAME_RECRUIT, leftPos + 10  , topPos + 5, MilitaryGuiStyle.TEXT, false);
-        guiGraphics.drawString(font, status, leftPos + 10, topPos + 42, status == TEXT_RENAME_BLANK ? MilitaryGuiStyle.TEXT_DENIED : fontColor, false);
+        guiGraphics.drawString(font, TEXT_RENAME_RECRUIT, leftPos + 10  , topPos + 5, fontColor, false);
+        guiGraphics.drawString(font, TEXT_STATUS, leftPos + 10, topPos + 45, 0x5B4A32, false);
     }
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        MilitaryGuiStyle.parchmentPanel(guiGraphics, leftPos, topPos, imageWidth, imageHeight);
-        MilitaryGuiStyle.titleStrip(guiGraphics, leftPos + 5, topPos + 4, imageWidth - 10, 14);
-        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 7, topPos + 18, imageWidth - 14, 32);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+        guiGraphics.blit(RESOURCE_LOCATION, leftPos, topPos, 0, 0, imageWidth, imageHeight);
     }
 
     @Override

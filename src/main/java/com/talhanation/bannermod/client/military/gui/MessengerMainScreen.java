@@ -17,6 +17,8 @@ public class MessengerMainScreen extends RecruitsScreenBase {
 
     private static final Component BUTTON_MESSAGES = Component.translatable("gui.recruits.messenger.tab.messages");
     private static final Component TITLE = Component.translatable("gui.recruits.messenger.main_title");
+    private static final Component SUBTITLE = Component.translatable("gui.recruits.messenger.main_subtitle");
+    private static final Component NEXT_STEP = Component.translatable("gui.recruits.messenger.main_next_step");
 
     private final Player player;
     private final MessengerEntity messenger;
@@ -52,10 +54,14 @@ public class MessengerMainScreen extends RecruitsScreenBase {
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         RenderSystem.setShaderTexture(0, TEXTURE);
         guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
+        drawFramedPanel(guiGraphics, guiLeft + 16, guiTop + 20, xSize - 32, 50);
+        drawDarkInset(guiGraphics, guiLeft + 26, guiTop + 92, xSize - 52, 28);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 7, FONT_COLOR, false);
+        guiGraphics.drawString(font, SUBTITLE, guiLeft + xSize / 2 - font.width(SUBTITLE) / 2, guiTop + 30, FONT_COLOR, false);
+        guiGraphics.drawString(font, NEXT_STEP, guiLeft + 30, guiTop + 101, 0xF3E7C8, false);
     }
 }

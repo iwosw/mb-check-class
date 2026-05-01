@@ -1,8 +1,14 @@
 package com.talhanation.bannermod.client.military.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
@@ -10,6 +16,7 @@ import java.util.List;
 
 public class ConfirmScreen extends RecruitsScreenBase {
 
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_small.png");
     private final Runnable yesAction;
     private final Runnable noAction;
     private final Runnable backAction;
@@ -18,7 +25,8 @@ public class ConfirmScreen extends RecruitsScreenBase {
     private static final MutableComponent BUTTON_YES = Component.translatable("gui.recruits.button.Yes");
     private static final MutableComponent BUTTON_NO = Component.translatable("gui.recruits.button.No");
     private static final MutableComponent BUTTON_BACK = Component.translatable("gui.recruits.button.back");
-    private static final MutableComponent TEXT_HINT = Component.translatable("gui.recruits.confirm.hint");
+    private static final MutableComponent STATUS_BINARY = Component.translatable("gui.recruits.confirm.status.binary");
+    private static final MutableComponent STATUS_TRINARY = Component.translatable("gui.recruits.confirm.status.trinary");
 
 
     public ConfirmScreen(Component title, Component text, Runnable yesAction, Runnable noAction) {
@@ -66,14 +74,15 @@ public class ConfirmScreen extends RecruitsScreenBase {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
-        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 6, guiTop + 5, xSize - 12, 18);
-        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 8, guiTop + 25, xSize - 16, 29);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+        RenderSystem.setShaderTexture(0, TEXTURE);
+        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, title, guiLeft + xSize / 2 - font.width(title) / 2, guiTop + 7, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(font, title, guiLeft + xSize / 2 - font.width(title) / 2, guiTop + 7, FONT_COLOR, false);
         int maxWidth = xSize - 20; // xSize minus Padding
 
 
@@ -86,6 +95,6 @@ public class ConfirmScreen extends RecruitsScreenBase {
             guiGraphics.drawString(font, line, guiLeft + xSize / 2 - font.width(line) / 2, yPosition, FONT_COLOR, false);
             yPosition += lineHeight;
         }
-        guiGraphics.drawString(font, TEXT_HINT, guiLeft + 10, guiTop + ySize - 40, MilitaryGuiStyle.TEXT_MUTED, false);
+        guiGraphics.drawString(font, backAction == null ? STATUS_BINARY : STATUS_TRINARY, guiLeft + 8, guiTop + ySize - 38, 0x5B4A32, false);
     }
 }

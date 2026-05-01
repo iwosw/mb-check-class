@@ -77,11 +77,14 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
     }
 
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        MilitaryGuiStyle.parchmentPanel(guiGraphics, leftPos, topPos, imageWidth, imageHeight);
-        MilitaryGuiStyle.titleStrip(guiGraphics, leftPos + 6, topPos + 6, imageWidth - 12, 18);
-        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 8, topPos + 30, 186, 86);
-        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 8, topPos + 120, 186, 60);
-        MilitaryGuiStyle.insetPanel(guiGraphics, leftPos + 202, topPos + 22, imageWidth - 210, imageHeight - 30);
+        guiGraphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, 0xE0C6B98D);
+        guiGraphics.fill(leftPos + 3, topPos + 3, leftPos + imageWidth - 3, topPos + imageHeight - 3, 0xF0E6D8B8);
+        guiGraphics.fill(leftPos + 8, topPos + 8, leftPos + 194, topPos + 115, 0x30FFFFFF);
+        guiGraphics.fill(leftPos + 8, topPos + 118, leftPos + 194, topPos + imageHeight - 8, 0x30C08A52);
+        guiGraphics.fill(leftPos + 202, topPos + 22, leftPos + imageWidth - 8, topPos + imageHeight - 8, 0x503B2F20);
+        guiGraphics.renderOutline(leftPos + 8, topPos + 8, 186, 107, 0x6B4A2A);
+        guiGraphics.renderOutline(leftPos + 8, topPos + 118, 186, imageHeight - 126, 0x6B4A2A);
+        guiGraphics.renderOutline(leftPos + 202, topPos + 22, imageWidth - 210, imageHeight - 30, 0x6B4A2A);
     }
 
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
@@ -89,7 +92,7 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         updatePolicyButtons(state);
         int x = leftPos + 10;
         int y = topPos + 10;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.title", recruit.getName().getString()), x, y, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.title", recruit.getName().getString()), x, y, 4210752, false);
         y += 12;
         guiGraphics.drawString(font, text("gui.bannermod.governor.mirror_state", text(state.stateKey()).getString()), x, y, state.stateColor(), false);
         guiGraphics.renderOutline(x - 3, y - 2, 120, 11, state.stateColor());

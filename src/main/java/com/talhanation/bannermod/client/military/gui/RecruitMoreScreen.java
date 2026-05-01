@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.military.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.group.RecruitsGroupListScreen;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
@@ -11,13 +12,16 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class RecruitMoreScreen extends RecruitsScreenBase {
 
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final Component TITLE = Component.translatable("gui.recruits.more_screen.title");
     private Player player;
     private AbstractRecruitEntity recruit;
@@ -28,9 +32,7 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
     private static final MutableComponent ASSIGN_TO_PLAYER = Component.translatable("gui.recruits.team.assignNewOwner");
     private static final MutableComponent GROUP_SETTINGS = Component.translatable("gui.recruits.groups.settings");
     private static final MutableComponent RENAME = Component.translatable("gui.recruits.inv.rename");
-    private static final MutableComponent STATUS_SERVER_AUTHORITY = Component.translatable("gui.recruits.more_screen.status.server_authority");
-    private static final MutableComponent TOOLTIP_RENAME = Component.translatable("gui.recruits.rename.hint");
-    private static final MutableComponent TOOLTIP_GROUP_SETTINGS = Component.translatable("gui.recruits.groups.tooltip.settings");
+    private static final MutableComponent STATUS_TEXT = Component.translatable("gui.recruits.more.status");
     public RecruitMoreScreen(Screen parent, AbstractRecruitEntity recruit, Player player) {
         super(TITLE, 195,160);
         this.player = player;
@@ -54,7 +56,6 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
                     }
                 }
         );
-        buttonRename.setTooltip(Tooltip.create(TOOLTIP_RENAME));
         addRenderableWidget(buttonRename);
 
         Button buttonDisband = new ExtendedButton(guiLeft + 32, guiTop + 45, 130, 20, DISBAND,
@@ -87,7 +88,6 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
                 }
             }
         );
-        giveToPlayer.setTooltip(Tooltip.create(TOOLTIP_ASSIGN_GROUP_TO_PLAYER));
         addRenderableWidget(giveToPlayer);
 
         Button buttonGroupSettings = new ExtendedButton(guiLeft + 32, guiTop + 105, 130, 20, GROUP_SETTINGS,
@@ -95,23 +95,22 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
                     minecraft.setScreen(new RecruitsGroupListScreen(player));
                 }
         );
-        buttonGroupSettings.setTooltip(Tooltip.create(TOOLTIP_GROUP_SETTINGS));
         addRenderableWidget(buttonGroupSettings);
     }
 
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
-        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 7, guiTop + 5, xSize - 14, 18);
-        MilitaryGuiStyle.insetPanel(guiGraphics, guiLeft + 24, guiTop + 23, xSize - 48, 108);
-        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 12, guiTop + 132, xSize - 24, 20);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+        RenderSystem.setShaderTexture(0, TEXTURE);
+        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 7, MilitaryGuiStyle.TEXT, false);
-        guiGraphics.drawString(font, font.plainSubstrByWidth(STATUS_SERVER_AUTHORITY.getString(), xSize - 28), guiLeft + 14, guiTop + 138, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 7, FONT_COLOR, false);
+        guiGraphics.drawString(font, STATUS_TEXT, guiLeft + 18, guiTop + 140, 0x5B4A32, false);
     }
 
 }
