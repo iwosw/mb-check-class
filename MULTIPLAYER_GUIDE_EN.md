@@ -100,6 +100,8 @@ The worker command screen (`X`) supports simple group orders: follow, guard, mov
 
 Governors expose the settlement's mirrored server snapshot: loading/stale/fresh state, citizen count, taxes, incidents, treasury data, policy buttons, and a read-only logistics panel. If the mirror says loading or stale, wait for the server refresh before trusting the panel; policy buttons explain why they are disabled until the server can validate the change. War, claim, governor, and work-area screens now use distinct waiting, empty, stale, and ready labels so you can tell whether to wait, select something, or fix authority. Promote an eligible owned recruit from its inventory when it has enough experience and is tied to a friendly claimed settlement.
 
+Messenger, noble-trade, governor, patrol, and scout screens now keep their primary action state visible in-screen instead of failing silently. If a courier has no recipient, a trade has no valid contract, or a patrol leader has no route, the screen tells you the missing step directly; when an order is accepted, the same screen confirms that the request was sent.
+
 The logistics panel also labels the settlement's strategic role and route cost. Farms plus storage can make a surplus hub, market plus routes can make a junction market, fort plus route storage can make a chokepoint fort, and ports/water access become a water gate. Landlocked settlements with food or material production may show a specialty such as preserved food or worked materials. These labels are warnings and planning hints first: they expose logistics objectives and loyalty pressure before applying destructive penalties.
 
 ### Code-backed settlement mechanics reference
@@ -195,6 +197,8 @@ Port or sea-entry points can now drive the Small Ships sea-trade loop when a ser
 
 The governor screen shows the current tax obligation as collected/due. A friendly settlement that pays shows the obligation as satisfied and adds to treasury; if a siege or settlement mismatch blocks payment, the same line turns unpaid and explains that treasury growth, upkeep, and defense funding can stall.
 
+Noble trade uses the right-hand status ribbon as the final authority for the next step: `Choose a contract`, `No contracts`, `Not enough currency/villagers`, or `Accepted`. Do not assume a greyed-out hire button means the same thing every time; read the ribbon or tooltip for the specific blocker.
+
 ## Recruits And Armies
 
 Recruits follow their owner. Allies on the same side can help with group commands if the server allows it and they are close enough.
@@ -203,6 +207,8 @@ The command screen (`R`) shows order buttons:
 
 - movement: `Hold`, `Follow`, `Regroup`, `Wander`, `Come to me`, `Patrol`, `Move to position`;
 - formation: read from the player's saved formation (Formation tab);
+
+Patrol and scout field-order screens now follow the same rule: select the route/group first, then look at the bottom status strip before you leave the screen. It will tell you whether the leader is idle, patrolling, paused, or whether the latest order was accepted by the client and sent to the server.
 - stance: `LOOSE`, `LINE_HOLD`, `SHIELD_WALL`.
 
 Stances change behavior and shield mitigation:
