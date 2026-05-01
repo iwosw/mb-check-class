@@ -6,6 +6,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.messages.military.MessageDebugGui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -17,6 +18,7 @@ public class RenameRecruitScreen extends Screen {
 
     private static final int fontColor = 4210752;
     private EditBox editBox;
+    private ExtendedButton saveButton;
     private final Screen parent;
     private final AbstractRecruitEntity recruit;
     private int leftPos;
@@ -27,6 +29,8 @@ public class RenameRecruitScreen extends Screen {
     private static final MutableComponent TEXT_CANCEL = Component.translatable("gui.recruits.groups.cancel");
     private static final MutableComponent TEXT_SAVE = Component.translatable("gui.recruits.groups.save");
     private static final MutableComponent TEXT_RENAME_RECRUIT = Component.translatable("gui.recruits.inv.rename");
+    private static final MutableComponent TEXT_STATUS = Component.translatable("gui.recruits.rename.status");
+    private static final MutableComponent TOOLTIP_SAVE_DISABLED = Component.translatable("gui.recruits.rename.tooltip.save_disabled");
     public RenameRecruitScreen(Screen parent, AbstractRecruitEntity recruit) {
         super(Component.literal(""));
         this.recruit = recruit;
@@ -46,11 +50,13 @@ public class RenameRecruitScreen extends Screen {
         if (recruit != null) {
             editBox.setValue(recruit.getName().getString());
         }
+        editBox.setMaxLength(24);
         this.addRenderableWidget(editBox);
+        this.setInitialFocus(editBox);
 
-        this.addRenderableWidget(new ExtendedButton(leftPos + 10, topPos + 55, 60, 20, TEXT_SAVE,
+        this.saveButton = this.addRenderableWidget(new ExtendedButton(leftPos + 10, topPos + 55, 60, 20, TEXT_SAVE,
             button -> {
-                String newName = editBox.getValue();
+                String newName = editBox.getValue().trim();
                 if (!newName.isEmpty()) {
                     recruit.setCustomName(Component.literal(newName));
 
@@ -68,10 +74,16 @@ public class RenameRecruitScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
+        boolean hasName = editBox != null && !editBox.getValue().trim().isEmpty();
+        if (saveButton != null) {
+            saveButton.active = hasName;
+            saveButton.setTooltip(hasName ? null : Tooltip.create(TOOLTIP_SAVE_DISABLED));
+        }
     }
 
     private void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         guiGraphics.drawString(font, TEXT_RENAME_RECRUIT, leftPos + 10  , topPos + 5, fontColor, false);
+        guiGraphics.drawString(font, TEXT_STATUS, leftPos + 10, topPos + 45, 0x5B4A32, false);
     }
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);

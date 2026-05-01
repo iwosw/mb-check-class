@@ -50,6 +50,7 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
 
     private ScrollDropDownMenu<RecruitsGroup> groupSelectionDropDownMenu;
     public RecruitsGroup group;
+    private static final MutableComponent GROUP_LABEL = Component.translatable("gui.recruits.hire.group_label");
     public RecruitHireScreen(RecruitHireMenu recruitContainer, Inventory playerInventory, Component title) {
         super(RESOURCE_LOCATION, recruitContainer, playerInventory, Component.literal(""));
         this.recruit = recruitContainer.getRecruitEntity();
@@ -61,9 +62,7 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     @Override
     protected void containerTick() {
         super.containerTick();
-        if(hireButton != null){
-            hireButton.active = ClientManager.canPlayerHire;
-        }
+        updateHireButtonState();
     }
 
     @Override
@@ -75,6 +74,7 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
                 (selected) ->{
                     this.group = selected;
                     ClientManager.groupSelection = ClientManager.groups.indexOf(group);
+                    updateHireButtonState();
                 }
         );
         groupSelectionDropDownMenu.setBgFillSelected(FastColor.ARGB32.color(255, 139, 139, 139));
@@ -82,7 +82,15 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
 
         if(ClientManager.currency != null) ClientManager.currency.setCount(recruit.getCost());
         hireButton = createHireButton();
-        if(group == null || ClientManager.groups.isEmpty()) hireButton.active = false;
+        updateHireButtonState();
+    }
+
+    private void updateHireButtonState() {
+        if (hireButton == null) {
+            return;
+        }
+        boolean canHire = ClientManager.canPlayerHire && group != null && ClientManager.groups != null && !ClientManager.groups.isEmpty();
+        hireButton.active = canHire;
     }
 
     private ExtendedButton createHireButton() {
@@ -132,6 +140,11 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
 
         guiGraphics.drawString(font, recruit.getDisplayName().getVisualOrderText(), 8, 5, fontColor, false);
         guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
+        guiGraphics.drawString(font, GROUP_LABEL, 92, this.imageHeight - 104, 0x5B4A32, false);
+        Component hireStatus = group == null
+                ? Component.translatable("gui.recruits.hire.status.no_group")
+                : Component.translatable("gui.recruits.hire.status.selected_group", group.getName());
+        guiGraphics.drawString(font, hireStatus, 92, this.imageHeight - 94, 0x5B4A32, false);
 
         guiGraphics.drawString(font, TEXT_HP, k, l, fontColor, false);
         guiGraphics.drawString(font, "" + health, k + 25, l , fontColor, false);
