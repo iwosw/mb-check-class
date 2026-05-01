@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.client.civilian.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.persistence.civilian.ScannedBlock;
@@ -27,6 +29,7 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.model.data.ModelData;
@@ -134,6 +137,12 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
         int blockEntityBudget = fullDetail ? Integer.MAX_VALUE : STRUCTURE_PREVIEW_FAR_BLOCK_ENTITY_BUDGET;
         int renderedBlocks = 0;
         int renderedBlockEntities = 0;
+        double minDx = Double.POSITIVE_INFINITY;
+        double minDy = Double.POSITIVE_INFINITY;
+        double minDz = Double.POSITIVE_INFINITY;
+        double maxDx = Double.NEGATIVE_INFINITY;
+        double maxDy = Double.NEGATIVE_INFINITY;
+        double maxDz = Double.NEGATIVE_INFINITY;
 
         poseStack.pushPose();
 
@@ -158,6 +167,12 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
             double dx = worldPos.getX() - buildArea.getX();
             double dy = worldPos.getY() - buildArea.getY();
             double dz = worldPos.getZ() - buildArea.getZ();
+            minDx = Math.min(minDx, dx);
+            minDy = Math.min(minDy, dy);
+            minDz = Math.min(minDz, dz);
+            maxDx = Math.max(maxDx, dx + 1.0D);
+            maxDy = Math.max(maxDy, dy + 1.0D);
+            maxDz = Math.max(maxDz, dz + 1.0D);
 
             BlockState state = scannedBlock.state();
             BlockState rotatedState = BuildArea.rotateBlockState(state, rotationSteps);
@@ -203,6 +218,19 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
                     }
                 }
             }
+        }
+
+        if (renderedBlocks > 0 && minDx != Double.POSITIVE_INFINITY) {
+            VertexConsumer lines = bufferSource.getBuffer(RenderType.lines());
+            ClientRenderPrimitives.lineBox(poseStack, lines,
+                    new AABB(minDx, minDy, minDz, maxDx, maxDy, maxDz).inflate(0.03D),
+                    0.85F, 0.65F, 0.35F, 0.70F);
+            double originDx = origin.getX() - buildArea.getX();
+            double originDy = origin.getY() - buildArea.getY();
+            double originDz = origin.getZ() - buildArea.getZ();
+            ClientRenderPrimitives.lineBox(poseStack, lines,
+                    new AABB(originDx, originDy, originDz, originDx + 1.0D, originDy + 1.0D, originDz + 1.0D).inflate(0.05D),
+                    1.0F, 0.55F, 0.24F, 0.95F);
         }
 
         poseStack.popPose();

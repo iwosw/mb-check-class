@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.civilian.SurveyorZonePalette;
 import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import com.talhanation.bannermod.items.civilian.SettlementSurveyorToolItem;
 import com.talhanation.bannermod.settlement.building.ZoneRole;
@@ -149,6 +150,9 @@ public final class SettlementSurveyorGuidanceRenderEvents {
                 : Component.translatable("bannermod.surveyor.hud.role_help", SettlementSurveyorToolItem.roleLabel(selected), roleHint(selected));
         Component rolePurpose = Component.translatable("bannermod.surveyor.hud.role_purpose", SurveyorModeGuidance.rolePurpose(selected));
         Component roleBlocks = Component.translatable("bannermod.surveyor.hud.role_blocks", SurveyorModeGuidance.roleBuildHint(mode, selected));
+        Component fortLegend = mode == SurveyorMode.BOOTSTRAP_FORT
+                ? Component.translatable("bannermod.surveyor.hud.fort_legend")
+                : null;
         ZoneSelection shown = hasAnchor ? findRole(session, selected) : null;
         Component dimensions = shown == null
                 ? Component.translatable("bannermod.surveyor.hud.dimensions.none", SettlementSurveyorToolItem.roleLabel(selected))
@@ -158,6 +162,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
                 + wrappedLineCount(mc, modeHint, contentWidth)
                 + wrappedLineCount(mc, rolePurpose, contentWidth)
                 + wrappedLineCount(mc, roleBlocks, contentWidth)
+                + (fortLegend == null ? 0 : wrappedLineCount(mc, fortLegend, contentWidth))
                 + 1
                 + (hasAnchor
                 ? 1 + requiredRoles.size() + wrappedLineCount(mc, dimensions, contentWidth) + wrappedLineCount(mc, roleHelp, contentWidth) + wrappedLineCount(mc, nextStep, contentWidth)
@@ -177,6 +182,9 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         textY = drawWrapped(graphics, mc, modeHint, x + 7, textY, contentWidth, PANEL_MUTED);
         textY = drawWrapped(graphics, mc, rolePurpose, x + 7, textY, contentWidth, PANEL_TEXT);
         textY = drawWrapped(graphics, mc, roleBlocks, x + 7, textY, contentWidth, PANEL_MUTED);
+        if (fortLegend != null) {
+            textY = drawWrapped(graphics, mc, fortLegend, x + 7, textY, contentWidth, PANEL_MUTED);
+        }
 
         textY = drawCheckLine(graphics, mc, x + 7, textY, hasAnchor, Component.translatable("bannermod.surveyor.hud.check.anchor"));
         if (!hasAnchor) {
@@ -248,6 +256,9 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         }
         ZoneRole nextMissingRole = SurveyorModeGuidance.nextMissingRole(mode, session);
         if (nextMissingRole != null) {
+            if (mode == SurveyorMode.BOOTSTRAP_FORT && nextMissingRole == ZoneRole.INTERIOR) {
+                return Component.translatable("bannermod.surveyor.hud.next.bootstrap_interior");
+            }
             return Component.translatable("bannermod.surveyor.hud.next.role", SettlementSurveyorToolItem.roleLabel(nextMissingRole), roleHint(nextMissingRole));
         }
         return Component.translatable("bannermod.surveyor.hud.next.validate");
@@ -435,16 +446,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
     }
 
     private static int color(ZoneRole role) {
-        return switch (role) {
-            case AUTHORITY_POINT -> 0xFFFFB13B;
-            case INTERIOR -> 0xFF7FD7FF;
-            case SLEEPING -> 0xFFB48CFF;
-            case WORK_ZONE -> 0xFF83D36B;
-            case FORT_PERIMETER -> 0xFFFF6F4A;
-            case ENTRANCE -> 0xFFFFF08A;
-            case STORAGE -> 0xFFCDA86B;
-            case PREFAB_FOOTPRINT -> 0xFFE5E5E5;
-        };
+        return SurveyorZonePalette.color(role);
     }
 
     private static double labelYOffset(ZoneRole role) {
@@ -456,7 +458,7 @@ public final class SettlementSurveyorGuidanceRenderEvents {
     }
 
     private static float[] rgb(int rgb) {
-        return new float[]{((rgb >> 16) & 0xFF) / 255.0F, ((rgb >> 8) & 0xFF) / 255.0F, (rgb & 0xFF) / 255.0F};
+        return SurveyorZonePalette.rgb(rgb);
     }
 
     private static void lineBox(PoseStack pose, VertexConsumer lines, AABB box, int argb, float alpha) {
