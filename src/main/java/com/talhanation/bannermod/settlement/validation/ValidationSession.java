@@ -55,6 +55,15 @@ public record ValidationSession(
         return withSelections(next);
     }
 
+    public ValidationSession withoutSelection(ZoneRole role) {
+        if (role == null) {
+            return this;
+        }
+        List<ZoneSelection> next = new ArrayList<>(this.selections);
+        next.removeIf(selection -> selection.role() == role);
+        return withSelections(next);
+    }
+
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
         tag.putUUID("PlayerId", this.playerId);

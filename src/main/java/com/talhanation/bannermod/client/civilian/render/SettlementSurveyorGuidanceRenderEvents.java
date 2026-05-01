@@ -8,7 +8,10 @@ import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import com.talhanation.bannermod.items.civilian.SettlementSurveyorToolItem;
 import com.talhanation.bannermod.settlement.building.ZoneRole;
 import com.talhanation.bannermod.settlement.building.ZoneSelection;
+import com.talhanation.bannermod.settlement.validation.SurveyorModeGuidance;
+import com.talhanation.bannermod.settlement.validation.StarterFortPlan;
 import com.talhanation.bannermod.settlement.validation.SurveyorMode;
+import com.talhanation.bannermod.settlement.validation.SurveyorStructurePlans;
 import com.talhanation.bannermod.settlement.validation.SurveyorSessionCodec;
 import com.talhanation.bannermod.settlement.validation.ValidationSession;
 import net.minecraft.client.Camera;
@@ -30,6 +33,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+
+import java.util.List;
+import java.util.Locale;
 
 @EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class SettlementSurveyorGuidanceRenderEvents {
@@ -60,6 +66,8 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         }
 
         ValidationSession session = SurveyorSessionCodec.read(stack);
+        SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
+        ZoneRole selectedRole = SettlementSurveyorToolItem.selectedRole(stack);
         BlockPos anchor = session == null ? BlockPos.ZERO : session.anchorPos();
         BlockPos target = targetedBlock(mc);
         if (anchor.equals(BlockPos.ZERO) && target == null) {
@@ -90,9 +98,12 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         BlockPos previewAnchor = anchor.equals(BlockPos.ZERO) ? target : anchor;
         if (previewAnchor != null) {
             renderAnchorMarker(pose, lines, previewAnchor);
-            renderAuthorityGuide(pose, lines, previewAnchor);
-            if (session == null || session.mode() == SurveyorMode.BOOTSTRAP_FORT) {
+            if (mode == SurveyorMode.BOOTSTRAP_FORT) {
+                renderGuideBox(pose, lines, previewAnchor, ZoneRole.AUTHORITY_POINT, StarterFortPlan.AUTHORITY_GUIDE, session, selectedRole, 0.82F);
+                renderGuideBox(pose, lines, previewAnchor, ZoneRole.INTERIOR, StarterFortPlan.INTERIOR_GUIDE, session, selectedRole, 0.28F);
                 renderStarterFortPreview(pose, lines, previewAnchor);
+            } else {
+                renderSurveyorPlanPreview(pose, lines, previewAnchor, mode, session, selectedRole);
             }
         }
 
@@ -114,13 +125,30 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         }
 
         ValidationSession session = SurveyorSessionCodec.read(stack);
+        SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
+        List<ZoneRole> requiredRoles = SurveyorModeGuidance.requiredRoles(mode);
         ZoneRole selected = SettlementSurveyorToolItem.selectedRole(stack);
         GuiGraphics graphics = event.getGuiGraphics();
         int x = 8;
         int y = 38;
         int width = 232;
+        int contentWidth = width - 14;
         int line = 11;
-        int rows = 8;
+        boolean hasAnchor = session != null && !session.anchorPos().equals(BlockPos.ZERO);
+        Component modeHint = modeHint(mode);
+        Component nextStep = currentStep(mode, session);
+        Component roleHelp = Component.translatable("bannermod.surveyor.hud.role_help", SettlementSurveyorToolItem.roleLabel(selected), roleHint(selected));
+        ZoneSelection shown = hasAnchor ? findRole(session, selected) : null;
+        Component dimensions = shown == null
+                ? Component.translatable("bannermod.surveyor.hud.dimensions.none", SettlementSurveyorToolItem.roleLabel(selected))
+                : Component.translatable("bannermod.surveyor.hud.dimensions",
+                SettlementSurveyorToolItem.roleLabel(selected), sizeX(shown), sizeY(shown), sizeZ(shown), shown.volume());
+        int rows = 3
+                + wrappedLineCount(mc, modeHint, contentWidth)
+                + 1
+                + (hasAnchor
+                ? 1 + requiredRoles.size() + wrappedLineCount(mc, dimensions, contentWidth) + wrappedLineCount(mc, roleHelp, contentWidth) + wrappedLineCount(mc, nextStep, contentWidth)
+                : wrappedLineCount(mc, Component.translatable("bannermod.surveyor.hud.preview"), contentWidth));
         int height = 16 + rows * line;
 
         graphics.fill(x, y, x + width, y + height, PANEL_BG);
@@ -128,40 +156,85 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         graphics.renderOutline(x, y, width, height, PANEL_BORDER);
 
         int textY = y + 6;
-        graphics.drawString(mc.font, Component.translatable("bannermod.surveyor.hud.title"), x + 7, textY, PANEL_TEXT, true);
+        Component title = Component.translatable("bannermod.surveyor.hud.title_mode", SettlementSurveyorToolItem.modeLabel(mode));
+        graphics.drawString(mc.font, title, x + 7, textY, PANEL_TEXT, true);
         textY += line + 2;
         graphics.drawString(mc.font, Component.translatable("bannermod.surveyor.hud.role", SettlementSurveyorToolItem.roleLabel(selected)), x + 7, textY, color(selected), true);
         textY += line;
+        textY = drawWrapped(graphics, mc, modeHint, x + 7, textY, contentWidth, PANEL_MUTED);
 
-        if (session == null || session.anchorPos().equals(BlockPos.ZERO)) {
-            graphics.drawString(mc.font, Component.translatable("bannermod.surveyor.hud.step.anchor"), x + 7, textY, PANEL_WARN, true);
-            textY += line;
-            graphics.drawString(mc.font, Component.translatable("bannermod.surveyor.hud.preview"), x + 7, textY, PANEL_MUTED, true);
+        textY = drawCheckLine(graphics, mc, x + 7, textY, hasAnchor, Component.translatable("bannermod.surveyor.hud.check.anchor"));
+        if (!hasAnchor) {
+            drawWrapped(graphics, mc, Component.translatable("bannermod.surveyor.hud.preview"), x + 7, textY, contentWidth, PANEL_MUTED);
             return;
         }
 
         graphics.drawString(mc.font, Component.translatable("bannermod.surveyor.hud.anchor", session.anchorPos().toShortString()), x + 7, textY, PANEL_TEXT, true);
         textY += line;
-        boolean hasAuthority = hasRole(session, ZoneRole.AUTHORITY_POINT);
-        boolean hasInterior = hasRole(session, ZoneRole.INTERIOR);
-        graphics.drawString(mc.font, Component.literal((hasAuthority ? "[x] " : "[ ] ")).append(SettlementSurveyorToolItem.roleLabel(ZoneRole.AUTHORITY_POINT)), x + 7, textY, hasAuthority ? PANEL_OK : PANEL_WARN, true);
-        textY += line;
-        graphics.drawString(mc.font, Component.literal((hasInterior ? "[x] " : "[ ] ")).append(SettlementSurveyorToolItem.roleLabel(ZoneRole.INTERIOR)), x + 7, textY, hasInterior ? PANEL_OK : PANEL_WARN, true);
-        textY += line;
+        boolean ready = true;
+        for (ZoneRole role : requiredRoles) {
+            boolean complete = hasRole(session, role);
+            ready &= complete;
+            textY = drawCheckLine(graphics, mc, x + 7, textY, complete, SettlementSurveyorToolItem.roleLabel(role));
+        }
 
-        ZoneSelection shown = findRole(session, selected);
-        Component dimensions = shown == null
-                ? Component.translatable("bannermod.surveyor.hud.dimensions.none")
-                : Component.translatable("bannermod.surveyor.hud.dimensions", sizeX(shown), sizeY(shown), sizeZ(shown), shown.volume());
-        graphics.drawString(mc.font, dimensions, x + 7, textY, PANEL_MUTED, true);
-        textY += line;
+        textY = drawWrapped(graphics, mc, dimensions, x + 7, textY, contentWidth, PANEL_MUTED);
+        textY = drawWrapped(graphics, mc, roleHelp, x + 7, textY, contentWidth, PANEL_MUTED);
 
-        Component next = !hasAuthority
-                ? Component.translatable("bannermod.surveyor.hud.next.authority")
-                : !hasInterior
-                ? Component.translatable("bannermod.surveyor.hud.next.interior")
-                : Component.translatable("bannermod.surveyor.hud.next.validate");
-        graphics.drawString(mc.font, next, x + 7, textY, hasAuthority && hasInterior ? PANEL_OK : PANEL_WARN, true);
+        drawWrapped(graphics, mc, nextStep, x + 7, textY, contentWidth, ready ? PANEL_OK : PANEL_WARN);
+    }
+
+    private static int drawCheckLine(GuiGraphics graphics,
+                                     Minecraft mc,
+                                     int x,
+                                     int textY,
+                                     boolean complete,
+                                     Component label) {
+        graphics.drawString(mc.font,
+                Component.literal(complete ? "[x] " : "[ ] ").append(label),
+                x,
+                textY,
+                complete ? PANEL_OK : PANEL_WARN,
+                true);
+        return textY + 11;
+    }
+
+    private static int drawWrapped(GuiGraphics graphics,
+                                   Minecraft mc,
+                                   Component text,
+                                   int x,
+                                   int y,
+                                   int width,
+                                   int color) {
+        int lineY = y;
+        for (net.minecraft.util.FormattedCharSequence sequence : mc.font.split(text, width)) {
+            graphics.drawString(mc.font, sequence, x, lineY, color, true);
+            lineY += 11;
+        }
+        return lineY;
+    }
+
+    private static int wrappedLineCount(Minecraft mc, Component text, int width) {
+        return Math.max(1, mc.font.split(text, width).size());
+    }
+
+    private static Component modeHint(SurveyorMode mode) {
+        return Component.translatable("bannermod.surveyor.mode_hint." + (mode == null ? SurveyorMode.BOOTSTRAP_FORT : mode).name().toLowerCase(Locale.ROOT));
+    }
+
+    private static Component roleHint(ZoneRole role) {
+        return Component.translatable("bannermod.surveyor.role_hint." + (role == null ? ZoneRole.INTERIOR : role).name().toLowerCase(Locale.ROOT));
+    }
+
+    private static Component currentStep(SurveyorMode mode, ValidationSession session) {
+        if (session == null || session.anchorPos().equals(BlockPos.ZERO)) {
+            return Component.translatable("bannermod.surveyor.hud.next.anchor");
+        }
+        ZoneRole nextMissingRole = SurveyorModeGuidance.nextMissingRole(mode, session);
+        if (nextMissingRole != null) {
+            return Component.translatable("bannermod.surveyor.hud.next.role", SettlementSurveyorToolItem.roleLabel(nextMissingRole), roleHint(nextMissingRole));
+        }
+        return Component.translatable("bannermod.surveyor.hud.next.validate");
     }
 
     private static ItemStack surveyorStack(LocalPlayer player) {
@@ -181,43 +254,44 @@ public final class SettlementSurveyorGuidanceRenderEvents {
     }
 
     private static void renderStarterFortPreview(PoseStack pose, VertexConsumer lines, BlockPos anchor) {
-        int x0 = anchor.getX() - 10;
-        int x1 = anchor.getX() + 11;
-        int z0 = anchor.getZ() - 10;
-        int z1 = anchor.getZ() + 11;
-        int y = anchor.getY() + 1;
-        int h = 5;
-        int gateLeft = anchor.getX() - 2;
-        int gateRight = anchor.getX() + 3;
         float[] wood = rgb(0xD8A55A);
         float[] tower = rgb(0xF0C06A);
         float[] yard = rgb(0x8AD0FF);
         float[] shelter = rgb(0xB8793C);
 
-        lineBox(pose, lines, new AABB(x0, y, z0, x1, y + h, z0 + 1), wood, 0.72F);
-        lineBox(pose, lines, new AABB(x0, y, z1 - 1, gateLeft, y + h, z1), wood, 0.72F);
-        lineBox(pose, lines, new AABB(gateRight, y, z1 - 1, x1, y + h, z1), wood, 0.72F);
-        lineBox(pose, lines, new AABB(x0, y, z0, x0 + 1, y + h, z1), wood, 0.72F);
-        lineBox(pose, lines, new AABB(x1 - 1, y, z0, x1, y + h, z1), wood, 0.72F);
+        for (StarterFortPlan.RelativeBox box : StarterFortPlan.PALISADE_SEGMENTS) {
+            lineBox(pose, lines, box.toAabb(anchor), wood, 0.72F);
+        }
+        for (StarterFortPlan.RelativeBox box : StarterFortPlan.TOWERS) {
+            lineBox(pose, lines, box.toAabb(anchor), tower, 0.9F);
+        }
+        for (StarterFortPlan.RelativeBox box : StarterFortPlan.GATE_ARCH) {
+            lineBox(pose, lines, box.toAabb(anchor), rgb(0xFFD36A), 0.88F);
+        }
+        for (StarterFortPlan.RelativeBox box : StarterFortPlan.WINGS) {
+            lineBox(pose, lines, box.toAabb(anchor), shelter, 0.72F);
+        }
+        lineBox(pose, lines, StarterFortPlan.GATE_OPENING.toAabb(anchor), rgb(0x2A2116), 0.35F);
+        lineBox(pose, lines, StarterFortPlan.COURTYARD.toAabb(anchor), yard, 0.42F);
+        lineBox(pose, lines, new AABB(anchor).inflate(0.08D), rgb(0xFF6F4A), 0.75F);
+    }
 
-        lineBox(pose, lines, new AABB(x0, y, z0, x0 + 3, y + 6, z0 + 3), tower, 0.9F);
-        lineBox(pose, lines, new AABB(x1 - 3, y, z0, x1, y + 6, z0 + 3), tower, 0.9F);
-        lineBox(pose, lines, new AABB(x0, y, z1 - 3, x0 + 3, y + 6, z1), tower, 0.9F);
-        lineBox(pose, lines, new AABB(x1 - 3, y, z1 - 3, x1, y + 6, z1), tower, 0.9F);
-        lineBox(pose, lines, new AABB(gateLeft, y, z1 - 1, gateRight, y + 6, z1), rgb(0xFFD36A), 0.88F);
-        lineBox(pose, lines, new AABB(gateLeft + 1, y, z1 - 1, gateRight - 1, y + 4, z1), rgb(0x2A2116), 0.35F);
-
-        lineBox(pose, lines, new AABB(anchor.getX() - 5, anchor.getY(), anchor.getZ() - 4,
-                anchor.getX() + 6, anchor.getY() + 1, anchor.getZ() + 8), yard, 0.42F);
-        lineBox(pose, lines, new AABB(anchor.getX() - 8, y, anchor.getZ() - 10,
-                anchor.getX() + 9, y + 4, anchor.getZ() - 5), shelter, 0.72F);
-        lineBox(pose, lines, new AABB(anchor.getX() - 10, y, anchor.getZ() - 4,
-                anchor.getX() - 5, y + 4, anchor.getZ() + 6), shelter, 0.72F);
-        lineBox(pose, lines, new AABB(anchor.getX() + 5, y, anchor.getZ() - 4,
-                anchor.getX() + 10, y + 4, anchor.getZ() + 6), shelter, 0.72F);
-        lineBox(pose, lines, new AABB(anchor.getX() - 1, y, anchor.getZ() - 5,
-                anchor.getX() + 2, y + 3, anchor.getZ() - 5), rgb(0xFFF08A), 0.8F);
-        lineBox(pose, lines, new AABB(anchor.getX(), y, anchor.getZ(), anchor.getX() + 1, y + 1, anchor.getZ() + 1), rgb(0xFF6F4A), 0.75F);
+    private static void renderSurveyorPlanPreview(PoseStack pose,
+                                                  VertexConsumer lines,
+                                                  BlockPos anchor,
+                                                  SurveyorMode mode,
+                                                  ValidationSession session,
+                                                  ZoneRole selectedRole) {
+        SurveyorStructurePlans.SurveyorPlan plan = SurveyorStructurePlans.planFor(mode);
+        if (plan == null) {
+            return;
+        }
+        for (SurveyorStructurePlans.PreviewBox previewBox : plan.previewBoxes()) {
+            lineBox(pose, lines, previewBox.box().toAabb(anchor), previewBox.color(), previewBox.alpha());
+        }
+        for (SurveyorStructurePlans.GuideBox guideBox : plan.guideBoxes()) {
+            renderGuideBox(pose, lines, anchor, guideBox.role(), guideBox.box(), session, selectedRole, guideBox.alpha());
+        }
     }
 
     private static void renderAnchorMarker(PoseStack pose, VertexConsumer lines, BlockPos anchor) {
@@ -229,10 +303,21 @@ public final class SettlementSurveyorGuidanceRenderEvents {
         lineBox(pose, lines, new AABB(anchor).inflate(0.08D), rgb(0xFFD36A), 1.0F);
     }
 
-    private static void renderAuthorityGuide(PoseStack pose, VertexConsumer lines, BlockPos anchor) {
-        AABB authority = new AABB(anchor.getX() - 2, anchor.getY(), anchor.getZ() - 2,
-                anchor.getX() + 3, anchor.getY() + 2, anchor.getZ() + 3);
-        lineBox(pose, lines, authority, rgb(0xFFB13B), 0.82F);
+    private static void renderGuideBox(PoseStack pose,
+                                       VertexConsumer lines,
+                                       BlockPos anchor,
+                                       ZoneRole role,
+                                       StarterFortPlan.RelativeBox box,
+                                       ValidationSession session,
+                                       ZoneRole selectedRole,
+                                       float baseAlpha) {
+        boolean captured = session != null && hasRole(session, role);
+        float alpha = selectedRole == role
+                ? Math.min(1.0F, baseAlpha + 0.18F)
+                : captured
+                ? Math.max(0.18F, baseAlpha - 0.16F)
+                : baseAlpha;
+        lineBox(pose, lines, box.toAabb(anchor), color(role), alpha);
     }
 
     private static AABB selectionBox(BlockPos a, BlockPos b) {

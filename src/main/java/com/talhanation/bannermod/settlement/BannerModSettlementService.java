@@ -464,7 +464,7 @@ public final class BannerModSettlementService {
             default -> 0;
         };
         int workplaceSlots = switch (type) {
-            case FARM, MINE, LUMBER_CAMP, SMITHY, ARCHITECT_WORKSHOP -> Math.max(1, PrefabAutoStaffingRuntime.vacancySlotsForManualBuilding(type));
+            case FARM, MINE, LUMBER_CAMP, SMITHY, ARCHITECT_WORKSHOP, BARRACKS -> Math.max(1, PrefabAutoStaffingRuntime.vacancySlotsForManualBuilding(type));
             default -> 0;
         };
         boolean stockpileBuilding = type == BuildingType.STORAGE;

@@ -74,5 +74,11 @@ public final class BuildingDefinitionRegistry {
                 Set.of(ZoneRole.INTERIOR, ZoneRole.WORK_ZONE),
                 ValidationProfile.ARCHITECT
         ));
+        register(new BuildingDefinition(
+                BuildingType.BARRACKS,
+                Set.<Block>of(),
+                Set.of(ZoneRole.INTERIOR, ZoneRole.SLEEPING, ZoneRole.STORAGE),
+                ValidationProfile.HOUSE
+        ));
     }
 }

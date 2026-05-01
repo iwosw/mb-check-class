@@ -77,6 +77,7 @@ public class DefaultBuildingValidator implements BuildingValidator {
             case SMITHY -> validateSmithy(level, request, zonesByRole, warnings, blocking);
             case STORAGE -> validateStorage(level, request, zonesByRole, warnings, blocking);
             case ARCHITECT_WORKSHOP -> validateArchitectWorkshop(level, request, zonesByRole, warnings, blocking);
+            case BARRACKS -> validateBarracks(level, request, zonesByRole, warnings, blocking);
             default -> BuildingValidationResult.blockingFailure(request.type(), "validator_not_implemented", "Validator pipeline for this building type is not implemented yet.");
         };
     }
@@ -220,10 +221,10 @@ public class DefaultBuildingValidator implements BuildingValidator {
 
         InteriorStats stats = scanInterior(level, interior);
         if (stats.walkableBlocks < 64) {
-            warnings.add(new ValidationIssue("fort_walkable_too_small", "Fort has less than recommended 64 walkable interior blocks.", ValidationSeverity.WARNING));
+            blocking.add(new ValidationIssue("fort_walkable_too_small", "Fort interior needs at least 64 walkable blocks around the courtyard and wings.", ValidationSeverity.BLOCKING));
         }
-        if (stats.roofCoverage < 0.80D) {
-            warnings.add(new ValidationIssue("fort_roof_too_open", "Fort has less than recommended 80% roof coverage.", ValidationSeverity.WARNING));
+        if (stats.roofCoverage < 0.60D) {
+            warnings.add(new ValidationIssue("fort_roof_too_open", "Fort roof coverage is low. A more sheltered interior is recommended.", ValidationSeverity.WARNING));
         }
         if (!hasEntrance(interior, level)) {
             warnings.add(new ValidationIssue("fort_entrance_unclear", "Fort entrance is unclear for current selection; manual review recommended.", ValidationSeverity.WARNING));
@@ -232,7 +233,7 @@ public class DefaultBuildingValidator implements BuildingValidator {
             return new BuildingValidationResult(false, request.type(), 0, 0, blocking, warnings, buildSnapshot(request));
         }
 
-        int qualityScore = Math.min(100, (int) Math.round(stats.roofCoverage * 100.0D));
+        int qualityScore = Math.min(100, (int) Math.round((stats.roofCoverage * 0.70D + Math.min(1.0D, stats.walkableBlocks / 128.0D) * 0.30D) * 100.0D));
         return BuildingValidationResult.success(request.type(), 4, qualityScore, warnings, buildSnapshot(request));
     }
 
@@ -460,6 +461,50 @@ public class DefaultBuildingValidator implements BuildingValidator {
 
         int capacityByArea = Math.max(1, interiorStats.walkableBlocks / 24);
         int capacity = Math.min(draftingTables, capacityByArea);
+        int qualityScore = Math.min(100, (int) Math.round(interiorStats.roofCoverage * 100.0D));
+        return BuildingValidationResult.success(request.type(), capacity, qualityScore, warnings, buildSnapshot(request));
+    }
+
+    private BuildingValidationResult validateBarracks(ServerLevel level,
+                                                      BuildingValidationRequest request,
+                                                      Map<ZoneRole, ZoneSelection> zonesByRole,
+                                                      List<ValidationIssue> warnings,
+                                                      List<ValidationIssue> blocking) {
+        ZoneSelection interior = zonesByRole.get(ZoneRole.INTERIOR);
+        ZoneSelection sleeping = zonesByRole.get(ZoneRole.SLEEPING);
+        ZoneSelection storage = zonesByRole.get(ZoneRole.STORAGE);
+        if (interior == null || sleeping == null || storage == null) {
+            return BuildingValidationResult.blockingFailure(request.type(), "barracks_zones_missing", "Barracks requires INTERIOR, SLEEPING, and STORAGE zones.");
+        }
+
+        InteriorStats interiorStats = scanInterior(level, interior);
+        if (interiorStats.walkableBlocks < 16) {
+            blocking.add(new ValidationIssue("barracks_walkable_too_small", "Barracks requires at least 16 walkable interior blocks.", ValidationSeverity.BLOCKING));
+        }
+        if (interiorStats.roofCoverage < 0.70D) {
+            blocking.add(new ValidationIssue("barracks_roof_too_open", "Barracks requires at least 70% roof coverage.", ValidationSeverity.BLOCKING));
+        }
+
+        int beds = countBeds(level, sleeping);
+        if (beds < 2) {
+            beds = Math.max(beds, countBedsNearZone(level, sleeping, 1));
+        }
+        if (beds < 2) {
+            blocking.add(new ValidationIssue("barracks_beds_missing", "Barracks requires at least two beds or bunks in the sleeping zone.", ValidationSeverity.BLOCKING));
+        }
+
+        int containers = countContainers(level, storage);
+        if (containers < 1) {
+            blocking.add(new ValidationIssue("barracks_storage_missing", "Barracks requires at least one chest or barrel in the storage zone.", ValidationSeverity.BLOCKING));
+        }
+        if (!hasEntrance(interior, level)) {
+            warnings.add(new ValidationIssue("barracks_entrance_unclear", "Barracks entrance is unclear for current selection.", ValidationSeverity.WARNING));
+        }
+        if (!blocking.isEmpty()) {
+            return new BuildingValidationResult(false, request.type(), 0, 0, blocking, warnings, buildSnapshot(request));
+        }
+
+        int capacity = clamp(Math.max(1, beds), 1, 4);
         int qualityScore = Math.min(100, (int) Math.round(interiorStats.roofCoverage * 100.0D));
         return BuildingValidationResult.success(request.type(), capacity, qualityScore, warnings, buildSnapshot(request));
     }

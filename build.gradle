@@ -77,24 +77,7 @@ neoForge {
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = project.file('run_gametest')
-        }
-
-        gameTestServerGame001 {
-            type = 'gameTestServer'
-            gameDirectory = project.file('run_gametest_game_001')
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'bannermod_game_001'
-        }
-
-        gameTestServerGame009 {
-            type = 'gameTestServer'
-            gameDirectory = project.file('run_gametest_game_009')
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'bannermod_game_009'
-        }
-
-        gameTestServerGame010 {
-            type = 'gameTestServer'
-            gameDirectory = project.file('run_gametest_game_010')
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'bannermod_game_010'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'bannermod,bannermod_game_001,bannermod_game_009,bannermod_game_010'
         }
 
         data {
@@ -229,7 +212,6 @@ tasks.register('verifyGameTestStage') {
     group = 'verification'
     description = 'Runs the game test stage used by check'
     dependsOn tasks.named('verifyGameTestScenarioCoverage')
-    dependsOn tasks.named('verifyFocusedGameTestStage')
     dependsOn tasks.named('runGameTestServer')
 }
 
@@ -270,21 +252,10 @@ tasks.register('verifyGameTestScenarioCoverage') {
     }
 }
 
-tasks.register('verifyFocusedGameTestStage') {
-    group = 'verification'
-    description = 'Runs focused high-risk GameTest suites used by check'
-    dependsOn tasks.named('runGameTestServerGame001')
-    dependsOn tasks.named('runGameTestServerGame009')
-    dependsOn tasks.named('runGameTestServerGame010')
-}
-
 tasks.matching { it.name.startsWith('runGameTestServer') }.configureEach {
     doFirst {
         Map<String, String> worldDirectories = [
-                'runGameTestServer'       : 'run_gametest/world',
-                'runGameTestServerGame001': 'run_gametest_game_001/world',
-                'runGameTestServerGame009': 'run_gametest_game_009/world',
-                'runGameTestServerGame010': 'run_gametest_game_010/world'
+                'runGameTestServer': 'run_gametest/world'
         ]
         String worldDirectory = worldDirectories.get(name)
         if (worldDirectory != null) {

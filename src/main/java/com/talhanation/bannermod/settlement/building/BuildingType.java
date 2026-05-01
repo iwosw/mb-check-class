@@ -8,5 +8,6 @@ public enum BuildingType {
     LUMBER_CAMP,
     SMITHY,
     STORAGE,
-    ARCHITECT_WORKSHOP
+    ARCHITECT_WORKSHOP,
+    BARRACKS
 }

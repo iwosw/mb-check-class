@@ -93,6 +93,7 @@ After coding, provide:
 - For Minecraft GUI/HUD work, load and apply the repo skill `minecraft-ui-design` from `.agents/skills/minecraft-ui-design/SKILL.md`.
 - UI must be Minecraft-native, minimal, readable, server-authoritative for gameplay mutations, localized, and checked for overlap with hotbar/chat/crosshair/boss bars/existing BannerMod overlays.
 - AI agents changing BannerMod GUI, HUD, overlays, or placement holograms must also follow `docs/AI_MINECRAFT_UI_STYLE_GUIDE.md`.
+- Do not spam the player with many always-visible action buttons. When one UI needs several secondary actions, prefer a compact context menu or similar progressive disclosure instead of exposing every action at once.
 
 13. Army command pipeline
 All server-side movement / face / attack / aggro / stance / strategic-fire commands for recruits MUST flow through the unified pipeline. Bypassing it (e.g. calling `recruit.setMovePos(...)` directly from a packet handler) breaks queueing, priority, and the `CommandIntentLog` audit trail.

@@ -56,17 +56,11 @@ public final class SettlementBootstrapService {
 
         BlockPos authorityPos = fortValidationResult.snapshot().anchorPos();
         RecruitsClaim claim = claimAt(authorityPos);
-        if (claim != null && !playerOwnsClaim(player, claim)) {
+        if (claim == null) {
+            return BootstrapResult.failure("Starter fort validation must happen inside your claimed settlement land.");
+        }
+        if (!playerOwnsClaim(player, claim)) {
             return BootstrapResult.failure("Settlement bootstrap requires a fort inside your faction claim.");
-        }
-        if (claim == null && isStarterTownTooCloseToSameNationTown(level, player, authorityPos)) {
-            return BootstrapResult.failure("New town center is too close to another town in your nation.");
-        }
-        if (claim == null) {
-            claim = createStarterClaim(level, player, authorityPos);
-        }
-        if (claim == null) {
-            return BootstrapResult.failure("No claim found at fort authority position and automatic claim bootstrap failed.");
         }
 
         SettlementRegistryData registry = SettlementRegistryData.get(level);

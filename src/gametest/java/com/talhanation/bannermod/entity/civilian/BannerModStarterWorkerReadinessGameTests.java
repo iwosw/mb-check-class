@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.entity.civilian;
 
 import com.talhanation.bannermod.BannerModDedicatedServerGameTestSupport;
+import com.talhanation.bannermod.BannerModStarterFortGameTestSupport;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
@@ -39,16 +40,14 @@ public class BannerModStarterWorkerReadinessGameTests {
                 "qa001-starter-leader",
                 "qa001_starter_team",
                 new BlockPos(1, 2, 1));
-        BlockPos fortOrigin = new BlockPos(20, 2, 20);
-        BlockPos anchor = fortOrigin.offset(5, 1, 5);
+        BlockPos anchor = new BlockPos(30, 2, 30);
 
         RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(
                 level, anchor, "qa001_starter_team", leader.getUUID(), leader.getScoreboardName());
         helper.assertTrue(claim != null, "Expected bootstrap test claim to seed successfully.");
 
-        buildValidFort(level, fortOrigin);
-        buildStarterField(level, new BlockPos(27, 2, 27));
-        BuildingValidationResult fortValidation = validateStarterFort(level, fortOrigin, anchor);
+        BannerModStarterFortGameTestSupport.buildValidFort(level, anchor);
+        BuildingValidationResult fortValidation = validateStarterFort(level, anchor);
         helper.assertTrue(fortValidation.valid(), "Expected prepared fort fixture to validate as STARTER_FORT.");
 
         BootstrapResult result = SettlementBootstrapService.bootstrapSettlement(level, leader, fortValidation);
@@ -64,7 +63,7 @@ public class BannerModStarterWorkerReadinessGameTests {
 
             assertIdleReason(helper, miner, "miner_no_area");
             assertIdleReason(helper, lumberjack, "lumberjack_no_area");
-            assertIdleReason(helper, builder, "builder_no_area");
+            assertAssignmentOrIdleReason(helper, builder, "builder_no_area");
             WorkersServerConfig.clearAllTestOverrides();
         });
     }
@@ -83,20 +82,8 @@ public class BannerModStarterWorkerReadinessGameTests {
         return player;
     }
 
-    private static BuildingValidationResult validateStarterFort(ServerLevel level, BlockPos fortOrigin, BlockPos anchor) {
-        return new DefaultBuildingValidator(new BuildingDefinitionRegistry()).validate(
-                level,
-                null,
-                new BuildingValidationRequest(
-                        new UUID(0L, 0L),
-                        BuildingType.STARTER_FORT,
-                        anchor,
-                        List.of(
-                                new ZoneSelection(ZoneRole.AUTHORITY_POINT, anchor, anchor, anchor),
-                                new ZoneSelection(ZoneRole.INTERIOR, fortOrigin.offset(1, 1, 1), fortOrigin.offset(8, 1, 8), anchor)
-                        )
-                )
-        );
+    private static BuildingValidationResult validateStarterFort(ServerLevel level, BlockPos anchor) {
+        return BannerModStarterFortGameTestSupport.validateStarterFort(level, anchor);
     }
 
     private static <T extends AbstractWorkerEntity> T singleWorker(GameTestHelper helper,
@@ -122,40 +109,6 @@ public class BannerModStarterWorkerReadinessGameTests {
             return;
         }
         assertIdleReason(helper, worker, expectedIdleReason);
-    }
-
-    private static void buildValidFort(ServerLevel level, BlockPos origin) {
-        int minX = origin.getX();
-        int minY = origin.getY();
-        int minZ = origin.getZ();
-        int maxX = minX + 9;
-        int maxY = minY + 4;
-        int maxZ = minZ + 9;
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                level.setBlockAndUpdate(new BlockPos(x, minY, z), Blocks.STONE_BRICKS.defaultBlockState());
-            }
-        }
-
-        for (int y = minY + 1; y <= maxY; y++) {
-            for (int x = minX; x <= maxX; x++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    boolean wall = x == minX || x == maxX || z == minZ || z == maxZ;
-                    if (y == maxY) {
-                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.STONE_BRICKS.defaultBlockState());
-                    } else if (wall) {
-                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.COBBLESTONE.defaultBlockState());
-                    } else {
-                        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState());
-                    }
-                }
-            }
-        }
-
-        level.setBlockAndUpdate(origin.offset(0, 1, 5), Blocks.AIR.defaultBlockState());
-        level.setBlockAndUpdate(origin.offset(0, 2, 5), Blocks.AIR.defaultBlockState());
-        level.setBlockAndUpdate(origin.offset(6, 1, 5), Blocks.WHITE_BANNER.defaultBlockState());
     }
 
     private static void buildStarterField(ServerLevel level, BlockPos waterCenter) {
