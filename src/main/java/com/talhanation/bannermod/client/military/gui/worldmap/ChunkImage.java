@@ -13,27 +13,35 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.MapColor;
 
 public class ChunkImage {
-    private static final int WATER_DEEP_RGB = 0x1E466E;
-    private static final int WATER_SHALLOW_RGB = 0x2D5B82;
-    private static final int GRASS_RGB = 0x4F8F45;
-    private static final int LEAVES_RGB = 0x376E35;
-    private static final int SAND_RGB = 0xD4C184;
-    private static final int RED_SAND_RGB = 0xB46B3D;
-    private static final int STONE_RGB = 0x85837C;
-    private static final int DEEPSLATE_RGB = 0x55565C;
-    private static final int SNOW_RGB = 0xE1E8EA;
-    private static final int DIRT_RGB = 0x7C5B3B;
-    private static final int PODZOL_RGB = 0x6E5130;
-    private static final int CLAY_RGB = 0x9A8F88;
-    private static final int WOOD_RGB = 0x7B5A35;
-    private static final int PLANKS_RGB = 0x9C7650;
-    private static final int PATH_RGB = 0x9A7A4E;
-    private static final int BRICK_RGB = 0x8E4E3E;
-    private static final int CROP_RGB = 0xA2A04B;
+    private static final int WATER_DEEP_RGB = 0x163A66;
+    private static final int WATER_SHALLOW_RGB = 0x2F74A8;
+    private static final int GRASS_RGB = 0x6FCF4B;
+    private static final int LEAVES_RGB = 0x269A34;
+    private static final int SAND_RGB = 0xE0CD88;
+    private static final int RED_SAND_RGB = 0xC06B34;
+    private static final int STONE_RGB = 0x92908A;
+    private static final int DEEPSLATE_RGB = 0x4B4C55;
+    private static final int SNOW_RGB = 0xEDF6F7;
+    private static final int DIRT_RGB = 0x835A35;
+    private static final int PODZOL_RGB = 0x76512B;
+    private static final int CLAY_RGB = 0xA59A94;
+    private static final int WOOD_RGB = 0x855E32;
+    private static final int PLANKS_RGB = 0xB17C45;
+    private static final int PATH_RGB = 0xB08A4A;
+    private static final int BRICK_RGB = 0x9C4E3E;
+    private static final int CROP_RGB = 0xB9AD3E;
+    private static final int EDGE_INK_RGB = 0x2B2118;
+    private static final int COAST_INK_RGB = 0x102D48;
 
     private final NativeImage image;
     private int meaningfulPixelCount;
     private int samplePixel;
+
+    private record BlockSample(BlockPos pos, BlockState state, boolean water, int terrainClass, int baseRgb) {
+        boolean visible() {
+            return baseRgb != 0;
+        }
+    }
 
     public ChunkImage(ClientLevel level, ChunkPos pos) {
         this.image = generateVanillaStyleImage(level, pos);
@@ -41,14 +49,38 @@ public class ChunkImage {
 
     private NativeImage generateVanillaStyleImage(ClientLevel level, ChunkPos pos) {
         NativeImage img = new NativeImage(NativeImage.Format.RGBA, ChunkTile.PIXELS_PER_CHUNK, ChunkTile.PIXELS_PER_CHUNK, true);
+        BlockSample[][] samples = new BlockSample[ChunkTile.BLOCKS_PER_CHUNK][ChunkTile.BLOCKS_PER_CHUNK];
+
         for (int blockX = 0; blockX < ChunkTile.BLOCKS_PER_CHUNK; blockX++) {
             for (int blockZ = 0; blockZ < ChunkTile.BLOCKS_PER_CHUNK; blockZ++) {
                 int worldX = pos.getMinBlockX() + blockX;
                 int worldZ = pos.getMinBlockZ() + blockZ;
-                BlockPos topBlock = resolveTopBlock(level, worldX, worldZ);
+                samples[blockX][blockZ] = sampleBlock(level, worldX, worldZ);
+            }
+        }
+
+        for (int blockX = 0; blockX < ChunkTile.BLOCKS_PER_CHUNK; blockX++) {
+            for (int blockZ = 0; blockZ < ChunkTile.BLOCKS_PER_CHUNK; blockZ++) {
+                BlockSample sample = samples[blockX][blockZ];
+                if (!sample.visible()) {
+                    continue;
+                }
+                int leftEdgeRgb = applyNeighborEdge(samples, blockX, blockZ, level, sample, -1, 0, sample.baseRgb());
+                int northEdgeRgb = applyNeighborEdge(samples, blockX, blockZ, level, sample, 0, -1, sample.baseRgb());
+                int cornerEdgeRgb = applyNeighborEdge(samples, blockX, blockZ, level, sample, 0, -1, leftEdgeRgb);
                 for (int subX = 0; subX < ChunkTile.PIXELS_PER_BLOCK; subX++) {
                     for (int subZ = 0; subZ < ChunkTile.PIXELS_PER_BLOCK; subZ++) {
-                        int pixel = getTerrainColor(level, topBlock, subX, subZ);
+                        int rgb = sample.baseRgb();
+                        if (subX == 0 && subZ == 0) {
+                            rgb = cornerEdgeRgb;
+                        } else if (subX == 0) {
+                            rgb = leftEdgeRgb;
+                        } else if (subZ == 0) {
+                            rgb = northEdgeRgb;
+                        }
+                        rgb = applyContourLine(sample.pos(), sample.water(), subX, subZ, rgb);
+                        rgb = applySubpixelShade(sample.pos(), subX, subZ, rgb);
+                        int pixel = toNativeAbgr(rgb);
                         img.setPixelRGBA(blockX * ChunkTile.PIXELS_PER_BLOCK + subX, blockZ * ChunkTile.PIXELS_PER_BLOCK + subZ, pixel);
                         if (((pixel >> 24) & 0xFF) > 0) {
                             meaningfulPixelCount++;
@@ -60,6 +92,23 @@ public class ChunkImage {
         }
         img.untrack();
         return img;
+    }
+
+    private BlockSample sampleBlock(ClientLevel level, int worldX, int worldZ) {
+        BlockPos topBlock = resolveTopBlock(level, worldX, worldZ);
+        BlockState state = level.getBlockState(topBlock);
+        if (state.isAir()) return new BlockSample(topBlock, state, false, 0, 0);
+
+        boolean water = isWaterLike(state);
+        int rgb = water ? getWaterRgb(level, topBlock) : getLandRgb(level, topBlock, state);
+        if (!water) {
+            rgb = applyRelief(level, topBlock, rgb);
+            if (state.is(BlockTags.LEAVES)) {
+                rgb = applyCanopyShade(level, topBlock, rgb);
+            }
+        }
+        rgb = applyTinyNoise(topBlock, rgb);
+        return new BlockSample(topBlock, state, water, terrainClass(state), rgb);
     }
 
     private BlockPos resolveTopBlock(ClientLevel level, int worldX, int worldZ) {
@@ -81,20 +130,6 @@ public class ChunkImage {
         return !state.isAir() || !state.getFluidState().isEmpty();
     }
 
-    private int getTerrainColor(ClientLevel level, BlockPos pos, int subX, int subZ) {
-        BlockState state = level.getBlockState(pos);
-        if (state.isAir()) return 0x00000000;
-
-        boolean water = isWaterLike(state);
-        int rgb = water ? getWaterRgb(level, pos) : getLandRgb(level, pos, state);
-        if (!water) {
-            rgb = applyRelief(level, pos, rgb);
-        }
-        rgb = applyTinyNoise(pos, rgb);
-        rgb = applySubpixelShade(pos, subX, subZ, rgb);
-        return toNativeAbgr(rgb);
-    }
-
     private int getWaterRgb(ClientLevel level, BlockPos pos) {
         int biomeWater = level.getBiome(pos).value().getWaterColor();
         int depth = getWaterDepth(level, pos);
@@ -109,16 +144,21 @@ public class ChunkImage {
 
         if (state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS)
                 || state.is(Blocks.FERN) || state.is(Blocks.LARGE_FERN)) {
-            rgb = mixRgb(rgb, muteRgb(level.getBiome(pos).value().getGrassColor(pos.getX(), pos.getZ()), 0.88f), 0.38f);
+            rgb = mixRgb(rgb, livelyRgb(level.getBiome(pos).value().getGrassColor(pos.getX(), pos.getZ()), 1.22f, 1.12f), 0.48f);
+            rgb = adjustBrightness(rgb, 1.08f);
         } else if (state.is(BlockTags.LEAVES)) {
-            rgb = mixRgb(rgb, muteRgb(level.getBiome(pos).value().getFoliageColor(), 0.86f), 0.42f);
-            rgb = adjustBrightness(rgb, 0.84f);
+            rgb = mixRgb(rgb, livelyRgb(level.getBiome(pos).value().getFoliageColor(), 1.18f, 1.02f), 0.46f);
+            rgb = adjustBrightness(rgb, 0.92f);
         }
 
         if (isSandLike(state) && isNextToWater(level, pos)) {
             rgb = adjustBrightness(rgb, 1.08f);
         }
-        return boostSaturation(rgb, 1.02f);
+        if (isBuiltSurface(state)) {
+            rgb = mixRgb(rgb, EDGE_INK_RGB, 0.08f);
+            rgb = boostSaturation(rgb, 1.18f);
+        }
+        return boostSaturation(rgb, 1.12f);
     }
 
     private int getBaseLandRgb(ClientLevel level, BlockPos pos, BlockState state) {
@@ -130,7 +170,7 @@ public class ChunkImage {
         if (state.is(Blocks.DIRT_PATH)) return mixRgb(mapRgb, PATH_RGB, 0.60f);
         if (state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS)
                 || state.is(Blocks.FERN) || state.is(Blocks.LARGE_FERN) || state.is(Blocks.MOSS_BLOCK)) {
-            return mixRgb(mapRgb, GRASS_RGB, 0.38f);
+            return mixRgb(mapRgb, GRASS_RGB, 0.70f);
         }
         if (state.is(Blocks.SAND) || state.is(Blocks.SANDSTONE) || state.is(Blocks.SMOOTH_SANDSTONE)
                 || state.is(Blocks.CHISELED_SANDSTONE) || state.is(Blocks.CUT_SANDSTONE)) {
@@ -189,13 +229,115 @@ public class ChunkImage {
         int north = surfaceHeight(level, x, z - 1);
         int south = surfaceHeight(level, x, z + 1);
 
-        float light = 1.0f + clamp((northwest - southeast) * 0.052f + (farNorthwest - farSoutheast) * 0.018f, -0.24f, 0.22f);
-        float roughness = Math.min(0.075f, (Math.abs(west - east) + Math.abs(north - south)) * 0.014f);
+        float light = 1.0f + clamp((northwest - southeast) * 0.068f + (farNorthwest - farSoutheast) * 0.024f, -0.30f, 0.28f);
+        float roughness = Math.min(0.105f, (Math.abs(west - east) + Math.abs(north - south)) * 0.018f);
         rgb = adjustBrightness(rgb, light);
         if (roughness > 0.0f) {
-            rgb = adjustBrightness(rgb, 1.0f - roughness * 0.62f);
+            rgb = adjustBrightness(rgb, 1.0f - roughness * 0.70f);
         }
         return rgb;
+    }
+
+    private int applyNeighborEdge(BlockSample[][] samples, int blockX, int blockZ, ClientLevel level, BlockSample sample, int dx, int dz, int rgb) {
+        BlockSample neighbor = neighborSample(samples, blockX, blockZ, level, sample.pos(), dx, dz);
+
+        if (sample.water() != neighbor.water()) {
+            return mixRgb(adjustBrightness(rgb, sample.water() ? 0.78f : 0.88f), sample.water() ? COAST_INK_RGB : EDGE_INK_RGB, 0.28f);
+        }
+
+        int heightDelta = Math.abs(sample.pos().getY() - neighbor.pos().getY());
+        if (heightDelta >= 4) {
+            return mixRgb(adjustBrightness(rgb, 0.82f), EDGE_INK_RGB, 0.18f);
+        }
+        if (!sample.water() && sample.terrainClass() != neighbor.terrainClass()) {
+            int terrain = sample.terrainClass();
+            float ink = terrain == 2 || terrain == 4 ? 0.045f : 0.10f;
+            float shade = terrain == 2 || terrain == 4 ? 0.96f : 0.90f;
+            return mixRgb(adjustBrightness(rgb, shade), EDGE_INK_RGB, ink);
+        }
+        return rgb;
+    }
+
+    private BlockSample neighborSample(BlockSample[][] samples, int blockX, int blockZ, ClientLevel level, BlockPos pos, int dx, int dz) {
+        int sampleX = blockX + dx;
+        int sampleZ = blockZ + dz;
+        if (sampleX >= 0 && sampleX < ChunkTile.BLOCKS_PER_CHUNK && sampleZ >= 0 && sampleZ < ChunkTile.BLOCKS_PER_CHUNK) {
+            return samples[sampleX][sampleZ];
+        }
+        return sampleBlock(level, pos.getX() + dx, pos.getZ() + dz);
+    }
+
+    private int applyCanopyShade(ClientLevel level, BlockPos pos, int rgb) {
+        int northwest = surfaceHeight(level, pos.getX() - 1, pos.getZ() - 1);
+        int southeast = surfaceHeight(level, pos.getX() + 1, pos.getZ() + 1);
+        float light = 1.0f + clamp((northwest - southeast) * 0.10f, -0.34f, 0.30f);
+
+        int openSides = 0;
+        if (!level.getBlockState(pos.north()).is(BlockTags.LEAVES)) openSides++;
+        if (!level.getBlockState(pos.south()).is(BlockTags.LEAVES)) openSides++;
+        if (!level.getBlockState(pos.east()).is(BlockTags.LEAVES)) openSides++;
+        if (!level.getBlockState(pos.west()).is(BlockTags.LEAVES)) openSides++;
+        if (openSides >= 2) {
+            light -= 0.10f;
+        }
+
+        int hash = pos.getX() * 1664525 ^ pos.getZ() * 1013904223;
+        light += ((hash >>> 6) & 0x7) * 0.018f - 0.054f;
+        rgb = adjustBrightness(rgb, clamp(light, 0.72f, 1.28f));
+        return boostSaturation(rgb, 1.16f);
+    }
+
+    private int applyContourLine(BlockPos pos, boolean water, int subX, int subZ, int rgb) {
+        if (water || subZ != 0) return rgb;
+        int y = pos.getY();
+        if (y > 0 && y % 16 == 0) {
+            return mixRgb(adjustBrightness(rgb, 0.88f), EDGE_INK_RGB, 0.08f);
+        }
+        if (y > 0 && subX == 0 && y % 8 == 0) {
+            return adjustBrightness(rgb, 0.94f);
+        }
+        return rgb;
+    }
+
+    private int terrainClass(BlockState state) {
+        if (isWaterLike(state)) return 1;
+        if (state.is(BlockTags.LEAVES)) return 2;
+        if (state.is(BlockTags.LOGS) || state.is(BlockTags.PLANKS) || isBuiltSurface(state)) return 3;
+        if (state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS)
+                || state.is(Blocks.FERN) || state.is(Blocks.LARGE_FERN) || state.is(Blocks.MOSS_BLOCK)) return 4;
+        if (isSandLike(state)) return 5;
+        if (state.is(Blocks.STONE) || state.is(Blocks.COBBLESTONE) || state.is(Blocks.ANDESITE)
+                || state.is(Blocks.DIORITE) || state.is(Blocks.GRANITE) || state.is(Blocks.TUFF)
+                || state.is(Blocks.CALCITE) || state.is(Blocks.DRIPSTONE_BLOCK)
+                || state.is(Blocks.DEEPSLATE) || state.is(Blocks.COBBLED_DEEPSLATE)) return 6;
+        if (state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.POWDER_SNOW)
+                || state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE) || state.is(Blocks.BLUE_ICE)) return 7;
+        if (state.is(Blocks.DIRT) || state.is(Blocks.COARSE_DIRT) || state.is(Blocks.ROOTED_DIRT)
+                || state.is(Blocks.PODZOL) || state.is(Blocks.MYCELIUM) || state.is(Blocks.MUD)) return 8;
+        return 0;
+    }
+
+    private boolean isBuiltSurface(BlockState state) {
+        return state.is(Blocks.DIRT_PATH)
+                || state.is(Blocks.BRICKS)
+                || state.is(Blocks.STONE_BRICKS)
+                || state.is(Blocks.MOSSY_STONE_BRICKS)
+                || state.is(Blocks.CRACKED_STONE_BRICKS)
+                || state.is(Blocks.NETHER_BRICKS)
+                || state.is(Blocks.RED_NETHER_BRICKS)
+                || state.is(Blocks.COBBLESTONE)
+                || state.is(Blocks.MOSSY_COBBLESTONE)
+                || state.is(Blocks.OAK_PLANKS)
+                || state.is(Blocks.SPRUCE_PLANKS)
+                || state.is(Blocks.BIRCH_PLANKS)
+                || state.is(Blocks.JUNGLE_PLANKS)
+                || state.is(Blocks.ACACIA_PLANKS)
+                || state.is(Blocks.DARK_OAK_PLANKS)
+                || state.is(Blocks.MANGROVE_PLANKS)
+                || state.is(Blocks.CHERRY_PLANKS)
+                || state.is(Blocks.BAMBOO_PLANKS)
+                || state.is(Blocks.CRIMSON_PLANKS)
+                || state.is(Blocks.WARPED_PLANKS);
     }
 
     private int surfaceHeight(ClientLevel level, int worldX, int worldZ) {
@@ -244,6 +386,10 @@ public class ChunkImage {
 
     private int muteRgb(int rgb, float saturation) {
         return boostSaturation(rgb & 0x00FFFFFF, saturation);
+    }
+
+    private int livelyRgb(int rgb, float saturation, float brightness) {
+        return adjustBrightness(boostSaturation(rgb & 0x00FFFFFF, saturation), brightness);
     }
 
     private int mixRgb(int a, int b, float t) {
