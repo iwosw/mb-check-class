@@ -11,9 +11,11 @@ import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.building.BuildingValidationState;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRegistryData;
+import com.talhanation.bannermod.settlement.building.ZoneSelection;
 import com.talhanation.bannermod.settlement.onboarding.SettlementOnboardingGuide;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.SectionPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -42,7 +44,9 @@ public final class SettlementSurveyorService {
 
         SettlementRecord settlementAtAnchor = settlementForAnchor(level, session);
         if (type != BuildingType.STARTER_FORT && settlementAtAnchor == null) {
-            player.sendSystemMessage(Component.literal("No settlement found at anchor. Bootstrap a fort first.").withStyle(ChatFormatting.RED));
+            player.sendSystemMessage(Component.literal(
+                    "No settlement found for the selected building area. Place the building anchor or marked area inside your settlement claim, or bootstrap a fort first.")
+                    .withStyle(ChatFormatting.RED));
             return;
         }
         UUID settlementId = settlementAtAnchor == null ? new UUID(0L, 0L) : settlementAtAnchor.settlementId();
@@ -94,11 +98,44 @@ public final class SettlementSurveyorService {
 
     private static SettlementRecord settlementForAnchor(ServerLevel level, ValidationSession session) {
         SettlementRegistryData registry = SettlementRegistryData.get(level);
-        SettlementRecord settlement = registry.getSettlementAt(new ChunkPos(session.anchorPos()));
+        SettlementRecord settlement = settlementForClaimChunk(registry, new ChunkPos(session.anchorPos()));
         if (settlement != null || ClaimEvents.claimManager() == null) {
             return settlement;
         }
-        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(new ChunkPos(session.anchorPos()));
+        for (ZoneSelection selection : session.selections()) {
+            SettlementRecord fromSelection = settlementForSelection(registry, selection);
+            if (fromSelection != null) {
+                return fromSelection;
+            }
+        }
+        return null;
+    }
+
+    private static SettlementRecord settlementForSelection(SettlementRegistryData registry, ZoneSelection selection) {
+        if (selection == null) {
+            return null;
+        }
+        int minChunkX = SectionPos.blockToSectionCoord(Math.min(selection.min().getX(), selection.max().getX()));
+        int maxChunkX = SectionPos.blockToSectionCoord(Math.max(selection.min().getX(), selection.max().getX()));
+        int minChunkZ = SectionPos.blockToSectionCoord(Math.min(selection.min().getZ(), selection.max().getZ()));
+        int maxChunkZ = SectionPos.blockToSectionCoord(Math.max(selection.min().getZ(), selection.max().getZ()));
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                SettlementRecord settlement = settlementForClaimChunk(registry, new ChunkPos(chunkX, chunkZ));
+                if (settlement != null) {
+                    return settlement;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static SettlementRecord settlementForClaimChunk(SettlementRegistryData registry, ChunkPos chunkPos) {
+        SettlementRecord settlement = registry.getSettlementAt(chunkPos);
+        if (settlement != null || ClaimEvents.claimManager() == null) {
+            return settlement;
+        }
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(chunkPos);
         return claim == null ? null : registry.getSettlementByClaimId(claim.getUUID());
     }
 

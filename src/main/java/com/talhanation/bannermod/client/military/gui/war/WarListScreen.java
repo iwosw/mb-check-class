@@ -315,7 +315,7 @@ public class WarListScreen extends Screen {
         if (declareBtn != null) {
             declareBtn.active = WarClientState.entities().stream().anyMatch(entity -> {
                 Player player = Minecraft.getInstance().player;
-                return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity) && entity.status().canDeclareOffensiveWar();
+                return player != null && PoliticalEntityAuthority.canAct(player.getUUID(), false, entity);
             });
             declareBtn.setTooltip(declareBtn.active ? null : Tooltip.create(declareDenial()));
         }

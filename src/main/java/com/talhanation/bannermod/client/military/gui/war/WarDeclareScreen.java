@@ -76,7 +76,7 @@ public class WarDeclareScreen extends Screen {
         Player player = Minecraft.getInstance().player;
         UUID playerId = player == null ? null : player.getUUID();
         for (PoliticalEntityRecord entity : WarClientState.entities()) {
-            if (playerId != null && PoliticalEntityAuthority.canAct(playerId, false, entity) && entity.status().canDeclareOffensiveWar()) {
+            if (playerId != null && PoliticalEntityAuthority.canAct(playerId, false, entity)) {
                 this.attackers.add(entity);
             }
         }

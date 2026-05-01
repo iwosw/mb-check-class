@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.overlay;
 
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -51,15 +52,27 @@ public enum ClaimAuthorityStatus {
     }
 
     public static ClaimAuthorityStatus classify(@Nullable String playerTeamName, @Nullable RecruitsClaim claim) {
-        return classify(null, playerTeamName, claim);
+        return classify(null, playerTeamName, claim, null);
     }
 
     public static ClaimAuthorityStatus classify(@Nullable UUID playerUuid, @Nullable String playerTeamName, @Nullable RecruitsClaim claim) {
+        return classify(playerUuid, playerTeamName, claim, null);
+    }
+
+    public static ClaimAuthorityStatus classify(@Nullable UUID playerUuid,
+                                                @Nullable String playerTeamName,
+                                                @Nullable RecruitsClaim claim,
+                                                @Nullable PoliticalEntityRecord ownerEntity) {
         if (claim == null || claim.getOwnerPoliticalEntityId() == null) {
             return UNCLAIMED;
         }
         if (claim.isTrustedPlayer(playerUuid)) {
             return FRIENDLY;
+        }
+        if (ownerEntity != null && playerUuid != null) {
+            if (playerUuid.equals(ownerEntity.leaderUuid()) || ownerEntity.coLeaderUuids().contains(playerUuid)) {
+                return FRIENDLY;
+            }
         }
         return claim.getOwnerPoliticalEntityId().toString().equals(playerTeamName) ? FRIENDLY : HOSTILE;
     }
