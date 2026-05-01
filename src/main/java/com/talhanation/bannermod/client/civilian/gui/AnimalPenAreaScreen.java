@@ -151,6 +151,15 @@ public class AnimalPenAreaScreen extends WorkAreaScreen {
 
     public void sendUpdate(){
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateAnimalPenArea(animalPenArea.getUUID(), animalType, breed, slaughter, special, maxAnimals));
+        this.markWorkAreaPending();
+    }
+
+    @Override
+    protected List<Component> getSettingSummaryLines() {
+        return List.of(
+                Component.translatable("gui.bannermod.work_area.animal_pen.summary"),
+                Component.translatable("gui.bannermod.work_area.animal_pen.limit", this.maxAnimals)
+        );
     }
 
 

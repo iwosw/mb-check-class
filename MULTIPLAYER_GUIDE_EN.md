@@ -82,6 +82,8 @@ Important checks:
 - the settlement must see the registered building or work area;
 - if a claim is captured, removed, or becomes mismatched, work can stop.
 
+Civilian work-area editors now show a sync state in the top-right corner, an explicit owner reminder when nobody is assigned yet, and per-screen hints for missing seeds/saplings or tunnel settings. Hold `Shift` while moving an area to nudge it by five blocks instead of one.
+
 Settlements have internal work orders. Some order state already survives server reloads, including worker claims. Transport orders (`HAUL_RESOURCE`/`FETCH_INPUT`) carry source, destination, resource filter, and item count. Workers can claim, complete, cancel, or release jobs back to the settlement if abandoned.
 
 Build Area screens show scan/build status at the bottom. Invalid names, empty scans, oversized dimensions, missing structure data, or server-side NBT/bounds rejection produce a visible reason; Build and creative Place requests also report accepted/rejected state in chat.

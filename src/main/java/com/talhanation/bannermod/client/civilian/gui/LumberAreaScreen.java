@@ -74,7 +74,7 @@ public class LumberAreaScreen extends WorkAreaScreen {
             this.shearLeaves,
             (bool) -> {
                 this.shearLeaves = bool;
-                BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+                sendUpdate();
             }
         );
         addRenderableWidget(shearLeavesCheckBox);
@@ -83,7 +83,7 @@ public class LumberAreaScreen extends WorkAreaScreen {
                 this.stripLogs,
                 (bool) -> {
                     this.stripLogs = bool;
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+                    sendUpdate();
                 }
         );
         addRenderableWidget(stripLogsCheckBox);
@@ -92,15 +92,35 @@ public class LumberAreaScreen extends WorkAreaScreen {
                 this.replant,
                 (bool) -> {
                     this.replant = bool;
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+                    sendUpdate();
                 }
         );
         addRenderableWidget(replantCheckBox);
     }
 
     public void setCurrentSapling(ItemStack currentSapling) {
-        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
         this.currentSapling = currentSapling;
+        sendUpdate();
+    }
+
+    private void sendUpdate() {
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateLumberArea(lumberArea.getUUID(), currentSapling, shearLeaves, stripLogs, replant));
+        this.markWorkAreaPending();
+    }
+
+    @Override
+    protected List<Component> getSettingSummaryLines() {
+        Component selectedSapling = this.currentSapling.isEmpty() ? TEXT_ANY_SAPLING : this.currentSapling.getHoverName();
+        if (this.possibleSeeds == null || this.possibleSeeds.isEmpty()) {
+            return List.of(
+                    Component.translatable("gui.bannermod.work_area.lumber.empty"),
+                    Component.translatable("gui.bannermod.work_area.lumber.toggles")
+            );
+        }
+        return List.of(
+                Component.translatable("gui.bannermod.work_area.lumber.selected", selectedSapling),
+                Component.translatable("gui.bannermod.work_area.lumber.toggles")
+        );
     }
 
     private List<ItemStack> getPossibleSaplingsFromInventory() {

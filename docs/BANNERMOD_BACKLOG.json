@@ -5833,7 +5833,7 @@
     {
       "id": "UI-010A",
       "title": "Restyle civilian work-area editor family",
-      "status": "open",
+      "status": "done",
       "updated": "2026-05-01",
       "why": "The shared work-area editor flow still drives daily settlement actions, so its generic panels and weak feedback should be fixed as one coherent slice instead of being spread across unrelated rewrites.",
       "scope": [
@@ -5850,10 +5850,16 @@
         "UI-009"
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-05-01",
+          "result": "1) ./gradlew compileJava passed; code inspection of WorkAreaScreen plus AnimalPenAreaScreen, CropAreaScreen, FishingAreaScreen, LumberAreaScreen, and MiningAreaScreen shows the family now renders inside one parchment/wood/iron panel layout with localized section labels and summaries instead of the old generic free-floating controls; 2) code inspection confirms visible next-step or empty-state feedback on each changed screen via the shared sync/owner status, crop/lumber empty inventory hints, fishing summary, animal-pen summary, and mining mode/tunnel summaries, while server-bound updates now mark the screen pending; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, docs/BANNERMOD_ALMANAC.html, and docs/STATUS.md were updated to reflect the changed civilian work-area editor cues."
+        }
+      ],
       "evidence": [
         "docs/UI-009_REMAINING_UI_AUDIT.txt"
-      ]
+      ],
+      "doneDate": "2026-05-01"
     },
     {
       "id": "UI-010B",

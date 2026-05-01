@@ -5,6 +5,7 @@ import com.talhanation.bannermod.client.civilian.gui.widgets.ItemScrollDropDownM
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.network.messages.civilian.MessageUpdateCropArea;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -54,7 +55,19 @@ public class CropAreaScreen extends WorkAreaScreen {
 
     public void setCurrentSeeds(ItemStack currentSeeds) {
         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateCropArea(this.cropArea.getUUID(), currentSeeds));
+        this.markWorkAreaPending();
         this.currentSeeds = currentSeeds;
+    }
+
+    @Override
+    protected List<Component> getSettingSummaryLines() {
+        if (this.possibleSeeds == null || this.possibleSeeds.isEmpty()) {
+            return List.of(Component.translatable("gui.bannermod.work_area.crop.empty"));
+        }
+        return List.of(
+                Component.translatable("gui.bannermod.work_area.crop.selected", this.currentSeeds.getHoverName()),
+                Component.translatable("gui.bannermod.work_area.crop.hint")
+        );
     }
 
     private List<ItemStack> getPossibleSeedsFromInventory() {

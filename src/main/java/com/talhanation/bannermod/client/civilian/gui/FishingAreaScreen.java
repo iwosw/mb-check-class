@@ -6,6 +6,9 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 
 
+import java.util.List;
+
+
 public class FishingAreaScreen extends WorkAreaScreen {
     private static final MutableComponent TEXT_SHEAR_LEAVES = Component.translatable("gui.workers.checkbox.shearLeaves");
     public final FishingArea fishingArea;
@@ -22,12 +25,14 @@ public class FishingAreaScreen extends WorkAreaScreen {
     @Override
     public void setButtons() {
         super.setButtons();
-        int checkBoxWidth = 100;
-        int checkBoxHeight = 20;
+    }
 
-        int checkBoxX = x - checkBoxWidth / 2;
-        int checkBoxY = y + checkBoxHeight / 2 - checkBoxHeight;
-
+    @Override
+    protected List<Component> getSettingSummaryLines() {
+        return List.of(
+                Component.translatable("gui.bannermod.work_area.fishing.summary"),
+                Component.translatable("gui.bannermod.work_area.fishing.hint")
+        );
     }
 
 }
