@@ -59,6 +59,7 @@ public class SettlementSurveyorScreen extends Screen {
     private Button clearRoleButton;
     private Button resetMarksButton;
     private Button pinPreviewButton;
+    private Button guidePreviewButton;
     private boolean actionsMenuOpen;
 
     public SettlementSurveyorScreen(InteractionHand hand) {
@@ -109,6 +110,9 @@ public class SettlementSurveyorScreen extends Screen {
         this.pinPreviewButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 66, menuWidth, 20,
                 Component.translatable("bannermod.surveyor.screen.action.pin_preview"),
                 button -> togglePinnedPreview()));
+        this.guidePreviewButton = this.addRenderableWidget(new ExtendedButton(menuLeft, menuTop + 88, menuWidth, 20,
+                Component.empty(),
+                button -> performAction(MessageModifySurveyorSession.Action.TOGGLE_GUIDE_PREVIEW)));
         syncButtons();
     }
 
@@ -252,6 +256,21 @@ public class SettlementSurveyorScreen extends Screen {
                             ? "bannermod.surveyor.screen.action.pin_preview.tooltip"
                             : "bannermod.surveyor.screen.action.pin_preview.disabled")));
         }
+        if (this.guidePreviewButton != null) {
+            boolean showGuidePreview = session == null || session.showGuidePreview();
+            this.guidePreviewButton.visible = this.actionsMenuOpen;
+            this.guidePreviewButton.active = mode != SurveyorMode.INSPECT_EXISTING;
+            this.guidePreviewButton.setMessage(Component.translatable(
+                    showGuidePreview
+                            ? "bannermod.surveyor.screen.action.hide_guide_preview"
+                            : "bannermod.surveyor.screen.action.show_guide_preview"));
+            this.guidePreviewButton.setTooltip(Tooltip.create(Component.translatable(
+                    mode == SurveyorMode.INSPECT_EXISTING
+                            ? "bannermod.surveyor.screen.action.guide_preview.disabled"
+                            : showGuidePreview
+                            ? "bannermod.surveyor.screen.action.hide_guide_preview.tooltip"
+                            : "bannermod.surveyor.screen.action.show_guide_preview.tooltip")));
+        }
     }
 
     @Override
@@ -267,9 +286,9 @@ public class SettlementSurveyorScreen extends Screen {
         graphics.fill(left + 1, top + 1, left + panelWidth - 1, top + PANEL_HEIGHT - 1, PANEL_INNER_COLOR);
         graphics.renderOutline(left, top, panelWidth, PANEL_HEIGHT, PANEL_OUTLINE_COLOR);
         if (this.actionsMenuOpen) {
-            graphics.fill(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuLeft() + actionMenuWidth() + 4, actionMenuTop() + 90, PANEL_COLOR);
-            graphics.fill(actionMenuLeft() - 3, actionMenuTop() - 3, actionMenuLeft() + actionMenuWidth() + 3, actionMenuTop() + 89, PANEL_INNER_COLOR);
-            graphics.renderOutline(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 94, PANEL_OUTLINE_COLOR);
+            graphics.fill(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuLeft() + actionMenuWidth() + 4, actionMenuTop() + 112, PANEL_COLOR);
+            graphics.fill(actionMenuLeft() - 3, actionMenuTop() - 3, actionMenuLeft() + actionMenuWidth() + 3, actionMenuTop() + 111, PANEL_INNER_COLOR);
+            graphics.renderOutline(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 116, PANEL_OUTLINE_COLOR);
         }
 
         ItemStack stack = currentStack();
@@ -476,14 +495,14 @@ public class SettlementSurveyorScreen extends Screen {
 
     private int actionMenuTop() {
         int actionY = panelTop() + PANEL_HEIGHT - 30;
-        return actionY - 92;
+        return actionY - 114;
     }
 
     private boolean insideActionMenu(double mouseX, double mouseY) {
         return mouseX >= actionMenuLeft() - 4
                 && mouseX <= actionMenuLeft() + actionMenuWidth() + 4
                 && mouseY >= actionMenuTop() - 4
-                && mouseY <= actionMenuTop() + 90;
+                && mouseY <= actionMenuTop() + 112;
     }
 
     private int panelLeft() {

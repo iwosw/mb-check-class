@@ -15,7 +15,8 @@ public record ValidationSession(
         UUID playerId,
         SurveyorMode mode,
         BlockPos anchorPos,
-        List<ZoneSelection> selections
+        List<ZoneSelection> selections,
+        boolean showGuidePreview
 ) {
     public ValidationSession {
         playerId = playerId == null ? new UUID(0L, 0L) : playerId;
@@ -25,15 +26,19 @@ public record ValidationSession(
     }
 
     public ValidationSession withAnchor(BlockPos newAnchor) {
-        return new ValidationSession(this.playerId, this.mode, newAnchor, this.selections);
+        return new ValidationSession(this.playerId, this.mode, newAnchor, this.selections, this.showGuidePreview);
     }
 
     public ValidationSession withMode(SurveyorMode newMode) {
-        return new ValidationSession(this.playerId, newMode, this.anchorPos, this.selections);
+        return new ValidationSession(this.playerId, newMode, this.anchorPos, this.selections, this.showGuidePreview);
     }
 
     public ValidationSession withSelections(List<ZoneSelection> newSelections) {
-        return new ValidationSession(this.playerId, this.mode, this.anchorPos, newSelections);
+        return new ValidationSession(this.playerId, this.mode, this.anchorPos, newSelections, this.showGuidePreview);
+    }
+
+    public ValidationSession withGuidePreview(boolean showGuidePreview) {
+        return new ValidationSession(this.playerId, this.mode, this.anchorPos, this.selections, showGuidePreview);
     }
 
     public ValidationSession addSelection(ZoneSelection selection) {
@@ -69,6 +74,7 @@ public record ValidationSession(
         tag.putUUID("PlayerId", this.playerId);
         tag.putString("Mode", this.mode.name());
         tag.putLong("AnchorPos", this.anchorPos.asLong());
+        tag.putBoolean("ShowGuidePreview", this.showGuidePreview);
         ListTag selectionsTag = new ListTag();
         for (ZoneSelection selection : this.selections) {
             selectionsTag.add(selection.toTag());
@@ -81,6 +87,7 @@ public record ValidationSession(
         UUID playerId = tag.hasUUID("PlayerId") ? tag.getUUID("PlayerId") : new UUID(0L, 0L);
         SurveyorMode mode = parseMode(tag.getString("Mode"));
         BlockPos anchorPos = tag.contains("AnchorPos", Tag.TAG_LONG) ? BlockPos.of(tag.getLong("AnchorPos")) : BlockPos.ZERO;
+        boolean showGuidePreview = !tag.contains("ShowGuidePreview", Tag.TAG_BYTE) || tag.getBoolean("ShowGuidePreview");
         List<ZoneSelection> selections = new ArrayList<>();
         ListTag selectionsTag = tag.getList("Selections", Tag.TAG_COMPOUND);
         for (Tag raw : selectionsTag) {
@@ -88,7 +95,7 @@ public record ValidationSession(
                 selections.add(ZoneSelection.fromTag(selectionTag));
             }
         }
-        return new ValidationSession(playerId, mode, anchorPos, selections);
+        return new ValidationSession(playerId, mode, anchorPos, selections, showGuidePreview);
     }
 
     private static SurveyorMode parseMode(String rawMode) {

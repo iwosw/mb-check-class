@@ -139,7 +139,7 @@ public class SettlementSurveyorToolItem extends Item {
             ensureSelectedRole(stack, existing.mode());
             return existing;
         }
-        ValidationSession created = new ValidationSession(player.getUUID(), SurveyorMode.BOOTSTRAP_FORT, BlockPos.ZERO, java.util.List.of());
+        ValidationSession created = new ValidationSession(player.getUUID(), SurveyorMode.BOOTSTRAP_FORT, BlockPos.ZERO, java.util.List.of(), true);
         SurveyorSessionCodec.write(stack, created);
         setSelectedRole(stack, defaultRoleForMode(created.mode()));
         return created;
@@ -197,9 +197,27 @@ public class SettlementSurveyorToolItem extends Item {
         ValidationSession session = SurveyorSessionCodec.read(stack);
         SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
         ItemStackComponentData.update(stack, data -> data.remove(TAG_PENDING_CORNER));
-        SurveyorSessionCodec.write(stack, new ValidationSession(player.getUUID(), mode, BlockPos.ZERO, List.of()));
+        boolean showGuidePreview = session == null || session.showGuidePreview();
+        SurveyorSessionCodec.write(stack, new ValidationSession(player.getUUID(), mode, BlockPos.ZERO, List.of(), showGuidePreview));
         setSelectedRole(stack, defaultRoleForMode(mode));
         player.sendSystemMessage(Component.translatable("bannermod.surveyor.marks_reset").withStyle(ChatFormatting.YELLOW));
+    }
+
+    public static void toggleGuidePreview(ServerPlayer player, ItemStack stack) {
+        if (player == null || stack == null) {
+            return;
+        }
+        ValidationSession session = SurveyorSessionCodec.read(stack);
+        if (session == null) {
+            return;
+        }
+        ValidationSession updated = session.withGuidePreview(!session.showGuidePreview());
+        SurveyorSessionCodec.write(stack, updated);
+        player.sendSystemMessage(Component.translatable(
+                updated.showGuidePreview()
+                        ? "bannermod.surveyor.guide_preview.enabled"
+                        : "bannermod.surveyor.guide_preview.disabled")
+                .withStyle(updated.showGuidePreview() ? ChatFormatting.AQUA : ChatFormatting.YELLOW));
     }
 
     public static boolean hasPendingCorner(ItemStack stack) {
