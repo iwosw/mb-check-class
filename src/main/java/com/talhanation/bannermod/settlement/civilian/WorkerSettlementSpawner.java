@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.scores.PlayerTeam;
 
 import javax.annotation.Nullable;
@@ -119,8 +120,9 @@ public final class WorkerSettlementSpawner {
             return null;
         }
 
-        worker.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, 0.0F, 0.0F);
-        worker.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.EVENT, null, null);
+        BlockPos safeSpawnPos = resolveSafeSpawnPos(level, spawnPos);
+        worker.moveTo(safeSpawnPos.getX() + 0.5D, safeSpawnPos.getY(), safeSpawnPos.getZ() + 0.5D, 0.0F, 0.0F);
+        worker.finalizeSpawn(level, level.getCurrentDifficultyAt(safeSpawnPos), MobSpawnType.EVENT, null, null);
         worker.setIsOwned(true);
         worker.setOwnerUUID(Optional.of(leaderId));
         worker.setFollowState(0);
@@ -130,10 +132,31 @@ public final class WorkerSettlementSpawner {
         if (team != null) {
             level.getScoreboard().addPlayerToTeam(worker.getScoreboardName(), team);
         }
-        seedClaimWorkAreaDefaults(level, worker, claim, owner, spawnPos);
+        seedClaimWorkAreaDefaults(level, worker, claim, owner, safeSpawnPos);
         BannerModSettlementRefreshSupport.refreshSnapshot(level, worker.blockPosition());
 
         return worker;
+    }
+
+    private static BlockPos resolveSafeSpawnPos(ServerLevel level, BlockPos preferredPos) {
+        if (isSpawnSpaceClear(level, preferredPos)) {
+            return preferredPos;
+        }
+        BlockPos abovePreferred = preferredPos.above();
+        if (isSpawnSpaceClear(level, abovePreferred)) {
+            return abovePreferred;
+        }
+        BlockPos surfacePos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, preferredPos);
+        if (isSpawnSpaceClear(level, surfacePos)) {
+            return surfacePos;
+        }
+        return surfacePos.above();
+    }
+
+    private static boolean isSpawnSpaceClear(ServerLevel level, BlockPos pos) {
+        return level.getBlockState(pos).isAir()
+                && level.getBlockState(pos.above()).isAir()
+                && !level.getBlockState(pos.below()).isAir();
     }
 
     private static void seedClaimWorkAreaDefaults(ServerLevel level,

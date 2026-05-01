@@ -144,7 +144,7 @@ public final class BuildingPlacementService {
         buildArea.setHeightSize(descriptor.height());
         buildArea.setDepthSize(descriptor.depth());
         buildArea.setFacing(actualFacing);
-        BlockPos anchorPos = resolveLeveledAnchor(serverLevel, targetPos, descriptor.width(), descriptor.depth());
+        BlockPos anchorPos = resolveLeveledAnchor(serverLevel, targetPos, descriptor.width(), descriptor.depth(), actualFacing);
         buildArea.moveTo(anchorPos, 0, 0);
         buildArea.createArea();
 
@@ -166,13 +166,23 @@ public final class BuildingPlacementService {
     }
 
     private static BlockPos resolveLeveledAnchor(ServerLevel level, BlockPos requestedPos, int width, int depth) {
+        return resolveLeveledAnchor(level, requestedPos, width, depth, Direction.SOUTH);
+    }
+
+    private static BlockPos resolveLeveledAnchor(ServerLevel level, BlockPos requestedPos, int width, int depth, Direction facing) {
         if (level == null || requestedPos == null) {
             return requestedPos;
         }
-        int minX = requestedPos.getX();
-        int minZ = requestedPos.getZ();
-        int maxX = minX + Math.max(0, width - 1);
-        int maxZ = minZ + Math.max(0, depth - 1);
+        BlockPos end = switch (facing == null ? Direction.SOUTH : facing) {
+            case NORTH -> requestedPos.offset(Math.max(0, width - 1), 0, -Math.max(0, depth - 1));
+            case SOUTH -> requestedPos.offset(-Math.max(0, width - 1), 0, Math.max(0, depth - 1));
+            case EAST -> requestedPos.offset(Math.max(0, depth - 1), 0, Math.max(0, width - 1));
+            default -> requestedPos.offset(-Math.max(0, depth - 1), 0, -Math.max(0, width - 1));
+        };
+        int minX = Math.min(requestedPos.getX(), end.getX());
+        int maxX = Math.max(requestedPos.getX(), end.getX());
+        int minZ = Math.min(requestedPos.getZ(), end.getZ());
+        int maxZ = Math.max(requestedPos.getZ(), end.getZ());
 
         int minY = Integer.MAX_VALUE;
         for (int x = minX; x <= maxX; x++) {
@@ -186,7 +196,8 @@ public final class BuildingPlacementService {
         if (minY == Integer.MAX_VALUE) {
             return requestedPos;
         }
-        // Heightmap returns "first free block above terrain"; anchor should be one block lower.
-        return new BlockPos(requestedPos.getX(), minY - 1, requestedPos.getZ());
+        // BuildArea derives its block origin from Entity#getOnPos(), so place the marker at the
+        // first free block above terrain. Placing it on the terrain block sinks the prefab by one.
+        return new BlockPos(requestedPos.getX(), minY, requestedPos.getZ());
     }
 }
