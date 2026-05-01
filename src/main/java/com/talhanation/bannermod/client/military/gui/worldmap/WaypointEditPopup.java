@@ -10,17 +10,22 @@ import org.lwjgl.glfw.GLFW;
 public class WaypointEditPopup {
 
     private static final int WIDTH = 210;
-    private static final int HEIGHT = 90;
+    private static final int HEIGHT = 110;
     private static final int TEXT_COLOR = 0xFFFFFF;
     private static final int TEXT_MUTED = 0xAAAAAA;
     private static final int BTN_H = 14;
     private static final int BTN_W = 62;
+    private static final Component TEXT_TITLE = Component.translatable("gui.recruits.map.waypoint.title");
     private static final Component TEXT_ACTION = Component.translatable("gui.recruits.map.waypoint.action");
     private static final Component TEXT_ACTION_NONE = Component.translatable("gui.recruits.map.waypoint.action.none");
     private static final Component TEXT_ACTION_WAIT = Component.translatable("gui.recruits.map.waypoint.action.wait");
     private static final Component TEXT_SECONDS = Component.translatable("gui.recruits.map.waypoint.seconds");
+    private static final Component TEXT_HINT_NONE = Component.translatable("gui.recruits.map.waypoint.hint.none");
+    private static final Component TEXT_HINT_WAIT = Component.translatable("gui.recruits.map.waypoint.hint.wait");
     private static final Component TEXT_CONFIRM = Component.translatable("gui.recruits.map.common.ok");
     private static final Component TEXT_CANCEL = Component.translatable("gui.recruits.map.common.cancel");
+    private static final Component TEXT_FEEDBACK_SAVED = Component.translatable("gui.recruits.map.waypoint.feedback.saved");
+    private static final Component TEXT_FEEDBACK_CLEARED = Component.translatable("gui.recruits.map.waypoint.feedback.cleared");
 
     private final WorldMapScreen parent;
     private final WorldMapRouteMutationController routeController;
@@ -62,7 +67,7 @@ public class WaypointEditPopup {
         if (waitFieldBuilt || actionType != RecruitsRoute.WaypointAction.Type.WAIT) return;
         int px = (parent.width - WIDTH) / 2;
         int py = (parent.height - HEIGHT) / 2;
-        int rowY = py + 22;
+        int rowY = py + 48;
         int fieldY = rowY + 20;
         int fieldX = px + 66;
         int fieldW = 54;
@@ -100,8 +105,14 @@ public class WaypointEditPopup {
             waypoint.setAction(new RecruitsRoute.WaypointAction(actionType, seconds));
         }
 
-        routeController.saveSelectedRoute();
+        if (routeController.saveSelectedRoute()) {
+            parent.showMapNotice(actionType == null ? TEXT_FEEDBACK_CLEARED : TEXT_FEEDBACK_SAVED, 0xFF9FDB6B);
+        }
         close();
+    }
+
+    private Component getHintText() {
+        return actionType == RecruitsRoute.WaypointAction.Type.WAIT ? TEXT_HINT_WAIT : TEXT_HINT_NONE;
     }
 
     public void tick() {
@@ -116,10 +127,12 @@ public class WaypointEditPopup {
         guiGraphics.fill(0, 0, parent.width, parent.height, 0x88000000);
         WorldMapRenderPrimitives.panel(guiGraphics, px, py, WIDTH, HEIGHT);
 
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, waypoint.getName(),
+        guiGraphics.drawCenteredString(Minecraft.getInstance().font, TEXT_TITLE,
                 px + WIDTH / 2, py + 6, TEXT_COLOR);
+        guiGraphics.drawString(Minecraft.getInstance().font, waypoint.getName(), px + 8, py + 18, 0xFFE6D6A8, false);
+        guiGraphics.drawWordWrap(Minecraft.getInstance().font, getHintText(), px + 8, py + 30, WIDTH - 16, 0xFFB8A17A);
 
-        int rowY = py + 22;
+        int rowY = py + 48;
         guiGraphics.drawString(Minecraft.getInstance().font, TEXT_ACTION, px + 8, rowY + 3, TEXT_MUTED, false);
 
         renderActionButton(guiGraphics, mouseX, mouseY, TEXT_ACTION_NONE, null, px + 56, rowY);
@@ -165,7 +178,7 @@ public class WaypointEditPopup {
             return true;
         }
 
-        int rowY = py + 22;
+        int rowY = py + 48;
 
         // Action: None
         if (WorldMapRenderPrimitives.contains(mouseX, mouseY, px + 56, rowY, BTN_W, BTN_H)) {

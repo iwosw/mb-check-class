@@ -65,6 +65,9 @@ public class WorldMapScreen extends Screen {
     RecruitsClaim selectedClaim = null;
     private ClaimInfoMenu claimInfoMenu;
     private UUID selectedFormationContactId = null;
+    private Component mapNotice = Component.empty();
+    private int mapNoticeColor = 0xFFE6D6A8;
+    private long mapNoticeUntilMs = 0L;
     int snapshotWorldX = 0;
     int snapshotWorldZ = 0;
     private final WorldMapRouteInteractionLayer routeInteractionLayer;
@@ -228,7 +231,21 @@ public class WorldMapScreen extends Screen {
             claimInfoMenu.render(guiGraphics);
         }
 
+        renderMapNotice(guiGraphics);
+
         routeInteractionLayer.renderPopups(guiGraphics, mouseX, mouseY);
+    }
+
+    private void renderMapNotice(GuiGraphics guiGraphics) {
+        if (mapNotice == null || mapNotice.getString().isBlank() || System.currentTimeMillis() > mapNoticeUntilMs) {
+            return;
+        }
+
+        int panelWidth = Math.min(Math.max(this.font.width(mapNotice) + 12, 180), this.width - 20);
+        int panelX = 10;
+        int panelY = this.height - 30;
+        WorldMapRenderPrimitives.panel(guiGraphics, panelX, panelY, panelWidth, 20);
+        guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(mapNotice.getString(), panelWidth - 10), panelX + 5, panelY + 6, mapNoticeColor, false);
     }
 
     @Override
@@ -820,6 +837,16 @@ public class WorldMapScreen extends Screen {
 
     void closeContextMenu() {
         contextMenu.close();
+    }
+
+    void showMapNotice(Component notice, int color) {
+        showMapNotice(notice, color, 2600L);
+    }
+
+    void showMapNotice(Component notice, int color, long durationMs) {
+        this.mapNotice = notice;
+        this.mapNoticeColor = color;
+        this.mapNoticeUntilMs = System.currentTimeMillis() + durationMs;
     }
 
     // -------------------------------------------------------------------------

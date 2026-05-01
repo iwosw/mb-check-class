@@ -16,7 +16,7 @@ public class ClaimInfoMenu {
     private RecruitsClaim currentClaim;
     private BannerRenderer bannerRenderer;
     public int x, y;
-    public int width = 120, height = 215;
+    public int width = 152, height = 206;
 
     public ClaimInfoMenu(WorldMapScreen parent) {
         this.parent = parent;
@@ -55,43 +55,50 @@ public class ClaimInfoMenu {
     public void render(GuiGraphics guiGraphics) {
         if (!visible || currentClaim == null) return;
 
-        guiGraphics.fill(x, y, x + width, y + height, 0xCC000000);
-        guiGraphics.renderOutline(x, y, width, height, 0xFFFFFFFF);
+        WorldMapRenderPrimitives.panel(guiGraphics, x, y, width, height);
+        guiGraphics.fill(x + 1, y + 18, x + width - 1, y + 19, 0x665A4025);
 
         guiGraphics.drawCenteredString(parent.getMinecraft().font, currentClaim.getName(), x + width / 2, y + 5, 0xFFFFFF);
 
-        bannerRenderer.renderBanner(guiGraphics, x - 7 + width / 2, y + 70,  this.width, this.height, 50);
+        bannerRenderer.renderBanner(guiGraphics, x - 7 + width / 2, y + 60,  this.width, this.height, 46);
 
-        int textY = y + 120;
-        guiGraphics.drawString(parent.getMinecraft().font,
-                Component.translatable("gui.bannermod.claim.faction").getString() + ": " + ownerPoliticalEntityName(currentClaim.getOwnerPoliticalEntityId()),
-                x + 5, textY, 0xFFFFFF);
+        int textY = y + 98;
+        guiGraphics.drawString(parent.getMinecraft().font, Component.translatable("gui.bannermod.claim.faction"), x + 6, textY, 0xFFE0B86A, false);
+        textY += 11;
+        guiGraphics.drawWordWrap(parent.getMinecraft().font, Component.literal(ownerPoliticalEntityName(currentClaim.getOwnerPoliticalEntityId())), x + 6, textY, width - 12, 0xFFFFFF);
 
-        textY += 15;
-        guiGraphics.drawString(parent.getMinecraft().font,
-                Component.translatable("gui.bannermod.claim.player").getString() + ": " + (currentClaim.getPlayerInfo() != null ?
-                        currentClaim.getPlayerInfo().getName() : Component.translatable("gui.bannermod.common.unknown").getString()),
-                x + 5, textY, 0xFFFFFF);
+        textY += 24;
+        guiGraphics.drawString(parent.getMinecraft().font, Component.translatable("gui.bannermod.claim.player"), x + 6, textY, 0xFFE0B86A, false);
+        textY += 11;
+        guiGraphics.drawWordWrap(parent.getMinecraft().font,
+                Component.literal(currentClaim.getPlayerInfo() != null ? currentClaim.getPlayerInfo().getName() : Component.translatable("gui.bannermod.common.unknown").getString()),
+                x + 6, textY, width - 12, 0xFFFFFF);
 
-        textY += 15;
+        textY += 22;
         guiGraphics.drawString(parent.getMinecraft().font,
                 Component.translatable("gui.bannermod.claim.block_placing").getString() + ": " + boolText(currentClaim.isBlockPlacementAllowed()),
-                x + 5, textY, 0xFFFFFF);
+                x + 6, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
                 Component.translatable("gui.bannermod.claim.block_breaking").getString() + ": " + boolText(currentClaim.isBlockBreakingAllowed()),
-                x + 5, textY, 0xFFFFFF);
+                x + 6, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
                 Component.translatable("gui.bannermod.claim.block_interaction").getString() + ": " + boolText(currentClaim.isBlockInteractionAllowed()),
-                x + 5, textY, 0xFFFFFF);
+                x + 6, textY, 0xFFFFFF);
 
         textY += 15;
         guiGraphics.drawString(parent.getMinecraft().font,
                 Component.translatable("gui.bannermod.claim.info.chunks", currentClaim.getClaimedChunks().size(), 50).getString(),
-                x + 5, textY, 0xFFFFFF);
+                x + 6, textY, 0xFFFFFF);
+
+        textY += 16;
+        Component hint = parent.isPlayerClaimLeader(currentClaim)
+                ? Component.translatable("gui.bannermod.claim.info.hint.leader")
+                : Component.translatable("gui.bannermod.claim.info.hint.viewer");
+        guiGraphics.drawWordWrap(parent.getMinecraft().font, hint, x + 6, textY, width - 12, 0xFFB8A17A);
 
     }
 

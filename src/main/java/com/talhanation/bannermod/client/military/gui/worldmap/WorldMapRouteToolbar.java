@@ -23,7 +23,9 @@ final class WorldMapRouteToolbar {
     private static final Component TEXT_ROUTE_HELP_SELECTED = Component.translatable("gui.recruits.map.route.help_selected");
     private static final Component TEXT_ADD_TOOLTIP = Component.translatable("gui.recruits.map.route.tooltip.add_route");
     private static final Component TEXT_EDIT_TOOLTIP = Component.translatable("gui.recruits.map.route.tooltip.edit_route");
+    private static final Component TEXT_EDIT_TOOLTIP_DISABLED = Component.translatable("gui.recruits.map.route.tooltip.edit_disabled");
     private static final Component TEXT_TRANSPARENCY_TOOLTIP = Component.translatable("gui.recruits.map.route.tooltip.claims");
+    private static final Component TEXT_TRANSPARENCY_TOOLTIP_DISABLED = Component.translatable("gui.recruits.map.route.tooltip.claims_disabled");
 
     private final WorldMapScreen screen;
 
@@ -56,19 +58,23 @@ final class WorldMapRouteToolbar {
         renderDropdown(guiGraphics, mouseX, mouseY, partialTicks, selectedRoute);
 
         renderButton(guiGraphics, mouseX, mouseY, getAddButtonX(), "+", 0xFFFFFF, false);
+        renderButton(guiGraphics, mouseX, mouseY, getEditButtonX(), "\u2699", 0xFFFFFF, false, selectedRoute != null);
+        renderButton(guiGraphics, mouseX, mouseY, getTransparencyButtonX(), "\u25A1",
+                claimTransparency ? 0xFFFFAA00 : 0xFFFFFF, claimTransparency, selectedRoute != null);
         if (selectedRoute == null) {
             if (routeDropDown != null && routeDropDown.isOpen()) {
                 renderButtonTooltip(guiGraphics, mouseX, mouseY, getAddButtonX(), TEXT_ADD_TOOLTIP);
+                renderButtonTooltip(guiGraphics, mouseX, mouseY, getEditButtonX(), TEXT_EDIT_TOOLTIP_DISABLED);
+                renderButtonTooltip(guiGraphics, mouseX, mouseY, getTransparencyButtonX(), TEXT_TRANSPARENCY_TOOLTIP_DISABLED);
                 return;
             }
             renderHelp(guiGraphics, TEXT_ROUTE_HELP);
             renderButtonTooltip(guiGraphics, mouseX, mouseY, getAddButtonX(), TEXT_ADD_TOOLTIP);
+            renderButtonTooltip(guiGraphics, mouseX, mouseY, getEditButtonX(), TEXT_EDIT_TOOLTIP_DISABLED);
+            renderButtonTooltip(guiGraphics, mouseX, mouseY, getTransparencyButtonX(), TEXT_TRANSPARENCY_TOOLTIP_DISABLED);
             return;
         }
 
-        renderButton(guiGraphics, mouseX, mouseY, getEditButtonX(), "\u2699", 0xFFFFFF, false);
-        renderButton(guiGraphics, mouseX, mouseY, getTransparencyButtonX(), "\u25A1",
-                claimTransparency ? 0xFFFFAA00 : 0xFFFFFF, claimTransparency);
         if (routeDropDown != null && routeDropDown.isOpen()) {
             renderButtonTooltip(guiGraphics, mouseX, mouseY, getAddButtonX(), TEXT_ADD_TOOLTIP);
             renderButtonTooltip(guiGraphics, mouseX, mouseY, getEditButtonX(), TEXT_EDIT_TOOLTIP);
@@ -149,8 +155,13 @@ final class WorldMapRouteToolbar {
 
     private void renderButton(GuiGraphics guiGraphics, int mouseX, int mouseY, int buttonX,
                               String label, int labelColor, boolean selected) {
+        renderButton(guiGraphics, mouseX, mouseY, buttonX, label, labelColor, selected, true);
+    }
+
+    private void renderButton(GuiGraphics guiGraphics, int mouseX, int mouseY, int buttonX,
+                              String label, int labelColor, boolean selected, boolean enabled) {
         WorldMapRenderPrimitives.button(guiGraphics, screen.getScreenFont(), mouseX, mouseY,
-                buttonX, ROUTE_UI_Y, ROUTE_BTN_SIZE, ROUTE_BTN_SIZE, label, labelColor, selected);
+                buttonX, ROUTE_UI_Y, ROUTE_BTN_SIZE, ROUTE_BTN_SIZE, label, labelColor, selected, enabled);
     }
 
     private int getAddButtonX() {
