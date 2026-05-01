@@ -77,6 +77,14 @@ final class ClaimProtectionEventService {
         }
     }
 
+    void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!SiegeExplosionTuning.shouldLimitTerrainDamage(event.getExplosion().getDirectSourceEntity())) {
+            return;
+        }
+        SiegeExplosionTuning.limitAffectedBlocks(event.getExplosion().center(), event.getAffectedBlocks());
+    }
+
     void onBlockInteract(PlayerInteractEvent.RightClickBlock event) {
         if(event.getLevel().isClientSide()) return;
         Player player = event.getEntity();
