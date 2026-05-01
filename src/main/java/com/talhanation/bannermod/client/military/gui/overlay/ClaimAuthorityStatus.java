@@ -50,6 +50,10 @@ public enum ClaimAuthorityStatus {
         return backgroundColor;
     }
 
+    public static ClaimAuthorityStatus classify(@Nullable String playerTeamName, @Nullable RecruitsClaim claim) {
+        return classify(null, playerTeamName, claim);
+    }
+
     public static ClaimAuthorityStatus classify(@Nullable UUID playerUuid, @Nullable String playerTeamName, @Nullable RecruitsClaim claim) {
         if (claim == null || claim.getOwnerPoliticalEntityId() == null) {
             return UNCLAIMED;
