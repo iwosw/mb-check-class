@@ -29,6 +29,13 @@ class WarAllyInvitePickerScreen extends Screen {
     private static final int H = 220;
     private static final int ROW_H = 16;
     private static final int LIST_VISIBLE = 10;
+    private static final int LEATHER = 0xFF6F4728;
+    private static final int LEATHER_DARK = 0xFF3E2515;
+    private static final int PAGE_BG = 0xFFF3E2B6;
+    private static final int PAGE_SHADE = 0xFF7A5A33;
+    private static final int GOLD = 0xFFE0B45C;
+    private static final int INK = 0xFF2D2418;
+    private static final int INK_MUTED = 0xFF6C5B45;
 
     private final Screen parent;
     private final WarDeclarationRecord war;
@@ -86,18 +93,25 @@ class WarAllyInvitePickerScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fill(0, 0, width, height, 0xFF101010);
-        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, 0xC0101010);
-        graphics.renderOutline(guiLeft, guiTop, W, H, 0xFFFFFFFF);
+        graphics.fill(0, 0, width, height, 0x66000000);
+        graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + W + 4, guiTop + H + 5, 0x55000000);
+        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, LEATHER_DARK);
+        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + W - 2, guiTop + H - 2, LEATHER);
+        renderParchmentPanel(graphics, guiLeft + 8, guiTop + 20, W - 16, LIST_VISIBLE * ROW_H + 18);
+        renderParchmentPanel(graphics, guiLeft + 8, guiTop + H - 52, W - 16, 28);
 
         graphics.drawCenteredString(font, Component.translatable("gui.bannermod.war_allies.invite_picker.header", localizedWarSide(side)),
-                guiLeft + W / 2, guiTop + 6, 0xFFFFFF);
+                guiLeft + W / 2, guiTop + 8, GOLD);
+        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("gui.bannermod.war_allies.invite_picker.hint").getString(), W - 24),
+                guiLeft + 12, guiTop + 24, INK_MUTED, false);
 
         int listX = guiLeft + 8;
         int listY = guiTop + 24;
         int listW = W - 16;
         int listH = LIST_VISIBLE * ROW_H;
-        graphics.fill(listX, listY, listX + listW, listY + listH, 0x60000000);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_allies.ledger"), listX, listY - 12, INK, false);
+        graphics.fill(listX, listY, listX + listW, listY + listH, 0x22FFFFFF);
+        graphics.renderOutline(listX, listY, listW, listH, PAGE_SHADE);
 
         if (options.isEmpty()) {
             graphics.drawCenteredString(font, Component.translatable("gui.bannermod.war_allies.invite_picker.empty"),
@@ -119,6 +133,7 @@ class WarAllyInvitePickerScreen extends Screen {
                         listX + 4, rowY + 4, 0xFFFFFF, false);
             }
         }
+        graphics.drawString(font, font.plainSubstrByWidth(visibleStatus().getString(), W - 24), guiLeft + 12, guiTop + H - 42, INK, false);
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
@@ -184,5 +199,24 @@ class WarAllyInvitePickerScreen extends Screen {
             case ATTACKER -> Component.translatable("gui.bannermod.war.side.attacker");
             case DEFENDER -> Component.translatable("gui.bannermod.war.side.defender");
         };
+    }
+
+    private Component visibleStatus() {
+        if (!WarClientState.hasSnapshot()) {
+            return Component.translatable("gui.bannermod.war_list.waiting_sync");
+        }
+        if (options.isEmpty()) {
+            return Component.translatable("gui.bannermod.war_allies.invite_picker.empty");
+        }
+        return Component.translatable("gui.bannermod.war_allies.invite_picker.status.ready", localizedWarSide(side));
+    }
+
+    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
+        graphics.fill(x, y, x + w, y + h, PAGE_BG);
+        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
+        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
+        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
+        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
+        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
     }
 }

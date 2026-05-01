@@ -450,6 +450,7 @@ public class WarListScreen extends Screen {
         renderBattleWindowBanner(graphics);
         renderList(graphics, mouseX, mouseY);
         renderDetailPanel(graphics);
+        renderActionStatus(graphics);
         renderActionFeedback(graphics);
 
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -504,6 +505,32 @@ public class WarListScreen extends Screen {
         int labelRight = actionLedgerX() + 8 + font.width(text("gui.bannermod.war_list.ledger_title")) + 8;
         int maxW = Math.max(40, actionLedgerX() + actionLedgerW() - labelRight - 8);
         graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), maxW), labelRight, actionLedgerTop() + 5, WAX, false);
+    }
+
+    private void renderActionStatus(GuiGraphics graphics) {
+        graphics.drawString(font,
+                font.plainSubstrByWidth(visibleOrderStatus().getString(), Math.max(40, actionLedgerW() - 16)),
+                actionLedgerX() + 8, actionLedgerTop() + 18, INK, false);
+    }
+
+    private Component visibleOrderStatus() {
+        if (!WarClientState.hasSnapshot()) {
+            return text("gui.bannermod.war_list.waiting_sync");
+        }
+        if (selected == null) {
+            return text("gui.bannermod.war_list.status.select_war");
+        }
+        if (selected.state() == WarState.RESOLVED || selected.state() == WarState.CANCELLED) {
+            return text("gui.bannermod.war_list.status.closed");
+        }
+        UUID commandSide = leaderSideOf(selected);
+        if (commandSide != null) {
+            if (selected.state() == WarState.DECLARED) {
+                return text("gui.bannermod.war_list.status.pre_active");
+            }
+            return text("gui.bannermod.war_list.status.authorized");
+        }
+        return sideAuthorityDenial(selected);
     }
 
     private void renderBattleWindowBanner(GuiGraphics graphics) {
