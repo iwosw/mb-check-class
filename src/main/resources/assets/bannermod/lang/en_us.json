@@ -1474,6 +1474,7 @@
   "gui.recruits.map.claim_area": "Claim Area",
   "gui.recruits.map.claim_area_disabled": "Claim-area creation is disabled here. Claim nearby chunks one at a time so the server can validate each edit.",
   "gui.recruits.map.disabled.not_claim_leader": "Only the neighboring claim leader can claim this chunk.",
+  "gui.recruits.map.disabled.not_enough_currency": "You need more claim currency to take this chunk.",
   "gui.recruits.map.disabled.stale": "A claim edit is waiting for server sync.",
   "gui.recruits.map.disabled.unclaimable_chunk": "Select a nearby unclaimed chunk outside buffer zones.",
   "gui.recruits.map.disabled.waiting_sync": "Waiting for the server claim snapshot.",

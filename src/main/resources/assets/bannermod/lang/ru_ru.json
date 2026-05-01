@@ -1418,6 +1418,7 @@
   "gui.recruits.map.claim_area": "Захватить территорию",
   "gui.recruits.map.claim_area_disabled": "Захват области здесь отключен. Захватывай соседние чанки по одному, чтобы сервер проверял каждое изменение.",
   "gui.recruits.map.disabled.not_claim_leader": "Только лидер соседней территории может захватить этот чанк.",
+  "gui.recruits.map.disabled.not_enough_currency": "Для захвата этого чанка нужно больше валюты территории.",
   "gui.recruits.map.disabled.stale": "Изменение территории ожидает синхронизации сервера.",
   "gui.recruits.map.disabled.unclaimable_chunk": "Выбери ближайший свободный чанк вне буферных зон.",
   "gui.recruits.map.disabled.waiting_sync": "Ожидание снимка территорий с сервера.",
