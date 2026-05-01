@@ -52,20 +52,24 @@ public class WorldMapRenderGameTests {
                 "Tile manager must expose a cooldown-gated visible-tile refresh for map rendering");
         helper.assertTrue(chunkTile.contains("this.textureId = mc.getTextureManager().register"),
                 "Chunk tiles must register a DynamicTexture that renderMapTiles can blit");
-        helper.assertTrue(chunkTile.contains("PIXELS_PER_BLOCK = 2")
-                        && chunkTile.contains("TILE_BLOCK_SIZE")
-                        && chunkTile.contains("TILE_PIXEL_SIZE")
+        helper.assertTrue(chunkTile.contains("PIXELS_PER_BLOCK = 3")
+                        && chunkTile.contains("PIXELS_PER_CHUNK = BLOCKS_PER_CHUNK * PIXELS_PER_BLOCK")
+                        && chunkTile.contains("TILE_BLOCK_SIZE = TILE_SIZE * BLOCKS_PER_CHUNK")
+                        && chunkTile.contains("TILE_PIXEL_SIZE = TILE_SIZE * PIXELS_PER_CHUNK")
                         && chunkTile.contains("newInputStream(tileFile.toPath())")
                         && chunkTile.contains("NativeImage.read(stream)")
                         && !chunkTile.contains("NativeImage.read(tileFile"),
-                "Chunk tiles must separate world tile size from 2x texture resolution");
-        helper.assertTrue(chunkImage.contains("getTerrainColor(level")
+                "Chunk tiles must separate world tile size from texture resolution");
+        helper.assertTrue(chunkImage.contains("private record BlockSample")
+                        && chunkImage.contains("BlockSample[][] samples")
+                        && chunkImage.contains("samples[blockX][blockZ] = sampleBlock(level, worldX, worldZ);")
                         && chunkImage.contains("level.getBiome(pos).value().getGrassColor")
-                        && chunkImage.contains("applyRelief(level, pos, rgb)")
-                        && chunkImage.contains("applyTinyNoise(pos, rgb)")
-                        && chunkImage.contains("applySubpixelShade(pos, subX, subZ, rgb)")
+                        && chunkImage.contains("applyRelief(level, topBlock, rgb)")
+                        && chunkImage.contains("applyCanopyShade(level, topBlock, rgb)")
+                        && chunkImage.contains("applyTinyNoise(topBlock, rgb)")
+                        && chunkImage.contains("applySubpixelShade(sample.pos(), subX, subZ, rgb)")
                         && chunkImage.contains("isSandLike(state) && isNextToWater"),
-                "World map chunk pixels must use the conservative Xaero-like flat-first terrain pipeline");
+                "World map chunk pixels must cache expensive terrain sampling before subpixel shading");
         helper.assertTrue(chunkImage.contains("toNativeAbgr(rgb)"),
                 "World map chunk pixels must convert MapColor RGB into NativeImage ABGR order");
 
