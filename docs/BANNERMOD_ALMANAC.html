@@ -81,9 +81,11 @@
         <article class="page" id="en-economy" data-page="EN 6">
           <h2>6. Economy, Storage, And Routes</h2>
           <h3>Storage</h3>
-          <p>Storage areas scan containers inside their selected footprint. The settlement reads those scans as stockpile visibility. If a chest is outside the area, not scanned, full, or blocked by ownership, logistics will report missing storage even if the player sees a chest nearby.</p>
+          <p>Storage areas scan containers inside their selected footprint. The settlement reads those scans as stockpile visibility. If a chest is outside the area, not scanned, full, or blocked by ownership, logistics will report missing storage even if the player sees a chest nearby. The storage screen now also shows route next-step text directly in the settings panel, so a missing destination UUID or blocked courier route is visible before you leave the screen.</p>
           <h3>Routes</h3>
           <ol><li>Open a storage area route screen.</li><li>Enter destination storage UUID, item filter, amount, and priority.</li><li>Apply the route. Invalid UUIDs, empty item filters, bad amounts, and illegal priorities are rejected client-side before the request.</li><li>A courier claims a route only if the source has reserved items and the destination can accept them.</li><li>The courier first fetches missing items from source storage, then delivers to destination storage.</li><li>On completion, reservation and active route are released. On source shortage, missing container, full destination, or timeout, the route records a blocked reason.</li></ol>
+          <h3>Merchant stalls</h3>
+          <p>Merchant trade screens now surface offer state in-place: no posted offers, no current selection, closed offers, sold-out stock, and full customer inventory each show an explicit reason and next step. The add/edit trade screen only enables saving after both the payment item and sold goods are placed.</p>
           <h3>Land and sea logistics</h3>
           <p>Long land routes may use a nearby approved free mount. If no mount is available, the courier continues on foot. Sea routes can use compatible ship carriers when available; the governor logistics mirror shows route id, carrier id or unassigned, phase, cargo progress, and blocked reason.</p>
           <h3>Taxes and strategy</h3>
