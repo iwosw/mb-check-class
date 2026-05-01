@@ -5839,7 +5839,7 @@
     {
       "id": "UI-011A",
       "title": "Restyle recruit command and inventory screens",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-05-02",
       "why": "The recruit command, inventory, hiring, promotion, rename, and confirmation screens are the core army-management loop and should be brought to the Minecraft-native style in one focused slice.",
       "scope": [
@@ -5853,12 +5853,41 @@
         "Player-facing docs reflect any changed recruit command, hiring, inventory, promotion, rename, or confirmation workflow before closure."
       ],
       "dependencies": [
-        "UI-009"
+        "UI-009",
+        "UI-011A1"
       ],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-02",
+          "text": "Implemented the recruit-command UI slice in feature/ui-011a-recruit-command-style: added shared parchment/dark-iron military GUI styling, restyled CommandScreen, RecruitInventoryScreen, RecruitHireScreen, GovernorScreen, PromoteScreen, RenameRecruitScreen, RecruitMoreScreen, ConfirmScreen, and their command/group buttons; added EN/RU localized next-step and disabled-reason cues; updated player guides and almanac. Verification so far: git diff --check, edited language JSON parsing, and ./gradlew compileJava pass. Remaining closure gap: acceptance requires real in-client readability/overlap verification at common GUI scales, which this API session cannot observe. Split that proof into UI-011A1."
+        }
+      ],
       "verification": [],
       "evidence": [
         "docs/UI-009_REMAINING_UI_AUDIT.txt",
+        "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
+      ]
+    },
+    {
+      "id": "UI-011A1",
+      "title": "Verify recruit command UI readability in client",
+      "status": "open",
+      "updated": "2026-05-02",
+      "why": "UI-011A changes core recruit-management screens, and closure needs a real client pass to prove common GUI-scale readability and non-overlap instead of relying on compile-only evidence.",
+      "scope": [
+        "Open CommandScreen, RecruitInventoryScreen, RecruitHireScreen, GovernorScreen, PromoteScreen, RenameRecruitScreen, RecruitMoreScreen, and ConfirmScreen in a real client after the UI-011A implementation is available.",
+        "Check common Minecraft GUI scale settings for readable parchment/dark-iron panels, non-overlapping buttons/status text/tooltips, and preserved inventory slot readability.",
+        "Record any required fixes or confirm the implementation result back on UI-011A before closing it."
+      ],
+      "acceptance": [
+        "A real client verification pass covers every UI-011A screen at common GUI scales.",
+        "Primary actions, disabled reasons, pending/accepted cues, tooltips, and inventory slots show no critical overlap or readability regression.",
+        "The verification result is recorded back on UI-011A before UI-011A is marked done."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
       ]
     },

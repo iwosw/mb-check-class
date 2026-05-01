@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.gui.group;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.CommandScreen;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import com.talhanation.bannermod.client.military.gui.component.ActivateableButton;
@@ -24,7 +25,8 @@ public class RecruitsFormationButton extends ActivateableButton {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float f) {
-        super.renderWidget(guiGraphics, mouseX, mouseY, f);
+        MilitaryGuiStyle.commandButton(guiGraphics, Minecraft.getInstance().font, mouseX, mouseY,
+                getX(), getY(), width, height, Component.empty(), true, false);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);

@@ -205,6 +205,8 @@ The command screen (`R`) shows order buttons:
 - formation: read from the player's saved formation (Formation tab);
 - stance: `LOOSE`, `LINE_HOLD`, `SHIELD_WALL`.
 
+The recruit command, inventory, hire, promote, rename, more-options, governor, and confirmation screens now use parchment/iron panels with visible status cues. Disabled army actions show why they are unavailable, hiring tells you to pick a group or pay the cost, rename requests say that the server applies the name, and disband/ownership changes remain server-confirmed.
+
 Stances change behavior and shield mitigation:
 
 - `LOOSE`: normal flexible behavior, shield blocks ~45% of incoming damage.

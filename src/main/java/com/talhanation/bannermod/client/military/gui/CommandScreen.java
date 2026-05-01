@@ -42,6 +42,11 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
 
     private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/command_gui.png");
     private static final MutableComponent TEXT_EVERYONE = Component.translatable("gui.recruits.command.text.everyone");
+    private static final MutableComponent TEXT_TITLE = Component.translatable("gui.recruits.command.title");
+    private static final MutableComponent TEXT_NO_GROUPS = Component.translatable("gui.recruits.command.status.no_groups");
+    private static final MutableComponent TEXT_GROUPS_DISABLED = Component.translatable("gui.recruits.command.status.groups_disabled");
+    private static final MutableComponent TEXT_NO_TARGET = Component.translatable("gui.recruits.command.status.no_target");
+    private static final MutableComponent TEXT_MANAGE_GROUPS = Component.translatable("gui.recruits.command.tooltip.manage_groups");
     private static final int fontColor = 16250871;
     public final Player player;
     public BlockPos rayBlockPos;
@@ -127,6 +132,7 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
             group.setDisabled(!group.isDisabled());
             this.setButtons();
         });
+        groupButton.setTooltip(Tooltip.create(Component.translatable("gui.recruits.command.tooltip.group_toggle", group.getName())));
         addRenderableWidget(groupButton);
         groupButton.active = !group.isDisabled();
 
@@ -147,6 +153,7 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
                     minecraft.setScreen(new RecruitsGroupListScreen(player));
 
                 });
+        groupButton.setTooltip(Tooltip.create(TEXT_MANAGE_GROUPS));
         addRenderableWidget(groupButton);
     }
 
@@ -294,6 +301,9 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
     }
 
     private List<RecruitsGroup> getGroups() {
+        if (ClientManager.groups == null) {
+            return List.of();
+        }
         return new ArrayList<>(ClientManager.groups.stream().filter(group -> !group.removed && group.getCount() != 0).toList());
     }
 
@@ -435,21 +445,64 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
         return Component.translatable("gui.recruits.command.tip.scrollCategories");
     }
 
-    int xTipPos = 140;
-    int yTipPos = 177;
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.renderLabels(guiGraphics, mouseX, mouseY);
 
-        String tipAllGroups = TEXT_SELECT_ALL_GROUPS().getString();
-        String tipScroll = TEXT_SCROLL_CATEGORIES().getString();
-        guiGraphics.drawString(font, tipAllGroups, xTipPos, yTipPos, FONT_COLOR, false);
-        guiGraphics.drawString(font, tipScroll, xTipPos, yTipPos + 15, FONT_COLOR, false);
+        int centerX = this.width / 2 - this.leftPos;
+        int centerY = this.height / 2 - this.topPos;
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, TEXT_TITLE, centerX - 210, centerY - 127, 420);
+        MilitaryGuiStyle.drawBadge(guiGraphics, font, groupStatus(), centerX - 205, centerY - 104, 160, groupStatusColor());
+        MilitaryGuiStyle.drawBadge(guiGraphics, font, targetStatus(), centerX + 43, centerY - 104, 160, targetStatusColor());
+
+        guiGraphics.drawString(font, TEXT_SELECT_ALL_GROUPS(), centerX - 150, centerY + 108, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, TEXT_SCROLL_CATEGORIES(), centerX - 150, centerY + 121, MilitaryGuiStyle.TEXT_DARK, false);
 
     }
 
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
         super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
+        int centerX = this.width / 2;
+        int centerY = this.height / 2;
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, centerX - 218, centerY - 138, 436, 276);
+        MilitaryGuiStyle.titleStrip(guiGraphics, centerX - 210, centerY - 130, 420, 18);
+        MilitaryGuiStyle.insetPanel(guiGraphics, centerX - 210, centerY - 108, 420, 58);
+        MilitaryGuiStyle.insetPanel(guiGraphics, centerX - 210, centerY - 46, 46, 150);
+        MilitaryGuiStyle.insetPanel(guiGraphics, centerX - 156, centerY - 46, 312, 150);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, centerX - 156, centerY + 106, 312, 30);
+    }
+
+    private Component groupStatus() {
+        List<RecruitsGroup> groups = getGroups();
+        if (groups.isEmpty()) {
+            return TEXT_NO_GROUPS;
+        }
+        int active = getActiveGroups().size();
+        if (active == 0) {
+            return TEXT_GROUPS_DISABLED;
+        }
+        return Component.translatable("gui.recruits.command.status.groups", active, groups.size());
+    }
+
+    private int groupStatusColor() {
+        if (getGroups().isEmpty() || getActiveGroups().isEmpty()) {
+            return MilitaryGuiStyle.TEXT_WARN;
+        }
+        return MilitaryGuiStyle.TEXT_GOOD;
+    }
+
+    private Component targetStatus() {
+        if (this.rayEntity != null) {
+            return Component.translatable("gui.recruits.command.status.target_entity", this.rayEntity.getDisplayName().getString());
+        }
+        if (this.rayBlockPos != null) {
+            return Component.translatable("gui.recruits.command.status.target_block", this.rayBlockPos.getX(), this.rayBlockPos.getY(), this.rayBlockPos.getZ());
+        }
+        return TEXT_NO_TARGET;
+    }
+
+    private int targetStatusColor() {
+        return this.rayEntity != null || this.rayBlockPos != null ? MilitaryGuiStyle.TEXT_GOOD : MilitaryGuiStyle.TEXT_MUTED;
     }
 
     @Nullable

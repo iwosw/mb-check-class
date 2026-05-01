@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.group;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -57,8 +58,8 @@ public class RecruitsGroupButton extends ExtendedButton {
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
-        int k = !this.active ? 0 : (this.isHoveredOrFocused() ? 2 : 1);
-        guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, k == 2 ? 0xAA707070 : 0xAA303030);
+        MilitaryGuiStyle.commandButton(guiGraphics, mc.font, mouseX, mouseY,
+                getX(), getY(), width, height, Component.empty(), true, this.active);
 
         if(this.image != null){
             RenderSystem.setShader(GameRenderer::getPositionTexShader);

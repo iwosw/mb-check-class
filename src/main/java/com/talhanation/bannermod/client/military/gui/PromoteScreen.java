@@ -5,6 +5,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.inventory.military.PromoteContainer;
 import com.talhanation.bannermod.network.messages.military.*;
 import de.maxhenkel.corelib.inventory.ScreenBase;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -55,6 +56,12 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     private static final MutableComponent BUTTON_ROGUE = Component.translatable("gui.bannermod.inv.text.rogue");
     private static final MutableComponent TOOLTIP_ROGUE = Component.translatable("gui.bannermod.inv.tooltip.rogue");
+    private static final Component TEXT_NAME = Component.translatable("gui.recruits.promote.name");
+    private static final Component TOOLTIP_REQUIRES_LEVEL_3 = Component.translatable("gui.recruits.promote.tooltip.requires_level", 3);
+    private static final Component TOOLTIP_REQUIRES_LEVEL_5 = Component.translatable("gui.recruits.promote.tooltip.requires_level", 5);
+    private static final Component TOOLTIP_REQUIRES_LEVEL_7 = Component.translatable("gui.recruits.promote.tooltip.requires_level", 7);
+    private static final Component TOOLTIP_GOVERNOR_DISABLED = Component.translatable("gui.recruits.promote.tooltip.governor_disabled");
+    private static final Component TOOLTIP_UNAVAILABLE = Component.translatable("gui.recruits.promote.tooltip.unavailable");
 
     //private boolean keepTeam;
 
@@ -84,7 +91,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
 
     private void setEditBox() {
-        Component name = Component.literal("Name");
+        Component name = TEXT_NAME;
         if(recruit.getCustomName() != null) name = recruit.getCustomName();
 
         textField = new EditBox(font, leftPos + 16, topPos + 8, 170, 20, name);
@@ -144,9 +151,28 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
                     }
                 }
         ));
-        professionButton.setTooltip(Tooltip.create(buttonTooltip));
         professionButton.active = active;
+        professionButton.setTooltip(Tooltip.create(active ? buttonTooltip : disabledProfessionTooltip(professionID, buttonTooltip)));
         return professionButton;
+    }
+
+    private Component disabledProfessionTooltip(int professionID, Component fallback) {
+        return switch (professionID) {
+            case 0, 1 -> TOOLTIP_REQUIRES_LEVEL_3;
+            case 2 -> TOOLTIP_REQUIRES_LEVEL_5;
+            case 3 -> recruit.getXpLevel() < 5 ? TOOLTIP_REQUIRES_LEVEL_5 : fallback;
+            case 4, 5, 7, 8 -> TOOLTIP_UNAVAILABLE;
+            case 6 -> recruit.getXpLevel() < 7 ? TOOLTIP_REQUIRES_LEVEL_7 : TOOLTIP_GOVERNOR_DISABLED;
+            default -> fallback;
+        };
+    }
+
+    @Override
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, leftPos - 2, topPos - 2, imageWidth + 4, imageHeight + 4);
+        MilitaryGuiStyle.titleStrip(guiGraphics, leftPos + 8, topPos + 5, imageWidth - 16, 26);
+        MilitaryGuiStyle.insetPanel(guiGraphics, leftPos + 51, topPos + 29, 96, 213);
     }
 
     @Override

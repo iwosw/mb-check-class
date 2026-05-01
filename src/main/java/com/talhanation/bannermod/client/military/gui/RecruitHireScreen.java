@@ -10,6 +10,7 @@ import com.talhanation.bannermod.network.messages.military.MessageHire;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -26,6 +27,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 import java.text.DecimalFormat;
+import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
 public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
@@ -41,6 +43,9 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     private static final Component TEXT_ATTACK = Component.translatable("gui.recruits.stat.attack");
     private static final Component TEXT_SPEED = Component.translatable("gui.recruits.stat.speed");
     private static final Component TEXT_ARMOR = Component.translatable("gui.recruits.stat.armor");
+    private static final Component TEXT_STATUS_READY = Component.translatable("gui.recruits.hire_gui.status.ready");
+    private static final Component TEXT_STATUS_NO_GROUP = Component.translatable("gui.recruits.hire_gui.status.no_group");
+    private static final Component TEXT_STATUS_NO_FUNDS = Component.translatable("gui.recruits.hire_gui.status.no_funds");
 
     private static final int fontColor = 4210752;
 
@@ -62,7 +67,7 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     protected void containerTick() {
         super.containerTick();
         if(hireButton != null){
-            hireButton.active = ClientManager.canPlayerHire;
+            updateHireButtonState();
         }
     }
 
@@ -70,11 +75,13 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     protected void init() {
         super.init();
         group = ClientManager.getSelectedGroup();
-        groupSelectionDropDownMenu = new ScrollDropDownMenu<>(group, leftPos + 80 + 7 + 5,topPos + 100,  80, 20, ClientManager.groups,
+        List<RecruitsGroup> groups = ClientManager.groups == null ? List.of() : ClientManager.groups;
+        groupSelectionDropDownMenu = new ScrollDropDownMenu<>(group, leftPos + 80 + 7 + 5,topPos + 100,  80, 20, groups,
                 RecruitsGroup::getName,
                 (selected) ->{
                     this.group = selected;
                     ClientManager.groupSelection = ClientManager.groups.indexOf(group);
+                    updateHireButtonState();
                 }
         );
         groupSelectionDropDownMenu.setBgFillSelected(FastColor.ARGB32.color(255, 139, 139, 139));
@@ -82,15 +89,40 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
 
         if(ClientManager.currency != null) ClientManager.currency.setCount(recruit.getCost());
         hireButton = createHireButton();
-        if(group == null || ClientManager.groups.isEmpty()) hireButton.active = false;
+        updateHireButtonState();
     }
 
     private ExtendedButton createHireButton() {
         return addRenderableWidget(new ExtendedButton(leftPos + 7, topPos + 100, 80, 20, TEXT_HIRE,
                 button -> {
+                    if (!canHire()) {
+                        return;
+                    }
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageHire(player.getUUID(), recruit.getUUID(), group.getUUID()));
                     this.onClose();
         }));
+    }
+
+    private void updateHireButtonState() {
+        if (hireButton == null) {
+            return;
+        }
+        hireButton.active = canHire();
+        hireButton.setTooltip(Tooltip.create(hireStatus()));
+    }
+
+    private boolean canHire() {
+        return ClientManager.canPlayerHire && group != null && ClientManager.groups != null && !ClientManager.groups.isEmpty();
+    }
+
+    private Component hireStatus() {
+        if (group == null || ClientManager.groups == null || ClientManager.groups.isEmpty()) {
+            return TEXT_STATUS_NO_GROUP;
+        }
+        if (!ClientManager.canPlayerHire) {
+            return TEXT_STATUS_NO_FUNDS;
+        }
+        return TEXT_STATUS_READY;
     }
 
     @Override
@@ -132,6 +164,7 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
 
         guiGraphics.drawString(font, recruit.getDisplayName().getVisualOrderText(), 8, 5, fontColor, false);
         guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
+        guiGraphics.drawString(font, font.plainSubstrByWidth(hireStatus().getString(), 158), 8, 88, canHire() ? MilitaryGuiStyle.TEXT_GOOD : MilitaryGuiStyle.TEXT_DENIED, false);
 
         guiGraphics.drawString(font, TEXT_HP, k, l, fontColor, false);
         guiGraphics.drawString(font, "" + health, k + 25, l , fontColor, false);
@@ -176,11 +209,15 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     }
 
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        int i = (this.width - this.imageWidth) / 2;
+        int j = (this.height - this.imageHeight) / 2;
+
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, i - 2, j - 2, this.imageWidth + 4, this.imageHeight + 4);
         super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
 
         RenderSystem.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
-        int i = (this.width - this.imageWidth) / 2;
-        int j = (this.height - this.imageHeight) / 2;
+        MilitaryGuiStyle.insetPanel(guiGraphics, i + 6, j + 16, 50, 62);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, i + 5, j + 84, 166, 42);
 
         InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 10, j + 20, i + 50, j + 75, 15, 0.0F, (float)(i + 50) - mouseX, (float)(j + 25) - mouseY, this.recruit);
         if(recruit.getVehicle() instanceof AbstractHorse horse) InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 10, j + 32, i + 50, j + 87, 15, 0.0F, (float)(i + 50) - mouseX, (float)(j + 25) - mouseY, horse);
