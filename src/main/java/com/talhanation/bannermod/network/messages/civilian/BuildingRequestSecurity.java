@@ -47,6 +47,9 @@ final class BuildingRequestSecurity {
         if (claim == null) {
             return true;
         }
+        if (claim.isTrustedPlayer(player.getUUID())) {
+            return true;
+        }
         if (claim.getPlayerInfo() != null && player.getUUID().equals(claim.getPlayerInfo().getUUID())) {
             return true;
         }

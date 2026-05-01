@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.events;
 
+import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
@@ -12,6 +13,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
+
+import java.util.UUID;
 
 final class ClaimAccessQueries {
 
@@ -38,6 +41,10 @@ final class ClaimAccessQueries {
     }
 
     static boolean isFriendlyToClaim(LivingEntity livingEntity, RecruitsClaim claim) {
+        UUID actorUuid = actorUuid(livingEntity);
+        if (claim.isTrustedPlayer(actorUuid)) {
+            return true;
+        }
         if (claim.getOwnerPoliticalEntityId() == null) {
             return false;
         }
@@ -49,5 +56,15 @@ final class ClaimAccessQueries {
         }
         return livingEntity.getTeam() != null
                 && livingEntity.getTeam().getName().equals(claim.getOwnerPoliticalEntityId().toString());
+    }
+
+    private static UUID actorUuid(LivingEntity livingEntity) {
+        if (livingEntity instanceof Player player) {
+            return player.getUUID();
+        }
+        if (livingEntity instanceof AbstractRecruitEntity recruit) {
+            return recruit.getOwnerUUID();
+        }
+        return null;
     }
 }

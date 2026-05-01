@@ -59,6 +59,9 @@ public class MessageUpdateClaim implements BannerModMessage<MessageUpdateClaim> 
             updatedClaim.setPlayer(existingClaim.getPlayerInfo());
             updatedClaim.setAdminClaim(existingClaim.isAdmin);
         }
+        if (updatedClaim.getPlayerInfo() != null) {
+            updatedClaim.removeTrustedPlayer(updatedClaim.getPlayerInfo().getUUID());
+        }
         if (ClaimEvents.claimManager().isTownTooCloseToSameNationTown(
                 updatedClaim,
                 existingClaim,

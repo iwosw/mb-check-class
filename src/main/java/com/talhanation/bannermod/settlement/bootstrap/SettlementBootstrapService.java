@@ -57,7 +57,10 @@ public final class SettlementBootstrapService {
         BlockPos authorityPos = fortValidationResult.snapshot().anchorPos();
         RecruitsClaim claim = claimAt(authorityPos);
         if (claim == null) {
-            return BootstrapResult.failure("Starter fort validation must happen inside your claimed settlement land.");
+            claim = createStarterClaim(level, player, authorityPos);
+            if (claim == null) {
+                return BootstrapResult.failure("Starter fort bootstrap could not create a claim here. Create or join a state first, keep distance from same-side towns, or claim the land manually.");
+            }
         }
         if (!playerOwnsClaim(player, claim)) {
             return BootstrapResult.failure("Settlement bootstrap requires a fort inside your faction claim.");

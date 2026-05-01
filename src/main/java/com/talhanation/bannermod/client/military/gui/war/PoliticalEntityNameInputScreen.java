@@ -89,11 +89,22 @@ public class PoliticalEntityNameInputScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.editBox != null && this.editBox.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
         if (keyCode == 257 || keyCode == 335) {
             submit();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.editBox != null && this.editBox.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override

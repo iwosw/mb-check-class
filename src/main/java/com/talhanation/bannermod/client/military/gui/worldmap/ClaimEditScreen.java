@@ -45,6 +45,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
     private RecruitsPlayerInfo playerInfo;
     private Button saveButton;
     private Button backButton;
+    private Button membersButton;
     private Button deleteButton;
     private String claimName;
     private String savedName;
@@ -138,13 +139,18 @@ public class ClaimEditScreen extends RecruitsScreenBase {
         );
         addRenderableWidget(blockInteractionCheckBox);
 
-        backButton = new ExtendedButton(x + 5, y + 90, 70, 20, BUTTON_BACK,
+        membersButton = new ExtendedButton(x - 70, y + 90, 140, 20,
+                Component.translatable("gui.bannermod.claim.members.button"),
+                button -> this.minecraft.setScreen(new ClaimTrustedMembersScreen(this, this.claim, this.player)));
+        addRenderableWidget(membersButton);
+
+        backButton = new ExtendedButton(x + 5, y + 114, 70, 20, BUTTON_BACK,
                 button -> {
                     this.minecraft.setScreen(this.parent);
                 });
         addRenderableWidget(backButton);
 
-        saveButton = new ExtendedButton(x - 75, y + 90, 70, 20, BUTTON_SAVE,
+        saveButton = new ExtendedButton(x - 75, y + 114, 70, 20, BUTTON_SAVE,
                 button -> {
                     this.claim.setName(editNameBox.getValue());
                     this.claim.setPlayer(playerInfo);
@@ -183,7 +189,7 @@ public class ClaimEditScreen extends RecruitsScreenBase {
         this.savedName = string;
     }
     int panelWidth = 150;
-    int panelHeight = 200;
+    int panelHeight = 224;
     int panelX = -75;
     int panelY = -115;
     int claimMiniX = -70;
