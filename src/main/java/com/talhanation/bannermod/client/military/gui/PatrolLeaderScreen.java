@@ -32,14 +32,17 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
     private static final int TEXTURE_W = 195;
     private static final int TEXTURE_H = 160;
     private static final int FONT_COLOR = 4210752;
+    private static final Component TITLE = Component.translatable("gui.recruits.patrol.title");
     private final PatrolLeaderControlController controls;
     private int leftPos;
     private int topPos;
     private ScrollDropDownMenu<RecruitsRoute>  routeDropDown;
     private ScrollDropDownMenu<RecruitsGroup>  groupDropDown;
+    private Component statusLine = Component.translatable("gui.recruits.patrol.status.select_route");
+    private int statusColor = 0x6E5A45;
 
     public PatrolLeaderScreen(AbstractLeaderEntity leaderEntity, Player player) {
-        super(Component.literal(""), 197,250);
+        super(TITLE, 197,250);
         this.controls = new PatrolLeaderControlController(leaderEntity, player);
     }
 
@@ -70,9 +73,12 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
                 controls.getSelectedRoute(),
                 x, y, fullW, btnH,
                 routeOptions,
-                r -> r == null ? "-- No Route --" : r.getName(),
+                r -> r == null ? text("gui.recruits.patrol.route.none").getString() : r.getName(),
                 r -> {
                     controls.selectRoute(r);
+                    setStatus(r == null
+                            ? text("gui.recruits.patrol.status.select_route")
+                            : text("gui.recruits.patrol.status.route_selected", r.getName()), r == null ? 0x6E5A45 : 0x2E5D32);
                     buildWidgets(); // refresh button states after route selection
                 }
         );
@@ -97,14 +103,16 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
 
         Button startButton = addRenderableWidget(new ExtendedButton(x, y, btnW, btnH, startLabel, btn -> {
             controls.startOrResumePatrol();
+            setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
             buildWidgets();
         }));
         startButton.active = canStart;
         startButton.setTooltip(Tooltip.create(
-                !canStart && controls.getSelectedRoute() == null ? Component.literal("No route selected") : startTooltip));
+                !canStart && controls.getSelectedRoute() == null ? text("gui.recruits.patrol.status.select_route") : startTooltip));
 
         Button stopButton = addRenderableWidget(new ExtendedButton(x + btnW + 4, y, btnW, btnH, stopLabel, btn -> {
             controls.stopOrPausePatrol();
+            setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
             buildWidgets();
         }));
         stopButton.active = patrolState != AbstractLeaderEntity.State.STOPPED
@@ -113,28 +121,21 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         y += btnH + 8;
 
         // --- Report ---
-        String infoLabel = "Report: " + switch (controls.getInfoMode()) {
-            case ALL     -> "All";
-            case HOSTILE -> "Hostiles";
-            case ENEMY   -> "Enemies";
-            case NONE    -> "None";
-        };
+        String infoLabel = text("gui.recruits.patrol.report", text(infoModeKey()).getString()).getString();
         addRenderableWidget(new ExtendedButton(x, y, fullW, btnH,
                 Component.literal(infoLabel), btn -> {
                     controls.cycleInfoMode();
+                    setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
                     buildWidgets();
                 }));
         y += btnH + 4;
 
         // --- On Enemy ---
-        String actionLabel = "On Enemy: " + switch (controls.getEnemyAction()) {
-            case CHARGE          -> "Charge";
-            case HOLD            -> "Hold";
-            case KEEP_PATROLLING -> "Keep Patrolling";
-        };
+        String actionLabel = text("gui.recruits.patrol.enemy_action", text(enemyActionKey()).getString()).getString();
         addRenderableWidget(new ExtendedButton(x, y, fullW, btnH,
                 Component.literal(actionLabel), btn -> {
                     controls.cycleEnemyAction();
+                    setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
                     buildWidgets();
                 }));
         y += btnH + 8;
@@ -146,13 +147,51 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
                 controls.getSelectedGroup(),
                 x, y, fullW, btnH,
                 groupOptions,
-                g -> g == null ? "-- No Group --" : g.getName(),
+                g -> g == null ? text("gui.recruits.patrol.group.none").getString() : g.getName(),
                 g -> {
                     controls.selectGroup(g);
+                    setStatus(g == null
+                            ? text("gui.recruits.patrol.status.group_cleared")
+                            : text("gui.recruits.patrol.status.group_selected", g.getName()), 0x2E5D32);
                     buildWidgets();
                 }
         );
         addRenderableWidget(groupDropDown);
+    }
+
+    private void setStatus(Component message, int color) {
+        this.statusLine = message;
+        this.statusColor = color;
+    }
+
+    private Component text(String key, Object... args) {
+        return Component.translatable(key, args);
+    }
+
+    private String infoModeKey() {
+        return switch (controls.getInfoMode()) {
+            case ALL -> "gui.recruits.patrol.info.all";
+            case HOSTILE -> "gui.recruits.patrol.info.hostile";
+            case ENEMY -> "gui.recruits.patrol.info.enemy";
+            case NONE -> "gui.recruits.patrol.info.none";
+        };
+    }
+
+    private String enemyActionKey() {
+        return switch (controls.getEnemyAction()) {
+            case CHARGE -> "gui.recruits.patrol.enemy.charge";
+            case HOLD -> "gui.recruits.patrol.enemy.hold";
+            case KEEP_PATROLLING -> "gui.recruits.patrol.enemy.keep_patrolling";
+        };
+    }
+
+    private String patrolStateKey() {
+        return switch (controls.getPatrolState()) {
+            case PATROLLING -> "gui.recruits.patrol.state.patrolling";
+            case PAUSED -> "gui.recruits.patrol.state.paused";
+            case STOPPED -> "gui.recruits.patrol.state.stopped";
+            default -> "gui.recruits.patrol.state.idle";
+        };
     }
 
     @Override
@@ -174,10 +213,14 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
         RenderSystem.setShaderTexture(0, TEXTURE);
         guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
+        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 6, xSize - 16, 18);
+        drawDarkInset(guiGraphics, guiLeft + 8, topPos + 132, xSize - 16, 20);
     }
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        int fontColor = 4210752;
+        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 11, FONT_COLOR, false);
+        guiGraphics.drawString(font, text("gui.recruits.patrol.current_state", text(patrolStateKey()).getString()), guiLeft + 12, topPos + 137, FONT_COLOR, false);
+        guiGraphics.drawString(font, statusLine, guiLeft + 12, topPos + 147, statusColor, false);
     }
 
     @Override
