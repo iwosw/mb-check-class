@@ -15,6 +15,7 @@ class SurveyorGuidanceVerificationTest {
     void fortSurveyGuidanceExplainsSingleInteriorZoneAndColorLegend() throws IOException {
         String selectionRender = read("src/main/java/com/talhanation/bannermod/client/civilian/render/SettlementSurveyorSelectionRenderEvents.java");
         String hudRender = read("src/main/java/com/talhanation/bannermod/client/civilian/render/SettlementSurveyorGuidanceRenderEvents.java");
+        String surveyorScreen = read("src/main/java/com/talhanation/bannermod/client/civilian/gui/SettlementSurveyorScreen.java");
         String modeGuidance = read("src/main/java/com/talhanation/bannermod/settlement/validation/SurveyorModeGuidance.java");
         String enLang = read("src/main/resources/assets/bannermod/lang/en_us.json");
         String ruLang = read("src/main/resources/assets/bannermod/lang/ru_ru.json");
@@ -24,12 +25,17 @@ class SurveyorGuidanceVerificationTest {
 
         assertTrue(selectionRender.contains("SurveyorZonePalette.rgb(selection.role())"));
         assertTrue(hudRender.contains("bannermod.surveyor.hud.fort_legend"));
+        assertTrue(hudRender.contains("context.showGuidePreview()"));
+        assertTrue(surveyorScreen.contains("TOGGLE_GUIDE_PREVIEW"));
         assertTrue(modeGuidance.contains("bannermod.surveyor.role_blocks.bootstrap_fort.interior"));
         assertTrue(enLang.contains("split fort interior zones are not supported yet"));
         assertTrue(ruLang.contains("Несколько отдельных INTERIOR-зон"));
         assertTrue(enGuide.contains("Color key: gold/wood lines show walls and towers"));
+        assertTrue(enGuide.contains("turn off the canned guide preview"));
+        assertTrue(ruGuide.contains("отключить шаблонную голограмму"));
         assertTrue(ruGuide.contains("Цвета читаются так"));
         assertTrue(almanac.contains("split fort interior zones are not supported yet"));
+        assertTrue(almanac.contains("turn off the canned guide preview"));
         assertTrue(almanac.contains("Несколько отдельных INTERIOR-зон пока не поддерживаются"));
     }
 
