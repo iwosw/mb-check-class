@@ -72,6 +72,33 @@ class CriticalUiStateVerificationTest {
         assertTrue(politicalEntityListScreen.contains(": \"gui.bannermod.states.waiting_sync\"") );
     }
 
+    @Test
+    void recruitAndAssassinScreensKeepVisibleStatusReasons() throws IOException {
+        String recruitInventoryScreen = read("src/main/java/com/talhanation/bannermod/client/military/gui/RecruitInventoryScreen.java");
+        String assassinLeaderScreen = read("src/main/java/com/talhanation/bannermod/client/military/gui/AssassinLeaderScreen.java");
+        String claimAuthorityStatusTest = read("src/test/java/com/talhanation/bannermod/client/military/gui/overlay/ClaimAuthorityStatusTest.java");
+        String enLang = read("src/main/resources/assets/bannermod/lang/en_us.json");
+        String ruLang = read("src/main/resources/assets/bannermod/lang/ru_ru.json");
+
+        assertTrue(recruitInventoryScreen.contains("MilitaryGuiStyle.drawBadge(guiGraphics, font, orderStatusLine()"));
+        assertTrue(recruitInventoryScreen.contains("gui.recruits.inv.status.group_unset"));
+        assertTrue(recruitInventoryScreen.contains("gui.recruits.inv.status.ready"));
+        assertTrue(recruitInventoryScreen.contains("TEXT_EXP"));
+        assertTrue(recruitInventoryScreen.contains("TEXT_MORALE"));
+        assertTrue(recruitInventoryScreen.contains("TEXT_HUNGER"));
+
+        assertTrue(assassinLeaderScreen.contains("gui.recruits.assassin.action.dispatch.disabled"));
+        assertTrue(assassinLeaderScreen.contains("gui.recruits.assassin.status.count_updated"));
+        assertTrue(assassinLeaderScreen.contains("MilitaryGuiStyle.parchmentPanel"));
+
+        assertTrue(claimAuthorityStatusTest.contains("@Test\n    void leaderOfOwningPoliticalEntityIsFriendly()"));
+
+        assertTrue(enLang.contains("gui.recruits.inv.status.group_unset"));
+        assertTrue(enLang.contains("gui.recruits.assassin.action.dispatch.disabled"));
+        assertTrue(ruLang.contains("gui.recruits.inv.status.group_unset"));
+        assertTrue(ruLang.contains("gui.recruits.assassin.action.dispatch.disabled"));
+    }
+
     private static String read(String relativePath) throws IOException {
         return Files.readString(ROOT.resolve(relativePath));
     }

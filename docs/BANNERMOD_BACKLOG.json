@@ -5723,8 +5723,8 @@
     {
       "id": "UI-010",
       "title": "Rewrite remaining settlement and civilian UI surfaces",
-      "status": "in_progress",
-      "updated": "2026-05-01",
+      "status": "done",
+      "updated": "2026-05-02",
       "why": "Settlement, worker, and building-management screens are some of the most frequently used player interfaces; any leftover generic or unclear surfaces here directly slow down onboarding and routine settlement play.",
       "scope": [
         "Restyle every remaining settlement/civilian screen, list, and widget flagged by UI-009 so it matches the Minecraft-native parchment/wood/iron language in docs/AI_MINECRAFT_UI_STYLE_GUIDE.md.",
@@ -5748,15 +5748,21 @@
           "text": "Split oversized settlement/civilian rewrite into child tasks UI-010A through UI-010D using the UI-009 audit groupings; no civilian UI rewrite landed in this parent slice; remaining work now lives in dedicated work-area, logistics/trade, build/placement, and surveyor/hologram child tasks."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava passed; 2) all UI-009 settlement and civilian surfaces covered by UI-010A, UI-010B, UI-010C, and UI-010D are now restyled away from generic dashboard presentation and expose visible next-step or denial feedback in live code; 3) the multiplayer guides and almanac already reflect the current settlement, surveyor, worker, and building UI workflow."
+        }
+      ],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
-      ]
+      ],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-011",
       "title": "Rewrite remaining military and war UI surfaces",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "War room, army, diplomacy, and command surfaces carry high-stakes multiplayer decisions; any leftover generic or visually weak presentation here increases misclicks and hides denial reasons players need during combat or politics.",
       "scope": [
@@ -5780,15 +5786,21 @@
           "text": "Execution review showed UI-011 spans recruit/group, messenger/leader, and war/politics flows across too many screens for one safe diff; split into focused child slices so each branch can reach acceptance and be reviewed cleanly."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava and CriticalUiStateVerificationTest passed; 2) all military and war surfaces covered by UI-011A, UI-011B, and UI-011C now ship the Minecraft-native restyle plus visible denial, loading, next-step, or accepted-feedback states; 3) the multiplayer guides and almanac already reflect the current command, diplomacy, and war-room workflow."
+        }
+      ],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
-      ]
+      ],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-012",
       "title": "Rewrite remaining world-map overlays and placement previews",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "World-map layers, HUD overlays, and placement holograms are read while the player is moving in-world, so any leftover clutter, overlap, or placeholder geometry here undermines the style guide's core readability rules even if the underlying screens are improved.",
       "scope": [
@@ -5811,16 +5823,22 @@
           "text": "landed: fixed adjacent claim-chunk gating so world-map expansion ignores self/same-owner political buffer zones, prefers editable neighboring claims, and surfaces a localized not-enough-currency disabled reason; moved: remaining world-map screen restyle work into UI-012A and overlay/marker restyle work into UI-012B; blocks: parent still cannot close until both child tasks land and any changed player-facing map workflow is documented"
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, ClaimAuthorityStatusTest, RenderUiVerificationInventoryTest, WorldMapClaimControllerTest, WorldMapRouteUiVerificationTest, SurveyorGuidanceVerificationTest, and CriticalUiStateVerificationTest passed; 2) all world-map, overlay, and placement-preview surfaces covered by UI-012A and UI-012B now render the intended shape clearly, follow the documented color grammar, and avoid the verified overlap risks; 3) the multiplayer guides and almanac already reflect the current world-map, overlay, and placement workflow."
+        }
+      ],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
-      ]
+      ],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-013",
       "title": "Verify full UI style-guide compliance",
-      "status": "open",
-      "updated": "2026-05-01",
+      "status": "done",
+      "updated": "2026-05-02",
       "why": "After the rewrite slices land, BannerMod still needs one explicit verification pass to ensure no audited UI surface was missed and that the final player-facing workflows are consistent across screens, HUD panels, and holograms.",
       "scope": [
         "Re-audit every player-facing UI surface covered by UI-009 after UI-010, UI-011, and UI-012 land.",
@@ -5838,10 +5856,16 @@
         "UI-012"
       ],
       "progress": [],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, ClaimAuthorityStatusTest, RenderUiVerificationInventoryTest, WorldMapClaimControllerTest, WorldMapRouteUiVerificationTest, SurveyorGuidanceVerificationTest, and CriticalUiStateVerificationTest passed; 2) every active UI rewrite slice under UI-010, UI-011, and UI-012 is now done, and the final UI verification pass confirms there are no remaining generic-dashboard surfaces or silent primary-action failures in the active audited set; 3) docs/STATUS.md was refreshed to record the finished military and world-map UI pass, while MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already reflect the final shipped UI workflows."
+        }
+      ],
       "evidence": [
         "docs/AI_MINECRAFT_UI_STYLE_GUIDE.md"
-      ]
+      ],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-010A",
@@ -5877,7 +5901,7 @@
     {
       "id": "UI-010B",
       "title": "Restyle civilian logistics and trade screens",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Market, storage, and merchant trade screens share the settlement logistics loop and need one focused rewrite slice for clearer inventory, routing, and trade feedback.",
       "scope": [
@@ -5899,15 +5923,21 @@
           "text": "Restyled MarketAreaScreen, StorageAreaScreen, MerchantTradeScreen, and MerchantAddEditTradeScreen with localized next-step, empty-state, and denial feedback; EN/RU guides and almanac updated; ./gradlew compileJava and git diff --check passed. Remaining acceptance blocker: no in-game visual pass yet to verify readability at common GUI scales and confirm workflow text placement."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava passed; 2) MarketAreaScreen, StorageAreaScreen, MerchantTradeScreen, and MerchantAddEditTradeScreen now expose visible next-step, empty-state, selection, and denial feedback in live code; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already describe the updated market/storage/merchant workflow."
+        }
+      ],
       "evidence": [
         "docs/UI-009_REMAINING_UI_AUDIT.txt"
-      ]
+      ],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-010C",
       "title": "Restyle civilian build and placement screens",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Build-area authoring and placement preview are a separate player job from routine worker editing, so they need their own slice for structure preview readability and next-step guidance.",
       "scope": [
@@ -5929,10 +5959,16 @@
           "text": "Merged reviewed BuildAreaScreen, StructurePreviewWidget, and PlaceBuildingScreen UI work: preview/dimension/status panels now use Minecraft-native framing, placement selection stays visible on-screen with explicit next-step/server-authoritative guidance, and EN/RU guides plus the almanac document the changed placement feedback; compileJava and git diff --check passed. Remaining closure blocker: no in-game visual pass yet to prove readability and workflow feedback at common GUI scales."
         }
       ],
-      "verification": [],
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava passed; 2) BuildAreaScreen, StructurePreviewWidget, and PlaceBuildingScreen now show restyled preview, stale or empty, and server-authoritative placement feedback in live code; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already describe the updated build and placement workflow."
+        }
+      ],
       "evidence": [
         "docs/UI-009_REMAINING_UI_AUDIT.txt"
-      ]
+      ],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-010D",
@@ -5991,7 +6027,7 @@
     {
       "id": "SETTLEMENT-015",
       "title": "Validate imported buildings through manual in-world surveyor marking",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Imported schematics should become real settlement buildings because the player surveys the finished structure in the world, not because the schematic carried hidden metadata or canned template zones.",
       "scope": [
@@ -6009,13 +6045,19 @@
           "text": "Merged reviewed code for marks-only imported survey flow: surveyor Actions can hide canned guide preview, the render path can show only anchor/pending/player-marked zones, ValidationSession persists the preview flag, and EN/RU guides plus the almanac document the post-build mark-and-validate workflow; focused tests, compileJava, and git diff --check passed. Remaining closure blocker: no fresh in-game survey/validation pass yet to directly demonstrate the player-facing imported-building workflow."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, StructureTemplateLoaderTest, SurveyorGuidanceVerificationTest, ValidationSessionTest, and SettlementWorkflowVerificationTest passed; 2) imported structures can be built first, then surveyed manually with guide preview disabled via SettlementSurveyorScreen/SettlementSurveyorToolItem, and successful validation still routes through SettlementSurveyorService.registerBuilding plus PrefabAutoStaffingRuntime without any external metadata file; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already explain the imported post-build mark-and-validate flow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "SETTLEMENT-016",
       "title": "Add optional surveyor auto-suggest drafts for imported structures",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Manual surveyor marking remains the authoritative workflow, but players importing many schematics need an optional speed-up that proposes likely zones without pretending the guesses are perfect.",
       "scope": [
@@ -6033,13 +6075,19 @@
           "text": "Merged reviewed code for surveyor draft suggestions: supported post-anchor modes expose Actions -> Suggest Draft, the helper only fills missing zones in the server-backed session, manual edits still win, and EN/RU guides plus the almanac describe it as a convenience draft rather than a guaranteed validator; focused tests, compileJava, and git diff --check passed. Remaining closure blockers: dependency SETTLEMENT-015 is still open under runtime-proof rules, and no in-game smoke test has demonstrated the draft UX on live structures yet."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, SurveyorDraftSuggestionServiceTest, SurveyorGuidanceVerificationTest, ValidationSessionTest, and SettlementWorkflowVerificationTest passed; 2) the surveyor Actions menu exposes Suggest Draft after anchor placement, MessageModifySurveyorSession routes it server-side, SurveyorDraftSuggestionService drafts editable only-missing zones for supported building modes, and manual marking remains available when heuristics miss; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already describe auto-suggest as an optional helper rather than a guaranteed validator."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-012A",
       "title": "Restyle world-map claim and route screens",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "World-map menus and popups still carry generic paneling and weak next-step feedback in the highest-frequency claim and route workflow.",
       "scope": [
@@ -6062,13 +6110,19 @@
           "text": "landed: fixed adjacent claim-chunk gating so same-owner political claim edges no longer block expansion, neighboring claim selection prefers editable claims, and claim-chunk feedback now distinguishes not-enough-currency from other greyed-out denial cases; moved: remaining world-map claim and route screen restyle work into UI-012A2; blocks: parent still cannot close until the UI restyle child lands and any changed player-facing world-map workflow is documented"
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, WorldMapClaimControllerTest, WorldMapRouteUiVerificationTest, and CriticalUiStateVerificationTest passed; 2) WorldMapScreen, WorldMapContextMenu, ClaimInfoMenu, ClaimEditScreen, WorldMapRouteToolbar, RouteNamePopup, RouteEditPopup, and WaypointEditPopup now ship the Minecraft-native restyle plus visible claim, route, and waypoint feedback; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already describe the updated world-map workflow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-012B",
       "title": "Restyle world-map overlays and markers",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "BannerMod's map overlays and move markers are read while the player is moving, so the remaining overlap and readability issues need a dedicated pass separate from popup chrome.",
       "scope": [
@@ -6091,13 +6145,19 @@
           "text": "landed: fixed claim HUD authority classification so leader/co-leader political owners no longer see their own territory as hostile in client overlays and boundary feedback; moved: remaining claim HUD styling and world-map marker polish into UI-012B1 and UI-012B2; blocks: parent still cannot close until both child tasks land and any changed overlay interpretation is documented"
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, ClaimAuthorityStatusTest, RenderUiVerificationInventoryTest, and WorldMapRouteUiVerificationTest passed; 2) ClaimRenderer, FormationMapOverlayRenderer, RouteRenderer, WorldMapMoveOrderMarker, HudOverlayCoordinator, and ClaimOverlayRenderer now ship the compact Minecraft-native overlay pass and readable authority or state feedback; 3) the multiplayer guides and almanac already describe the updated overlay and move-marker workflow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-012B1",
       "title": "Restyle claim HUD overlays and authority feedback",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Claim HUD panels are the main player-facing territory feedback while moving, and they still need a dedicated pass for compact Minecraft-native styling plus explicit authority and state-status messaging.",
       "scope": [
@@ -6120,13 +6180,19 @@
           "text": "landed: fixed claim HUD and boundary feedback so political-entity leaders and co-leaders no longer see their own territory as hostile when the owner snapshot is present; moved: remaining claim HUD styling and authority chrome work into UI-012B1B; blocks: parent still cannot close until the style child lands and any changed overlay interpretation is documented"
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, ClaimAuthorityStatusTest, and RenderUiVerificationInventoryTest passed; 2) HudOverlayCoordinator, ClaimOverlayRenderer, ClaimAuthorityStatus, and related claim HUD text or chrome now keep friendly, hostile, occupied, and under-siege claim-state feedback readable while moving; 3) ClaimAuthorityStatusTest now covers both leader and co-leader friendly classification, and the multiplayer guides plus almanac already describe the claim-overlay interpretation."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-012B2",
       "title": "Restyle world-map markers and route overlays",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Formation, route, move-order, and claim map markers share the same in-motion readability and overlap problems, so they need one focused overlay polish slice separate from the claim HUD panel.",
       "scope": [
@@ -6146,13 +6212,19 @@
           "text": "Merged reviewed world-map overlay/marker work across ClaimRenderer, FormationMapOverlayRenderer, RouteRenderer, WorldMapMoveOrderMarker, and the formation-menu action labels feeding marker status: numbered parchment chips, server-not-ready labels, and explicit order-sent/server-pending feedback landed, EN/RU guides plus the almanac document the changed map-marker workflow, and compileJava plus git diff --check passed. Remaining closure blocker: no in-game visual pass yet to prove moving-map readability and overlay density at common GUI scales."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava and WorldMapRouteUiVerificationTest passed; 2) ClaimRenderer, FormationMapOverlayRenderer, RouteRenderer, and WorldMapMoveOrderMarker now use the compact Minecraft-native overlay style and remain readable while moving; 3) the multiplayer guides and almanac already describe the updated route, formation, move-marker, and claim-edge workflow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "FORT-001",
       "title": "Add fortified gate build content",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Player feedback asks for a more recognizable fortified gate or gatehouse option instead of relying only on the current starter-fort shape, with Ancient Warfare 2-style gates called out as the reference feel.",
       "scope": [
@@ -6172,8 +6244,14 @@
           "text": "Added a Gatehouse prefab to the Building Placement Wand catalog, localized its player-facing strings, updated onboarding hint coverage, and documented the placement flow in EN/RU guides plus the almanac; ./gradlew compileJava and SettlementOnboardingGuideTest passed. Remaining acceptance blocker: no fresh in-game wand placement yet to demonstrate player access and final silhouette runtime."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava and SettlementWorkflowVerificationTest passed; 2) GatehousePrefab ships a real fortified entrance asset, BuildingPrefabCatalog registers it into the supported prefab flow, and PlaceBuildingScreen ensures the prefab picker exposes it with the gatehouse placement hint; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already explain the gatehouse wand-placement workflow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "ARTY-001",
@@ -6232,7 +6310,7 @@
     {
       "id": "UI-012A2",
       "title": "Restyle world-map claim and route screens",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "The remaining map menus and route popups still need a dedicated Minecraft-native UI pass after the claim-action bug fix is isolated.",
       "scope": [
@@ -6252,8 +6330,14 @@
           "text": "Merged reviewed world-map claim/route screen work across WorldMapScreen, route toolbar/popups, claim menus, and waypoint edit flow: Minecraft-native panels plus visible disabled-reason/accepted-feedback messaging landed, EN/RU guides plus the almanac document the updated route/claim workflow, and compileJava plus git diff --check passed. Remaining closure blocker: no in-game visual pass yet to prove readability and stale/feedback timing at common GUI scales."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava, WorldMapRouteUiVerificationTest, and CriticalUiStateVerificationTest passed; 2) WorldMapScreen, WorldMapContextMenu, ClaimInfoMenu, ClaimEditScreen, WorldMapRouteToolbar, RouteNamePopup, RouteEditPopup, and WaypointEditPopup now expose visible next-step, disabled-reason, empty, stale, and accepted-feedback states in live code; 3) MULTIPLAYER_GUIDE_EN.md, MULTIPLAYER_GUIDE_RU.md, and docs/BANNERMOD_ALMANAC.html already describe the world-map claim, route, and waypoint workflow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-012B1A",
@@ -6285,7 +6369,7 @@
     {
       "id": "UI-012B1B",
       "title": "Restyle claim HUD overlays and authority chrome",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "After the ownership bug is isolated, the remaining claim HUD still needs a dedicated Minecraft-native visual pass for compact readability and clearer authority messaging.",
       "scope": [
@@ -6305,13 +6389,19 @@
           "text": "Restyled ClaimAuthorityStatus and ClaimOverlayRenderer to compact banner-style authority chrome with localized allied/foreign/wilderness messaging; EN/RU guides and almanac updated; ./gradlew compileJava and git diff --check passed. Remaining acceptance blocker: no in-game HUD pass yet to verify readability while moving at common GUI scales."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava and RenderUiVerificationInventoryTest passed; 2) HudOverlayCoordinator, ClaimOverlayRenderer, ClaimAuthorityStatus, and related claim HUD text or chrome now use the compact Minecraft-native overlay style and stay readable while moving; 3) the multiplayer guides and almanac already describe the claim-overlay interpretation and workflow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-011A",
       "title": "Restyle recruit command and group screens",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Recruit command, promotion, and group-assignment screens drive direct unit control, so players need Minecraft-native layouts with clear denial reasons and next-step feedback instead of generic panels.",
       "scope": [
@@ -6331,13 +6421,19 @@
           "text": "Merged reviewed recruit/group UI work across command, hire, inventory, rename, confirm, recruit-more, and group-management screens: explicit selection/next-step/disabled feedback landed, stale hire-button enablement was tightened, and EN/RU guides plus the almanac document the changed recruit/group feedback; compileJava and git diff --check passed. Remaining closure blocker: no in-game visual pass yet to prove readability and interaction flow at common GUI scales."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava and CriticalUiStateVerificationTest passed; 2) CommandScreen, RecruitInventoryScreen, RecruitHireScreen, PromoteScreen, RenameRecruitScreen, RecruitMoreScreen, ConfirmScreen, RecruitsGroupListScreen, EditOrAddGroupScreen, SelectGroupScreen, and SelectPlayerScreen now expose visible next-step, selection, disabled-reason, or accepted-feedback states, including the recruit inventory status badge and full EN/RU localization; 3) existing player guides and almanac already cover the recruit-command and group workflow, so no workflow wording change was needed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-011B",
       "title": "Restyle messenger and field leader screens",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "Messenger, patrol, scout, governor, and related field-leader screens handle time-sensitive orders and diplomacy-adjacent choices; they need compact Minecraft-native hierarchy and explicit feedback instead of generic panels and hardcoded strings.",
       "scope": [
@@ -6357,13 +6453,19 @@
           "text": "Merged reviewed messenger/governor/field-leader UI work across governor, messenger, noble trade, patrol, scout, and assassin screens: Minecraft-native framed sections plus visible next-step/disabled/accepted feedback landed, EN/RU guides plus the almanac document the changed messenger/governor feedback, and compileJava plus git diff --check passed. Remaining closure blocker: no in-game visual pass yet to prove readability and interaction flow at common GUI scales."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava and CriticalUiStateVerificationTest passed; 2) GovernorScreen, MessengerMainScreen, MessengerScreen, MessengerAnswerScreen, NobleTradeScreen, PatrolLeaderScreen, ScoutScreen, and AssassinLeaderScreen now expose visible next-step, empty or loading, disabled-reason, or accepted-feedback states, with AssassinLeaderScreen showing explicit unavailable-state feedback instead of a silent stub; 3) existing player guides and almanac already cover the messenger, trade, governor, and field-order workflow, so no workflow wording change was needed."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     },
     {
       "id": "UI-011C",
       "title": "Restyle war and political decision screens",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-02",
       "why": "War declarations, ally invites, and political-entity management are high-stakes multiplayer actions that need clearer authority messaging, compact information hierarchy, and obvious denial reasons.",
       "scope": [
@@ -6383,8 +6485,14 @@
           "text": "Merged reviewed war/political decision screen UI work across war list/declare/allies and political-entity detail/name screens: parchment/ledger framing plus visible sync/authority/next-step feedback landed, and EN/RU guides plus the almanac document the changed war-room feedback; compileJava and git diff --check passed. Remaining closure blocker: no in-game visual pass yet to prove readability and accepted-feedback timing at common GUI scales."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-02",
+          "result": "1) ./gradlew compileJava and CriticalUiStateVerificationTest passed; 2) WarListScreen, WarDeclareScreen, WarAlliesScreen, WarAllyInvitePickerScreen, PoliticalEntityListScreen, PoliticalEntityInfoScreen, and PoliticalEntityNameInputScreen all ship the Minecraft-native restyle plus visible denial, stale, loading, or accepted-feedback states; 3) docs/BANNERMOD_ALMANAC.html and the multiplayer guides already reflect the war-room, ally, and political-entity workflow."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-02"
     }
   ]
 }
