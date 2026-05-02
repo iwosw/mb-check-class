@@ -70,6 +70,39 @@ public final class MilitaryGuiStyle {
         }
         graphics.fill(x, y, x + width, y + height, bg);
         graphics.renderOutline(x, y, width, height, outline);
-        graphics.drawCenteredString(font, label, x + width / 2, y + (height - 8) / 2, textColor);
+        String clamped = clampLabel(font, label.getString(), Math.max(0, width - 6));
+        graphics.drawCenteredString(font, clamped, x + width / 2, y + (height - 8) / 2, textColor);
+    }
+
+    /**
+     * Clamps a raw string to fit within {@code maxWidth} pixels using the given font.
+     * Adds an ellipsis when truncation occurs. Safe for null / empty inputs.
+     */
+    public static String clampLabel(Font font, String text, int maxWidth) {
+        if (text == null || text.isEmpty() || maxWidth <= 0) {
+            return text == null ? "" : text;
+        }
+        if (font.width(text) <= maxWidth) {
+            return text;
+        }
+        String ellipsis = "...";
+        int budget = Math.max(0, maxWidth - font.width(ellipsis));
+        String head = font.plainSubstrByWidth(text, budget);
+        return head + ellipsis;
+    }
+
+    /**
+     * Component-friendly overload: returns a clamped {@link Component} that preserves
+     * the original component when it already fits, and falls back to a literal when truncated.
+     */
+    public static Component clampLabel(Font font, Component label, int maxWidth) {
+        if (label == null) {
+            return Component.literal("");
+        }
+        String raw = label.getString();
+        if (font.width(raw) <= maxWidth) {
+            return label;
+        }
+        return Component.literal(clampLabel(font, raw, maxWidth));
     }
 }
