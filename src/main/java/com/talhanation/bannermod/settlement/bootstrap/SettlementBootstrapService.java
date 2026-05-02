@@ -13,6 +13,7 @@ import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
 import com.talhanation.bannermod.settlement.validation.BuildingValidationResult;
+import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -273,6 +274,7 @@ public final class SettlementBootstrapService {
         } else if (claim.getPlayerInfo() != null) {
             citizen.setOwnerUUID(java.util.Optional.of(claim.getPlayerInfo().getUUID()));
         }
+        BannerModNpcNamePool.ensureNamed(citizen);
         level.addFreshEntity(citizen);
         if (owner != null) {
             PlayerTeam team = level.getScoreboard().getPlayerTeam(owner.name());

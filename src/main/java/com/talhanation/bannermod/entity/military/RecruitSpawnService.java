@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.entity.military;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -59,6 +60,7 @@ final class RecruitSpawnService {
     }
 
     static void applySpawnValues(AbstractRecruitEntity recruit) {
+        BannerModNpcNamePool.ensureNamed(recruit);
         recruit.setHunger(50);
         recruit.setMoral(50);
         recruit.setListen(true);

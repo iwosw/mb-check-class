@@ -42,7 +42,7 @@ public class RecruitInventoryMenu extends ContainerBase {
         this.recruit = recruit;
         this.recruitInventory = recruit.getInventory();
 
-        addPlayerInventorySlots();
+        addPlayerInventorySlots(playerInventory);
 
         addRecruitHandSlots();
         addRecruitEquipmentSlots();
@@ -55,7 +55,19 @@ public class RecruitInventoryMenu extends ContainerBase {
 
     @Override
     public int getInvOffset() {
-        return 56;
+        return 0;
+    }
+
+    private void addPlayerInventorySlots(Inventory playerInventory) {
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 118 + col * 18, 180 + row * 18));
+            }
+        }
+
+        for (int col = 0; col < 9; col++) {
+            this.addSlot(new Slot(playerInventory, col, 118 + col * 18, 238));
+        }
     }
 
     //iv slots
@@ -68,7 +80,7 @@ public class RecruitInventoryMenu extends ContainerBase {
     //6+ -> inventory
 
     public void addRecruitHandSlots() {
-        this.addSlot(new Slot(recruit.inventory, 4,44,90) {
+        this.addSlot(new Slot(recruit.inventory, 4,116,126) {
             @Override
             public boolean mayPlace(ItemStack stack){
                 return !recruit.isUsingItem() && stack.getItem() instanceof ShieldItem;
@@ -98,7 +110,7 @@ public class RecruitInventoryMenu extends ContainerBase {
             }
         });
 
-        this.addSlot(new Slot(recruit.inventory, 5,26,90) {
+        this.addSlot(new Slot(recruit.inventory, 5,134,126) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
                 return recruit.canHoldItem(itemStack);
@@ -121,7 +133,7 @@ public class RecruitInventoryMenu extends ContainerBase {
     public void addRecruitEquipmentSlots() {
         for (int slotIndex = 0; slotIndex < 4; ++slotIndex) {
             final EquipmentSlot equipmentslottype = SLOT_IDS[slotIndex];
-            this.addSlot(new Slot(recruit.inventory, slotIndex, 8, 18 + slotIndex * 18) {
+            this.addSlot(new Slot(recruit.inventory, slotIndex, 116, 48 + slotIndex * 18) {
                 public int getMaxStackSize() {
                     return 1;
                 }
@@ -155,7 +167,7 @@ public class RecruitInventoryMenu extends ContainerBase {
     public void addRecruitInventorySlots() {
         for (int k = 0; k < 3; ++k) {
             for (int l = 0; l < 3; ++l) {
-                this.addSlot(new Slot(recruitInventory, 6 + l + k * recruit.getInventoryColumns(), 2 * 18 + 82 + l * 18,  18 + k * 18){
+                this.addSlot(new Slot(recruitInventory, 6 + l + k * recruit.getInventoryColumns(), 222 + l * 18,  74 + k * 18){
                      @Override
                      public void set(ItemStack stack){
                          super.set(stack);

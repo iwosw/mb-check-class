@@ -9,7 +9,9 @@ import com.talhanation.bannermod.army.command.CommandIntentLog;
 import com.talhanation.bannermod.army.command.RecruitSelectionRegistry;
 import com.talhanation.bannermod.army.command.RecruitSelectionService;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.inventory.military.AdminRecruitSpawnMenu;
 import com.talhanation.bannermod.items.military.RecruitsSpawnEgg;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -21,6 +23,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -47,6 +53,8 @@ final class DebugManagerAdminCommands {
                 .then(Commands.literal("spawnFromEgg")
                         .then(Commands.argument("Amount", IntegerArgumentType.integer(0))
                                 .executes(context -> spawnFromEgg(context.getSource(), IntegerArgumentType.getInteger(context, "Amount")))))
+                .then(Commands.literal("spawnGui")
+                        .executes(context -> openSpawnGui(context.getSource())))
                 .then(Commands.literal("intents")
                         .executes(context -> dumpIntents(context.getSource(), null, 20))
                         .then(Commands.argument("Count", IntegerArgumentType.integer(1, CommandIntentLog.MAX_ENTRIES_PER_PLAYER))
@@ -83,6 +91,30 @@ final class DebugManagerAdminCommands {
             source.sendSuccess(() -> Component.literal(entry.getKey() + "=" + entry.getValue()).withStyle(ChatFormatting.AQUA), false);
         }
         return snapshot.size();
+    }
+
+    private static int openSpawnGui(CommandSourceStack source) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Run as a player.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        if (!player.isCreative()) {
+            source.sendFailure(Component.literal("Creative mode required for recruit spawn GUI.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        BannerModNetworkHooks.openScreen(player, new MenuProvider() {
+            @Override
+            public Component getDisplayName() {
+                return Component.translatable("gui.bannermod.admin_recruit_spawn.title");
+            }
+
+            @Override
+            public AbstractContainerMenu createMenu(int id, Inventory inventory, Player menuPlayer) {
+                return new AdminRecruitSpawnMenu(id, menuPlayer);
+            }
+        });
+        return 1;
     }
 
     private static void sendProfilingSummary(CommandSourceStack source, Map<String, Long> snapshot) {

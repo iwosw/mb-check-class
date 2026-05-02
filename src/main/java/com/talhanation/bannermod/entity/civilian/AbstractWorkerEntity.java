@@ -11,6 +11,7 @@ import com.talhanation.bannermod.ai.civilian.GetNeededItemsFromStorage;
 import com.talhanation.bannermod.ai.civilian.SettlementOrderWorkGoal;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
+import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -135,11 +136,28 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
 
     @Override
     public InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
-        if (!this.level().isClientSide() && hand == InteractionHand.MAIN_HAND) {
+        if (hand != InteractionHand.MAIN_HAND) {
+            return super.mobInteract(player, hand);
+        }
+        if (this.level().isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
+        if (canOpenWorkerProfile(player)) {
+            BannerModNpcNamePool.ensureNamed(this);
+            this.openGUI(player);
+            return InteractionResult.SUCCESS;
+        }
+        if (!this.level().isClientSide()) {
             sendWorkerInspection(player);
             return InteractionResult.SUCCESS;
         }
         return super.mobInteract(player, hand);
+    }
+
+    private boolean canOpenWorkerProfile(Player player) {
+        return player.hasPermissions(2)
+                || !this.isOwned()
+                || this.getOwnerUUID() != null && this.getOwnerUUID().equals(player.getUUID());
     }
 
     private void sendWorkerInspection(Player player) {

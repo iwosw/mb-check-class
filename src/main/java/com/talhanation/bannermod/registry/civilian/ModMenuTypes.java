@@ -7,7 +7,10 @@ import javax.annotation.Nullable;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.gui.MerchantAddEditTradeScreen;
 import com.talhanation.bannermod.client.civilian.gui.MerchantTradeScreen;
+import com.talhanation.bannermod.client.civilian.gui.CitizenProfileScreen;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
+import com.talhanation.bannermod.entity.citizen.CitizenEntity;
+import com.talhanation.bannermod.inventory.civilian.CitizenProfileMenu;
 import com.talhanation.bannermod.inventory.civilian.MerchantAddEditTradeContainer;
 import com.talhanation.bannermod.inventory.civilian.MerchantTradeContainer;
 import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
@@ -36,6 +39,7 @@ public class ModMenuTypes {
     public static void registerMenuScreens(RegisterMenuScreensEvent event) {
         event.register(MERCHANT_ADD_EDIT_TRADE_CONTAINER_TYPE.get(), MerchantAddEditTradeScreen::new);
         event.register(MERCHANT_TRADE_CONTAINER_TYPE.get(), MerchantTradeScreen::new);
+        event.register(CITIZEN_PROFILE_CONTAINER_TYPE.get(), CitizenProfileScreen::new);
         logger.info("Civilian MenuScreens registered");
     }
 
@@ -59,6 +63,15 @@ public class ModMenuTypes {
                 return new MerchantTradeContainer(windowId, merchant, inv);
             }));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<CitizenProfileMenu>> CITIZEN_PROFILE_CONTAINER_TYPE =
+            MENU_TYPES.register("citizen_profile_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
+                CitizenEntity citizen = getCitizenByUUID(inv.player, data.readUUID());
+                if (citizen == null) {
+                    return null;
+                }
+                return new CitizenProfileMenu(windowId, citizen, inv);
+            }));
+
     @Nullable
     private static AbstractWorkerEntity getRecruitByUUID(Player player, UUID uuid) {
         double distance = 10D;
@@ -72,6 +85,21 @@ public class ModMenuTypes {
             return null;
         }
         return player.getCommandSenderWorld().getEntitiesOfClass(AbstractWorkerEntity.class, lookupBounds,
+                entity -> entity.getUUID().equals(uuid)).stream().findAny().orElse(null);
+    }
+
+    @Nullable
+    private static CitizenEntity getCitizenByUUID(Player player, UUID uuid) {
+        double distance = 12D;
+        AABB lookupBounds = new AABB(player.getX() - distance, player.getY() - distance, player.getZ() - distance,
+                player.getX() + distance, player.getY() + distance, player.getZ() + distance);
+        if (player.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+            if (serverLevel.getEntity(uuid) instanceof CitizenEntity citizen && lookupBounds.intersects(citizen.getBoundingBox())) {
+                return citizen;
+            }
+            return null;
+        }
+        return player.getCommandSenderWorld().getEntitiesOfClass(CitizenEntity.class, lookupBounds,
                 entity -> entity.getUUID().equals(uuid)).stream().findAny().orElse(null);
     }
 }

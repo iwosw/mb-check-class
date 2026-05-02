@@ -12,15 +12,22 @@ import com.talhanation.bannermod.citizen.CitizenStateSnapshot;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
+import com.talhanation.bannermod.inventory.civilian.CitizenProfileMenu;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
+import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
@@ -31,6 +38,8 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -109,8 +118,47 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         super.aiStep();
         CitizenIndex.instance().onCitizenTick(this);
         if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
+            BannerModNpcNamePool.ensureNamed(this);
             PrefabAutoStaffingRuntime.assignCitizenToNearestVacancy((net.minecraft.server.level.ServerLevel) this.level(), this);
             tryConvertIntoPendingWorker();
+        }
+    }
+
+    @Override
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND) {
+            return super.mobInteract(player, hand);
+        }
+        if (this.level().isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
+        if (!canOpenProfile(player)) {
+            return super.mobInteract(player, hand);
+        }
+        BannerModNpcNamePool.ensureNamed(this);
+        openProfileGui(player);
+        return InteractionResult.SUCCESS;
+    }
+
+    private boolean canOpenProfile(Player player) {
+        return player.hasPermissions(2)
+                || !this.isOwned()
+                || this.getOwnerUUID() != null && this.getOwnerUUID().equals(player.getUUID());
+    }
+
+    private void openProfileGui(Player player) {
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
+                @Override
+                public Component getDisplayName() {
+                    return CitizenEntity.this.getDisplayName();
+                }
+
+                @Override
+                public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player menuPlayer) {
+                    return new CitizenProfileMenu(id, CitizenEntity.this, playerInventory);
+                }
+            }, buffer -> buffer.writeUUID(this.getUUID()));
         }
     }
 
