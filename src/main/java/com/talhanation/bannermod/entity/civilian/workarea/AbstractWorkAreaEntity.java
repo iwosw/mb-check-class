@@ -3,6 +3,7 @@ package com.talhanation.bannermod.entity.civilian.workarea;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkAreaScreen;
@@ -220,7 +221,13 @@ public abstract class AbstractWorkAreaEntity extends Entity {
     }
 
     public boolean isSameTeamMember(Player player) {
-        return player.getTeam() != null && player.getTeam().getName().equals(this.getTeamStringID());
+        if (player == null) {
+            return false;
+        }
+        if (player.getTeam() != null && player.getTeam().getName().equals(this.getTeamStringID())) {
+            return true;
+        }
+        return matchesPoliticalEntity(player.getUUID(), player.getTeam() == null ? null : player.getTeam().getName(), this.getPlayerUUID(), this.getTeamStringID());
     }
 
     public boolean isTrustedSettlementMember(Player player) {
@@ -248,7 +255,11 @@ public abstract class AbstractWorkAreaEntity extends Entity {
         UUID ownerUuid = worker.getOwnerUUID();
         boolean ownerMatch = ownerUuid != null && ownerUuid.equals(this.getPlayerUUID());
         boolean sameTeam = worker.getTeam() != null && this.getTeamStringID() != null && this.getTeamStringID().equals(worker.getTeam().getName());
-        if (!ownerMatch && !sameTeam) {
+        boolean samePoliticalEntity = matchesPoliticalEntity(ownerUuid,
+                worker.getTeam() == null ? null : worker.getTeam().getName(),
+                this.getPlayerUUID(),
+                this.getTeamStringID());
+        if (!ownerMatch && !sameTeam && !samePoliticalEntity) {
             return false;
         }
 
@@ -274,6 +285,32 @@ public abstract class AbstractWorkAreaEntity extends Entity {
                 .map(PoliticalEntityRecord::id)
                 .map(UUID::toString)
                 .orElse(teamStringId);
+    }
+
+    private boolean matchesPoliticalEntity(@javax.annotation.Nullable UUID leftParticipantUuid,
+                                           @javax.annotation.Nullable String leftTeamToken,
+                                           @javax.annotation.Nullable UUID rightParticipantUuid,
+                                           @javax.annotation.Nullable String rightTeamToken) {
+        String left = resolvePoliticalEntityId(leftParticipantUuid, leftTeamToken);
+        String right = resolvePoliticalEntityId(rightParticipantUuid, rightTeamToken);
+        return left != null && left.equals(right);
+    }
+
+    @javax.annotation.Nullable
+    private String resolvePoliticalEntityId(@javax.annotation.Nullable UUID participantUuid, @javax.annotation.Nullable String teamToken) {
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            if (teamToken == null || teamToken.isBlank()) {
+                return null;
+            }
+            return teamToken;
+        }
+        for (PoliticalEntityRecord record : WarRuntimeContext.registry(serverLevel).all()) {
+            if (participantUuid != null && (participantUuid.equals(record.leaderUuid()) || record.coLeaderUuids().contains(participantUuid))) {
+                return record.id().toString();
+            }
+        }
+        UUID byToken = RecruitPoliticalContext.politicalEntityIdForToken(teamToken, WarRuntimeContext.registry(serverLevel));
+        return byToken == null ? null : byToken.toString();
     }
 
     public void setDone(boolean b) {

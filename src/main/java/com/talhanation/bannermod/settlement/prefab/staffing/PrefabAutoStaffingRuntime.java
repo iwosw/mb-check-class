@@ -51,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PrefabAutoStaffingRuntime {
     public static final String TAG_PENDING_WORKER_PROFESSION = "BannerModPendingWorkerProfession";
+    public static final String TAG_ASSIGNMENT_PAUSE_UNTIL = "BannerModAssignmentPauseUntil";
     private static final Map<UUID, VacancyRecord> VACANCIES = new ConcurrentHashMap<>();
     private static final double VACANCY_ASSIGN_RADIUS_SQR = 96.0D * 96.0D;
     private static OccupancySnapshot occupancySnapshot;
@@ -194,6 +195,13 @@ public final class PrefabAutoStaffingRuntime {
     public static void assignCitizenToNearestVacancy(ServerLevel level, CitizenEntity citizen) {
         if (level == null || citizen == null || !citizen.isAlive() || citizen.isRemoved()) {
             return;
+        }
+        long pausedUntil = citizen.getPersistentData().getLong(TAG_ASSIGNMENT_PAUSE_UNTIL);
+        if (pausedUntil > level.getGameTime()) {
+            return;
+        }
+        if (pausedUntil != 0L) {
+            citizen.getPersistentData().remove(TAG_ASSIGNMENT_PAUSE_UNTIL);
         }
         if (citizen.getPersistentData().contains(TAG_PENDING_WORKER_PROFESSION)) {
             return;

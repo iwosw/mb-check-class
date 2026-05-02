@@ -2,6 +2,7 @@ package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
+import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
@@ -90,7 +91,7 @@ final class WorkerSettlementClaimPolicy {
             ClaimOwnerKey ownerKey = resolveClaimOwnerKey(level, claim);
             return WorkerIndex.instance()
                     .queryInClaim(level, claim)
-                    .map(workers -> (int) workers.stream().filter(worker -> workerMatchesClaimOwner(worker, ownerKey)).count())
+                    .map(workers -> (int) workers.stream().filter(worker -> workerMatchesClaimOwner(level, worker, ownerKey)).count())
                     .orElseGet(() -> {
                         RuntimeProfilingCounters.increment("worker.index.fallback_scans");
                         return countEntitiesInClaimByScan(level, claim, entityType, ownerKey);
@@ -112,7 +113,7 @@ final class WorkerSettlementClaimPolicy {
                 return true;
             }
 
-            return workerMatchesClaimOwner(worker, ownerKey);
+            return workerMatchesClaimOwner(level, worker, ownerKey);
         }).size();
     }
 
@@ -127,11 +128,14 @@ final class WorkerSettlementClaimPolicy {
         return new ClaimOwnerKey(owner.leaderUuid(), ownerUuids, politicalEntityId.toString());
     }
 
-    private static boolean workerMatchesClaimOwner(AbstractWorkerEntity worker, ClaimOwnerKey ownerKey) {
+    private static boolean workerMatchesClaimOwner(ServerLevel level, AbstractWorkerEntity worker, ClaimOwnerKey ownerKey) {
         UUID workerOwner = worker.getOwnerUUID();
         boolean ownerMatch = workerOwner != null && ownerKey.ownerUuids().contains(workerOwner);
-        boolean teamMatch = ownerKey.factionId() != null && worker.getTeam() != null && ownerKey.factionId().equals(worker.getTeam().getName());
-        return ownerMatch || teamMatch;
+        if (ownerMatch || ownerKey.factionId() == null) {
+            return ownerMatch;
+        }
+        UUID workerPoliticalEntityId = RecruitPoliticalContext.politicalEntityIdOf(worker, WarRuntimeContext.registry(level));
+        return workerPoliticalEntityId != null && ownerKey.factionId().equals(workerPoliticalEntityId.toString());
     }
 
     private record ClaimOwnerKey(@Nullable UUID leaderId, java.util.Set<UUID> ownerUuids, @Nullable String factionId) {

@@ -12,6 +12,11 @@ public interface IRenderWorkArea {
         ClientRenderPrimitives.lineBox(poseStack, vertexConsumer, aabb, 1F, 1F, 1F, 1F);
     }
 
+    default void renderWorkArea(PoseStack poseStack, VertexConsumer vertexConsumer, AABB aabb,
+                                float r, float g, float b, float a) {
+        ClientRenderPrimitives.lineBox(poseStack, vertexConsumer, aabb, r, g, b, a);
+    }
+
     default void drawLine(PoseStack stack, VertexConsumer buffer, Vec3 from, Vec3 to, float r, float g, float b, float a) {
         ClientRenderPrimitives.line(stack, buffer, from, to, r, g, b, a);
     }

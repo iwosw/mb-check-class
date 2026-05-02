@@ -58,6 +58,16 @@ class ClaimAuthorityStatusTest {
     }
 
     @Test
+    void owningPoliticalEntityNameTokenIsFriendly() {
+        UUID owner = UUID.fromString("00000000-0000-0000-0000-000000000011");
+        UUID leader = UUID.fromString("00000000-0000-0000-0000-000000000022");
+        RecruitsClaim claim = new RecruitsClaim("Keep", owner);
+
+        assertEquals(ClaimAuthorityStatus.FRIENDLY,
+                ClaimAuthorityStatus.classify(null, "Keep", claim, politicalEntity(owner, leader, List.of(), GovernmentForm.MONARCHY)));
+    }
+
+    @Test
     void boundaryFeedbackKeysStayMappedByTerritory() {
         assertEquals("actionbar.bannermod.claim_boundary.friendly", ClaimAuthorityStatus.FRIENDLY.boundaryMessageKey());
         assertEquals("actionbar.bannermod.claim_boundary.hostile", ClaimAuthorityStatus.HOSTILE.boundaryMessageKey());
