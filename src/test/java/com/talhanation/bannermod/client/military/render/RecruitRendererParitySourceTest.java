@@ -17,9 +17,9 @@ class RecruitRendererParitySourceTest {
 
         assertTrue(source.contains("extends AbstractRecruitRenderer<HumanoidModel<AbstractRecruitEntity>>"));
         assertTrue(source.contains("new RecruitHumanModel(mgr.bakeLayer(ModelLayers.PLAYER))"));
-        assertTrue(source.contains("TEXTURE[recruit.getVariant()]"));
-        assertTrue(source.contains("textures/entity/human/human_0.png"));
-        assertTrue(source.contains("textures/entity/human/human_19.png"));
+        assertTrue(source.contains("TEXTURES[Math.floorMod(recruit.getVariant(), TEXTURES.length)]"));
+        assertTrue(source.contains("textures/entity/human/human_new_0.png"));
+        assertTrue(source.contains("textures/entity/human/human_new_2.png"));
         assertTrue(source.contains("RecruitRenderProfiling.textureStateSwitch(\"base_model\")"));
         assertTrue(source.contains("new RecruitLodArmorLayer"));
         assertTrue(source.contains("new RecruitHumanTeamColorLayer"));

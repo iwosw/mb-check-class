@@ -109,9 +109,7 @@ public final class RecruitCrowdRenderEvents {
     }
 
     private static ResourceLocation crowdTexture(AbstractRecruitEntity recruit) {
-        return RecruitsClientConfig.RecruitsLookLikeVillagers.get()
-                ? RecruitVillagerRenderer.crowdTexture(recruit)
-                : RecruitHumanRenderer.crowdTexture(recruit);
+        return RecruitHumanRenderer.crowdTexture(recruit);
     }
 
     private static void renderImpostor(AbstractRecruitEntity recruit,
