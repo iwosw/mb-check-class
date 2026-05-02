@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
@@ -106,6 +107,11 @@ public class StorageAreaScreen extends WorkAreaScreen {
         int checkBoxY = y + checkBoxHeight / 2 + 40;
         int routeFieldX = x + 40;
         int routeFieldY = y - 30;
+        int typesColumnWidth = checkBoxWidth - 4;
+        int typesColumnLeft = checkBoxX - typesColumnWidth - 4;
+        int typesColumnRight = checkBoxX + 4;
+        int typesRowHeight = 18;
+        int typesY = checkBoxY + 10;
 
         nameEditBox = new EditBox(font, checkBoxX , checkBoxY - 20, checkBoxWidth, checkBoxHeight, Component.literal(""));
         nameEditBox.setValue(savedName.getString());
@@ -153,112 +159,40 @@ public class StorageAreaScreen extends WorkAreaScreen {
                 .bounds(routeFieldX, routeFieldY + 96, routeFieldWidth, checkBoxHeight)
                 .build());
 
-        this.minersCheckBox = new RecruitsCheckBox(checkBoxX, 10 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_MINERS,
-                this.miners,
-                (bool) -> {
-                    this.miners = bool;
-                    if(miners){
-                        types.add(StorageArea.StorageType.MINERS);
-                    }
-                    else{
-                        types.remove(StorageArea.StorageType.MINERS);
-                    }
+        // Worker-type filters laid out as a compact 2-column grid (4 + 3) instead of a
+        // 7-row stack. Same authoritative state, just less vertical real estate.
+        this.minersCheckBox = addRenderableWidget(new RecruitsCheckBox(typesColumnLeft, typesY, typesColumnWidth, checkBoxHeight, TEXT_MINERS,
+                this.miners, bool -> toggleType(StorageArea.StorageType.MINERS, bool)));
+        this.lumbersCheckBox = addRenderableWidget(new RecruitsCheckBox(typesColumnRight, typesY, typesColumnWidth, checkBoxHeight, TEXT_LUMBERS,
+                this.lumbers, bool -> toggleType(StorageArea.StorageType.LUMBERS, bool)));
+        this.buildersCheckBox = addRenderableWidget(new RecruitsCheckBox(typesColumnLeft, typesY + typesRowHeight, typesColumnWidth, checkBoxHeight, TEXT_BUILDERS,
+                this.builders, bool -> toggleType(StorageArea.StorageType.BUILDERS, bool)));
+        this.farmersCheckBox = addRenderableWidget(new RecruitsCheckBox(typesColumnRight, typesY + typesRowHeight, typesColumnWidth, checkBoxHeight, TEXT_FARMERS,
+                this.farmers, bool -> toggleType(StorageArea.StorageType.FARMERS, bool)));
+        this.merchantsCheckBox = addRenderableWidget(new RecruitsCheckBox(typesColumnLeft, typesY + typesRowHeight * 2, typesColumnWidth, checkBoxHeight, TEXT_MERCHANTS,
+                this.merchants, bool -> toggleType(StorageArea.StorageType.MERCHANTS, bool)));
+        this.fishermanCheckBox = addRenderableWidget(new RecruitsCheckBox(typesColumnRight, typesY + typesRowHeight * 2, typesColumnWidth, checkBoxHeight, TEXT_FISHERMAN,
+                this.fisherman, bool -> toggleType(StorageArea.StorageType.FISHERMAN, bool)));
+        this.animalFarmerCheckBox = addRenderableWidget(new RecruitsCheckBox(typesColumnLeft, typesY + typesRowHeight * 3, typesColumnWidth * 2 + 8, checkBoxHeight, TEXT_ANIMAL_FARMERS,
+                this.animalFarmer, bool -> toggleType(StorageArea.StorageType.ANIMAL_FARMERS, bool)));
+    }
 
-                    sendMessage();
-                }
-        );
-        addRenderableWidget(minersCheckBox);
-
-        this.lumbersCheckBox = new RecruitsCheckBox(checkBoxX, 30 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_LUMBERS,
-                this.lumbers,
-                (bool) -> {
-                    this.lumbers = bool;
-                    if(lumbers){
-                        types.add(StorageArea.StorageType.LUMBERS);
-                    }
-                    else{
-                        types.remove(StorageArea.StorageType.LUMBERS);
-                    }
-                    sendMessage();
-                }
-        );
-        addRenderableWidget(lumbersCheckBox);
-
-        this.buildersCheckBox = new RecruitsCheckBox(checkBoxX, 50 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_BUILDERS,
-                this.builders,
-                (bool) -> {
-                    this.builders = bool;
-                    if(builders){
-                        types.add(StorageArea.StorageType.BUILDERS);
-                    }
-                    else{
-                        types.remove(StorageArea.StorageType.BUILDERS);
-                    }
-                    sendMessage();
-                }
-        );
-        addRenderableWidget(buildersCheckBox);
-
-        this.farmersCheckBox = new RecruitsCheckBox(checkBoxX, 70 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_FARMERS,
-                this.farmers,
-                (bool) -> {
-                    this.farmers = bool;
-                    if(farmers){
-                        types.add(StorageArea.StorageType.FARMERS);
-                    }
-                    else{
-                        types.remove(StorageArea.StorageType.FARMERS);
-                    }
-                    sendMessage();
-                }
-        );
-        addRenderableWidget(farmersCheckBox);
-
-        this.merchantsCheckBox = new RecruitsCheckBox(checkBoxX, 90 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_MERCHANTS,
-                this.merchants,
-                (bool) -> {
-                    this.merchants = bool;
-                    if(merchants){
-                        types.add(StorageArea.StorageType.MERCHANTS);
-                    }
-                    else{
-                        types.remove(StorageArea.StorageType.MERCHANTS);
-                    }
-                    sendMessage();
-                }
-        );
-        addRenderableWidget(merchantsCheckBox);
-
-        this.fishermanCheckBox = new RecruitsCheckBox(checkBoxX, 110 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_FISHERMAN,
-                this.fisherman,
-                (bool) -> {
-                    this.fisherman = bool;
-                    if(fisherman){
-                        types.add(StorageArea.StorageType.FISHERMAN);
-                    }
-                    else{
-                        types.remove(StorageArea.StorageType.FISHERMAN);
-                    }
-                    sendMessage();
-                }
-        );
-        addRenderableWidget(fishermanCheckBox);
-
-        this.animalFarmerCheckBox = new RecruitsCheckBox(checkBoxX, 130 + checkBoxY, checkBoxWidth, checkBoxHeight, TEXT_ANIMAL_FARMERS,
-                this.animalFarmer,
-                (bool) -> {
-                    this.animalFarmer = bool;
-                    if(animalFarmer){
-                        types.add(StorageArea.StorageType.ANIMAL_FARMERS);
-                    }
-                    else{
-                        types.remove(StorageArea.StorageType.ANIMAL_FARMERS);
-                    }
-                    sendMessage();
-                }
-        );
-        addRenderableWidget(animalFarmerCheckBox);
-
+    private void toggleType(StorageArea.StorageType type, boolean enabled) {
+        if (enabled) {
+            this.types.add(type);
+        } else {
+            this.types.remove(type);
+        }
+        switch (type) {
+            case MINERS -> this.miners = enabled;
+            case LUMBERS -> this.lumbers = enabled;
+            case BUILDERS -> this.builders = enabled;
+            case FARMERS -> this.farmers = enabled;
+            case MERCHANTS -> this.merchants = enabled;
+            case FISHERMAN -> this.fisherman = enabled;
+            case ANIMAL_FARMERS -> this.animalFarmer = enabled;
+        }
+        sendMessage();
     }
 
     private void setName(String s) {
@@ -371,25 +305,32 @@ public class StorageAreaScreen extends WorkAreaScreen {
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
         int labelX = x + 40;
         int labelY = y - 42;
-        guiGraphics.drawString(font, TEXT_ROUTE_DESTINATION, labelX, labelY, 4210752, false);
-        guiGraphics.drawString(font, TEXT_ROUTE_FILTER, labelX, labelY + 24, 4210752, false);
-        guiGraphics.drawString(font, TEXT_ROUTE_COUNT, labelX, labelY + 48, 4210752, false);
-        guiGraphics.drawString(font, TEXT_ROUTE_PRIORITY, labelX + 80, labelY + 48, 4210752, false);
-        guiGraphics.drawString(font, TEXT_ROUTE_BLOCKED, labelX, labelY + 100, 4210752, false);
+        int labelWidth = 150;
+        int labelColor = 0xFF000000 | MilitaryGuiStyle.TEXT;
+        int mutedColor = 0xFF000000 | MilitaryGuiStyle.TEXT_MUTED;
+        int errorColor = 0xFF000000 | MilitaryGuiStyle.TEXT_DENIED;
+        drawClamped(guiGraphics, TEXT_ROUTE_DESTINATION, labelX, labelY, labelWidth, labelColor);
+        drawClamped(guiGraphics, TEXT_ROUTE_FILTER, labelX, labelY + 24, labelWidth, labelColor);
+        drawClamped(guiGraphics, TEXT_ROUTE_COUNT, labelX, labelY + 48, 70, labelColor);
+        drawClamped(guiGraphics, TEXT_ROUTE_PRIORITY, labelX + 80, labelY + 48, 70, labelColor);
+        drawClamped(guiGraphics, TEXT_ROUTE_BLOCKED, labelX, labelY + 100, labelWidth, labelColor);
         Component destination = this.routeDestination == null || this.routeDestination.isBlank()
                 ? text("gui.workers.storage.route.destination_value", text("gui.bannermod.common.none"))
                 : text("gui.workers.storage.route.destination_value", this.routeDestination);
-        guiGraphics.drawString(font, destination, labelX, labelY + 112, 4210752, false);
-        guiGraphics.drawString(font, this.routeStatus, labelX, labelY + 124, this.routeStatusColor, false);
+        drawClamped(guiGraphics, destination, labelX, labelY + 112, labelWidth, mutedColor);
+        drawClamped(guiGraphics, this.routeStatus, labelX, labelY + 124, labelWidth, this.routeStatusColor);
         boolean blocked = !this.storageArea.getRouteBlockedReasonToken().isBlank() || !this.storageArea.getRouteBlockedMessage().isBlank();
-        guiGraphics.drawString(font,
-                this.storageArea.getRouteBlockedReasonToken().isBlank()
-                        ? text("gui.workers.storage.route.blocked_value", text("gui.bannermod.common.none"))
-                        : text("gui.workers.storage.route.blocked_value", this.storageArea.getRouteBlockedReasonToken()),
-                labelX, labelY + 136, blocked ? 0xFFFF8888 : 4210752, false);
+        Component blockedLine = this.storageArea.getRouteBlockedReasonToken().isBlank()
+                ? text("gui.workers.storage.route.blocked_value", text("gui.bannermod.common.none"))
+                : text("gui.workers.storage.route.blocked_value", this.storageArea.getRouteBlockedReasonToken());
+        drawClamped(guiGraphics, blockedLine, labelX, labelY + 136, labelWidth, blocked ? errorColor : mutedColor);
         if (!this.storageArea.getRouteBlockedMessage().isBlank()) {
-            guiGraphics.drawString(font, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 148, 0xFFFF8888, false);
+            drawClamped(guiGraphics, Component.literal(this.storageArea.getRouteBlockedMessage()), labelX, labelY + 148, labelWidth, errorColor);
         }
+    }
+
+    private void drawClamped(GuiGraphics guiGraphics, Component text, int x, int y, int width, int color) {
+        guiGraphics.drawString(font, font.plainSubstrByWidth(text.getString(), width), x, y, color, false);
     }
 
     @Override
