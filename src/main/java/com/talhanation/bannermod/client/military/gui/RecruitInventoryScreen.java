@@ -5,6 +5,8 @@ import com.talhanation.bannermod.ai.military.CombatStance;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.events.RecruitEvents;
 import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.client.military.gui.widgets.ActionMenuButton;
+import com.talhanation.bannermod.client.military.gui.widgets.ContextMenuEntry;
 import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
 import com.talhanation.bannermod.compat.SmallShips;
 import com.talhanation.bannermod.compat.workers.IVillagerWorker;
@@ -95,6 +97,9 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent SECTION_DISCIPLINE = Component.translatable("gui.recruits.inv.section.discipline");
     private static final MutableComponent SECTION_ORDERS = Component.translatable("gui.recruits.inv.section.orders");
     private static final MutableComponent SECTION_DETAILS = Component.translatable("gui.recruits.inv.section.details");
+    private static final MutableComponent TEXT_MENU_AGGRO = Component.translatable("gui.recruits.command.menu.aggro");
+    private static final MutableComponent TEXT_MENU_ORDERS = Component.translatable("gui.recruits.inv.menu.orders");
+    private static final MutableComponent TEXT_MENU_MOUNT = Component.translatable("gui.recruits.inv.menu.mount");
     private static final MutableComponent STATUS_READ_ONLY = Component.translatable("gui.recruits.inv.status.read_only");
     private static final MutableComponent STATUS_GROUP_UNSET = Component.translatable("gui.recruits.inv.status.group_unset");
     private static final MutableComponent STATUS_GROUP_LOCKED = Component.translatable("gui.recruits.inv.status.group_locked");
@@ -137,68 +142,49 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         this.canPromote = this.recruit.getXpLevel() >= 3;
 
         this.clearWidgets();
-        //PASSIVE
-        ExtendedButton buttonPassive = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 0, 80, 20, TEXT_PASSIVE,
-            button -> {
-                this.aggro = recruit.getState();
-                if (this.aggro != 3) {
-                    this.aggro = 3;
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
-                }
-            });
-        buttonPassive.setTooltip(Tooltip.create(recruit.getState() == 3 ? TOOLTIP_CURRENT_STATE : TOOLTIP_PASSIVE));
-        buttonPassive.active = recruit.getState() != 3;
-        addRenderableWidget(buttonPassive);
 
-        // NEUTRAL
-        ExtendedButton buttonNeutral = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 1, 80, 20, TEXT_NEUTRAL,
-                button -> {
-                    this.aggro = recruit.getState();
-                    if (this.aggro != 0) {
+        // AGGRO MENU — collapses Passive / Neutral / Aggressive / Raid / Clear Target into a single
+        // dropdown trigger. Mutations remain server-authoritative; the menu only sends intent packets.
+        boolean isNoble = recruit instanceof VillagerNobleEntity;
+        int recruitState = recruit.getState();
+        ActionMenuButton aggroMenu = new ActionMenuButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 0,
+                80, 20, TEXT_MENU_AGGRO, java.util.List.of(
+                new ContextMenuEntry(TEXT_PASSIVE.getString(), () -> {
+                    if (recruit.getState() != 3) {
+                        this.aggro = 3;
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
+                    }
+                }, recruitState != 3),
+                new ContextMenuEntry(TEXT_NEUTRAL.getString(), () -> {
+                    if (recruit.getState() != 0) {
                         this.aggro = 0;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
-                });
-        buttonNeutral.setTooltip(Tooltip.create(recruit.getState() == 0 ? TOOLTIP_CURRENT_STATE : TOOLTIP_NEUTRAL));
-        buttonNeutral.active = recruit.getState() != 0;
-        addRenderableWidget(buttonNeutral);
-
-        //AGGRESSIVE
-        ExtendedButton buttonAggressive = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 2, 80, 20, TEXT_AGGRESSIVE,
-                button -> {
-                    this.aggro = recruit.getState();
-                    if (this.aggro != 1) {
+                }, recruitState != 0),
+                new ContextMenuEntry(TEXT_AGGRESSIVE.getString(), () -> {
+                    if (recruit.getState() != 1) {
                         this.aggro = 1;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
-                });
-        buttonAggressive.setTooltip(Tooltip.create(recruit.getState() == 1 ? TOOLTIP_CURRENT_STATE : TOOLTIP_AGGRESSIVE));
-        buttonAggressive.active = !(recruit instanceof VillagerNobleEntity) && recruit.getState() != 1;
-        addRenderableWidget(buttonAggressive);
-
-        //RAID
-        ExtendedButton buttonRaid = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 3, 80, 20, TEXT_RAID,
-                button -> {
-                    this.aggro = recruit.getState();
-                    if (this.aggro != 2) {
+                }, !isNoble && recruitState != 1),
+                new ContextMenuEntry(TEXT_RAID.getString(), () -> {
+                    if (recruit.getState() != 2) {
                         this.aggro = 2;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageAggroGui(aggro, recruit.getUUID()));
                     }
-                });
-        buttonRaid.setTooltip(Tooltip.create(recruit.getState() == 2 ? TOOLTIP_CURRENT_STATE : TOOLTIP_RAID));
-        buttonRaid.active = !(recruit instanceof VillagerNobleEntity) && recruit.getState() != 2;
-        addRenderableWidget(buttonRaid);
+                }, !isNoble && recruitState != 2),
+                new ContextMenuEntry(TEXT_CLEAR_TARGET.getString(), () ->
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClearTargetGui(playerInventory.player.getUUID(), recruit.getUUID())),
+                        true)
+        ));
+        aggroMenu.setTooltip(Tooltip.create(TOOLTIP_PASSIVE.copy().append("\n")
+                .append(TOOLTIP_NEUTRAL).append("\n")
+                .append(TOOLTIP_AGGRESSIVE).append("\n")
+                .append(TOOLTIP_RAID).append("\n")
+                .append(TOOLTIP_CLEAR_TARGET)));
+        addRenderableWidget(aggroMenu);
 
-        //CLEAR TARGET
-        ExtendedButton buttonClearTarget = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 4, 80, 20, TEXT_CLEAR_TARGET,
-                button -> {
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClearTargetGui(playerInventory.player.getUUID(), recruit.getUUID()));
-                });
-        buttonClearTarget.setTooltip(Tooltip.create(TOOLTIP_CLEAR_TARGET));
-        addRenderableWidget(buttonClearTarget);
-
-
-        //MOUNT
+        //MOUNT — kept as a separate row because it triggers a different menu path (mount/dismount).
         ExtendedButton buttonMount =  new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 5, 80, 20, TEXT_MOUNT,
             button -> {
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMountEntityGui(recruit.getUUID(), false));
@@ -209,96 +195,64 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(buttonMount);
 
 
-        //WANDER
-        ExtendedButton buttonWander = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 0, 80, 20, TEXT_WANDER,
-                button -> {
-                    this.follow = recruit.getFollowState();
-                    if (this.follow != 0) {
+        // ORDERS MENU — collapses Wander / Follow / Hold Pos / Back to Pos / Hold My Pos under one
+        // dropdown trigger. Server is source of truth for follow-state changes.
+        int followState = recruit.getFollowState();
+        ActionMenuButton ordersMenu = new ActionMenuButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 0,
+                80, 20, TEXT_MENU_ORDERS, java.util.List.of(
+                new ContextMenuEntry(TEXT_WANDER.getString(), () -> {
+                    if (recruit.getFollowState() != 0) {
                         this.follow = 0;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
-                });
-        buttonWander.setTooltip(Tooltip.create(recruit.getFollowState() == 0 ? TOOLTIP_CURRENT_STATE : TOOLTIP_WANDER));
-        buttonWander.active = recruit.getFollowState() != 0;
-        addRenderableWidget(buttonWander);
-
-
-        //FOLLOW
-        ExtendedButton buttonFollow = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 1, 80, 20, TEXT_FOLLOW,
-                button -> {
-                    this.follow = recruit.getFollowState();
-                    if (this.follow != 1) {
+                }, followState != 0),
+                new ContextMenuEntry(TEXT_FOLLOW.getString(), () -> {
+                    if (recruit.getFollowState() != 1) {
                         this.follow = 1;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
-                });
-        buttonFollow.setTooltip(Tooltip.create(recruit.getFollowState() == 1 ? TOOLTIP_CURRENT_STATE : TOOLTIP_FOLLOW));
-        buttonFollow.active = !(recruit instanceof VillagerNobleEntity) && recruit.getFollowState() != 1;
-        addRenderableWidget(buttonFollow);
-
-
-        //HOLD POS
-        ExtendedButton buttonHoldPos = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 2, 80, 20, TEXT_HOLD_POS,
-                button -> {
-                    this.follow = recruit.getFollowState();
-                    if (this.follow != 2) {
+                }, !isNoble && followState != 1),
+                new ContextMenuEntry(TEXT_HOLD_POS.getString(), () -> {
+                    if (recruit.getFollowState() != 2) {
                         this.follow = 2;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
-                });
-        buttonHoldPos.setTooltip(Tooltip.create(recruit.getFollowState() == 2 ? TOOLTIP_CURRENT_STATE : TOOLTIP_HOLD_POS));
-        buttonHoldPos.active = recruit.getFollowState() != 2;
-        addRenderableWidget(buttonHoldPos);
-
-
-        //BACK TO POS
-        ExtendedButton buttonBackToPos = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 3, 80, 20, TEXT_BACK_TO_POS,
-                button -> {
-                    this.follow = recruit.getFollowState();
-                    if (this.follow != 3) {
+                }, followState != 2),
+                new ContextMenuEntry(TEXT_BACK_TO_POS.getString(), () -> {
+                    if (recruit.getFollowState() != 3) {
                         this.follow = 3;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
-                });
-        buttonBackToPos.setTooltip(Tooltip.create(recruit.getFollowState() == 3 ? TOOLTIP_CURRENT_STATE : TOOLTIP_BACK_TO_POS));
-        buttonBackToPos.active = recruit.getFollowState() != 3;
-        addRenderableWidget(buttonBackToPos);
-
-
-        //HOLD MY POS
-        ExtendedButton buttonHoldMyPos = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 4, 80, 20, TEXT_HOLD_MY_POS,
-                button -> {
-                    this.follow = recruit.getFollowState();
-                    if (this.follow != 4) {
+                }, followState != 3),
+                new ContextMenuEntry(TEXT_HOLD_MY_POS.getString(), () -> {
+                    if (recruit.getFollowState() != 4) {
                         this.follow = 4;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageFollowGui(follow, recruit.getUUID()));
                     }
-                });
-        buttonHoldMyPos.setTooltip(Tooltip.create(recruit.getFollowState() == 4 ? TOOLTIP_CURRENT_STATE : TOOLTIP_HOLD_MY_POS));
-        buttonHoldMyPos.active = !(recruit instanceof VillagerNobleEntity) && recruit.getFollowState() != 4;
-        addRenderableWidget(buttonHoldMyPos);
+                }, !isNoble && followState != 4)
+        ));
+        ordersMenu.setTooltip(Tooltip.create(TOOLTIP_WANDER.copy().append("\n")
+                .append(TOOLTIP_FOLLOW).append("\n")
+                .append(TOOLTIP_HOLD_POS).append("\n")
+                .append(TOOLTIP_BACK_TO_POS).append("\n")
+                .append(TOOLTIP_HOLD_MY_POS)));
+        addRenderableWidget(ordersMenu);
 
-        //Dismount
-        ExtendedButton buttonDismount = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 5, 80, 20, TEXT_DISMOUNT,
-                button -> {
-                    this.follow = recruit.getFollowState();
-                    if (this.follow != 4) {
+        // MOUNT MENU — Dismount / Back-to-Mount collapse to one trigger.
+        ActionMenuButton mountMenu = new ActionMenuButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 5,
+                80, 20, TEXT_MENU_MOUNT, java.util.List.of(
+                new ContextMenuEntry(TEXT_DISMOUNT.getString(), () -> {
+                    if (recruit.getFollowState() != 4) {
                         this.follow = 4;
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDismountGui(playerInventory.player.getUUID(), recruit.getUUID()));
                     }
-                });
-        buttonDismount.setTooltip(Tooltip.create(TOOLTIP_DISMOUNT));
-        addRenderableWidget(buttonDismount);
-
-        //BACK TO MOUNT
-        ExtendedButton backToMount = addRenderableWidget(new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 6, 80, 20, TEXT_BACK_TO_MOUNT,
-                button -> {
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMountEntityGui(recruit.getUUID(), true));
-                }
+                }, true),
+                new ContextMenuEntry(TEXT_BACK_TO_MOUNT.getString(), () ->
+                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMountEntityGui(recruit.getUUID(), true)),
+                        !isNoble)
         ));
-        backToMount.setTooltip(Tooltip.create(TOOLTIP_BACK_TO_MOUNT));
-        backToMount.active = !(recruit instanceof VillagerNobleEntity);
-        addRenderableWidget(backToMount);
+        mountMenu.setTooltip(Tooltip.create(TOOLTIP_DISMOUNT.copy().append("\n").append(TOOLTIP_BACK_TO_MOUNT)));
+        addRenderableWidget(mountMenu);
 
         //CLEAR UPKEEP
         this.clearUpkeep = addRenderableWidget(new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 6, 80, 20, TEXT_CLEAR_UPKEEP,
