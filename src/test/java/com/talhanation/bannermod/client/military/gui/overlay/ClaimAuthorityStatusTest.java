@@ -36,6 +36,7 @@ class ClaimAuthorityStatusTest {
         assertEquals(ClaimAuthorityStatus.HOSTILE, ClaimAuthorityStatus.classify("other-team", new RecruitsClaim("Keep", owner)));
     }
 
+    @Test
     void leaderOfOwningPoliticalEntityIsFriendly() {
         UUID owner = UUID.fromString("00000000-0000-0000-0000-000000000011");
         UUID leader = UUID.fromString("00000000-0000-0000-0000-000000000022");
@@ -54,6 +55,16 @@ class ClaimAuthorityStatusTest {
 
         assertEquals(ClaimAuthorityStatus.FRIENDLY,
                 ClaimAuthorityStatus.classify(coLeader, "other-team", claim, politicalEntity(owner, leader, List.of(coLeader), GovernmentForm.MONARCHY)));
+    }
+
+    @Test
+    void owningPoliticalEntityNameTokenIsFriendly() {
+        UUID owner = UUID.fromString("00000000-0000-0000-0000-000000000011");
+        UUID leader = UUID.fromString("00000000-0000-0000-0000-000000000022");
+        RecruitsClaim claim = new RecruitsClaim("Keep", owner);
+
+        assertEquals(ClaimAuthorityStatus.FRIENDLY,
+                ClaimAuthorityStatus.classify(null, "Keep", claim, politicalEntity(owner, leader, List.of(), GovernmentForm.MONARCHY)));
     }
 
     @Test

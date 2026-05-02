@@ -14,11 +14,12 @@ final class WorkerStatusRuntime {
     }
 
     void reportReason(WorkerControlStatus.Kind kind, String reasonToken, @Nullable Component message) {
+        boolean changed = this.workStatus.shouldNotify(kind, reasonToken, message == null ? null : message.getString());
         if (this.worker.level().isClientSide() || message == null || this.worker.getOwner() == null) {
             return;
         }
 
-        if (this.workStatus.shouldNotify(kind, reasonToken)) {
+        if (changed) {
             this.worker.getOwner().sendSystemMessage(message);
         }
     }

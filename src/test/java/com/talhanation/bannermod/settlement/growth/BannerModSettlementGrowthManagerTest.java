@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.growth;
 
+import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.settlement.BannerModSettlementBuildingCategory;
 import com.talhanation.bannermod.settlement.BannerModSettlementBuildingProfileSeed;
 import com.talhanation.bannermod.settlement.BannerModSettlementDesiredGoodSeed;
@@ -20,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.UUID;
 
 class BannerModSettlementGrowthManagerTest {
 
@@ -190,6 +193,132 @@ class BannerModSettlementGrowthManagerTest {
         assertNotEquals(first.get(0), first.get(1));
     }
 
+    @Test
+    void governorPriorityCanCreateConstructionCandidateWithoutOtherDemand() {
+        BannerModSettlementGrowthContext ctx = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                BannerModSettlementDesiredGoodsSeed.empty(),
+                BannerModSettlementMarketState.empty(),
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                BannerModSettlementSupplySignalState.empty(),
+                0, 0, 0,
+                governorSnapshot(2, 3, List.of()),
+                15L
+        );
+
+        List<PendingProject> queue = BannerModSettlementGrowthManager.evaluateGrowthQueue(ctx, 4);
+
+        assertEquals(1, queue.size());
+        assertSame(BannerModSettlementBuildingProfileSeed.CONSTRUCTION, queue.get(0).profileSeed());
+        assertEquals(ProjectBlocker.NONE, queue.get(0).blockerReason());
+    }
+
+    @Test
+    void governorPriorityBoostsExistingConstructionDemandInsteadOfReplacingIt() {
+        BannerModSettlementDesiredGoodsSeed desired = new BannerModSettlementDesiredGoodsSeed(List.of(
+                new BannerModSettlementDesiredGoodSeed("construction_materials", 1)
+        ));
+        BannerModSettlementGrowthContext baseline = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                desired,
+                NON_EMPTY_MARKET,
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                BannerModSettlementSupplySignalState.empty(),
+                0, 0, 0,
+                null,
+                40L
+        );
+        BannerModSettlementGrowthContext boosted = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                desired,
+                NON_EMPTY_MARKET,
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                BannerModSettlementSupplySignalState.empty(),
+                0, 0, 0,
+                governorSnapshot(1, 2, List.of()),
+                40L
+        );
+
+        PendingProject baselineProject = BannerModSettlementGrowthManager.pickNextProject(baseline).orElseThrow();
+        PendingProject boostedProject = BannerModSettlementGrowthManager.pickNextProject(boosted).orElseThrow();
+
+        assertSame(BannerModSettlementBuildingProfileSeed.CONSTRUCTION, baselineProject.profileSeed());
+        assertSame(BannerModSettlementBuildingProfileSeed.CONSTRUCTION, boostedProject.profileSeed());
+        assertTrue(boostedProject.priorityScore() > baselineProject.priorityScore());
+    }
+
+    @Test
+    void siegeAddsDefensiveFallbackAndBlocksCivilianExpansion() {
+        BannerModSettlementDesiredGoodsSeed desired = new BannerModSettlementDesiredGoodsSeed(List.of(
+                new BannerModSettlementDesiredGoodSeed("food", 2)
+        ));
+        BannerModSettlementGrowthContext ctx = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                desired,
+                NON_EMPTY_MARKET,
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                BannerModSettlementSupplySignalState.empty(),
+                0, 0, 0,
+                governorSnapshot(0, 0, List.of("Under_Siege")),
+                99L
+        );
+
+        List<PendingProject> queue = BannerModSettlementGrowthManager.evaluateGrowthQueue(ctx, 4);
+        PendingProject foodProject = projectFor(queue, BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION).orElseThrow();
+
+        assertFalse(queue.isEmpty());
+        assertSame(BannerModSettlementBuildingProfileSeed.CONSTRUCTION, queue.get(0).profileSeed());
+        assertEquals(ProjectBlocker.NONE, queue.get(0).blockerReason());
+        assertEquals(ProjectBlocker.UNDER_SIEGE, foodProject.blockerReason());
+    }
+
+    @Test
+    void tradeRouteDemandBonusAmplifiesStorageAndMarketScoring() {
+        BannerModSettlementDesiredGoodsSeed desired = new BannerModSettlementDesiredGoodsSeed(List.of(
+                new BannerModSettlementDesiredGoodSeed("storage_type:merchants", 1),
+                new BannerModSettlementDesiredGoodSeed("trade_stock", 1)
+        ));
+        BannerModSettlementTradeRouteHandoffSeed boostedHandoff = new BannerModSettlementTradeRouteHandoffSeed(
+                1,
+                1,
+                2,
+                2,
+                3,
+                12,
+                List.of(),
+                List.of(),
+                List.of()
+        );
+        BannerModSettlementGrowthContext baseline = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                desired,
+                NON_EMPTY_MARKET,
+                BannerModSettlementTradeRouteHandoffSeed.empty(),
+                BannerModSettlementSupplySignalState.empty(),
+                0, 0, 0,
+                null,
+                0L
+        );
+        BannerModSettlementGrowthContext boosted = ctxOf(
+                BannerModSettlementProjectCandidateSeed.empty(),
+                desired,
+                NON_EMPTY_MARKET,
+                boostedHandoff,
+                BannerModSettlementSupplySignalState.empty(),
+                0, 0, 0,
+                null,
+                0L
+        );
+
+        List<PendingProject> baselineQueue = BannerModSettlementGrowthManager.evaluateGrowthQueue(baseline, 4);
+        List<PendingProject> boostedQueue = BannerModSettlementGrowthManager.evaluateGrowthQueue(boosted, 4);
+
+        assertTrue(projectFor(boostedQueue, BannerModSettlementBuildingProfileSeed.STORAGE).orElseThrow().priorityScore()
+                > projectFor(baselineQueue, BannerModSettlementBuildingProfileSeed.STORAGE).orElseThrow().priorityScore());
+        assertTrue(projectFor(boostedQueue, BannerModSettlementBuildingProfileSeed.MARKET).orElseThrow().priorityScore()
+                > projectFor(baselineQueue, BannerModSettlementBuildingProfileSeed.MARKET).orElseThrow().priorityScore());
+    }
+
     private static BannerModSettlementGrowthContext emptyContext() {
         return ctxOf(
                 BannerModSettlementProjectCandidateSeed.empty(),
@@ -231,6 +360,32 @@ class BannerModSettlementGrowthManagerTest {
             int unassignedWorkerCount,
             long gameTime
     ) {
+        return ctxOf(
+                seed,
+                desired,
+                market,
+                tradeRouteHandoffSeed,
+                supplySignalState,
+                residentCapacity,
+                assignedResidentCount,
+                unassignedWorkerCount,
+                null,
+                gameTime
+        );
+    }
+
+    private static BannerModSettlementGrowthContext ctxOf(
+            BannerModSettlementProjectCandidateSeed seed,
+            BannerModSettlementDesiredGoodsSeed desired,
+            BannerModSettlementMarketState market,
+            BannerModSettlementTradeRouteHandoffSeed tradeRouteHandoffSeed,
+            BannerModSettlementSupplySignalState supplySignalState,
+            int residentCapacity,
+            int assignedResidentCount,
+            int unassignedWorkerCount,
+            BannerModGovernorSnapshot governorSnapshot,
+            long gameTime
+    ) {
         return new BannerModSettlementGrowthContext(
                 seed,
                 desired,
@@ -244,8 +399,39 @@ class BannerModSettlementGrowthManagerTest {
                 assignedResidentCount,
                 unassignedWorkerCount,
                 0,
-                null,
+                governorSnapshot,
                 gameTime
         );
+    }
+
+    private static BannerModGovernorSnapshot governorSnapshot(int garrisonPriority,
+                                                              int fortificationPriority,
+                                                              List<String> incidentTokens) {
+        return new BannerModGovernorSnapshot(
+                UUID.randomUUID(),
+                0,
+                0,
+                null,
+                null,
+                null,
+                0L,
+                0L,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                garrisonPriority,
+                fortificationPriority,
+                0,
+                incidentTokens,
+                List.of()
+        );
+    }
+
+    private static Optional<PendingProject> projectFor(List<PendingProject> queue,
+                                                       BannerModSettlementBuildingProfileSeed profileSeed) {
+        return queue.stream().filter(project -> project.profileSeed() == profileSeed).findFirst();
     }
 }

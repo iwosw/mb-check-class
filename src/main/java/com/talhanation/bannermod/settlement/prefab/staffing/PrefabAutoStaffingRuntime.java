@@ -51,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PrefabAutoStaffingRuntime {
     public static final String TAG_PENDING_WORKER_PROFESSION = "BannerModPendingWorkerProfession";
+    public static final String TAG_ASSIGNMENT_PAUSE_UNTIL = "BannerModAssignmentPauseUntil";
     private static final Map<UUID, VacancyRecord> VACANCIES = new ConcurrentHashMap<>();
     private static final double VACANCY_ASSIGN_RADIUS_SQR = 96.0D * 96.0D;
     private static OccupancySnapshot occupancySnapshot;
@@ -195,6 +196,13 @@ public final class PrefabAutoStaffingRuntime {
         if (level == null || citizen == null || !citizen.isAlive() || citizen.isRemoved()) {
             return;
         }
+        long pausedUntil = citizen.getPersistentData().getLong(TAG_ASSIGNMENT_PAUSE_UNTIL);
+        if (pausedUntil > level.getGameTime()) {
+            return;
+        }
+        if (pausedUntil != 0L) {
+            citizen.getPersistentData().remove(TAG_ASSIGNMENT_PAUSE_UNTIL);
+        }
         if (citizen.getPersistentData().contains(TAG_PENDING_WORKER_PROFESSION)) {
             return;
         }
@@ -291,10 +299,7 @@ public final class PrefabAutoStaffingRuntime {
             }
         }
         java.util.List<AbstractRecruitEntity> recruits = com.talhanation.bannermod.entity.military.RecruitIndex
-                .instance().allInBox(level, search, true);
-        if (recruits == null) {
-            recruits = level.getEntitiesOfClass(AbstractRecruitEntity.class, search);
-        }
+                .instance().all(level, true);
         for (AbstractRecruitEntity recruit : recruits) {
             UUID bound = recruit.getCitizenCore().getBoundWorkAreaUUID();
             if (bound != null) {

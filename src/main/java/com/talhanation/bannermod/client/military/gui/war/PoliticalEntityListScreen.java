@@ -326,13 +326,7 @@ public class PoliticalEntityListScreen extends Screen {
     }
 
     private void sendCoLeader(UUID entityId, String coLeaderUuidText, boolean add) {
-        try {
-            BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateCoLeader(entityId, UUID.fromString(coLeaderUuidText), add));
-        } catch (IllegalArgumentException ignored) {
-            if (this.minecraft != null && this.minecraft.player != null) {
-                this.minecraft.player.displayClientMessage(text("gui.bannermod.states.invalid_uuid"), false);
-            }
-        }
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateCoLeader(entityId, coLeaderUuidText, add));
     }
 
     private void updateLeaderButtons() {

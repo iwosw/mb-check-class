@@ -10,12 +10,15 @@ import com.talhanation.bannermod.citizen.CitizenProfessionSwitcher;
 import com.talhanation.bannermod.citizen.CitizenRoleContext;
 import com.talhanation.bannermod.citizen.CitizenStateSnapshot;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
 import com.talhanation.bannermod.inventory.civilian.CitizenProfileMenu;
 import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
+import com.talhanation.bannermod.util.BannerModCurrencyHelper;
 import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -195,9 +198,13 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         if (!PrefabAutoStaffingRuntime.hasConversionSlot((net.minecraft.server.level.ServerLevel) this.level(), boundWorkAreaUuid, this.getUUID())) {
             return;
         }
+        int hireCost = hireCostFor(targetProfession);
         if (workerType != null) {
             AbstractWorkerEntity worker = workerType.create(this.level());
             if (worker == null) {
+                return;
+            }
+            if (!payHireCost(hireCost)) {
                 return;
             }
             worker.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
@@ -214,6 +221,9 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         if (recruit == null) {
             return;
         }
+        if (!payHireCost(hireCost)) {
+            return;
+        }
         recruit.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
         if (this.getOwnerUUID() != null) {
             recruit.setOwnerUUID(Optional.of(this.getOwnerUUID()));
@@ -222,6 +232,40 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         recruit.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
         this.level().addFreshEntity(recruit);
         this.discard();
+    }
+
+    private boolean payHireCost(int hireCost) {
+        if (hireCost <= 0) {
+            return true;
+        }
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return false;
+        }
+        UUID ownerUuid = this.getOwnerUUID();
+        if (ownerUuid == null) {
+            return false;
+        }
+        net.minecraft.server.level.ServerPlayer owner = serverLevel.getServer().getPlayerList().getPlayer(ownerUuid);
+        return owner != null && BannerModCurrencyHelper.removeCurrency(owner, hireCost);
+    }
+
+    private static int hireCostFor(CitizenProfession profession) {
+        return switch (profession == null ? CitizenProfession.NONE : profession) {
+            case FARMER -> WorkersServerConfig.FarmerCost.get();
+            case LUMBERJACK -> WorkersServerConfig.LumberjackCost.get();
+            case MINER -> WorkersServerConfig.MinerCost.get();
+            case BUILDER -> WorkersServerConfig.BuilderCost.get();
+            case MERCHANT -> WorkersServerConfig.MerchantCost.get();
+            case FISHERMAN -> WorkersServerConfig.FarmerCost.get();
+            case ANIMAL_FARMER -> WorkersServerConfig.FarmerCost.get();
+            case RECRUIT_SPEAR -> RecruitsServerConfig.RecruitCost.get();
+            case RECRUIT_BOWMAN -> RecruitsServerConfig.BowmanCost.get();
+            case RECRUIT_CROSSBOWMAN -> RecruitsServerConfig.CrossbowmanCost.get();
+            case RECRUIT_HORSEMAN -> RecruitsServerConfig.HorsemanCost.get();
+            case RECRUIT_SHIELDMAN -> RecruitsServerConfig.ShieldmanCost.get();
+            case RECRUIT_NOMAD -> RecruitsServerConfig.NomadCost.get();
+            case RECRUIT_SCOUT, NOBLE, NONE -> 0;
+        };
     }
 
     @Nullable

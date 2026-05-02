@@ -6,6 +6,7 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.BowmanEntity;
 import com.talhanation.bannermod.entity.military.CrossBowmanEntity;
 import com.talhanation.bannermod.persistence.military.RecruitsGroup;
+import com.talhanation.bannermod.util.BannerModCurrencyHelper;
 import com.talhanation.bannermod.util.RegistryLookup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -33,41 +34,12 @@ final class RecruitCommandActionService {
     static boolean handleRecruiting(Player player, RecruitsGroup group, AbstractRecruitEntity recruit, boolean message) {
         String name = recruit.getName().getString() + ": ";
         int sollPrice = recruit.getCost();
-        Inventory playerInv = player.getInventory();
-        int playerEmeralds = 0;
-
-        String str = RecruitsServerConfig.RecruitCurrency.get();
-        Optional<? extends Holder<Item>> holder = RegistryLookup.itemHolder(ResourceLocation.tryParse(str));
-
-        ItemStack currencyItemStack = holder.map(itemHolder -> itemHolder.value().getDefaultInstance()).orElseGet(Items.EMERALD::getDefaultInstance);
-
-        Item currency = currencyItemStack.getItem();
-
-        for (int i = 0; i < playerInv.getContainerSize(); i++) {
-            ItemStack itemStackInSlot = playerInv.getItem(i);
-            Item itemInSlot = itemStackInSlot.getItem();
-            if (itemInSlot.equals(currency)) {
-                playerEmeralds = playerEmeralds + itemStackInSlot.getCount();
-            }
-        }
-
-        boolean playerCanPay = playerEmeralds >= sollPrice;
+        boolean playerCanPay = BannerModCurrencyHelper.canAfford(player, sollPrice);
+        Item currency = BannerModCurrencyHelper.currencyItem();
 
         if (playerCanPay || player.isCreative()) {
             if (recruit.hire(player, group, message)) {
-                playerEmeralds = playerEmeralds - sollPrice;
-
-                for (int i = 0; i < playerInv.getContainerSize(); i++) {
-                    ItemStack itemStackInSlot = playerInv.getItem(i);
-                    Item itemInSlot = itemStackInSlot.getItem();
-                    if (itemInSlot.equals(currency)) {
-                        playerInv.removeItemNoUpdate(i);
-                    }
-                }
-
-                ItemStack emeraldsLeft = currencyItemStack.copy();
-                emeraldsLeft.setCount(playerEmeralds);
-                playerInv.add(emeraldsLeft);
+                BannerModCurrencyHelper.removeCurrency(player, sollPrice);
 
                 return true;
             }

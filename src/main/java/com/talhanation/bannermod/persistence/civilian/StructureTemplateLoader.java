@@ -11,14 +11,13 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,7 +27,13 @@ import java.util.function.Consumer;
 
 public class StructureTemplateLoader {
 
-    public static final List<String> supportedExtensions = List.of(".nbt", ".schem", ".schematic", ".litematic");
+    public static final List<String> supportedExtensions = List.of(
+            ".nbt",
+            ".schem",
+            ".schematic",
+            ".litematic",
+            ".forgematica",
+            ".forgematic");
 
     public static CompoundTag loadTemplate(Path templatePath) {
         return loadTemplate(templatePath, WorkersRuntime::migrateStructureNbt);
@@ -42,7 +47,7 @@ public class StructureTemplateLoader {
                 try (InputStream input = Files.newInputStream(templatePath)) {
                     root = NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap());
                 }
-            } else if (fileName.endsWith(".litematic")) {
+            } else if (fileName.endsWith(".litematic") || fileName.endsWith(".forgematica") || fileName.endsWith(".forgematic")) {
                 try (InputStream input = Files.newInputStream(templatePath)) {
                     root = convertLitematic(NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap()), stripExtension(fileName));
                 }

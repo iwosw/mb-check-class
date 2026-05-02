@@ -5,6 +5,11 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.talhanation.bannermod.client.render.ClientRenderPrimitives;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
+import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
+import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
 import com.talhanation.bannermod.persistence.civilian.ScannedBlock;
 import com.talhanation.bannermod.persistence.civilian.StructureManager;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
@@ -24,12 +29,15 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.model.data.ModelData;
@@ -43,9 +51,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 @OnlyIn(Dist.CLIENT)
-public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
+public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> implements IRenderWorkArea {
     private static final double STRUCTURE_PREVIEW_MAX_DISTANCE_SQR = 64.0D * 64.0D;
     private static final double STRUCTURE_PREVIEW_FULL_DETAIL_DISTANCE_SQR = 24.0D * 24.0D;
+    private static final double SETTLEMENT_WORK_AREA_MAX_DISTANCE_SQR = 128.0D * 128.0D;
     private static final int STRUCTURE_PREVIEW_CACHE_ENTRIES = 8;
     private static final int STRUCTURE_PREVIEW_FAR_BLOCK_BUDGET = 512;
     private static final int STRUCTURE_PREVIEW_FAR_BLOCK_ENTITY_BUDGET = 16;
@@ -58,10 +67,16 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
     };
     private final Map<BlockState, ModelData> previewModelDataCache = new HashMap<>();
     private static boolean renderStructurePreviews = true;
+    private static boolean renderSettlementWorkAreas = false;
 
     public static boolean toggleStructurePreviewRendering() {
         renderStructurePreviews = !renderStructurePreviews;
         return renderStructurePreviews;
+    }
+
+    public static boolean toggleSettlementWorkAreaRendering() {
+        renderSettlementWorkAreas = !renderSettlementWorkAreas;
+        return renderSettlementWorkAreas;
     }
 
     public WorkerAreaRenderer(EntityRendererProvider.Context mgr) {
@@ -77,11 +92,21 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
     @Override
     public boolean shouldRender(AbstractWorkAreaEntity entity, Frustum frustum, double camX, double camY, double camZ) {
         boolean visible = super.shouldRender(entity, frustum, camX, camY, camZ);
+        Player player = Minecraft.getInstance().player;
+        AABB areaBounds = entity.getArea().inflate(0.5D);
+        boolean areaVisible = frustum.isVisible(areaBounds);
+        if (player != null) {
+            if (entity.showBox && areaVisible) {
+                return true;
+            }
+            if (renderSettlementWorkAreas && shouldRenderSettlementOverlay(entity, player, areaVisible)) {
+                return true;
+            }
+        }
         if (entity instanceof BuildArea buildArea) {
-            Player player = Minecraft.getInstance().player;
             if (renderStructurePreviews
-                    && visible
                     && player != null
+                    && (visible || areaVisible)
                     && entity.canPlayerSee(player)
                     && player.distanceToSqr(buildArea) <= STRUCTURE_PREVIEW_MAX_DISTANCE_SQR) {
                 return true;
@@ -94,8 +119,15 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
     public void render(@NotNull AbstractWorkAreaEntity abstractWorkAreaEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         Player player = Minecraft.getInstance().player;
         if(player == null) return;
-        if(!renderStructurePreviews) return;
 
+        if(abstractWorkAreaEntity.showBox) {
+            renderWorkAreaBox(abstractWorkAreaEntity, poseStack, bufferSource, 0.95F, 0.84F, 0.42F, 0.95F);
+        } else if (renderSettlementWorkAreas && shouldRenderSettlementOverlay(abstractWorkAreaEntity, player, true)) {
+            float[] color = overlayColor(abstractWorkAreaEntity);
+            renderWorkAreaBox(abstractWorkAreaEntity, poseStack, bufferSource, color[0], color[1], color[2], color[3]);
+        }
+
+        if(!renderStructurePreviews) return;
         if(!abstractWorkAreaEntity.canPlayerSee(player)) return;
 
         if(abstractWorkAreaEntity instanceof BuildArea buildArea){
@@ -234,6 +266,70 @@ public class WorkerAreaRenderer extends EntityRenderer<AbstractWorkAreaEntity> {
         }
 
         poseStack.popPose();
+    }
+
+    private void renderWorkAreaBox(AbstractWorkAreaEntity area, PoseStack poseStack, MultiBufferSource bufferSource,
+                                   float r, float g, float b, float a) {
+        VertexConsumer lines = bufferSource.getBuffer(RenderType.lines());
+        AABB localArea = area.getArea().inflate(0.03D).move(-area.getX(), -area.getY(), -area.getZ());
+        renderWorkArea(poseStack, lines, localArea, r, g, b, a);
+        Vec3 center = localArea.getCenter();
+        drawLine(poseStack, lines,
+                new Vec3(center.x, localArea.minY, center.z),
+                new Vec3(center.x, localArea.maxY + 0.45D, center.z),
+                r, g, b, a);
+    }
+
+    private boolean shouldRenderSettlementOverlay(AbstractWorkAreaEntity area, Player player, boolean areaVisible) {
+        return areaVisible
+                && area.canPlayerSee(player)
+                && player.distanceToSqr(area) <= SETTLEMENT_WORK_AREA_MAX_DISTANCE_SQR
+                && isClearlyVisible(area, player);
+    }
+
+    private boolean isClearlyVisible(AbstractWorkAreaEntity area, Player player) {
+        if (player.distanceToSqr(area) <= 9.0D) {
+            return true;
+        }
+        AABB box = area.getArea().inflate(0.15D);
+        Vec3 eye = player.getEyePosition();
+        Vec3 center = box.getCenter();
+        if (hasLineOfSight(area, player, eye, center)) {
+            return true;
+        }
+        double topY = box.maxY + 0.2D;
+        return hasLineOfSight(area, player, eye, new Vec3(box.minX, topY, box.minZ))
+                || hasLineOfSight(area, player, eye, new Vec3(box.minX, topY, box.maxZ))
+                || hasLineOfSight(area, player, eye, new Vec3(box.maxX, topY, box.minZ))
+                || hasLineOfSight(area, player, eye, new Vec3(box.maxX, topY, box.maxZ))
+                || hasLineOfSight(area, player, eye, new Vec3(center.x, topY, center.z));
+    }
+
+    private boolean hasLineOfSight(AbstractWorkAreaEntity area, Player player, Vec3 from, Vec3 to) {
+        HitResult result = player.level().clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        return result.getType() == HitResult.Type.MISS || area.getArea().inflate(0.2D).contains(result.getLocation());
+    }
+
+    private float[] overlayColor(AbstractWorkAreaEntity area) {
+        if (area instanceof CropArea) {
+            return new float[]{0.49F, 0.76F, 0.31F, 0.82F};
+        }
+        if (area instanceof LumberArea) {
+            return new float[]{0.68F, 0.48F, 0.24F, 0.82F};
+        }
+        if (area instanceof MiningArea) {
+            return new float[]{0.61F, 0.66F, 0.78F, 0.82F};
+        }
+        if (area instanceof StorageArea) {
+            return new float[]{0.78F, 0.58F, 0.28F, 0.82F};
+        }
+        if (area instanceof MarketArea) {
+            return new float[]{0.77F, 0.48F, 0.67F, 0.82F};
+        }
+        if (area instanceof BuildArea) {
+            return new float[]{0.39F, 0.70F, 0.92F, 0.82F};
+        }
+        return new float[]{0.84F, 0.78F, 0.62F, 0.82F};
     }
 
     private List<ScannedBlock> getCachedPreviewStructure(BuildArea buildArea, CompoundTag nbt) {

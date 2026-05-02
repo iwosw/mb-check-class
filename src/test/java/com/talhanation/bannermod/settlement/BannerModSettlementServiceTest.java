@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.settlement;
 
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementStatus;
 import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
@@ -10,6 +12,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -122,6 +126,142 @@ class BannerModSettlementServiceTest {
         assertEquals("bannermod:validated_farm", farmRecord.buildingTypeId());
         assertEquals(1, farmRecord.workplaceSlots());
         assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, farmRecord.buildingProfileSeed());
+    }
+
+    @Test
+    void validatedBuildingLookupUsesSettlementIdInsteadOfClaimId() {
+        UUID settlementId = UUID.randomUUID();
+        UUID claimId = UUID.randomUUID();
+        SettlementRecord settlement = new SettlementRecord(
+                settlementId,
+                UUID.randomUUID(),
+                "faction",
+                claimId,
+                Level.OVERWORLD,
+                BlockPos.ZERO,
+                BlockPos.ZERO,
+                UUID.randomUUID(),
+                SettlementStatus.ACTIVE,
+                10L
+        );
+        ValidatedBuildingRecord matchingRecord = new ValidatedBuildingRecord(
+                UUID.randomUUID(),
+                settlementId,
+                BuildingType.FARM,
+                Level.OVERWORLD,
+                new BlockPos(4, 64, 4),
+                List.of(),
+                new AABB(4, 64, 4, 8, 65, 8),
+                null,
+                4,
+                80,
+                1L,
+                1L,
+                0L
+        );
+        ValidatedBuildingRecord wrongRecord = new ValidatedBuildingRecord(
+                UUID.randomUUID(),
+                claimId,
+                BuildingType.FARM,
+                Level.OVERWORLD,
+                new BlockPos(4, 64, 4),
+                List.of(),
+                new AABB(4, 64, 4, 8, 65, 8),
+                null,
+                4,
+                80,
+                1L,
+                1L,
+                0L
+        );
+
+        assertTrue(BannerModSettlementService.validatedBuildingBelongsToSettlement(settlement, matchingRecord));
+        assertEquals(false, BannerModSettlementService.validatedBuildingBelongsToSettlement(settlement, wrongRecord));
+    }
+
+    @Test
+    void mergesValidatedCapacityIntoLiveWorkAreaRecordWithoutBreakingBindingUuid() {
+        UUID liveWorkAreaUuid = UUID.randomUUID();
+        UUID settlementId = UUID.randomUUID();
+        UUID ownerUuid = UUID.randomUUID();
+        BlockPos origin = new BlockPos(12, 64, 12);
+        ValidatedBuildingRecord record = new ValidatedBuildingRecord(
+                UUID.randomUUID(),
+                settlementId,
+                BuildingType.FARM,
+                Level.OVERWORLD,
+                origin,
+                List.of(),
+                new AABB(12, 64, 12, 20, 65, 20),
+                null,
+                4,
+                100,
+                1L,
+                1L,
+                0L
+        );
+        BannerModSettlementBuildingRecord liveRecord = new BannerModSettlementBuildingRecord(
+                liveWorkAreaUuid,
+                "bannermod:crop_area",
+                origin,
+                ownerUuid,
+                "54ac1b4f-006f-4fcb-a48d-47f93a9f575a",
+                0,
+                1,
+                0,
+                List.of()
+        );
+        BannerModSettlementBuildingRecord expectedValidated = BannerModSettlementService.fromValidatedBuildingFields(
+                liveWorkAreaUuid,
+                BuildingType.FARM,
+                origin,
+                4,
+                ownerUuid
+        );
+
+        BannerModSettlementBuildingRecord merged = BannerModSettlementService.mergeValidatedBuildingIntoLiveRecord(record, liveRecord);
+
+        assertEquals(liveWorkAreaUuid, merged.buildingUuid());
+        assertEquals("bannermod:crop_area", merged.buildingTypeId());
+        assertEquals(expectedValidated.workplaceSlots(), merged.workplaceSlots());
+        assertEquals(expectedValidated.buildingCategory(), merged.buildingCategory());
+        assertEquals(expectedValidated.buildingProfileSeed(), merged.buildingProfileSeed());
+        assertEquals(ownerUuid, merged.ownerUuid());
+        assertEquals(liveRecord.teamId(), merged.teamId());
+    }
+
+    @Test
+    void resolvesRepairBindingOnlyWhenCanonicalTargetIsUnambiguous() {
+        UUID currentBinding = UUID.randomUUID();
+        UUID duplicateA = UUID.randomUUID();
+        UUID duplicateB = UUID.randomUUID();
+        UUID canonical = UUID.randomUUID();
+        UUID other = UUID.randomUUID();
+
+        assertEquals(
+                canonical,
+                BannerModSettlementService.resolveRepairBinding(
+                        currentBinding,
+                        List.of(duplicateA, duplicateB),
+                        Map.of(duplicateA, canonical, duplicateB, canonical)
+                )
+        );
+        assertEquals(
+                canonical,
+                BannerModSettlementService.resolveRepairBinding(
+                        duplicateA,
+                        List.of(duplicateA, duplicateB),
+                        Map.of(duplicateA, canonical, duplicateB, canonical)
+                )
+        );
+        assertEquals(
+                null,
+                BannerModSettlementService.resolveRepairBinding(
+                        currentBinding,
+                        List.of(duplicateA, duplicateB),
+                        Map.of(duplicateA, duplicateA, duplicateB, other)
+                )
+        );
     }
 
     @Test
@@ -651,6 +791,203 @@ class BannerModSettlementServiceTest {
         assertEquals(expectedSupplySignals, logistics.supplySignalState());
     }
 
+    @Test
+    void summarizesDesiredGoodsIncludesSeaTradeImportAndExportDrivers() {
+        BannerModSeaTradeSummary.Summary seaTradeSummary = new BannerModSeaTradeSummary.Summary(
+                Map.of(ResourceLocation.fromNamespaceAndPath("minecraft", "wheat"), 4),
+                Map.of(ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot"), 2),
+                List.of()
+        );
+
+        BannerModSettlementDesiredGoodsSeed desiredGoodsSeed = BannerModSettlementService.summarizeDesiredGoods(
+                List.of(),
+                BannerModSettlementStockpileSummary.empty(),
+                BannerModSettlementMarketState.empty(),
+                seaTradeSummary
+        );
+
+        assertEquals(List.of(
+                new BannerModSettlementDesiredGoodSeed("sea_import:minecraft:iron_ingot", 2),
+                new BannerModSettlementDesiredGoodSeed("sea_export:minecraft:wheat", 4)
+        ), desiredGoodsSeed.desiredGoods());
+    }
+
+    @Test
+    void summarizesSupplySignalsCountsSeaTradeMarketAndStorageCoverage() {
+        BannerModSettlementDesiredGoodsSeed desiredGoodsSeed = new BannerModSettlementDesiredGoodsSeed(List.of(
+                new BannerModSettlementDesiredGoodSeed("storage_type:merchants", 1),
+                new BannerModSettlementDesiredGoodSeed("market_goods", 2),
+                new BannerModSettlementDesiredGoodSeed("trade_stock", 3),
+                new BannerModSettlementDesiredGoodSeed("sea_import:minecraft:iron_ingot", 4),
+                new BannerModSettlementDesiredGoodSeed("sea_export:minecraft:wheat", 5)
+        ));
+        BannerModSeaTradeSummary.Summary seaTradeSummary = new BannerModSeaTradeSummary.Summary(
+                Map.of(ResourceLocation.fromNamespaceAndPath("minecraft", "wheat"), 5),
+                Map.of(ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot"), 4),
+                List.of()
+        );
+
+        BannerModSettlementSupplySignalState signals = BannerModSettlementService.summarizeSupplySignals(
+                desiredGoodsSeed,
+                new BannerModSettlementStockpileSummary(1, 1, 27, 0, 2, List.of("merchants")),
+                new BannerModSettlementMarketState(1, 1, 27, 9, 2, 2, List.of(), List.of()),
+                List.of(),
+                List.of(),
+                BannerModSettlementService.ReservationSignalSeed.empty(),
+                seaTradeSummary
+        );
+
+        assertEquals(new BannerModSettlementSupplySignalState(
+                5,
+                0,
+                0,
+                0,
+                List.of(
+                        new BannerModSettlementSupplySignal("storage_type:merchants", 1, 1, 0, 0),
+                        new BannerModSettlementSupplySignal("market_goods", 2, 2, 0, 0),
+                        new BannerModSettlementSupplySignal("trade_stock", 3, 3, 0, 0),
+                        new BannerModSettlementSupplySignal("sea_import:minecraft:iron_ingot", 4, 4, 0, 0),
+                        new BannerModSettlementSupplySignal("sea_export:minecraft:wheat", 5, 5, 0, 0)
+                )
+        ), signals);
+    }
+
+    @Test
+    void seaTradeStatusLinesIncludeBenefitsBottlenecksAndFallbackLabels() {
+        BannerModSeaTradeSummary.Summary seaTradeSummary = new BannerModSeaTradeSummary.Summary(
+                Map.of(ResourceLocation.fromNamespaceAndPath("minecraft", "wheat"), 5),
+                Map.of(ResourceLocation.fromNamespaceAndPath("minecraft", "iron_ingot"), 3),
+                List.of(BannerModSeaTradeSummary.BOTTLENECK_ONLY_EXPORTS, BannerModSeaTradeSummary.BOTTLENECK_UNFILTERED_ROUTE)
+        );
+
+        List<String> lines = BannerModSettlementService.seaTradeStatusLines(
+                seaTradeSummary,
+                List.of(seaTradeRecord(
+                        "00000000-0000-0000-0000-000000003207",
+                        UUID.fromString("00000000-0000-0000-0000-000000003101"),
+                        UUID.fromString("00000000-0000-0000-0000-000000003102"),
+                        BannerModLogisticsItemFilter.any(),
+                        6,
+                        1,
+                        BannerModSeaTradeExecutionState.FAILED,
+                        "unexpected_failure"
+                ))
+        );
+
+        assertEquals(
+                "gui.bannermod.governor.logistics.sea_trade.blocked_cargo 3207 2201 gui.bannermod.governor.logistics.sea_trade.reason.carrier_failed any 1 6",
+                lines.get(0)
+        );
+        assertTrue(lines.contains("Sea import benefit: minecraft:iron_ingot x3"));
+        assertTrue(lines.contains("Sea export benefit: minecraft:wheat x5"));
+        assertTrue(lines.contains("Sea trade bottleneck: only_exports"));
+        assertTrue(lines.contains("Sea trade bottleneck: unfiltered_route"));
+    }
+
+    @Test
+    void summarizesProjectCandidatePrefersMarketFoundationWhenDemandExistsWithoutMarket() {
+        BannerModSettlementProjectCandidateSeed candidate = BannerModSettlementService.summarizeProjectCandidate(
+                List.of(storageBuilding(false, false, List.of("merchants"))),
+                new BannerModSettlementStockpileSummary(1, 1, 27, 0, 0, List.of("merchants")),
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("market_goods", 2)
+                )),
+                BannerModSettlementMarketState.empty(),
+                true,
+                false
+        );
+
+        assertEquals("market_foundation", candidate.candidateId());
+        assertEquals(BannerModSettlementBuildingProfileSeed.MARKET, candidate.targetBuildingProfileSeed());
+        assertEquals(4, candidate.priority());
+        assertEquals(List.of("market_missing", "market_goods_demand", "stockpile_ready"), candidate.driverIds());
+    }
+
+    @Test
+    void summarizesProjectCandidateRecoversClosedMarketsBeforeExpansion() {
+        BannerModSettlementProjectCandidateSeed candidate = BannerModSettlementService.summarizeProjectCandidate(
+                List.of(
+                        storageBuilding(false, false, List.of()),
+                        building("bannermod:market_area", BannerModSettlementBuildingProfileSeed.MARKET)
+                ),
+                new BannerModSettlementStockpileSummary(1, 1, 27, 0, 0, List.of()),
+                BannerModSettlementDesiredGoodsSeed.empty(),
+                new BannerModSettlementMarketState(2, 1, 27, 9, 1, 1, List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9),
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "East Gate", false, 18, 4)
+                ), List.of()),
+                false,
+                false
+        );
+
+        assertEquals("market_recovery", candidate.candidateId());
+        assertEquals(BannerModSettlementBuildingProfileSeed.MARKET, candidate.targetBuildingProfileSeed());
+        assertEquals(List.of("closed_market_capacity", "seller_ready"), candidate.driverIds());
+    }
+
+    @Test
+    void summarizesProjectCandidateUsesMaterialPressureWhenStorageAndMarketsExist() {
+        BannerModSettlementProjectCandidateSeed candidate = BannerModSettlementService.summarizeProjectCandidate(
+                List.of(
+                        storageBuilding(false, false, List.of()),
+                        building("bannermod:market_area", BannerModSettlementBuildingProfileSeed.MARKET)
+                ),
+                new BannerModSettlementStockpileSummary(1, 1, 27, 0, 0, List.of()),
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("materials", 2)
+                )),
+                new BannerModSettlementMarketState(1, 1, 27, 9, 0, 0, List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9)
+                ), List.of()),
+                false,
+                true
+        );
+
+        assertEquals("material_capacity_growth", candidate.candidateId());
+        assertEquals(BannerModSettlementBuildingProfileSeed.MATERIAL_PRODUCTION, candidate.targetBuildingProfileSeed());
+        assertEquals(List.of("materials_demand"), candidate.driverIds());
+    }
+
+    @Test
+    void summarizesProjectCandidateUsesConstructionPressureAndCanSettleOnNone() {
+        BannerModSettlementProjectCandidateSeed constructionCandidate = BannerModSettlementService.summarizeProjectCandidate(
+                List.of(
+                        storageBuilding(false, false, List.of()),
+                        building("bannermod:market_area", BannerModSettlementBuildingProfileSeed.MARKET)
+                ),
+                new BannerModSettlementStockpileSummary(1, 1, 27, 0, 0, List.of()),
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("construction_materials", 1)
+                )),
+                new BannerModSettlementMarketState(1, 1, 27, 9, 0, 0, List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9)
+                ), List.of()),
+                false,
+                false
+        );
+        BannerModSettlementProjectCandidateSeed noneCandidate = BannerModSettlementService.summarizeProjectCandidate(
+                List.of(
+                        storageBuilding(false, false, List.of()),
+                        building("bannermod:market_area", BannerModSettlementBuildingProfileSeed.MARKET),
+                        building("bannermod:crop_area", BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION)
+                ),
+                new BannerModSettlementStockpileSummary(1, 1, 27, 0, 0, List.of()),
+                new BannerModSettlementDesiredGoodsSeed(List.of(
+                        new BannerModSettlementDesiredGoodSeed("food", 1)
+                )),
+                new BannerModSettlementMarketState(1, 1, 27, 9, 0, 0, List.of(
+                        new BannerModSettlementMarketRecord(UUID.randomUUID(), "Harbor Square", true, 27, 9)
+                ), List.of()),
+                false,
+                false
+        );
+
+        assertEquals("construction_capacity_growth", constructionCandidate.candidateId());
+        assertEquals(BannerModSettlementBuildingProfileSeed.CONSTRUCTION, constructionCandidate.targetBuildingProfileSeed());
+        assertEquals("none", noneCandidate.candidateId());
+        assertEquals(0, noneCandidate.priority());
+    }
+
     private static BannerModSeaTradeExecutionRecord seaTradeRecord(String routeId,
                                                                    UUID sourceId,
                                                                    UUID destinationId,
@@ -671,6 +1008,53 @@ class BannerModSettlementServiceTest {
                 cargoCount,
                 state,
                 failureReason
+        );
+    }
+
+    private static BannerModSettlementBuildingRecord building(String typeId,
+                                                              BannerModSettlementBuildingProfileSeed profileSeed) {
+        return new BannerModSettlementBuildingRecord(
+                UUID.randomUUID(),
+                typeId,
+                BlockPos.ZERO,
+                UUID.randomUUID(),
+                "blueguild",
+                0,
+                1,
+                0,
+                List.of(),
+                false,
+                0,
+                0,
+                false,
+                false,
+                List.of(),
+                profileSeed.category(),
+                profileSeed
+        );
+    }
+
+    private static BannerModSettlementBuildingRecord storageBuilding(boolean routed,
+                                                                     boolean portEntrypoint,
+                                                                     List<String> typeIds) {
+        return new BannerModSettlementBuildingRecord(
+                UUID.randomUUID(),
+                "bannermod:storage_area",
+                BlockPos.ZERO,
+                UUID.randomUUID(),
+                "blueguild",
+                0,
+                1,
+                0,
+                List.of(),
+                true,
+                1,
+                27,
+                routed,
+                portEntrypoint,
+                typeIds,
+                BannerModSettlementBuildingProfileSeed.STORAGE.category(),
+                BannerModSettlementBuildingProfileSeed.STORAGE
         );
     }
 }

@@ -43,9 +43,92 @@ class BannerModSettlementStrategicSignalsTest {
         assertTrue(signals.loyaltyPressureIds().isEmpty());
     }
 
+    @Test
+    void marketAndRouteStorageBecomeJunctionMarketWithSingleRoutePressure() {
+        BannerModSettlementStrategicSignals signals = BannerModSettlementStrategicSignals.fromSnapshot(snapshot(
+                new BannerModSettlementStockpileSummary(1, 1, 27, 1, 0, List.of()),
+                new BannerModSettlementMarketState(1, 1, 9, 4, 0, 0, List.of(), List.of()),
+                List.of(building("bannermod:storage_area", BannerModSettlementBuildingProfileSeed.STORAGE))
+        ));
+
+        assertEquals("junction_market", signals.roleId());
+        assertEquals("single_route", signals.routeCostId());
+        assertTrue(signals.logisticsObjectiveIds().contains("route_junction"));
+        assertTrue(signals.loyaltyPressureIds().contains("dependent_on_single_route"));
+    }
+
+    @Test
+    void fortifiedRouteStorageBecomesChokepointFort() {
+        BannerModSettlementStrategicSignals signals = BannerModSettlementStrategicSignals.fromSnapshot(snapshot(
+                new BannerModSettlementStockpileSummary(1, 1, 27, 1, 0, List.of()),
+                BannerModSettlementMarketState.empty(),
+                List.of(
+                        building("bannermod:starter_fort", BannerModSettlementBuildingProfileSeed.GENERAL),
+                        building("bannermod:storage_area", BannerModSettlementBuildingProfileSeed.STORAGE)
+                )
+        ));
+
+        assertEquals("chokepoint_fort", signals.roleId());
+        assertEquals("single_route", signals.routeCostId());
+    }
+
+    @Test
+    void landlockedMaterialsBecomeWorkedGoodsSpecialization() {
+        BannerModSettlementStrategicSignals signals = BannerModSettlementStrategicSignals.fromSnapshot(snapshot(
+                new BannerModSettlementStockpileSummary(1, 1, 27, 0, 0, List.of()),
+                BannerModSettlementMarketState.empty(),
+                List.of(
+                        building("bannermod:mining_area", BannerModSettlementBuildingProfileSeed.MATERIAL_PRODUCTION),
+                        building("bannermod:storage_area", BannerModSettlementBuildingProfileSeed.STORAGE)
+                )
+        ));
+
+        assertEquals("worked_materials", signals.specializationId());
+        assertTrue(signals.logisticsObjectiveIds().contains("stockpile"));
+        assertTrue(signals.loyaltyPressureIds().contains("isolated_supply"));
+    }
+
+    @Test
+    void nullSnapshotAndSparseOutpostUseFallbackSignals() {
+        BannerModSettlementStrategicSignals emptySignals = BannerModSettlementStrategicSignals.fromSnapshot(null);
+        BannerModSettlementStrategicSignals outpostSignals = BannerModSettlementStrategicSignals.fromSnapshot(snapshot(
+                BannerModSettlementStockpileSummary.empty(),
+                BannerModSettlementMarketState.empty(),
+                List.of(building("bannermod:watchtower", BannerModSettlementBuildingProfileSeed.GENERAL))
+        ));
+
+        assertEquals("outpost", emptySignals.roleId());
+        assertEquals("unknown", emptySignals.routeCostId());
+        assertEquals("local_outpost", outpostSignals.roleId());
+        assertTrue(outpostSignals.loyaltyPressureIds().contains("no_local_distribution"));
+    }
+
+    @Test
+    void constructorNormalizesBlankSignalMetadataToStableFallbacks() {
+        BannerModSettlementStrategicSignals signals = new BannerModSettlementStrategicSignals(
+                " ",
+                "",
+                null,
+                " ",
+                "  ",
+                null,
+                null,
+                null
+        );
+
+        assertEquals("outpost", signals.roleId());
+        assertEquals("isolated", signals.routeCostId());
+        assertEquals("none", signals.specializationId());
+        assertEquals("Local outpost with no dominant logistics role yet.", signals.roleDescription());
+        assertEquals("Supply depends on local stores or manual hauling.", signals.routeCostDescription());
+        assertEquals("No landlocked specialty is visible yet.", signals.specializationDescription());
+        assertTrue(signals.logisticsObjectiveIds().isEmpty());
+        assertTrue(signals.loyaltyPressureIds().isEmpty());
+    }
+
     private static BannerModSettlementSnapshot snapshot(BannerModSettlementStockpileSummary stockpileSummary,
-                                                        BannerModSettlementMarketState marketState,
-                                                        List<BannerModSettlementBuildingRecord> buildings) {
+                                                         BannerModSettlementMarketState marketState,
+                                                         List<BannerModSettlementBuildingRecord> buildings) {
         ChunkPos anchor = new ChunkPos(0, 0);
         return new BannerModSettlementSnapshot(
                 UUID.randomUUID(),

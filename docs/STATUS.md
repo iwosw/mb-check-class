@@ -22,6 +22,7 @@ Last updated: 2026-04-28.
 - Political-entity rename/co-leader dialogs now accept typed input again, and starter-fort founding can create the first anchor claim automatically for the founding state when no claim exists yet.
 - Claims now support a trusted-members list for shared settlement access: trusted players get claim-friendly block/build/work-area access and a localized management UI, but do not gain co-leader political authority.
 - Settlement survey now explains zone purpose and expected build contents in-screen/HUD, renders role labels over hologram guide boxes, and can pin the anchored hologram client-side after the tool is put away; local RenaissanceMuskets optional-runtime wiring now stages Connector/Fabric bridge jars and passes live musket GameTests under `runGameTestServer` when the runtime property is enabled.
+- Remaining recruit, messenger, claim-HUD, and world-map UI surfaces now follow the Minecraft-native parchment/wood/iron style pass, keep visible action-state or denial feedback on primary controls, and verify leader plus co-leader claim-authority HUD behavior in focused UI tests.
 - Claim deletion packets now resolve and delete only persisted server-side claims after the same owner/co-leader/admin authority check used by claim updates.
 - Face, ranged-fire, and upkeep military packets now use the real server sender UUID for authority instead of client-supplied owner UUID fields.
 - Leader group and companion group assignment packet paths now require direct recruit control and owned groups before mutating leader/group state.

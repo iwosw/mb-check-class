@@ -1,9 +1,12 @@
 package com.talhanation.bannermod.settlement;
 
+import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
+import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeEntrypoint;
 import com.talhanation.bannermod.shared.logistics.BannerModSeaTradeExecutionRecord;
@@ -29,6 +32,11 @@ final class BannerModSettlementSnapshotBuilder {
         String settlementFactionId = claim.getOwnerPoliticalEntityId() != null
                 ? claim.getOwnerPoliticalEntityId().toString()
                 : governorSnapshot == null ? null : governorSnapshot.settlementFactionId();
+
+        List<AbstractWorkAreaEntity> workAreas = BannerModSettlementService.collectWorkAreas(level, claim, AbstractWorkAreaEntity.class);
+        SettlementRecord settlementRecord = BannerModSettlementService.settlementRecordForClaim(level, claim);
+        List<ValidatedBuildingRecord> validatedBuildings = BannerModSettlementService.collectValidatedBuildings(level, settlementRecord);
+        BannerModSettlementService.repairClaimState(level, claim, workAreas, validatedBuildings);
 
         List<BannerModSettlementResidentRecord> residents = BannerModSettlementService.collectResidents(level, claim, governorSnapshot, settlementFactionId);
         List<BannerModSettlementBuildingRecord> buildings = BannerModSettlementService.collectBuildings(level, claim);

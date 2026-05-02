@@ -11,24 +11,29 @@ public class WorkerControlStatus {
 
     private Kind kind;
     private String reasonToken;
+    private String reasonMessage;
 
-    public boolean shouldNotify(Kind nextKind, String nextReasonToken) {
+    public boolean shouldNotify(Kind nextKind, String nextReasonToken, String nextReasonMessage) {
         if (nextKind == null || nextReasonToken == null || nextReasonToken.isBlank()) {
             return false;
         }
 
-        if (kind == nextKind && Objects.equals(reasonToken, nextReasonToken)) {
+        if (kind == nextKind
+                && Objects.equals(reasonToken, nextReasonToken)
+                && Objects.equals(reasonMessage, nextReasonMessage)) {
             return false;
         }
 
         kind = nextKind;
         reasonToken = nextReasonToken;
+        reasonMessage = nextReasonMessage;
         return true;
     }
 
     public void clear() {
         kind = null;
         reasonToken = null;
+        reasonMessage = null;
     }
 
     public Kind kind() {
@@ -37,5 +42,9 @@ public class WorkerControlStatus {
 
     public String reasonToken() {
         return reasonToken;
+    }
+
+    public String reasonMessage() {
+        return reasonMessage;
     }
 }

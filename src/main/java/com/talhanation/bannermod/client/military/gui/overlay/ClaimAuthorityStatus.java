@@ -80,6 +80,11 @@ public enum ClaimAuthorityStatus {
                 return FRIENDLY;
             }
         }
+        if (ownerEntity != null && playerTeamName != null) {
+            if (playerTeamName.equals(ownerEntity.id().toString()) || playerTeamName.equals(ownerEntity.name())) {
+                return FRIENDLY;
+            }
+        }
         return claim.getOwnerPoliticalEntityId().toString().equals(playerTeamName) ? FRIENDLY : HOSTILE;
     }
 }
