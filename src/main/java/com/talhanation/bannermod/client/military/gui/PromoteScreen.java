@@ -57,9 +57,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
     private static final MutableComponent BUTTON_ROGUE = Component.translatable("gui.bannermod.inv.text.rogue");
     private static final MutableComponent TOOLTIP_ROGUE = Component.translatable("gui.bannermod.inv.tooltip.rogue");
     private static final MutableComponent NAME_LABEL = Component.translatable("gui.recruits.promote.name_label");
-
-    //private boolean keepTeam;
-
+    private static final MutableComponent TITLE = Component.translatable("gui.recruits.promote.screen.title");
 
     public PromoteScreen(PromoteContainer container, Inventory playerInventory, Component title) {
         super(RESOURCE_LOCATION, container, playerInventory, Component.literal(""));
@@ -75,7 +73,6 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
         super.init();
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
-        //keepTeam = false;
 
         setWidgets();
     }
@@ -133,7 +130,8 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
     }
 
     private Button createProfessionButtons(Component buttonText, Component buttonTooltip, int professionID, boolean active){
-        Button professionButton = addRenderableWidget(new ExtendedButton(leftPos + 59, 31 + topPos + 23 * professionID, 80, 20, buttonText,
+        Component clamped = MilitaryGuiStyle.clampLabel(font, buttonText, 80 - 6);
+        Button professionButton = addRenderableWidget(new ExtendedButton(leftPos + 59, 31 + topPos + 23 * professionID, 80, 20, clamped,
                 btn -> {
                     if (recruit != null) {
                         String name = this.textField.getValue();
@@ -152,10 +150,21 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
     }
 
     @Override
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        // Replace ad-hoc texture chrome with parchment palette.
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, leftPos, topPos, imageWidth, imageHeight);
+        MilitaryGuiStyle.titleStrip(guiGraphics, leftPos + 10, topPos + 8, imageWidth - 20, 16);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 14, topPos + 30, imageWidth - 28, 200);
+        MilitaryGuiStyle.insetPanel(guiGraphics, leftPos + 14, topPos + 232, imageWidth - 28, 14);
+    }
+
+    @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.renderLabels(guiGraphics, mouseX, mouseY);
-        guiGraphics.drawString(font, NAME_LABEL, 16, 3, 0xB59A6A, false);
-        guiGraphics.drawString(font, recruit.getDisplayName(), 16, 28, 0xF0E6D2, false);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, TITLE, 0, 11, imageWidth);
+        guiGraphics.drawString(font, NAME_LABEL, 16, 32, MilitaryGuiStyle.TEXT_DARK, false);
+        Component clampedName = MilitaryGuiStyle.clampLabel(font, recruit.getDisplayName(), imageWidth - 24);
+        guiGraphics.drawString(font, clampedName, 16, 50, MilitaryGuiStyle.TEXT_DARK, false);
 
         Component status = recruit.getXpLevel() >= 7
                 ? Component.translatable("gui.recruits.promote.status.ready")
@@ -164,7 +173,8 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
                 : recruit.getXpLevel() >= 3
                 ? Component.translatable("gui.recruits.promote.status.level5")
                 : Component.translatable("gui.recruits.promote.status.level3");
-        guiGraphics.drawString(font, status, 16, 236, 0xB59A6A, false);
+        Component statusClamped = MilitaryGuiStyle.clampLabel(font, status, imageWidth - 28);
+        guiGraphics.drawString(font, statusClamped, 16, 235, MilitaryGuiStyle.TEXT, false);
     }
 
     @Override

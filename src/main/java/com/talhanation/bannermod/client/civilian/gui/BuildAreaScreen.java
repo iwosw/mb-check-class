@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.military.gui.component.ActivateableButton;
 import com.talhanation.bannermod.client.military.gui.widgets.BlackShowingTextField;
 import com.talhanation.bannermod.bootstrap.WorkersRuntime;
@@ -31,12 +32,8 @@ import java.util.UUID;
 
 public class BuildAreaScreen extends WorkAreaScreen {
 
-    private static final int PANEL_WOOD = 0xB02B1C12;
-    private static final int PANEL_PARCHMENT = 0xD8C4A06B;
-    private static final int PANEL_INNER = 0xCC1B120C;
-    private static final int PANEL_BORDER = 0xFF8A683F;
-    private static final int PANEL_TITLE = 0xFFF4D8A1;
-    private static final int PANEL_TEXT = 0xFFE8D9BF;
+    private static final int PANEL_TITLE = 0xFF000000 | MilitaryGuiStyle.TEXT;
+    private static final int PANEL_TEXT = 0xFF000000 | MilitaryGuiStyle.TEXT_MUTED;
 
     public final BuildArea buildArea;
     public Button scanButton;
@@ -518,10 +515,10 @@ public class BuildAreaScreen extends WorkAreaScreen {
     }
 
     private void drawPanel(GuiGraphics guiGraphics, int left, int top, int width, int height) {
-        guiGraphics.fill(left, top, left + width, top + height, PANEL_WOOD);
-        guiGraphics.fill(left + 2, top + 2, left + width - 2, top + height - 2, PANEL_PARCHMENT);
-        guiGraphics.fill(left + 5, top + 16, left + width - 5, top + height - 5, PANEL_INNER);
-        guiGraphics.renderOutline(left, top, width, height, PANEL_BORDER);
+        // Inset over the parent WorkAreaScreen wood panel — keep title strip + dark interior
+        // so labels read at GUI scale 2 without fighting the parchment behind them.
+        MilitaryGuiStyle.insetPanel(guiGraphics, left, top, width, height);
+        MilitaryGuiStyle.titleStrip(guiGraphics, left + 1, top + 1, width - 2, 14);
     }
 
     private void drawWrapped(GuiGraphics guiGraphics, Component text, int x, int y, int width, int color) {
