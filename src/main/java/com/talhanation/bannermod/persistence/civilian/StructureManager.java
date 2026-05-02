@@ -141,7 +141,7 @@ public class StructureManager {
             try { Files.createDirectories(scanRoot); } catch (IOException e) { e.printStackTrace(); return; }
         }
 
-        if (containsNbt(scanRoot)) return;
+        if (containsStructureTemplates(scanRoot)) return;
 
         String folderPrefix = WorkersRuntime.mergedStructureRoot().getPath();
         Map<ResourceLocation, Resource> resources = Minecraft.getInstance().getResourceManager()
@@ -167,13 +167,13 @@ public class StructureManager {
         }
     }
 
-    private static boolean containsNbt(Path dir) {
+    private static boolean containsStructureTemplates(Path dir) {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path entry : stream) {
                 if (Files.isDirectory(entry)) {
-                    if (containsNbt(entry)) return true;
+                    if (containsStructureTemplates(entry)) return true;
                 } else if (StructureTemplateLoader.supportedExtensions.stream()
-                        .anyMatch(ext -> entry.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(ext))) {
+                        .anyMatch(extension -> entry.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(extension))) {
                     return true;
                 }
             }
