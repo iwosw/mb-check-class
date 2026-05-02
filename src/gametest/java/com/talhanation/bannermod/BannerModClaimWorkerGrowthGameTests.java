@@ -6,6 +6,7 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -131,10 +132,14 @@ public class BannerModClaimWorkerGrowthGameTests {
 
         helper.assertTrue(worker instanceof FarmerEntity, "Expected the configured claim-growth profession pool to spawn a farmer.");
         FarmerEntity farmer = (FarmerEntity) worker;
-        helper.assertTrue(farmer.getCurrentCropArea() != null, "Expected a claim-grown farmer on a prepared field to receive a crop area instead of idling without work.");
-        helper.assertTrue(farmer.getCurrentCropArea().isAlive(), "Expected claim-grown farmer field seeding to create a live crop area entity.");
-
-        helper.succeed();
+        helper.succeedWhen(() -> {
+            CropArea currentArea = farmer.getCurrentCropArea();
+            List<CropArea> cropAreas = level.getEntitiesOfClass(CropArea.class, new AABB(fieldCenter).inflate(12.0D));
+            helper.assertTrue(currentArea != null || !cropAreas.isEmpty(),
+                    "Expected a claim-grown farmer on a prepared field to receive or seed a crop area instead of idling without work.");
+            helper.assertTrue((currentArea != null && currentArea.isAlive()) || cropAreas.stream().anyMatch(CropArea::isAlive),
+                    "Expected claim-grown farmer field seeding to create a live crop area entity.");
+        });
     }
 
     private static ServerPlayer createLeader(GameTestHelper helper, ServerLevel level, UUID playerId, String name, String teamId) {

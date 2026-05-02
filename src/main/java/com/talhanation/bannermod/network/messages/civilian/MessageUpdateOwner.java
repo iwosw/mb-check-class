@@ -56,6 +56,15 @@ public class MessageUpdateOwner implements BannerModMessage<MessageUpdateOwner> 
 
     public boolean updateWorkArea(AbstractWorkAreaEntity workArea){
         Player player = workArea.level().getPlayerByUUID(playerUUID);
+        if (player == null && workArea.level() instanceof ServerLevel serverLevel) {
+            player = serverLevel.getServer().getPlayerList().getPlayer(playerUUID);
+        }
+        if (player == null) {
+            player = workArea.level().getEntitiesOfClass(Player.class, workArea.getBoundingBox().inflate(256.0D), candidate -> candidate.getUUID().equals(playerUUID))
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+        }
         return WorkAreaOwnerUpdate.apply(this.playerUUID, resolvedOwner(player), new WorkAreaOwnerUpdate.MutableWorkArea() {
             @Override
             public void setPlayerUUID(UUID playerUUID) {
@@ -87,7 +96,7 @@ public class MessageUpdateOwner implements BannerModMessage<MessageUpdateOwner> 
 
             @Override
             public String name() {
-                return player.getName().getString();
+                return player.getScoreboardName();
             }
 
             @Override

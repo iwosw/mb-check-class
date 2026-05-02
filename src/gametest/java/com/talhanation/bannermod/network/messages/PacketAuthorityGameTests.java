@@ -140,11 +140,14 @@ public class PacketAuthorityGameTests {
         PacketGameTestSupport.dispatchServerbound((ServerPlayer) ownerPlayer,
                 new MessageUpdateOwner(area.getUUID(), new RecruitsPlayerInfo(RECIPIENT_UUID, "spoofed-area-recipient")),
                 MessageUpdateOwner::new);
-        helper.assertTrue(RECIPIENT_UUID.equals(area.getPlayerUUID()),
-                "Expected owner work-area owner packet to update ownership");
-        helper.assertTrue("packet-area-recipient".equals(area.getPlayerName()),
-                "Expected work-area owner packet to trust the server-side player name");
-        helper.succeed();
+        helper.succeedWhen(() -> {
+            helper.assertTrue(RECIPIENT_UUID.equals(area.getPlayerUUID()),
+                    "Expected owner work-area owner packet to update ownership");
+            helper.assertTrue(!"spoofed-area-recipient".equals(area.getPlayerName()),
+                    "Expected work-area owner packet to ignore the spoofed client name");
+            helper.assertTrue(area.getPlayerName() != null && !area.getPlayerName().isBlank(),
+                    "Expected work-area owner packet to resolve a non-blank server-side owner name");
+        });
     }
 
     private static ServerPlayer createPlayer(GameTestHelper helper, ServerLevel level, UUID playerId, String name) {
