@@ -107,7 +107,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent STATUS_FIREARM_AMMO_MISSING = Component.translatable("gui.recruits.inv.status.firearm_ammo_missing");
     private static final MutableComponent STATUS_PROMOTE_READY = Component.translatable("gui.recruits.inv.status.promote_ready");
     private static final MutableComponent STATUS_READY = Component.translatable("gui.recruits.inv.status.ready");
-    private static final int fontColor = 4210752;
+    private static final int fontColor = MilitaryGuiStyle.TEXT_DARK;
     private static final int firearmSupportedColor = 0x3A7A2A;
     private static final int firearmWarningColor = 0xD2A12D;
     private static final int firearmUnsupportedColor = 0xA33A2A;

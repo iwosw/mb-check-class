@@ -83,7 +83,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
 
     private void setEditBox() {
-        Component name = Component.literal("Name");
+        Component name = Component.translatable("gui.recruits.promote.field.name");
         if(recruit.getCustomName() != null) name = recruit.getCustomName();
 
         textField = new EditBox(font, leftPos + 16, topPos + 8, 170, 20, name);

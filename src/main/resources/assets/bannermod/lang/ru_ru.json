@@ -1364,6 +1364,7 @@
   "gui.recruits.hire.status.no_group": "Сначала выбери отряд, прежде чем нанимать этого рекрута.",
   "gui.recruits.hire.status.selected_group": "Вступит в: %s",
   "gui.recruits.promote.screen.title": "Повышение рекрута",
+  "gui.recruits.promote.field.name": "Имя",
   "gui.recruits.promote.name_label": "Полевое имя",
   "gui.recruits.promote.status.level3": "Нужен 3 уровень для первой должности.",
   "gui.recruits.promote.status.level5": "Должности 3 уровня уже открыты. Достигни 5 уровня для старшего командования.",
