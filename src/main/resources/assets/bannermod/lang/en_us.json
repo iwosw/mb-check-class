@@ -2208,6 +2208,7 @@
   "gui.bannermod.hud.battle_window.open": "Battle window OPEN · %s",
   "gui.bannermod.hud.siege_zone": "Siege zone: %s",
   "gui.bannermod.hud.siege_zone.details": "%s · r=%s · %s",
+  "gui.bannermod.hud.war_vs": "%s vs %s",
   "gui.bannermod.widget.dropdown": "Dropdown",
   "gui.bannermod.widget.dropdown.closed": "Press to open dropdown options",
   "gui.bannermod.widget.dropdown.folder_narration": "Template dropdown, folder %s, %s entries",
