@@ -1,6 +1,9 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
+import com.talhanation.bannermod.client.military.gui.widgets.ContextMenuEntry;
+import com.talhanation.bannermod.client.military.gui.widgets.DropDownMenu;
 import com.talhanation.bannermod.client.military.gui.widgets.GuiWidgetBounds;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenEntryBase;
 import com.talhanation.bannermod.client.military.gui.widgets.ListScreenListBase;
@@ -25,6 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +41,9 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
     private static final MutableComponent BUTTON_REMOVE = Component.translatable("gui.workers.button.remove");
     private static final MutableComponent BUTTON_COPY = Component.translatable("gui.workers.button.copy");
     private static final MutableComponent BUTTON_TRADE = Component.translatable("gui.workers.button.trade");
+    private static final MutableComponent BUTTON_MANAGE = Component.translatable("gui.workers.merchant.button.manage");
+    private static final MutableComponent BUTTON_MOVE_UP = Component.translatable("gui.workers.merchant.manage.move_up");
+    private static final MutableComponent BUTTON_MOVE_DOWN = Component.translatable("gui.workers.merchant.manage.move_down");
     private static final MutableComponent TEXT_CREATIVE = Component.translatable("gui.workers.text.creative");
     private static final MutableComponent TEXT_DAILY_REFRESH = Component.translatable("gui.workers.text.dailyRefresh");
     private static final Component TITLE_STALL_LEDGER = Component.translatable("gui.workers.merchant.title");
@@ -48,12 +55,9 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
     public MerchantTradeContainer tradeContainer;
     private ExtendedButton tradeButton;
     private ExtendedButton addEditTradeButton;
-    private ExtendedButton removeTradeButton;
     private RecruitsCheckBox creativeCheckbox;
     private RecruitsCheckBox dailyRefreshCheckbox;
-    private ExtendedButton copyTradeButton;
-    private ExtendedButton moveUpButton;
-    private ExtendedButton moveDownButton;
+    private DropDownMenu<ContextMenuEntry> manageMenu;
     private boolean isCreative;
     private boolean isDailyRefresh;
     private ItemStack hoveredTooltipStack = ItemStack.EMPTY;
@@ -110,7 +114,8 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
         this.addRenderableWidget(this.tradeList);
 
         if((merchantEntity.isCreative() && player.isCreative()) || isOwner){
-            tradeButton = new ExtendedButton(leftPos + 88, topPos + 58, 60, 18, BUTTON_TRADE,
+            // Primary actions: Trade + Add/Edit on the top row (60px wide each, 18 tall, ~80px gap for the dropdown).
+            tradeButton = new ExtendedButton(leftPos + 88, topPos + 58, 78, 18, BUTTON_TRADE,
                     button -> {
                         BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDoTradeWithMerchant(merchantEntity.getUUID(), selection.uuid));
                         this.selection.currentTrades++;
@@ -118,7 +123,7 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                     });
             addRenderableWidget(tradeButton);
 
-            addEditTradeButton = new ExtendedButton(leftPos + 186, topPos + 58, 60, 18, Component.empty(),
+            addEditTradeButton = new ExtendedButton(leftPos + 168, topPos + 58, 78, 18, Component.empty(),
                     button -> {
                         WorkersMerchantTrade trade = selection == null ? new WorkersMerchantTrade() : selection;
                         merchantEntity.openAddEditTradeGUI(player, trade);
@@ -129,66 +134,32 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
                     });
             addRenderableWidget(addEditTradeButton);
 
-            copyTradeButton = new ExtendedButton(leftPos + 88, topPos + 77, 60, 18, BUTTON_COPY,
-                    button -> {
-                        WorkersMerchantTrade trade = selection == null ? new WorkersMerchantTrade() : selection.copy();
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(this.merchantEntity.getUUID(), trade, false));
-                        tradeList.addEntry(this.tradeList.new TradeEntry(trade));
-                        this.selection = null;
-                        tradeList.setSelected(null);
-                        updateButtonState();
-                    });
-            addRenderableWidget(copyTradeButton);
-
-            removeTradeButton = new ExtendedButton(leftPos + 186, topPos + 77, 60, 18, BUTTON_REMOVE,
-                    button -> {
-                        tradeList.children().removeIf(tradeEntry -> tradeEntry.trade.uuid.equals(selection.uuid));
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(merchantEntity.getUUID(), selection, true));
-                        this.selection = null;
-                        tradeList.setSelected(null);
-                        updateButtonState();
-                    });
-            addRenderableWidget(removeTradeButton);
-
-            moveUpButton = new ExtendedButton(leftPos + 158, topPos + 58, 18, 18, Component.literal("\u21E7"),//do not replace
-                    button -> {
-                        if (selection == null) return;
-                        UUID selectedUuid = selection.uuid;
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, true));
-                        List<WorkersMerchantTrade> list = new java.util.ArrayList<>(merchantEntity.getTrades());
-                        for (int i = 1; i < list.size(); i++) {
-                            if (list.get(i).uuid.equals(selectedUuid)) {
-                                WorkersMerchantTrade tmp = list.get(i - 1);
-                                list.set(i - 1, list.get(i));
-                                list.set(i, tmp);
-                                break;
-                            }
+            // Manage dropdown: Copy / Remove / Move up / Move down. Collapses 4 same-tier buttons.
+            List<ContextMenuEntry> manageEntries = new ArrayList<>();
+            manageEntries.add(new ContextMenuEntry(BUTTON_COPY.getString(), this::onCopySelectedTrade, true));
+            manageEntries.add(new ContextMenuEntry(BUTTON_REMOVE.getString(), this::onRemoveSelectedTrade, true));
+            manageEntries.add(new ContextMenuEntry(BUTTON_MOVE_UP.getString(), this::onMoveSelectedUp, true));
+            manageEntries.add(new ContextMenuEntry(BUTTON_MOVE_DOWN.getString(), this::onMoveSelectedDown, true));
+            manageMenu = new DropDownMenu<>(
+                    null,
+                    leftPos + 88,
+                    topPos + 78,
+                    158,
+                    18,
+                    manageEntries,
+                    entry -> entry == null ? BUTTON_MANAGE.getString() : entry.label,
+                    entry -> {
+                        if (entry != null && entry.enabled && entry.action != null) {
+                            entry.action.run();
                         }
-                        merchantEntity.setTrades(list);
-                        loadTrades();
-                        restoreSelection(selectedUuid);
-                    });
-            addRenderableWidget(moveUpButton);
-
-            moveDownButton = new ExtendedButton(leftPos + 158, topPos + 77, 18, 18, Component.literal("\u21E9"),//do not replace
-                    button -> {
-                        if (selection == null) return;
-                        UUID selectedUuid = selection.uuid;
-                        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, false));
-                        List<WorkersMerchantTrade> list = new java.util.ArrayList<>(merchantEntity.getTrades());
-                        for (int i = 0; i < list.size() - 1; i++) {
-                            if (list.get(i).uuid.equals(selectedUuid)) {
-                                WorkersMerchantTrade tmp = list.get(i + 1);
-                                list.set(i + 1, list.get(i));
-                                list.set(i, tmp);
-                                break;
-                            }
-                        }
-                        merchantEntity.setTrades(list);
-                        loadTrades();
-                        restoreSelection(selectedUuid);
-                    });
-            addRenderableWidget(moveDownButton);
+                    }
+            );
+            manageMenu.setBgFill(0xCC2A2119);
+            manageMenu.setBgFillHovered(0xCC4B3928);
+            manageMenu.setBgFillSelected(0xCC1A1310);
+            manageMenu.setDisplayColor(MilitaryGuiStyle.TEXT);
+            manageMenu.setOptionTextColor(MilitaryGuiStyle.TEXT);
+            addRenderableWidget(manageMenu);
 
             if(player.isCreative()) {
                 this.creativeCheckbox = new RecruitsCheckBox(leftPos + 256, topPos + 172, 100, 20, TEXT_CREATIVE,
@@ -250,16 +221,18 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.manageMenu != null) {
+            this.manageMenu.onMouseClick(mouseX, mouseY);
+        }
+
         boolean clicked = super.mouseClicked(mouseX, mouseY, button);
 
         boolean overAddEdit = this.addEditTradeButton != null && this.addEditTradeButton.isHovered();
         boolean overTrade = this.tradeButton != null && this.tradeButton.isHovered();
         boolean overTradeList = this.tradeList != null && this.tradeList.isMouseOver(mouseX, mouseY);
-        boolean overCopy = this.copyTradeButton != null && this.copyTradeButton.isMouseOver(mouseX, mouseY);
-        boolean overUp = this.moveUpButton != null && this.moveUpButton.isMouseOver(mouseX, mouseY);
-        boolean overDown = this.moveDownButton != null && this.moveDownButton.isMouseOver(mouseX, mouseY);
+        boolean overManage = this.manageMenu != null && this.manageMenu.isMouseOver(mouseX, mouseY);
 
-        if (!overAddEdit && !overTrade && !overTradeList && !overCopy && !overUp && !overDown) {
+        if (!overAddEdit && !overTrade && !overTradeList && !overManage) {
             this.selection = null;
             if (this.tradeList != null)
                 this.tradeList.setSelected(null);
@@ -267,6 +240,68 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
         }
 
         return clicked;
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        if (this.manageMenu != null) {
+            this.manageMenu.onMouseMove(mouseX, mouseY);
+        }
+        super.mouseMoved(mouseX, mouseY);
+    }
+
+    private void onCopySelectedTrade() {
+        WorkersMerchantTrade trade = selection == null ? new WorkersMerchantTrade() : selection.copy();
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(this.merchantEntity.getUUID(), trade, false));
+        tradeList.addEntry(this.tradeList.new TradeEntry(trade));
+        this.selection = null;
+        tradeList.setSelected(null);
+        updateButtonState();
+    }
+
+    private void onRemoveSelectedTrade() {
+        if (selection == null) return;
+        tradeList.children().removeIf(tradeEntry -> tradeEntry.trade.uuid.equals(selection.uuid));
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageUpdateMerchantTrade(merchantEntity.getUUID(), selection, true));
+        this.selection = null;
+        tradeList.setSelected(null);
+        updateButtonState();
+    }
+
+    private void onMoveSelectedUp() {
+        if (selection == null) return;
+        UUID selectedUuid = selection.uuid;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, true));
+        List<WorkersMerchantTrade> list = new ArrayList<>(merchantEntity.getTrades());
+        for (int i = 1; i < list.size(); i++) {
+            if (list.get(i).uuid.equals(selectedUuid)) {
+                WorkersMerchantTrade tmp = list.get(i - 1);
+                list.set(i - 1, list.get(i));
+                list.set(i, tmp);
+                break;
+            }
+        }
+        merchantEntity.setTrades(list);
+        loadTrades();
+        restoreSelection(selectedUuid);
+    }
+
+    private void onMoveSelectedDown() {
+        if (selection == null) return;
+        UUID selectedUuid = selection.uuid;
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMoveMerchantTrade(merchantEntity.getUUID(), selectedUuid, false));
+        List<WorkersMerchantTrade> list = new ArrayList<>(merchantEntity.getTrades());
+        for (int i = 0; i < list.size() - 1; i++) {
+            if (list.get(i).uuid.equals(selectedUuid)) {
+                WorkersMerchantTrade tmp = list.get(i + 1);
+                list.set(i + 1, list.get(i));
+                list.set(i, tmp);
+                break;
+            }
+        }
+        merchantEntity.setTrades(list);
+        loadTrades();
+        restoreSelection(selectedUuid);
     }
 
     private void restoreSelection(UUID tradeUuid) {
@@ -300,17 +335,8 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
         if(addEditTradeButton != null){
             this.addEditTradeButton.setMessage(selection != null ? BUTTON_EDIT : BUTTON_ADD);
         }
-        if(removeTradeButton != null){
-            removeTradeButton.active = selection != null;
-        }
-        if(copyTradeButton != null){
-            copyTradeButton.active = selection != null;
-        }
-        if(moveUpButton != null){
-            moveUpButton.active = selection != null;
-        }
-        if(moveDownButton != null){
-            moveDownButton.active = selection != null;
+        if(manageMenu != null){
+            manageMenu.active = selection != null;
         }
 
         this.tradeButton.active = false;
@@ -408,17 +434,25 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         guiGraphics.drawString(font, title, 8, 5, fontColor, false);
 
-        // Show "MerchantName - MarketName" if merchant is in a market, else just merchant name
+        // Show "MerchantName - MarketName" if merchant is in a market, else just merchant name.
+        // The header strip from x=92 to about x=244 gives ~150px of usable space; clamp so long names do not overflow.
         String marketName = merchantEntity.getCurrentMarketName();
-        Component nameLabel = marketName.isEmpty()
-                ? merchantEntity.getDisplayName()
-                : Component.literal(merchantEntity.getDisplayName().getString() + " - " + marketName);
-        guiGraphics.drawString(font, nameLabel, 92, 5, fontColor, false);
+        String rawNameLabel = marketName.isEmpty()
+                ? merchantEntity.getDisplayName().getString()
+                : merchantEntity.getDisplayName().getString() + " - " + marketName;
+        guiGraphics.drawString(font, clampWithEllipsis(rawNameLabel, 150), 92, 5, fontColor, false);
 
         int hintY = drawWrapped(guiGraphics, currentStatusText(), 96, 20, 148, currentStatusColor());
         drawWrapped(guiGraphics, currentHintText(), 96, hintY + 2, 148, 0xFF5D4630);
 
         guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 92, this.imageHeight - 96 + 2, fontColor, false);
+    }
+
+    private String clampWithEllipsis(String raw, int maxWidth) {
+        if (this.font.width(raw) <= maxWidth) return raw;
+        String ellipsis = "…";
+        int ellipsisWidth = this.font.width(ellipsis);
+        return this.font.plainSubstrByWidth(raw, Math.max(0, maxWidth - ellipsisWidth)) + ellipsis;
     }
 
     protected void renderItemStackTooltip(GuiGraphics guiGraphics, ItemStack itemstack, int mouseX, int mouseY) {
