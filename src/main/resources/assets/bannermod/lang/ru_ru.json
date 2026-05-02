@@ -2301,6 +2301,7 @@
   "gui.bannermod.hud.battle_window.open": "Боевое окно ОТКРЫТО · %s",
   "gui.bannermod.hud.siege_zone": "Зона осады: %s",
   "gui.bannermod.hud.siege_zone.details": "%s · r=%s · %s",
+  "gui.bannermod.hud.war_vs": "%s против %s",
   "gui.bannermod.states.add_co_leader": "Добавить со-лидера",
   "gui.bannermod.states.authority.leader_only": "полномочия только у лидера",
   "gui.bannermod.states.authority.shared": "со-лидеры делят полномочия",
