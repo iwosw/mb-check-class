@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.settlement;
 
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementStatus;
 import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsItemFilter;
@@ -10,6 +12,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -122,6 +126,142 @@ class BannerModSettlementServiceTest {
         assertEquals("bannermod:validated_farm", farmRecord.buildingTypeId());
         assertEquals(1, farmRecord.workplaceSlots());
         assertEquals(BannerModSettlementBuildingProfileSeed.FOOD_PRODUCTION, farmRecord.buildingProfileSeed());
+    }
+
+    @Test
+    void validatedBuildingLookupUsesSettlementIdInsteadOfClaimId() {
+        UUID settlementId = UUID.randomUUID();
+        UUID claimId = UUID.randomUUID();
+        SettlementRecord settlement = new SettlementRecord(
+                settlementId,
+                UUID.randomUUID(),
+                "faction",
+                claimId,
+                Level.OVERWORLD,
+                BlockPos.ZERO,
+                BlockPos.ZERO,
+                UUID.randomUUID(),
+                SettlementStatus.ACTIVE,
+                10L
+        );
+        ValidatedBuildingRecord matchingRecord = new ValidatedBuildingRecord(
+                UUID.randomUUID(),
+                settlementId,
+                BuildingType.FARM,
+                Level.OVERWORLD,
+                new BlockPos(4, 64, 4),
+                List.of(),
+                new AABB(4, 64, 4, 8, 65, 8),
+                null,
+                4,
+                80,
+                1L,
+                1L,
+                0L
+        );
+        ValidatedBuildingRecord wrongRecord = new ValidatedBuildingRecord(
+                UUID.randomUUID(),
+                claimId,
+                BuildingType.FARM,
+                Level.OVERWORLD,
+                new BlockPos(4, 64, 4),
+                List.of(),
+                new AABB(4, 64, 4, 8, 65, 8),
+                null,
+                4,
+                80,
+                1L,
+                1L,
+                0L
+        );
+
+        assertTrue(BannerModSettlementService.validatedBuildingBelongsToSettlement(settlement, matchingRecord));
+        assertEquals(false, BannerModSettlementService.validatedBuildingBelongsToSettlement(settlement, wrongRecord));
+    }
+
+    @Test
+    void mergesValidatedCapacityIntoLiveWorkAreaRecordWithoutBreakingBindingUuid() {
+        UUID liveWorkAreaUuid = UUID.randomUUID();
+        UUID settlementId = UUID.randomUUID();
+        UUID ownerUuid = UUID.randomUUID();
+        BlockPos origin = new BlockPos(12, 64, 12);
+        ValidatedBuildingRecord record = new ValidatedBuildingRecord(
+                UUID.randomUUID(),
+                settlementId,
+                BuildingType.FARM,
+                Level.OVERWORLD,
+                origin,
+                List.of(),
+                new AABB(12, 64, 12, 20, 65, 20),
+                null,
+                4,
+                100,
+                1L,
+                1L,
+                0L
+        );
+        BannerModSettlementBuildingRecord liveRecord = new BannerModSettlementBuildingRecord(
+                liveWorkAreaUuid,
+                "bannermod:crop_area",
+                origin,
+                ownerUuid,
+                "54ac1b4f-006f-4fcb-a48d-47f93a9f575a",
+                0,
+                1,
+                0,
+                List.of()
+        );
+        BannerModSettlementBuildingRecord expectedValidated = BannerModSettlementService.fromValidatedBuildingFields(
+                liveWorkAreaUuid,
+                BuildingType.FARM,
+                origin,
+                4,
+                ownerUuid
+        );
+
+        BannerModSettlementBuildingRecord merged = BannerModSettlementService.mergeValidatedBuildingIntoLiveRecord(record, liveRecord);
+
+        assertEquals(liveWorkAreaUuid, merged.buildingUuid());
+        assertEquals("bannermod:crop_area", merged.buildingTypeId());
+        assertEquals(expectedValidated.workplaceSlots(), merged.workplaceSlots());
+        assertEquals(expectedValidated.buildingCategory(), merged.buildingCategory());
+        assertEquals(expectedValidated.buildingProfileSeed(), merged.buildingProfileSeed());
+        assertEquals(ownerUuid, merged.ownerUuid());
+        assertEquals(liveRecord.teamId(), merged.teamId());
+    }
+
+    @Test
+    void resolvesRepairBindingOnlyWhenCanonicalTargetIsUnambiguous() {
+        UUID currentBinding = UUID.randomUUID();
+        UUID duplicateA = UUID.randomUUID();
+        UUID duplicateB = UUID.randomUUID();
+        UUID canonical = UUID.randomUUID();
+        UUID other = UUID.randomUUID();
+
+        assertEquals(
+                canonical,
+                BannerModSettlementService.resolveRepairBinding(
+                        currentBinding,
+                        List.of(duplicateA, duplicateB),
+                        Map.of(duplicateA, canonical, duplicateB, canonical)
+                )
+        );
+        assertEquals(
+                canonical,
+                BannerModSettlementService.resolveRepairBinding(
+                        duplicateA,
+                        List.of(duplicateA, duplicateB),
+                        Map.of(duplicateA, canonical, duplicateB, canonical)
+                )
+        );
+        assertEquals(
+                null,
+                BannerModSettlementService.resolveRepairBinding(
+                        currentBinding,
+                        List.of(duplicateA, duplicateB),
+                        Map.of(duplicateA, duplicateA, duplicateB, other)
+                )
+        );
     }
 
     @Test
