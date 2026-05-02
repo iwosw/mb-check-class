@@ -36,6 +36,7 @@ class ClaimAuthorityStatusTest {
         assertEquals(ClaimAuthorityStatus.HOSTILE, ClaimAuthorityStatus.classify("other-team", new RecruitsClaim("Keep", owner)));
     }
 
+    @Test
     void leaderOfOwningPoliticalEntityIsFriendly() {
         UUID owner = UUID.fromString("00000000-0000-0000-0000-000000000011");
         UUID leader = UUID.fromString("00000000-0000-0000-0000-000000000022");

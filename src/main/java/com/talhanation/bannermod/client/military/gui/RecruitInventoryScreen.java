@@ -37,7 +37,10 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
     private static final MutableComponent TEXT_HEALTH = Component.translatable("gui.recruits.inv.health");
     private static final MutableComponent TEXT_LEVEL = Component.translatable("gui.recruits.inv.level");
+    private static final MutableComponent TEXT_EXP = Component.translatable("gui.recruits.inv.exp");
     private static final MutableComponent TEXT_KILLS = Component.translatable("gui.recruits.inv.kills");
+    private static final MutableComponent TEXT_MORALE = Component.translatable("gui.recruits.inv.morale");
+    private static final MutableComponent TEXT_HUNGER = Component.translatable("gui.recruits.inv.hunger");
     private static final MutableComponent TEXT_DISBAND = Component.translatable("gui.recruits.inv.text.disband");
     private static final MutableComponent TEXT_INFO_FOLLOW = Component.translatable("gui.recruits.inv.info.text.follow");
     private static final MutableComponent TEXT_INFO_WANDER = Component.translatable("gui.recruits.inv.info.text.wander");
@@ -92,6 +95,13 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent SECTION_DISCIPLINE = Component.translatable("gui.recruits.inv.section.discipline");
     private static final MutableComponent SECTION_ORDERS = Component.translatable("gui.recruits.inv.section.orders");
     private static final MutableComponent SECTION_DETAILS = Component.translatable("gui.recruits.inv.section.details");
+    private static final MutableComponent STATUS_READ_ONLY = Component.translatable("gui.recruits.inv.status.read_only");
+    private static final MutableComponent STATUS_GROUP_UNSET = Component.translatable("gui.recruits.inv.status.group_unset");
+    private static final MutableComponent STATUS_GROUP_LOCKED = Component.translatable("gui.recruits.inv.status.group_locked");
+    private static final MutableComponent STATUS_FIREARM_UNSUPPORTED = Component.translatable("gui.recruits.inv.status.firearm_unsupported");
+    private static final MutableComponent STATUS_FIREARM_AMMO_MISSING = Component.translatable("gui.recruits.inv.status.firearm_ammo_missing");
+    private static final MutableComponent STATUS_PROMOTE_READY = Component.translatable("gui.recruits.inv.status.promote_ready");
+    private static final MutableComponent STATUS_READY = Component.translatable("gui.recruits.inv.status.ready");
     private static final int fontColor = 4210752;
     private static final int firearmSupportedColor = 0x3A7A2A;
     private static final int firearmWarningColor = 0xD2A12D;
@@ -446,6 +456,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         guiGraphics.drawString(font, playerInventory.getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
         guiGraphics.drawString(font, SECTION_DISCIPLINE, 8, 17, 0x5B4A32, false);
         guiGraphics.drawString(font, SECTION_DETAILS, 79, 17, 0x5B4A32, false);
+        MilitaryGuiStyle.drawBadge(guiGraphics, font, orderStatusLine(), 79, 62, 92, orderStatusColor());
         guiGraphics.drawString(font, SECTION_ORDERS, 79, 76, 0x5B4A32, false);
 
         guiGraphics.pose().pushPose();
@@ -458,17 +469,17 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         //Info
 
 
-        guiGraphics.drawString(font, "Health:", k, l, fontColor, false);
+        guiGraphics.drawString(font, TEXT_HEALTH, k, l, fontColor, false);
         guiGraphics.drawString(font, "" + health, k + gap, l, fontColor, false);
-        guiGraphics.drawString(font, "Lvl.:", k, l + 10, fontColor, false);
+        guiGraphics.drawString(font, TEXT_LEVEL, k, l + 10, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getXpLevel(), k + gap, l + 10, fontColor, false);
-        guiGraphics.drawString(font, "Exp.:", k, l + 20, fontColor, false);
+        guiGraphics.drawString(font, TEXT_EXP, k, l + 20, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getXp(), k + gap, l + 20, fontColor, false);
-        guiGraphics.drawString(font, "Kills:", k, l + 30, fontColor, false);
+        guiGraphics.drawString(font, TEXT_KILLS, k, l + 30, fontColor, false);
         guiGraphics.drawString(font, "" + recruit.getKills(), k + gap, l + 30, fontColor, false);
-        guiGraphics.drawString(font, "Morale:", k, l + 40, fontColor, false);
+        guiGraphics.drawString(font, TEXT_MORALE, k, l + 40, fontColor, false);
         guiGraphics.drawString(font, "" + moral, k + gap, l + 40, fontColor, false);
-        guiGraphics.drawString(font, "Hunger:", k, l + 50, fontColor, false);
+        guiGraphics.drawString(font, TEXT_HUNGER, k, l + 50, fontColor, false);
         guiGraphics.drawString(font, "" + hunger, k + gap, l + 50, fontColor, false);
         renderFirearmStatus(guiGraphics, k, l + 60);
         guiGraphics.pose().popPose();
@@ -613,6 +624,58 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                 : TEXT_FIREARM_AMMO_MISSING;
         int ammoColor = status.hasAmmo() ? firearmSupportedColor : firearmWarningColor;
         guiGraphics.drawString(font, Component.translatable("gui.recruits.inv.info.ammo_status", ammoValue), x, y + 10, ammoColor, false);
+    }
+
+    private Component orderStatusLine() {
+        if (this.playerInventory.player == null
+                || this.recruit.getOwnerUUID() == null
+                || !this.recruit.getOwnerUUID().equals(this.playerInventory.player.getUUID())) {
+            return STATUS_READ_ONLY;
+        }
+
+        RecruitsGroup selectedGroup = selectedGroup();
+        if (selectedGroup == null) {
+            return STATUS_GROUP_UNSET;
+        }
+        if (selectedGroup.leaderUUID != null && this.recruit.getUUID().equals(selectedGroup.leaderUUID)) {
+            return STATUS_GROUP_LOCKED;
+        }
+
+        BannerModRecruitFirearmStatus.FirearmInspection firearm = BannerModRecruitFirearmStatus.inspect(this.recruit.getMainHandItem(), this.recruit.getInventory());
+        if (firearm.visible()) {
+            if (firearm.state() == BannerModRecruitFirearmStatus.FirearmState.UNSUPPORTED) {
+                return STATUS_FIREARM_UNSUPPORTED;
+            }
+            if (firearm.state() == BannerModRecruitFirearmStatus.FirearmState.MISSING_AMMO) {
+                return STATUS_FIREARM_AMMO_MISSING;
+            }
+        }
+
+        if (this.canPromote) {
+            return STATUS_PROMOTE_READY;
+        }
+        return STATUS_READY;
+    }
+
+    private int orderStatusColor() {
+        Component statusLine = orderStatusLine();
+        if (statusLine == STATUS_READ_ONLY || statusLine == STATUS_FIREARM_UNSUPPORTED) {
+            return MilitaryGuiStyle.TEXT_DENIED;
+        }
+        if (statusLine == STATUS_GROUP_UNSET || statusLine == STATUS_GROUP_LOCKED || statusLine == STATUS_FIREARM_AMMO_MISSING) {
+            return MilitaryGuiStyle.TEXT_WARN;
+        }
+        if (statusLine == STATUS_PROMOTE_READY) {
+            return MilitaryGuiStyle.TEXT_GOOD;
+        }
+        return MilitaryGuiStyle.TEXT;
+    }
+
+    private RecruitsGroup selectedGroup() {
+        if (this.currentGroup != null) {
+            return this.currentGroup;
+        }
+        return ClientManager.getGroup(this.recruit.getGroup());
     }
 
     private static Component stanceLabel(CombatStance stance) {
