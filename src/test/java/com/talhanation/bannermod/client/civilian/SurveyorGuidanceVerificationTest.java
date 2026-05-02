@@ -24,13 +24,14 @@ class SurveyorGuidanceVerificationTest {
         String almanac = read("docs/BANNERMOD_ALMANAC.html");
 
         assertTrue(selectionRender.contains("SurveyorZonePalette.rgb(selection.role())"));
-        assertTrue(hudRender.contains("bannermod.surveyor.hud.fort_legend"));
+        assertTrue(hudRender.contains("bannermod.surveyor.hud.next.validate"));
         assertTrue(hudRender.contains("context.showGuidePreview()"));
         assertTrue(surveyorScreen.contains("TOGGLE_GUIDE_PREVIEW"));
         assertTrue(surveyorScreen.contains("SUGGEST_DRAFT_ZONES"));
         assertTrue(modeGuidance.contains("bannermod.surveyor.role_blocks.bootstrap_fort.interior"));
         assertTrue(enLang.contains("Suggest Draft"));
         assertTrue(ruLang.contains("Черновик по подсказкам"));
+        assertTrue(enLang.contains("Build the starter fort by hand"));
         assertTrue(enLang.contains("split fort interior zones are not supported yet"));
         assertTrue(ruLang.contains("Несколько отдельных INTERIOR-зон"));
         assertTrue(enGuide.contains("Color key: gold/wood lines show walls and towers"));
