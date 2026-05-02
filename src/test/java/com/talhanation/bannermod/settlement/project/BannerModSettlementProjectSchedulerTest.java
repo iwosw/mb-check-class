@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BannerModSettlementProjectSchedulerTest {
@@ -303,5 +304,46 @@ class BannerModSettlementProjectSchedulerTest {
         scheduler.cancel(UUID.randomUUID(), ProjectCancellationReason.MANUAL);
 
         assertEquals(3, dirtyCount.get());
+    }
+
+    @Test
+    void forServerRejectsNullLevel() {
+        assertThrows(IllegalArgumentException.class, () -> BannerModSettlementProjectScheduler.forServer(null));
+    }
+
+    @Test
+    void requeueFrontPrependsProjectAndMarksDirty() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        UUID claim = UUID.randomUUID();
+        PendingProject queued = ProjectTestFactory.general(50, 5);
+        PendingProject urgentRetry = ProjectTestFactory.general(10, 1);
+
+        scheduler.submit(claim, queued);
+        scheduler.setDirtyListener(dirtyCount::incrementAndGet);
+        dirtyCount.set(0);
+
+        scheduler.requeueFront(claim, urgentRetry);
+
+        assertEquals(List.of(urgentRetry, queued), scheduler.snapshot(claim));
+        assertEquals(1, dirtyCount.get());
+    }
+
+    @Test
+    void requeueFrontRespectsCapAndLeavesQueueUntouchedWhenFull() {
+        BannerModSettlementProjectScheduler scheduler = BannerModSettlementProjectScheduler.detached();
+        AtomicInteger dirtyCount = new AtomicInteger();
+        UUID claim = UUID.randomUUID();
+        for (int i = 0; i < BannerModSettlementProjectScheduler.PER_CLAIM_QUEUE_CAP; i++) {
+            scheduler.submit(claim, ProjectTestFactory.general(200 - i, 1));
+        }
+        List<PendingProject> before = scheduler.snapshot(claim);
+        scheduler.setDirtyListener(dirtyCount::incrementAndGet);
+        dirtyCount.set(0);
+
+        scheduler.requeueFront(claim, ProjectTestFactory.general(999, 1));
+
+        assertEquals(before, scheduler.snapshot(claim));
+        assertEquals(0, dirtyCount.get());
     }
 }

@@ -100,4 +100,49 @@ class BannerModSettlementProjectRuntimeTest {
         assertEquals(1, runtime.scheduler().pendingCount(claim));
         assertSame(project, runtime.scheduler().peek(claim).orElseThrow());
     }
+
+    @Test
+    void queuedProjectSurvivesNoopTickAndDedupesOnRetryAssignment() {
+        BannerModSettlementProjectRuntime runtime = BannerModSettlementProjectRuntime.detached();
+        UUID claim = UUID.randomUUID();
+        UUID buildArea = UUID.randomUUID();
+        PendingProject project = ProjectTestFactory.general(65, 4);
+
+        Optional<ProjectAssignment> first = runtime.tickClaim(
+                null,
+                claim,
+                List.of(project),
+                new BannerModBuildAreaProjectBridge.NoopBuildAreaResolver(),
+                10L
+        );
+        assertTrue(first.isEmpty());
+        assertEquals(1, runtime.scheduler().pendingCount(claim));
+        assertSame(project, runtime.scheduler().peek(claim).orElseThrow());
+
+        BannerModBuildAreaProjectBridge.BuildAreaResolver resolver =
+                (c, p) -> Optional.of(new BannerModBuildAreaProjectBridge.BuildAreaBinding(buildArea, true, 4));
+
+        Optional<ProjectAssignment> second = runtime.tickClaim(
+                null,
+                claim,
+                java.util.Arrays.asList(project, null),
+                resolver,
+                11L
+        );
+
+        assertTrue(second.isPresent());
+        assertEquals(project.projectId(), second.get().projectId());
+        assertEquals(buildArea, second.get().buildAreaUuid());
+        assertEquals(0, runtime.scheduler().pendingCount(claim));
+    }
+
+    @Test
+    void staticConvenienceMethodsIgnoreNullInputs() {
+        assertTrue(BannerModSettlementProjectRuntime.tickClaim(null, UUID.randomUUID(), List.of(ProjectTestFactory.general(20, 2))).isEmpty());
+
+        BannerModSettlementProjectRuntime.onBuildAreaStarted(null, UUID.randomUUID());
+        BannerModSettlementProjectRuntime.onBuildAreaStarted(null, null);
+        BannerModSettlementProjectRuntime.onBuildAreaCompleted(null, UUID.randomUUID());
+        BannerModSettlementProjectRuntime.onBuildAreaCompleted(null, null);
+    }
 }

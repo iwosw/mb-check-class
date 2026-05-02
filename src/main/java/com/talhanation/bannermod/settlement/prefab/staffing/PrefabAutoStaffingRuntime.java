@@ -299,10 +299,7 @@ public final class PrefabAutoStaffingRuntime {
             }
         }
         java.util.List<AbstractRecruitEntity> recruits = com.talhanation.bannermod.entity.military.RecruitIndex
-                .instance().allInBox(level, search, true);
-        if (recruits == null) {
-            recruits = level.getEntitiesOfClass(AbstractRecruitEntity.class, search);
-        }
+                .instance().all(level, true);
         for (AbstractRecruitEntity recruit : recruits) {
             UUID bound = recruit.getCitizenCore().getBoundWorkAreaUUID();
             if (bound != null) {
