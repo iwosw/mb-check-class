@@ -15,14 +15,7 @@ public class RecruitArmorLayer extends HumanoidModel {
         MeshDefinition meshdefinition = HumanoidModel.createMesh(new CubeDeformation(1.0F), 0.0F);
         PartDefinition partdefinition = meshdefinition.getRoot();
 
-        if(RecruitsClientConfig.RecruitsLookLikeVillagers.get()) {
-            partdefinition.addOrReplaceChild("head",
-                    CubeListBuilder.create()
-                            .texOffs(0, 0)
-                            .addBox(-4.0F, -10.0F, -4.0F, 8.0F, 8.0F, 8.0F,
-                                    new CubeDeformation(1.0F)),
-                    PartPose.offset(0.0F, 1.0F, 0.0F));
-        }
+        // Villager armor layer removed since human model is forced
 
         return LayerDefinition.create(meshdefinition, 64, 32);
     }
