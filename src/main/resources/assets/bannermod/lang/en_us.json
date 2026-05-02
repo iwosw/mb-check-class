@@ -1416,6 +1416,7 @@
   "gui.recruits.hire.tooltip.disabled": "Pick a company before hiring this recruit.",
   "gui.recruits.hire.status.no_group": "Pick a company before hiring this recruit.",
   "gui.recruits.hire.status.selected_group": "Will join: %s",
+  "gui.recruits.promote.screen.title": "Promote Recruit",
   "gui.recruits.promote.name_label": "Field Name",
   "gui.recruits.promote.status.level3": "Needs level 3 to take the first office.",
   "gui.recruits.promote.status.level5": "Level 3 offices unlocked. Reach level 5 for senior command.",
