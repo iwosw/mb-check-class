@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.settlement.project;
 
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
 import com.talhanation.bannermod.settlement.growth.PendingProject;
 import org.junit.jupiter.api.Test;
 
@@ -165,5 +167,58 @@ class BannerModBuildAreaProjectBridgeTest {
                 null, claim, java.util.List.of(project), resolver, 100L);
         assertTrue(second.isPresent());
         assertEquals(100L, second.get().assignedAtGameTime());
+    }
+
+    @Test
+    void buildAreaBindingClampsNegativeCostAndRejectsNullUuid() {
+        UUID buildArea = UUID.randomUUID();
+
+        BannerModBuildAreaProjectBridge.BuildAreaBinding binding =
+                new BannerModBuildAreaProjectBridge.BuildAreaBinding(buildArea, true, -5);
+
+        assertEquals(buildArea, binding.buildAreaUuid());
+        assertEquals(0, binding.estimatedTickCost());
+        assertThrows(IllegalArgumentException.class,
+                () -> new BannerModBuildAreaProjectBridge.BuildAreaBinding(null, true, 1));
+    }
+
+    @Test
+    void claimResolverReturnsEmptyWhenContextIsMissingOrClaimDoesNotMatch() {
+        PendingProject project = ProjectTestFactory.general(10, 2);
+        RecruitsClaim claim = new RecruitsClaim("Test Claim", null);
+
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimBuildAreaResolver(null, claim)
+                .resolveCandidate(claim.getUUID(), project)
+                .isEmpty());
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimBuildAreaResolver(null, null)
+                .resolveCandidate(claim.getUUID(), project)
+                .isEmpty());
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimBuildAreaResolver(null, claim)
+                .resolveCandidate(UUID.randomUUID(), project)
+                .isEmpty());
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimBuildAreaResolver(null, claim)
+                .resolveCandidate(null, project)
+                .isEmpty());
+    }
+
+    @Test
+    void claimManagerResolverReturnsEmptyForMissingAndUnexecutableClaims() {
+        PendingProject project = ProjectTestFactory.general(10, 2);
+        RecruitsClaimManager claimManager = new RecruitsClaimManager();
+        RecruitsClaim claim = new RecruitsClaim("Managed Claim", null);
+        claimManager.testInsertClaim(claim);
+
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimManagerBuildAreaResolver(null, null)
+                .resolveCandidate(claim.getUUID(), project)
+                .isEmpty());
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimManagerBuildAreaResolver(null, claimManager)
+                .resolveCandidate(UUID.randomUUID(), project)
+                .isEmpty());
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimManagerBuildAreaResolver(null, claimManager)
+                .resolveCandidate(null, project)
+                .isEmpty());
+        assertTrue(new BannerModBuildAreaProjectBridge.ClaimManagerBuildAreaResolver(null, claimManager)
+                .resolveCandidate(claim.getUUID(), project)
+                .isEmpty());
     }
 }
