@@ -34,6 +34,9 @@ public final class CivilianPacketCatalog {
         MessageSetSurveyorRole.class,
         MessageModifySurveyorSession.class,
         MessageValidateSurveyorSession.class,
+        MessageToClientOpenWorkerScreen.class,
+        MessageOpenWorkerScreen.class,
+        MessageConvertWorkerToCitizen.class,
     };
 
     public static final PacketCatalog CATALOG = new PacketCatalog(MESSAGES);

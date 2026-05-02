@@ -88,6 +88,12 @@ Important checks:
 
 Civilian work-area editors now show a sync state in the top-right corner, an explicit owner reminder when nobody is assigned yet, and per-screen hints for missing seeds/saplings or tunnel settings. Market and storage editors also spell out the next step directly in the settings panel: an open market without a merchant, a closed stall with a merchant assigned, a missing storage route destination, or a blocked courier route now show visible guidance instead of relying on guesswork. Hold `Shift` while moving an area to nudge it by five blocks instead of one.
 
+Right-clicking a worker now opens a compact worker ledger instead of dumping chat lines. The ledger shows owner, authority token, claim relation, assignment, current problem, and transport state in one place. If it shows `Ownership mismatch` or `Foreign claim`, fix claim/state/work-area ownership first; workers only run inside friendly authority and on the correct political side.
+
+The same ledger also has a `To Citizen` button. It converts that worker into a free citizen on the server and applies a short auto-assignment pause so the citizen does not instantly snap back into the same vacancy before you can move or repurpose it.
+
+The current work-area editor now shows its zone box again while the screen is open, and the civilian overlay key `B` toggles nearby work areas you are allowed to control in your settlement. The overlay culls distant and fully hidden zones instead of drawing every marker through walls. For crop areas, the seed is chosen in the crop-area screen itself from the seed list built from your own inventory.
+
 Settlements have internal work orders. Some order state already survives server reloads, including worker claims. Transport orders (`HAUL_RESOURCE`/`FETCH_INPUT`) carry source, destination, resource filter, and item count. Workers can claim, complete, cancel, or release jobs back to the settlement if abandoned.
 
 Build Area screens show scan/build status at the bottom. Invalid names, empty scans, oversized dimensions, missing structure data, or server-side NBT/bounds rejection produce a visible reason; Build and creative Place requests also report accepted/rejected state in chat.

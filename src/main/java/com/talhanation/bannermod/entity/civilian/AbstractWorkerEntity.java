@@ -1,19 +1,28 @@
 package com.talhanation.bannermod.entity.civilian;
 
 import com.google.common.collect.ImmutableSet;
+import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.citizen.CitizenCore;
 import com.talhanation.bannermod.citizen.CitizenRole;
+import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.shared.logistics.BannerModLogisticsRuntime;
+import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
+import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.entity.military.AbstractChunkLoaderEntity;
 import com.talhanation.bannermod.ai.civilian.DepositItemsToStorage;
 import com.talhanation.bannermod.ai.civilian.GetNeededItemsFromStorage;
 import com.talhanation.bannermod.ai.civilian.SettlementOrderWorkGoal;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
+import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
+import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkerScreen;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
+import com.talhanation.bannermod.war.WarRuntimeContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.*;
@@ -136,37 +145,81 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     @Override
     public InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (!this.level().isClientSide() && hand == InteractionHand.MAIN_HAND) {
-            sendWorkerInspection(player);
+            openDepositsGUI(player);
             return InteractionResult.SUCCESS;
         }
         return super.mobInteract(player, hand);
     }
 
-    private void sendWorkerInspection(Player player) {
-        player.sendSystemMessage(Component.literal("Worker: " + this.getName().getString()));
-        player.sendSystemMessage(Component.literal("Profession: " + workerProfessionLabel()));
-        player.sendSystemMessage(Component.literal("Assignment: " + workerAssignmentLabel()));
-        player.sendSystemMessage(Component.literal("Problem: " + workerProblemLabel()));
-        player.sendSystemMessage(Component.translatable("chat.bannermod.workers.transport", this.transportService.inspectionMessage()));
+    private WorkerInspectionSnapshot inspectionSnapshot(@Nullable Player viewer) {
+        ServerPlayer serverPlayer = viewer instanceof ServerPlayer sp ? sp : null;
+        String convertBlockedReasonKey = WorkerCitizenConversionService.convertDeniedReasonKey(serverPlayer, this);
+        return new WorkerInspectionSnapshot(
+                this.getId(),
+                this.getUUID(),
+                this.getName().getString(),
+                this.getType().getDescriptionId(),
+                workerOwnerLabel(),
+                workerPoliticalLabel(),
+                workerClaimRelationKey(),
+                workerAssignmentLabel(),
+                workerProblemLabel(),
+                this.transportService.inspectionMessage().getString(),
+                convertBlockedReasonKey == null,
+                convertBlockedReasonKey
+        );
     }
 
-    private String workerProfessionLabel() {
-        String path = EntityType.getKey(this.getType()).getPath();
-        return path.replace('_', ' ');
+    private String workerOwnerLabel() {
+        Player owner = this.getOwner();
+        if (owner != null) {
+            return owner.getName().getString();
+        }
+        UUID ownerUuid = this.getOwnerUUID();
+        return ownerUuid == null ? "none" : ownerUuid.toString();
+    }
+
+    private String workerPoliticalLabel() {
+        return this.getTeam() == null ? "none" : this.getTeam().getName();
     }
 
     private String workerAssignmentLabel() {
         AbstractWorkAreaEntity workArea = this.getCurrentWorkArea();
         if (workArea != null) {
-            return EntityType.getKey(workArea.getType()).toString();
+            return workArea.getType().getDescription().getString();
         }
         return this.getBoundWorkAreaUUID() == null ? "unassigned" : "missing work area";
+    }
+
+    private String workerClaimRelationKey() {
+        if (!(this.level() instanceof ServerLevel serverLevel) || ClaimEvents.claimManager() == null) {
+            return "gui.bannermod.worker_screen.relation.unknown";
+        }
+        String token = this.getTeam() == null ? null : this.getTeam().getName();
+        UUID politicalEntityId = RecruitPoliticalContext.politicalEntityIdOf(this, WarRuntimeContext.registry(serverLevel));
+        if (politicalEntityId != null) {
+            token = politicalEntityId.toString();
+        }
+        BannerModSettlementBinding.Binding binding = BannerModSettlementBinding.resolveSettlementStatus(
+                ClaimEvents.claimManager(),
+                this.blockPosition(),
+                token
+        );
+        return switch (binding.status()) {
+            case FRIENDLY_CLAIM -> "gui.bannermod.worker_screen.relation.friendly_claim";
+            case HOSTILE_CLAIM -> "gui.bannermod.worker_screen.relation.hostile_claim";
+            case DEGRADED_MISMATCH -> "gui.bannermod.worker_screen.relation.degraded_mismatch";
+            case UNCLAIMED -> "gui.bannermod.worker_screen.relation.unclaimed";
+        };
     }
 
     private String workerProblemLabel() {
         WorkerControlStatus status = this.controlAccess.workStatus();
         if (status.kind() == null || status.reasonToken() == null || status.reasonToken().isBlank()) {
             return "none reported";
+        }
+        if (status.reasonMessage() != null && !status.reasonMessage().isBlank()) {
+            return status.reasonMessage();
         }
         return status.kind().name().toLowerCase(Locale.ROOT) + ": " + status.reasonToken();
     }
@@ -334,7 +387,13 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     }
 
     public void openDepositsGUI(Player player) {
-
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        BannerModMain.SIMPLE_CHANNEL.send(
+                BannerModPacketDistributor.PLAYER.with(() -> serverPlayer),
+                new MessageToClientOpenWorkerScreen(this.inspectionSnapshot(serverPlayer))
+        );
     }
 
     public boolean shouldWork() {

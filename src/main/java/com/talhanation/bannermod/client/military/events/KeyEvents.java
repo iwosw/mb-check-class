@@ -59,6 +59,13 @@ public class KeyEvents {
             clientPlayerEntity.displayClientMessage(Component.translatable(
                     enabled ? "key.workers.toggle_prefab_render.enabled" : "key.workers.toggle_prefab_render.disabled"), true);
         }
+
+        if (com.talhanation.bannermod.registry.civilian.ModShortcuts.TOGGLE_SETTLEMENT_WORKAREA_RENDER_KEY != null
+                && com.talhanation.bannermod.registry.civilian.ModShortcuts.TOGGLE_SETTLEMENT_WORKAREA_RENDER_KEY.consumeClick()) {
+            boolean enabled = WorkerAreaRenderer.toggleSettlementWorkAreaRendering();
+            clientPlayerEntity.displayClientMessage(Component.translatable(
+                    enabled ? "key.workers.toggle_settlement_workareas.enabled" : "key.workers.toggle_settlement_workareas.disabled"), true);
+        }
     }
 
     @SubscribeEvent

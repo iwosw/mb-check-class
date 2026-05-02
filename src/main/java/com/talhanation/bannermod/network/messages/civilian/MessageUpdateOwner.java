@@ -1,9 +1,11 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
+import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementRefreshSupport;
 import com.talhanation.bannermod.network.payload.BannerModMessage;
+import com.talhanation.bannermod.war.WarRuntimeContext;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -90,6 +92,12 @@ public class MessageUpdateOwner implements BannerModMessage<MessageUpdateOwner> 
 
             @Override
             public String teamName() {
+                if (player.level() instanceof ServerLevel serverLevel) {
+                    UUID politicalEntityId = RecruitPoliticalContext.politicalEntityIdOf(player, WarRuntimeContext.registry(serverLevel));
+                    if (politicalEntityId != null) {
+                        return politicalEntityId.toString();
+                    }
+                }
                 return player.getTeam() == null ? null : player.getTeam().getName();
             }
         };

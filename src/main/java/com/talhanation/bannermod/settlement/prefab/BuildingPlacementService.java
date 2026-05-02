@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.prefab;
 
+import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
@@ -20,6 +21,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Server-side handler for "place this prefab here" requests.
@@ -89,6 +91,10 @@ public final class BuildingPlacementService {
         buildArea.createArea();
 
         String teamId = player.getTeam() == null ? "" : player.getTeam().getName();
+        UUID politicalEntityId = RecruitPoliticalContext.politicalEntityIdOf(player, WarRuntimeContext.registry(serverLevel));
+        if (politicalEntityId != null) {
+            teamId = politicalEntityId.toString();
+        }
         buildArea.setTeamStringID(teamId);
         buildArea.setPlayerName(player.getName().getString());
         buildArea.setPlayerUUID(player.getUUID());
