@@ -50,6 +50,15 @@ class StructureTemplateLoaderTest {
     }
 
     @Test
+    void loadTemplateAcceptsForgematicaAliases() throws IOException {
+        assertTrue(StructureTemplateLoader.supportedExtensions.contains(".forgematica"));
+        assertTrue(StructureTemplateLoader.supportedExtensions.contains(".forgematic"));
+
+        assertForgematicaAliasLoads("watchtower.forgematica");
+        assertForgematicaAliasLoads("watchtower.forgematic");
+    }
+
+    @Test
     void loadTemplateParsesSchematicPalettePropertiesIntoStateTag() throws IOException {
         Path file = tempDir.resolve("stairs.schem");
         NbtIo.writeCompressed(sampleSchematic(), file);
@@ -135,5 +144,16 @@ class StructureTemplateLoaderTest {
             }
         }
         return packed;
+    }
+
+    private void assertForgematicaAliasLoads(String fileName) throws IOException {
+        Path file = tempDir.resolve(fileName);
+        NbtIo.writeCompressed(sampleLitematic(), file);
+
+        CompoundTag root = StructureTemplateLoader.loadTemplate(file);
+
+        assertNotNull(root);
+        assertEquals("watchtower", root.getString("name"));
+        assertEquals(2, root.getList("blocks", Tag.TAG_COMPOUND).size());
     }
 }
