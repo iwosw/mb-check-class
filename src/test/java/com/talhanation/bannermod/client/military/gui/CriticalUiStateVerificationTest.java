@@ -45,7 +45,8 @@ class CriticalUiStateVerificationTest {
         assertTrue(claimActions.contains("Component claimChunkDisabledReason = !ClientManager.hasClaimsSnapshot ? TEXT_DISABLED_SYNC"));
         assertTrue(claimActions.contains(": ClientManager.claimsSnapshotStale ? TEXT_DISABLED_STALE"));
         assertTrue(claimActions.contains(": !canClaimChunk ? TEXT_DISABLED_UNCLAIMABLE"));
-        assertTrue(claimActions.contains(": TEXT_DISABLED_NOT_LEADER;"));
+        assertTrue(claimActions.contains(": !isNeighborLeader ? TEXT_DISABLED_NOT_LEADER"));
+        assertTrue(claimActions.contains(": TEXT_DISABLED_NO_CURRENCY;"));
 
         assertTrue(clientPlayerEvents.contains("updateMapTiles(!screen.isNavigatingMap());"));
 

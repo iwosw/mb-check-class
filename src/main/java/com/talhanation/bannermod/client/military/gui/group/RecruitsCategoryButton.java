@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.military.gui.group;
 
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -23,7 +24,8 @@ public class RecruitsCategoryButton extends ExtendedButton {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int p_93658_, int p_93659_, float p_93660_) {
-        super.renderWidget(guiGraphics, p_93658_, p_93659_, p_93660_);
+        MilitaryGuiStyle.commandButton(guiGraphics, Minecraft.getInstance().font, p_93658_, p_93659_,
+                getX(), getY(), width, height, Component.empty(), true, this.active);
         guiGraphics.renderFakeItem(renderItem, this.x, this.y);
     }
 
