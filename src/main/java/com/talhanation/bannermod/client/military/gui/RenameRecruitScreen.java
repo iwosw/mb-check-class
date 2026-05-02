@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.messages.military.MessageDebugGui;
@@ -8,15 +7,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class RenameRecruitScreen extends Screen {
 
-    private static final int fontColor = 4210752;
     private EditBox editBox;
     private ExtendedButton saveButton;
     private final Screen parent;
@@ -25,7 +21,6 @@ public class RenameRecruitScreen extends Screen {
     private int topPos;
     private int imageWidth;
     private int imageHeight;
-    private static final ResourceLocation RESOURCE_LOCATION = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_small.png");
     private static final MutableComponent TEXT_CANCEL = Component.translatable("gui.recruits.groups.cancel");
     private static final MutableComponent TEXT_SAVE = Component.translatable("gui.recruits.groups.save");
     private static final MutableComponent TEXT_RENAME_RECRUIT = Component.translatable("gui.recruits.inv.rename");
@@ -82,13 +77,14 @@ public class RenameRecruitScreen extends Screen {
     }
 
     private void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TEXT_RENAME_RECRUIT, leftPos + 10  , topPos + 5, fontColor, false);
-        guiGraphics.drawString(font, TEXT_STATUS, leftPos + 10, topPos + 45, 0x5B4A32, false);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, TEXT_RENAME_RECRUIT, leftPos, topPos + 7, imageWidth);
+        Component statusClamped = MilitaryGuiStyle.clampLabel(font, TEXT_STATUS, imageWidth - 20);
+        guiGraphics.drawString(font, statusClamped, leftPos + 10, topPos + 45, MilitaryGuiStyle.TEXT_DARK, false);
     }
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        guiGraphics.blit(RESOURCE_LOCATION, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, leftPos, topPos, imageWidth, imageHeight);
+        MilitaryGuiStyle.titleStrip(guiGraphics, leftPos + 6, topPos + 4, imageWidth - 12, 14);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 8, topPos + 18, imageWidth - 16, 26);
     }
 
     @Override

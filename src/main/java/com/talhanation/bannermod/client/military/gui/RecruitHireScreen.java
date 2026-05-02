@@ -42,7 +42,7 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
     private static final Component TEXT_SPEED = Component.translatable("gui.recruits.stat.speed");
     private static final Component TEXT_ARMOR = Component.translatable("gui.recruits.stat.armor");
 
-    private static final int fontColor = 4210752;
+    // text color now sourced from MilitaryGuiStyle palette
 
     private final AbstractRecruitEntity recruit;
     private final Player player;
@@ -138,40 +138,42 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
         int k = 60;//rechst links
         int l = 19;//höhe
 
-        guiGraphics.drawString(font, recruit.getDisplayName().getVisualOrderText(), 8, 5, fontColor, false);
-        guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
-        guiGraphics.drawString(font, GROUP_LABEL, 92, this.imageHeight - 104, 0x5B4A32, false);
+        Component clampedName = MilitaryGuiStyle.clampLabel(font, recruit.getDisplayName(), 100);
+        guiGraphics.drawString(font, clampedName, 8, 5, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, player.getInventory().getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, GROUP_LABEL, 92, this.imageHeight - 104, MilitaryGuiStyle.TEXT_DARK, false);
         Component hireStatus = group == null
                 ? Component.translatable("gui.recruits.hire.status.no_group")
                 : Component.translatable("gui.recruits.hire.status.selected_group", group.getName());
-        guiGraphics.drawString(font, hireStatus, 92, this.imageHeight - 94, 0x5B4A32, false);
+        Component hireStatusClamped = MilitaryGuiStyle.clampLabel(font, hireStatus, 80);
+        guiGraphics.drawString(font, hireStatusClamped, 92, this.imageHeight - 94, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_HP, k, l, fontColor, false);
-        guiGraphics.drawString(font, "" + health, k + 25, l , fontColor, false);
+        guiGraphics.drawString(font, TEXT_HP, k, l, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, "" + health, k + 25, l , MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_LEVEL, k , l  + 10, fontColor, false);
-        guiGraphics.drawString(font, "" + recruit.getXpLevel(), k + 25 , l + 10, fontColor, false);
+        guiGraphics.drawString(font, TEXT_LEVEL, k , l  + 10, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, "" + recruit.getXpLevel(), k + 25 , l + 10, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_EXP, k, l + 20, fontColor, false);
-        guiGraphics.drawString(font, "" + recruit.getXp(), k + 25, l + 20, fontColor, false);
+        guiGraphics.drawString(font, TEXT_EXP, k, l + 20, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, "" + recruit.getXp(), k + 25, l + 20, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_KILLS, k, l + 30, fontColor, false);
-        guiGraphics.drawString(font, ""+ recruit.getKills(), k + 25, l + 30, fontColor, false);
+        guiGraphics.drawString(font, TEXT_KILLS, k, l + 30, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, ""+ recruit.getKills(), k + 25, l + 30, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_MORALE, k, l + 40, fontColor, false);
-        guiGraphics.drawString(font, ""+ moral, k + 37, l + 40, fontColor, false);
+        guiGraphics.drawString(font, TEXT_MORALE, k, l + 40, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, ""+ moral, k + 37, l + 40, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_MAX_HP, k + 55, l, fontColor, false);
-        guiGraphics.drawString(font, ""+ maxHealth, k + 90, l, fontColor, false);
+        guiGraphics.drawString(font, TEXT_MAX_HP, k + 55, l, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, ""+ maxHealth, k + 90, l, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_ATTACK, k + 55, l + 10, fontColor, false);
-        guiGraphics.drawString(font, ""+ A_damage, k + 90, l + 10, fontColor, false);
+        guiGraphics.drawString(font, TEXT_ATTACK, k + 55, l + 10, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, ""+ A_damage, k + 90, l + 10, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_SPEED, k + 55, l + 20, fontColor, false);
-        guiGraphics.drawString(font, ""+ decimalformat.format(speed), k + 90, l + 20, fontColor, false);
+        guiGraphics.drawString(font, TEXT_SPEED, k + 55, l + 20, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, ""+ decimalformat.format(speed), k + 90, l + 20, MilitaryGuiStyle.TEXT_DARK, false);
 
-        guiGraphics.drawString(font, TEXT_ARMOR, k + 55, l + 30, fontColor, false);
-        guiGraphics.drawString(font, ""+ armor, k + 90, l + 30, fontColor, false);
+        guiGraphics.drawString(font, TEXT_ARMOR, k + 55, l + 30, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, ""+ armor, k + 90, l + 30, MilitaryGuiStyle.TEXT_DARK, false);
 
         if(ClientManager.currency != null){
             guiGraphics.renderFakeItem(ClientManager.currency, 70, this.imageHeight - 122);
