@@ -88,7 +88,9 @@ public final class BannerModSettlementProjectScheduler {
             ordered = new ArrayList<>(ordered.subList(0, PER_CLAIM_QUEUE_CAP));
         }
         if (!ordered.contains(project)) {
-            reportOverflow(claimUuid, project, queue.size(), "submit");
+            // Claim heartbeats resubmit deterministic growth candidates every cycle. When the
+            // queue is already capped, lower-priority retries should drop quietly instead of
+            // emitting the same warning every heartbeat.
             return;
         }
         queue.clear();
