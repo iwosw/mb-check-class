@@ -94,6 +94,7 @@ public final class MilitaryPacketCatalog {
         MessageUpdateGovernorPolicy.class,
         MessageDebugGui.class,
         MessageDebugScreen.class,
+        MessageAdminRecruitSpawn.class,
         MessageSelectRecruits.class,
         MessageCombatStance.class,
         MessageCombatStanceGui.class,

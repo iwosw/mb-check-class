@@ -12,6 +12,7 @@ import com.talhanation.bannermod.network.messages.military.MessageRecruitGui;
 import com.talhanation.bannermod.network.messages.military.MessageToClientUpdateHireState;
 import com.talhanation.bannermod.registry.military.ModItems;
 import net.minecraft.core.BlockPos;
+import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -85,6 +86,7 @@ final class RecruitInteractionService {
     }
 
     static void openGUI(AbstractRecruitEntity recruit, Player player) {
+        BannerModNpcNamePool.ensureNamed(recruit);
         if (player instanceof ServerPlayer serverPlayer) {
             BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
                 @Override

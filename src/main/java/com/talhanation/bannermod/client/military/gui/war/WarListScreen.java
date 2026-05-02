@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.gui.AdminRecruitSpawnScreen;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.network.messages.war.MessageResolveRevolt;
 import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
@@ -88,6 +89,7 @@ public class WarListScreen extends Screen {
     private Button statesBtn;
     private Button refreshBtn;
     private Button closeBtn;
+    private Button adminRecruitSpawnBtn;
 
     public WarListScreen(@Nullable Screen parent) {
         super(text("gui.bannermod.war_list.title"));
@@ -114,6 +116,7 @@ public class WarListScreen extends Screen {
         tributeLockedBtn = actionButton(10, text("gui.bannermod.war_list.tribute_locked"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE));
         revoltSuccessBtn = actionButton(11, text("gui.bannermod.war_list.revolt.resolve_success"), btn -> sendRevolt(RevoltState.SUCCESS));
         revoltFailBtn = actionButton(12, text("gui.bannermod.war_list.revolt.resolve_fail"), btn -> sendRevolt(RevoltState.FAILED));
+        adminRecruitSpawnBtn = actionButton(14, text("gui.bannermod.war_list.admin_recruit_spawn"), btn -> openAdminRecruitSpawner());
 
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
@@ -129,6 +132,7 @@ public class WarListScreen extends Screen {
         addRenderableWidget(tributeLockedBtn);
         addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
+        addRenderableWidget(adminRecruitSpawnBtn);
 
         refresh();
     }
@@ -223,7 +227,11 @@ public class WarListScreen extends Screen {
 
     private int actionRows() {
         int columns = actionColumns();
-        return (14 + columns - 1) / columns;
+        return (actionButtonCount() + columns - 1) / columns;
+    }
+
+    private int actionButtonCount() {
+        return 15;
     }
 
     private int actionLedgerX() {
@@ -354,6 +362,25 @@ public class WarListScreen extends Screen {
             revoltFailBtn.active = pendingRevolt != null && op;
             revoltFailBtn.setTooltip(revoltFailBtn.active ? null : Tooltip.create(revoltTooltip));
         }
+        if (adminRecruitSpawnBtn != null) {
+            boolean adminCreative = isAdminCreative();
+            adminRecruitSpawnBtn.visible = adminCreative;
+            adminRecruitSpawnBtn.active = adminCreative;
+            adminRecruitSpawnBtn.setTooltip(adminCreative ? Tooltip.create(text("gui.bannermod.war_list.admin_recruit_spawn.tooltip")) : null);
+        }
+    }
+
+    private boolean isAdminCreative() {
+        Player player = Minecraft.getInstance().player;
+        return player != null && player.hasPermissions(2) && player.isCreative();
+    }
+
+    private void openAdminRecruitSpawner() {
+        Player player = Minecraft.getInstance().player;
+        if (player == null || !isAdminCreative()) {
+            return;
+        }
+        AdminRecruitSpawnScreen.openLocal(player);
     }
 
     private Component placeSiegeDenial(boolean hasSelection) {
@@ -497,6 +524,30 @@ public class WarListScreen extends Screen {
         graphics.drawString(font,
                 text("gui.bannermod.war_list.ledger_title").getString(),
                 actionLedgerX() + 8, actionLedgerTop() + 5, INK_MUTED, false);
+        renderTitleOrnaments(graphics);
+    }
+
+    private void renderTitleOrnaments(GuiGraphics graphics) {
+        int titleY = guiTop + 12;
+        renderSigil(graphics, guiLeft + 28, titleY, WAX);
+        renderSigil(graphics, guiLeft + guiW - 28, titleY, 0xFF2F6E2E);
+        renderDividerFlourish(graphics, guiLeft + guiW / 2 - 76, guiTop + 26, 50);
+        renderDividerFlourish(graphics, guiLeft + guiW / 2 + 26, guiTop + 26, 50);
+    }
+
+    private void renderSigil(GuiGraphics graphics, int centerX, int topY, int accent) {
+        graphics.fill(centerX - 6, topY, centerX + 6, topY + 2, GOLD);
+        graphics.fill(centerX - 4, topY + 2, centerX + 4, topY + 5, accent);
+        graphics.fill(centerX - 2, topY + 5, centerX + 2, topY + 9, accent);
+        graphics.fill(centerX - 1, topY + 9, centerX + 1, topY + 11, GOLD);
+        graphics.renderOutline(centerX - 6, topY, 12, 11, LEATHER_DARK);
+    }
+
+    private void renderDividerFlourish(GuiGraphics graphics, int x, int y, int width) {
+        graphics.fill(x, y, x + width, y + 1, 0xAA7A4C24);
+        graphics.fill(x + width / 2 - 1, y - 2, x + width / 2 + 1, y + 3, GOLD);
+        graphics.fill(x + 6, y - 1, x + 10, y + 2, 0x667A4C24);
+        graphics.fill(x + width - 10, y - 1, x + width - 6, y + 2, 0x667A4C24);
     }
 
     private void renderActionFeedback(GuiGraphics graphics) {
@@ -511,6 +562,18 @@ public class WarListScreen extends Screen {
         graphics.drawString(font,
                 font.plainSubstrByWidth(visibleOrderStatus().getString(), Math.max(40, actionLedgerW() - 16)),
                 actionLedgerX() + 8, actionLedgerTop() + 18, INK, false);
+        renderLedgerSeal(graphics);
+    }
+
+    private void renderLedgerSeal(GuiGraphics graphics) {
+        int sealSize = 12;
+        int x = actionLedgerX() + actionLedgerW() - sealSize - 10;
+        int y = actionLedgerTop() + 4;
+        graphics.fill(x, y, x + sealSize, y + sealSize, WAX);
+        graphics.renderOutline(x, y, sealSize, sealSize, LEATHER_DARK);
+        graphics.fill(x + 3, y + 2, x + sealSize - 3, y + 3, GOLD);
+        graphics.fill(x + 2, y + 5, x + sealSize - 2, y + 6, GOLD);
+        graphics.fill(x + 4, y + 8, x + sealSize - 4, y + 9, GOLD);
     }
 
     private Component visibleOrderStatus() {

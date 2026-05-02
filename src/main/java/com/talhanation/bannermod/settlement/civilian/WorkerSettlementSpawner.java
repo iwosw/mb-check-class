@@ -134,6 +134,9 @@ public final class WorkerSettlementSpawner {
         }
         seedClaimWorkAreaDefaults(level, worker, claim, owner, safeSpawnPos);
         BannerModSettlementRefreshSupport.refreshSnapshot(level, worker.blockPosition());
+        if (worker instanceof FarmerEntity farmer && farmer.getCurrentCropArea() == null) {
+            seedClaimWorkAreaDefaults(level, farmer, claim, owner, safeSpawnPos);
+        }
 
         return worker;
     }
@@ -199,6 +202,7 @@ public final class WorkerSettlementSpawner {
         }
 
         level.addFreshEntity(cropArea);
+        WorkAreaIndex.instance().onEntityJoin(cropArea);
         farmer.setCurrentWorkArea(cropArea);
     }
 

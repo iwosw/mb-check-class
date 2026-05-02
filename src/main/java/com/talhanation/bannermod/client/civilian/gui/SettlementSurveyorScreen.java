@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.civilian.gui;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.civilian.SurveyorZonePalette;
 import com.talhanation.bannermod.client.civilian.render.SettlementSurveyorPinnedPreviewState;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.items.civilian.SettlementSurveyorToolItem;
 import com.talhanation.bannermod.network.messages.civilian.MessageModifySurveyorSession;
 import com.talhanation.bannermod.network.messages.civilian.MessageSetSurveyorMode;
@@ -41,14 +42,11 @@ public class SettlementSurveyorScreen extends Screen {
     private static final int CONTENT_PADDING = 10;
     private static final int SECTION_SPACING = 8;
     private static final int LINE_HEIGHT = 12;
-    private static final int TITLE_COLOR = 0xFFFFFFFF;
-    private static final int TEXT_COLOR = 0xFFF1F1F1;
-    private static final int MUTED_TEXT_COLOR = 0xFFD4D4D4;
-    private static final int COMPLETE_COLOR = 0xFF86D36B;
-    private static final int PENDING_COLOR = 0xFFE3C16F;
-    private static final int PANEL_COLOR = 0xFF121212;
-    private static final int PANEL_INNER_COLOR = 0xFF1D1D1D;
-    private static final int PANEL_OUTLINE_COLOR = 0xFF6F6F6F;
+    private static final int TITLE_COLOR = MilitaryGuiStyle.TEXT;
+    private static final int TEXT_COLOR = MilitaryGuiStyle.TEXT_DARK;
+    private static final int MUTED_TEXT_COLOR = 0xFF6E5535;
+    private static final int COMPLETE_COLOR = MilitaryGuiStyle.TEXT_GOOD;
+    private static final int PENDING_COLOR = MilitaryGuiStyle.TEXT_WARN;
 
     private final InteractionHand hand;
     private Button modeButton;
@@ -149,7 +147,7 @@ public class SettlementSurveyorScreen extends Screen {
         if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
             return;
         }
-        ValidationSession session = SurveyorSessionCodec.read(stack);
+        ValidationSession session = SurveyorModeGuidance.normalizeSession(SurveyorSessionCodec.read(stack));
         SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
         List<ZoneRole> roles = SurveyorModeGuidance.requiredRoles(mode);
         if (roles.size() <= 1) {
@@ -180,7 +178,7 @@ public class SettlementSurveyorScreen extends Screen {
 
     private void togglePinnedPreview() {
         ItemStack stack = currentStack();
-        ValidationSession session = SurveyorSessionCodec.read(stack);
+        ValidationSession session = SurveyorModeGuidance.normalizeSession(SurveyorSessionCodec.read(stack));
         if (SettlementSurveyorPinnedPreviewState.hasPinnedPreview()) {
             SettlementSurveyorPinnedPreviewState.clear();
         } else if (minecraft != null && minecraft.level != null && SettlementSurveyorPinnedPreviewState.canPin(session)) {
@@ -192,7 +190,7 @@ public class SettlementSurveyorScreen extends Screen {
 
     private void syncButtons() {
         ItemStack stack = currentStack();
-        ValidationSession session = SurveyorSessionCodec.read(stack);
+        ValidationSession session = SurveyorModeGuidance.normalizeSession(SurveyorSessionCodec.read(stack));
         SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
         if (this.modeButton != null) {
             this.modeButton.setMessage(Component.translatable("bannermod.surveyor.screen.mode", SettlementSurveyorToolItem.modeLabel(mode)));
@@ -302,36 +300,30 @@ public class SettlementSurveyorScreen extends Screen {
         int top = panelTop();
         int contentX = left + CONTENT_PADDING;
         int contentWidth = contentWidth();
-        graphics.fill(0, 0, this.width, this.height, 0x78000000);
-        graphics.fill(left, top, left + panelWidth, top + PANEL_HEIGHT, PANEL_COLOR);
-        graphics.fill(left + 1, top + 1, left + panelWidth - 1, top + PANEL_HEIGHT - 1, PANEL_INNER_COLOR);
-        graphics.renderOutline(left, top, panelWidth, PANEL_HEIGHT, PANEL_OUTLINE_COLOR);
+        graphics.fill(0, 0, this.width, this.height, 0x54160E08);
+        MilitaryGuiStyle.parchmentPanel(graphics, left, top, panelWidth, PANEL_HEIGHT);
+        MilitaryGuiStyle.titleStrip(graphics, left + 6, top + 6, panelWidth - 12, 14);
         if (this.actionsMenuOpen) {
-            graphics.fill(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuLeft() + actionMenuWidth() + 4, actionMenuTop() + 134, PANEL_COLOR);
-            graphics.fill(actionMenuLeft() - 3, actionMenuTop() - 3, actionMenuLeft() + actionMenuWidth() + 3, actionMenuTop() + 133, PANEL_INNER_COLOR);
-            graphics.renderOutline(actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 138, PANEL_OUTLINE_COLOR);
+            MilitaryGuiStyle.parchmentPanel(graphics, actionMenuLeft() - 4, actionMenuTop() - 4, actionMenuWidth() + 8, 138);
         }
 
         ItemStack stack = currentStack();
-        ValidationSession session = SurveyorSessionCodec.read(stack);
+        ValidationSession session = SurveyorModeGuidance.normalizeSession(SurveyorSessionCodec.read(stack));
         SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
         ZoneRole selectedRole = SettlementSurveyorToolItem.selectedRole(stack);
         BlockPos pendingCorner = SettlementSurveyorToolItem.pendingCorner(stack);
 
-        graphics.drawString(this.font, this.title, contentX, top + 8, TITLE_COLOR, true);
+        MilitaryGuiStyle.drawCenteredTitle(graphics, this.font, this.title, left, top + 9, panelWidth);
+        graphics.fill(contentX, top + 74, contentX + contentWidth, top + 75, 0x665A4025);
 
         int infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.capture_hint"), contentX, top + 74, contentWidth, MUTED_TEXT_COLOR);
-        infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.current_role", SettlementSurveyorToolItem.roleLabel(selectedRole), roleHint(selectedRole)), contentX, infoY + 4, contentWidth, SurveyorZonePalette.color(selectedRole));
-        if (mode != SurveyorMode.INSPECT_EXISTING) {
-            infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.role_purpose", rolePurpose(selectedRole)), contentX, infoY + 4, contentWidth, MUTED_TEXT_COLOR);
-            infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.role_blocks", roleBuildHint(mode, selectedRole)), contentX, infoY + 2, contentWidth, MUTED_TEXT_COLOR);
-        }
+        infoY = drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.current_role", SettlementSurveyorToolItem.roleLabel(selectedRole), roleHint(selectedRole)), contentX, infoY + 4, contentWidth, TEXT_COLOR);
         infoY = drawWrapped(graphics, currentStep(mode, session), contentX, infoY + 4, contentWidth, PENDING_COLOR);
         graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.anchor",
-                session == null || session.anchorPos().equals(BlockPos.ZERO) ? "-" : session.anchorPos().toShortString()), contentX, infoY + 4, TEXT_COLOR, true);
+                session == null || session.anchorPos().equals(BlockPos.ZERO) ? "-" : session.anchorPos().toShortString()), contentX, infoY + 4, TEXT_COLOR, false);
         int sectionY = infoY + 20;
         if (pendingCorner != null) {
-            graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.pending", pendingCorner.toShortString()), contentX, infoY + 16, TEXT_COLOR, true);
+            graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.pending", pendingCorner.toShortString()), contentX, infoY + 16, TEXT_COLOR, false);
             sectionY += 12;
         }
 
@@ -364,7 +356,7 @@ public class SettlementSurveyorScreen extends Screen {
     }
 
     private int drawRequirements(GuiGraphics graphics, int x, int y, int width, SurveyorMode mode, @Nullable ValidationSession session) {
-        graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.requirements"), x, y, TITLE_COLOR, true);
+        graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.requirements"), x, y, TITLE_COLOR, false);
         List<ZoneRole> requiredRoles = requiredRoles(mode);
         if (requiredRoles.isEmpty()) {
             return drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.requirements.none"), x, y + LINE_HEIGHT, width, MUTED_TEXT_COLOR);
@@ -380,7 +372,7 @@ public class SettlementSurveyorScreen extends Screen {
     }
 
     private int drawZones(GuiGraphics graphics, int x, int y, int width, @Nullable ValidationSession session) {
-        graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.zones"), x, y, TITLE_COLOR, true);
+        graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.zones"), x, y, TITLE_COLOR, false);
         if (session == null || session.selections().isEmpty()) {
             return drawWrapped(graphics, Component.translatable("bannermod.surveyor.screen.zones.none"), x, y + LINE_HEIGHT, width, MUTED_TEXT_COLOR);
         }
@@ -403,7 +395,7 @@ public class SettlementSurveyorScreen extends Screen {
     }
 
     private int drawChecklist(GuiGraphics graphics, int x, int y, int width, SurveyorMode mode, @Nullable ValidationSession session) {
-        graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.checklist"), x, y, TITLE_COLOR, true);
+        graphics.drawString(this.font, Component.translatable("bannermod.surveyor.screen.checklist"), x, y, TITLE_COLOR, false);
         int lineY = y + LINE_HEIGHT;
         boolean hasAnchor = session != null && !session.anchorPos().equals(BlockPos.ZERO);
         lineY = drawWrapped(graphics, checklistLine(hasAnchor, Component.translatable("bannermod.surveyor.screen.check.anchor")), x, lineY, width, hasAnchor ? COMPLETE_COLOR : PENDING_COLOR);
@@ -438,14 +430,6 @@ public class SettlementSurveyorScreen extends Screen {
 
     private Component roleHint(ZoneRole role) {
         return Component.translatable("bannermod.surveyor.role_hint." + (role == null ? ZoneRole.INTERIOR : role).name().toLowerCase(Locale.ROOT));
-    }
-
-    private Component rolePurpose(ZoneRole role) {
-        return SurveyorModeGuidance.rolePurpose(role);
-    }
-
-    private Component roleBuildHint(SurveyorMode mode, ZoneRole role) {
-        return SurveyorModeGuidance.roleBuildHint(mode, role);
     }
 
     private Component currentStep(SurveyorMode mode, @Nullable ValidationSession session) {
@@ -494,7 +478,7 @@ public class SettlementSurveyorScreen extends Screen {
     private int drawWrapped(GuiGraphics graphics, Component text, int x, int y, int width, int color) {
         List<FormattedCharSequence> lines = this.font.split(text, width);
         for (FormattedCharSequence line : lines) {
-            graphics.drawString(this.font, line, x, y, color, true);
+            graphics.drawString(this.font, line, x, y, color, false);
             y += LINE_HEIGHT;
         }
         return y;

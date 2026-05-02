@@ -10,17 +10,27 @@ import com.talhanation.bannermod.citizen.CitizenProfessionSwitcher;
 import com.talhanation.bannermod.citizen.CitizenRoleContext;
 import com.talhanation.bannermod.citizen.CitizenStateSnapshot;
 import com.talhanation.bannermod.ai.pathfinding.AsyncGroundPathNavigation;
+import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
+import com.talhanation.bannermod.inventory.civilian.CitizenProfileMenu;
+import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
+import com.talhanation.bannermod.util.BannerModCurrencyHelper;
+import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
@@ -31,6 +41,8 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -109,8 +121,47 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         super.aiStep();
         CitizenIndex.instance().onCitizenTick(this);
         if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
+            BannerModNpcNamePool.ensureNamed(this);
             PrefabAutoStaffingRuntime.assignCitizenToNearestVacancy((net.minecraft.server.level.ServerLevel) this.level(), this);
             tryConvertIntoPendingWorker();
+        }
+    }
+
+    @Override
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND) {
+            return super.mobInteract(player, hand);
+        }
+        if (this.level().isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
+        if (!canOpenProfile(player)) {
+            return super.mobInteract(player, hand);
+        }
+        BannerModNpcNamePool.ensureNamed(this);
+        openProfileGui(player);
+        return InteractionResult.SUCCESS;
+    }
+
+    private boolean canOpenProfile(Player player) {
+        return player.hasPermissions(2)
+                || !this.isOwned()
+                || this.getOwnerUUID() != null && this.getOwnerUUID().equals(player.getUUID());
+    }
+
+    private void openProfileGui(Player player) {
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            BannerModNetworkHooks.openScreen(serverPlayer, new MenuProvider() {
+                @Override
+                public Component getDisplayName() {
+                    return CitizenEntity.this.getDisplayName();
+                }
+
+                @Override
+                public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player menuPlayer) {
+                    return new CitizenProfileMenu(id, CitizenEntity.this, playerInventory);
+                }
+            }, buffer -> buffer.writeUUID(this.getUUID()));
         }
     }
 
@@ -147,9 +198,13 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         if (!PrefabAutoStaffingRuntime.hasConversionSlot((net.minecraft.server.level.ServerLevel) this.level(), boundWorkAreaUuid, this.getUUID())) {
             return;
         }
+        int hireCost = hireCostFor(targetProfession);
         if (workerType != null) {
             AbstractWorkerEntity worker = workerType.create(this.level());
             if (worker == null) {
+                return;
+            }
+            if (!payHireCost(hireCost)) {
                 return;
             }
             worker.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
@@ -166,6 +221,9 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         if (recruit == null) {
             return;
         }
+        if (!payHireCost(hireCost)) {
+            return;
+        }
         recruit.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
         if (this.getOwnerUUID() != null) {
             recruit.setOwnerUUID(Optional.of(this.getOwnerUUID()));
@@ -174,6 +232,40 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         recruit.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
         this.level().addFreshEntity(recruit);
         this.discard();
+    }
+
+    private boolean payHireCost(int hireCost) {
+        if (hireCost <= 0) {
+            return true;
+        }
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return false;
+        }
+        UUID ownerUuid = this.getOwnerUUID();
+        if (ownerUuid == null) {
+            return false;
+        }
+        net.minecraft.server.level.ServerPlayer owner = serverLevel.getServer().getPlayerList().getPlayer(ownerUuid);
+        return owner != null && BannerModCurrencyHelper.removeCurrency(owner, hireCost);
+    }
+
+    private static int hireCostFor(CitizenProfession profession) {
+        return switch (profession == null ? CitizenProfession.NONE : profession) {
+            case FARMER -> WorkersServerConfig.FarmerCost.get();
+            case LUMBERJACK -> WorkersServerConfig.LumberjackCost.get();
+            case MINER -> WorkersServerConfig.MinerCost.get();
+            case BUILDER -> WorkersServerConfig.BuilderCost.get();
+            case MERCHANT -> WorkersServerConfig.MerchantCost.get();
+            case FISHERMAN -> WorkersServerConfig.FarmerCost.get();
+            case ANIMAL_FARMER -> WorkersServerConfig.FarmerCost.get();
+            case RECRUIT_SPEAR -> RecruitsServerConfig.RecruitCost.get();
+            case RECRUIT_BOWMAN -> RecruitsServerConfig.BowmanCost.get();
+            case RECRUIT_CROSSBOWMAN -> RecruitsServerConfig.CrossbowmanCost.get();
+            case RECRUIT_HORSEMAN -> RecruitsServerConfig.HorsemanCost.get();
+            case RECRUIT_SHIELDMAN -> RecruitsServerConfig.ShieldmanCost.get();
+            case RECRUIT_NOMAD -> RecruitsServerConfig.NomadCost.get();
+            case RECRUIT_SCOUT, NOBLE, NONE -> 0;
+        };
     }
 
     @Nullable

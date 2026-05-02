@@ -2,6 +2,7 @@ package com.talhanation.bannermod.items.civilian;
 
 import com.talhanation.bannermod.client.civilian.gui.SettlementSurveyorScreen;
 import com.talhanation.bannermod.settlement.building.ZoneRole;
+import com.talhanation.bannermod.settlement.building.ZoneSelection;
 import com.talhanation.bannermod.settlement.validation.SurveyorDraftSuggestionService;
 import com.talhanation.bannermod.settlement.validation.SurveyorModeGuidance;
 import com.talhanation.bannermod.settlement.validation.SettlementSurveyorService;
@@ -84,7 +85,8 @@ public class SettlementSurveyorToolItem extends Item {
         BlockPos cornerA = BlockPos.of(tag.getLong(TAG_PENDING_CORNER));
         ItemStackComponentData.update(stack, data -> data.remove(TAG_PENDING_CORNER));
         ZoneRole role = selectedRole(stack);
-        ValidationSession updated = session.upsertSelection(role, cornerA, clicked, clicked);
+        ZoneSelection capturedSelection = SurveyorModeGuidance.normalizeSelection(session.mode(), new ZoneSelection(role, cornerA, clicked, clicked));
+        ValidationSession updated = session.upsertSelection(role, capturedSelection.min(), capturedSelection.max(), capturedSelection.marker());
         SurveyorSessionCodec.write(stack, updated);
         player.sendSystemMessage(Component.translatable("bannermod.surveyor.zone_captured", roleLabel(role)).withStyle(ChatFormatting.GREEN));
         maybeAdvanceRoleAfterCapture(player, stack, updated, role);
@@ -277,17 +279,40 @@ public class SettlementSurveyorToolItem extends Item {
     }
 
     public static ZoneRole selectedRole(ItemStack stack) {
+        ValidationSession session = SurveyorSessionCodec.read(stack);
+        SurveyorMode mode = session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode();
+        List<ZoneRole> requiredRoles = SurveyorModeGuidance.requiredRoles(mode);
         CompoundTag tag = ItemStackComponentData.read(stack);
+        ZoneRole resolved;
         if (tag == null || !tag.contains(TAG_SELECTED_ROLE)) {
-            ValidationSession session = SurveyorSessionCodec.read(stack);
-            return defaultRoleForMode(session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode());
+            resolved = defaultRoleForMode(mode);
+        } else {
+            try {
+                resolved = ZoneRole.valueOf(tag.getString(TAG_SELECTED_ROLE));
+            } catch (IllegalArgumentException ex) {
+                resolved = defaultRoleForMode(mode);
+            }
         }
-        try {
-            return ZoneRole.valueOf(tag.getString(TAG_SELECTED_ROLE));
-        } catch (IllegalArgumentException ex) {
-            ValidationSession session = SurveyorSessionCodec.read(stack);
-            return defaultRoleForMode(session == null ? SurveyorMode.BOOTSTRAP_FORT : session.mode());
+
+        if (requiredRoles.isEmpty()) {
+            return resolved;
         }
+        ZoneRole nextMissingRole = SurveyorModeGuidance.nextMissingRole(mode, session);
+        if (!requiredRoles.contains(resolved)) {
+            return nextMissingRole != null ? nextMissingRole : requiredRoles.get(0);
+        }
+        if (nextMissingRole == null) {
+            return resolved;
+        }
+        if (resolved == nextMissingRole) {
+            return resolved;
+        }
+        int resolvedIndex = requiredRoles.indexOf(resolved);
+        int nextMissingIndex = requiredRoles.indexOf(nextMissingRole);
+        if (resolvedIndex > nextMissingIndex || hasRole(session, resolved)) {
+            return nextMissingRole;
+        }
+        return resolved;
     }
 
     private static void maybeAdvanceRoleAfterCapture(Player player, ItemStack stack, ValidationSession session, ZoneRole capturedRole) {
@@ -313,6 +338,10 @@ public class SettlementSurveyorToolItem extends Item {
         if (tag == null || !tag.contains(TAG_SELECTED_ROLE)) {
             setSelectedRole(stack, defaultRoleForMode(mode));
         }
+    }
+
+    private static boolean hasRole(@Nullable ValidationSession session, ZoneRole role) {
+        return session != null && session.selections().stream().anyMatch(selection -> selection.role() == role);
     }
 
     private static ZoneRole defaultRoleForMode(SurveyorMode mode) {

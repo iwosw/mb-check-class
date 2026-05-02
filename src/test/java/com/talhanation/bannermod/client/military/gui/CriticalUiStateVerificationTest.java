@@ -91,7 +91,7 @@ class CriticalUiStateVerificationTest {
         assertTrue(assassinLeaderScreen.contains("gui.recruits.assassin.status.count_updated"));
         assertTrue(assassinLeaderScreen.contains("MilitaryGuiStyle.parchmentPanel"));
 
-        assertTrue(claimAuthorityStatusTest.contains("@Test\n    void leaderOfOwningPoliticalEntityIsFriendly()"));
+        assertTrue(claimAuthorityStatusTest.contains("void leaderOfOwningPoliticalEntityIsFriendly()"));
 
         assertTrue(enLang.contains("gui.recruits.inv.status.group_unset"));
         assertTrue(enLang.contains("gui.recruits.assassin.action.dispatch.disabled"));

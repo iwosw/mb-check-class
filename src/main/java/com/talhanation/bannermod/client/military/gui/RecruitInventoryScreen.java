@@ -123,22 +123,22 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         super(RESOURCE_LOCATION, recruitContainer, playerInventory, Component.literal(""));
         this.recruit = recruitContainer.getRecruit();
         this.playerInventory = playerInventory;
-        imageWidth = 176;
-        imageHeight = 223;
+        imageWidth = 412;
+        imageHeight = 260;
     }
 
     @Override
     protected void init() {
         super.init();
 
-        int zeroLeftPos = leftPos + 180;
-        int zeroTopPos = topPos + 10;
-        int topPosGab = 5;
+        int zeroLeftPos = leftPos + 316;
+        int zeroTopPos = topPos + 44;
+        int topPosGab = 4;
         this.canPromote = this.recruit.getXpLevel() >= 3;
 
         this.clearWidgets();
         //PASSIVE
-        ExtendedButton buttonPassive = new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 0, 80, 20, TEXT_PASSIVE,
+        ExtendedButton buttonPassive = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 0, 80, 20, TEXT_PASSIVE,
             button -> {
                 this.aggro = recruit.getState();
                 if (this.aggro != 3) {
@@ -151,7 +151,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(buttonPassive);
 
         // NEUTRAL
-        ExtendedButton buttonNeutral = new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 1, 80, 20, TEXT_NEUTRAL,
+        ExtendedButton buttonNeutral = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 1, 80, 20, TEXT_NEUTRAL,
                 button -> {
                     this.aggro = recruit.getState();
                     if (this.aggro != 0) {
@@ -164,7 +164,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(buttonNeutral);
 
         //AGGRESSIVE
-        ExtendedButton buttonAggressive = new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 2, 80, 20, TEXT_AGGRESSIVE,
+        ExtendedButton buttonAggressive = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 2, 80, 20, TEXT_AGGRESSIVE,
                 button -> {
                     this.aggro = recruit.getState();
                     if (this.aggro != 1) {
@@ -177,7 +177,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(buttonAggressive);
 
         //RAID
-        ExtendedButton buttonRaid = new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 3, 80, 20, TEXT_RAID,
+        ExtendedButton buttonRaid = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 3, 80, 20, TEXT_RAID,
                 button -> {
                     this.aggro = recruit.getState();
                     if (this.aggro != 2) {
@@ -190,7 +190,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(buttonRaid);
 
         //CLEAR TARGET
-        ExtendedButton buttonClearTarget = new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 4, 80, 20, TEXT_CLEAR_TARGET,
+        ExtendedButton buttonClearTarget = new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 4, 80, 20, TEXT_CLEAR_TARGET,
                 button -> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClearTargetGui(playerInventory.player.getUUID(), recruit.getUUID()));
                 });
@@ -199,7 +199,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
 
         //MOUNT
-        ExtendedButton buttonMount =  new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 5, 80, 20, TEXT_MOUNT,
+        ExtendedButton buttonMount =  new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 5, 80, 20, TEXT_MOUNT,
             button -> {
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMountEntityGui(recruit.getUUID(), false));
             }
@@ -210,7 +210,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
 
         //WANDER
-        ExtendedButton buttonWander = new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 0, 80, 20, TEXT_WANDER,
+        ExtendedButton buttonWander = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 0, 80, 20, TEXT_WANDER,
                 button -> {
                     this.follow = recruit.getFollowState();
                     if (this.follow != 0) {
@@ -224,7 +224,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
 
         //FOLLOW
-        ExtendedButton buttonFollow = new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 1, 80, 20, TEXT_FOLLOW,
+        ExtendedButton buttonFollow = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 1, 80, 20, TEXT_FOLLOW,
                 button -> {
                     this.follow = recruit.getFollowState();
                     if (this.follow != 1) {
@@ -238,7 +238,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
 
         //HOLD POS
-        ExtendedButton buttonHoldPos = new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 2, 80, 20, TEXT_HOLD_POS,
+        ExtendedButton buttonHoldPos = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 2, 80, 20, TEXT_HOLD_POS,
                 button -> {
                     this.follow = recruit.getFollowState();
                     if (this.follow != 2) {
@@ -252,7 +252,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
 
         //BACK TO POS
-        ExtendedButton buttonBackToPos = new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 3, 80, 20, TEXT_BACK_TO_POS,
+        ExtendedButton buttonBackToPos = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 3, 80, 20, TEXT_BACK_TO_POS,
                 button -> {
                     this.follow = recruit.getFollowState();
                     if (this.follow != 3) {
@@ -266,7 +266,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
 
         //HOLD MY POS
-        ExtendedButton buttonHoldMyPos = new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 4, 80, 20, TEXT_HOLD_MY_POS,
+        ExtendedButton buttonHoldMyPos = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 4, 80, 20, TEXT_HOLD_MY_POS,
                 button -> {
                     this.follow = recruit.getFollowState();
                     if (this.follow != 4) {
@@ -279,7 +279,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(buttonHoldMyPos);
 
         //Dismount
-        ExtendedButton buttonDismount = new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 5, 80, 20, TEXT_DISMOUNT,
+        ExtendedButton buttonDismount = new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 5, 80, 20, TEXT_DISMOUNT,
                 button -> {
                     this.follow = recruit.getFollowState();
                     if (this.follow != 4) {
@@ -291,7 +291,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(buttonDismount);
 
         //BACK TO MOUNT
-        ExtendedButton backToMount = addRenderableWidget(new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 6, 80, 20, TEXT_BACK_TO_MOUNT,
+        ExtendedButton backToMount = addRenderableWidget(new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 6, 80, 20, TEXT_BACK_TO_MOUNT,
                 button -> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMountEntityGui(recruit.getUUID(), true));
                 }
@@ -301,7 +301,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         addRenderableWidget(backToMount);
 
         //CLEAR UPKEEP
-        this.clearUpkeep = addRenderableWidget(new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 6, 80, 20, TEXT_CLEAR_UPKEEP,
+        this.clearUpkeep = addRenderableWidget(new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 6, 80, 20, TEXT_CLEAR_UPKEEP,
                 button -> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageClearUpkeepGui(recruit.getUUID()));
                     clearUpkeep.active = false;
@@ -310,7 +310,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         this.clearUpkeep.setTooltip(Tooltip.create(TOOLTIP_CLEAR_UPKEEP));
         this.clearUpkeep.active = this.recruit.hasUpkeep();
 
-        this.stanceButton = addRenderableWidget(new ExtendedButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 7, 80, 20, Component.empty(),
+        this.stanceButton = addRenderableWidget(new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 7, 80, 20, Component.empty(),
                 button -> {
                     CombatStance nextStance = nextCombatStance(this.recruit.getCombatStance());
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCombatStanceGui(recruit.getUUID(), nextStance));
@@ -321,20 +321,20 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         updateCombatStanceButton();
 
         //LISTEN
-         leftListenButton =  new ExtendedButton(leftPos + 77, topPos + 100, 12, 12, Component.literal("<"), button -> {
+         leftListenButton =  new ProfileButton(leftPos + 160, topPos + 130, 14, 14, Component.literal("<"), button -> {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageListen(!recruit.getListen(), recruit.getUUID()));
          });
          leftListenButton.active = !(recruit instanceof VillagerNobleEntity);
          addRenderableWidget(leftListenButton);
 
-        rightListenButton = new ExtendedButton(leftPos + 77 + 81, topPos + 100, 12, 12, Component.literal(">"), button -> {
+        rightListenButton = new ProfileButton(leftPos + 274, topPos + 130, 14, 14, Component.literal(">"), button -> {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageListen(!recruit.getListen(), recruit.getUUID()));
         });
         rightListenButton.active = !(recruit instanceof VillagerNobleEntity);
         addRenderableWidget(rightListenButton);
 
         //more
-        moreButton = new ExtendedButton(leftPos + 77 + 55, topPos + 4, 40, 12, Component.literal("..."),
+        moreButton = new ProfileButton(leftPos + 246, topPos + 24, 42, 16, Component.literal("..."),
                 button -> {
                     minecraft.setScreen(new RecruitMoreScreen(this, this.recruit, this.playerInventory.player));
                 }
@@ -347,7 +347,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         }
         //promote
         if(recruit instanceof ICompanion || recruit instanceof IVillagerWorker){
-            Button promoteButton = addRenderableWidget(new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 8, 80, 20, TEXT_SPECIAL,
+            Button promoteButton = addRenderableWidget(new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 8, 80, 20, TEXT_SPECIAL,
                     button -> {
                         if(recruit instanceof ScoutEntity scout){
                             this.minecraft.setScreen(new ScoutScreen(scout, getMinecraft().player));
@@ -375,7 +375,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
 
         }
         else {
-            Button promoteButton = addRenderableWidget(new ExtendedButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 8, 80, 20, TEXT_PROMOTE,
+            Button promoteButton = addRenderableWidget(new ProfileButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 8, 80, 20, TEXT_PROMOTE,
                     button -> {
                         RecruitEvents.openPromoteScreen(this.playerInventory.player, this.recruit);
                         this.onClose();
@@ -394,7 +394,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         if(ClientManager.groups != null && !ClientManager.groups.isEmpty() && !buttonsSet){
             this.currentGroup = ClientManager.getGroup(recruit.getGroup());
 
-            groupSelectionDropDownMenu = new ScrollDropDownMenu<>(currentGroup, leftPos + 77,topPos + 114,  93, 12, ClientManager.groups,
+            groupSelectionDropDownMenu = new ScrollDropDownMenu<>(currentGroup, leftPos + 178, topPos + 130,  110, 14, ClientManager.groups,
                 RecruitsGroup::getName,
                 (selected) ->{
                     this.currentGroup = selected;
@@ -447,49 +447,17 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         this.follow = recruit.getFollowState();
         this.aggro = recruit.getState();
 
-        int k = 79;//rechst links
-        int l = 19;//höhe
+        guiGraphics.drawCenteredString(font, recruit.getDisplayName(), this.imageWidth / 2, 12, MilitaryGuiStyle.TEXT);
+        guiGraphics.drawString(font, SECTION_DISCIPLINE, 16, 28, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, SECTION_DETAILS, 210, 28, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, SECTION_ORDERS, 316, 28, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, playerInventory.getDisplayName().getVisualOrderText(), 118, 168, MilitaryGuiStyle.TEXT_DARK, false);
 
-        //Titles
-
-        guiGraphics.drawString(font, recruit.getDisplayName().getVisualOrderText(), 8, 5, fontColor, false);
-        guiGraphics.drawString(font, playerInventory.getDisplayName().getVisualOrderText(), 8, this.imageHeight - 96 + 2, fontColor, false);
-        guiGraphics.drawString(font, SECTION_DISCIPLINE, 8, 17, 0x5B4A32, false);
-        guiGraphics.drawString(font, SECTION_DETAILS, 79, 17, 0x5B4A32, false);
-        MilitaryGuiStyle.drawBadge(guiGraphics, font, orderStatusLine(), 79, 62, 92, orderStatusColor());
-        guiGraphics.drawString(font, SECTION_ORDERS, 79, 76, 0x5B4A32, false);
-
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().scale(0.7F, 0.7F, 1F);
-
-
-        k = 112;//rechst links
-        l = 32;//höhe
-        int gap = 42;
-        //Info
-
-
-        guiGraphics.drawString(font, TEXT_HEALTH, k, l, fontColor, false);
-        guiGraphics.drawString(font, "" + health, k + gap, l, fontColor, false);
-        guiGraphics.drawString(font, TEXT_LEVEL, k, l + 10, fontColor, false);
-        guiGraphics.drawString(font, "" + recruit.getXpLevel(), k + gap, l + 10, fontColor, false);
-        guiGraphics.drawString(font, TEXT_EXP, k, l + 20, fontColor, false);
-        guiGraphics.drawString(font, "" + recruit.getXp(), k + gap, l + 20, fontColor, false);
-        guiGraphics.drawString(font, TEXT_KILLS, k, l + 30, fontColor, false);
-        guiGraphics.drawString(font, "" + recruit.getKills(), k + gap, l + 30, fontColor, false);
-        guiGraphics.drawString(font, TEXT_MORALE, k, l + 40, fontColor, false);
-        guiGraphics.drawString(font, "" + moral, k + gap, l + 40, fontColor, false);
-        guiGraphics.drawString(font, TEXT_HUNGER, k, l + 50, fontColor, false);
-        guiGraphics.drawString(font, "" + hunger, k + gap, l + 50, fontColor, false);
-        renderFirearmStatus(guiGraphics, k, l + 60);
-        guiGraphics.pose().popPose();
-
-        /*
-        font.draw(matrixStack, "Moral:", k, l + 30, fontColor);
-        font.draw(matrixStack, ""+ recruit.getKills(), k + 25, l + 30, fontColor);
-        */
-        k = 79;//rechst links
-        l = 19;//höhe
+        guiGraphics.drawString(font, Component.literal("HP " + health + "   LV " + recruit.getXpLevel()), 214, 50, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, Component.literal("XP " + recruit.getXp() + "   KL " + recruit.getKills()), 214, 62, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, Component.literal("MR " + moral + "   HG " + hunger), 214, 74, MilitaryGuiStyle.TEXT_DARK, false);
+        renderFirearmStatus(guiGraphics, 214, 88);
+        MilitaryGuiStyle.drawBadge(guiGraphics, font, orderStatusLine(), 210, 120, 82, orderStatusColor());
         // command
         String follow = switch (this.follow) {
             case 0 -> TEXT_INFO_WANDER.getString();
@@ -499,7 +467,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
             case 6 -> TEXT_INFO_WORKING.getString();
             default -> throw new IllegalStateException("Unexpected value: " + this.follow);
         };
-        guiGraphics.drawString(font, follow, k + 15, l + 58 + 0, fontColor, false);
+        guiGraphics.drawString(font, follow, 184, 126, MilitaryGuiStyle.TEXT_DARK, false);
 
 
         String aggro = switch (this.aggro) {
@@ -510,15 +478,15 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
             default -> throw new IllegalStateException("Unexpected value: " + this.aggro);
         };
 
-        int fnt = this.aggro == 3 ? 16733525 : fontColor;
-        guiGraphics.drawString(font, aggro, k + 15, l + 56 + 15, fnt, false);
+        int fnt = this.aggro == 3 ? MilitaryGuiStyle.TEXT_WARN : MilitaryGuiStyle.TEXT_DARK;
+        guiGraphics.drawString(font, aggro, 184, 138, fnt, false);
 
         String listen;
         if (recruit.getListen()) listen = TEXT_INFO_LISTEN.getString();
         else listen = TEXT_INFO_IGNORE.getString();
 
-        int fnt2 = recruit.getListen() ? fontColor : 16733525;
-        guiGraphics.drawString(font, listen, k + 15, l + 56 + 28, fnt2, false);
+        int fnt2 = recruit.getListen() ? MilitaryGuiStyle.TEXT_DARK : MilitaryGuiStyle.TEXT_WARN;
+        guiGraphics.drawCenteredString(font, Component.literal(listen), 226, 132, fnt2);
 
         ItemStack profItem1 = null;
         ItemStack profItem2 = null;
@@ -561,23 +529,72 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
         guiGraphics.pose().scale(0.8F, 0.8F, 1F);
 
         if(profItem2 != null){
-            guiGraphics.renderFakeItem(profItem2, 90, 4);
+            guiGraphics.renderFakeItem(profItem2, 268, 28);
         }
 
         if(profItem1 != null){
-            guiGraphics.renderFakeItem(profItem1, 80, 4);
+            guiGraphics.renderFakeItem(profItem1, 248, 28);
         }
         guiGraphics.pose().popPose();
     }
 
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        super.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
-
         RenderSystem.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
-        int i = (this.width - this.imageWidth) / 2;
-        int j = (this.height - this.imageHeight) / 2;
+        int i = this.leftPos;
+        int j = this.topPos;
 
-        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 10, j + 20, i + 90, j + 100, 30, 0.0F, (float)(i + 50) - mouseX, (float)(j + 25) - mouseY, this.recruit);
+        guiGraphics.fill(0, 0, this.width, this.height, 0x54160E08);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, i, j, this.imageWidth, this.imageHeight);
+        MilitaryGuiStyle.titleStrip(guiGraphics, i + 10, j + 8, this.imageWidth - 20, 16);
+
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, i + 8, j + 18, 92, 232);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, i + 106, j + 18, 194, 148);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, i + 306, j + 18, 98, 232);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, i + 106, j + 172, 176, 82);
+
+        MilitaryGuiStyle.insetPanel(guiGraphics, i + 114, j + 46, 18, 18 * 5);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, i + 136, j + 46, 68, 98);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, i + 210, j + 46, 82, 24);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, i + 210, j + 74, 82, 40);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, i + 210, j + 120, 82, 24);
+
+        renderGeneratedSlotFrames(guiGraphics, i + 222, j + 74, 3, 3);
+        renderGeneratedSlotFrames(guiGraphics, i + 118, j + 180, 9, 3);
+        renderGeneratedSlotFrames(guiGraphics, i + 118, j + 238, 9, 1);
+
+        renderProfileOrnaments(guiGraphics, i, j);
+        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, i + 138, j + 52, i + 202, j + 140, 34, 0.0F,
+                (float) (i + 170) - mouseX, (float) (j + 74) - mouseY, this.recruit);
+    }
+
+    private void renderGeneratedSlotFrames(GuiGraphics guiGraphics, int x, int y, int cols, int rows) {
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                MilitaryGuiStyle.insetPanel(guiGraphics, x + col * 18, y + row * 18, 18, 18);
+            }
+        }
+    }
+
+    private void renderProfileOrnaments(GuiGraphics guiGraphics, int x, int y) {
+        renderWaxSeal(guiGraphics, x + 18, y + 26, 0xFF8E2E24);
+        renderWaxSeal(guiGraphics, x + this.imageWidth - 30, y + 26, 0xFF2F6E2E);
+        renderDividerFlourish(guiGraphics, x + 118, y + 34, 160);
+        renderDividerFlourish(guiGraphics, x + 118, y + 164, 160);
+    }
+
+    private void renderWaxSeal(GuiGraphics guiGraphics, int x, int y, int wax) {
+        guiGraphics.fill(x, y, x + 12, y + 12, wax);
+        guiGraphics.renderOutline(x, y, 12, 12, 0xFF24150D);
+        guiGraphics.fill(x + 3, y + 2, x + 9, y + 3, 0xFFE0B86A);
+        guiGraphics.fill(x + 2, y + 5, x + 10, y + 6, 0xFFE0B86A);
+        guiGraphics.fill(x + 4, y + 8, x + 8, y + 9, 0xFFE0B86A);
+    }
+
+    private void renderDividerFlourish(GuiGraphics guiGraphics, int x, int y, int width) {
+        guiGraphics.fill(x, y, x + width, y + 1, 0xAA8A6A3A);
+        guiGraphics.fill(x + width / 2 - 1, y - 2, x + width / 2 + 1, y + 3, 0xFFE0B86A);
+        guiGraphics.fill(x + 10, y - 1, x + 16, y + 2, 0x665A4025);
+        guiGraphics.fill(x + width - 16, y - 1, x + width - 10, y + 2, 0x665A4025);
     }
 
     private void updateCombatStanceButton() {
@@ -684,5 +701,17 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
             case SHIELD_WALL -> Component.translatable("gui.recruits.command.text.stance_shield_wall");
             case LOOSE -> Component.translatable("gui.recruits.command.text.stance_loose");
         };
+    }
+
+    private static class ProfileButton extends ExtendedButton {
+        protected ProfileButton(int x, int y, int width, int height, Component message, OnPress onPress) {
+            super(x, y, width, height, message, onPress);
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            MilitaryGuiStyle.commandButton(graphics, Minecraft.getInstance().font, mouseX, mouseY,
+                    getX(), getY(), width, height, getMessage(), this.active, this.isHoveredOrFocused());
+        }
     }
 }

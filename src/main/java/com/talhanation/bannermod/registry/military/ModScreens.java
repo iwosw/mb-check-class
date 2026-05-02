@@ -32,6 +32,7 @@ public class ModScreens {
     public static void registerMenuScreens(RegisterMenuScreensEvent event) {
         event.register(RECRUIT_CONTAINER_TYPE.get(), RecruitInventoryScreen::new);
         event.register(DEBUG_CONTAINER_TYPE.get(), DebugInvScreen::new);
+        event.register(ADMIN_RECRUIT_SPAWN_CONTAINER_TYPE.get(), AdminRecruitSpawnScreen::new);
         event.register(COMMAND_CONTAINER_TYPE.get(), CommandScreen::new);
         event.register(ASSASSIN_CONTAINER_TYPE.get(), AssassinLeaderScreen::new);
         event.register(HIRE_CONTAINER_TYPE.get(), RecruitHireScreen::new);
@@ -82,6 +83,11 @@ public class ModScreens {
                 return null;
             }
     }));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<AdminRecruitSpawnMenu>> ADMIN_RECRUIT_SPAWN_CONTAINER_TYPE =
+            MENU_TYPES.register("admin_recruit_spawn_container", () -> IMenuTypeExtension.create((windowId, inv, data) ->
+                    new AdminRecruitSpawnMenu(windowId, inv.player)));
+
     public static final DeferredHolder<MenuType<?>, MenuType<AssassinLeaderMenu>> ASSASSIN_CONTAINER_TYPE =
         MENU_TYPES.register("assassin_container", () -> IMenuTypeExtension.create((windowId, inv, data) -> {
             try {

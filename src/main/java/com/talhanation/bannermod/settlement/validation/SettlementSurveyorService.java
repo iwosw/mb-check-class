@@ -31,6 +31,7 @@ public final class SettlementSurveyorService {
         if (player == null || session == null) {
             return;
         }
+        session = SurveyorModeGuidance.normalizeSession(session);
         ServerLevel level = player.serverLevel();
         if (session.mode() == SurveyorMode.INSPECT_EXISTING) {
             inspectExisting(player, level, session);

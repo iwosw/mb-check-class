@@ -17,6 +17,7 @@ import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity
 import com.talhanation.bannermod.network.compat.BannerModPacketDistributor;
 import com.talhanation.bannermod.network.messages.civilian.MessageToClientOpenWorkerScreen;
 import com.talhanation.bannermod.persistence.civilian.NeededItem;
+import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -145,6 +146,7 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
     @Override
     public InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (!this.level().isClientSide() && hand == InteractionHand.MAIN_HAND) {
+            BannerModNpcNamePool.ensureNamed(this);
             openDepositsGUI(player);
             return InteractionResult.SUCCESS;
         }
