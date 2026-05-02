@@ -1,15 +1,30 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.AnimalFarmerEntity;
+import com.talhanation.bannermod.entity.civilian.BuilderEntity;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.FishermanEntity;
+import com.talhanation.bannermod.entity.civilian.LumberjackEntity;
+import com.talhanation.bannermod.entity.civilian.MerchantEntity;
+import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.AnimalPenArea;
+import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.workarea.FishingArea;
+import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
+import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaimManager;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRecord;
+import com.talhanation.bannermod.settlement.bootstrap.SettlementRegistryData;
 import com.talhanation.bannermod.settlement.building.BuildingType;
 import com.talhanation.bannermod.settlement.building.BuildingValidationState;
 import com.talhanation.bannermod.settlement.building.ValidatedBuildingRecord;
@@ -33,7 +48,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -138,6 +155,23 @@ public final class BannerModSettlementService {
         return BannerModSettlementSnapshotBuilder.buildSnapshot(level, claim, governorManager);
     }
 
+    static void repairClaimState(ServerLevel level,
+                                 RecruitsClaim claim,
+                                 List<AbstractWorkAreaEntity> workAreas,
+                                 List<ValidatedBuildingRecord> validatedBuildings) {
+        if (level == null || claim == null) {
+            return;
+        }
+        Map<UUID, UUID> canonicalBindings = buildCanonicalWorkAreaBindings(validatedBuildings, workAreas);
+        Map<UUID, AbstractWorkAreaEntity> areasById = new LinkedHashMap<>();
+        for (AbstractWorkAreaEntity workArea : workAreas) {
+            areasById.put(workArea.getUUID(), workArea);
+        }
+        for (AbstractWorkerEntity worker : workersInClaim(level, claim)) {
+            repairWorkerBinding(worker, workAreas, canonicalBindings, areasById);
+        }
+    }
+
     static List<BannerModSettlementResidentRecord> collectResidents(ServerLevel level,
                                                                     RecruitsClaim claim,
                                                                     @Nullable BannerModGovernorSnapshot governorSnapshot,
@@ -227,6 +261,88 @@ public final class BannerModSettlementService {
                     RuntimeProfilingCounters.increment("worker.index.fallback_scans");
                     return level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
                 });
+    }
+
+    private static void repairWorkerBinding(AbstractWorkerEntity worker,
+                                            List<AbstractWorkAreaEntity> workAreas,
+                                            Map<UUID, UUID> canonicalBindings,
+                                            Map<UUID, AbstractWorkAreaEntity> areasById) {
+        if (worker == null) {
+            return;
+        }
+        UUID currentBinding = worker.getBoundWorkAreaUUID();
+        if (currentBinding == null) {
+            return;
+        }
+        List<UUID> compatibleAreaIds = new ArrayList<>();
+        for (AbstractWorkAreaEntity workArea : workAreas) {
+            if (isCompatibleWorkArea(worker, workArea) && workArea.canWorkHere(worker)) {
+                compatibleAreaIds.add(workArea.getUUID());
+            }
+        }
+        UUID repairedBinding = resolveRepairBinding(currentBinding, compatibleAreaIds, canonicalBindings);
+        if (repairedBinding == null) {
+            worker.setCurrentWorkArea(null);
+            worker.clearWorkStatus();
+            return;
+        }
+        AbstractWorkAreaEntity currentArea = worker.getCurrentWorkArea();
+        if (currentArea != null && repairedBinding.equals(currentArea.getUUID()) && currentArea.canWorkHere(worker)) {
+            return;
+        }
+        AbstractWorkAreaEntity repairedArea = areasById.get(repairedBinding);
+        if (repairedArea == null || !repairedArea.canWorkHere(worker)) {
+            worker.setCurrentWorkArea(null);
+            worker.clearWorkStatus();
+            return;
+        }
+        worker.setCurrentWorkArea(repairedArea);
+        worker.clearWorkStatus();
+    }
+
+    static UUID resolveRepairBinding(@Nullable UUID currentBinding,
+                                     List<UUID> compatibleAreaIds,
+                                     Map<UUID, UUID> canonicalBindings) {
+        if (currentBinding == null) {
+            return null;
+        }
+        UUID canonicalCurrent = canonicalBindings.get(currentBinding);
+        if (canonicalCurrent != null) {
+            return canonicalCurrent;
+        }
+        if (compatibleAreaIds.contains(currentBinding)) {
+            return currentBinding;
+        }
+        Set<UUID> distinctCanonicalCandidates = new LinkedHashSet<>();
+        for (UUID areaId : compatibleAreaIds) {
+            distinctCanonicalCandidates.add(canonicalBindings.getOrDefault(areaId, areaId));
+        }
+        return distinctCanonicalCandidates.size() == 1 ? distinctCanonicalCandidates.iterator().next() : null;
+    }
+
+    private static boolean isCompatibleWorkArea(AbstractWorkerEntity worker, AbstractWorkAreaEntity workArea) {
+        if (worker instanceof FarmerEntity) {
+            return workArea instanceof CropArea;
+        }
+        if (worker instanceof MinerEntity) {
+            return workArea instanceof MiningArea;
+        }
+        if (worker instanceof LumberjackEntity) {
+            return workArea instanceof LumberArea;
+        }
+        if (worker instanceof FishermanEntity) {
+            return workArea instanceof FishingArea;
+        }
+        if (worker instanceof MerchantEntity) {
+            return workArea instanceof MarketArea;
+        }
+        if (worker instanceof AnimalFarmerEntity) {
+            return workArea instanceof AnimalPenArea;
+        }
+        if (worker instanceof BuilderEntity) {
+            return workArea instanceof BuildArea;
+        }
+        return false;
     }
 
     static List<BannerModSettlementResidentRecord> applyResidentAssignmentSemantics(List<BannerModSettlementResidentRecord> residents,
@@ -408,38 +524,76 @@ public final class BannerModSettlementService {
     }
 
     static List<BannerModSettlementBuildingRecord> collectBuildings(ServerLevel level,
-                                                                    RecruitsClaim claim) {
+                                                                     RecruitsClaim claim) {
         List<BannerModSettlementBuildingRecord> buildings = new ArrayList<>();
         List<AbstractWorkAreaEntity> workAreas = collectWorkAreas(level, claim, AbstractWorkAreaEntity.class);
-        for (AbstractWorkAreaEntity workArea : workAreas) {
-            StockpileSeed stockpileSeed = resolveStockpileSeed(workArea);
-            BannerModSettlementBuildingProfileSeed profileSeed = BannerModSettlementBuildingProfileSeed.fromWorkArea(workArea);
-            buildings.add(new BannerModSettlementBuildingRecord(
-                    workArea.getUUID(),
-                    resolveBuildingTypeId(workArea),
-                    workArea.getOriginPos(),
-                    workArea.getPlayerUUID(),
-                    workArea.getTeamStringID(),
-                    0,
-                    1,
-                    0,
-                    List.of(),
-                    stockpileSeed.stockpileBuilding(),
-                    stockpileSeed.containerCount(),
-                    stockpileSeed.slotCapacity(),
-                    stockpileSeed.routeAuthored(),
-                    stockpileSeed.portEntrypoint(),
-                    stockpileSeed.typeIds(),
-                    profileSeed.category(),
-                    profileSeed
-            ));
-        }
-        for (ValidatedBuildingRecord record : ValidatedBuildingRegistryData.get(level).allRecords()) {
-            if (claim.getUUID().equals(record.settlementId()) && isValidSnapshotBuilding(level, record) && !duplicatesLiveWorkArea(record, workAreas)) {
+        SettlementRecord settlementRecord = settlementRecordForClaim(level, claim);
+        List<ValidatedBuildingRecord> validatedBuildings = collectValidatedBuildings(level, settlementRecord);
+        Map<UUID, UUID> canonicalBindings = buildCanonicalWorkAreaBindings(validatedBuildings, workAreas);
+        Set<UUID> mergedLiveAreas = new LinkedHashSet<>();
+
+        for (ValidatedBuildingRecord record : validatedBuildings) {
+            List<AbstractWorkAreaEntity> overlappingAreas = compatibleOverlappingWorkAreas(record, workAreas);
+            if (overlappingAreas.isEmpty()) {
                 buildings.add(fromValidatedBuilding(record, claim));
+                continue;
+            }
+
+            AbstractWorkAreaEntity primaryArea = primaryWorkAreaForValidatedBuilding(record, overlappingAreas);
+            if (primaryArea == null) {
+                buildings.add(fromValidatedBuilding(record, claim));
+                continue;
+            }
+
+            for (AbstractWorkAreaEntity overlappingArea : overlappingAreas) {
+                mergedLiveAreas.add(overlappingArea.getUUID());
+            }
+            UUID canonicalId = canonicalBindings.getOrDefault(primaryArea.getUUID(), primaryArea.getUUID());
+            AbstractWorkAreaEntity canonicalArea = canonicalId.equals(primaryArea.getUUID())
+                    ? primaryArea
+                    : overlappingAreas.stream()
+                            .filter(area -> canonicalId.equals(area.getUUID()))
+                            .findFirst()
+                            .orElse(primaryArea);
+            buildings.add(mergeValidatedBuildingIntoLiveRecord(record, fromLiveWorkArea(canonicalArea)));
+        }
+
+        for (AbstractWorkAreaEntity workArea : workAreas) {
+            if (!mergedLiveAreas.contains(workArea.getUUID())) {
+                buildings.add(fromLiveWorkArea(workArea));
             }
         }
         return buildings;
+    }
+
+    static BannerModSettlementBuildingRecord mergeValidatedBuildingIntoLiveRecord(ValidatedBuildingRecord record,
+                                                                                  BannerModSettlementBuildingRecord liveRecord) {
+        BannerModSettlementBuildingRecord validatedRecord = fromValidatedBuildingFields(
+                liveRecord.buildingUuid(),
+                record.type(),
+                liveRecord.originPos(),
+                record.capacity(),
+                liveRecord.ownerUuid()
+        );
+        return new BannerModSettlementBuildingRecord(
+                liveRecord.buildingUuid(),
+                liveRecord.buildingTypeId(),
+                liveRecord.originPos(),
+                liveRecord.ownerUuid(),
+                liveRecord.teamId(),
+                validatedRecord.residentCapacity(),
+                validatedRecord.workplaceSlots(),
+                0,
+                List.of(),
+                liveRecord.stockpileBuilding(),
+                liveRecord.stockpileContainerCount(),
+                liveRecord.stockpileSlotCapacity(),
+                liveRecord.stockpileRouteAuthored(),
+                liveRecord.stockpilePortEntrypoint(),
+                liveRecord.stockpileTypeIds(),
+                validatedRecord.buildingCategory(),
+                validatedRecord.buildingProfileSeed()
+        );
     }
 
     static BannerModSettlementBuildingRecord fromValidatedBuilding(ValidatedBuildingRecord record,
@@ -498,6 +652,13 @@ public final class BannerModSettlementService {
                 && record.dimension().equals(level.dimension());
     }
 
+    static boolean validatedBuildingBelongsToSettlement(@Nullable SettlementRecord settlementRecord,
+                                                        @Nullable ValidatedBuildingRecord record) {
+        return settlementRecord != null
+                && record != null
+                && settlementRecord.settlementId().equals(record.settlementId());
+    }
+
     private static boolean duplicatesLiveWorkArea(ValidatedBuildingRecord record, List<AbstractWorkAreaEntity> workAreas) {
         for (AbstractWorkAreaEntity workArea : workAreas) {
             if (workArea.getOriginPos().equals(record.anchorPos()) || workArea.getBoundingBox().intersects(record.bounds())) {
@@ -505,6 +666,119 @@ public final class BannerModSettlementService {
             }
         }
         return false;
+    }
+
+    static List<ValidatedBuildingRecord> collectValidatedBuildings(ServerLevel level,
+                                                                   @Nullable SettlementRecord settlementRecord) {
+        if (level == null || settlementRecord == null) {
+            return List.of();
+        }
+        List<ValidatedBuildingRecord> records = new ArrayList<>();
+        for (ValidatedBuildingRecord record : ValidatedBuildingRegistryData.get(level).allRecords()) {
+            if (validatedBuildingBelongsToSettlement(settlementRecord, record) && isValidSnapshotBuilding(level, record)) {
+                records.add(record);
+            }
+        }
+        return records;
+    }
+
+    static SettlementRecord settlementRecordForClaim(ServerLevel level, RecruitsClaim claim) {
+        if (level == null || claim == null) {
+            return null;
+        }
+        return SettlementRegistryData.get(level).getSettlementByClaimId(claim.getUUID());
+    }
+
+    private static BannerModSettlementBuildingRecord fromLiveWorkArea(AbstractWorkAreaEntity workArea) {
+        StockpileSeed stockpileSeed = resolveStockpileSeed(workArea);
+        BannerModSettlementBuildingProfileSeed profileSeed = BannerModSettlementBuildingProfileSeed.fromWorkArea(workArea);
+        return new BannerModSettlementBuildingRecord(
+                workArea.getUUID(),
+                resolveBuildingTypeId(workArea),
+                workArea.getOriginPos(),
+                workArea.getPlayerUUID(),
+                workArea.getTeamStringID(),
+                0,
+                1,
+                0,
+                List.of(),
+                stockpileSeed.stockpileBuilding(),
+                stockpileSeed.containerCount(),
+                stockpileSeed.slotCapacity(),
+                stockpileSeed.routeAuthored(),
+                stockpileSeed.portEntrypoint(),
+                stockpileSeed.typeIds(),
+                profileSeed.category(),
+                profileSeed
+        );
+    }
+
+    private static Map<UUID, UUID> buildCanonicalWorkAreaBindings(Collection<ValidatedBuildingRecord> validatedBuildings,
+                                                                  List<AbstractWorkAreaEntity> workAreas) {
+        Map<UUID, UUID> canonicalBindings = new HashMap<>();
+        for (ValidatedBuildingRecord record : validatedBuildings) {
+            List<AbstractWorkAreaEntity> candidates = compatibleOverlappingWorkAreas(record, workAreas);
+            AbstractWorkAreaEntity primary = primaryWorkAreaForValidatedBuilding(record, candidates);
+            if (primary == null) {
+                continue;
+            }
+            for (AbstractWorkAreaEntity candidate : candidates) {
+                canonicalBindings.put(candidate.getUUID(), primary.getUUID());
+            }
+        }
+        return canonicalBindings;
+    }
+
+    private static List<AbstractWorkAreaEntity> compatibleOverlappingWorkAreas(ValidatedBuildingRecord record,
+                                                                                List<AbstractWorkAreaEntity> workAreas) {
+        if (record == null || workAreas.isEmpty()) {
+            return List.of();
+        }
+        List<AbstractWorkAreaEntity> matches = new ArrayList<>();
+        for (AbstractWorkAreaEntity workArea : workAreas) {
+            if (isCompatibleValidatedWorkArea(record.type(), workArea)
+                    && (workArea.getOriginPos().equals(record.anchorPos()) || workArea.getBoundingBox().intersects(record.bounds()))) {
+                matches.add(workArea);
+            }
+        }
+        return matches;
+    }
+
+    private static AbstractWorkAreaEntity primaryWorkAreaForValidatedBuilding(ValidatedBuildingRecord record,
+                                                                               List<AbstractWorkAreaEntity> candidates) {
+        if (record == null || candidates.isEmpty()) {
+            return null;
+        }
+        AbstractWorkAreaEntity best = null;
+        int bestScore = Integer.MIN_VALUE;
+        for (AbstractWorkAreaEntity candidate : candidates) {
+            int score = 0;
+            if (candidate.getOriginPos().equals(record.anchorPos())) {
+                score += 1000;
+            }
+            score -= (int) Math.min(999, candidate.getOriginPos().distManhattan(record.anchorPos()));
+            if (candidate instanceof CropArea cropArea && !cropArea.getSeedStack().isEmpty()) {
+                score += 100;
+            }
+            if (best == null || score > bestScore || (score == bestScore && candidate.getUUID().toString().compareTo(best.getUUID().toString()) < 0)) {
+                best = candidate;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    private static boolean isCompatibleValidatedWorkArea(BuildingType type, AbstractWorkAreaEntity workArea) {
+        if (type == null || workArea == null) {
+            return false;
+        }
+        return switch (type) {
+            case FARM -> workArea instanceof CropArea;
+            case MINE -> workArea instanceof MiningArea;
+            case LUMBER_CAMP -> workArea instanceof LumberArea;
+            case STORAGE -> workArea instanceof StorageArea;
+            default -> false;
+        };
     }
 
     private static BannerModSettlementBuildingProfileSeed profileSeedForValidatedBuilding(BuildingType type) {
@@ -971,9 +1245,9 @@ public final class BannerModSettlementService {
         return collectWorkAreas(level, claim, StorageArea.class);
     }
 
-    private static <T extends AbstractWorkAreaEntity> List<T> collectWorkAreas(ServerLevel level,
-                                                                               RecruitsClaim claim,
-                                                                               Class<T> type) {
+    static <T extends AbstractWorkAreaEntity> List<T> collectWorkAreas(ServerLevel level,
+                                                                       RecruitsClaim claim,
+                                                                       Class<T> type) {
         WorkAreaIndex index = WorkAreaIndex.instance();
         if (index.sizeFor(level.dimension()) > 0) {
             return index.queryInChunks(level, claim.getClaimedChunks(), type).stream()
