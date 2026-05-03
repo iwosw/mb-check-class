@@ -2435,6 +2435,7 @@
   "gui.bannermod.states.co_authority.locked": "listed, monarchy locked",
   "gui.bannermod.states.color": "Color",
   "gui.bannermod.states.create": "Create",
+  "gui.bannermod.states.menu.manage": "Manage state",
   "gui.bannermod.states.detail": "Realm Detail",
   "gui.bannermod.states.detail.capital": "Capital: %s",
   "gui.bannermod.states.detail.co_leader_authority": "Co-leader authority: %s",

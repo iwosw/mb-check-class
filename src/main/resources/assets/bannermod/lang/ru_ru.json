@@ -2343,6 +2343,7 @@
   "gui.bannermod.states.co_authority.locked": "в списке, монархия блокирует",
   "gui.bannermod.states.color": "Цвет",
   "gui.bannermod.states.create": "Создать",
+  "gui.bannermod.states.menu.manage": "Управление государством",
   "gui.bannermod.states.detail": "Подробности владения",
   "gui.bannermod.states.detail.capital": "Столица: %s",
   "gui.bannermod.states.detail.co_leader_authority": "Полномочия со-лидеров: %s",
