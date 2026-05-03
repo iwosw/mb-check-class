@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.component.RecruitsMultiLineEditBox;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
@@ -8,16 +7,13 @@ import com.talhanation.bannermod.network.messages.military.MessageAnswerMessenge
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class MessengerAnswerScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
     private final Player player;
     private final MessengerEntity messenger;
     private RecruitsMultiLineEditBox textFieldMessage;
@@ -78,13 +74,10 @@ public class MessengerAnswerScreen extends RecruitsScreenBase {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
-        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 8, xSize - 16, 24);
-        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 36, xSize - 16, 175);
-        drawDarkInset(guiGraphics, guiLeft + 24, guiTop + ySize - 80, xSize - 48, 18);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 8, guiTop + 8, xSize - 16, 22);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 8, guiTop + 36, xSize - 16, 175);
+        MilitaryGuiStyle.insetPanel(guiGraphics, guiLeft + 24, guiTop + ySize - 80, xSize - 48, 18);
     }
 
     @Override
@@ -97,20 +90,25 @@ public class MessengerAnswerScreen extends RecruitsScreenBase {
                 ? Component.translatable("gui.recruits.messenger.answer_time_seconds", time)
                 : Component.translatable("gui.recruits.messenger.answer_time_minutes", time / 60);
 
-        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 14, FONT_COLOR, false);
-        guiGraphics.drawString(font, LABEL_FROM, guiLeft + 14, guiTop + 44, FONT_COLOR, false);
-        guiGraphics.drawString(font, LABEL_TO, guiLeft + 14,  guiTop + 56, FONT_COLOR, false);
-        guiGraphics.drawString(font, owner, guiLeft + 48,  guiTop + 44, FONT_COLOR, false);
-        guiGraphics.drawString(font, targetPlayer, guiLeft + 48,  guiTop + 56, FONT_COLOR, false);
-        guiGraphics.drawString(font, timeLine, guiLeft + 14, guiTop + 68, 0x6E5A45, false);
-        guiGraphics.drawString(font, LABEL_REPLY, guiLeft + 14, guiTop + 86, FONT_COLOR, false);
-        guiGraphics.drawString(font,
-                acknowledged
-                        ? Component.translatable("gui.recruits.messenger.answer_status.accepted")
-                        : Component.translatable("gui.recruits.messenger.answer_status.ready"),
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, TITLE, xSize - 24);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, clampedTitle, guiLeft, guiTop + 14, xSize);
+        guiGraphics.drawString(font, LABEL_FROM, guiLeft + 14, guiTop + 44, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, LABEL_TO, guiLeft + 14,  guiTop + 56, MilitaryGuiStyle.TEXT_DARK, false);
+        String clampedOwner = MilitaryGuiStyle.clampLabel(font, owner, xSize - 60);
+        String clampedTarget = MilitaryGuiStyle.clampLabel(font, targetPlayer, xSize - 60);
+        guiGraphics.drawString(font, clampedOwner, guiLeft + 48,  guiTop + 44, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, clampedTarget, guiLeft + 48,  guiTop + 56, MilitaryGuiStyle.TEXT_DARK, false);
+        Component clampedTime = MilitaryGuiStyle.clampLabel(font, timeLine, xSize - 28);
+        guiGraphics.drawString(font, clampedTime, guiLeft + 14, guiTop + 68, MilitaryGuiStyle.TEXT_MUTED, false);
+        guiGraphics.drawString(font, LABEL_REPLY, guiLeft + 14, guiTop + 86, MilitaryGuiStyle.TEXT_DARK, false);
+        Component statusLine = acknowledged
+                ? Component.translatable("gui.recruits.messenger.answer_status.accepted")
+                : Component.translatable("gui.recruits.messenger.answer_status.ready");
+        Component clampedStatus = MilitaryGuiStyle.clampLabel(font, statusLine, xSize - 60);
+        guiGraphics.drawString(font, clampedStatus,
                 guiLeft + 30,
                 guiTop + ySize - 75,
-                acknowledged ? 0x2E5D32 : 0x6E5A45,
+                acknowledged ? MilitaryGuiStyle.TEXT_GOOD : MilitaryGuiStyle.TEXT_MUTED,
                 false);
 
         if(!messenger.getMainHandItem().isEmpty()){

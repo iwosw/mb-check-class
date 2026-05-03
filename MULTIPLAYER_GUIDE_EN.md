@@ -65,6 +65,26 @@ The same actions (Create / Rename / Capital here / Government form toggle) live 
 
 If you only want to let another player live and build inside your settlement without giving them political powers, use the claim editor instead of co-leaders: open the map (`M`), edit the claim, then open `Trusted Members`. Trusted members can build, interact, and manage local work areas in that claim, but they still cannot edit claims, change state law, invite allies, or use war powers.
 
+### How to add a player to your settlement
+
+Step by step:
+
+1. Press `M` to open the world map.
+2. Right-click the chunk that belongs to your settlement claim and pick `Edit claim`.
+3. In the claim editor click `Trusted Members`.
+4. Press `Add Player`, choose the target player from the picker, and `Save`.
+
+Removing a member uses the same screen — select the player row, click the `x` button on the selected-player widget, then `Save`.
+
+### Forming a state out of multiple settlements
+
+Each settlement is one claim and is auto-bound to the political entity of the player who created it. Two ways to bring multiple settlements into the same state today:
+
+- The same leader (or a republic co-leader) creates all the new settlements while in the state. Their starter forts auto-attach to that state.
+- Use co-leadership: the additional player accepts a co-leader seat (`Add co-leader` in the state screen), switch the government form to `REPUBLIC`, and any future settlement they author lands in the same state.
+
+There is currently **no in-place way to move an existing pre-state settlement claim into another state** — a claim's owning political entity is fixed at creation. If you need that, file an issue or watch the `WORLDMAPCLAIMPE-001` backlog item; until then the workaround is to delete the orphan claim from the world map and re-claim those chunks while a member of the target state.
+
 ## Promoting A Settlement Into A State
 
 A settlement cannot become a full state without infrastructure. `/bannermod state status <entity> STATE` only succeeds when the settlement registers:
@@ -90,7 +110,9 @@ Civilian work-area editors now show a sync state in the top-right corner, an exp
 
 Right-clicking a worker now opens a compact worker ledger instead of dumping chat lines. The ledger shows owner, authority token, claim relation, assignment, current problem, and transport state in one place. If it shows `Ownership mismatch` or `Foreign claim`, fix claim/state/work-area ownership first; workers only run inside friendly authority and on the correct political side.
 
-The same ledger also has a `To Citizen` button. It converts that worker into a free citizen on the server and applies a short auto-assignment pause so the citizen does not instantly snap back into the same vacancy before you can move or repurpose it.
+The same ledger also has a `To Citizen` button. It converts that worker into a free citizen on the server and applies a short auto-assignment pause so the citizen does not instantly snap back into the same vacancy before you can move or repurpose it. This is also the dismiss path: if you want to fully send a worker home, use `To Citizen` and ignore the citizen until it leaves the area, or re-hire it from a Citizen Profile to swap profession through the spawn-egg / hire flow.
+
+Next to `To Citizen` the ledger now has a `Reassign` action menu. It opens a dropdown of every worker profession (Farmer, Lumberjack, Miner, Animal Farmer, Builder, Merchant, Fisherman) except the one this worker already holds. Picking an option asks the server to swap the worker's profession in place: ownership, bound work area, and position are preserved, the old worker entity is replaced with the chosen profession's worker entity at the same anchor, and the same ownership / political authority gate that allows `To Citizen` is reused for `Reassign`. There is no recurring wage system in BannerMod; profession changes only re-hire if the original spawn cost has not yet been deducted, and once the worker exists no payroll is charged.
 
 The current work-area editor now shows its zone box again while the screen is open, and the civilian overlay key `B` toggles nearby work areas you are allowed to control in your settlement. The overlay culls distant and fully hidden zones instead of drawing every marker through walls. For crop areas, the seed is chosen in the crop-area screen itself from the seed list built from your own inventory.
 

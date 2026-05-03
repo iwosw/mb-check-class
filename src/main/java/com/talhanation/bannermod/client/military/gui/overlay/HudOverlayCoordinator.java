@@ -447,7 +447,9 @@ public final class HudOverlayCoordinator {
     }
 
     private static String warName(WarDeclarationRecord war) {
-        return entityName(war.attackerPoliticalEntityId()) + " vs " + entityName(war.defenderPoliticalEntityId());
+        return Component.translatable("gui.bannermod.hud.war_vs",
+                entityName(war.attackerPoliticalEntityId()),
+                entityName(war.defenderPoliticalEntityId())).getString();
     }
 
     @Nullable

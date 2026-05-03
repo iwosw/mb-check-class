@@ -17,7 +17,8 @@ public record WorkerInspectionSnapshot(
         String problemLabel,
         String transportLabel,
         boolean canConvert,
-        @Nullable String convertBlockedReasonKey
+        @Nullable String convertBlockedReasonKey,
+        String currentProfessionTag
 ) {
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeVarInt(entityId);
@@ -35,6 +36,7 @@ public record WorkerInspectionSnapshot(
         if (convertBlockedReasonKey != null) {
             buf.writeUtf(convertBlockedReasonKey);
         }
+        buf.writeUtf(currentProfessionTag == null ? "" : currentProfessionTag);
     }
 
     public static WorkerInspectionSnapshot fromBytes(FriendlyByteBuf buf) {
@@ -50,7 +52,8 @@ public record WorkerInspectionSnapshot(
                 buf.readUtf(),
                 buf.readUtf(),
                 buf.readBoolean(),
-                buf.readBoolean() ? buf.readUtf() : null
+                buf.readBoolean() ? buf.readUtf() : null,
+                buf.readUtf()
         );
     }
 }

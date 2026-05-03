@@ -46,9 +46,11 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     private static final MutableComponent BUTTON_ASSASSIN = Component.translatable("gui.bannermod.inv.text.assassin");
     private static final MutableComponent TOOLTIP_ASSASSIN = Component.translatable("gui.bannermod.inv.tooltip.assassin");
+    private static final MutableComponent TOOLTIP_ASSASSIN_DISABLED = Component.translatable("gui.bannermod.inv.tooltip.assassin_disabled");
 
     private static final MutableComponent BUTTON_SPY = Component.translatable("gui.bannermod.inv.text.spy");
     private static final MutableComponent TOOLTIP_SPY = Component.translatable("gui.bannermod.inv.tooltip.spy");
+    private static final MutableComponent TOOLTIP_SPY_DISABLED = Component.translatable("gui.bannermod.inv.tooltip.spy_disabled");
 
     private static final MutableComponent BUTTON_SIEGE_ENGINEER = Component.translatable("gui.bannermod.inv.text.siege_engineer");
     private static final MutableComponent TOOLTIP_SIEGE_ENGINEER = Component.translatable("gui.bannermod.inv.tooltip.siege_engineer");
@@ -56,10 +58,9 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     private static final MutableComponent BUTTON_ROGUE = Component.translatable("gui.bannermod.inv.text.rogue");
     private static final MutableComponent TOOLTIP_ROGUE = Component.translatable("gui.bannermod.inv.tooltip.rogue");
+    private static final MutableComponent TOOLTIP_ROGUE_DISABLED = Component.translatable("gui.bannermod.inv.tooltip.rogue_disabled");
     private static final MutableComponent NAME_LABEL = Component.translatable("gui.recruits.promote.name_label");
-
-    //private boolean keepTeam;
-
+    private static final MutableComponent TITLE = Component.translatable("gui.recruits.promote.screen.title");
 
     public PromoteScreen(PromoteContainer container, Inventory playerInventory, Component title) {
         super(RESOURCE_LOCATION, container, playerInventory, Component.literal(""));
@@ -75,7 +76,6 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
         super.init();
         this.leftPos = (this.width - this.imageWidth) / 2;
         this.topPos = (this.height - this.imageHeight) / 2;
-        //keepTeam = false;
 
         setWidgets();
     }
@@ -86,7 +86,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
 
     private void setEditBox() {
-        Component name = Component.literal("Name");
+        Component name = Component.translatable("gui.recruits.promote.field.name");
         if(recruit.getCustomName() != null) name = recruit.getCustomName();
 
         textField = new EditBox(font, leftPos + 16, topPos + 8, 170, 20, name);
@@ -117,15 +117,15 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
         createProfessionButtons(BUTTON_PATROL_LEADER, TOOLTIP_PATROL_LEADER, 2,recruit.getXpLevel() >= 5);
         createProfessionButtons(BUTTON_CAPTAIN, BannerModMain.isSmallShipsCompatible ? TOOLTIP_CAPTAIN : TOOLTIP_CAPTAIN_DISABLED, 3, recruit.getXpLevel() >= 5 && BannerModMain.isSmallShipsLoaded && BannerModMain.isSmallShipsCompatible);
-        createProfessionButtons(BUTTON_ASSASSIN, TOOLTIP_ASSASSIN, 4, false && recruit.getXpLevel() >= 5);
-        createProfessionButtons(BUTTON_SIEGE_ENGINEER,
-                BannerModMain.isSiegeWeaponsLoaded ? TOOLTIP_SIEGE_ENGINEER_DISABLED : TOOLTIP_SIEGE_ENGINEER_DISABLED,
-                5,
-                false);
+        // Assassin / Spy / Rogue / Siege-Engineer are gated off until the systems land.
+        // Surface a "feature disabled" tooltip rather than the active-state description so a
+        // greyed button explains itself to the player.
+        createProfessionButtons(BUTTON_ASSASSIN, TOOLTIP_ASSASSIN_DISABLED, 4, false);
+        createProfessionButtons(BUTTON_SIEGE_ENGINEER, TOOLTIP_SIEGE_ENGINEER_DISABLED, 5, false);
 
         createProfessionButtons(BUTTON_GOVERNOR, TOOLTIP_GOVERNOR, 6, canDesignateGovernor());
-        createProfessionButtons(BUTTON_SPY, TOOLTIP_SPY, 7, false && recruit.getXpLevel() >= 7);
-        createProfessionButtons(BUTTON_ROGUE, TOOLTIP_ROGUE, 8, false && recruit.getXpLevel() >= 7);
+        createProfessionButtons(BUTTON_SPY, TOOLTIP_SPY_DISABLED, 7, false);
+        createProfessionButtons(BUTTON_ROGUE, TOOLTIP_ROGUE_DISABLED, 8, false);
     }
 
     private boolean canDesignateGovernor() {
@@ -133,7 +133,8 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
     }
 
     private Button createProfessionButtons(Component buttonText, Component buttonTooltip, int professionID, boolean active){
-        Button professionButton = addRenderableWidget(new ExtendedButton(leftPos + 59, 31 + topPos + 23 * professionID, 80, 20, buttonText,
+        Component clamped = MilitaryGuiStyle.clampLabel(font, buttonText, 80 - 6);
+        Button professionButton = addRenderableWidget(new ExtendedButton(leftPos + 59, 31 + topPos + 23 * professionID, 80, 20, clamped,
                 btn -> {
                     if (recruit != null) {
                         String name = this.textField.getValue();
@@ -152,10 +153,21 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
     }
 
     @Override
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        // Replace ad-hoc texture chrome with parchment palette.
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, leftPos, topPos, imageWidth, imageHeight);
+        MilitaryGuiStyle.titleStrip(guiGraphics, leftPos + 10, topPos + 8, imageWidth - 20, 16);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 14, topPos + 30, imageWidth - 28, 200);
+        MilitaryGuiStyle.insetPanel(guiGraphics, leftPos + 14, topPos + 232, imageWidth - 28, 14);
+    }
+
+    @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.renderLabels(guiGraphics, mouseX, mouseY);
-        guiGraphics.drawString(font, NAME_LABEL, 16, 3, 0xB59A6A, false);
-        guiGraphics.drawString(font, recruit.getDisplayName(), 16, 28, 0xF0E6D2, false);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, TITLE, 0, 11, imageWidth);
+        guiGraphics.drawString(font, NAME_LABEL, 16, 32, MilitaryGuiStyle.TEXT_DARK, false);
+        Component clampedName = MilitaryGuiStyle.clampLabel(font, recruit.getDisplayName(), imageWidth - 24);
+        guiGraphics.drawString(font, clampedName, 16, 50, MilitaryGuiStyle.TEXT_DARK, false);
 
         Component status = recruit.getXpLevel() >= 7
                 ? Component.translatable("gui.recruits.promote.status.ready")
@@ -164,7 +176,8 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
                 : recruit.getXpLevel() >= 3
                 ? Component.translatable("gui.recruits.promote.status.level5")
                 : Component.translatable("gui.recruits.promote.status.level3");
-        guiGraphics.drawString(font, status, 16, 236, 0xB59A6A, false);
+        Component statusClamped = MilitaryGuiStyle.clampLabel(font, status, imageWidth - 28);
+        guiGraphics.drawString(font, statusClamped, 16, 235, MilitaryGuiStyle.TEXT, false);
     }
 
     @Override
