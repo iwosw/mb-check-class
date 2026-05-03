@@ -963,6 +963,7 @@
   "gui.workers.merchant.hint.ready_owner": "Нажмите «Торговать», чтобы проверить обмен, или переставьте предложения через меню «Управление».",
   "gui.workers.merchant.hint.ready_customer": "Нажмите «Торговать», чтобы сразу получить товар.",
   "gui.workers.merchant.button.manage": "Управление",
+  "gui.workers.merchant.manage.disabled": "Сначала выберите предложение, чтобы скопировать, удалить или переставить его.",
   "gui.workers.merchant.manage.move_up": "Поднять",
   "gui.workers.merchant.manage.move_down": "Опустить",
   "gui.workers.merchant.edit_title": "Торговая грамота",
