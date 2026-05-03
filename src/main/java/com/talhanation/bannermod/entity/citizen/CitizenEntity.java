@@ -87,6 +87,20 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         this.registry = registry;
         this.state = new CitizenCoreState(27);
         this.switcher = new CitizenProfessionSwitcher(registry, this, CitizenProfession.NONE);
+        // Citizens are settlement NPCs the player invests in (named, profession-tagged,
+        // assigned to claim work areas). Without this they inherit Mob's vanilla
+        // despawn behavior — wander out of the 32-block "no-despawn" radius around
+        // a player, accumulate noActionTime, and silently vanish via Mob.checkDespawn.
+        // The persistence flag also keeps them across save/load even if the chunk
+        // unloads while they're outside the player tracking radius.
+        this.setPersistenceRequired();
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double sqDistanceToClosestPlayer) {
+        // See constructor: citizens never despawn from distance. Recruits already do
+        // this; we mirror it here so the unified-citizen line behaves consistently.
+        return false;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
