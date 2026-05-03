@@ -69,6 +69,17 @@ final class ClaimProtectionEventService {
         }
 
         if(claim != null && RecruitsServerConfig.ExplosionProtectionInClaims.get()){
+            // Allow the explosion through ONLY if an active siege is happening here:
+            // a war in battle-window-eligible state, this position inside that war's
+            // SiegeStandard zone, and the BattleWindowSchedule currently open. That
+            // means TNT / Medieval Siege Machines blasts can land during a real
+            // assault but are nullified during peacetime / outside battle hours.
+            if (event.getLevel() instanceof ServerLevel serverLevel
+                    && com.talhanation.bannermod.war.runtime.SiegeExplosionPolicy
+                    .isExplosionAllowedDuringActiveSiege(serverLevel, pos)) {
+                BuildingInvalidationRuntime.enqueueByBlockChange(serverLevel, pos, BuildingInvalidationReason.EXPLOSION);
+                return;
+            }
             event.setCanceled(true);
             return;
         }
