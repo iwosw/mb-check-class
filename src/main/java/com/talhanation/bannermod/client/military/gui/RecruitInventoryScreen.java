@@ -71,6 +71,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TOOLTIP_RAID = Component.translatable("gui.recruits.inv.tooltip.raid");
     private static final MutableComponent TOOLTIP_BACK_TO_MOUNT = Component.translatable("gui.recruits.inv.tooltip.backToMount");
     private static final MutableComponent TOOLTIP_CLEAR_UPKEEP = Component.translatable("gui.recruits.inv.tooltip.clearUpkeep");
+    private static final MutableComponent TOOLTIP_CLEAR_UPKEEP_DISABLED = Component.translatable("gui.recruits.inv.tooltip.clearUpkeep_disabled");
+    private static final MutableComponent TOOLTIP_NOBLE_LOCKED = Component.translatable("gui.recruits.inv.tooltip.noble_locked");
     private static final MutableComponent TEXT_FOLLOW = Component.translatable("gui.recruits.inv.text.follow");
     private static final MutableComponent TEXT_WANDER = Component.translatable("gui.recruits.inv.text.wander");
     private static final MutableComponent TEXT_HOLD_MY_POS = Component.translatable("gui.recruits.inv.text.holdMyPos");
@@ -190,8 +192,9 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                 BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageMountEntityGui(recruit.getUUID(), false));
             }
             );
-        buttonMount.setTooltip(Tooltip.create(TOOLTIP_MOUNT));
-        buttonMount.active = !(recruit instanceof VillagerNobleEntity);
+        boolean isNobleForMount = recruit instanceof VillagerNobleEntity;
+        buttonMount.setTooltip(Tooltip.create(isNobleForMount ? TOOLTIP_NOBLE_LOCKED : TOOLTIP_MOUNT));
+        buttonMount.active = !isNobleForMount;
         addRenderableWidget(buttonMount);
 
 
@@ -261,8 +264,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                     clearUpkeep.active = false;
                 }
         ));
-        this.clearUpkeep.setTooltip(Tooltip.create(TOOLTIP_CLEAR_UPKEEP));
         this.clearUpkeep.active = this.recruit.hasUpkeep();
+        this.clearUpkeep.setTooltip(Tooltip.create(this.clearUpkeep.active ? TOOLTIP_CLEAR_UPKEEP : TOOLTIP_CLEAR_UPKEEP_DISABLED));
 
         this.stanceButton = addRenderableWidget(new ProfileButton(zeroLeftPos - 270, zeroTopPos + (20 + topPosGab) * 7, 80, 20, Component.empty(),
                 button -> {
@@ -270,8 +273,8 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                     BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageCombatStanceGui(recruit.getUUID(), nextStance));
                 }
         ));
-        this.stanceButton.setTooltip(Tooltip.create(TOOLTIP_STANCE));
         this.stanceButton.active = !(recruit instanceof VillagerNobleEntity);
+        this.stanceButton.setTooltip(Tooltip.create(this.stanceButton.active ? TOOLTIP_STANCE : TOOLTIP_NOBLE_LOCKED));
         updateCombatStanceButton();
 
         //LISTEN
@@ -279,12 +282,14 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageListen(!recruit.getListen(), recruit.getUUID()));
          });
          leftListenButton.active = !(recruit instanceof VillagerNobleEntity);
+         if (!leftListenButton.active) leftListenButton.setTooltip(Tooltip.create(TOOLTIP_NOBLE_LOCKED));
          addRenderableWidget(leftListenButton);
 
         rightListenButton = new ProfileButton(leftPos + 274, topPos + 130, 14, 14, Component.literal(">"), button -> {
             BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageListen(!recruit.getListen(), recruit.getUUID()));
         });
         rightListenButton.active = !(recruit instanceof VillagerNobleEntity);
+        if (!rightListenButton.active) rightListenButton.setTooltip(Tooltip.create(TOOLTIP_NOBLE_LOCKED));
         addRenderableWidget(rightListenButton);
 
         //more
@@ -294,6 +299,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                 }
         );
         moreButton.active = !(recruit instanceof VillagerNobleEntity);
+        if (!moreButton.active) moreButton.setTooltip(Tooltip.create(TOOLTIP_NOBLE_LOCKED));
         addRenderableWidget(moreButton);
 
         if(recruit instanceof VillagerNobleEntity){

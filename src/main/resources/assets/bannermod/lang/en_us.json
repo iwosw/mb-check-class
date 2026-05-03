@@ -1375,6 +1375,8 @@
   "gui.recruits.inv.text.ok_messenger": "Done",
   "gui.recruits.inv.tooltip.backToMount": "Make this recruit mount his previous vehicle.",
   "gui.recruits.inv.tooltip.clearUpkeep": "Clears saved upkeep position.",
+  "gui.recruits.inv.tooltip.clearUpkeep_disabled": "No upkeep position is currently set.",
+  "gui.recruits.inv.tooltip.noble_locked": "Nobles cannot be commanded that way.",
   "gui.recruits.inv.text.clearUpkeep": "Clear Upkeep",
   "gui.recruits.inv.tooltip.takeOwnership": "Take ownership of this recruit",
   "gui.recruits.inv.tooltip.openInventory": "Open Inventory of this recruit",

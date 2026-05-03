@@ -1319,6 +1319,8 @@
   "gui.recruits.inv.text.ok_messenger": "Готово",
   "gui.recruits.inv.tooltip.backToMount": "Приказать рекруту вернуться на предыдущий транспорт.",
   "gui.recruits.inv.tooltip.clearUpkeep": "Очищает сохраненную позицию обеспечения.",
+  "gui.recruits.inv.tooltip.clearUpkeep_disabled": "Позиция обеспечения сейчас не задана.",
+  "gui.recruits.inv.tooltip.noble_locked": "Дворянам нельзя отдавать такую команду.",
   "gui.recruits.inv.text.clearUpkeep": "Очистить обеспечение",
   "gui.recruits.inv.tooltip.takeOwnership": "Взять этого солдата под свое командование",
   "gui.recruits.inv.tooltip.openInventory": "Открыть инвентарь этого солдата",
