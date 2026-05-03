@@ -234,7 +234,9 @@ public class BuildAreaScreen extends WorkAreaScreen {
                 saveButton = addRenderableWidget(new ExtendedButton(x - buttonWidth / 2, y + 182, buttonWidth, buttonHeight, text("gui.workers.build.action.save"),
                         btn -> StructureManager.saveStructureToFile(this.scanNameEditBox.getValue(), this.structureNBT)
                 ));
-                saveButton.active = false;
+                // Always run the disabled-state tooltip path so a freshly-opened screen
+                // shows "scan first" / "name needed" instead of a silent grey button.
+                checkSaveButtonActive(scanNameEditBox.getValue());
 
                 structurePreview = new StructurePreviewWidget(x - previewWidth / 2, y - previewHeight / 2 + 130, previewWidth, previewHeight, buildArea.getWidthSize(), buildArea.getDepthSize());
                 addRenderableWidget(structurePreview);

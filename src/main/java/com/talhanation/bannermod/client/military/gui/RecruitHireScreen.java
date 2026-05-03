@@ -89,8 +89,18 @@ public class RecruitHireScreen extends ScreenBase<RecruitHireMenu> {
         if (hireButton == null) {
             return;
         }
-        boolean canHire = ClientManager.canPlayerHire && group != null && ClientManager.groups != null && !ClientManager.groups.isEmpty();
+        boolean hasGroup = group != null && ClientManager.groups != null && !ClientManager.groups.isEmpty();
+        boolean canHire = ClientManager.canPlayerHire && hasGroup;
         hireButton.active = canHire;
+        if (canHire) {
+            hireButton.setTooltip(null);
+        } else if (!hasGroup) {
+            hireButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                    Component.translatable("gui.recruits.hire.tooltip.disabled")));
+        } else {
+            hireButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                    Component.translatable("gui.recruits.hire.tooltip.not_allowed")));
+        }
     }
 
     private ExtendedButton createHireButton() {
