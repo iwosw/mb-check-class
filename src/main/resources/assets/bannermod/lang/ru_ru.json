@@ -1274,6 +1274,7 @@
   "gui.recruits.inv.tooltip.rogue": "Разбойник может захватывать вражеских игроков и компаньонов, когда у них низкое здоровье.",
   "gui.recruits.inv.text.special": "Особенность",
   "gui.recruits.inv.tooltip.special": "Открывает экран компаньона для особых способностей.",
+  "gui.recruits.inv.tooltip.special_disabled": "Способности компаньона недоступны: требования не выполнены.",
   "chat.recruits.text.messenger_player_not_found": "%s: Игрока с таким именем нет, милорд.",
   "chat.recruits.text.messenger_arrived_at_target": "Посыльный %s от %s прибыл к вам!",
   "chat.recruits.text.messenger_arrived_at_target_team": "Посыльный %s от %s из %s прибыл к вам!",

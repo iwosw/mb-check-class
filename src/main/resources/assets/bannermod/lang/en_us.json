@@ -1330,6 +1330,7 @@
   "gui.recruits.inv.tooltip.rogue": "Rogue can capture enemy players and companions when their health is low.",
   "gui.recruits.inv.text.special": "Special",
   "gui.recruits.inv.tooltip.special": "Opens Companion Screen for special abilities",
+  "gui.recruits.inv.tooltip.special_disabled": "Companion abilities are unavailable until requirements are met.",
   "chat.recruits.text.messenger_player_not_found": "%s: There is no Player with this name, my lord.",
   "chat.recruits.text.messenger_arrived_at_target": "The Messenger %s of %s arrived next to you!",
   "chat.recruits.text.messenger_arrived_at_target_team": "The Messenger %s of %s from %s arrived next to you!",

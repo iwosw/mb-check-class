@@ -95,6 +95,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TOOLTIP_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote");
     private static final MutableComponent TOOLTIP_DISABLED_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote_disabled");
     private static final MutableComponent TOOLTIP_SPECIAL = Component.translatable("gui.recruits.inv.tooltip.special");
+    private static final MutableComponent TOOLTIP_SPECIAL_DISABLED = Component.translatable("gui.recruits.inv.tooltip.special_disabled");
     private static final MutableComponent TOOLTIP_CURRENT_STATE = Component.translatable("gui.recruits.inv.tooltip.current_state");
     private static final MutableComponent SECTION_DISCIPLINE = Component.translatable("gui.recruits.inv.section.discipline");
     private static final MutableComponent SECTION_ORDERS = Component.translatable("gui.recruits.inv.section.orders");
@@ -330,7 +331,7 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
                     }
             ));
 
-            promoteButton.setTooltip(Tooltip.create(TOOLTIP_SPECIAL));
+            promoteButton.setTooltip(Tooltip.create(canPromote ? TOOLTIP_SPECIAL : TOOLTIP_SPECIAL_DISABLED));
             promoteButton.active = canPromote;
 
         }
