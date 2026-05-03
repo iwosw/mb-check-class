@@ -83,7 +83,7 @@ Each settlement is one claim and is auto-bound to the political entity of the pl
 - The same leader (or a republic co-leader) creates all the new settlements while in the state. Their starter forts auto-attach to that state.
 - Use co-leadership: the additional player accepts a co-leader seat (`Add co-leader` in the state screen), switch the government form to `REPUBLIC`, and any future settlement they author lands in the same state.
 
-There is currently **no in-place way to move an existing pre-state settlement claim into another state** — a claim's owning political entity is fixed at creation. If you need that, file an issue or watch the `WORLDMAPCLAIMPE-001` backlog item; until then the workaround is to delete the orphan claim from the world map and re-claim those chunks while a member of the target state.
+If you already have an existing claim that needs to live under a different state, you can transfer it in place. Open the world map, right-click the claim, choose `Edit claim`, and use the **Owning state:** dropdown to pick the target state — only states where you currently hold authority are listed. Press `Transfer to state`, confirm in the prompt, and the server moves the claim to the chosen state (the previous owner loses authority). The dropdown is empty if you are not a leader or co-leader anywhere else; the button is greyed when you have no authority in the current owning state.
 
 ## Promoting A Settlement Into A State
 

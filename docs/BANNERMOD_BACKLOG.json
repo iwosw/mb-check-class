@@ -6525,7 +6525,7 @@
     {
       "id": "WORLDMAPCLAIMPE-001",
       "title": "Move existing claim into a different political entity",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-05-03",
       "why": "Audit of multi-settlement-state UX (UI_AUDIT_FINDINGS + user playtest) found a real gap: a claim's owning political entity is fixed at creation. There is no UI or command to transfer an existing settlement claim into another state. The current workaround forces players to delete and re-claim, losing all in-claim state.",
       "scope": [
@@ -6541,7 +6541,12 @@
         "Both multiplayer guides describe the new flow and remove the WORLDMAPCLAIMPE-001 workaround note"
       ],
       "dependencies": [],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-03",
+          "text": "Implemented MessageReassignClaimPoliticalEntity (server-authoritative dual-PE auth via ClaimPacketAuthority + PoliticalEntityAuthority.canAct), wired ClaimEditScreen Transfer dropdown + ConfirmScreen, added EN+RU lang, updated both player guides, ClaimTransferContractTest pins all surfaces."
+        }
+      ],
       "verification": [],
       "evidence": [
         "UI_AUDIT_FINDINGS.md (audit doc) + user playtest report '2026-05-03'"

@@ -63,6 +63,7 @@ public final class MilitaryPacketCatalog {
         MessageToClientUpdateClaim.class,
         MessageToClientUpdateClaims.class,
         MessageUpdateClaim.class,
+        MessageReassignClaimPoliticalEntity.class,
         MessageDeleteClaim.class,
         MessageClaimIntent.class,
         MessageToClientReceiveRoute.class,
