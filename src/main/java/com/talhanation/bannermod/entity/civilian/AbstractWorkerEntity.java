@@ -168,7 +168,8 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
                 workerProblemLabel(),
                 this.transportService.inspectionMessage().getString(),
                 convertBlockedReasonKey == null,
-                convertBlockedReasonKey
+                convertBlockedReasonKey,
+                WorkerCitizenConversionService.workerProfessionTag(this)
         );
     }
 
