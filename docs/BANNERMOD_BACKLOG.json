@@ -6585,6 +6585,63 @@
       "progress": [],
       "verification": [],
       "evidence": []
+    },
+    {
+      "id": "CIT-001",
+      "title": "Replace round-robin profession picker with dynamic deficit-based selection",
+      "status": "done",
+      "updated": "2026-05-04",
+      "why": "Today WorkerSettlementSpawnRules picks the next citizen profession via Math.floorMod(currentWorkerCount, allowedProfessions.size()). When a settlement loses (e.g.) a smith, the picker keeps cycling alphabetically instead of refilling the empty smith slot, leading to permanent staffing gaps and unbalanced workforces.",
+      "scope": [
+        "Rework WorkerSettlementSpawnRules.evaluate / evaluateClaimWorkerGrowth to pick the allowed profession with the largest current vacancy deficit (vacancy_slots - currently_filled) for the claim, falling back to declaration order on ties. Surface a per-profession occupancy map from WorkerSettlementClaimPolicy / PrefabAutoStaffingRuntime callers. Keep the existing denial reasons. Add a unit test that distinguishes round-robin from deficit selection for a 2-profession config with one slot already filled."
+      ],
+      "acceptance": [
+        "WorkerSettlementSpawnRules no longer references currentWorkerCount % allowedProfessions.size(); evaluators take a per-profession occupancy snapshot; given config[FARMER, SMITH] with 1 farmer / 0 smiths the next decision is SMITH (not FARMER); ./gradlew compileJava is green; new test class covers tied/empty/cap-reached cases."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [
+        {
+          "date": "2026-05-04",
+          "result": "Math.floorMod call removed from WorkerSettlementSpawnRules; deficit picker added (pickByDeficit, lowest count wins, list-order tiebreak). Callers in WorkerSettlementClaimPolicy / WorkerSettlementSpawnRuntime now build a per-profession occupancy snapshot via countWorkersByProfession. ./gradlew test passes; new WorkerSettlementSpawnRulesTest under settlement.civilian covers diagnostic case (1 FARMER 0 MINER -> next MINER for both odd and even worker totals), tied counts, empty allowed list, cap-reached denial, and null-occupancy fallback. Existing rule tests under com.talhanation.workers updated for the new arg."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-04"
+    },
+    {
+      "id": "CIT-002",
+      "title": "Real citizen-on-citizen birth bound to housing",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "The current 'birth' path is just a Villager-grows-up hook that converts a vanilla villager into a worker once. Citizens themselves never reproduce; settlements cannot grow organically once vanilla villagers are exhausted, and there is no demographic loop tying population to housing.",
+      "scope": [
+        "Add a server-side birth tick that pairs adult citizens of opposite (or compatible) gender within a claim, applies a configurable cooldown and food/housing precondition, and spawns a baby citizen entity that grows into an adult over a config-controlled grow-up time. Integrate with the existing CitizenIndex and BannerModHomeAssignmentAdvisor so the baby inherits the parents' claim and is auto-assigned to a free home. Keep WorkersServerConfig the source of truth for cooldowns/caps; do not bypass WorkerSettlementSpawner. Localize new chat/log strings via lang files."
+      ],
+      "acceptance": [
+        "Two adult citizens in the same claim, with food in claim storage and at least one home with free residentCapacity, produce a baby citizen on a server tick and the baby grows up after the configured grow-up time; if no free housing slot exists in the claim no baby is spawned and a debug log entry is written; cooldown prevents back-to-back births; ./gradlew compileJava and existing citizen tests pass; new test exercises the housing-gated path; MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md describe the new mechanic."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "CIT-003",
+      "title": "Gate citizen spawns and growth on housing slack",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Settlement and claim-growth spawns currently ignore housing entirely — a claim with zero house prefabs but high villager count will still produce workers. This breaks the design intent that homes are the bottleneck for population growth and makes BannerModHomeAssignmentAdvisor's residentCapacity model decorative.",
+      "scope": [
+        "Extend WorkerSettlementSpawnRules.RuleConfig and ClaimGrowthConfig with a housingRequirement view. Pass the claim's housing capacity (sum of residentCapacity over GENERAL/HOUSING category buildings, minus current assignments) from WorkerSettlementSpawnRuntime / claim-growth callers. Add a NO_FREE_HOUSING DenialReason and emit it when slack <= 0. Auto-assign the freshly spawned citizen to the chosen home via BannerModHomeAssignmentAdvisor.pickHomeBuilding so the slack accounting stays consistent."
+      ],
+      "acceptance": [
+        "Spawn rules deny with NO_FREE_HOUSING when claim has 0 free housing slots; spawn rules allow when at least one home has free capacity and the new citizen is recorded against that home in the home-assignment runtime; claim with N homes (residentCapacity 1 each) caps citizen population at N regardless of villager count; ./gradlew compileJava is green; the multiplayer guides document the housing requirement; existing tests for WorkerSettlementSpawnRules updated for the new config field."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
