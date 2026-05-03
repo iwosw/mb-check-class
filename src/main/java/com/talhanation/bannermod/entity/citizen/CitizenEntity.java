@@ -227,9 +227,10 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
                 return;
             }
             worker.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-            if (this.getOwnerUUID() != null) {
-                worker.setOwnerUUID(Optional.of(this.getOwnerUUID()));
-                worker.setIsOwned(this.isOwned());
+            UUID resolvedOwner = resolveOwnerOrClaimFallback();
+            if (resolvedOwner != null) {
+                worker.setOwnerUUID(Optional.of(resolvedOwner));
+                worker.setIsOwned(true);
             }
             worker.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
             this.level().addFreshEntity(worker);
@@ -244,13 +245,32 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
             return;
         }
         recruit.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-        if (this.getOwnerUUID() != null) {
-            recruit.setOwnerUUID(Optional.of(this.getOwnerUUID()));
-            recruit.setIsOwned(this.isOwned());
+        UUID resolvedOwner = resolveOwnerOrClaimFallback();
+        if (resolvedOwner != null) {
+            recruit.setOwnerUUID(Optional.of(resolvedOwner));
+            recruit.setIsOwned(true);
         }
         recruit.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
         this.level().addFreshEntity(recruit);
         this.discard();
+    }
+
+    /**
+     * Resolves the owner UUID for a freshly-spawned worker / recruit derived from this
+     * citizen. Prefers the citizen's existing owner, then falls back to the owner of the
+     * claim the citizen is standing in. Without this fallback a citizen that was spawned
+     * as part of a settlement (no explicit owner) ends up producing an "unowned" worker
+     * the first time it converts, which is what the player saw as "сеньор сбрасывается".
+     */
+    @javax.annotation.Nullable
+    private UUID resolveOwnerOrClaimFallback() {
+        UUID owner = this.getOwnerUUID();
+        if (owner != null) return owner;
+        if (com.talhanation.bannermod.events.ClaimEvents.claimManager() == null) return null;
+        com.talhanation.bannermod.persistence.military.RecruitsClaim claim = com.talhanation.bannermod.events.ClaimEvents.claimManager()
+                .getClaim(new net.minecraft.world.level.ChunkPos(this.blockPosition()));
+        if (claim == null || claim.getPlayerInfo() == null) return null;
+        return claim.getPlayerInfo().getUUID();
     }
 
     private boolean payHireCost(int hireCost) {
