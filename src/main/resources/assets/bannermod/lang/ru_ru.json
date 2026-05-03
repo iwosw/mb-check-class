@@ -1035,6 +1035,7 @@
   "gui.bannermod.inv.convert.cavalry": "Кавалерия",
   "chat.bannermod.convert.unsupported_kind": "Этот тип рекрута нельзя конвертировать.",
   "chat.bannermod.convert.already_same": "Рекрут уже того же типа.",
+  "bannermod.prefab.disabled.use_surveyor": "Префабы построек отключены. Построй здание сам и размечай рабочую зону землемером — у землемера есть подсказка для каждого типа здания, что должно быть в зоне.",
   "key.recruits.command_screen_key": "Открыть экран командования",
   "key.recruits.team_screen_key": "Открыть экран отряда",
   "key.recruits.map_screen_key": "Открыть экран карты территорий",

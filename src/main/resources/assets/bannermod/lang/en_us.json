@@ -1081,6 +1081,7 @@
   "gui.bannermod.inv.convert.cavalry": "Cavalry (Horseman)",
   "chat.bannermod.convert.unsupported_kind": "Unsupported recruit type for conversion.",
   "chat.bannermod.convert.already_same": "Recruit is already that type.",
+  "bannermod.prefab.disabled.use_surveyor": "Building prefabs are disabled. Build the structure by hand and use the Settlement Surveyor (землемер) to mark the work zone — see the surveyor's per-mode hint for required contents.",
   "key.recruits.command_screen_key": "Open Command Screen",
   "key.recruits.team_screen_key": "Open Faction Screen",
   "key.recruits.map_screen_key": "Open Claim-Map Screen",

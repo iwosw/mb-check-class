@@ -61,6 +61,15 @@ public final class BuildingPlacementService {
         if (player == null) {
             return Result.NO_PLAYER;
         }
+        if (!com.talhanation.bannermod.config.WorkersServerConfig.EnableBuildingPrefabs.get()) {
+            // Prefab pipeline disabled — players are expected to build the structure
+            // manually and then mark the work area with the surveyor (zone-then-mark
+            // workflow). The surveyor's existing per-mode hint covers what each zone
+            // needs.
+            player.sendSystemMessage(Component.translatable("bannermod.prefab.disabled.use_surveyor")
+                    .withStyle(ChatFormatting.YELLOW));
+            return Result.UNKNOWN_PREFAB;
+        }
         Objects.requireNonNull(prefabId, "prefabId");
         Objects.requireNonNull(targetPos, "targetPos");
         Direction actualFacing = facing == null ? player.getDirection() : facing;
@@ -123,6 +132,12 @@ public final class BuildingPlacementService {
                                        Direction facing) {
         if (serverLevel == null || claim == null) {
             return Result.INVALID_POSITION;
+        }
+        if (!com.talhanation.bannermod.config.WorkersServerConfig.EnableBuildingPrefabs.get()) {
+            // Prefab pipeline disabled — settlement-project automation that wanted to
+            // auto-place a building should treat this as a no-op and let the human
+            // owner draw the zone manually with the surveyor.
+            return Result.UNKNOWN_PREFAB;
         }
         Objects.requireNonNull(prefabId, "prefabId");
         Objects.requireNonNull(targetPos, "targetPos");
