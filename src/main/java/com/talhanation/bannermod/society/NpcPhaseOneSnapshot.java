@@ -3,6 +3,8 @@ package com.talhanation.bannermod.society;
 import net.minecraft.network.FriendlyByteBuf;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -23,7 +25,13 @@ public record NpcPhaseOneSnapshot(
         int fatigueNeed,
         int socialNeed,
         int safetyNeed,
-        String housingRequestStatusTag
+        int trustScore,
+        int fearScore,
+        int angerScore,
+        int gratitudeScore,
+        int loyaltyScore,
+        String housingRequestStatusTag,
+        List<NpcMemorySummarySnapshot> recentMemories
 ) {
     public static NpcPhaseOneSnapshot empty() {
         return new NpcPhaseOneSnapshot(
@@ -43,7 +51,14 @@ public record NpcPhaseOneSnapshot(
                 0,
                 0,
                 0,
+                50,
+                0,
+                0,
+                0,
+                50,
                 NpcHousingRequestStatus.NONE.name()
+                ,
+                List.of()
         );
     }
 
@@ -64,28 +79,72 @@ public record NpcPhaseOneSnapshot(
         buf.writeVarInt(Math.max(0, this.fatigueNeed));
         buf.writeVarInt(Math.max(0, this.socialNeed));
         buf.writeVarInt(Math.max(0, this.safetyNeed));
+        buf.writeVarInt(Math.max(0, this.trustScore));
+        buf.writeVarInt(Math.max(0, this.fearScore));
+        buf.writeVarInt(Math.max(0, this.angerScore));
+        buf.writeVarInt(Math.max(0, this.gratitudeScore));
+        buf.writeVarInt(Math.max(0, this.loyaltyScore));
         buf.writeUtf(safeTag(this.housingRequestStatusTag));
+        buf.writeVarInt(this.recentMemories == null ? 0 : this.recentMemories.size());
+        if (this.recentMemories != null) {
+            for (NpcMemorySummarySnapshot memory : this.recentMemories) {
+                (memory == null ? new NpcMemorySummarySnapshot("UNSPECIFIED", "PERSONAL", null, 0, false) : memory).toBytes(buf);
+            }
+        }
     }
 
     public static NpcPhaseOneSnapshot fromBytes(FriendlyByteBuf buf) {
+        List<NpcMemorySummarySnapshot> memories = new ArrayList<>();
+        String lifeStageTag = buf.readUtf();
+        String sexTag = buf.readUtf();
+        UUID householdId = readNullableUuid(buf);
+        UUID homeBuildingUuid = readNullableUuid(buf);
+        UUID workBuildingUuid = readNullableUuid(buf);
+        String cultureId = readNullableString(buf);
+        String faithId = readNullableString(buf);
+        String dailyPhaseTag = buf.readUtf();
+        String currentIntentTag = buf.readUtf();
+        String currentAnchorTag = buf.readUtf();
+        int householdSize = buf.readVarInt();
+        String householdHousingStateTag = buf.readUtf();
+        int hungerNeed = buf.readVarInt();
+        int fatigueNeed = buf.readVarInt();
+        int socialNeed = buf.readVarInt();
+        int safetyNeed = buf.readVarInt();
+        int trustScore = buf.readVarInt();
+        int fearScore = buf.readVarInt();
+        int angerScore = buf.readVarInt();
+        int gratitudeScore = buf.readVarInt();
+        int loyaltyScore = buf.readVarInt();
+        String housingRequestStatusTag = buf.readUtf();
+        int memoryCount = buf.readVarInt();
+        for (int i = 0; i < memoryCount; i++) {
+            memories.add(NpcMemorySummarySnapshot.fromBytes(buf));
+        }
         return new NpcPhaseOneSnapshot(
-                buf.readUtf(),
-                buf.readUtf(),
-                readNullableUuid(buf),
-                readNullableUuid(buf),
-                readNullableUuid(buf),
-                readNullableString(buf),
-                readNullableString(buf),
-                buf.readUtf(),
-                buf.readUtf(),
-                buf.readUtf(),
-                buf.readVarInt(),
-                buf.readUtf(),
-                buf.readVarInt(),
-                buf.readVarInt(),
-                buf.readVarInt(),
-                buf.readVarInt(),
-                buf.readUtf()
+                lifeStageTag,
+                sexTag,
+                householdId,
+                homeBuildingUuid,
+                workBuildingUuid,
+                cultureId,
+                faithId,
+                dailyPhaseTag,
+                currentIntentTag,
+                currentAnchorTag,
+                householdSize,
+                householdHousingStateTag,
+                hungerNeed,
+                fatigueNeed,
+                socialNeed,
+                safetyNeed,
+                trustScore,
+                fearScore,
+                angerScore,
+                gratitudeScore,
+                loyaltyScore,
+                housingRequestStatusTag,
+                List.copyOf(memories)
         );
     }
 
@@ -127,6 +186,10 @@ public record NpcPhaseOneSnapshot(
 
     public static String shortId(@Nullable UUID uuid) {
         return uuid == null ? "-" : uuid.toString().substring(0, 8);
+    }
+
+    public List<NpcMemorySummarySnapshot> safeRecentMemories() {
+        return this.recentMemories == null ? List.of() : this.recentMemories;
     }
 
     private static void writeNullableUuid(FriendlyByteBuf buf, @Nullable UUID value) {

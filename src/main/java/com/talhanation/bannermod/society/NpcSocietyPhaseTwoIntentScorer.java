@@ -36,6 +36,7 @@ public final class NpcSocietyPhaseTwoIntentScorer {
         if (ctx.safetyNeed() >= 70) {
             score = Math.max(score, 55 + ctx.safetyNeed() / 2);
         }
+        score += ctx.fearScore() / 5;
         return clamp(score);
     }
 
@@ -47,6 +48,7 @@ public final class NpcSocietyPhaseTwoIntentScorer {
         if (ctx.safetyNeed() >= 75 && ctx.hasHome()) {
             score = Math.max(score, 58 + ctx.safetyNeed() / 3);
         }
+        score += ctx.fearScore() / 6;
         return clamp(score);
     }
 
@@ -74,6 +76,10 @@ public final class NpcSocietyPhaseTwoIntentScorer {
         score -= ctx.hungerNeed() / 4;
         score -= ctx.socialNeed() / 6;
         score -= ctx.safetyNeed() / 2;
+        score += ctx.loyaltyScore() / 6;
+        score += ctx.trustScore() / 10;
+        score -= ctx.angerScore() / 6;
+        score -= ctx.fearScore() / 8;
         if (ctx.isAdolescent()) {
             score -= 10;
         }
@@ -105,17 +111,22 @@ public final class NpcSocietyPhaseTwoIntentScorer {
         if (ctx.dayTime() > 9000) {
             score += 6;
         }
+        score += ctx.trustScore() / 10;
+        score += ctx.gratitudeScore() / 12;
         score -= ctx.fatigueNeed() / 4;
         score -= ctx.hungerNeed() / 6;
         score -= ctx.safetyNeed() / 2;
+        score -= ctx.fearScore() / 4;
+        score -= ctx.angerScore() / 5;
         return clamp(score);
     }
 
     private static int scoreHide(ResidentGoalContext ctx) {
-        if (ctx.safetyNeed() < 40 || ctx.canDefend()) {
+        int dangerPressure = Math.max(ctx.safetyNeed(), ctx.fearScore());
+        if (dangerPressure < 35 || ctx.canDefend() && ctx.angerScore() > ctx.fearScore() + 12) {
             return 0;
         }
-        int score = 30 + ctx.safetyNeed();
+        int score = 24 + dangerPressure + ctx.fearScore() / 3 - ctx.angerScore() / 7;
         if (ctx.hasHome()) {
             score += 10;
         }
@@ -123,10 +134,11 @@ public final class NpcSocietyPhaseTwoIntentScorer {
     }
 
     private static int scoreDefend(ResidentGoalContext ctx) {
-        if (!ctx.canDefend() || ctx.safetyNeed() < 35) {
+        int defendPressure = Math.max(ctx.safetyNeed(), ctx.angerScore());
+        if (!ctx.canDefend() || defendPressure < 30) {
             return 0;
         }
-        int score = 28 + ctx.safetyNeed();
+        int score = 20 + defendPressure + ctx.angerScore() / 2 + ctx.loyaltyScore() / 5 - ctx.fearScore() / 6;
         if (ctx.resident().role() == BannerModSettlementResidentRole.GOVERNOR_RECRUIT) {
             score += 8;
         }

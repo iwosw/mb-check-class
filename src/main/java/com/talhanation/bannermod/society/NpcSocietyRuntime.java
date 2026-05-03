@@ -118,6 +118,30 @@ public final class NpcSocietyRuntime {
         return updated;
     }
 
+    public NpcSocietyProfile reconcileSocialState(UUID residentUuid,
+                                                  int trustScore,
+                                                  int fearScore,
+                                                  int angerScore,
+                                                  int gratitudeScore,
+                                                  int loyaltyScore,
+                                                  long gameTime) {
+        NpcSocietyProfile profile = ensureResident(residentUuid, gameTime);
+        NpcSocietyProfile updated = profile.withSocialState(
+                trustScore,
+                fearScore,
+                angerScore,
+                gratitudeScore,
+                loyaltyScore,
+                gameTime
+        );
+        if (updated == profile) {
+            return profile;
+        }
+        this.profilesByResident.put(residentUuid, updated);
+        markDirty();
+        return updated;
+    }
+
     public List<NpcSocietyProfile> snapshot() {
         return Collections.unmodifiableList(new ArrayList<>(this.profilesByResident.values()));
     }

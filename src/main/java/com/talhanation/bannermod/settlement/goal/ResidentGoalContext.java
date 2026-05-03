@@ -17,6 +17,12 @@ public record ResidentGoalContext(
         @Nullable NpcSocietyProfile societyProfile
 ) {
 
+    public ResidentGoalContext(BannerModSettlementResidentRecord resident,
+                               @Nullable BannerModSettlementSnapshot settlement,
+                               long gameTime) {
+        this(resident, settlement, gameTime, null);
+    }
+
     public UUID residentId() {
         return this.resident.residentUuid();
     }
@@ -70,6 +76,26 @@ public record ResidentGoalContext(
 
     public int safetyNeed() {
         return this.societyProfile == null ? 0 : this.societyProfile.safetyNeed();
+    }
+
+    public int trustScore() {
+        return this.societyProfile == null ? 50 : this.societyProfile.trustScore();
+    }
+
+    public int fearScore() {
+        return this.societyProfile == null ? 0 : this.societyProfile.fearScore();
+    }
+
+    public int angerScore() {
+        return this.societyProfile == null ? 0 : this.societyProfile.angerScore();
+    }
+
+    public int gratitudeScore() {
+        return this.societyProfile == null ? 0 : this.societyProfile.gratitudeScore();
+    }
+
+    public int loyaltyScore() {
+        return this.societyProfile == null ? 50 : this.societyProfile.loyaltyScore();
     }
 
     public boolean canDefend() {

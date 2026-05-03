@@ -2,6 +2,7 @@ package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.society.NpcHousingProjectPlanner;
+import com.talhanation.bannermod.society.NpcMemoryAccess;
 import com.talhanation.bannermod.society.NpcSocietyNeedRuntime;
 import com.talhanation.bannermod.settlement.dispatch.BannerModSellerDispatchRuntime;
 import com.talhanation.bannermod.settlement.dispatch.SellerPhase;
@@ -199,7 +200,7 @@ final class BannerModSettlementClaimTickService {
                 resident.role() == BannerModSettlementResidentRole.GOVERNOR_RECRUIT,
                 gameTime
         );
-        return NpcSocietyAccess.reconcileNeedState(
+        NpcSocietyProfile needProfile = NpcSocietyAccess.reconcileNeedState(
                 level,
                 residentUuid,
                 updatedProfile.hungerNeed(),
@@ -208,6 +209,7 @@ final class BannerModSettlementClaimTickService {
                 updatedProfile.safetyNeed(),
                 gameTime
         );
+        return NpcMemoryAccess.tickResidentState(level, needProfile, gameTime);
     }
 
     private static boolean isThreatened(@Nullable Entity entity) {
