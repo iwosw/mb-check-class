@@ -2,6 +2,9 @@ package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.AdminRecruitSpawnScreen;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
+import com.talhanation.bannermod.client.military.gui.widgets.ActionMenuButton;
+import com.talhanation.bannermod.client.military.gui.widgets.ContextMenuEntry;
 import com.talhanation.bannermod.network.messages.war.MessagePlaceSiegeStandardHere;
 import com.talhanation.bannermod.network.messages.war.MessageResolveRevolt;
 import com.talhanation.bannermod.network.messages.war.MessageResolveWarOutcome;
@@ -77,19 +80,13 @@ public class WarListScreen extends Screen {
 
     private Button openAttackerBtn;
     private Button openDefenderBtn;
-    private Button placeSiegeBtn;
     private Button alliesBtn;
     private Button declareBtn;
-    private Button cancelWarBtn;
-    private Button occupyBtn;
-    private Button annexBtn;
-    private Button revoltSuccessBtn;
-    private Button revoltFailBtn;
-    private Button tributeLockedBtn;
     private Button statesBtn;
     private Button refreshBtn;
     private Button closeBtn;
     private Button adminRecruitSpawnBtn;
+    private ActionMenuButton resolveOutcomeMenu;
 
     public WarListScreen(@Nullable Screen parent) {
         super(text("gui.bannermod.war_list.title"));
@@ -101,38 +98,32 @@ public class WarListScreen extends Screen {
         super.init();
         updateGeometry();
 
+        // Nav buttons remain plain (different tier from outcome resolution).
+        statesBtn = actionButton(0, text("gui.bannermod.war_list.states"), btn -> this.minecraft.setScreen(new PoliticalEntityListScreen(this)));
+        refreshBtn = actionButton(1, text("gui.bannermod.common.refresh"), btn -> refresh());
+        declareBtn = actionButton(2, text("gui.bannermod.war_list.declare"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)));
+        alliesBtn = actionButton(3, text("gui.bannermod.war_list.allies"), btn -> openAllies());
         openAttackerBtn = actionButton(4, text("gui.bannermod.war_list.attacker_info"), btn -> openEntity(selected != null ? selected.attackerPoliticalEntityId() : null));
         openDefenderBtn = actionButton(5, text("gui.bannermod.war_list.defender_info"), btn -> openEntity(selected != null ? selected.defenderPoliticalEntityId() : null));
-        statesBtn = actionButton(0, text("gui.bannermod.war_list.states"), btn -> this.minecraft.setScreen(new PoliticalEntityListScreen(this)));
-        placeSiegeBtn = actionButton(6, text("gui.bannermod.war_list.place_siege"), btn -> placeSiegeHere());
-        refreshBtn = actionButton(1, text("gui.bannermod.common.refresh"), btn -> refresh());
-        closeBtn = actionButton(13, text("gui.bannermod.common.close"), btn -> onClose());
+        closeBtn = actionButton(6, text("gui.bannermod.common.close"), btn -> onClose());
+        adminRecruitSpawnBtn = actionButton(7, text("gui.bannermod.war_list.admin_recruit_spawn"), btn -> openAdminRecruitSpawner());
 
-        alliesBtn = actionButton(3, text("gui.bannermod.war_list.allies"), btn -> openAllies());
-        declareBtn = actionButton(2, text("gui.bannermod.war_list.declare"), btn -> this.minecraft.setScreen(new WarDeclareScreen(this)));
-        cancelWarBtn = actionButton(7, text("gui.bannermod.war_list.cancel"), btn -> sendOutcome(MessageResolveWarOutcome.Action.CANCEL));
-        occupyBtn = actionButton(8, text("gui.bannermod.war_list.occupy"), btn -> sendOutcome(MessageResolveWarOutcome.Action.OCCUPY));
-        annexBtn = actionButton(9, text("gui.bannermod.war_list.annex"), btn -> sendOutcome(MessageResolveWarOutcome.Action.ANNEX));
-        tributeLockedBtn = actionButton(10, text("gui.bannermod.war_list.tribute_locked"), btn -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE));
-        revoltSuccessBtn = actionButton(11, text("gui.bannermod.war_list.revolt.resolve_success"), btn -> sendRevolt(RevoltState.SUCCESS));
-        revoltFailBtn = actionButton(12, text("gui.bannermod.war_list.revolt.resolve_fail"), btn -> sendRevolt(RevoltState.FAILED));
-        adminRecruitSpawnBtn = actionButton(14, text("gui.bannermod.war_list.admin_recruit_spawn"), btn -> openAdminRecruitSpawner());
+        // Resolve-outcome ledger collapses 7 same-tier outcome buttons under one menu.
+        resolveOutcomeMenu = new ActionMenuButton(
+                actionButtonX(8), actionButtonY(8), actionButtonW(), BUTTON_H,
+                text("gui.bannermod.war_list.menu.resolve_outcome"),
+                buildResolveOutcomeEntries());
+        resolveOutcomeMenu.setOpenUpward(true);
 
+        addRenderableWidget(statesBtn);
+        addRenderableWidget(refreshBtn);
+        addRenderableWidget(declareBtn);
+        addRenderableWidget(alliesBtn);
         addRenderableWidget(openAttackerBtn);
         addRenderableWidget(openDefenderBtn);
-        addRenderableWidget(statesBtn);
-        addRenderableWidget(placeSiegeBtn);
-        addRenderableWidget(alliesBtn);
-        addRenderableWidget(declareBtn);
-        addRenderableWidget(cancelWarBtn);
-        addRenderableWidget(occupyBtn);
-        addRenderableWidget(annexBtn);
-        addRenderableWidget(revoltSuccessBtn);
-        addRenderableWidget(revoltFailBtn);
-        addRenderableWidget(tributeLockedBtn);
-        addRenderableWidget(refreshBtn);
         addRenderableWidget(closeBtn);
         addRenderableWidget(adminRecruitSpawnBtn);
+        addRenderableWidget(resolveOutcomeMenu);
 
         refresh();
     }
@@ -231,7 +222,8 @@ public class WarListScreen extends Screen {
     }
 
     private int actionButtonCount() {
-        return 15;
+        // 8 nav buttons + 1 resolve-outcome dropdown trigger.
+        return 9;
     }
 
     private int actionLedgerX() {
@@ -311,11 +303,6 @@ public class WarListScreen extends Screen {
         openAttackerBtn.setTooltip(has ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.select_war")));
         openDefenderBtn.active = has;
         openDefenderBtn.setTooltip(has ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.select_war")));
-        if (placeSiegeBtn != null) {
-            placeSiegeBtn.active = has && leaderSideOf(selected) != null
-                    && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
-            placeSiegeBtn.setTooltip(placeSiegeBtn.active ? null : Tooltip.create(placeSiegeDenial(has)));
-        }
         if (alliesBtn != null) {
             alliesBtn.active = has;
             alliesBtn.setTooltip(has ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.select_war")));
@@ -327,40 +314,11 @@ public class WarListScreen extends Screen {
             });
             declareBtn.setTooltip(declareBtn.active ? null : Tooltip.create(declareDenial()));
         }
-        boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
-        boolean attackerLeader = has && canLocalPlayerActFor(selected.attackerPoliticalEntityId());
-        boolean localOp = Minecraft.getInstance().player != null && Minecraft.getInstance().player.hasPermissions(2);
-        if (cancelWarBtn != null) {
-            cancelWarBtn.active = live && attackerLeader;
-            cancelWarBtn.setTooltip(cancelWarBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected)));
-        }
-        if (occupyBtn != null) {
-            boolean supported = has && selected.goalType() == WarGoalType.OCCUPATION;
-            occupyBtn.active = live && attackerLeader && supported;
-            occupyBtn.setTooltip(occupyBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected, supported)));
-        }
-        if (annexBtn != null) {
-            boolean supported = has && selected.goalType() == WarGoalType.ANNEX_LIMITED_CHUNKS;
-            annexBtn.active = live && attackerLeader && supported;
-            annexBtn.setTooltip(annexBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected, supported)));
-        }
-        if (tributeLockedBtn != null) {
-            boolean supported = has && selected.goalType() == WarGoalType.TRIBUTE;
-            tributeLockedBtn.setMessage(localOp ? text("gui.bannermod.war_list.tribute") : text("gui.bannermod.war_list.tribute_locked"));
-            tributeLockedBtn.active = live && attackerLeader && supported && localOp;
-            tributeLockedBtn.setTooltip(tributeLockedBtn.active ? null : Tooltip.create(outcomeLockedTooltip(has, live, selected, supported, localOp)));
-        }
-        RevoltRecord pendingRevolt = firstPendingRevolt(selected);
-        Player player = Minecraft.getInstance().player;
-        boolean op = player != null && player.hasPermissions(2);
-        Component revoltTooltip = revoltLockedTooltip(has, pendingRevolt != null, op);
-        if (revoltSuccessBtn != null) {
-            revoltSuccessBtn.active = pendingRevolt != null && op;
-            revoltSuccessBtn.setTooltip(revoltSuccessBtn.active ? null : Tooltip.create(revoltTooltip));
-        }
-        if (revoltFailBtn != null) {
-            revoltFailBtn.active = pendingRevolt != null && op;
-            revoltFailBtn.setTooltip(revoltFailBtn.active ? null : Tooltip.create(revoltTooltip));
+        if (resolveOutcomeMenu != null) {
+            resolveOutcomeMenu.setEntries(buildResolveOutcomeEntries());
+            // Trigger stays clickable so players can browse outcomes; per-entry enabled flags gate execution.
+            resolveOutcomeMenu.active = has;
+            resolveOutcomeMenu.setTooltip(has ? null : Tooltip.create(text("gui.bannermod.war_list.tooltip.select_war")));
         }
         if (adminRecruitSpawnBtn != null) {
             boolean adminCreative = isAdminCreative();
@@ -368,6 +326,38 @@ public class WarListScreen extends Screen {
             adminRecruitSpawnBtn.active = adminCreative;
             adminRecruitSpawnBtn.setTooltip(adminCreative ? Tooltip.create(text("gui.bannermod.war_list.admin_recruit_spawn.tooltip")) : null);
         }
+    }
+
+    private List<ContextMenuEntry> buildResolveOutcomeEntries() {
+        boolean has = selected != null;
+        boolean live = has && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
+        boolean attackerLeader = has && canLocalPlayerActFor(selected.attackerPoliticalEntityId());
+        Player player = Minecraft.getInstance().player;
+        boolean localOp = player != null && player.hasPermissions(2);
+        boolean canPlaceSiege = has && leaderSideOf(selected) != null
+                && selected.state() != WarState.RESOLVED && selected.state() != WarState.CANCELLED;
+        boolean occupySupported = has && selected.goalType() == WarGoalType.OCCUPATION;
+        boolean annexSupported = has && selected.goalType() == WarGoalType.ANNEX_LIMITED_CHUNKS;
+        boolean tributeSupported = has && selected.goalType() == WarGoalType.TRIBUTE;
+        RevoltRecord pendingRevolt = firstPendingRevolt(selected);
+        Component tributeLabel = localOp ? text("gui.bannermod.war_list.tribute") : text("gui.bannermod.war_list.tribute_locked");
+
+        List<ContextMenuEntry> entries = new ArrayList<>();
+        entries.add(new ContextMenuEntry(text("gui.bannermod.war_list.place_siege").getString(),
+                this::placeSiegeHere, canPlaceSiege));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.war_list.cancel").getString(),
+                () -> sendOutcome(MessageResolveWarOutcome.Action.CANCEL), live && attackerLeader));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.war_list.occupy").getString(),
+                () -> sendOutcome(MessageResolveWarOutcome.Action.OCCUPY), live && attackerLeader && occupySupported));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.war_list.annex").getString(),
+                () -> sendOutcome(MessageResolveWarOutcome.Action.ANNEX), live && attackerLeader && annexSupported));
+        entries.add(new ContextMenuEntry(tributeLabel.getString(),
+                () -> sendOutcome(MessageResolveWarOutcome.Action.TRIBUTE), live && attackerLeader && tributeSupported && localOp));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.war_list.revolt.resolve_success").getString(),
+                () -> sendRevolt(RevoltState.SUCCESS), pendingRevolt != null && localOp));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.war_list.revolt.resolve_fail").getString(),
+                () -> sendRevolt(RevoltState.FAILED), pendingRevolt != null && localOp));
+        return entries;
     }
 
     private boolean isAdminCreative() {
@@ -489,30 +479,18 @@ public class WarListScreen extends Screen {
 
     private void renderBookFrame(GuiGraphics graphics) {
         graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + guiW + 4, guiTop + guiH + 5, 0x66000000);
-        graphics.fill(guiLeft, guiTop, guiLeft + guiW, guiTop + guiH, LEATHER_DARK);
-        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + guiW - 2, guiTop + guiH - 2, LEATHER);
-        graphics.fill(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiLeft + guiW - BOOK_BORDER, guiTop + guiH - BOOK_BORDER, BOOK_BG);
-        graphics.renderOutline(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiW - BOOK_BORDER * 2, guiH - BOOK_BORDER * 2, 0xFF7A4C24);
+        MilitaryGuiStyle.parchmentPanel(graphics, guiLeft, guiTop, guiW, guiH);
 
         int pageY = contentTop();
         int pageH = Math.max(36, contentBottom() - pageY);
-        renderParchmentPanel(graphics, leftPageX(), pageY, leftPageW(), pageH);
-        renderParchmentPanel(graphics, rightPageX(), pageY, rightPageW(), pageH);
+        MilitaryGuiStyle.parchmentInset(graphics, leftPageX(), pageY, leftPageW(), pageH);
+        MilitaryGuiStyle.parchmentInset(graphics, rightPageX(), pageY, rightPageW(), pageH);
 
         int spineX = leftPageX() + leftPageW() + pageGap() / 2 - 1;
         graphics.fill(spineX, pageY + 3, spineX + 2, pageY + pageH - 3, PAGE_SHADE);
         graphics.fill(spineX + 2, pageY + 3, spineX + 3, pageY + pageH - 3, 0x88FFF3C5);
 
-        renderParchmentPanel(graphics, actionLedgerX(), actionLedgerTop(), actionLedgerW(), actionLedgerH());
-    }
-
-    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x + w, y + h, PAGE_BG);
-        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
-        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
-        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
-        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
-        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
+        MilitaryGuiStyle.parchmentInset(graphics, actionLedgerX(), actionLedgerTop(), actionLedgerW(), actionLedgerH());
     }
 
     private void renderHeader(GuiGraphics graphics) {

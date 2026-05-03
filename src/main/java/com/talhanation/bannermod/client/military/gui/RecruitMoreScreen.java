@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.group.RecruitsGroupListScreen;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
@@ -12,16 +11,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class RecruitMoreScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final Component TITLE = Component.translatable("gui.recruits.more_screen.title");
     private Player player;
     private AbstractRecruitEntity recruit;
@@ -33,6 +29,9 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
     private static final MutableComponent GROUP_SETTINGS = Component.translatable("gui.recruits.groups.settings");
     private static final MutableComponent RENAME = Component.translatable("gui.recruits.inv.rename");
     private static final MutableComponent STATUS_TEXT = Component.translatable("gui.recruits.more.status");
+
+    private static final int BUTTON_W = 130;
+
     public RecruitMoreScreen(Screen parent, AbstractRecruitEntity recruit, Player player) {
         super(TITLE, 195,160);
         this.player = player;
@@ -49,7 +48,8 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
     private void setButtons(){
         clearWidgets();
 
-        Button buttonRename = new ExtendedButton(guiLeft + 32, guiTop + 25, 130, 20, RENAME,
+        Button buttonRename = new ExtendedButton(guiLeft + 32, guiTop + 25, BUTTON_W, 20,
+                MilitaryGuiStyle.clampLabel(font, RENAME, BUTTON_W - 6),
                 btn -> {
                     if(recruit != null) {
                         minecraft.setScreen(new RenameRecruitScreen(this, recruit));
@@ -58,7 +58,8 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
         );
         addRenderableWidget(buttonRename);
 
-        Button buttonDisband = new ExtendedButton(guiLeft + 32, guiTop + 45, 130, 20, DISBAND,
+        Button buttonDisband = new ExtendedButton(guiLeft + 32, guiTop + 45, BUTTON_W, 20,
+                MilitaryGuiStyle.clampLabel(font, DISBAND, BUTTON_W - 6),
                 btn -> {
                     if(this.recruit != null) {
                         if(this.recruit.getTeam() != null) {
@@ -76,7 +77,8 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
         buttonDisband.setTooltip(Tooltip.create(TOOLTIP_DISBAND));
         addRenderableWidget(buttonDisband);
 
-        Button giveToPlayer = new ExtendedButton(guiLeft + 32, guiTop + 65, 130, 20, ASSIGN_TO_PLAYER,
+        Button giveToPlayer = new ExtendedButton(guiLeft + 32, guiTop + 65, BUTTON_W, 20,
+                MilitaryGuiStyle.clampLabel(font, ASSIGN_TO_PLAYER, BUTTON_W - 6),
             btn -> {
                 if(recruit != null) {
                     minecraft.setScreen(new SelectPlayerScreen(this, player, ASSIGN_TO_PLAYER, ASSIGN_TO_PLAYER, TOOLTIP_ASSIGN_GROUP_TO_PLAYER, false, PlayersList.FilterType.NONE,
@@ -90,7 +92,8 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
         );
         addRenderableWidget(giveToPlayer);
 
-        Button buttonGroupSettings = new ExtendedButton(guiLeft + 32, guiTop + 105, 130, 20, GROUP_SETTINGS,
+        Button buttonGroupSettings = new ExtendedButton(guiLeft + 32, guiTop + 105, BUTTON_W, 20,
+                MilitaryGuiStyle.clampLabel(font, GROUP_SETTINGS, BUTTON_W - 6),
                 btn -> {
                     minecraft.setScreen(new RecruitsGroupListScreen(player));
                 }
@@ -101,16 +104,18 @@ public class RecruitMoreScreen extends RecruitsScreenBase {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 6, guiTop + 4, xSize - 12, 14);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 18, guiTop + 22, xSize - 36, 110);
+        MilitaryGuiStyle.insetPanel(guiGraphics, guiLeft + 14, guiTop + 136, xSize - 28, 16);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 7, FONT_COLOR, false);
-        guiGraphics.drawString(font, STATUS_TEXT, guiLeft + 18, guiTop + 140, 0x5B4A32, false);
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, TITLE, xSize - 20);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, clampedTitle, guiLeft, guiTop + 7, xSize);
+        Component statusClamped = MilitaryGuiStyle.clampLabel(font, STATUS_TEXT, xSize - 36);
+        guiGraphics.drawString(font, statusClamped, guiLeft + 18, guiTop + 140, MilitaryGuiStyle.TEXT, false);
     }
 
 }

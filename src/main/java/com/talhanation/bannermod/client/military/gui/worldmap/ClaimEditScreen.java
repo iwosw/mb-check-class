@@ -3,11 +3,13 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.military.gui.RecruitsScreenBase;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.client.military.gui.widgets.SelectedPlayerWidget;
+import com.talhanation.bannermod.network.messages.military.MessageClaimIntent;
 import com.talhanation.bannermod.network.messages.military.MessageUpdateClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
@@ -17,6 +19,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -28,6 +31,9 @@ public class ClaimEditScreen extends RecruitsScreenBase {
     private static final Component TITLE = Component.translatable("gui.recruits.claim_edit.title");
     private static final Component BUTTON_SAVE = Component.translatable("gui.recruits.button.save");
     protected static final Component BUTTON_BACK = Component.translatable("gui.recruits.button.back");
+    private static final Component BUTTON_DELETE = Component.translatable("gui.bannermod.map.claim.delete");
+    private static final Component DELETE_CONFIRM_TITLE = Component.translatable("gui.bannermod.map.claim.delete.confirm.title");
+    private static final Component DELETE_CONFIRM_BODY = Component.translatable("gui.bannermod.map.claim.delete.confirm.body");
     protected static final Component CHECKBOX_ALLOW_BREAKING = Component.translatable("gui.recruits.checkbox.allowBlockBreaking");
     protected static final Component CHECKBOX_ALLOW_PLACING = Component.translatable("gui.recruits.checkbox.allowBlockPlacing");
     protected static final Component CHECKBOX_ALLOW_INTERACTING = Component.translatable("gui.recruits.checkbox.allowBlockInteracting");
@@ -76,8 +82,8 @@ public class ClaimEditScreen extends RecruitsScreenBase {
     private void setWidgets(){
         clearWidgets();
         editNameBox = new EditBox(font, x - 70, y - 110, 140, 20, Component.literal(""));
-        editNameBox.setTextColor(-1);
-        editNameBox.setTextColorUneditable(-1);
+        editNameBox.setTextColor(MilitaryGuiStyle.TEXT_DARK);
+        editNameBox.setTextColorUneditable(MilitaryGuiStyle.TEXT_DARK);
         editNameBox.setBordered(true);
         editNameBox.setMaxLength(32);
         editNameBox.setValue(savedName);
@@ -167,18 +173,41 @@ public class ClaimEditScreen extends RecruitsScreenBase {
         addRenderableWidget(saveButton);
         this.checkSaveActive();
 
-        /*
-        deleteButton = new ExtendedButton(x - 75 + 35, y + 112, 70, 20, BUTTON_DELETE,
-                button -> {
-                    ClientManager.recruitsClaims.remove(this.claim);
-                    BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageDeleteClaim(this.claim));
-
-                    this.minecraft.setScreen(this.parent);
-                });
+        // Restored delete button: opens vanilla ConfirmScreen, then routes through
+        // MessageClaimIntent.Action.DELETE so the server stays authoritative
+        // (auth + chunk cleanup are server-side; client just signals intent).
+        // Plain ExtendedButton with destructive label tint via ChatFormatting.RED;
+        // this keeps the button at the same chrome as save/back without needing
+        // to subclass for a foreground-color override.
+        deleteButton = new ExtendedButton(x - 70, y + 138, 140, 20, BUTTON_DELETE,
+                button -> openDeleteConfirm());
+        deleteButton.setFGColor(MilitaryGuiStyle.TEXT_DENIED);
         addRenderableWidget(deleteButton);
 
-         */
+    }
 
+    private void openDeleteConfirm() {
+        Minecraft mc = this.minecraft;
+        if (mc == null) return;
+        mc.setScreen(new ConfirmScreen(confirmed -> {
+            if (confirmed) {
+                ClientManager.recruitsClaims.remove(this.claim);
+                ClientManager.markClaimsStale();
+                // DELETE ignores the chunk on the server — pass center if known, else
+                // the first claimed chunk, else origin (0,0) as a benign placeholder.
+                ChunkPos anchor = this.claim.getCenter();
+                if (anchor == null) {
+                    anchor = this.claim.getClaimedChunks().isEmpty()
+                            ? new ChunkPos(0, 0)
+                            : this.claim.getClaimedChunks().get(0);
+                }
+                BannerModMain.SIMPLE_CHANNEL.sendToServer(
+                        new MessageClaimIntent(MessageClaimIntent.Action.DELETE, this.claim.getUUID(), anchor));
+                mc.setScreen(this.parent);
+            } else {
+                mc.setScreen(this);
+            }
+        }, DELETE_CONFIRM_TITLE, DELETE_CONFIRM_BODY));
     }
 
     public void checkSaveActive(){

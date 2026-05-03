@@ -1,9 +1,11 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
+import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.inventory.civilian.CitizenProfileMenu;
+import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -62,12 +64,31 @@ public class CitizenProfileScreen extends AbstractContainerScreen<CitizenProfile
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         MilitaryGuiStyle.drawCenteredTitle(graphics, this.font, this.title, 0, 10, this.imageWidth);
-        graphics.drawString(this.font, Component.translatable("gui.bannermod.citizen_profile.profession", professionLabel(this.citizen.activeProfession())), 92, 32, MilitaryGuiStyle.TEXT_DARK, false);
-        graphics.drawString(this.font, Component.translatable("gui.bannermod.citizen_profile.owner", ownerLabel()), 92, 46, MilitaryGuiStyle.TEXT_DARK, false);
-        graphics.drawString(this.font, Component.translatable("gui.bannermod.citizen_profile.assignment", assignmentLabel()), 92, 60, 0xFF6E5535, false);
-        graphics.drawString(this.font, Component.translatable("gui.bannermod.citizen_profile.state", stateLabel()), 92, 74, 0xFF6E5535, false);
+        // Inset starts at x=92 with width=142, so we have 138px of usable text space.
+        final int textBoxWidth = 134;
+        drawClamped(graphics, Component.translatable("gui.bannermod.citizen_profile.profession",
+                professionLabel(this.citizen.activeProfession()).getString()), 92, 32, textBoxWidth, MilitaryGuiStyle.TEXT_DARK);
+        drawClamped(graphics, Component.translatable("gui.bannermod.citizen_profile.owner",
+                ownerLabel().getString()), 92, 46, textBoxWidth, MilitaryGuiStyle.TEXT_DARK);
+        drawClamped(graphics, Component.translatable("gui.bannermod.citizen_profile.assignment",
+                assignmentLabel().getString()), 92, 60, textBoxWidth, 0xFF6E5535);
+        drawClamped(graphics, Component.translatable("gui.bannermod.citizen_profile.state",
+                stateLabel().getString()), 92, 74, textBoxWidth, 0xFF6E5535);
         graphics.drawString(this.font, Component.translatable("gui.bannermod.citizen_profile.inventory"), 96, 108, MilitaryGuiStyle.TEXT_DARK, false);
         graphics.drawString(this.font, Component.translatable("gui.bannermod.citizen_profile.player_inventory"), 14, 166, MilitaryGuiStyle.TEXT_DARK, false);
+    }
+
+    private void drawClamped(GuiGraphics graphics, Component text, int x, int y, int maxWidth, int color) {
+        String raw = text.getString();
+        if (this.font.width(raw) <= maxWidth) {
+            graphics.drawString(this.font, raw, x, y, color, false);
+            return;
+        }
+        // Reserve space for ellipsis so the clamped string fits visibly
+        String ellipsis = "…";
+        int ellipsisWidth = this.font.width(ellipsis);
+        String head = this.font.plainSubstrByWidth(raw, Math.max(0, maxWidth - ellipsisWidth));
+        graphics.drawString(this.font, head + ellipsis, x, y, color, false);
     }
 
     @Override
@@ -91,7 +112,16 @@ public class CitizenProfileScreen extends AbstractContainerScreen<CitizenProfile
         if (this.minecraft != null && this.minecraft.level != null && this.minecraft.level.getPlayerByUUID(owner) != null) {
             return this.minecraft.level.getPlayerByUUID(owner).getDisplayName();
         }
-        return Component.literal(owner.toString().substring(0, 8));
+        // Try the online-players cache before giving up to a UUID prefix.
+        if (ClientManager.onlinePlayers != null) {
+            for (RecruitsPlayerInfo info : ClientManager.onlinePlayers) {
+                if (info != null && owner.equals(info.getUUID()) && info.getName() != null && !info.getName().isBlank()) {
+                    return Component.literal(info.getName());
+                }
+            }
+        }
+        return Component.translatable("gui.bannermod.citizen_profile.owner.unknown",
+                owner.toString().substring(0, 8));
     }
 
     private Component assignmentLabel() {
@@ -99,7 +129,10 @@ public class CitizenProfileScreen extends AbstractContainerScreen<CitizenProfile
         if (boundArea == null) {
             return Component.translatable("gui.bannermod.citizen_profile.assignment.none");
         }
-        return Component.literal(boundArea.toString().substring(0, 8));
+        // No client-side work-area name cache yet — at minimum label the truncated UUID
+        // so the assignment field reads as "(area: 1a2b3c4d)" instead of a bare prefix.
+        return Component.translatable("gui.bannermod.citizen_profile.assignment.area",
+                boundArea.toString().substring(0, 8));
     }
 
     private Component stateLabel() {

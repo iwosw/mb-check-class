@@ -1,14 +1,8 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.talhanation.bannermod.bootstrap.BannerModMain;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
@@ -16,7 +10,6 @@ import java.util.List;
 
 public class ConfirmScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_small.png");
     private final Runnable yesAction;
     private final Runnable noAction;
     private final Runnable backAction;
@@ -74,15 +67,15 @@ public class ConfirmScreen extends RecruitsScreenBase {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 6, guiTop + 4, xSize - 12, 14);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 8, guiTop + 22, xSize - 16, ySize - 56);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, title, guiLeft + xSize / 2 - font.width(title) / 2, guiTop + 7, FONT_COLOR, false);
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, title, xSize - 20);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, clampedTitle, guiLeft, guiTop + 7, xSize);
         int maxWidth = xSize - 20; // xSize minus Padding
 
 
@@ -92,9 +85,11 @@ public class ConfirmScreen extends RecruitsScreenBase {
         int yPosition = guiTop + 27;
 
         for (FormattedCharSequence line : lines) {
-            guiGraphics.drawString(font, line, guiLeft + xSize / 2 - font.width(line) / 2, yPosition, FONT_COLOR, false);
+            guiGraphics.drawString(font, line, guiLeft + xSize / 2 - font.width(line) / 2, yPosition, MilitaryGuiStyle.TEXT_DARK, false);
             yPosition += lineHeight;
         }
-        guiGraphics.drawString(font, backAction == null ? STATUS_BINARY : STATUS_TRINARY, guiLeft + 8, guiTop + ySize - 38, 0x5B4A32, false);
+        Component status = backAction == null ? STATUS_BINARY : STATUS_TRINARY;
+        Component statusClamped = MilitaryGuiStyle.clampLabel(font, status, xSize - 20);
+        guiGraphics.drawString(font, statusClamped, guiLeft + 8, guiTop + ySize - 38, MilitaryGuiStyle.TEXT_DARK, false);
     }
 }

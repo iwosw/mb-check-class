@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.items.civilian.BuildingPlacementWandItem;
 import com.talhanation.bannermod.settlement.onboarding.SettlementOnboardingGuide;
 import com.talhanation.bannermod.settlement.prefab.BuildingPrefab;
@@ -31,13 +32,10 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
     private static final int BUTTON_WIDTH = PANEL_WIDTH - PANEL_PADDING * 2;
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_SPACING = 4;
-    private static final int BUTTONS_PER_COLUMN = 7;
-    private static final int PANEL_BG = 0xCC2A2116;
-    private static final int PANEL_INNER = 0xD63B2D1C;
-    private static final int PANEL_BORDER = 0xFFC49A55;
-    private static final int TITLE_COLOR = 0xFFFFE9B8;
-    private static final int TEXT_COLOR = 0xFFF1E6C7;
-    private static final int MUTED_TEXT_COLOR = 0xFFD7BE85;
+    private static final int BUTTONS_PER_COLUMN = 5;
+    private static final int TITLE_COLOR = 0xFF000000 | MilitaryGuiStyle.TEXT;
+    private static final int TEXT_COLOR = 0xFF000000 | MilitaryGuiStyle.TEXT_DARK;
+    private static final int MUTED_TEXT_COLOR = 0xFF000000 | MilitaryGuiStyle.TEXT_MUTED;
 
     private final ItemStack wandStack;
     private List<BuildingPrefab> prefabs;
@@ -184,13 +182,11 @@ public class PlaceBuildingScreen extends net.minecraft.client.gui.screens.Screen
         int top = panelTop();
 
         graphics.fill(0, 0, this.width, this.height, 0x78000000);
-        graphics.fill(left, top, left + PANEL_WIDTH, top + PANEL_HEIGHT, PANEL_BG);
-        graphics.fill(left + 1, top + 1, left + PANEL_WIDTH - 1, top + PANEL_HEIGHT - 1, PANEL_INNER);
-        graphics.renderOutline(left, top, PANEL_WIDTH, PANEL_HEIGHT, PANEL_BORDER);
+        MilitaryGuiStyle.parchmentPanel(graphics, left, top, PANEL_WIDTH, PANEL_HEIGHT);
+        MilitaryGuiStyle.titleStrip(graphics, left + 6, top + 6, PANEL_WIDTH - 12, 14);
 
         Component title = Component.translatable("bannermod.prefab.wand.title");
-        int titleWidth = this.font.width(title);
-        graphics.drawString(this.font, title, (this.width - titleWidth) / 2, top + 10, TITLE_COLOR, true);
+        MilitaryGuiStyle.drawCenteredTitle(graphics, this.font, title, left, top + 9, PANEL_WIDTH);
         Component subtitle = Component.translatable("bannermod.prefab.wand.screen.subtitle");
         int subtitleWidth = this.font.width(subtitle);
         graphics.drawString(this.font, subtitle, (this.width - subtitleWidth) / 2, top + 22, MUTED_TEXT_COLOR, false);

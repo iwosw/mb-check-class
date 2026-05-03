@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.network.messages.war.MessageCancelAllyInvite;
 import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
 import com.talhanation.bannermod.network.messages.war.MessageRespondAllyInvite;
@@ -148,10 +149,9 @@ public class WarAlliesScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0x66000000);
         graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + W + 4, guiTop + H + 5, 0x55000000);
-        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, LEATHER_DARK);
-        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + W - 2, guiTop + H - 2, LEATHER);
-        renderParchmentPanel(graphics, guiLeft + 8, guiTop + 20, W - 16, LIST_VISIBLE * ROW_H + 20);
-        renderParchmentPanel(graphics, guiLeft + 8, guiTop + H - 62, W - 16, 42);
+        MilitaryGuiStyle.parchmentPanel(graphics, guiLeft, guiTop, W, H);
+        MilitaryGuiStyle.parchmentInset(graphics, guiLeft + 8, guiTop + 20, W - 16, LIST_VISIBLE * ROW_H + 20);
+        MilitaryGuiStyle.parchmentInset(graphics, guiLeft + 8, guiTop + H - 62, W - 16, 42);
 
         WarDeclarationRecord war = currentWar();
         String header = war == null
@@ -160,8 +160,8 @@ public class WarAlliesScreen extends Screen {
                 entityName(war.attackerPoliticalEntityId()),
                 entityName(war.defenderPoliticalEntityId()),
                 localizedWarState(war.state())).getString();
-        graphics.drawCenteredString(font, header, guiLeft + W / 2, guiTop + 8, GOLD);
-        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("gui.bannermod.war_allies.hint").getString(), W - 32), guiLeft + 12, guiTop + 24, INK_MUTED, false);
+        graphics.drawCenteredString(font, header, guiLeft + W / 2, guiTop + 8, MilitaryGuiStyle.TEXT);
+        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("gui.bannermod.war_allies.hint").getString(), W - 32), guiLeft + 12, guiTop + 24, MilitaryGuiStyle.TEXT_MUTED, false);
 
         renderList(graphics, mouseX, mouseY);
         renderVisibleStatus(graphics);
@@ -173,7 +173,7 @@ public class WarAlliesScreen extends Screen {
         Component feedback = WarClientState.lastActionFeedback();
         if (feedback == null || feedback.getString().isBlank()) return;
         graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), W - 24),
-                guiLeft + 12, guiTop + H - 34, WAX, false);
+                guiLeft + 12, guiTop + H - 34, MilitaryGuiStyle.TEXT_WARN, false);
     }
 
     private void renderVisibleStatus(GuiGraphics graphics) {
@@ -182,7 +182,7 @@ public class WarAlliesScreen extends Screen {
             return;
         }
         graphics.drawString(font, font.plainSubstrByWidth(status.getString(), W - 24),
-                guiLeft + 12, guiTop + H - 48, INK, false);
+                guiLeft + 12, guiTop + H - 48, MilitaryGuiStyle.TEXT_DARK, false);
     }
 
     private void renderList(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -190,7 +190,7 @@ public class WarAlliesScreen extends Screen {
         int listY = guiTop + 24;
         int listW = W - 16;
         int listH = LIST_VISIBLE * ROW_H;
-        graphics.drawString(font, Component.translatable("gui.bannermod.war_allies.ledger"), listX, listY - 12, INK, false);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_allies.ledger"), listX, listY - 12, MilitaryGuiStyle.TEXT_DARK, false);
         graphics.fill(listX, listY, listX + listW, listY + listH, 0x22FFFFFF);
         graphics.renderOutline(listX, listY, listW, listH, PAGE_SHADE);
 
@@ -238,15 +238,6 @@ public class WarAlliesScreen extends Screen {
             return Component.translatable("gui.bannermod.war_allies.status.open_picker", localizedWarSide(WarSide.DEFENDER));
         }
         return inviteDenial(war, true, war.attackerPoliticalEntityId());
-    }
-
-    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x + w, y + h, PAGE_BG);
-        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
-        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
-        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
-        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
-        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
     }
 
     @Override
