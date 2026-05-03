@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
+import com.talhanation.bannermod.client.military.gui.widgets.DropDownMenu;
 import com.talhanation.bannermod.network.messages.war.MessageDeclareWar;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
@@ -33,8 +34,8 @@ public class WarDeclareScreen extends Screen {
     private int defenderIndex;
     private int goalIndex;
     private EditBox casusBelliBox;
-    private Button attackerButton;
-    private Button defenderButton;
+    private DropDownMenu<PoliticalEntityRecord> attackerDropdown;
+    private DropDownMenu<PoliticalEntityRecord> defenderDropdown;
     private Button goalButton;
     private Button declareButton;
 
@@ -50,10 +51,31 @@ public class WarDeclareScreen extends Screen {
         this.guiTop = (this.height - H) / 2;
         rebuildChoices();
 
-        this.attackerButton = Button.builder(Component.literal(""), btn -> cycleAttacker())
-                .bounds(guiLeft + 16, guiTop + 42, 128, 20).build();
-        this.defenderButton = Button.builder(Component.literal(""), btn -> cycleDefender())
-                .bounds(guiLeft + 156, guiTop + 42, 128, 20).build();
+        // Dropdown shows the candidate list at a glance; cycle button required N
+        // clicks to find the right entry. Server-authoritative — onSelect just
+        // updates the local index, declareWar() still posts MessageDeclareWar.
+        this.attackerDropdown = new DropDownMenu<>(
+                selectedAttacker(), guiLeft + 16, guiTop + 50, 128, 20,
+                this.attackers, this::displayName,
+                entity -> {
+                    int idx = this.attackers.indexOf(entity);
+                    if (idx >= 0) {
+                        this.attackerIndex = idx;
+                        rebuildDefenders();
+                        rebuildDefenderDropdown();
+                        updateButtons();
+                    }
+                });
+        this.defenderDropdown = new DropDownMenu<>(
+                selectedDefender(), guiLeft + 156, guiTop + 50, 128, 20,
+                this.defenders, this::displayName,
+                entity -> {
+                    int idx = this.defenders.indexOf(entity);
+                    if (idx >= 0) {
+                        this.defenderIndex = idx;
+                        updateButtons();
+                    }
+                });
         this.goalButton = Button.builder(Component.literal(""), btn -> cycleGoal())
                 .bounds(guiLeft + 16, guiTop + 76, 128, 20).build();
         this.casusBelliBox = new EditBox(this.font, guiLeft + 156, guiTop + 76, 128, 20, Component.translatable("gui.bannermod.war_declare.casus"));
@@ -62,8 +84,6 @@ public class WarDeclareScreen extends Screen {
         this.casusBelliBox.setTextColorUneditable(MilitaryGuiStyle.TEXT_MUTED);
         this.casusBelliBox.setBordered(true);
         this.casusBelliBox.setHint(Component.translatable("gui.bannermod.war_declare.casus_belli.hint"));
-        addRenderableWidget(this.attackerButton);
-        addRenderableWidget(this.defenderButton);
         addRenderableWidget(this.goalButton);
         addRenderableWidget(this.casusBelliBox);
 
@@ -72,7 +92,29 @@ public class WarDeclareScreen extends Screen {
         addRenderableWidget(this.declareButton);
         addRenderableWidget(Button.builder(Component.translatable("gui.bannermod.common.cancel"), btn -> onClose())
                 .bounds(guiLeft + W - 108, guiTop + H - 32, 92, 20).build());
+        // Dropdowns added LAST so the open option list renders above the goal button
+        // and casus belli box that sit immediately below them.
+        addRenderableWidget(this.attackerDropdown);
+        addRenderableWidget(this.defenderDropdown);
         updateButtons();
+    }
+
+    private void rebuildDefenderDropdown() {
+        if (this.defenderDropdown == null) return;
+        // Defenders depend on attacker selection; recreate the dropdown so the
+        // option list stays in sync.
+        removeWidget(this.defenderDropdown);
+        this.defenderDropdown = new DropDownMenu<>(
+                selectedDefender(), guiLeft + 156, guiTop + 50, 128, 20,
+                this.defenders, this::displayName,
+                entity -> {
+                    int idx = this.defenders.indexOf(entity);
+                    if (idx >= 0) {
+                        this.defenderIndex = idx;
+                        updateButtons();
+                    }
+                });
+        addRenderableWidget(this.defenderDropdown);
     }
 
     private void rebuildChoices() {
@@ -100,19 +142,6 @@ public class WarDeclareScreen extends Screen {
         this.defenderIndex = Math.min(this.defenderIndex, Math.max(0, this.defenders.size() - 1));
     }
 
-    private void cycleAttacker() {
-        if (this.attackers.isEmpty()) return;
-        this.attackerIndex = (this.attackerIndex + 1) % this.attackers.size();
-        rebuildDefenders();
-        updateButtons();
-    }
-
-    private void cycleDefender() {
-        if (this.defenders.isEmpty()) return;
-        this.defenderIndex = (this.defenderIndex + 1) % this.defenders.size();
-        updateButtons();
-    }
-
     private void cycleGoal() {
         this.goalIndex = (this.goalIndex + 1) % WarGoalType.values().length;
         updateButtons();
@@ -121,17 +150,12 @@ public class WarDeclareScreen extends Screen {
     private void updateButtons() {
         PoliticalEntityRecord attacker = selectedAttacker();
         PoliticalEntityRecord defender = selectedDefender();
-        this.attackerButton.setMessage(Component.translatable("gui.bannermod.war_declare.attacker", displayName(attacker)));
-        this.defenderButton.setMessage(Component.translatable("gui.bannermod.war_declare.defender", displayName(defender)));
         this.goalButton.setMessage(Component.translatable("gui.bannermod.war_declare.goal", localizedGoal(selectedGoal())));
-        this.attackerButton.active = this.attackers.size() > 1;
-        this.defenderButton.active = this.defenders.size() > 1;
-        // Cycle buttons go inert when there's only one valid option to cycle through;
-        // surface the gating reason rather than leaving the player to guess.
-        this.attackerButton.setTooltip(this.attackerButton.active ? null
-                : Tooltip.create(Component.translatable("gui.bannermod.war_declare.attacker.only_one")));
-        this.defenderButton.setTooltip(this.defenderButton.active ? null
-                : Tooltip.create(Component.translatable("gui.bannermod.war_declare.defender.only_one")));
+        // Dropdowns clamp to read-only display when only one (or zero) options are
+        // available — matches the previous active=size>1 semantics on the cycle button.
+        // The choose-side labels next to the dropdown explain that the side is fixed.
+        this.attackerDropdown.active = this.attackers.size() > 1;
+        this.defenderDropdown.active = this.defenders.size() > 1;
         this.declareButton.active = attacker != null && defender != null;
         this.declareButton.setTooltip(this.declareButton.active ? null : Tooltip.create(declareDenial()));
     }
@@ -188,6 +212,8 @@ public class WarDeclareScreen extends Screen {
         MilitaryGuiStyle.parchmentInset(graphics, guiLeft + 10, guiTop + 18, W - 20, H - 28);
         MilitaryGuiStyle.drawCenteredTitle(graphics, font, this.title, guiLeft, guiTop + 8, W);
         graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("gui.bannermod.war_declare.hint").getString(), W - 36), guiLeft + 16, guiTop + 28, MilitaryGuiStyle.TEXT_MUTED, false);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_declare.attacker.choose"), guiLeft + 16, guiTop + 40, MilitaryGuiStyle.TEXT_MUTED, false);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_declare.defender.choose"), guiLeft + 156, guiTop + 40, MilitaryGuiStyle.TEXT_MUTED, false);
         graphics.drawString(font, Component.translatable("gui.bannermod.war_declare.casus"), guiLeft + 156, guiTop + 64, MilitaryGuiStyle.TEXT_MUTED, false);
         renderStatus(graphics);
         renderActionFeedback(graphics);
@@ -235,6 +261,28 @@ public class WarDeclareScreen extends Screen {
             return declareDenial();
         }
         return Component.translatable("gui.bannermod.war_declare.ready");
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Drive dropdowns explicitly — DropDownMenu.onClick is intentionally inert,
+        // option clicks must route through onMouseClick.
+        if (this.attackerDropdown != null && this.attackerDropdown.active && this.attackerDropdown.isMouseOver(mouseX, mouseY)) {
+            this.attackerDropdown.onMouseClick(mouseX, mouseY);
+            return true;
+        }
+        if (this.defenderDropdown != null && this.defenderDropdown.active && this.defenderDropdown.isMouseOver(mouseX, mouseY)) {
+            this.defenderDropdown.onMouseClick(mouseX, mouseY);
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        if (this.attackerDropdown != null) this.attackerDropdown.onMouseMove(mouseX, mouseY);
+        if (this.defenderDropdown != null) this.defenderDropdown.onMouseMove(mouseX, mouseY);
+        super.mouseMoved(mouseX, mouseY);
     }
 
     @Override

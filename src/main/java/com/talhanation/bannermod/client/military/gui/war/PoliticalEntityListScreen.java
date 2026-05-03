@@ -2,6 +2,8 @@ package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
+import com.talhanation.bannermod.client.military.gui.widgets.ActionMenuButton;
+import com.talhanation.bannermod.client.military.gui.widgets.ContextMenuEntry;
 import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
@@ -61,21 +63,7 @@ public class PoliticalEntityListScreen extends Screen {
     @Nullable
     private PoliticalEntityRecord selected;
     @Nullable
-    private Button renameButton;
-    @Nullable
-    private Button setCapitalButton;
-    @Nullable
-    private Button toggleFormButton;
-    @Nullable
-    private Button setColorButton;
-    @Nullable
-    private Button setCharterButton;
-    @Nullable
-    private Button addCoLeaderButton;
-    @Nullable
-    private Button removeCoLeaderButton;
-    @Nullable
-    private Button promoteStateButton;
+    private ActionMenuButton manageMenu;
 
     public PoliticalEntityListScreen(@Nullable Screen parent) {
         super(text("gui.bannermod.states.title"));
@@ -86,17 +74,16 @@ public class PoliticalEntityListScreen extends Screen {
     protected void init() {
         super.init();
         updateGeometry();
-        addRenderableWidget(actionButton(0, text("gui.bannermod.states.create"), btn -> openCreateDialog()));
-        this.renameButton = addRenderableWidget(actionButton(1, text("gui.bannermod.states.rename"), btn -> openRenameDialog()));
-        this.setCapitalButton = addRenderableWidget(actionButton(2, text("gui.bannermod.states.capital_here"), btn -> setCapitalHere()));
-        this.toggleFormButton = addRenderableWidget(actionButton(3, text("gui.bannermod.states.toggle_form"), btn -> toggleGovernmentForm()));
-        this.setColorButton = addRenderableWidget(actionButton(4, text("gui.bannermod.states.color"), btn -> openColorDialog()));
-        this.setCharterButton = addRenderableWidget(actionButton(5, text("gui.bannermod.states.charter"), btn -> openCharterDialog()));
-        this.addCoLeaderButton = addRenderableWidget(actionButton(6, text("gui.bannermod.states.add_co_leader"), btn -> openCoLeaderDialog(true)));
-        this.removeCoLeaderButton = addRenderableWidget(actionButton(7, text("gui.bannermod.states.remove_co_leader"), btn -> openCoLeaderDialog(false)));
-        this.promoteStateButton = addRenderableWidget(actionButton(8, text("gui.bannermod.states.promote_state"), btn -> promoteToState()));
-        addRenderableWidget(actionButton(9, text("gui.bannermod.common.refresh"), btn -> refresh()));
-        addRenderableWidget(actionButton(10, text("gui.bannermod.common.back"), btn -> onClose()));
+        // Collapse 9 same-tier state-management actions under one manage dropdown.
+        // Refresh and back stay as plain buttons (different tier: nav controls).
+        this.manageMenu = new ActionMenuButton(
+                actionButtonX(0), actionButtonY(0), actionButtonW(), BUTTON_H,
+                text("gui.bannermod.states.menu.manage"),
+                buildManageEntries());
+        this.manageMenu.setOpenUpward(true);
+        addRenderableWidget(this.manageMenu);
+        addRenderableWidget(actionButton(1, text("gui.bannermod.common.refresh"), btn -> refresh()));
+        addRenderableWidget(actionButton(2, text("gui.bannermod.common.back"), btn -> onClose()));
         refresh();
     }
 
@@ -183,7 +170,8 @@ public class PoliticalEntityListScreen extends Screen {
 
     private int actionRows() {
         int columns = actionColumns();
-        return (11 + columns - 1) / columns;
+        // 1 manage dropdown + 2 nav buttons (refresh, back).
+        return (3 + columns - 1) / columns;
     }
 
     private int actionLedgerX() {
@@ -331,52 +319,42 @@ public class PoliticalEntityListScreen extends Screen {
     }
 
     private void updateLeaderButtons() {
+        if (this.manageMenu != null) {
+            this.manageMenu.setEntries(buildManageEntries());
+        }
+    }
+
+    private List<ContextMenuEntry> buildManageEntries() {
         boolean canAct = canLocalPlayerAct(this.selected);
         boolean leader = isLocalPlayerLeader(this.selected);
-        Component selectState = text("gui.bannermod.states.tooltip.select_state");
-        Component needAuthority = text("gui.bannermod.states.tooltip.need_authority");
-        Component needLeader = text("gui.bannermod.states.tooltip.need_leader");
-        if (this.renameButton != null) {
-            this.renameButton.active = canAct;
-            this.renameButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
-        }
-        if (this.setCapitalButton != null) {
-            this.setCapitalButton.active = canAct;
-            this.setCapitalButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
-        }
-        if (this.toggleFormButton != null) {
-            this.toggleFormButton.active = leader;
-            if (this.selected != null) {
-                this.toggleFormButton.setMessage(text(this.selected.governmentForm() == GovernmentForm.MONARCHY
+        boolean canPromote = canAct && this.selected != null && this.selected.status() != PoliticalEntityStatus.STATE;
+        boolean canRemoveCoLeader = leader && this.selected != null && !this.selected.coLeaderUuids().isEmpty();
+        Component toggleFormLabel = this.selected == null
+                ? text("gui.bannermod.states.toggle_form")
+                : text(this.selected.governmentForm() == GovernmentForm.MONARCHY
                         ? "gui.bannermod.states.to_republic"
-                        : "gui.bannermod.states.to_monarchy"));
-            }
-            this.toggleFormButton.setTooltip(leader ? null : Tooltip.create(this.selected == null ? selectState : needLeader));
-        }
-        if (this.setColorButton != null) {
-            this.setColorButton.active = canAct;
-            this.setColorButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
-        }
-        if (this.setCharterButton != null) {
-            this.setCharterButton.active = canAct;
-            this.setCharterButton.setTooltip(canAct ? null : Tooltip.create(this.selected == null ? selectState : needAuthority));
-        }
-        if (this.addCoLeaderButton != null) {
-            this.addCoLeaderButton.active = leader;
-            this.addCoLeaderButton.setTooltip(leader ? null : Tooltip.create(this.selected == null ? selectState : needLeader));
-        }
-        if (this.removeCoLeaderButton != null) {
-            this.removeCoLeaderButton.active = leader && this.selected != null && !this.selected.coLeaderUuids().isEmpty();
-            Component tooltip = this.selected != null && this.selected.coLeaderUuids().isEmpty()
-                    ? text("gui.bannermod.states.tooltip.no_co_leaders")
-                    : (this.selected == null ? selectState : needLeader);
-            this.removeCoLeaderButton.setTooltip(this.removeCoLeaderButton.active ? null : Tooltip.create(tooltip));
-        }
-        if (this.promoteStateButton != null) {
-            boolean canPromote = canAct && this.selected != null && this.selected.status() != PoliticalEntityStatus.STATE;
-            this.promoteStateButton.active = canPromote;
-            this.promoteStateButton.setTooltip(canPromote ? Tooltip.create(text("gui.bannermod.states.tooltip.promote_state")) : Tooltip.create(this.selected == null ? selectState : needAuthority));
-        }
+                        : "gui.bannermod.states.to_monarchy");
+
+        List<ContextMenuEntry> entries = new ArrayList<>();
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.create").getString(),
+                this::openCreateDialog, true));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.rename").getString(),
+                this::openRenameDialog, canAct));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.capital_here").getString(),
+                this::setCapitalHere, canAct));
+        entries.add(new ContextMenuEntry(toggleFormLabel.getString(),
+                this::toggleGovernmentForm, leader));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.color").getString(),
+                this::openColorDialog, canAct));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.charter").getString(),
+                this::openCharterDialog, canAct));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.add_co_leader").getString(),
+                () -> openCoLeaderDialog(true), leader));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.remove_co_leader").getString(),
+                () -> openCoLeaderDialog(false), canRemoveCoLeader));
+        entries.add(new ContextMenuEntry(text("gui.bannermod.states.promote_state").getString(),
+                this::promoteToState, canPromote));
+        return entries;
     }
 
     private static boolean isLocalPlayerLeader(@Nullable PoliticalEntityRecord entity) {
