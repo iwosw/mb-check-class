@@ -6497,7 +6497,7 @@
     {
       "id": "WORKERUI-001",
       "title": "WorkerStatusScreen needs profession reassignment, dismiss, wage controls",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-05-03",
       "why": "Audit (UI_AUDIT_FINDINGS.md) flagged the screen advertises management but only exposes Refresh/Convert/Close. Players have no UI path to reassign a worker's profession, dismiss them, or set a wage.",
       "scope": [
@@ -6511,7 +6511,12 @@
         "MULTIPLAYER_GUIDE_EN.md and MULTIPLAYER_GUIDE_RU.md describe the new controls in the worker management section"
       ],
       "dependencies": [],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-03",
+          "text": "Implemented Reassign Profession + clarified Convert as dismiss path. Wage system not present in codebase; acceptance #2 (wage) descoped. ActionMenuButton in WorkerStatusScreen offers all 7 CONTROLLED_WORKER professions except current. Server message reuses WorkerCitizenConversionService auth. New WorkerStatusReassignContractTest pins source invariants."
+        }
+      ],
       "verification": [],
       "evidence": [
         "UI_AUDIT_FINDINGS.md section 'civilian/WorkerStatusScreen.java' (HIGH severity)"
