@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.settlement.BannerModSettlementClientMirror;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.governance.BannerModGovernorPolicy;
@@ -77,14 +78,10 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
     }
 
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, 0xE0C6B98D);
-        guiGraphics.fill(leftPos + 3, topPos + 3, leftPos + imageWidth - 3, topPos + imageHeight - 3, 0xF0E6D8B8);
-        guiGraphics.fill(leftPos + 8, topPos + 8, leftPos + 194, topPos + 115, 0x30FFFFFF);
-        guiGraphics.fill(leftPos + 8, topPos + 118, leftPos + 194, topPos + imageHeight - 8, 0x30C08A52);
-        guiGraphics.fill(leftPos + 202, topPos + 22, leftPos + imageWidth - 8, topPos + imageHeight - 8, 0x503B2F20);
-        guiGraphics.renderOutline(leftPos + 8, topPos + 8, 186, 107, 0x6B4A2A);
-        guiGraphics.renderOutline(leftPos + 8, topPos + 118, 186, imageHeight - 126, 0x6B4A2A);
-        guiGraphics.renderOutline(leftPos + 202, topPos + 22, imageWidth - 210, imageHeight - 30, 0x6B4A2A);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, leftPos, topPos, imageWidth, imageHeight);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 8, topPos + 8, 186, 107);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, leftPos + 8, topPos + 118, 186, imageHeight - 126);
+        MilitaryGuiStyle.insetPanel(guiGraphics, leftPos + 202, topPos + 22, imageWidth - 210, imageHeight - 30);
     }
 
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
@@ -92,61 +89,61 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
         updatePolicyButtons(state);
         int x = leftPos + 10;
         int y = topPos + 10;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.title", recruit.getName().getString()), x, y, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.title", recruit.getName().getString()), x, y, MilitaryGuiStyle.TEXT_DARK, false);
         y += 12;
         guiGraphics.drawString(font, text("gui.bannermod.governor.mirror_state", text(state.stateKey()).getString()), x, y, state.stateColor(), false);
         guiGraphics.renderOutline(x - 3, y - 2, 120, 11, state.stateColor());
         y += 12;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.settlement", text(state.settlementKey()).getString()), x, y, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.settlement", text(state.settlementKey()).getString()), x, y, MilitaryGuiStyle.TEXT_DARK, false);
         y += 12;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.citizens", state.citizenCount()), x, y, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.citizens", state.citizenCount()), x, y, MilitaryGuiStyle.TEXT_DARK, false);
         y += 12;
         guiGraphics.drawString(font, text("gui.bannermod.governor.tax_obligation", state.taxesCollected(), state.taxesDue(), text(taxObligationStateKey(state)).getString()), x, y, taxObligationColor(state), false);
         y += 12;
         guiGraphics.drawString(font, text(taxObligationConsequenceKey(state)), x, y, taxObligationColor(state), false);
         y += 12;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.treasury", state.treasuryBalance(), state.lastTreasuryNet()), x, y, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.treasury", state.treasuryBalance(), state.lastTreasuryNet()), x, y, MilitaryGuiStyle.TEXT_DARK, false);
         y += 12;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.projected", state.projectedTreasuryBalance()), x, y, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.projected", state.projectedTreasuryBalance()), x, y, MilitaryGuiStyle.TEXT_DARK, false);
         y += 12;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.heartbeat", state.lastHeartbeatTick()), x, y, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.heartbeat", state.lastHeartbeatTick()), x, y, MilitaryGuiStyle.TEXT_DARK, false);
         y += 12;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.incidents"), x, y, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.incidents"), x, y, MilitaryGuiStyle.TEXT_DARK, false);
         y += 12;
         int visibleIncidents = Math.min(1, state.incidents().size());
         for (int i = 0; i < visibleIncidents; i++) {
-            guiGraphics.drawString(font, text("gui.bannermod.governor.bullet", governorValue(state.incidents().get(i))), x, y, 4210752, false);
+            guiGraphics.drawString(font, text("gui.bannermod.governor.bullet", governorValue(state.incidents().get(i))), x, y, MilitaryGuiStyle.TEXT_DARK, false);
             y += 10;
         }
         if (state.incidents().isEmpty()) {
-            guiGraphics.drawString(font, text("gui.bannermod.governor.none_row"), x, y, 4210752, false);
+            guiGraphics.drawString(font, text("gui.bannermod.governor.none_row"), x, y, MilitaryGuiStyle.TEXT_DARK, false);
             y += 10;
         } else if (state.incidents().size() > visibleIncidents) {
-            guiGraphics.drawString(font, text("gui.bannermod.governor.incidents_more", state.incidents().size() - visibleIncidents), x, y, 4210752, false);
+            guiGraphics.drawString(font, text("gui.bannermod.governor.incidents_more", state.incidents().size() - visibleIncidents), x, y, MilitaryGuiStyle.TEXT_DARK, false);
             y += 10;
         }
-        guiGraphics.drawString(font, text("gui.bannermod.governor.action_reason", text(state.actionReasonKey()).getString()), x, y, state.canUpdatePolicy() ? 0x2E5D32 : 0x8A1F11, false);
-        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.garrison", governorPolicyValue(state.garrisonPriority())), leftPos + 10, topPos + 124, 4210752, false);
-        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.fortification", governorPolicyValue(state.fortificationPriority())), leftPos + 10, topPos + 148, 4210752, false);
-        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.tax", governorPolicyValue(state.taxPressure())), leftPos + 10, topPos + 172, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.action_reason", text(state.actionReasonKey()).getString()), x, y, state.canUpdatePolicy() ? MilitaryGuiStyle.TEXT_GOOD : MilitaryGuiStyle.TEXT_DENIED, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.garrison", governorPolicyValue(state.garrisonPriority())), leftPos + 10, topPos + 124, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.fortification", governorPolicyValue(state.fortificationPriority())), leftPos + 10, topPos + 148, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.policy.tax", governorPolicyValue(state.taxPressure())), leftPos + 10, topPos + 172, MilitaryGuiStyle.TEXT_DARK, false);
 
         int logisticsX = leftPos + 210;
         int logisticsY = topPos + 10;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.logistics"), logisticsX, logisticsY, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.logistics"), logisticsX, logisticsY, MilitaryGuiStyle.TEXT, false);
         logisticsY += 14;
         for (String line : state.logisticsLines()) {
-            guiGraphics.drawString(font, shorten(lineComponent(line), 26), logisticsX, logisticsY, 4210752, false);
+            guiGraphics.drawString(font, shorten(lineComponent(line), 26), logisticsX, logisticsY, MilitaryGuiStyle.TEXT, false);
             logisticsY += 11;
         }
         logisticsY += 4;
-        guiGraphics.drawString(font, text("gui.bannermod.governor.advice"), logisticsX, logisticsY, 4210752, false);
+        guiGraphics.drawString(font, text("gui.bannermod.governor.advice"), logisticsX, logisticsY, MilitaryGuiStyle.TEXT, false);
         logisticsY += 12;
-        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.garrison", governorValue(state.garrisonRecommendation())), 26), logisticsX, logisticsY, 4210752, false);
+        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.garrison", governorValue(state.garrisonRecommendation())), 26), logisticsX, logisticsY, MilitaryGuiStyle.TEXT, false);
         logisticsY += 11;
-        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.fort", governorValue(state.fortificationRecommendation())), 26), logisticsX, logisticsY, 4210752, false);
+        guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.advice.fort", governorValue(state.fortificationRecommendation())), 26), logisticsX, logisticsY, MilitaryGuiStyle.TEXT, false);
         logisticsY += 11;
         for (int i = 0; i < Math.min(3, state.recommendations().size()); i++) {
-            guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.bullet", governorValue(state.recommendations().get(i))), 26), logisticsX, logisticsY, 4210752, false);
+            guiGraphics.drawString(font, shorten(text("gui.bannermod.governor.bullet", governorValue(state.recommendations().get(i))), 26), logisticsX, logisticsY, MilitaryGuiStyle.TEXT, false);
             logisticsY += 10;
         }
     }
@@ -256,11 +253,11 @@ public class GovernorScreen extends ScreenBase<GovernorContainer> {
 
     private static int taxObligationColor(BannerModSettlementClientMirror.GovernorView state) {
         if (state.taxesDue() <= 0) {
-            return 0x555555;
+            return MilitaryGuiStyle.TEXT_MUTED;
         }
         if (state.taxesCollected() >= state.taxesDue()) {
-            return 0x2E7D32;
+            return MilitaryGuiStyle.TEXT_GOOD;
         }
-        return 0x8A1F11;
+        return MilitaryGuiStyle.TEXT_DENIED;
     }
 }
