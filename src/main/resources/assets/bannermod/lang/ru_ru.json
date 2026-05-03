@@ -505,6 +505,8 @@
   "gui.bannermod.claim.members.hint.access": "Доверенные игроки могут строить, взаимодействовать и менять местные рабочие зоны.",
   "gui.bannermod.claim.members.hint.no_politics": "Они не получают права на редактирование клейма, государство, дипломатию или войну.",
   "gui.bannermod.claim.members.save_disabled": "Нет изменений списка для сохранения.",
+  "gui.bannermod.claim.members.cycle_disabled": "В списке только один доверенный игрок.",
+  "gui.bannermod.claim.members.unknown_player": "Неизвестный игрок (%s)",
   "gui.bannermod.claim.members.duplicate": "%s уже есть в списке доверенных игроков.",
   "gui.bannermod.claim.members.owner_denied": "Владелец клейма и так имеет полный доступ.",
   "gui.bannermod.error.name_too_short": "Имя слишком короткое!",

@@ -506,6 +506,8 @@
   "gui.bannermod.claim.members.hint.access": "Trusted members may build, interact, and manage local work areas here.",
   "gui.bannermod.claim.members.hint.no_politics": "They do not gain claim-edit, state, diplomacy, or war powers.",
   "gui.bannermod.claim.members.save_disabled": "No member changes to save.",
+  "gui.bannermod.claim.members.cycle_disabled": "Only one trusted member to display.",
+  "gui.bannermod.claim.members.unknown_player": "Unknown player (%s)",
   "gui.bannermod.claim.members.duplicate": "%s is already a trusted member.",
   "gui.bannermod.claim.members.owner_denied": "The claim owner already has full access.",
   "gui.bannermod.error.name_too_short": "Name too short!",
