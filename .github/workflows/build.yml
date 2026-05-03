@@ -21,8 +21,6 @@ jobs:
     name: Forge build (assemble + check, no publishing)
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env:
-      ORG_GRADLE_PROJECT_release_version: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
 
     steps:
       - name: Checkout
@@ -59,11 +57,11 @@ jobs:
         run: ./gradlew -Dnet.minecraftforge.gradle.check.certs=false runGameTestServer --stacktrace --warning-mode=summary
 
       - name: Build
-        run: ./gradlew clean verifyBuildStage --stacktrace --warning-mode=summary
+        run: ./gradlew clean build --stacktrace --warning-mode=summary
 
       - name: Publish release JARs
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/libs/bannermod-${{ github.ref_name }}-all.jar
+          files: build/libs/bannermod-1.0.0-all.jar
           overwrite_files: true
