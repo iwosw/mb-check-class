@@ -886,6 +886,7 @@
   "gui.workers.build.status.scan_rejected_name": "Scan rejected: name must be at least 3 characters.",
   "gui.workers.build.section.dimensions": "Bounds",
   "gui.workers.build.section.materials": "Materials",
+  "gui.workers.build.load.scan_name_na": "Scan name: N/A (LOAD mode)",
   "gui.workers.build.section.preview": "Builder's Preview",
   "gui.workers.build.section.status": "Order Status",
   "gui.workers.build.tooltip.need_name": "Enter a scan name with at least 3 characters.",

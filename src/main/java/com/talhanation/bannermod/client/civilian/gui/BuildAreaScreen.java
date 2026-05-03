@@ -507,6 +507,12 @@ public class BuildAreaScreen extends WorkAreaScreen {
         guiGraphics.drawString(this.font, text("gui.workers.build.section.status"), statusLeft, y + 202, PANEL_TITLE, false);
         if (this.mode == Mode.LOAD) {
             guiGraphics.drawString(this.font, text("gui.workers.build.section.materials"), x + 102, y + 58, PANEL_TITLE, false);
+            // LOAD mode never instantiates scanNameEditBox; surface a disabled-style
+            // placeholder so the SCAN-mode "Name" slot doesn't read as missing.
+            guiGraphics.drawString(this.font,
+                    Component.translatable("gui.workers.build.load.scan_name_na"),
+                    x - 110 + 6, y + 74 - 12,
+                    MilitaryGuiStyle.TEXT_MUTED, false);
         }
 
         Component previewHint = this.mode == Mode.LOAD
