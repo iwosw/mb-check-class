@@ -1,6 +1,13 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.AnimalFarmerEntity;
+import com.talhanation.bannermod.entity.civilian.BuilderEntity;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.FishermanEntity;
+import com.talhanation.bannermod.entity.civilian.LumberjackEntity;
+import com.talhanation.bannermod.entity.civilian.MerchantEntity;
+import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
 import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
@@ -19,6 +26,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,20 +45,22 @@ final class WorkerSettlementClaimPolicy {
         }
 
         int currentWorkerCount = countEntitiesInClaim(level, claim, AbstractWorkerEntity.class);
+        Map<WorkerSettlementSpawnRules.WorkerProfession, Integer> currentByProfession =
+                countWorkersByProfession(level, claim);
         long elapsedCooldownTicks = resolveClaimGrowthElapsedTicks(claim, gameTime, claimWorkerGrowthSpawnTimes);
         WorkerSettlementSpawnRules.Decision decision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
                 binding.status(),
                 currentWorkerCount,
                 elapsedCooldownTicks,
-                config
+                config,
+                currentByProfession
         );
-        WorkerSettlementSpawnRules.Decision deterministicDecision = applyClaimGrowthProfessionSeed(claim, currentWorkerCount, config, decision);
-        if (!deterministicDecision.allowed()) {
+        if (!decision.allowed()) {
             return null;
         }
 
         BlockPos spawnPos = resolveClaimGrowthSpawnPos(level, claim);
-        AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnClaimWorker(level, spawnPos, deterministicDecision, claim);
+        AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnClaimWorker(level, spawnPos, decision, claim);
         if (worker != null) {
             claimWorkerGrowthSpawnTimes.put(claim.getUUID(), gameTime);
         }
@@ -150,18 +160,33 @@ final class WorkerSettlementClaimPolicy {
         return Math.max(0L, gameTime - lastSpawnTime);
     }
 
-    private static WorkerSettlementSpawnRules.Decision applyClaimGrowthProfessionSeed(RecruitsClaim claim,
-                                                                                       int currentWorkerCount,
-                                                                                       WorkerSettlementSpawnRules.ClaimGrowthConfig config,
-                                                                                       WorkerSettlementSpawnRules.Decision decision) {
-        if (claim == null || config == null || decision == null || !decision.allowed() || config.allowedProfessions().isEmpty()) {
-            return decision;
+    static Map<WorkerSettlementSpawnRules.WorkerProfession, Integer> countWorkersByProfession(ServerLevel level, RecruitsClaim claim) {
+        Map<WorkerSettlementSpawnRules.WorkerProfession, Integer> counts =
+                new EnumMap<>(WorkerSettlementSpawnRules.WorkerProfession.class);
+        if (level == null || claim == null || claim.getClaimedChunks().isEmpty()) {
+            return counts;
         }
+        ClaimOwnerKey ownerKey = resolveClaimOwnerKey(level, claim);
+        AABB claimBounds = getClaimBounds(level, claim);
+        for (AbstractWorkerEntity worker : level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds, w -> w.isAlive() && claim.containsChunk(w.chunkPosition()) && workerMatchesClaimOwner(level, w, ownerKey))) {
+            WorkerSettlementSpawnRules.WorkerProfession profession = professionOf(worker);
+            if (profession != null) {
+                counts.merge(profession, 1, Integer::sum);
+            }
+        }
+        return counts;
+    }
 
-        ChunkPos anchorChunk = resolveClaimAnchorChunk(claim);
-        int professionIndex = Math.floorMod(anchorChunk.x * 31 + anchorChunk.z * 17 + currentWorkerCount, config.allowedProfessions().size());
-        WorkerSettlementSpawnRules.WorkerProfession profession = config.allowedProfessions().get(professionIndex);
-        return new WorkerSettlementSpawnRules.Decision(true, profession, null, decision.requiredCooldownTicks());
+    @Nullable
+    private static WorkerSettlementSpawnRules.WorkerProfession professionOf(AbstractWorkerEntity worker) {
+        if (worker instanceof FarmerEntity) return WorkerSettlementSpawnRules.WorkerProfession.FARMER;
+        if (worker instanceof LumberjackEntity) return WorkerSettlementSpawnRules.WorkerProfession.LUMBERJACK;
+        if (worker instanceof MinerEntity) return WorkerSettlementSpawnRules.WorkerProfession.MINER;
+        if (worker instanceof BuilderEntity) return WorkerSettlementSpawnRules.WorkerProfession.BUILDER;
+        if (worker instanceof MerchantEntity) return WorkerSettlementSpawnRules.WorkerProfession.MERCHANT;
+        if (worker instanceof FishermanEntity) return WorkerSettlementSpawnRules.WorkerProfession.FISHERMAN;
+        if (worker instanceof AnimalFarmerEntity) return WorkerSettlementSpawnRules.WorkerProfession.ANIMAL_FARMER;
+        return null;
     }
 
     private static ChunkPos resolveClaimAnchorChunk(RecruitsClaim claim) {

@@ -6,6 +6,7 @@ import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -47,7 +48,8 @@ class WorkerSettlementSpawnRulesTest {
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                 0,
                 200L,
-                config
+                config,
+                Map.of()
         );
 
         assertTrue(decision.allowed());
@@ -68,19 +70,22 @@ class WorkerSettlementSpawnRulesTest {
                 BannerModSettlementBinding.Status.HOSTILE_CLAIM,
                 0,
                 200L,
-                config
+                config,
+                Map.of()
         );
         WorkerSettlementSpawnRules.Decision degradedDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
                 BannerModSettlementBinding.Status.DEGRADED_MISMATCH,
                 0,
                 200L,
-                config
+                config,
+                Map.of()
         );
         WorkerSettlementSpawnRules.Decision unclaimedDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
                 BannerModSettlementBinding.Status.UNCLAIMED,
                 0,
                 200L,
-                config
+                config,
+                Map.of()
         );
 
         assertFalse(hostileDecision.allowed());
@@ -104,13 +109,15 @@ class WorkerSettlementSpawnRulesTest {
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                 2,
                 599L,
-                config
+                config,
+                Map.of()
         );
         WorkerSettlementSpawnRules.Decision allowedDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                 2,
                 600L,
-                config
+                config,
+                Map.of()
         );
 
         assertEquals(600L, deniedDecision.requiredCooldownTicks());
@@ -134,7 +141,8 @@ class WorkerSettlementSpawnRulesTest {
                 6,
                 1,
                 false,
-                config
+                config,
+                Map.of()
         );
 
         assertTrue(decision.allowed());
@@ -151,8 +159,8 @@ class WorkerSettlementSpawnRulesTest {
                 List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER)
         );
 
-        WorkerSettlementSpawnRules.Decision hostileBirth = WorkerSettlementSpawnRules.evaluateBirth(HOSTILE, 6, 0, false, config);
-        WorkerSettlementSpawnRules.Decision unclaimedSpawn = WorkerSettlementSpawnRules.evaluateSettlementSpawn(UNCLAIMED, 6, 0, false, config);
+        WorkerSettlementSpawnRules.Decision hostileBirth = WorkerSettlementSpawnRules.evaluateBirth(HOSTILE, 6, 0, false, config, Map.of());
+        WorkerSettlementSpawnRules.Decision unclaimedSpawn = WorkerSettlementSpawnRules.evaluateSettlementSpawn(UNCLAIMED, 6, 0, false, config, Map.of());
 
         assertFalse(hostileBirth.allowed());
         assertEquals(WorkerSettlementSpawnRules.DenialReason.NOT_FRIENDLY_CLAIM, hostileBirth.denialReasonOptional().orElseThrow());
@@ -172,8 +180,8 @@ class WorkerSettlementSpawnRulesTest {
                 )
         );
 
-        WorkerSettlementSpawnRules.Decision quotaDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 6, 2, false, config);
-        WorkerSettlementSpawnRules.Decision cooldownDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 6, 1, true, config);
+        WorkerSettlementSpawnRules.Decision quotaDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 6, 2, false, config, Map.of());
+        WorkerSettlementSpawnRules.Decision cooldownDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 6, 1, true, config, Map.of());
 
         assertFalse(quotaDecision.allowed());
         assertEquals(WorkerSettlementSpawnRules.DenialReason.WORKER_CAP_REACHED, quotaDecision.denialReasonOptional().orElseThrow());
@@ -188,14 +196,16 @@ class WorkerSettlementSpawnRulesTest {
                 8,
                 1,
                 false,
-                WorkersServerConfig.workerBirthRuleConfig()
+                WorkersServerConfig.workerBirthRuleConfig(),
+                Map.of()
         );
         WorkerSettlementSpawnRules.Decision spawnDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(
                 FRIENDLY,
                 8,
                 1,
                 false,
-                WorkersServerConfig.workerSettlementSpawnRuleConfig()
+                WorkersServerConfig.workerSettlementSpawnRuleConfig(),
+                Map.of()
         );
 
         assertTrue(birthDecision.allowed());
@@ -209,8 +219,8 @@ class WorkerSettlementSpawnRulesTest {
         WorkerSettlementSpawnRules.RuleConfig disabledBirth = WorkersServerConfig.workerBirthRuleConfig().withEnabled(false);
         WorkerSettlementSpawnRules.RuleConfig disabledSpawn = WorkersServerConfig.workerSettlementSpawnRuleConfig().withEnabled(false);
 
-        WorkerSettlementSpawnRules.Decision birthDecision = WorkerSettlementSpawnRules.evaluateBirth(FRIENDLY, 8, 1, false, disabledBirth);
-        WorkerSettlementSpawnRules.Decision spawnDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 8, 1, false, disabledSpawn);
+        WorkerSettlementSpawnRules.Decision birthDecision = WorkerSettlementSpawnRules.evaluateBirth(FRIENDLY, 8, 1, false, disabledBirth, Map.of());
+        WorkerSettlementSpawnRules.Decision spawnDecision = WorkerSettlementSpawnRules.evaluateSettlementSpawn(FRIENDLY, 8, 1, false, disabledSpawn, Map.of());
 
         assertFalse(birthDecision.allowed());
         assertEquals(WorkerSettlementSpawnRules.DenialReason.FEATURE_DISABLED, birthDecision.denialReasonOptional().orElseThrow());
@@ -226,7 +236,8 @@ class WorkerSettlementSpawnRulesTest {
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                 1,
                 config.requiredCooldownTicks(1),
-                config
+                config,
+                Map.of()
         );
 
         assertTrue(decision.allowed());
@@ -242,13 +253,15 @@ class WorkerSettlementSpawnRulesTest {
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                 1,
                 enabledConfig.requiredCooldownTicks(1),
-                disabledConfig
+                disabledConfig,
+                Map.of()
         );
         WorkerSettlementSpawnRules.Decision capDecision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
                 enabledConfig.workerCap(),
                 enabledConfig.requiredCooldownTicks(enabledConfig.workerCap()),
-                enabledConfig
+                enabledConfig,
+                Map.of()
         );
 
         assertFalse(disabledDecision.allowed());

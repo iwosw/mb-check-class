@@ -50,7 +50,8 @@ final class WorkerSettlementSpawnRuntime {
                 villagerCount,
                 WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, AbstractWorkerEntity.class),
                 false,
-                WorkersServerConfig.workerBirthRuleConfig()
+                WorkersServerConfig.workerBirthRuleConfig(),
+                WorkerSettlementClaimPolicy.countWorkersByProfession(level, claim)
         );
         return WorkerSettlementSpawner.spawnWorkerFromVillager(level, villager, decision, claim);
     }
@@ -72,7 +73,8 @@ final class WorkerSettlementSpawnRuntime {
                 villagerCount,
                 WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, AbstractWorkerEntity.class),
                 isSettlementSpawnOnCooldown(claim, now),
-                WorkersServerConfig.workerSettlementSpawnRuleConfig()
+                WorkersServerConfig.workerSettlementSpawnRuleConfig(),
+                WorkerSettlementClaimPolicy.countWorkersByProfession(level, claim)
         );
 
         AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnWorkerFromVillager(level, villager, decision, claim);

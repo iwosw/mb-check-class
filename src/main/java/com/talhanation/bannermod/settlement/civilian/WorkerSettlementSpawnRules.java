@@ -5,6 +5,7 @@ import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,22 +18,25 @@ public final class WorkerSettlementSpawnRules {
                                          int villagerCount,
                                          int currentWorkerCount,
                                          boolean cooldownActive,
-                                         RuleConfig config) {
-        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config);
+                                         RuleConfig config,
+                                         Map<WorkerProfession, Integer> currentByProfession) {
+        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config, currentByProfession);
     }
 
     public static Decision evaluateSettlementSpawn(BannerModSettlementBinding.Binding binding,
                                                     int villagerCount,
                                                     int currentWorkerCount,
                                                     boolean cooldownActive,
-                                                    RuleConfig config) {
-        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config);
+                                                    RuleConfig config,
+                                                    Map<WorkerProfession, Integer> currentByProfession) {
+        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config, currentByProfession);
     }
 
     public static Decision evaluateClaimWorkerGrowth(BannerModSettlementBinding.Status status,
                                                      int currentWorkerCount,
                                                      long elapsedCooldownTicks,
-                                                     ClaimGrowthConfig config) {
+                                                     ClaimGrowthConfig config,
+                                                     Map<WorkerProfession, Integer> currentByProfession) {
         long requiredCooldownTicks = config == null ? 0L : config.requiredCooldownTicks(currentWorkerCount);
         if (config == null || !config.enabled()) {
             return deny(DenialReason.FEATURE_DISABLED, requiredCooldownTicks);
@@ -50,15 +54,15 @@ public final class WorkerSettlementSpawnRules {
             return deny(DenialReason.NO_ALLOWED_PROFESSIONS, requiredCooldownTicks);
         }
 
-        int professionIndex = Math.floorMod(currentWorkerCount, config.allowedProfessions().size());
-        return allow(config.allowedProfessions().get(professionIndex), requiredCooldownTicks);
+        return allow(pickByDeficit(config.allowedProfessions(), currentByProfession), requiredCooldownTicks);
     }
 
     private static Decision evaluate(BannerModSettlementBinding.Binding binding,
                                      int villagerCount,
                                      int currentWorkerCount,
                                      boolean cooldownActive,
-                                     RuleConfig config) {
+                                     RuleConfig config,
+                                     Map<WorkerProfession, Integer> currentByProfession) {
         if (config == null || !config.enabled()) {
             return deny(DenialReason.FEATURE_DISABLED, 0L);
         }
@@ -78,8 +82,35 @@ public final class WorkerSettlementSpawnRules {
             return deny(DenialReason.NO_ALLOWED_PROFESSIONS, 0L);
         }
 
-        int professionIndex = Math.floorMod(currentWorkerCount, config.allowedProfessions().size());
-        return allow(config.allowedProfessions().get(professionIndex), 0L);
+        return allow(pickByDeficit(config.allowedProfessions(), currentByProfession), 0L);
+    }
+
+    /**
+     * Pick the allowed profession with the lowest current headcount in the claim,
+     * tiebroken by declaration order. A missing key defaults to 0 — so a profession
+     * the settlement has never staffed always wins over one that already exists.
+     */
+    static WorkerProfession pickByDeficit(List<WorkerProfession> allowed,
+                                          @Nullable Map<WorkerProfession, Integer> currentByProfession) {
+        WorkerProfession best = allowed.get(0);
+        int bestCount = currentCount(currentByProfession, best);
+        for (int i = 1; i < allowed.size(); i++) {
+            WorkerProfession candidate = allowed.get(i);
+            int candidateCount = currentCount(currentByProfession, candidate);
+            if (candidateCount < bestCount) {
+                best = candidate;
+                bestCount = candidateCount;
+            }
+        }
+        return best;
+    }
+
+    private static int currentCount(@Nullable Map<WorkerProfession, Integer> map, WorkerProfession profession) {
+        if (map == null) {
+            return 0;
+        }
+        Integer value = map.get(profession);
+        return value == null ? 0 : Math.max(0, value);
     }
 
     private static Decision allow(WorkerProfession profession, long requiredCooldownTicks) {
