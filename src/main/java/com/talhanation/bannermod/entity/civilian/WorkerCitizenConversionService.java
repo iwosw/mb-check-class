@@ -65,6 +65,22 @@ public final class WorkerCitizenConversionService {
         citizen.setBoundWorkAreaUUID(null);
         citizen.clearHoldPos();
         citizen.clearMovePos();
+        // Owner ("сеньор") preservation on worker → citizen conversion. The snapshot/apply
+        // path can drop the worker's owner UUID for citizens originally settlement-spawned
+        // without an explicit owner. Carry the worker's owner across, and fall back to the
+        // owner of the claim under the conversion target so the resulting citizen never
+        // ends up unowned in friendly territory.
+        UUID resolvedOwner = worker.getOwnerUUID();
+        if (resolvedOwner == null && com.talhanation.bannermod.events.ClaimEvents.claimManager() != null) {
+            com.talhanation.bannermod.persistence.military.RecruitsClaim claim = com.talhanation.bannermod.events.ClaimEvents.claimManager()
+                    .getClaim(new net.minecraft.world.level.ChunkPos(citizen.blockPosition()));
+            if (claim != null && claim.getPlayerInfo() != null) {
+                resolvedOwner = claim.getPlayerInfo().getUUID();
+            }
+        }
+        if (resolvedOwner != null) {
+            citizen.setOwnerUUID(java.util.Optional.of(resolvedOwner));
+        }
         citizen.getPersistentData().putLong(
                 PrefabAutoStaffingRuntime.TAG_ASSIGNMENT_PAUSE_UNTIL,
                 serverLevel.getGameTime() + MANUAL_ASSIGNMENT_PAUSE_TICKS
