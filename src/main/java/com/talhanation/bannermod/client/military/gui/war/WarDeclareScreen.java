@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.network.messages.war.MessageDeclareWar;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityAuthority;
@@ -22,14 +23,6 @@ import java.util.UUID;
 public class WarDeclareScreen extends Screen {
     private static final int W = 300;
     private static final int H = 166;
-    private static final int LEATHER = 0xFF6F4728;
-    private static final int LEATHER_DARK = 0xFF3E2515;
-    private static final int PAGE_BG = 0xFFF3E2B6;
-    private static final int PAGE_SHADE = 0xFF7A5A33;
-    private static final int GOLD = 0xFFE0B45C;
-    private static final int INK = 0xFF2D2418;
-    private static final int INK_MUTED = 0xFF6C5B45;
-    private static final int WAX = 0xFFD8B56C;
 
     private final Screen parent;
     private final List<PoliticalEntityRecord> attackers = new ArrayList<>();
@@ -65,8 +58,8 @@ public class WarDeclareScreen extends Screen {
                 .bounds(guiLeft + 16, guiTop + 76, 128, 20).build();
         this.casusBelliBox = new EditBox(this.font, guiLeft + 156, guiTop + 76, 128, 20, Component.translatable("gui.bannermod.war_declare.casus"));
         this.casusBelliBox.setMaxLength(96);
-        this.casusBelliBox.setTextColor(INK);
-        this.casusBelliBox.setTextColorUneditable(INK_MUTED);
+        this.casusBelliBox.setTextColor(MilitaryGuiStyle.TEXT_DARK);
+        this.casusBelliBox.setTextColorUneditable(MilitaryGuiStyle.TEXT_MUTED);
         this.casusBelliBox.setBordered(true);
         this.casusBelliBox.setHint(Component.translatable("gui.bannermod.war_declare.casus_belli.hint"));
         addRenderableWidget(this.attackerButton);
@@ -191,12 +184,11 @@ public class WarDeclareScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0x66000000);
         graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + W + 4, guiTop + H + 5, 0x55000000);
-        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, LEATHER_DARK);
-        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + W - 2, guiTop + H - 2, LEATHER);
-        renderParchmentPanel(graphics, guiLeft + 10, guiTop + 18, W - 20, H - 28);
-        graphics.drawCenteredString(font, this.title.getString(), guiLeft + W / 2, guiTop + 8, GOLD);
-        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("gui.bannermod.war_declare.hint").getString(), W - 36), guiLeft + 16, guiTop + 28, INK_MUTED, false);
-        graphics.drawString(font, Component.translatable("gui.bannermod.war_declare.casus"), guiLeft + 156, guiTop + 64, INK_MUTED, false);
+        MilitaryGuiStyle.parchmentPanel(graphics, guiLeft, guiTop, W, H);
+        MilitaryGuiStyle.parchmentInset(graphics, guiLeft + 10, guiTop + 18, W - 20, H - 28);
+        MilitaryGuiStyle.drawCenteredTitle(graphics, font, this.title, guiLeft, guiTop + 8, W);
+        graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("gui.bannermod.war_declare.hint").getString(), W - 36), guiLeft + 16, guiTop + 28, MilitaryGuiStyle.TEXT_MUTED, false);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_declare.casus"), guiLeft + 156, guiTop + 64, MilitaryGuiStyle.TEXT_MUTED, false);
         renderStatus(graphics);
         renderActionFeedback(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -221,12 +213,12 @@ public class WarDeclareScreen extends Screen {
         Component feedback = WarClientState.lastActionFeedback();
         if (feedback == null || feedback.getString().isBlank()) return;
         graphics.drawString(font, font.plainSubstrByWidth(feedback.getString(), W - 32),
-                guiLeft + 16, guiTop + H - 50, WAX, false);
+                guiLeft + 16, guiTop + H - 50, MilitaryGuiStyle.TEXT_WARN, false);
     }
 
     private void renderStatus(GuiGraphics graphics) {
         Component status = visibleStatus();
-        int color = status == null || status.equals(declareDenial()) ? 0xFF8A3128 : INK;
+        int color = status == null || status.equals(declareDenial()) ? MilitaryGuiStyle.TEXT_DENIED : MilitaryGuiStyle.TEXT_DARK;
         if (status != null && !status.getString().isBlank()) {
             graphics.drawString(font, font.plainSubstrByWidth(status.getString(), W - 32),
                     guiLeft + 16, guiTop + 110, color, false);
@@ -243,15 +235,6 @@ public class WarDeclareScreen extends Screen {
             return declareDenial();
         }
         return Component.translatable("gui.bannermod.war_declare.ready");
-    }
-
-    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x + w, y + h, PAGE_BG);
-        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
-        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
-        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
-        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
-        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
     }
 
     @Override

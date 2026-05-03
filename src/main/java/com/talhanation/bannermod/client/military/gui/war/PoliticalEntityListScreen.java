@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.network.messages.war.MessageCreatePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageRenamePoliticalEntity;
 import com.talhanation.bannermod.network.messages.war.MessageSetGovernmentForm;
@@ -476,30 +477,18 @@ public class PoliticalEntityListScreen extends Screen {
 
     private void renderBookFrame(GuiGraphics graphics) {
         graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + guiW + 4, guiTop + guiH + 5, 0x66000000);
-        graphics.fill(guiLeft, guiTop, guiLeft + guiW, guiTop + guiH, LEATHER_DARK);
-        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + guiW - 2, guiTop + guiH - 2, LEATHER);
-        graphics.fill(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiLeft + guiW - BOOK_BORDER, guiTop + guiH - BOOK_BORDER, BOOK_BG);
-        graphics.renderOutline(guiLeft + BOOK_BORDER, guiTop + BOOK_BORDER, guiW - BOOK_BORDER * 2, guiH - BOOK_BORDER * 2, 0xFF7A4C24);
+        MilitaryGuiStyle.parchmentPanel(graphics, guiLeft, guiTop, guiW, guiH);
 
         int pageY = contentTop();
         int pageH = Math.max(36, contentBottom() - pageY);
-        renderParchmentPanel(graphics, leftPageX(), pageY, leftPageW(), pageH);
-        renderParchmentPanel(graphics, rightPageX(), pageY, rightPageW(), pageH);
+        MilitaryGuiStyle.parchmentInset(graphics, leftPageX(), pageY, leftPageW(), pageH);
+        MilitaryGuiStyle.parchmentInset(graphics, rightPageX(), pageY, rightPageW(), pageH);
 
         int spineX = leftPageX() + leftPageW() + pageGap() / 2 - 1;
         graphics.fill(spineX, pageY + 3, spineX + 2, pageY + pageH - 3, PAGE_SHADE);
         graphics.fill(spineX + 2, pageY + 3, spineX + 3, pageY + pageH - 3, 0x88FFF3C5);
 
-        renderParchmentPanel(graphics, actionLedgerX(), actionLedgerTop(), actionLedgerW(), actionLedgerH());
-    }
-
-    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x + w, y + h, PAGE_BG);
-        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
-        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
-        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
-        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
-        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
+        MilitaryGuiStyle.parchmentInset(graphics, actionLedgerX(), actionLedgerTop(), actionLedgerW(), actionLedgerH());
     }
 
     private void renderHeader(GuiGraphics graphics) {

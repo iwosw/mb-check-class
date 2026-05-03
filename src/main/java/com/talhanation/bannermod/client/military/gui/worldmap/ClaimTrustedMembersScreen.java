@@ -2,6 +2,7 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.military.gui.RecruitsScreenBase;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
@@ -205,32 +206,28 @@ public class ClaimTrustedMembersScreen extends RecruitsScreenBase {
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         super.renderBackground(guiGraphics, mouseX, mouseY, delta);
-        guiGraphics.fill(x - 102, y - 82, x + 102, y + 106, 0xFF1E120A);
-        guiGraphics.fill(x - 100, y - 80, x + 100, y + 104, 0xE0B08B55);
-        guiGraphics.fill(x - 94, y - 50, x + 94, y + 2, 0xCC140E09);
-        guiGraphics.fill(x - 94, y + 40, x + 94, y + 68, 0xCC140E09);
-        guiGraphics.renderOutline(x - 100, y - 80, 200, 184, 0xFF8A683F);
-        guiGraphics.renderOutline(x - 94, y - 50, 188, 52, 0xFF8A683F);
-        guiGraphics.renderOutline(x - 94, y + 40, 188, 28, 0xFF8A683F);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, x - 102, y - 82, 204, 188);
+        MilitaryGuiStyle.insetPanel(guiGraphics, x - 94, y - 50, 188, 52);
+        MilitaryGuiStyle.insetPanel(guiGraphics, x - 94, y + 40, 188, 28);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         super.renderForeground(guiGraphics, mouseX, mouseY, delta);
-        guiGraphics.drawCenteredString(font, this.title, x, y - 70, 0xFFF4D8A1);
-        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.subtitle"), x - 90, y - 58, 0xFFF4D8A1, false);
-        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.summary", this.trustedMembers.size()), x - 90, y - 42, 0xFFE8D9BF, false);
+        guiGraphics.drawCenteredString(font, this.title, x, y - 70, MilitaryGuiStyle.TEXT);
+        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.subtitle"), x - 90, y - 58, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.summary", this.trustedMembers.size()), x - 90, y - 42, MilitaryGuiStyle.TEXT_MUTED, false);
 
         if (currentSelected() == null) {
-            guiGraphics.drawCenteredString(font, Component.translatable("gui.bannermod.claim.members.empty"), x, y - 8, 0xFFE8D9BF);
+            guiGraphics.drawCenteredString(font, Component.translatable("gui.bannermod.claim.members.empty"), x, y - 8, MilitaryGuiStyle.TEXT_MUTED);
         } else {
             guiGraphics.drawCenteredString(font,
                     Component.translatable("gui.bannermod.claim.members.index", this.selectedIndex + 1, this.trustedMembers.size()),
-                    x, y + 48, 0xFFE8D9BF);
+                    x, y + 48, MilitaryGuiStyle.TEXT_MUTED);
         }
 
-        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.hint.access"), x - 90, y + 18, 0xFFE8D9BF, false);
-        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.hint.no_politics"), x - 90, y + 30, 0xFFE8D9BF, false);
+        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.hint.access"), x - 90, y + 18, MilitaryGuiStyle.TEXT_MUTED, false);
+        guiGraphics.drawString(font, Component.translatable("gui.bannermod.claim.members.hint.no_politics"), x - 90, y + 30, MilitaryGuiStyle.TEXT_MUTED, false);
     }
 
     @Override
