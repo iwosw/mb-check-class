@@ -1,9 +1,11 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
+import com.talhanation.bannermod.client.military.ClientManager;
 import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.inventory.civilian.CitizenProfileMenu;
+import com.talhanation.bannermod.persistence.military.RecruitsPlayerInfo;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -110,7 +112,16 @@ public class CitizenProfileScreen extends AbstractContainerScreen<CitizenProfile
         if (this.minecraft != null && this.minecraft.level != null && this.minecraft.level.getPlayerByUUID(owner) != null) {
             return this.minecraft.level.getPlayerByUUID(owner).getDisplayName();
         }
-        return Component.literal(owner.toString().substring(0, 8));
+        // Try the online-players cache before giving up to a UUID prefix.
+        if (ClientManager.onlinePlayers != null) {
+            for (RecruitsPlayerInfo info : ClientManager.onlinePlayers) {
+                if (info != null && owner.equals(info.getUUID()) && info.getName() != null && !info.getName().isBlank()) {
+                    return Component.literal(info.getName());
+                }
+            }
+        }
+        return Component.translatable("gui.bannermod.citizen_profile.owner.unknown",
+                owner.toString().substring(0, 8));
     }
 
     private Component assignmentLabel() {
@@ -118,7 +129,10 @@ public class CitizenProfileScreen extends AbstractContainerScreen<CitizenProfile
         if (boundArea == null) {
             return Component.translatable("gui.bannermod.citizen_profile.assignment.none");
         }
-        return Component.literal(boundArea.toString().substring(0, 8));
+        // No client-side work-area name cache yet — at minimum label the truncated UUID
+        // so the assignment field reads as "(area: 1a2b3c4d)" instead of a bare prefix.
+        return Component.translatable("gui.bannermod.citizen_profile.assignment.area",
+                boundArea.toString().substring(0, 8));
     }
 
     private Component stateLabel() {
