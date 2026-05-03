@@ -153,6 +153,13 @@ public class MessageClaimIntent implements BannerModMessage<MessageClaimIntent> 
 
     private static void deny(ServerPlayer player, String reason) {
         player.sendSystemMessage(Component.literal("Claim edit denied: " + reason));
+        // The client preflight set claimsSnapshotStale=true expecting a clearing
+        // broadcast on success. On deny no broadcast fires, so the world-map UI
+        // stays stuck on "awaiting sync". Re-sync this player's claim snapshot
+        // so the stale flag clears even when the request was rejected.
+        if (ClaimEvents.claimManager() != null) {
+            ClaimEvents.claimManager().sendClaimsToPlayer(player);
+        }
     }
 
     @Override
