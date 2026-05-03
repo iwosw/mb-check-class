@@ -46,7 +46,7 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
     private static final MutableComponent TEXT_NEEDS_GROUP = Component.translatable("gui.recruits.command.status.no_group");
     private static final MutableComponent TEXT_NEEDS_BLOCK = Component.translatable("gui.recruits.command.status.block_target");
     private static final MutableComponent TEXT_NEEDS_ENTITY = Component.translatable("gui.recruits.command.status.entity_target");
-    private static final int fontColor = 16250871;
+    // text color now sourced from MilitaryGuiStyle palette
     public final Player player;
     public BlockPos rayBlockPos;
     public Entity rayEntity;
@@ -445,10 +445,13 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.renderLabels(guiGraphics, mouseX, mouseY);
 
-        String tipAllGroups = TEXT_SELECT_ALL_GROUPS().getString();
-        String tipScroll = TEXT_SCROLL_CATEGORIES().getString();
-        String activeGroups = Component.translatable("gui.recruits.command.status.groups", getActiveGroups().size(), getGroups().size()).getString();
-        Component categoryStatus = currentCategory == null ? Component.empty() : currentCategory.getToolTipName();
+        Component tipAllGroups = MilitaryGuiStyle.clampLabel(font, TEXT_SELECT_ALL_GROUPS(), 140);
+        Component tipScroll = MilitaryGuiStyle.clampLabel(font, TEXT_SCROLL_CATEGORIES(), 140);
+        Component activeGroups = MilitaryGuiStyle.clampLabel(font,
+                Component.translatable("gui.recruits.command.status.groups", getActiveGroups().size(), getGroups().size()),
+                124);
+        Component categoryStatus = currentCategory == null ? Component.empty()
+                : MilitaryGuiStyle.clampLabel(font, currentCategory.getToolTipName(), 124);
         Component targetStatus = getActiveGroups().isEmpty()
                 ? TEXT_NEEDS_GROUP
                 : rayBlockPos == null
@@ -456,12 +459,13 @@ public class CommandScreen extends ScreenBase<CommandMenu> {
                 : rayEntity == null
                 ? TEXT_NEEDS_ENTITY
                 : Component.empty();
-        guiGraphics.drawString(font, tipAllGroups, xTipPos, yTipPos, FONT_COLOR, false);
-        guiGraphics.drawString(font, tipScroll, xTipPos, yTipPos + 15, FONT_COLOR, false);
-        guiGraphics.drawString(font, activeGroups, 10, 177, 0xF0E6D2, false);
-        guiGraphics.drawString(font, categoryStatus, 10, 189, 0xB59A6A, false);
+        Component clampedTarget = MilitaryGuiStyle.clampLabel(font, targetStatus, 124);
+        guiGraphics.drawString(font, tipAllGroups, xTipPos, yTipPos, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(font, tipScroll, xTipPos, yTipPos + 15, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(font, activeGroups, 10, 177, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(font, categoryStatus, 10, 189, MilitaryGuiStyle.TEXT_MUTED, false);
         if (!targetStatus.getString().isEmpty()) {
-            guiGraphics.drawString(font, targetStatus, 10, 201, 0xB59A6A, false);
+            guiGraphics.drawString(font, clampedTarget, 10, 201, MilitaryGuiStyle.TEXT_MUTED, false);
         }
 
     }

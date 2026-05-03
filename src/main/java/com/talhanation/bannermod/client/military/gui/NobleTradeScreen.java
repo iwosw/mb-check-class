@@ -58,7 +58,7 @@ public class NobleTradeScreen extends RecruitsScreenBase {
     private ScrollDropDownMenu<RecruitsGroup> groupSelectionDropDownMenu;
     public RecruitsGroup group;
     private Component hireState = Component.translatable("gui.recruits.villager_noble.status.select_contract");
-    private int hireStateColor = FONT_COLOR;
+    private int hireStateColor = MilitaryGuiStyle.TEXT_DARK;
     private boolean hireAccepted;
     private static final int LIST_X = 5;
     private static final int LIST_Y = 18;
@@ -112,7 +112,7 @@ public class NobleTradeScreen extends RecruitsScreenBase {
                 }
                 this.hireAccepted = true;
                 this.hireState = Component.translatable("gui.recruits.villager_noble.status.accepted");
-                this.hireStateColor = 0x2E5D32;
+                this.hireStateColor = MilitaryGuiStyle.TEXT_GOOD;
             }
         ));
 
@@ -258,22 +258,25 @@ public class NobleTradeScreen extends RecruitsScreenBase {
     int v = 0;
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TITLE, guiLeft + 10, guiTop + 7, FONT_COLOR, false);
-        guiGraphics.drawString(font, Component.translatable("gui.recruits.stat.level_value", villagerNoble.getTraderLevel()), guiLeft + TRADE_TITLE_X, guiTop + 7, FONT_COLOR, false);
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, TITLE, BAR_W);
+        guiGraphics.drawString(font, clampedTitle, guiLeft + 10, guiTop + 7, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, Component.translatable("gui.recruits.stat.level_value", villagerNoble.getTraderLevel()), guiLeft + TRADE_TITLE_X, guiTop + 7, MilitaryGuiStyle.TEXT_DARK, false);
 
         if(villagerList != null) v = villagerList.size();
         else v = 0;
 
         if(ClientManager.configValueNobleNeedsVillagers)
-            guiGraphics.drawString(font, Component.translatable("gui.recruits.villager_noble.villagers_value", v), guiLeft + TRADE_TITLE_X, guiTop + 30, FONT_COLOR, false);
-        guiGraphics.drawString(font, hireState, guiLeft + TRADE_TITLE_X, guiTop + 42, hireStateColor, false);
+            guiGraphics.drawString(font, Component.translatable("gui.recruits.villager_noble.villagers_value", v), guiLeft + TRADE_TITLE_X, guiTop + 30, MilitaryGuiStyle.TEXT_DARK, false);
+        Component clampedHireState = MilitaryGuiStyle.clampLabel(font, hireState, BAR_W);
+        guiGraphics.drawString(font, clampedHireState, guiLeft + TRADE_TITLE_X, guiTop + 42, hireStateColor, false);
 
         if (selection != null) {
             int x = guiLeft + TRADE_TITLE_X ;
             int y = guiTop + TRADE_TITLE_Y;
-            guiGraphics.drawString(font, tradeTitle, x, y, FONT_COLOR, false);
+            Component clampedTradeTitle = MilitaryGuiStyle.clampLabel(font, tradeTitle, BAR_W);
+            guiGraphics.drawString(font, clampedTradeTitle, x, y, MilitaryGuiStyle.TEXT_DARK, false);
         } else if (villagerNoble.getTrades().isEmpty()) {
-            guiGraphics.drawString(font, Component.translatable("gui.recruits.villager_noble.empty_title"), guiLeft + TRADE_TITLE_X, guiTop + TRADE_TITLE_Y, FONT_COLOR, false);
+            guiGraphics.drawString(font, Component.translatable("gui.recruits.villager_noble.empty_title"), guiLeft + TRADE_TITLE_X, guiTop + TRADE_TITLE_Y, MilitaryGuiStyle.TEXT_DARK, false);
         }
         int progress = (int) (villagerNoble.getTraderProgress() * 1.5);
         guiGraphics.fill(guiLeft + LEVEL_BAR_X, guiTop + LEVEL_BAR_Y, guiLeft + LEVEL_BAR_X + BAR_W,  guiTop + LEVEL_BAR_Y + BAR_H, 0xFF555555);
@@ -301,10 +304,10 @@ public class NobleTradeScreen extends RecruitsScreenBase {
             this.hireButton.active = false;
             if (villagerNoble.getTrades().isEmpty()) {
                 this.hireState = Component.translatable("gui.recruits.villager_noble.status.no_contracts");
-                this.hireStateColor = 0x8A1F11;
+                this.hireStateColor = MilitaryGuiStyle.TEXT_DENIED;
             } else {
                 this.hireState = Component.translatable("gui.recruits.villager_noble.status.select_contract");
-                this.hireStateColor = 0x6E5A45;
+                this.hireStateColor = MilitaryGuiStyle.TEXT_MUTED;
             }
             return;
         }
@@ -321,11 +324,11 @@ public class NobleTradeScreen extends RecruitsScreenBase {
         List<HireError> errors = getErrors();
         if (!errors.isEmpty()) {
             this.hireState = errors.get(0).getMessage();
-            this.hireStateColor = 0x8A1F11;
+            this.hireStateColor = MilitaryGuiStyle.TEXT_DENIED;
             return;
         }
         this.hireState = Component.translatable("gui.recruits.villager_noble.status.ready");
-        this.hireStateColor = 0x2E5D32;
+        this.hireStateColor = MilitaryGuiStyle.TEXT_GOOD;
     }
 
     private int getPlayerCurrencyAmount(){

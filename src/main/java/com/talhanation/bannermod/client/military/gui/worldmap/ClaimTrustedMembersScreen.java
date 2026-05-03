@@ -154,8 +154,13 @@ public class ClaimTrustedMembersScreen extends RecruitsScreenBase {
 
     private void updateButtons() {
         boolean hasSelection = currentSelected() != null;
-        this.prevButton.active = this.trustedMembers.size() > 1;
-        this.nextButton.active = this.trustedMembers.size() > 1;
+        boolean canCycle = this.trustedMembers.size() > 1;
+        this.prevButton.active = canCycle;
+        this.nextButton.active = canCycle;
+        net.minecraft.client.gui.components.Tooltip cycleDisabled = canCycle ? null
+                : net.minecraft.client.gui.components.Tooltip.create(Component.translatable("gui.bannermod.claim.members.cycle_disabled"));
+        this.prevButton.setTooltip(cycleDisabled);
+        this.nextButton.setTooltip(cycleDisabled);
         this.saveButton.active = this.dirty;
         this.saveButton.setTooltip(this.dirty ? null : net.minecraft.client.gui.components.Tooltip.create(Component.translatable("gui.bannermod.claim.members.save_disabled")));
         this.prevButton.visible = hasSelection;
@@ -186,9 +191,15 @@ public class ClaimTrustedMembersScreen extends RecruitsScreenBase {
     }
 
     private String displayName(RecruitsPlayerInfo playerInfo) {
-        return playerInfo.getName() == null || playerInfo.getName().isBlank()
-                ? playerInfo.getUUID().toString()
-                : playerInfo.getName();
+        if (playerInfo.getName() != null && !playerInfo.getName().isBlank()) {
+            return playerInfo.getName();
+        }
+        // Avoid spilling a 36-char raw UUID into the SelectedPlayerWidget label.
+        // Surface a localized "(unknown player)" hint plus the first 8 chars of the
+        // UUID so an offline / unresolved entry is still distinguishable.
+        UUID uuid = playerInfo.getUUID();
+        String hint = uuid == null ? "" : uuid.toString().substring(0, Math.min(8, uuid.toString().length()));
+        return Component.translatable("gui.bannermod.claim.members.unknown_player", hint).getString();
     }
 
     @Override
