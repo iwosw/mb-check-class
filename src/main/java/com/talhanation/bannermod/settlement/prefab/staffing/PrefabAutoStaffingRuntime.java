@@ -2,7 +2,12 @@ package com.talhanation.bannermod.settlement.prefab.staffing;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
+import com.talhanation.bannermod.entity.civilian.workarea.AnimalPenArea;
 import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
+import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.workarea.FishingArea;
+import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
+import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
 import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.citizen.CitizenProfession;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
@@ -66,6 +71,14 @@ public final class PrefabAutoStaffingRuntime {
      */
     public static void onBuildAreaCompleted(ServerLevel level, BuildArea buildArea) {
         if (level == null || buildArea == null) {
+            return;
+        }
+        if (!com.talhanation.bannermod.settlement.prefab.BuildingPlacementService.isPrefabPipelineEnabledForGate()) {
+            // Prefab auto-staffing disabled. Drain any tracker entry so it doesn't
+            // leak across config toggles, but spawn nothing — the player builds the
+            // structure manually and draws the work zone with the surveyor; citizens
+            // bind to the zone via ensureStandaloneWorkAreaVacancies below.
+            PrefabBuildAreaTracker.consume(buildArea.getUUID());
             return;
         }
 
@@ -192,6 +205,42 @@ public final class PrefabAutoStaffingRuntime {
         VACANCIES.put(anchorUuid, new VacancyRecord(anchorUuid, profession, slots, buildArea.blockPosition()));
     }
 
+    /**
+     * Surveyor-drawn work areas (CropArea, MiningArea, LumberArea, FishingArea, AnimalPenArea)
+     * are not tied to a prefab BuildArea, so they never call {@link #onBuildAreaCompleted}
+     * and never appear in {@link #VACANCIES}. Without a vacancy entry, idle citizens have
+     * nothing to apply for and just wander. Walk the index near the citizen and lift any
+     * unbound standalone work area into VACANCIES so the regular assignment loop below
+     * can pick it up.
+     *
+     * <p>Synthetic vacancies use 1 slot and the area's UUID as anchor, matching the embedded
+     * work-area branch of {@link #registerVacancy}.
+     */
+    private static void ensureStandaloneWorkAreaVacancies(ServerLevel level, CitizenEntity citizen) {
+        double scanRadius = Math.sqrt(VACANCY_ASSIGN_RADIUS_SQR);
+        List<AbstractWorkAreaEntity> areas = WorkAreaIndex.instance().queryInRange(citizen, scanRadius, AbstractWorkAreaEntity.class);
+        for (AbstractWorkAreaEntity area : areas) {
+            if (area == null || !area.isAlive()) continue;
+            UUID anchor = area.getUUID();
+            if (VACANCIES.containsKey(anchor)) continue;
+            BuildingPrefabProfession profession = professionForStandaloneWorkArea(area);
+            if (profession == BuildingPrefabProfession.NONE) continue;
+            VACANCIES.put(anchor, new VacancyRecord(anchor, profession, 1, area.blockPosition()));
+        }
+    }
+
+    private static BuildingPrefabProfession professionForStandaloneWorkArea(AbstractWorkAreaEntity area) {
+        if (area instanceof CropArea) return BuildingPrefabProfession.FARMER;
+        if (area instanceof MiningArea) return BuildingPrefabProfession.MINER;
+        if (area instanceof LumberArea) return BuildingPrefabProfession.LUMBERJACK;
+        if (area instanceof FishingArea) return BuildingPrefabProfession.FISHERMAN;
+        if (area instanceof AnimalPenArea) return BuildingPrefabProfession.ANIMAL_FARMER;
+        // BuildArea / StorageArea / MarketArea are intentionally not auto-staffed:
+        // BuildArea is transient (consumed by onBuildAreaCompleted), StorageArea and
+        // MarketArea are logistics anchors with no worker profession.
+        return BuildingPrefabProfession.NONE;
+    }
+
     public static void assignCitizenToNearestVacancy(ServerLevel level, CitizenEntity citizen) {
         if (level == null || citizen == null || !citizen.isAlive() || citizen.isRemoved()) {
             return;
@@ -206,6 +255,9 @@ public final class PrefabAutoStaffingRuntime {
         if (citizen.getPersistentData().contains(TAG_PENDING_WORKER_PROFESSION)) {
             return;
         }
+        // Lift any standalone (surveyor-drawn) work area in range into VACANCIES
+        // so citizens take farms/mines/etc. that were never tied to a prefab build.
+        ensureStandaloneWorkAreaVacancies(level, citizen);
         VacancyRecord best = null;
         double bestDistanceSqr = Double.POSITIVE_INFINITY;
         for (VacancyRecord vacancy : VACANCIES.values()) {

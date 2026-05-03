@@ -44,6 +44,7 @@ public class WorkersServerConfig {
     public static ModConfigSpec.IntValue ClaimWorkerMaxPerClaim;
     public static ModConfigSpec.ConfigValue<List<? extends String>> ClaimWorkerProfessionPool;
     public static ModConfigSpec.DoubleValue CitizenMilitiaMobilizationChance;
+    public static ModConfigSpec.BooleanValue EnableBuildingPrefabs;
     public static ArrayList<String> FARMER_PICKUP = new ArrayList<>(
             Arrays.asList(
                     "minecraft:wheat",
@@ -348,6 +349,18 @@ public class WorkersServerConfig {
                         \tdefault: 0.25""")
                 .worldRestart()
                 .defineInRange("CitizenMilitiaMobilizationChance", 0.25D, 0.0D, 1.0D);
+
+        EnableBuildingPrefabs = BUILDER.comment("""
+
+                        Master switch for the prefab building pipeline. When false, the mod does NOT
+                        spawn pre-built structures via BuildingPlacementService and does NOT auto-staff
+                        BuildArea completions. Players must build the structure manually and then mark
+                        the work area with the surveyor (землемер) — citizens still auto-bind to the
+                        zone via the standalone-vacancy path.
+                        \t(takes effect after restart)
+                        \tdefault: false""")
+                .worldRestart()
+                .define("EnableBuildingPrefabs", false);
 
         BUILDER.pop();
 

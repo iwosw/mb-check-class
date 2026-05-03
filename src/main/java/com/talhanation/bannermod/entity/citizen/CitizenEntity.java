@@ -87,6 +87,20 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         this.registry = registry;
         this.state = new CitizenCoreState(27);
         this.switcher = new CitizenProfessionSwitcher(registry, this, CitizenProfession.NONE);
+        // Citizens are settlement NPCs the player invests in (named, profession-tagged,
+        // assigned to claim work areas). Without this they inherit Mob's vanilla
+        // despawn behavior — wander out of the 32-block "no-despawn" radius around
+        // a player, accumulate noActionTime, and silently vanish via Mob.checkDespawn.
+        // The persistence flag also keeps them across save/load even if the chunk
+        // unloads while they're outside the player tracking radius.
+        this.setPersistenceRequired();
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double sqDistanceToClosestPlayer) {
+        // See constructor: citizens never despawn from distance. Recruits already do
+        // this; we mirror it here so the unified-citizen line behaves consistently.
+        return false;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -111,6 +125,11 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // Walk to a bound work-area when one is assigned. Sits between FloatGoal (0)
+        // and the random stroll (8) so the citizen actually pathfinds to its workplace
+        // via AsyncGroundPathNavigation instead of randomly bumping into walls until
+        // chance places it within the 3-block conversion window.
+        this.goalSelector.addGoal(2, new com.talhanation.bannermod.ai.citizen.CitizenSeekWorkAreaGoal(this));
         this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.6D));
         this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));

@@ -54,12 +54,47 @@ public final class BuildingPlacementService {
         NO_PLAYER
     }
 
+    /**
+     * Test-only override for the {@code EnableBuildingPrefabs} config gate. Production
+     * code never touches this — gametests covering the legacy prefab pipeline flip it
+     * to {@code true} for the duration of the test, then reset to {@code null} so the
+     * config value is consulted again in normal play.
+     */
+    private static volatile Boolean prefabEnabledOverride;
+
+    public static void setPrefabEnabledOverrideForTesting(@Nullable Boolean value) {
+        prefabEnabledOverride = value;
+    }
+
+    private static boolean isPrefabPipelineEnabled() {
+        Boolean override = prefabEnabledOverride;
+        if (override != null) return override;
+        return com.talhanation.bannermod.config.WorkersServerConfig.EnableBuildingPrefabs.get();
+    }
+
+    /**
+     * Public wrapper around the gate so sibling subsystems (e.g. PrefabAutoStaffingRuntime)
+     * share the same enabled/disabled answer and the same testing override.
+     */
+    public static boolean isPrefabPipelineEnabledForGate() {
+        return isPrefabPipelineEnabled();
+    }
+
     public static Result placeFor(@Nullable ServerPlayer player,
                                   ResourceLocation prefabId,
                                   BlockPos targetPos,
                                   Direction facing) {
         if (player == null) {
             return Result.NO_PLAYER;
+        }
+        if (!isPrefabPipelineEnabled()) {
+            // Prefab pipeline disabled — players are expected to build the structure
+            // manually and then mark the work area with the surveyor (zone-then-mark
+            // workflow). The surveyor's existing per-mode hint covers what each zone
+            // needs.
+            player.sendSystemMessage(Component.translatable("bannermod.prefab.disabled.use_surveyor")
+                    .withStyle(ChatFormatting.YELLOW));
+            return Result.UNKNOWN_PREFAB;
         }
         Objects.requireNonNull(prefabId, "prefabId");
         Objects.requireNonNull(targetPos, "targetPos");
@@ -123,6 +158,12 @@ public final class BuildingPlacementService {
                                        Direction facing) {
         if (serverLevel == null || claim == null) {
             return Result.INVALID_POSITION;
+        }
+        if (!isPrefabPipelineEnabled()) {
+            // Prefab pipeline disabled — settlement-project automation that wanted to
+            // auto-place a building should treat this as a no-op and let the human
+            // owner draw the zone manually with the surveyor.
+            return Result.UNKNOWN_PREFAB;
         }
         Objects.requireNonNull(prefabId, "prefabId");
         Objects.requireNonNull(targetPos, "targetPos");

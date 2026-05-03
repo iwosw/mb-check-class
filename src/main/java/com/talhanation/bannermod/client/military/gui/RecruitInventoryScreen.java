@@ -96,6 +96,13 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
     private static final MutableComponent TOOLTIP_DISABLED_PROMOTE = Component.translatable("gui.recruits.inv.tooltip.promote_disabled");
     private static final MutableComponent TOOLTIP_SPECIAL = Component.translatable("gui.recruits.inv.tooltip.special");
     private static final MutableComponent TOOLTIP_SPECIAL_DISABLED = Component.translatable("gui.recruits.inv.tooltip.special_disabled");
+    private static final MutableComponent TEXT_MENU_CONVERT = Component.translatable("gui.bannermod.inv.menu.convert_type");
+    private static final MutableComponent TEXT_CONVERT_SWORDSMAN = Component.translatable("gui.bannermod.inv.convert.swordsman");
+    private static final MutableComponent TEXT_CONVERT_BOWMAN = Component.translatable("gui.bannermod.inv.convert.bowman");
+    private static final MutableComponent TEXT_CONVERT_PIKEMAN = Component.translatable("gui.bannermod.inv.convert.pikeman");
+    private static final MutableComponent TEXT_CONVERT_CROSSBOWMAN = Component.translatable("gui.bannermod.inv.convert.crossbowman");
+    private static final MutableComponent TEXT_CONVERT_CAVALRY = Component.translatable("gui.bannermod.inv.convert.cavalry");
+    private static final MutableComponent TOOLTIP_CONVERT = Component.translatable("gui.bannermod.inv.tooltip.convert_type");
     private static final MutableComponent TOOLTIP_CURRENT_STATE = Component.translatable("gui.recruits.inv.tooltip.current_state");
     private static final MutableComponent SECTION_DISCIPLINE = Component.translatable("gui.recruits.inv.section.discipline");
     private static final MutableComponent SECTION_ORDERS = Component.translatable("gui.recruits.inv.section.orders");
@@ -345,7 +352,37 @@ public class RecruitInventoryScreen extends ScreenBase<RecruitInventoryMenu> {
             promoteButton.setTooltip(Tooltip.create(canPromote ? TOOLTIP_PROMOTE : TOOLTIP_DISABLED_PROMOTE));
             promoteButton.active = canPromote;
 
+            // Convert-Type menu — only for plain base recruits (not companions, not noble villagers,
+            // not villager-worker compat). Sends MessageConvertRecruitType; server discards old
+            // entity and spawns the chosen type carrying owner/group/xp/level/inventory across.
+            if (com.talhanation.bannermod.events.runtime.RecruitTypeConverter.isConvertibleBaseType(this.recruit)) {
+                ActionMenuButton convertMenu = new ActionMenuButton(zeroLeftPos, zeroTopPos + (20 + topPosGab) * 7,
+                        80, 20, TEXT_MENU_CONVERT, java.util.List.of(
+                        new ContextMenuEntry(TEXT_CONVERT_SWORDSMAN.getString(),
+                                () -> sendConvertRecruit(com.talhanation.bannermod.events.runtime.RecruitTypeConverter.Kind.SWORDSMAN),
+                                !(recruit.getClass() == com.talhanation.bannermod.entity.military.RecruitEntity.class)),
+                        new ContextMenuEntry(TEXT_CONVERT_BOWMAN.getString(),
+                                () -> sendConvertRecruit(com.talhanation.bannermod.events.runtime.RecruitTypeConverter.Kind.BOWMAN),
+                                !(recruit.getClass() == com.talhanation.bannermod.entity.military.BowmanEntity.class)),
+                        new ContextMenuEntry(TEXT_CONVERT_PIKEMAN.getString(),
+                                () -> sendConvertRecruit(com.talhanation.bannermod.events.runtime.RecruitTypeConverter.Kind.PIKEMAN),
+                                !(recruit.getClass() == com.talhanation.bannermod.entity.military.RecruitShieldmanEntity.class)),
+                        new ContextMenuEntry(TEXT_CONVERT_CROSSBOWMAN.getString(),
+                                () -> sendConvertRecruit(com.talhanation.bannermod.events.runtime.RecruitTypeConverter.Kind.CROSSBOWMAN),
+                                !(recruit.getClass() == com.talhanation.bannermod.entity.military.CrossBowmanEntity.class)),
+                        new ContextMenuEntry(TEXT_CONVERT_CAVALRY.getString(),
+                                () -> sendConvertRecruit(com.talhanation.bannermod.events.runtime.RecruitTypeConverter.Kind.CAVALRY),
+                                !(recruit.getClass() == com.talhanation.bannermod.entity.military.HorsemanEntity.class))
+                ));
+                convertMenu.setTooltip(Tooltip.create(TOOLTIP_CONVERT));
+                addRenderableWidget(convertMenu);
+            }
         }
+    }
+
+    private void sendConvertRecruit(com.talhanation.bannermod.events.runtime.RecruitTypeConverter.Kind kind) {
+        BannerModMain.SIMPLE_CHANNEL.sendToServer(new MessageConvertRecruitType(this.recruit.getUUID(), kind));
+        this.onClose();
     }
 
     @Override

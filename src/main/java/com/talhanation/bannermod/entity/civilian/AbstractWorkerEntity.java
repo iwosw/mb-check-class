@@ -61,6 +61,17 @@ public abstract class AbstractWorkerEntity extends AbstractChunkLoaderEntity imp
         if (this.getNavigation() != null) {
             this.getNavigation().setCanFloat(true);
         }
+        // Workers are paid, named, claim-bound NPCs — they must not despawn just because
+        // their work-area routine took them outside the player's 32-block no-despawn radius.
+        // Recruits already opt out of vanilla despawn via removeWhenFarAway; mirror that
+        // here so a wandering farmer/lumberjack/miner doesn't disappear while the player
+        // is at the other end of the claim.
+        this.setPersistenceRequired();
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double sqDistanceToClosestPlayer) {
+        return false;
     }
     public List<NeededItem> neededItems = new ArrayList<>();
     public int farmedItems;
