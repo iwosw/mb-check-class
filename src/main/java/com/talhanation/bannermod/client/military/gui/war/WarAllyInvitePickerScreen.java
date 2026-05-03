@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.client.military.gui.war;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.network.messages.war.MessageInviteAlly;
 import com.talhanation.bannermod.war.client.WarClientState;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
@@ -95,21 +96,20 @@ class WarAllyInvitePickerScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0x66000000);
         graphics.fill(guiLeft + 4, guiTop + 5, guiLeft + W + 4, guiTop + H + 5, 0x55000000);
-        graphics.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, LEATHER_DARK);
-        graphics.fill(guiLeft + 2, guiTop + 2, guiLeft + W - 2, guiTop + H - 2, LEATHER);
-        renderParchmentPanel(graphics, guiLeft + 8, guiTop + 20, W - 16, LIST_VISIBLE * ROW_H + 18);
-        renderParchmentPanel(graphics, guiLeft + 8, guiTop + H - 52, W - 16, 28);
+        MilitaryGuiStyle.parchmentPanel(graphics, guiLeft, guiTop, W, H);
+        MilitaryGuiStyle.parchmentInset(graphics, guiLeft + 8, guiTop + 20, W - 16, LIST_VISIBLE * ROW_H + 18);
+        MilitaryGuiStyle.parchmentInset(graphics, guiLeft + 8, guiTop + H - 52, W - 16, 28);
 
         graphics.drawCenteredString(font, Component.translatable("gui.bannermod.war_allies.invite_picker.header", localizedWarSide(side)),
-                guiLeft + W / 2, guiTop + 8, GOLD);
+                guiLeft + W / 2, guiTop + 8, MilitaryGuiStyle.TEXT);
         graphics.drawString(font, font.plainSubstrByWidth(Component.translatable("gui.bannermod.war_allies.invite_picker.hint").getString(), W - 24),
-                guiLeft + 12, guiTop + 24, INK_MUTED, false);
+                guiLeft + 12, guiTop + 24, MilitaryGuiStyle.TEXT_MUTED, false);
 
         int listX = guiLeft + 8;
         int listY = guiTop + 24;
         int listW = W - 16;
         int listH = LIST_VISIBLE * ROW_H;
-        graphics.drawString(font, Component.translatable("gui.bannermod.war_allies.ledger"), listX, listY - 12, INK, false);
+        graphics.drawString(font, Component.translatable("gui.bannermod.war_allies.ledger"), listX, listY - 12, MilitaryGuiStyle.TEXT_DARK, false);
         graphics.fill(listX, listY, listX + listW, listY + listH, 0x22FFFFFF);
         graphics.renderOutline(listX, listY, listW, listH, PAGE_SHADE);
 
@@ -133,7 +133,7 @@ class WarAllyInvitePickerScreen extends Screen {
                         listX + 4, rowY + 4, 0xFFFFFF, false);
             }
         }
-        graphics.drawString(font, font.plainSubstrByWidth(visibleStatus().getString(), W - 24), guiLeft + 12, guiTop + H - 42, INK, false);
+        graphics.drawString(font, font.plainSubstrByWidth(visibleStatus().getString(), W - 24), guiLeft + 12, guiTop + H - 42, MilitaryGuiStyle.TEXT_DARK, false);
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
@@ -211,12 +211,4 @@ class WarAllyInvitePickerScreen extends Screen {
         return Component.translatable("gui.bannermod.war_allies.invite_picker.status.ready", localizedWarSide(side));
     }
 
-    private void renderParchmentPanel(GuiGraphics graphics, int x, int y, int w, int h) {
-        graphics.fill(x, y, x + w, y + h, PAGE_BG);
-        graphics.fill(x, y, x + w, y + 2, 0x88FFF1BE);
-        graphics.fill(x, y + h - 2, x + w, y + h, PAGE_SHADE);
-        graphics.fill(x, y, x + 2, y + h, 0x66FFF1BE);
-        graphics.fill(x + w - 2, y, x + w, y + h, 0x66B88245);
-        graphics.renderOutline(x, y, w, h, PAGE_SHADE);
-    }
 }
