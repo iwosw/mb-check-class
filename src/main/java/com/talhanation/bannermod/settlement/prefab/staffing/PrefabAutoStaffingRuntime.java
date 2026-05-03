@@ -73,7 +73,7 @@ public final class PrefabAutoStaffingRuntime {
         if (level == null || buildArea == null) {
             return;
         }
-        if (!com.talhanation.bannermod.config.WorkersServerConfig.EnableBuildingPrefabs.get()) {
+        if (!com.talhanation.bannermod.settlement.prefab.BuildingPlacementService.isPrefabPipelineEnabledForGate()) {
             // Prefab auto-staffing disabled. Drain any tracker entry so it doesn't
             // leak across config toggles, but spawn nothing — the player builds the
             // structure manually and draws the work zone with the surveyor; citizens

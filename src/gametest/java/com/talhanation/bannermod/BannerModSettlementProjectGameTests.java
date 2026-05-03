@@ -35,6 +35,21 @@ public class BannerModSettlementProjectGameTests {
     }
 
     static void assertSettlementProjectCreatesExecutableBuildAreaInWorld(GameTestHelper helper) {
+        // This test exercises the legacy prefab-driven settlement-project pipeline,
+        // which the player has disabled by default in favour of manual build + surveyor.
+        // Force the gate open for the duration of the test so we can keep validating the
+        // pipeline contract; production code still observes the config flag.
+        com.talhanation.bannermod.settlement.prefab.BuildingPlacementService
+                .setPrefabEnabledOverrideForTesting(Boolean.TRUE);
+        try {
+            runAssertSettlementProjectCreatesExecutableBuildAreaInWorld(helper);
+        } finally {
+            com.talhanation.bannermod.settlement.prefab.BuildingPlacementService
+                    .setPrefabEnabledOverrideForTesting(null);
+        }
+    }
+
+    private static void runAssertSettlementProjectCreatesExecutableBuildAreaInWorld(GameTestHelper helper) {
         WorkAreaIndex.instance().clearAllForTest();
         ServerLevel level = helper.getLevel();
         Player player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
