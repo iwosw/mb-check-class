@@ -65,6 +65,26 @@ The same actions (Create / Rename / Capital here / Government form toggle) live 
 
 If you only want to let another player live and build inside your settlement without giving them political powers, use the claim editor instead of co-leaders: open the map (`M`), edit the claim, then open `Trusted Members`. Trusted members can build, interact, and manage local work areas in that claim, but they still cannot edit claims, change state law, invite allies, or use war powers.
 
+### How to add a player to your settlement
+
+Step by step:
+
+1. Press `M` to open the world map.
+2. Right-click the chunk that belongs to your settlement claim and pick `Edit claim`.
+3. In the claim editor click `Trusted Members`.
+4. Press `Add Player`, choose the target player from the picker, and `Save`.
+
+Removing a member uses the same screen — select the player row, click the `x` button on the selected-player widget, then `Save`.
+
+### Forming a state out of multiple settlements
+
+Each settlement is one claim and is auto-bound to the political entity of the player who created it. Two ways to bring multiple settlements into the same state today:
+
+- The same leader (or a republic co-leader) creates all the new settlements while in the state. Their starter forts auto-attach to that state.
+- Use co-leadership: the additional player accepts a co-leader seat (`Add co-leader` in the state screen), switch the government form to `REPUBLIC`, and any future settlement they author lands in the same state.
+
+There is currently **no in-place way to move an existing pre-state settlement claim into another state** — a claim's owning political entity is fixed at creation. If you need that, file an issue or watch the `WORLDMAPCLAIMPE-001` backlog item; until then the workaround is to delete the orphan claim from the world map and re-claim those chunks while a member of the target state.
+
 ## Promoting A Settlement Into A State
 
 A settlement cannot become a full state without infrastructure. `/bannermod state status <entity> STATE` only succeeds when the settlement registers:
