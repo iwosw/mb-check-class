@@ -14,13 +14,21 @@ public record ResidentGoalContext(
         BannerModSettlementResidentRecord resident,
         @Nullable BannerModSettlementSnapshot settlement,
         long gameTime,
+        long worldDayTime,
         @Nullable NpcSocietyProfile societyProfile
 ) {
 
     public ResidentGoalContext(BannerModSettlementResidentRecord resident,
                                @Nullable BannerModSettlementSnapshot settlement,
                                long gameTime) {
-        this(resident, settlement, gameTime, null);
+        this(resident, settlement, gameTime, gameTime, null);
+    }
+
+    public ResidentGoalContext(BannerModSettlementResidentRecord resident,
+                               @Nullable BannerModSettlementSnapshot settlement,
+                               long gameTime,
+                               @Nullable NpcSocietyProfile societyProfile) {
+        this(resident, settlement, gameTime, gameTime, societyProfile);
     }
 
     public UUID residentId() {
@@ -37,7 +45,7 @@ public record ResidentGoalContext(
 
     /** Minecraft day-of-time (0..23999) derived from absolute game time. */
     public int dayTime() {
-        long time = this.gameTime % 24000L;
+        long time = this.worldDayTime % 24000L;
         if (time < 0L) {
             time += 24000L;
         }

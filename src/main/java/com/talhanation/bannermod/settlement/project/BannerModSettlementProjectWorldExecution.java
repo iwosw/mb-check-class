@@ -44,13 +44,29 @@ final class BannerModSettlementProjectWorldExecution {
         if (buildAreas.stream().anyMatch(buildArea -> buildArea != null && buildArea.isAlive() && !buildArea.isDone())) {
             return false;
         }
-        return BuildingPlacementService.placeForClaim(
+        BuildingPlacementService.Result result = BuildingPlacementService.placeForClaim(
                 level,
                 claim,
-                prefabIdFor(project.profileSeed()),
+                prefabIdFor(project),
                 choosePlacementPos(level, claim, buildAreas.size()),
                 Direction.SOUTH
-        ) == BuildingPlacementService.Result.PLACED;
+        );
+        if (result != BuildingPlacementService.Result.PLACED) {
+            return false;
+        }
+        if (project != null && project.prefabId() != null) {
+            BuildArea placedArea = BannerModBuildAreaProjectBridge.collectBuildAreas(level, claim).stream()
+                    .filter(buildArea -> buildArea != null && buildArea.isAlive() && !buildArea.isDone())
+                    .max(java.util.Comparator.comparingInt(net.minecraft.world.entity.Entity::getId))
+                    .orElse(null);
+            if (placedArea != null) {
+                // First autonomous livelihood slice: once the ruler approves the request,
+                // material bootstrap is granted immediately so the new workplace can start
+                // supporting the settlement instead of deadlocking on missing resources.
+                placedArea.setStartBuild(true);
+            }
+        }
+        return true;
     }
 
     private static RecruitsClaim resolveClaim(UUID claimUuid) {
@@ -62,7 +78,11 @@ final class BannerModSettlementProjectWorldExecution {
         return null;
     }
 
-    private static ResourceLocation prefabIdFor(BannerModSettlementBuildingProfileSeed profileSeed) {
+    private static ResourceLocation prefabIdFor(PendingProject project) {
+        if (project != null && project.prefabId() != null) {
+            return project.prefabId();
+        }
+        BannerModSettlementBuildingProfileSeed profileSeed = project == null ? null : project.profileSeed();
         return switch (profileSeed == null ? BannerModSettlementBuildingProfileSeed.GENERAL : profileSeed) {
             case FOOD_PRODUCTION -> FarmPrefab.ID;
             case MATERIAL_PRODUCTION -> LumberCampPrefab.ID;

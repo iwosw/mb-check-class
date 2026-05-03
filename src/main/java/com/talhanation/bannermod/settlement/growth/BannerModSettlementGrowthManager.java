@@ -321,6 +321,7 @@ public final class BannerModSettlementGrowthManager {
                     projectId,
                     ProjectKind.NEW_BUILDING,
                     null,
+                    null,
                     category,
                     this.profile,
                     this.clampedScore(),

@@ -65,6 +65,7 @@ public class BannerModSettlementProjectGameTests {
                 UUID.randomUUID(),
                 ProjectKind.NEW_BUILDING,
                 null,
+                null,
                 BannerModSettlementBuildingCategory.GENERAL,
                 BannerModSettlementBuildingProfileSeed.GENERAL,
                 100,
@@ -118,6 +119,7 @@ public class BannerModSettlementProjectGameTests {
                 UUID.randomUUID(),
                 ProjectKind.NEW_BUILDING,
                 null,
+                null,
                 BannerModSettlementBuildingCategory.GENERAL,
                 BannerModSettlementBuildingProfileSeed.GENERAL,
                 100,
@@ -160,6 +162,7 @@ public class BannerModSettlementProjectGameTests {
         PendingProject project = new PendingProject(
                 UUID.randomUUID(),
                 ProjectKind.NEW_BUILDING,
+                null,
                 null,
                 BannerModSettlementBuildingCategory.GENERAL,
                 BannerModSettlementBuildingProfileSeed.GENERAL,

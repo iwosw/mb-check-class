@@ -5,6 +5,7 @@ import com.talhanation.bannermod.settlement.BannerModSettlementBuildingProfileSe
 import com.talhanation.bannermod.settlement.growth.PendingProject;
 import com.talhanation.bannermod.settlement.growth.ProjectBlocker;
 import com.talhanation.bannermod.settlement.growth.ProjectKind;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -53,6 +54,7 @@ class BannerModSettlementProjectPersistenceTest {
                 PROJECT_X,
                 ProjectKind.UPGRADE,
                 TARGET_BUILDING,
+                ResourceLocation.fromNamespaceAndPath("bannermod", "mine"),
                 BannerModSettlementBuildingCategory.GENERAL,
                 BannerModSettlementBuildingProfileSeed.GENERAL,
                 420,
@@ -76,6 +78,7 @@ class BannerModSettlementProjectPersistenceTest {
                 PROJECT_X,
                 ProjectKind.NEW_BUILDING,
                 TARGET_BUILDING, // ctor will null this out
+                ResourceLocation.fromNamespaceAndPath("bannermod", "house"),
                 BannerModSettlementBuildingCategory.GENERAL,
                 BannerModSettlementBuildingProfileSeed.GENERAL,
                 500,
@@ -99,7 +102,7 @@ class BannerModSettlementProjectPersistenceTest {
         for (ProjectKind kind : ProjectKind.values()) {
             UUID target = kind == ProjectKind.NEW_BUILDING ? null : TARGET_BUILDING;
             PendingProject original = new PendingProject(
-                    PROJECT_X, kind, target,
+                    PROJECT_X, kind, target, null,
                     BannerModSettlementBuildingCategory.GENERAL,
                     BannerModSettlementBuildingProfileSeed.GENERAL,
                     100, 0L, 1, ProjectBlocker.NONE
@@ -136,7 +139,7 @@ class BannerModSettlementProjectPersistenceTest {
     void everyProjectBlockerRoundTripsExactly() {
         for (ProjectBlocker blocker : ProjectBlocker.values()) {
             PendingProject original = new PendingProject(
-                    PROJECT_X, ProjectKind.NEW_BUILDING, null,
+                    PROJECT_X, ProjectKind.NEW_BUILDING, null, null,
                     BannerModSettlementBuildingCategory.GENERAL,
                     BannerModSettlementBuildingProfileSeed.GENERAL,
                     1, 0L, 1, blocker
@@ -275,6 +278,7 @@ class BannerModSettlementProjectPersistenceTest {
             PendingProject project = new PendingProject(
                     UUID.randomUUID(),
                     ProjectKind.NEW_BUILDING,
+                    null,
                     null,
                     BannerModSettlementBuildingCategory.GENERAL,
                     BannerModSettlementBuildingProfileSeed.GENERAL,
