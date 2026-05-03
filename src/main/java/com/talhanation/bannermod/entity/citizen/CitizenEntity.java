@@ -18,6 +18,9 @@ import com.talhanation.bannermod.inventory.civilian.CitizenProfileMenu;
 import com.talhanation.bannermod.network.compat.BannerModNetworkHooks;
 import com.talhanation.bannermod.registry.civilian.ModEntityTypes;
 import com.talhanation.bannermod.settlement.prefab.staffing.PrefabAutoStaffingRuntime;
+import com.talhanation.bannermod.society.NpcLifeStage;
+import com.talhanation.bannermod.society.NpcPhaseOneSnapshot;
+import com.talhanation.bannermod.society.NpcSocietyAccess;
 import com.talhanation.bannermod.util.BannerModCurrencyHelper;
 import com.talhanation.bannermod.util.BannerModNpcNamePool;
 import net.minecraft.core.BlockPos;
@@ -71,6 +74,8 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
 
     private static final EntityDataAccessor<String> DATA_PROFESSION =
             SynchedEntityData.defineId(CitizenEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> DATA_LIFE_STAGE =
+            SynchedEntityData.defineId(CitizenEntity.class, EntityDataSerializers.INT);
 
     private static final CitizenProfessionRegistry DEFAULT_REGISTRY = CitizenProfessionRegistry.defaults();
 
@@ -115,6 +120,7 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_PROFESSION, CitizenProfession.NONE.name());
+        builder.define(DATA_LIFE_STAGE, NpcLifeStage.ADULT.ordinal());
     }
 
     @Override
@@ -141,9 +147,32 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         CitizenIndex.instance().onCitizenTick(this);
         if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
             BannerModNpcNamePool.ensureNamed(this);
+            syncLifeStageFromSociety();
             PrefabAutoStaffingRuntime.assignCitizenToNearestVacancy((net.minecraft.server.level.ServerLevel) this.level(), this);
             tryConvertIntoPendingWorker();
         }
+    }
+
+    private void syncLifeStageFromSociety() {
+        if (!(this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return;
+        }
+        NpcLifeStage stage = NpcSocietyAccess.ensureResident(serverLevel, this.getUUID(), serverLevel.getGameTime()).lifeStage();
+        this.entityData.set(DATA_LIFE_STAGE, stage.ordinal());
+    }
+
+    public NpcLifeStage renderLifeStage() {
+        int ordinal = this.entityData.get(DATA_LIFE_STAGE);
+        NpcLifeStage[] values = NpcLifeStage.values();
+        return ordinal >= 0 && ordinal < values.length ? values[ordinal] : NpcLifeStage.ADULT;
+    }
+
+    public float renderScaleFactor() {
+        return switch (renderLifeStage()) {
+            case ADOLESCENT -> 0.84F;
+            case ELDER -> 0.92F;
+            default -> 1.0F;
+        };
     }
 
     @Override
@@ -178,9 +207,19 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
 
                 @Override
                 public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player menuPlayer) {
-                    return new CitizenProfileMenu(id, CitizenEntity.this, playerInventory);
+                    NpcPhaseOneSnapshot phaseOneSnapshot = CitizenEntity.this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
+                            ? NpcSocietyAccess.phaseOneSnapshot(serverLevel, CitizenEntity.this.getUUID(), CitizenEntity.this.getBoundWorkAreaUUID())
+                            : NpcPhaseOneSnapshot.empty();
+                    return new CitizenProfileMenu(id, CitizenEntity.this, playerInventory, phaseOneSnapshot);
                 }
-            }, buffer -> buffer.writeUUID(this.getUUID()));
+            }, buffer -> {
+                buffer.writeUUID(this.getUUID());
+                if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                    NpcSocietyAccess.phaseOneSnapshot(serverLevel, this.getUUID(), this.getBoundWorkAreaUUID()).toBytes(buffer);
+                } else {
+                    NpcPhaseOneSnapshot.empty().toBytes(buffer);
+                }
+            });
         }
     }
 
@@ -234,6 +273,9 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
             }
             worker.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
             this.level().addFreshEntity(worker);
+            if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                NpcSocietyAccess.moveResidentProfile(serverLevel, this.getUUID(), worker.getUUID(), serverLevel.getGameTime());
+            }
             this.discard();
             return;
         }
@@ -252,6 +294,9 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         }
         recruit.getCitizenCore().setBoundWorkAreaUUID(boundWorkAreaUuid);
         this.level().addFreshEntity(recruit);
+        if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            NpcSocietyAccess.moveResidentProfile(serverLevel, this.getUUID(), recruit.getUUID(), serverLevel.getGameTime());
+        }
         this.discard();
     }
 

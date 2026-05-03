@@ -26,10 +26,19 @@ public final class SocialiseResidentGoal implements ResidentGoal {
         if (!ctx.isActivePhase()) {
             return 0;
         }
-        return ctx.window() == BannerModSettlementResidentScheduleWindowSeed.CIVIC_DAY
-                || ctx.window() == BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX
-                ? SOCIALISE_PRIORITY
-                : 0;
+        if (ctx.window() != BannerModSettlementResidentScheduleWindowSeed.CIVIC_DAY
+                && ctx.window() != BannerModSettlementResidentScheduleWindowSeed.DAYLIGHT_FLEX) {
+            return 0;
+        }
+        int priority = SOCIALISE_PRIORITY + ctx.socialNeed() / 3;
+        if (ctx.isAdolescent()) {
+            priority += 8;
+        }
+        if (ctx.dayTime() > 9000) {
+            priority += 6;
+        }
+        priority -= ctx.fatigueNeed() / 10;
+        return Math.max(0, priority);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.military.gui.widgets.ActionMenuButton;
 import com.talhanation.bannermod.client.military.gui.widgets.ContextMenuEntry;
 import com.talhanation.bannermod.entity.civilian.WorkerInspectionSnapshot;
+import com.talhanation.bannermod.society.NpcPhaseOneSnapshot;
 import com.talhanation.bannermod.network.messages.civilian.MessageConvertWorkerToCitizen;
 import com.talhanation.bannermod.network.messages.civilian.MessageOpenWorkerScreen;
 import com.talhanation.bannermod.network.messages.civilian.MessageReassignWorkerProfession;
@@ -23,9 +24,7 @@ import java.util.Locale;
 
 public class WorkerStatusScreen extends Screen {
     private static final int WIDTH = 252;
-    // 210 gives 22 px clearance between the bottom transport text box (ends at top+168)
-    // and the action button row (starts at top + HEIGHT - 26 = top+184) so they never overlap.
-    private static final int HEIGHT = 210;
+    private static final int HEIGHT = 280;
     private static final int BTN_W = 58;
     private static final int BTN_H = 20;
 
@@ -123,22 +122,67 @@ public class WorkerStatusScreen extends Screen {
         MilitaryGuiStyle.titleStrip(graphics, this.left + 8, this.top + 8, WIDTH - 16, 16);
         MilitaryGuiStyle.drawCenteredTitle(graphics, this.font, this.title, this.left + 8, this.top + 12, WIDTH - 16);
         MilitaryGuiStyle.drawBadge(graphics, this.font, Component.translatable(this.snapshot.claimRelationKey()), this.left + 16, this.top + 32, 110, MilitaryGuiStyle.TEXT_WARN);
-        graphics.drawString(this.font, this.snapshot.workerName(), this.left + 132, this.top + 35, MilitaryGuiStyle.TEXT_DARK, false);
+        MilitaryGuiStyle.drawBadge(graphics, this.font, Component.translatable(this.snapshot.professionKey()), this.left + 132, this.top + 32, 104, MilitaryGuiStyle.TEXT_WARN);
+        graphics.drawString(this.font, this.snapshot.workerName(), this.left + 132, this.top + 47, MilitaryGuiStyle.TEXT_DARK, false);
 
         renderInfoBlock(graphics, this.left + 14, this.top + 52, WIDTH - 28, 58);
-        drawLabelValue(graphics, text("gui.bannermod.worker_screen.profession"), Component.translatable(this.snapshot.professionKey()), this.left + 20, this.top + 58);
-        drawLabelValue(graphics, text("gui.bannermod.worker_screen.owner"), Component.literal(this.snapshot.ownerLabel()), this.left + 20, this.top + 72);
-        drawLabelValue(graphics, text("gui.bannermod.worker_screen.political"), Component.literal(this.snapshot.politicalLabel()), this.left + 20, this.top + 86);
-        drawLabelValue(graphics, text("gui.bannermod.worker_screen.assignment"), Component.literal(this.snapshot.assignmentLabel()), this.left + 20, this.top + 100);
+        drawLabelValue(graphics, text("gui.bannermod.worker_screen.owner"), Component.literal(this.snapshot.ownerLabel()), this.left + 20, this.top + 58);
+        drawLabelValue(graphics, text("gui.bannermod.worker_screen.political"), Component.literal(this.snapshot.politicalLabel()), this.left + 20, this.top + 72);
+        drawLabelValue(graphics, text("gui.bannermod.worker_screen.assignment"), Component.literal(this.snapshot.assignmentLabel()), this.left + 20, this.top + 86);
+        drawLabelValue(graphics, text("gui.bannermod.worker_screen.profession"), Component.translatable(this.snapshot.professionKey()), this.left + 20, this.top + 100);
 
         renderTextBox(graphics, this.left + 14, this.top + 116, WIDTH - 28, 24,
+                text("gui.bannermod.worker_screen.identity"),
+                identitySummary(),
+                MilitaryGuiStyle.TEXT_DARK);
+        renderTextBox(graphics, this.left + 14, this.top + 144, WIDTH - 28, 24,
+                text("gui.bannermod.worker_screen.routine"),
+                routineSummary(),
+                MilitaryGuiStyle.TEXT_DARK);
+        renderTextBox(graphics, this.left + 14, this.top + 172, WIDTH - 28, 24,
+                text("gui.bannermod.worker_screen.needs"),
+                needsSummary(),
+                MilitaryGuiStyle.TEXT_DARK);
+        renderTextBox(graphics, this.left + 14, this.top + 200, WIDTH - 28, 24,
                 text("gui.bannermod.worker_screen.problem"),
                 Component.literal(this.snapshot.problemLabel()),
                 isClearState(this.snapshot.problemLabel()) ? MilitaryGuiStyle.TEXT_GOOD : MilitaryGuiStyle.TEXT_DENIED);
-        renderTextBox(graphics, this.left + 14, this.top + 144, WIDTH - 28, 24,
+        renderTextBox(graphics, this.left + 14, this.top + 228, WIDTH - 28, 24,
                 text("gui.bannermod.worker_screen.transport"),
                 Component.literal(this.snapshot.transportLabel()),
                 MilitaryGuiStyle.TEXT_DARK);
+    }
+
+    private Component identitySummary() {
+        NpcPhaseOneSnapshot phaseOne = this.snapshot.phaseOne();
+        return Component.translatable(
+                "gui.bannermod.worker_screen.identity.summary",
+                Component.translatable(phaseOne.lifeStageTranslationKey()).getString(),
+                Component.translatable(phaseOne.sexTranslationKey()).getString(),
+                NpcPhaseOneSnapshot.shortId(phaseOne.householdId()),
+                NpcPhaseOneSnapshot.shortId(phaseOne.homeBuildingUuid())
+        );
+    }
+
+    private Component routineSummary() {
+        NpcPhaseOneSnapshot phaseOne = this.snapshot.phaseOne();
+        return Component.translatable(
+                "gui.bannermod.worker_screen.routine.summary",
+                Component.translatable(phaseOne.dailyPhaseTranslationKey()).getString(),
+                Component.translatable(phaseOne.currentIntentTranslationKey()).getString(),
+                Component.translatable(phaseOne.currentAnchorTranslationKey()).getString(),
+                Component.translatable(phaseOne.housingRequestTranslationKey()).getString()
+        );
+    }
+
+    private Component needsSummary() {
+        NpcPhaseOneSnapshot phaseOne = this.snapshot.phaseOne();
+        return Component.translatable(
+                "gui.bannermod.worker_screen.needs.summary",
+                phaseOne.hungerNeed(),
+                phaseOne.fatigueNeed(),
+                phaseOne.socialNeed()
+        );
     }
 
     private void renderInfoBlock(GuiGraphics graphics, int x, int y, int width, int height) {

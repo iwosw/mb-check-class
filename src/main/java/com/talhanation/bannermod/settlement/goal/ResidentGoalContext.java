@@ -1,5 +1,7 @@
 package com.talhanation.bannermod.settlement.goal;
 
+import com.talhanation.bannermod.society.NpcLifeStage;
+import com.talhanation.bannermod.society.NpcSocietyProfile;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentRecord;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentSchedulePolicy;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentScheduleWindowSeed;
@@ -11,7 +13,8 @@ import java.util.UUID;
 public record ResidentGoalContext(
         BannerModSettlementResidentRecord resident,
         @Nullable BannerModSettlementSnapshot settlement,
-        long gameTime
+        long gameTime,
+        @Nullable NpcSocietyProfile societyProfile
 ) {
 
     public UUID residentId() {
@@ -47,5 +50,25 @@ public record ResidentGoalContext(
         int t = this.dayTime();
         BannerModSettlementResidentScheduleWindowSeed w = this.window();
         return t >= w.restStartTick() || t < w.activeStartTick();
+    }
+
+    public boolean hasHome() {
+        return this.societyProfile != null && this.societyProfile.homeBuildingUuid() != null;
+    }
+
+    public int hungerNeed() {
+        return this.societyProfile == null ? 0 : this.societyProfile.hungerNeed();
+    }
+
+    public int fatigueNeed() {
+        return this.societyProfile == null ? 0 : this.societyProfile.fatigueNeed();
+    }
+
+    public int socialNeed() {
+        return this.societyProfile == null ? 0 : this.societyProfile.socialNeed();
+    }
+
+    public boolean isAdolescent() {
+        return this.societyProfile != null && this.societyProfile.lifeStage() == NpcLifeStage.ADOLESCENT;
     }
 }
