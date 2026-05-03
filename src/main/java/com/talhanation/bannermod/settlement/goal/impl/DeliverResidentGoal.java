@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.settlement.goal.impl;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.society.NpcIntent;
+import com.talhanation.bannermod.society.NpcSocietyPhaseTwoIntentScorer;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentAssignmentState;
 import com.talhanation.bannermod.settlement.goal.ResidentGoal;
 import com.talhanation.bannermod.settlement.goal.ResidentGoalContext;
@@ -26,7 +28,10 @@ public final class DeliverResidentGoal implements ResidentGoal {
 
     @Override
     public int computePriority(ResidentGoalContext ctx) {
-        return ctx.isActivePhase() ? DELIVER_PRIORITY : 0;
+        if (!ctx.isActivePhase()) {
+            return 0;
+        }
+        return Math.max(DELIVER_PRIORITY, NpcSocietyPhaseTwoIntentScorer.scoreIntent(ctx, NpcIntent.WORK) - 2);
     }
 
     @Override

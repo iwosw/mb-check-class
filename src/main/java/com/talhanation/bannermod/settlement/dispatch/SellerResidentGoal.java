@@ -1,6 +1,8 @@
 package com.talhanation.bannermod.settlement.dispatch;
 
 import com.talhanation.bannermod.bootstrap.BannerModMain;
+import com.talhanation.bannermod.society.NpcIntent;
+import com.talhanation.bannermod.society.NpcSocietyPhaseTwoIntentScorer;
 import com.talhanation.bannermod.settlement.BannerModSettlementMarketState;
 import com.talhanation.bannermod.settlement.BannerModSettlementResidentServiceContract;
 import com.talhanation.bannermod.settlement.BannerModSettlementSellerDispatchRecord;
@@ -93,7 +95,9 @@ public final class SellerResidentGoal implements ResidentGoal {
         if (ctx == null || !ctx.isActivePhase()) {
             return 0;
         }
-        return this.findReadyMarketUuid(ctx) != null ? SELLER_PRIORITY : 0;
+        return this.findReadyMarketUuid(ctx) != null
+                ? Math.max(SELLER_PRIORITY, NpcSocietyPhaseTwoIntentScorer.scoreIntent(ctx, NpcIntent.WORK) + 8)
+                : 0;
     }
 
     @Override
