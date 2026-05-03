@@ -2391,6 +2391,7 @@
   "gui.bannermod.war_allies.status.open_picker": "Next: open the %s roster and choose one realm to invite.",
   "gui.bannermod.war_allies.title": "War Allies",
   "gui.bannermod.war_declare.casus": "Casus belli",
+  "gui.bannermod.war_declare.casus_belli.hint": "Reason for war (optional)",
   "gui.bannermod.war_declare.attacker": "Attacker: %s",
   "gui.bannermod.war_declare.attacker.only_one": "Only one realm currently has war authority for you to attack with.",
   "gui.bannermod.war_declare.defender": "Defender: %s",

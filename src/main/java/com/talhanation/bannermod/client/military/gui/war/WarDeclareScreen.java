@@ -68,6 +68,7 @@ public class WarDeclareScreen extends Screen {
         this.casusBelliBox.setTextColor(INK);
         this.casusBelliBox.setTextColorUneditable(INK_MUTED);
         this.casusBelliBox.setBordered(true);
+        this.casusBelliBox.setHint(Component.translatable("gui.bannermod.war_declare.casus_belli.hint"));
         addRenderableWidget(this.attackerButton);
         addRenderableWidget(this.defenderButton);
         addRenderableWidget(this.goalButton);
