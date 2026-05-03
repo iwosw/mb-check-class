@@ -1,6 +1,5 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
@@ -12,11 +11,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 import org.lwjgl.glfw.GLFW;
@@ -24,8 +20,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class MessengerScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
-    protected static final int PLAYER_NAME_COLOR = FastColor.ARGB32.color(255, 255, 255, 255);
     private final Player player;
     public static RecruitsPlayerInfo playerInfo;
     private final MessengerEntity messenger;
@@ -34,7 +28,7 @@ public class MessengerScreen extends RecruitsScreenBase {
     private Button sendButton;
     private boolean sendAccepted;
     private Component dispatchStatus = Component.empty();
-    private int dispatchStatusColor = FONT_COLOR;
+    private int dispatchStatusColor = MilitaryGuiStyle.TEXT_DARK;
     private static final MutableComponent TOOLTIP_MESSENGER = Component.translatable("gui.recruits.inv.tooltip.messenger");
     private static final MutableComponent BUTTON_SEND_MESSENGER = Component.translatable("gui.recruits.inv.text.send_messenger");
     private static final Component TITLE = Component.translatable("gui.recruits.messenger.compose_title");
@@ -135,24 +129,24 @@ public class MessengerScreen extends RecruitsScreenBase {
         boolean hasMessage = !this.textFieldMessage.getValue().isBlank();
         if (this.sendAccepted) {
             this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.accepted");
-            this.dispatchStatusColor = 0x2E5D32;
+            this.dispatchStatusColor = MilitaryGuiStyle.TEXT_GOOD;
             this.sendButton.active = false;
             return;
         }
         if (!hasRecipient) {
             this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.select_player");
-            this.dispatchStatusColor = 0x8A1F11;
+            this.dispatchStatusColor = MilitaryGuiStyle.TEXT_DENIED;
             this.sendButton.active = false;
             return;
         }
         if (!hasMessage) {
             this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.write_message");
-            this.dispatchStatusColor = 0x8A1F11;
+            this.dispatchStatusColor = MilitaryGuiStyle.TEXT_DENIED;
             this.sendButton.active = false;
             return;
         }
         this.dispatchStatus = Component.translatable("gui.recruits.messenger.compose_status.ready");
-        this.dispatchStatusColor = 0x2E5D32;
+        this.dispatchStatusColor = MilitaryGuiStyle.TEXT_GOOD;
         this.sendButton.active = true;
     }
 
@@ -163,27 +157,27 @@ public class MessengerScreen extends RecruitsScreenBase {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
-        drawFramedPanel(guiGraphics, guiLeft + 12, guiTop + 18, xSize - 24, 26);
-        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 48, xSize - 16, 158);
-        drawDarkInset(guiGraphics, guiLeft + 24, guiTop + ySize - 80, xSize - 48, 18);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 8, guiTop + 4, xSize - 16, 14);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 12, guiTop + 20, xSize - 24, 26);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 8, guiTop + 48, xSize - 16, 158);
+        MilitaryGuiStyle.insetPanel(guiGraphics, guiLeft + 24, guiTop + ySize - 80, xSize - 48, 18);
     }
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 6, FONT_COLOR, false);
-        guiGraphics.drawString(font, LABEL_PLAYER, guiLeft + 16, guiTop + 24, FONT_COLOR, false);
-        guiGraphics.drawString(font, LABEL_MESSAGE, guiLeft + 16, guiTop + 52, FONT_COLOR, false);
-        guiGraphics.drawString(font, dispatchStatus, guiLeft + 28, guiTop + ySize - 75, dispatchStatusColor, false);
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, TITLE, xSize - 24);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, clampedTitle, guiLeft, guiTop + 7, xSize);
+        guiGraphics.drawString(font, LABEL_PLAYER, guiLeft + 16, guiTop + 24, MilitaryGuiStyle.TEXT_DARK, false);
+        guiGraphics.drawString(font, LABEL_MESSAGE, guiLeft + 16, guiTop + 52, MilitaryGuiStyle.TEXT_DARK, false);
+        Component clampedDispatch = MilitaryGuiStyle.clampLabel(font, dispatchStatus, xSize - 56);
+        guiGraphics.drawString(font, clampedDispatch, guiLeft + 28, guiTop + ySize - 75, dispatchStatusColor, false);
 
         if(!messenger.getMainHandItem().isEmpty()){
-            guiGraphics.drawString(font, LABEL_PARCEL, guiLeft + 120, guiTop + ySize - 75, FONT_COLOR, false);
+            guiGraphics.drawString(font, LABEL_PARCEL, guiLeft + 120, guiTop + ySize - 75, MilitaryGuiStyle.TEXT_DARK, false);
             guiGraphics.renderFakeItem(messenger.getMainHandItem(), guiLeft + 140, guiTop + ySize - 48);
             guiGraphics.renderItemDecorations(font, messenger.getMainHandItem(),guiLeft + 140, guiTop + ySize - 48);
         } else {
-            guiGraphics.drawString(font, LABEL_EMPTY_PARCEL, guiLeft + 110, guiTop + ySize - 48, 0x6E5A45, false);
+            guiGraphics.drawString(font, LABEL_EMPTY_PARCEL, guiLeft + 110, guiTop + ySize - 48, MilitaryGuiStyle.TEXT_MUTED, false);
         }
     }
 }

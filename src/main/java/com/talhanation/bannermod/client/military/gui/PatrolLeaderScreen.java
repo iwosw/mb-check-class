@@ -1,7 +1,5 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.PatrolLeaderControlController;
 import com.talhanation.bannermod.client.military.gui.widgets.ScrollDropDownMenu;
 import com.talhanation.bannermod.entity.military.AbstractLeaderEntity;
@@ -10,10 +8,8 @@ import com.talhanation.bannermod.persistence.military.RecruitsRoute;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
@@ -28,10 +24,8 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
     private static final MutableComponent TT_STOP      = Component.translatable("gui.recruits.inv.tooltip.patrol_leader_stop");
     private static final MutableComponent TT_PAUSE     = Component.translatable("gui.recruits.inv.tooltip.patrol_leader_pause");
     private static final MutableComponent TT_RESUME    = Component.translatable("gui.recruits.inv.tooltip.patrol_leader_resume");
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/professions/blank_gui.png");
     private static final int TEXTURE_W = 195;
     private static final int TEXTURE_H = 160;
-    private static final int FONT_COLOR = 4210752;
     private static final Component TITLE = Component.translatable("gui.recruits.patrol.title");
     private final PatrolLeaderControlController controls;
     private int leftPos;
@@ -39,7 +33,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
     private ScrollDropDownMenu<RecruitsRoute>  routeDropDown;
     private ScrollDropDownMenu<RecruitsGroup>  groupDropDown;
     private Component statusLine = Component.translatable("gui.recruits.patrol.status.select_route");
-    private int statusColor = 0x6E5A45;
+    private int statusColor = MilitaryGuiStyle.TEXT_MUTED;
 
     public PatrolLeaderScreen(AbstractLeaderEntity leaderEntity, Player player) {
         super(TITLE, 197,250);
@@ -78,7 +72,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
                     controls.selectRoute(r);
                     setStatus(r == null
                             ? text("gui.recruits.patrol.status.select_route")
-                            : text("gui.recruits.patrol.status.route_selected", r.getName()), r == null ? 0x6E5A45 : 0x2E5D32);
+                            : text("gui.recruits.patrol.status.route_selected", r.getName()), r == null ? MilitaryGuiStyle.TEXT_MUTED : MilitaryGuiStyle.TEXT_GOOD);
                     buildWidgets(); // refresh button states after route selection
                 }
         );
@@ -103,7 +97,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
 
         Button startButton = addRenderableWidget(new ExtendedButton(x, y, btnW, btnH, startLabel, btn -> {
             controls.startOrResumePatrol();
-            setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
+            setStatus(text("gui.recruits.patrol.status.order_sent"), MilitaryGuiStyle.TEXT_GOOD);
             buildWidgets();
         }));
         startButton.active = canStart;
@@ -112,7 +106,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
 
         Button stopButton = addRenderableWidget(new ExtendedButton(x + btnW + 4, y, btnW, btnH, stopLabel, btn -> {
             controls.stopOrPausePatrol();
-            setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
+            setStatus(text("gui.recruits.patrol.status.order_sent"), MilitaryGuiStyle.TEXT_GOOD);
             buildWidgets();
         }));
         stopButton.active = patrolState != AbstractLeaderEntity.State.STOPPED
@@ -125,7 +119,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         addRenderableWidget(new ExtendedButton(x, y, fullW, btnH,
                 Component.literal(infoLabel), btn -> {
                     controls.cycleInfoMode();
-                    setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
+                    setStatus(text("gui.recruits.patrol.status.order_sent"), MilitaryGuiStyle.TEXT_GOOD);
                     buildWidgets();
                 }));
         y += btnH + 4;
@@ -135,7 +129,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
         addRenderableWidget(new ExtendedButton(x, y, fullW, btnH,
                 Component.literal(actionLabel), btn -> {
                     controls.cycleEnemyAction();
-                    setStatus(text("gui.recruits.patrol.status.order_sent"), 0x2E5D32);
+                    setStatus(text("gui.recruits.patrol.status.order_sent"), MilitaryGuiStyle.TEXT_GOOD);
                     buildWidgets();
                 }));
         y += btnH + 8;
@@ -152,7 +146,7 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
                     controls.selectGroup(g);
                     setStatus(g == null
                             ? text("gui.recruits.patrol.status.group_cleared")
-                            : text("gui.recruits.patrol.status.group_selected", g.getName()), 0x2E5D32);
+                            : text("gui.recruits.patrol.status.group_selected", g.getName()), MilitaryGuiStyle.TEXT_GOOD);
                     buildWidgets();
                 }
         );
@@ -209,18 +203,19 @@ public class PatrolLeaderScreen extends RecruitsScreenBase {
     }
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
-        drawFramedPanel(guiGraphics, guiLeft + 8, guiTop + 6, xSize - 16, 18);
-        drawDarkInset(guiGraphics, guiLeft + 8, topPos + 132, xSize - 16, 20);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 8, guiTop + 6, xSize - 16, 18);
+        MilitaryGuiStyle.insetPanel(guiGraphics, guiLeft + 8, topPos + 132, xSize - 16, 22);
     }
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 11, FONT_COLOR, false);
-        guiGraphics.drawString(font, text("gui.recruits.patrol.current_state", text(patrolStateKey()).getString()), guiLeft + 12, topPos + 137, FONT_COLOR, false);
-        guiGraphics.drawString(font, statusLine, guiLeft + 12, topPos + 147, statusColor, false);
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, TITLE, xSize - 24);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, clampedTitle, guiLeft, guiTop + 11, xSize);
+        Component currentState = text("gui.recruits.patrol.current_state", text(patrolStateKey()).getString());
+        Component clampedState = MilitaryGuiStyle.clampLabel(font, currentState, xSize - 24);
+        guiGraphics.drawString(font, clampedState, guiLeft + 12, topPos + 137, MilitaryGuiStyle.TEXT, false);
+        Component clampedStatus = MilitaryGuiStyle.clampLabel(font, statusLine, xSize - 24);
+        guiGraphics.drawString(font, clampedStatus, guiLeft + 12, topPos + 147, statusColor, false);
     }
 
     @Override

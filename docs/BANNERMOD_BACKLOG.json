@@ -6493,6 +6493,64 @@
       ],
       "evidence": [],
       "doneDate": "2026-05-02"
+    },
+    {
+      "id": "WORKERUI-001",
+      "title": "WorkerStatusScreen needs profession reassignment, dismiss, wage controls",
+      "status": "in_progress",
+      "updated": "2026-05-03",
+      "why": "Audit (UI_AUDIT_FINDINGS.md) flagged the screen advertises management but only exposes Refresh/Convert/Close. Players have no UI path to reassign a worker's profession, dismiss them, or set a wage.",
+      "scope": [
+        "Add ActionMenuButton or DropDownMenu to WorkerStatusScreen with: (1) Reassign profession entry that opens a profession picker; (2) Dismiss entry that sends a server-validated MessageDismissWorker; (3) Wage adjustment +/- pad if the wage system exposes a setter.",
+        "Define new server-authoritative messages: MessageReassignWorkerProfession(workerUUID, professionId), MessageDismissWorker(workerUUID), MessageSetWorkerWage(workerUUID, amount) — all idempotent, all validated by ownership/permission server-side.",
+        "Localize all new player-facing strings in en_us.json + ru_ru.json."
+      ],
+      "acceptance": [
+        "WorkerStatusScreen renders Reassign/Dismiss/Wage controls accessible from the screen",
+        "Each new server message round-trips through ownership validation; non-owner click results in denied feedback in client and no state change server-side (covered by a unit test on the message handler)",
+        "MULTIPLAYER_GUIDE_EN.md and MULTIPLAYER_GUIDE_RU.md describe the new controls in the worker management section"
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-05-03",
+          "text": "Implemented Reassign Profession + clarified Convert as dismiss path. Wage system not present in codebase; acceptance #2 (wage) descoped. ActionMenuButton in WorkerStatusScreen offers all 7 CONTROLLED_WORKER professions except current. Server message reuses WorkerCitizenConversionService auth. New WorkerStatusReassignContractTest pins source invariants."
+        }
+      ],
+      "verification": [],
+      "evidence": [
+        "UI_AUDIT_FINDINGS.md section 'civilian/WorkerStatusScreen.java' (HIGH severity)"
+      ]
+    },
+    {
+      "id": "WORLDMAPCLAIMPE-001",
+      "title": "Move existing claim into a different political entity",
+      "status": "in_progress",
+      "updated": "2026-05-03",
+      "why": "Audit of multi-settlement-state UX (UI_AUDIT_FINDINGS + user playtest) found a real gap: a claim's owning political entity is fixed at creation. There is no UI or command to transfer an existing settlement claim into another state. The current workaround forces players to delete and re-claim, losing all in-claim state.",
+      "scope": [
+        "Server-side: add MessageReassignClaimPoliticalEntity(claimUuid, newPoliticalEntityUuid). Auth: caller must be leader (or REPUBLIC co-leader) of BOTH the source PE (or admin claim caller) AND the target PE; reuse PoliticalEntityAuthority.canAct gating. On success mutate RecruitsClaim.setOwnerPoliticalEntityId, persist, and broadcast claim snapshot.",
+        "Client UI: extend ClaimEditScreen with a 'Transfer to state' DropDownMenu populated by states the caller has authority in (filter via WarClientState.entities + PoliticalEntityAuthority). Show denial reason when empty.",
+        "Localize all new strings in en_us.json + ru_ru.json (button label, tooltip, denial reasons, confirm dialog).",
+        "Update MULTIPLAYER_GUIDE_EN.md + MULTIPLAYER_GUIDE_RU.md to replace the current 'no in-place way' wording with the working flow."
+      ],
+      "acceptance": [
+        "From ClaimEditScreen, a leader can transfer the claim to any state where they hold authority; the claim's HUD relation, color, and political entity ledger update without a re-log",
+        "Non-leaders see the transfer trigger greyed with a 'Need authority in target state' tooltip; server rejects forged packets with the same denial path used by other claim mutations",
+        "WorldMapClaimControllerTest (or a new sibling) covers a successful transfer + a denied transfer; en_us + ru_ru both carry the new keys",
+        "Both multiplayer guides describe the new flow and remove the WORLDMAPCLAIMPE-001 workaround note"
+      ],
+      "dependencies": [],
+      "progress": [
+        {
+          "date": "2026-05-03",
+          "text": "Implemented MessageReassignClaimPoliticalEntity (server-authoritative dual-PE auth via ClaimPacketAuthority + PoliticalEntityAuthority.canAct), wired ClaimEditScreen Transfer dropdown + ConfirmScreen, added EN+RU lang, updated both player guides, ClaimTransferContractTest pins all surfaces."
+        }
+      ],
+      "verification": [],
+      "evidence": [
+        "UI_AUDIT_FINDINGS.md (audit doc) + user playtest report '2026-05-03'"
+      ]
     }
   ]
 }

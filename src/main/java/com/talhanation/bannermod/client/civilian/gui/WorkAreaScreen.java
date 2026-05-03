@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.client.civilian.gui;
 
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.military.gui.RecruitsScreenBase;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
@@ -36,14 +37,6 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
     private static final MutableComponent TEXT_HINT_SHIFT = Component.translatable("gui.bannermod.work_area.hint.shift");
     private static final MutableComponent TEXT_HINT_OWNER_MISSING = Component.translatable("gui.bannermod.work_area.hint.owner_missing");
     private static final MutableComponent TEXT_HINT_OWNER_READY = Component.translatable("gui.bannermod.work_area.hint.owner_ready");
-    private static final int PANEL_COLOR = 0xDD2C1C11;
-    private static final int PANEL_INNER_COLOR = 0xE0B29268;
-    private static final int HEADER_COLOR = 0xE055341D;
-    private static final int SECTION_COLOR = 0xAA23160E;
-    private static final int SECTION_INNER_COLOR = 0xCC130D08;
-    private static final int OUTLINE_COLOR = 0xFF8A683F;
-    private static final int ACCENT_TEXT_COLOR = 0xFFF4D8A1;
-    private static final int MUTED_TEXT_COLOR = 0xFFE8D9BF;
     private Button moveForward;
     private Button moveBackward;
     private Button moveLeft;
@@ -232,23 +225,12 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         int panelLeft = this.guiLeft;
         int panelTop = this.guiTop;
-        int panelRight = panelLeft + this.xSize;
-        int panelBottom = panelTop + this.ySize;
 
-        guiGraphics.fill(panelLeft, panelTop, panelRight, panelBottom, PANEL_COLOR);
-        guiGraphics.fill(panelLeft + 3, panelTop + 3, panelRight - 3, panelBottom - 3, PANEL_INNER_COLOR);
-        guiGraphics.fill(panelLeft + 3, panelTop + 3, panelRight - 3, panelTop + 22, HEADER_COLOR);
-        guiGraphics.fill(panelLeft + 10, panelTop + 48, panelRight - 10, panelTop + 118, SECTION_COLOR);
-        guiGraphics.fill(panelLeft + 14, panelTop + 52, panelRight - 14, panelTop + 114, SECTION_INNER_COLOR);
-        guiGraphics.fill(panelLeft + 176, panelTop + 48, panelRight - 10, panelTop + 94, SECTION_COLOR);
-        guiGraphics.fill(panelLeft + 180, panelTop + 52, panelRight - 14, panelTop + 90, SECTION_INNER_COLOR);
-        guiGraphics.fill(panelLeft + 10, panelTop + 124, panelRight - 10, panelBottom - 10, SECTION_COLOR);
-        guiGraphics.fill(panelLeft + 14, panelTop + 128, panelRight - 14, panelBottom - 14, SECTION_INNER_COLOR);
-
-        guiGraphics.renderOutline(panelLeft, panelTop, this.xSize, this.ySize, OUTLINE_COLOR);
-        guiGraphics.renderOutline(panelLeft + 10, panelTop + 48, this.xSize - 20, 70, OUTLINE_COLOR);
-        guiGraphics.renderOutline(panelLeft + 176, panelTop + 48, 134, 46, OUTLINE_COLOR);
-        guiGraphics.renderOutline(panelLeft + 10, panelTop + 124, this.xSize - 20, this.ySize - 134, OUTLINE_COLOR);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, panelLeft, panelTop, this.xSize, this.ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, panelLeft + 3, panelTop + 3, this.xSize - 6, 19);
+        MilitaryGuiStyle.insetPanel(guiGraphics, panelLeft + 10, panelTop + 48, this.xSize - 20, 70);
+        MilitaryGuiStyle.insetPanel(guiGraphics, panelLeft + 176, panelTop + 48, 134, 46);
+        MilitaryGuiStyle.insetPanel(guiGraphics, panelLeft + 10, panelTop + 124, this.xSize - 20, this.ySize - 134);
     }
 
     @Override
@@ -258,30 +240,30 @@ public abstract class WorkAreaScreen extends RecruitsScreenBase {
         int color;
         if (this.player.tickCount < this.workAreaPendingUntilTick) {
             status = Component.translatable("gui.bannermod.work_area.state.stale");
-            color = 0xFFFFD36A;
+            color = MilitaryGuiStyle.TEXT_WARN;
         } else if (this.workArea.getPlayerUUID() == null) {
             status = Component.translatable("gui.bannermod.work_area.state.empty_owner");
-            color = 0xFF8FA8FF;
+            color = MilitaryGuiStyle.TEXT_MUTED;
         } else {
             status = Component.translatable("gui.bannermod.work_area.state.ready");
-            color = FONT_COLOR;
+            color = MilitaryGuiStyle.TEXT_GOOD;
         }
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.guiTop + 9, ACCENT_TEXT_COLOR);
+        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.guiTop + 9, MilitaryGuiStyle.TEXT);
         guiGraphics.drawString(this.font, status, this.guiLeft + this.xSize - 16 - this.font.width(status), this.guiTop + 9, color, false);
 
-        guiGraphics.drawString(this.font, TEXT_SECTION_POSITION, this.guiLeft + 16, this.guiTop + 32, ACCENT_TEXT_COLOR, false);
-        guiGraphics.drawString(this.font, TEXT_SECTION_OWNER, this.guiLeft + 182, this.guiTop + 32, ACCENT_TEXT_COLOR, false);
-        guiGraphics.drawString(this.font, TEXT_SECTION_SETTINGS, this.guiLeft + 16, this.guiTop + 108, ACCENT_TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, TEXT_SECTION_POSITION, this.guiLeft + 16, this.guiTop + 32, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(this.font, TEXT_SECTION_OWNER, this.guiLeft + 182, this.guiTop + 32, MilitaryGuiStyle.TEXT, false);
+        guiGraphics.drawString(this.font, TEXT_SECTION_SETTINGS, this.guiLeft + 16, this.guiTop + 108, MilitaryGuiStyle.TEXT, false);
 
-        int movementHintY = drawWrapped(guiGraphics, TEXT_HINT_MOVE, this.guiLeft + 16, this.guiTop + 93, 150, MUTED_TEXT_COLOR);
-        drawWrapped(guiGraphics, TEXT_HINT_SHIFT, this.guiLeft + 16, movementHintY + 2, 150, MUTED_TEXT_COLOR);
+        int movementHintY = drawWrapped(guiGraphics, TEXT_HINT_MOVE, this.guiLeft + 16, this.guiTop + 93, 150, MilitaryGuiStyle.TEXT_MUTED);
+        drawWrapped(guiGraphics, TEXT_HINT_SHIFT, this.guiLeft + 16, movementHintY + 2, 150, MilitaryGuiStyle.TEXT_MUTED);
 
         Component ownerHint = this.workArea.getPlayerUUID() == null ? TEXT_HINT_OWNER_MISSING : TEXT_HINT_OWNER_READY;
-        drawWrapped(guiGraphics, ownerHint, this.guiLeft + 182, this.guiTop + 76, 122, MUTED_TEXT_COLOR);
+        drawWrapped(guiGraphics, ownerHint, this.guiLeft + 182, this.guiTop + 76, 122, MilitaryGuiStyle.TEXT_MUTED);
 
         int summaryY = this.guiTop + 138;
         for (Component line : getSettingSummaryLines()) {
-            summaryY = drawWrapped(guiGraphics, line, this.guiLeft + 18, summaryY, this.xSize - 36, MUTED_TEXT_COLOR) + 2;
+            summaryY = drawWrapped(guiGraphics, line, this.guiLeft + 18, summaryY, this.xSize - 36, MilitaryGuiStyle.TEXT_MUTED) + 2;
         }
     }
 
