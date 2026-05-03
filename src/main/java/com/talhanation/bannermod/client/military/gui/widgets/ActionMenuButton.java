@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class ActionMenuButton extends AbstractWidget {
     private final Component triggerLabel;
-    private final List<ContextMenuEntry> entries;
+    private List<ContextMenuEntry> entries;
     private final int rowHeight;
     private final int menuWidth;
     private boolean openUpward;
@@ -50,6 +50,16 @@ public class ActionMenuButton extends AbstractWidget {
 
     public void close() {
         isOpen = false;
+    }
+
+    /**
+     * Replace the menu entries. Required when entry-level enabled flags depend on
+     * runtime selection state (e.g. WarListScreen's outcome menu). Closes the menu
+     * to avoid the open list pointing at stale lambdas.
+     */
+    public void setEntries(List<ContextMenuEntry> newEntries) {
+        this.entries = new ArrayList<>(newEntries);
+        this.isOpen = false;
     }
 
     @Override

@@ -2116,6 +2116,7 @@
   "gui.bannermod.war_list.book_title": "Военная летопись",
   "gui.bannermod.war_list.list_title": "Кампании",
   "gui.bannermod.war_list.ledger_title": "Приказы",
+  "gui.bannermod.war_list.menu.resolve_outcome": "Решить исход",
   "gui.bannermod.war_list.allies": "Союзники",
   "gui.bannermod.war_list.annex": "Аннексия",
   "gui.bannermod.war_list.attacker_info": "Атакующий",

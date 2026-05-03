@@ -2243,6 +2243,7 @@
   "gui.bannermod.war_list.book_title": "War Ledger",
   "gui.bannermod.war_list.list_title": "Campaigns",
   "gui.bannermod.war_list.ledger_title": "Orders",
+  "gui.bannermod.war_list.menu.resolve_outcome": "Resolve outcome",
   "gui.bannermod.war_list.allies": "Allies",
   "gui.bannermod.war_list.annex": "Annex",
   "gui.bannermod.war_list.attacker_info": "Attacker",
