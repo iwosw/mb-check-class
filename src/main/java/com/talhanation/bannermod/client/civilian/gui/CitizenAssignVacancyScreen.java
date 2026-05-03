@@ -111,16 +111,44 @@ public class CitizenAssignVacancyScreen extends Screen {
         Player viewer = mc.player;
         if (viewer == null) return List.of();
 
-        AABB box = this.citizen.getBoundingBox().inflate(SCAN_RADIUS);
+        // Prefer the citizen's host claim — its drawn boundary is the player's stated
+        // intent for "where my workers should work", which beats an arbitrary radius.
+        net.minecraft.world.level.ChunkPos citizenChunk = new net.minecraft.world.level.ChunkPos(this.citizen.blockPosition());
+        com.talhanation.bannermod.persistence.military.RecruitsClaim claim =
+                com.talhanation.bannermod.client.military.ClientManager.getClaimAtChunk(citizenChunk);
+
+        AABB scanBox;
+        if (claim != null && !claim.getClaimedChunks().isEmpty()) {
+            // Bounding box across all claim chunks; we still filter per-entity by
+            // claim.containsChunk to ignore anything spilling outside the bbox.
+            int minX = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
+            int maxX = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
+            for (net.minecraft.world.level.ChunkPos cp : claim.getClaimedChunks()) {
+                if (cp.x < minX) minX = cp.x;
+                if (cp.z < minZ) minZ = cp.z;
+                if (cp.x > maxX) maxX = cp.x;
+                if (cp.z > maxZ) maxZ = cp.z;
+            }
+            scanBox = new AABB(
+                    minX * 16, mc.level.getMinBuildHeight(), minZ * 16,
+                    maxX * 16 + 16, mc.level.getMaxBuildHeight(), maxZ * 16 + 16);
+        } else {
+            // Fallback: citizen sits outside any claim — keep the legacy 96-block scan
+            // so the button still does something useful in that edge case.
+            scanBox = this.citizen.getBoundingBox().inflate(SCAN_RADIUS);
+        }
+
         List<VacancyEntry> entries = new ArrayList<>();
-        for (Entity entity : mc.level.getEntities(this.citizen, box)) {
+        for (Entity entity : mc.level.getEntities(this.citizen, scanBox)) {
             if (entity == this.citizen) continue;
             if (!(entity instanceof AbstractWorkAreaEntity area) || !area.isAlive()) continue;
             String label = labelFor(area);
             if (label == null) continue;
-            double distSqr = this.citizen.distanceToSqr(area);
-            if (distSqr > SCAN_RADIUS * SCAN_RADIUS) continue;
-            entries.add(new VacancyEntry(area.getUUID(), label, distSqr));
+            // Clip to the actual claim shape, not just its bbox — claims can be L-shaped.
+            if (claim != null && !claim.containsChunk(new net.minecraft.world.level.ChunkPos(area.blockPosition()))) {
+                continue;
+            }
+            entries.add(new VacancyEntry(area.getUUID(), label, this.citizen.distanceToSqr(area)));
         }
         entries.sort(Comparator.comparingDouble(VacancyEntry::distSqr));
         return entries;

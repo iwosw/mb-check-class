@@ -1085,7 +1085,7 @@
   "gui.bannermod.citizen_profile.assign_vacancy.button": "Assign Vacancy",
   "gui.bannermod.citizen_profile.assign_vacancy.title": "Assign Citizen to Work Area",
   "gui.bannermod.citizen_profile.assign_vacancy.back": "Cancel",
-  "gui.bannermod.citizen_profile.assign_vacancy.empty": "No nearby work areas found within 96 blocks.",
+  "gui.bannermod.citizen_profile.assign_vacancy.empty": "No work areas found in this claim. Mark a zone with the Settlement Surveyor first.",
   "chat.bannermod.assign_vacancy.ok": "Citizen assigned to that vacancy.",
   "chat.bannermod.assign_vacancy.denied": "You can only assign citizens you own.",
   "chat.bannermod.assign_vacancy.citizen_missing": "Citizen no longer exists.",
