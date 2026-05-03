@@ -6568,6 +6568,23 @@
       "progress": [],
       "verification": [],
       "evidence": []
+    },
+    {
+      "id": "HOMEASSIGN-001",
+      "title": "Assign-home button for citizens, workers, and recruits",
+      "status": "open",
+      "updated": "2026-05-03",
+      "why": "Player wants to manually anchor a citizen/worker/recruit to a specific dwelling so they sleep / return to it. Recruits already carry an upkeepPos field that's conceptually a home, but workers/citizens have no equivalent and there's no UI to set one for any of the three. Without manual override the AI just wanders to whatever the staffing pipeline picked.",
+      "scope": [
+        "(a) Add homePos (BlockPos) + homeBuildAreaUUID (UUID) NBT/synched fields on AbstractCitizenEntity and AbstractWorkerEntity; reuse existing upkeepPos+upkeepUUID on AbstractRecruitEntity to mean 'home' for the recruit case (or alias). (b) Server-side packet MessageAssignHome(entityUuid, BlockPos|UUID) — validates ownership and that the target is a HousePrefab/bed/sleeping-zone block. (c) Client UI: 'Assign Home' button on CitizenProfileScreen, RecruitInventoryScreen, and worker profile screen. Two-step flow: click button → 'right-click target block within 30s'. (d) AI goal: at night or low-stamina, entity pathfinds back to homePos via AsyncGroundPathNavigation; once within 3 blocks, sleeps/idles. (e) Persistence + sync. (f) Localization en_us/ru_ru."
+      ],
+      "acceptance": [
+        "All three entity types expose Assign Home button in their profile screen; button opens a 30-second 'right-click target' selector that accepts beds and validated sleeping zones; assigned home survives save/load; entities pathfind to home at night and on /restart; ./gradlew compileJava and gametest both green."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
