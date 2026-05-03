@@ -38,6 +38,7 @@ public final class CivilianPacketCatalog {
         MessageOpenWorkerScreen.class,
         MessageConvertWorkerToCitizen.class,
         MessageReassignWorkerProfession.class,
+        MessageAssignCitizenVacancy.class,
     };
 
     public static final PacketCatalog CATALOG = new PacketCatalog(MESSAGES);

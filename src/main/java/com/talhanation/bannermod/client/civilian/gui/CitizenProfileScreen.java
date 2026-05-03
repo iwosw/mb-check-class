@@ -31,6 +31,25 @@ public class CitizenProfileScreen extends AbstractContainerScreen<CitizenProfile
     }
 
     @Override
+    protected void init() {
+        super.init();
+        // "Assign Vacancy" button — opens a list of nearby work-areas (CropArea/MineArea/
+        // etc.) and lets the player pin this citizen to a specific one instead of waiting
+        // for assignCitizenToNearestVacancy to pick. The button is layout-stacked above
+        // the inventory grid in the right pane (parchmentInset at x=92, y=108).
+        int buttonX = this.leftPos + 96;
+        int buttonY = this.topPos + 88;
+        this.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+                Component.translatable("gui.bannermod.citizen_profile.assign_vacancy.button"),
+                button -> {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new CitizenAssignVacancyScreen(this, this.citizen));
+                    }
+                }
+        ).bounds(buttonX, buttonY, 134, 16).build());
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);

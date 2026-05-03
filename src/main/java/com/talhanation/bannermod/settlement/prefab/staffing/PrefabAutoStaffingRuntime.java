@@ -241,6 +241,47 @@ public final class PrefabAutoStaffingRuntime {
         return BuildingPrefabProfession.NONE;
     }
 
+    /**
+     * Manually pin a citizen to a specific work-area UUID, bypassing the distance and
+     * "nearest vacancy" picking logic. Used by the player-driven Assign-Vacancy button.
+     *
+     * <p>The work area must already exist (or have been lifted into VACANCIES via the
+     * standalone-work-area helper). If no profession can be derived (BuildArea / Storage
+     * / Market), this is a no-op so we don't bind a citizen to a vacancy that produces
+     * NONE profession.
+     *
+     * @return {@code true} if the binding was applied.
+     */
+    public static boolean assignCitizenToSpecificVacancy(ServerLevel level, CitizenEntity citizen, UUID anchorUuid) {
+        if (level == null || citizen == null || anchorUuid == null
+                || !citizen.isAlive() || citizen.isRemoved()) {
+            return false;
+        }
+        // Lift the requested anchor if it's a standalone work-area we haven't tracked
+        // yet — manual assign should work for fresh surveyor-drawn zones too.
+        Entity entity = level.getEntity(anchorUuid);
+        if (!VACANCIES.containsKey(anchorUuid) && entity instanceof AbstractWorkAreaEntity wa && wa.isAlive()) {
+            BuildingPrefabProfession profession = professionForStandaloneWorkArea(wa);
+            if (profession != BuildingPrefabProfession.NONE) {
+                VACANCIES.put(anchorUuid, new VacancyRecord(anchorUuid, profession, 1, wa.blockPosition()));
+            }
+        }
+        VacancyRecord vacancy = VACANCIES.get(anchorUuid);
+        if (vacancy == null) {
+            return false;
+        }
+        CitizenProfession pending = toCitizenProfession(vacancy.profession());
+        if (pending == CitizenProfession.NONE) {
+            return false;
+        }
+        // Clear any stale assignment pause that would block the binding from taking effect.
+        citizen.getPersistentData().remove(TAG_ASSIGNMENT_PAUSE_UNTIL);
+        citizen.getPersistentData().putString(TAG_PENDING_WORKER_PROFESSION, pending.name());
+        citizen.setBoundWorkAreaUUID(anchorUuid);
+        incrementOccupancy(level, anchorUuid);
+        return true;
+    }
+
     public static void assignCitizenToNearestVacancy(ServerLevel level, CitizenEntity citizen) {
         if (level == null || citizen == null || !citizen.isAlive() || citizen.isRemoved()) {
             return;
