@@ -1422,6 +1422,7 @@
   "gui.recruits.confirm.status.trinary": "Yes keeps the banner, No dismisses it, Back returns.",
   "gui.recruits.hire.group_label": "Company",
   "gui.recruits.hire.tooltip.disabled": "Pick a company before hiring this recruit.",
+  "gui.recruits.hire.tooltip.not_allowed": "You are not allowed to hire here right now.",
   "gui.recruits.hire.status.no_group": "Pick a company before hiring this recruit.",
   "gui.recruits.hire.status.selected_group": "Will join: %s",
   "gui.recruits.promote.screen.title": "Promote Recruit",

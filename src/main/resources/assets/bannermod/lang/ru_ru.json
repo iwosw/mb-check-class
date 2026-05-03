@@ -1366,6 +1366,7 @@
   "gui.recruits.confirm.status.trinary": "Да сохраняет знамя, Нет распускает его, Назад возвращает назад.",
   "gui.recruits.hire.group_label": "Отряд",
   "gui.recruits.hire.tooltip.disabled": "Сначала выбери отряд, прежде чем нанимать этого рекрута.",
+  "gui.recruits.hire.tooltip.not_allowed": "Сейчас тебе нельзя нанимать здесь.",
   "gui.recruits.hire.status.no_group": "Сначала выбери отряд, прежде чем нанимать этого рекрута.",
   "gui.recruits.hire.status.selected_group": "Вступит в: %s",
   "gui.recruits.promote.screen.title": "Повышение рекрута",
