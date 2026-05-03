@@ -6521,6 +6521,31 @@
       "evidence": [
         "UI_AUDIT_FINDINGS.md section 'civilian/WorkerStatusScreen.java' (HIGH severity)"
       ]
+    },
+    {
+      "id": "WORLDMAPCLAIMPE-001",
+      "title": "Move existing claim into a different political entity",
+      "status": "open",
+      "updated": "2026-05-03",
+      "why": "Audit of multi-settlement-state UX (UI_AUDIT_FINDINGS + user playtest) found a real gap: a claim's owning political entity is fixed at creation. There is no UI or command to transfer an existing settlement claim into another state. The current workaround forces players to delete and re-claim, losing all in-claim state.",
+      "scope": [
+        "Server-side: add MessageReassignClaimPoliticalEntity(claimUuid, newPoliticalEntityUuid). Auth: caller must be leader (or REPUBLIC co-leader) of BOTH the source PE (or admin claim caller) AND the target PE; reuse PoliticalEntityAuthority.canAct gating. On success mutate RecruitsClaim.setOwnerPoliticalEntityId, persist, and broadcast claim snapshot.",
+        "Client UI: extend ClaimEditScreen with a 'Transfer to state' DropDownMenu populated by states the caller has authority in (filter via WarClientState.entities + PoliticalEntityAuthority). Show denial reason when empty.",
+        "Localize all new strings in en_us.json + ru_ru.json (button label, tooltip, denial reasons, confirm dialog).",
+        "Update MULTIPLAYER_GUIDE_EN.md + MULTIPLAYER_GUIDE_RU.md to replace the current 'no in-place way' wording with the working flow."
+      ],
+      "acceptance": [
+        "From ClaimEditScreen, a leader can transfer the claim to any state where they hold authority; the claim's HUD relation, color, and political entity ledger update without a re-log",
+        "Non-leaders see the transfer trigger greyed with a 'Need authority in target state' tooltip; server rejects forged packets with the same denial path used by other claim mutations",
+        "WorldMapClaimControllerTest (or a new sibling) covers a successful transfer + a denied transfer; en_us + ru_ru both carry the new keys",
+        "Both multiplayer guides describe the new flow and remove the WORLDMAPCLAIMPE-001 workaround note"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "UI_AUDIT_FINDINGS.md (audit doc) + user playtest report '2026-05-03'"
+      ]
     }
   ]
 }
