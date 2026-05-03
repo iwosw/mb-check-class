@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.gui.worldmap;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.client.military.ClientManager;
+import com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle;
 import com.talhanation.bannermod.client.military.gui.RecruitsScreenBase;
 import com.talhanation.bannermod.client.military.gui.player.PlayersList;
 import com.talhanation.bannermod.client.military.gui.player.SelectPlayerScreen;
@@ -76,8 +77,8 @@ public class ClaimEditScreen extends RecruitsScreenBase {
     private void setWidgets(){
         clearWidgets();
         editNameBox = new EditBox(font, x - 70, y - 110, 140, 20, Component.literal(""));
-        editNameBox.setTextColor(-1);
-        editNameBox.setTextColorUneditable(-1);
+        editNameBox.setTextColor(MilitaryGuiStyle.TEXT_DARK);
+        editNameBox.setTextColorUneditable(MilitaryGuiStyle.TEXT_DARK);
         editNameBox.setBordered(true);
         editNameBox.setMaxLength(32);
         editNameBox.setValue(savedName);
