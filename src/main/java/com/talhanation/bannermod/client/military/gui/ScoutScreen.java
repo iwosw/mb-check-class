@@ -1,22 +1,17 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.talhanation.bannermod.bootstrap.BannerModMain;
-import com.talhanation.bannermod.client.military.gui.component.ActivateableButton;
 import com.talhanation.bannermod.client.military.gui.widgets.RecruitsCheckBox;
 import com.talhanation.bannermod.entity.military.ScoutEntity;
 import com.talhanation.bannermod.network.messages.military.MessageScoutTask;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 public class ScoutScreen extends RecruitsScreenBase {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
     private static final Component TITLE = Component.translatable("gui.recruits.more_screen.title");
     private final Player player;
     private final ScoutEntity scout;
@@ -27,7 +22,7 @@ public class ScoutScreen extends RecruitsScreenBase {
     private RecruitsCheckBox checkBoxScouting;
     public boolean scouting;
     private Component statusLine = Component.empty();
-    private int statusColor = FONT_COLOR;
+    private int statusColor = MilitaryGuiStyle.TEXT_DARK;
     public ScoutScreen(ScoutEntity scout, Player player) {
         super(TITLE, 195,160);
         this.player = player;
@@ -52,7 +47,7 @@ public class ScoutScreen extends RecruitsScreenBase {
                 this.statusLine = Component.translatable(scouting
                         ? "gui.recruits.scout.status.accepted_start"
                         : "gui.recruits.scout.status.accepted_stop");
-                this.statusColor = 0x2E5D32;
+                this.statusColor = MilitaryGuiStyle.TEXT_GOOD;
             }
         );
         checkBoxScouting.setTooltip(Tooltip.create(TOOLTIP_SCOUTING));
@@ -61,29 +56,30 @@ public class ScoutScreen extends RecruitsScreenBase {
     }
 
     private void updateStatusLine() {
-        if (this.statusColor == 0x2E5D32 && this.statusLine != Component.empty()) {
+        if (this.statusColor == MilitaryGuiStyle.TEXT_GOOD && this.statusLine != Component.empty()) {
             return;
         }
         this.statusLine = Component.translatable(scouting
                 ? "gui.recruits.scout.status.active"
                 : "gui.recruits.scout.status.idle");
-        this.statusColor = scouting ? 0x2E5D32 : 0x6E5A45;
+        this.statusColor = scouting ? MilitaryGuiStyle.TEXT_GOOD : MilitaryGuiStyle.TEXT_MUTED;
     }
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
-        drawFramedPanel(guiGraphics, guiLeft + 18, guiTop + 20, xSize - 36, 44);
-        drawDarkInset(guiGraphics, guiLeft + 24, guiTop + 108, xSize - 48, 18);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 8, guiTop + 6, xSize - 16, 14);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 18, guiTop + 24, xSize - 36, 40);
+        MilitaryGuiStyle.insetPanel(guiGraphics, guiLeft + 24, guiTop + 108, xSize - 48, 18);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 8, FONT_COLOR, false);
-        guiGraphics.drawString(font, SUBTITLE, guiLeft + xSize / 2 - font.width(SUBTITLE) / 2, guiTop + 33, FONT_COLOR, false);
-        guiGraphics.drawString(font, statusLine, guiLeft + 28, guiTop + 114, statusColor, false);
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, TITLE, xSize - 20);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, clampedTitle, guiLeft, guiTop + 9, xSize);
+        Component clampedSubtitle = MilitaryGuiStyle.clampLabel(font, SUBTITLE, xSize - 40);
+        guiGraphics.drawCenteredString(font, clampedSubtitle, guiLeft + xSize / 2, guiTop + 33, MilitaryGuiStyle.TEXT_DARK);
+        Component clampedStatus = MilitaryGuiStyle.clampLabel(font, statusLine, xSize - 56);
+        guiGraphics.drawString(font, clampedStatus, guiLeft + 28, guiTop + 114, statusColor, false);
     }
 }

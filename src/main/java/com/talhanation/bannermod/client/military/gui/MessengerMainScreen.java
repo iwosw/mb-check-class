@@ -1,19 +1,13 @@
 package com.talhanation.bannermod.client.military.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.talhanation.bannermod.bootstrap.BannerModMain;
 import com.talhanation.bannermod.entity.military.MessengerEntity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.client.gui.widget.ExtendedButton;
 
 public class MessengerMainScreen extends RecruitsScreenBase {
-
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(BannerModMain.MOD_ID, "textures/gui/gui_big.png");
 
     private static final Component BUTTON_MESSAGES = Component.translatable("gui.recruits.messenger.tab.messages");
     private static final Component TITLE = Component.translatable("gui.recruits.messenger.main_title");
@@ -41,7 +35,8 @@ public class MessengerMainScreen extends RecruitsScreenBase {
         int btnWidth = 128;
         int btnX = guiLeft + (xSize - btnWidth) / 2;
 
-        Button messagesButton = new ExtendedButton(btnX, guiTop + 30, btnWidth, 20, BUTTON_MESSAGES,
+        Button messagesButton = new ExtendedButton(btnX, guiTop + 30, btnWidth, 20,
+                MilitaryGuiStyle.clampLabel(font, BUTTON_MESSAGES, btnWidth - 6),
                 button -> minecraft.setScreen(new MessengerScreen(messenger, player))
         );
         addRenderableWidget(messagesButton);
@@ -50,18 +45,19 @@ public class MessengerMainScreen extends RecruitsScreenBase {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, xSize, ySize);
-        drawFramedPanel(guiGraphics, guiLeft + 16, guiTop + 20, xSize - 32, 50);
-        drawDarkInset(guiGraphics, guiLeft + 26, guiTop + 92, xSize - 52, 28);
+        MilitaryGuiStyle.parchmentPanel(guiGraphics, guiLeft, guiTop, xSize, ySize);
+        MilitaryGuiStyle.titleStrip(guiGraphics, guiLeft + 8, guiTop + 4, xSize - 16, 14);
+        MilitaryGuiStyle.parchmentInset(guiGraphics, guiLeft + 16, guiTop + 22, xSize - 32, 48);
+        MilitaryGuiStyle.insetPanel(guiGraphics, guiLeft + 26, guiTop + 92, xSize - 52, 28);
     }
 
     @Override
     public void renderForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        guiGraphics.drawString(font, TITLE, guiLeft + xSize / 2 - font.width(TITLE) / 2, guiTop + 7, FONT_COLOR, false);
-        guiGraphics.drawString(font, SUBTITLE, guiLeft + xSize / 2 - font.width(SUBTITLE) / 2, guiTop + 30, FONT_COLOR, false);
-        guiGraphics.drawString(font, NEXT_STEP, guiLeft + 30, guiTop + 101, 0xF3E7C8, false);
+        Component clampedTitle = MilitaryGuiStyle.clampLabel(font, TITLE, xSize - 20);
+        MilitaryGuiStyle.drawCenteredTitle(guiGraphics, font, clampedTitle, guiLeft, guiTop + 7, xSize);
+        Component clampedSubtitle = MilitaryGuiStyle.clampLabel(font, SUBTITLE, xSize - 36);
+        guiGraphics.drawCenteredString(font, clampedSubtitle, guiLeft + xSize / 2, guiTop + 30, MilitaryGuiStyle.TEXT_DARK);
+        Component clampedNext = MilitaryGuiStyle.clampLabel(font, NEXT_STEP, xSize - 60);
+        guiGraphics.drawString(font, clampedNext, guiLeft + 30, guiTop + 101, MilitaryGuiStyle.TEXT, false);
     }
 }

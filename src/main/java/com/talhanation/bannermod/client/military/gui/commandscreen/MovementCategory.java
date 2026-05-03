@@ -39,7 +39,7 @@ public class MovementCategory implements ICommandCategory {
     private static final MutableComponent TEXT_FORMATION_V = Component.translatable("gui.recruits.command.text.formation_v");
     private static final MutableComponent TEXT_FORMATION_CIRCLE = Component.translatable("gui.recruits.command.text.formation_circle");
     private static final MutableComponent TEXT_FORMATION_MOVEMENT = Component.translatable("gui.recruits.command.text.formation_movement");
-    private static final MutableComponent TEXT_FORMATION_TESTUDO = Component.literal("Testudo");
+    private static final MutableComponent TEXT_FORMATION_TESTUDO = Component.translatable("gui.recruits.command.text.formation_testudo");
     private static final MutableComponent TEXT_FORMATION_NONE = Component.translatable("gui.recruits.command.text.formation_none");
     private static final MutableComponent TEXT_HOLD_MY_POS = Component.translatable("gui.recruits.command.text.holdMyPos");
     private static final MutableComponent TOOLTIP_MOVE = Component.translatable("gui.recruits.command.tooltip.move_hold");
@@ -241,10 +241,14 @@ public class MovementCategory implements ICommandCategory {
         screen.addRenderableWidget(testudoFormationButton);
 
         //TIGHT TOGGLE BUTTON
-        Component tightText = CommandScreen.tightFormation ?
-                Component.literal("[X] ").append(TEXT_TIGHT) :
-                Component.literal("[ ] ").append(TEXT_TIGHT);
-        ExtendedButton tightCheckbox = new ExtendedButton(x + 74, formationY + 14, 60, 20, tightText,
+        Component tightText = Component.translatable(
+                CommandScreen.tightFormation
+                        ? "gui.recruits.command.text.tight.on"
+                        : "gui.recruits.command.text.tight.off",
+                TEXT_TIGHT.getString());
+        Component tightClamped = com.talhanation.bannermod.client.military.gui.MilitaryGuiStyle.clampLabel(
+                net.minecraft.client.Minecraft.getInstance().font, tightText, 60 - 6);
+        ExtendedButton tightCheckbox = new ExtendedButton(x + 74, formationY + 14, 60, 20, tightClamped,
                 button -> {
                     screen.setTightFormation(!CommandScreen.tightFormation);
                 });
