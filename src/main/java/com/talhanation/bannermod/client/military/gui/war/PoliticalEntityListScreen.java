@@ -161,7 +161,8 @@ public class PoliticalEntityListScreen extends Screen {
     }
 
     private int actionLedgerH() {
-        return 18 + actionRows() * (BUTTON_H + 4);
+        // Header reserves 32px: title strip (~5..14) + status line (~18..27) + 5px gap before buttons.
+        return 32 + actionRows() * (BUTTON_H + 4);
     }
 
     private int actionColumns() {
@@ -194,7 +195,8 @@ public class PoliticalEntityListScreen extends Screen {
 
     private int actionButtonY(int index) {
         int row = index / actionColumns();
-        return actionLedgerTop() + 16 + row * (BUTTON_H + 4);
+        // Push first row to +30 so the "Orders" title (+5) and status line (+18) stay readable above it.
+        return actionLedgerTop() + 30 + row * (BUTTON_H + 4);
     }
 
     @Override

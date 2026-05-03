@@ -23,7 +23,9 @@ import java.util.Locale;
 
 public class WorkerStatusScreen extends Screen {
     private static final int WIDTH = 252;
-    private static final int HEIGHT = 188;
+    // 210 gives 22 px clearance between the bottom transport text box (ends at top+168)
+    // and the action button row (starts at top + HEIGHT - 26 = top+184) so they never overlap.
+    private static final int HEIGHT = 210;
     private static final int BTN_W = 58;
     private static final int BTN_H = 20;
 
@@ -115,8 +117,8 @@ public class WorkerStatusScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTick);
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(graphics, mouseX, mouseY, partialTick);
         MilitaryGuiStyle.parchmentPanel(graphics, this.left, this.top, WIDTH, HEIGHT);
         MilitaryGuiStyle.titleStrip(graphics, this.left + 8, this.top + 8, WIDTH - 16, 16);
         MilitaryGuiStyle.drawCenteredTitle(graphics, this.font, this.title, this.left + 8, this.top + 12, WIDTH - 16);
@@ -137,7 +139,6 @@ public class WorkerStatusScreen extends Screen {
                 text("gui.bannermod.worker_screen.transport"),
                 Component.literal(this.snapshot.transportLabel()),
                 MilitaryGuiStyle.TEXT_DARK);
-        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     private void renderInfoBlock(GuiGraphics graphics, int x, int y, int width, int height) {
