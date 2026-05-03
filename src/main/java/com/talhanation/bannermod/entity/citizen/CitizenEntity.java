@@ -125,6 +125,11 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        // Walk to a bound work-area when one is assigned. Sits between FloatGoal (0)
+        // and the random stroll (8) so the citizen actually pathfinds to its workplace
+        // via AsyncGroundPathNavigation instead of randomly bumping into walls until
+        // chance places it within the 3-block conversion window.
+        this.goalSelector.addGoal(2, new com.talhanation.bannermod.ai.citizen.CitizenSeekWorkAreaGoal(this));
         this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.6D));
         this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
