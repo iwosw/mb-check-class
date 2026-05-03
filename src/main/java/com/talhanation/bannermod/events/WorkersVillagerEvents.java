@@ -76,6 +76,7 @@ public class WorkersVillagerEvents {
         }
 
         WorkerSettlementEventService.runClaimWorkerGrowthPass(level);
+        WorkerSettlementEventService.runCitizenBirthPass(level);
     }
 
     @SubscribeEvent

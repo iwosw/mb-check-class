@@ -71,12 +71,17 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
 
     private static final EntityDataAccessor<String> DATA_PROFESSION =
             SynchedEntityData.defineId(CitizenEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> DATA_FEMALE =
+            SynchedEntityData.defineId(CitizenEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_BABY =
+            SynchedEntityData.defineId(CitizenEntity.class, EntityDataSerializers.BOOLEAN);
 
     private static final CitizenProfessionRegistry DEFAULT_REGISTRY = CitizenProfessionRegistry.defaults();
 
     private final CitizenCoreState state;
     private final CitizenProfessionRegistry registry;
     private CitizenProfessionSwitcher switcher;
+    private int growUpTicks;
 
     public CitizenEntity(EntityType<? extends CitizenEntity> type, Level level) {
         this(type, level, DEFAULT_REGISTRY);
@@ -94,6 +99,9 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         // The persistence flag also keeps them across save/load even if the chunk
         // unloads while they're outside the player tracking radius.
         this.setPersistenceRequired();
+        if (level != null) {
+            this.entityData.set(DATA_FEMALE, level.getRandom().nextBoolean());
+        }
     }
 
     @Override
@@ -115,6 +123,30 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_PROFESSION, CitizenProfession.NONE.name());
+        builder.define(DATA_FEMALE, false);
+        builder.define(DATA_BABY, false);
+    }
+
+    public boolean isFemale() {
+        return this.entityData.get(DATA_FEMALE);
+    }
+
+    public void setFemale(boolean female) {
+        this.entityData.set(DATA_FEMALE, female);
+    }
+
+    @Override
+    public boolean isBaby() {
+        return this.entityData.get(DATA_BABY);
+    }
+
+    public void setBabyForBirth(int growUpTicks) {
+        this.entityData.set(DATA_BABY, true);
+        this.growUpTicks = Math.max(1, growUpTicks);
+    }
+
+    public int growUpTicksRemaining() {
+        return this.growUpTicks;
     }
 
     @Override
@@ -139,11 +171,25 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     public void aiStep() {
         super.aiStep();
         CitizenIndex.instance().onCitizenTick(this);
-        if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
-            BannerModNpcNamePool.ensureNamed(this);
-            PrefabAutoStaffingRuntime.assignCitizenToNearestVacancy((net.minecraft.server.level.ServerLevel) this.level(), this);
-            tryConvertIntoPendingWorker();
+        if (!this.level().isClientSide()) {
+            tickGrowUp();
+            if (this.tickCount % 20 == 0) {
+                BannerModNpcNamePool.ensureNamed(this);
+                PrefabAutoStaffingRuntime.assignCitizenToNearestVacancy((net.minecraft.server.level.ServerLevel) this.level(), this);
+                tryConvertIntoPendingWorker();
+            }
         }
+    }
+
+    private void tickGrowUp() {
+        if (!this.entityData.get(DATA_BABY)) {
+            return;
+        }
+        if (this.growUpTicks > 0) {
+            this.growUpTicks--;
+            return;
+        }
+        this.entityData.set(DATA_BABY, false);
     }
 
     @Override
@@ -412,6 +458,9 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
             flagTag.putBoolean(flag.name(), this.state.getRuntimeFlag(flag));
         }
         tag.put("CitizenRuntimeFlags", flagTag);
+        tag.putBoolean("CitizenFemale", this.entityData.get(DATA_FEMALE));
+        tag.putBoolean("CitizenBaby", this.entityData.get(DATA_BABY));
+        tag.putInt("CitizenGrowUpTicks", this.growUpTicks);
     }
 
     @Override
@@ -463,6 +512,13 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
                 this.state.setRuntimeFlag(flag, flagTag.getBoolean(flag.name()));
             }
         }
+        if (tag.contains("CitizenFemale")) {
+            this.entityData.set(DATA_FEMALE, tag.getBoolean("CitizenFemale"));
+        }
+        if (tag.contains("CitizenBaby")) {
+            this.entityData.set(DATA_BABY, tag.getBoolean("CitizenBaby"));
+        }
+        this.growUpTicks = tag.contains("CitizenGrowUpTicks") ? tag.getInt("CitizenGrowUpTicks") : 0;
     }
 
     // ------------------------------------------------------------------

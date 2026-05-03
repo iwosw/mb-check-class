@@ -45,6 +45,10 @@ public class WorkersServerConfig {
     public static ModConfigSpec.ConfigValue<List<? extends String>> ClaimWorkerProfessionPool;
     public static ModConfigSpec.DoubleValue CitizenMilitiaMobilizationChance;
     public static ModConfigSpec.BooleanValue EnableBuildingPrefabs;
+    public static ModConfigSpec.BooleanValue CitizenBirthEnabled;
+    public static ModConfigSpec.LongValue CitizenBirthCooldownTicks;
+    public static ModConfigSpec.IntValue CitizenBirthGrowUpTicks;
+    public static ModConfigSpec.IntValue CitizenBirthMaxBabiesPerClaim;
     public static ArrayList<String> FARMER_PICKUP = new ArrayList<>(
             Arrays.asList(
                     "minecraft:wheat",
@@ -362,6 +366,40 @@ public class WorkersServerConfig {
                 .worldRestart()
                 .define("EnableBuildingPrefabs", false);
 
+        CitizenBirthEnabled = BUILDER.comment("""
+
+                        Server-side citizen-on-citizen birth tick. When true, claims with at least one
+                        adult male and one adult female citizen and free housing slack will spawn a
+                        baby citizen on cooldown. Baby grows into an adult after CitizenBirthGrowUpTicks.
+                        \t(takes effect after restart)
+                        \tdefault: false""")
+                .worldRestart()
+                .define("CitizenBirthEnabled", false);
+
+        CitizenBirthCooldownTicks = BUILDER.comment("""
+
+                        Minimum game ticks between consecutive births in the same claim.
+                        \t(takes effect after restart)
+                        \tdefault: 24000 (1 minecraft day)""")
+                .worldRestart()
+                .defineInRange("CitizenBirthCooldownTicks", 24000L, 0L, Long.MAX_VALUE);
+
+        CitizenBirthGrowUpTicks = BUILDER.comment("""
+
+                        Game ticks a baby citizen remains a baby before becoming an adult.
+                        \t(takes effect after restart)
+                        \tdefault: 168000 (7 minecraft days)""")
+                .worldRestart()
+                .defineInRange("CitizenBirthGrowUpTicks", 168000, 1, Integer.MAX_VALUE);
+
+        CitizenBirthMaxBabiesPerClaim = BUILDER.comment("""
+
+                        Hard cap on simultaneous babies in a single claim.
+                        \t(takes effect after restart)
+                        \tdefault: 2""")
+                .worldRestart()
+                .defineInRange("CitizenBirthMaxBabiesPerClaim", 2, 1, 64);
+
         BUILDER.pop();
 
         SERVER = BUILDER.build();
@@ -402,6 +440,15 @@ public class WorkersServerConfig {
                 resolveInt(ClaimWorkerMaxPerClaim, 4),
                 resolveAllowedClaimGrowthProfessions(),
                 true
+        );
+    }
+
+    public static com.talhanation.bannermod.settlement.civilian.CitizenBirthRules.Config citizenBirthConfig() {
+        return new com.talhanation.bannermod.settlement.civilian.CitizenBirthRules.Config(
+                resolveBoolean(CitizenBirthEnabled, false),
+                resolveLong(CitizenBirthCooldownTicks, 24000L),
+                resolveInt(CitizenBirthGrowUpTicks, 168000),
+                resolveInt(CitizenBirthMaxBabiesPerClaim, 2)
         );
     }
 

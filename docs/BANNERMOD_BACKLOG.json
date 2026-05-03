@@ -6612,7 +6612,7 @@
     {
       "id": "CIT-002",
       "title": "Real citizen-on-citizen birth bound to housing",
-      "status": "open",
+      "status": "in_progress",
       "updated": "2026-05-04",
       "why": "The current 'birth' path is just a Villager-grows-up hook that converts a vanilla villager into a worker once. Citizens themselves never reproduce; settlements cannot grow organically once vanilla villagers are exhausted, and there is no demographic loop tying population to housing.",
       "scope": [
@@ -6622,7 +6622,12 @@
         "Two adult citizens in the same claim, with food in claim storage and at least one home with free residentCapacity, produce a baby citizen on a server tick and the baby grows up after the configured grow-up time; if no free housing slot exists in the claim no baby is spawned and a debug log entry is written; cooldown prevents back-to-back births; ./gradlew compileJava and existing citizen tests pass; new test exercises the housing-gated path; MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md describe the new mechanic."
       ],
       "dependencies": [],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-04",
+          "text": "Implementation landed: CitizenEntity now carries DATA_FEMALE/DATA_BABY synched fields plus a growUpTicks counter persisted via NBT (CitizenFemale/CitizenBaby/CitizenGrowUpTicks). Gender is randomized in the constructor and the baby flag is decremented in aiStep (server-side only). New CitizenBirthRules pure rule (FRIENDLY_CLAIM, opposite-gender pair, cooldown, baby cap, housing slack) returns Decision/DenialReason. CitizenBirthService runs every 200 ticks from WorkersVillagerEvents.onServerTick.Post, scans CitizenIndex per claim, evaluates the rule and spawns a baby CitizenEntity at the mother's position with setBabyForBirth. WorkerSettlementClaimPolicy.assignHomeIfAvailable binds the baby to a free home slot, so housing accounting stays consistent. Four config knobs (CitizenBirthEnabled default false, CitizenBirthCooldownTicks default 24000, CitizenBirthGrowUpTicks default 168000, CitizenBirthMaxBabiesPerClaim default 2). New CitizenBirthRulesTest covers all six denial paths and the allow path. Multiplayer guides RU+EN document the mechanic. ./gradlew test passes.\\n\\nDeviation from acceptance: the food precondition is NOT implemented — no claim-level food query exists in the codebase today, and adding one is its own slice (StorageArea iteration + food-item filter + config knob). Tracked as CIT-004. The rest of the acceptance items (paired adults produce baby on tick, baby grows up after configured time, no housing slot blocks birth, cooldown blocks back-to-back, guide updates) are observable from the current code."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -6648,6 +6653,23 @@
       ],
       "evidence": [],
       "doneDate": "2026-05-04"
+    },
+    {
+      "id": "CIT-004",
+      "title": "Gate citizen-on-citizen birth on claim food storage",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "CIT-002 ships birth gated only on opposite-gender adult pair, cooldown, housing slack and baby cap. The original spec also called for a food precondition (claim storage must contain food) so settlements can starve. The codebase has no claim-level food query today (StorageArea is per-area, not aggregated). Without this gate, a player can leave a claim unattended and watch population balloon from a single mating pair.",
+      "scope": [
+        "Add a static helper that scans StorageArea entities in a claim for any vanilla 'food' item (Item#getFoodProperties != null) above a configurable minimum, expose it from WorkerSettlementClaimPolicy, thread it as an int parameter through CitizenBirthRules.evaluate, add a NO_FOOD denial reason, surface a config knob CitizenBirthFoodMinUnits (default 8), update CitizenBirthService to compute and pass the count, and add a unit test that covers the new denial."
+      ],
+      "acceptance": [
+        "CitizenBirthRules has a NO_FOOD denial reason and rejects when food count is below the configured minimum; CitizenBirthService passes a real claim-food count instead of Integer.MAX_VALUE; new unit test confirms the gate; ./gradlew test passes; multiplayer guides reference the food precondition."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
