@@ -6551,6 +6551,23 @@
       "evidence": [
         "UI_AUDIT_FINDINGS.md (audit doc) + user playtest report '2026-05-03'"
       ]
+    },
+    {
+      "id": "SKILLTREE-001",
+      "title": "Bannerlord-style skill/perk tree for recruits and players",
+      "status": "open",
+      "updated": "2026-05-03",
+      "why": "Player asked for Mount&Blade-style progression: per-archetype perks (sword/bow/crossbow/cavalry) + general stats (HP/speed/damage/etc.) for both recruits and players, on top of the existing XP/level system in RecruitProgressionService. Promote system covers class-change but not in-class growth.",
+      "scope": [
+        "Design and implement: (a) perk/talent data model (server-authoritative, persisted) layered on top of existing XP/level system without breaking RecruitProgressionService; (b) per-archetype perk trees for swordsman/bowman/crossbowman/pikeman/cavalry; (c) general stat skills (HP, KB-resist, attack damage, attack speed, movement, ranged accuracy, ranged velocity); (d) player-side skill tree using NeoForge AttachmentType (new infra); (e) GUI screens for recruit and player skill trees in the existing parchment style; (f) skill-point earning (kills + per-level grants) and respec mechanic; (g) localization for all keys in en_us/ru_ru. Phase plan: 1) data layer + persistence, 2) recruit perks + combat hooks, 3) player attachment + perks, 4) GUI."
+      ],
+      "acceptance": [
+        "Recruit profile screen shows perk tree with locked/available/owned states; player has a key-binding to open own skill tree; perks survive save/load; combat hooks observably affect damage/HP/speed numbers (verified by testing in-game with /tp and combat dummies); both en_us and ru_ru localised; existing promote/level system still works; tools/backlog validate passes; ./gradlew compileJava is green."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
