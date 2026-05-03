@@ -6493,6 +6493,29 @@
       ],
       "evidence": [],
       "doneDate": "2026-05-02"
+    },
+    {
+      "id": "WORKERUI-001",
+      "title": "WorkerStatusScreen needs profession reassignment, dismiss, wage controls",
+      "status": "open",
+      "updated": "2026-05-03",
+      "why": "Audit (UI_AUDIT_FINDINGS.md) flagged the screen advertises management but only exposes Refresh/Convert/Close. Players have no UI path to reassign a worker's profession, dismiss them, or set a wage.",
+      "scope": [
+        "Add ActionMenuButton or DropDownMenu to WorkerStatusScreen with: (1) Reassign profession entry that opens a profession picker; (2) Dismiss entry that sends a server-validated MessageDismissWorker; (3) Wage adjustment +/- pad if the wage system exposes a setter.",
+        "Define new server-authoritative messages: MessageReassignWorkerProfession(workerUUID, professionId), MessageDismissWorker(workerUUID), MessageSetWorkerWage(workerUUID, amount) — all idempotent, all validated by ownership/permission server-side.",
+        "Localize all new player-facing strings in en_us.json + ru_ru.json."
+      ],
+      "acceptance": [
+        "WorkerStatusScreen renders Reassign/Dismiss/Wage controls accessible from the screen",
+        "Each new server message round-trips through ownership validation; non-owner click results in denied feedback in client and no state change server-side (covered by a unit test on the message handler)",
+        "MULTIPLAYER_GUIDE_EN.md and MULTIPLAYER_GUIDE_RU.md describe the new controls in the worker management section"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": [
+        "UI_AUDIT_FINDINGS.md section 'civilian/WorkerStatusScreen.java' (HIGH severity)"
+      ]
     }
   ]
 }
