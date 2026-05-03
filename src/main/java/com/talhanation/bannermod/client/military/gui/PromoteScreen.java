@@ -46,9 +46,11 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     private static final MutableComponent BUTTON_ASSASSIN = Component.translatable("gui.bannermod.inv.text.assassin");
     private static final MutableComponent TOOLTIP_ASSASSIN = Component.translatable("gui.bannermod.inv.tooltip.assassin");
+    private static final MutableComponent TOOLTIP_ASSASSIN_DISABLED = Component.translatable("gui.bannermod.inv.tooltip.assassin_disabled");
 
     private static final MutableComponent BUTTON_SPY = Component.translatable("gui.bannermod.inv.text.spy");
     private static final MutableComponent TOOLTIP_SPY = Component.translatable("gui.bannermod.inv.tooltip.spy");
+    private static final MutableComponent TOOLTIP_SPY_DISABLED = Component.translatable("gui.bannermod.inv.tooltip.spy_disabled");
 
     private static final MutableComponent BUTTON_SIEGE_ENGINEER = Component.translatable("gui.bannermod.inv.text.siege_engineer");
     private static final MutableComponent TOOLTIP_SIEGE_ENGINEER = Component.translatable("gui.bannermod.inv.tooltip.siege_engineer");
@@ -56,6 +58,7 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
     private static final MutableComponent BUTTON_ROGUE = Component.translatable("gui.bannermod.inv.text.rogue");
     private static final MutableComponent TOOLTIP_ROGUE = Component.translatable("gui.bannermod.inv.tooltip.rogue");
+    private static final MutableComponent TOOLTIP_ROGUE_DISABLED = Component.translatable("gui.bannermod.inv.tooltip.rogue_disabled");
     private static final MutableComponent NAME_LABEL = Component.translatable("gui.recruits.promote.name_label");
     private static final MutableComponent TITLE = Component.translatable("gui.recruits.promote.screen.title");
 
@@ -114,15 +117,15 @@ public class PromoteScreen extends ScreenBase<PromoteContainer> {
 
         createProfessionButtons(BUTTON_PATROL_LEADER, TOOLTIP_PATROL_LEADER, 2,recruit.getXpLevel() >= 5);
         createProfessionButtons(BUTTON_CAPTAIN, BannerModMain.isSmallShipsCompatible ? TOOLTIP_CAPTAIN : TOOLTIP_CAPTAIN_DISABLED, 3, recruit.getXpLevel() >= 5 && BannerModMain.isSmallShipsLoaded && BannerModMain.isSmallShipsCompatible);
-        createProfessionButtons(BUTTON_ASSASSIN, TOOLTIP_ASSASSIN, 4, false && recruit.getXpLevel() >= 5);
-        createProfessionButtons(BUTTON_SIEGE_ENGINEER,
-                BannerModMain.isSiegeWeaponsLoaded ? TOOLTIP_SIEGE_ENGINEER_DISABLED : TOOLTIP_SIEGE_ENGINEER_DISABLED,
-                5,
-                false);
+        // Assassin / Spy / Rogue / Siege-Engineer are gated off until the systems land.
+        // Surface a "feature disabled" tooltip rather than the active-state description so a
+        // greyed button explains itself to the player.
+        createProfessionButtons(BUTTON_ASSASSIN, TOOLTIP_ASSASSIN_DISABLED, 4, false);
+        createProfessionButtons(BUTTON_SIEGE_ENGINEER, TOOLTIP_SIEGE_ENGINEER_DISABLED, 5, false);
 
         createProfessionButtons(BUTTON_GOVERNOR, TOOLTIP_GOVERNOR, 6, canDesignateGovernor());
-        createProfessionButtons(BUTTON_SPY, TOOLTIP_SPY, 7, false && recruit.getXpLevel() >= 7);
-        createProfessionButtons(BUTTON_ROGUE, TOOLTIP_ROGUE, 8, false && recruit.getXpLevel() >= 7);
+        createProfessionButtons(BUTTON_SPY, TOOLTIP_SPY_DISABLED, 7, false);
+        createProfessionButtons(BUTTON_ROGUE, TOOLTIP_ROGUE_DISABLED, 8, false);
     }
 
     private boolean canDesignateGovernor() {
