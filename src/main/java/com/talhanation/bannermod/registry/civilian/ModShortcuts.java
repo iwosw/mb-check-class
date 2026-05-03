@@ -17,8 +17,8 @@ public class ModShortcuts {
     @OnlyIn(Dist.CLIENT)
     public static void registerBindings(RegisterKeyMappingsEvent event) {
         COMMAND_SCREEN_KEY = new KeyMapping("key.workers.open_command_screen", GLFW.GLFW_KEY_X, "category.bannermod");
-        TOGGLE_PREFAB_RENDER_KEY = new KeyMapping("key.workers.toggle_prefab_render", GLFW.GLFW_KEY_V, "Workers");
-        TOGGLE_SETTLEMENT_WORKAREA_RENDER_KEY = new KeyMapping("key.workers.toggle_settlement_workareas", GLFW.GLFW_KEY_B, "Workers");
+        TOGGLE_PREFAB_RENDER_KEY = new KeyMapping("key.workers.toggle_prefab_render", GLFW.GLFW_KEY_V, "category.bannermod");
+        TOGGLE_SETTLEMENT_WORKAREA_RENDER_KEY = new KeyMapping("key.workers.toggle_settlement_workareas", GLFW.GLFW_KEY_B, "category.bannermod");
         event.register(COMMAND_SCREEN_KEY);
         event.register(TOGGLE_PREFAB_RENDER_KEY);
         event.register(TOGGLE_SETTLEMENT_WORKAREA_RENDER_KEY);
