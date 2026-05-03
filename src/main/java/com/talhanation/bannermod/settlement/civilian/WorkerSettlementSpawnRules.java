@@ -19,8 +19,9 @@ public final class WorkerSettlementSpawnRules {
                                          int currentWorkerCount,
                                          boolean cooldownActive,
                                          RuleConfig config,
-                                         Map<WorkerProfession, Integer> currentByProfession) {
-        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config, currentByProfession);
+                                         Map<WorkerProfession, Integer> currentByProfession,
+                                         int housingSlack) {
+        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config, currentByProfession, housingSlack);
     }
 
     public static Decision evaluateSettlementSpawn(BannerModSettlementBinding.Binding binding,
@@ -28,15 +29,17 @@ public final class WorkerSettlementSpawnRules {
                                                     int currentWorkerCount,
                                                     boolean cooldownActive,
                                                     RuleConfig config,
-                                                    Map<WorkerProfession, Integer> currentByProfession) {
-        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config, currentByProfession);
+                                                    Map<WorkerProfession, Integer> currentByProfession,
+                                                    int housingSlack) {
+        return evaluate(binding, villagerCount, currentWorkerCount, cooldownActive, config, currentByProfession, housingSlack);
     }
 
     public static Decision evaluateClaimWorkerGrowth(BannerModSettlementBinding.Status status,
                                                      int currentWorkerCount,
                                                      long elapsedCooldownTicks,
                                                      ClaimGrowthConfig config,
-                                                     Map<WorkerProfession, Integer> currentByProfession) {
+                                                     Map<WorkerProfession, Integer> currentByProfession,
+                                                     int housingSlack) {
         long requiredCooldownTicks = config == null ? 0L : config.requiredCooldownTicks(currentWorkerCount);
         if (config == null || !config.enabled()) {
             return deny(DenialReason.FEATURE_DISABLED, requiredCooldownTicks);
@@ -53,6 +56,9 @@ public final class WorkerSettlementSpawnRules {
         if (config.allowedProfessions().isEmpty()) {
             return deny(DenialReason.NO_ALLOWED_PROFESSIONS, requiredCooldownTicks);
         }
+        if (config.requireHousing() && housingSlack <= 0) {
+            return deny(DenialReason.NO_FREE_HOUSING, requiredCooldownTicks);
+        }
 
         return allow(pickByDeficit(config.allowedProfessions(), currentByProfession), requiredCooldownTicks);
     }
@@ -62,7 +68,8 @@ public final class WorkerSettlementSpawnRules {
                                      int currentWorkerCount,
                                      boolean cooldownActive,
                                      RuleConfig config,
-                                     Map<WorkerProfession, Integer> currentByProfession) {
+                                     Map<WorkerProfession, Integer> currentByProfession,
+                                     int housingSlack) {
         if (config == null || !config.enabled()) {
             return deny(DenialReason.FEATURE_DISABLED, 0L);
         }
@@ -80,6 +87,9 @@ public final class WorkerSettlementSpawnRules {
         }
         if (config.allowedProfessions().isEmpty()) {
             return deny(DenialReason.NO_ALLOWED_PROFESSIONS, 0L);
+        }
+        if (config.requireHousing() && housingSlack <= 0) {
+            return deny(DenialReason.NO_FREE_HOUSING, 0L);
         }
 
         return allow(pickByDeficit(config.allowedProfessions(), currentByProfession), 0L);
@@ -127,7 +137,8 @@ public final class WorkerSettlementSpawnRules {
         INSUFFICIENT_VILLAGERS,
         WORKER_CAP_REACHED,
         COOLDOWN_ACTIVE,
-        NO_ALLOWED_PROFESSIONS
+        NO_ALLOWED_PROFESSIONS,
+        NO_FREE_HOUSING
     }
 
     public enum WorkerProfession {
@@ -159,7 +170,8 @@ public final class WorkerSettlementSpawnRules {
     public record RuleConfig(boolean enabled,
                              int minimumVillagers,
                              int workerCap,
-                             List<WorkerProfession> allowedProfessions) {
+                             List<WorkerProfession> allowedProfessions,
+                             boolean requireHousing) {
 
         public RuleConfig {
             minimumVillagers = Math.max(0, minimumVillagers);
@@ -167,15 +179,20 @@ public final class WorkerSettlementSpawnRules {
             allowedProfessions = allowedProfessions == null ? List.of() : allowedProfessions.stream().filter(Objects::nonNull).distinct().toList();
         }
 
+        public RuleConfig(boolean enabled, int minimumVillagers, int workerCap, List<WorkerProfession> allowedProfessions) {
+            this(enabled, minimumVillagers, workerCap, allowedProfessions, false);
+        }
+
         public RuleConfig withEnabled(boolean enabled) {
-            return new RuleConfig(enabled, minimumVillagers, workerCap, allowedProfessions);
+            return new RuleConfig(enabled, minimumVillagers, workerCap, allowedProfessions, requireHousing);
         }
     }
 
     public record ClaimGrowthConfig(boolean enabled,
                                     long baseCooldownTicks,
                                     int workerCap,
-                                    List<WorkerProfession> allowedProfessions) {
+                                    List<WorkerProfession> allowedProfessions,
+                                    boolean requireHousing) {
 
         public ClaimGrowthConfig {
             baseCooldownTicks = Math.max(0L, baseCooldownTicks);
@@ -183,12 +200,16 @@ public final class WorkerSettlementSpawnRules {
             allowedProfessions = allowedProfessions == null ? List.of() : allowedProfessions.stream().filter(Objects::nonNull).distinct().toList();
         }
 
+        public ClaimGrowthConfig(boolean enabled, long baseCooldownTicks, int workerCap, List<WorkerProfession> allowedProfessions) {
+            this(enabled, baseCooldownTicks, workerCap, allowedProfessions, false);
+        }
+
         public long requiredCooldownTicks(int currentWorkerCount) {
             return baseCooldownTicks * Math.max(1, currentWorkerCount + 1L);
         }
 
         public ClaimGrowthConfig withEnabled(boolean enabled) {
-            return new ClaimGrowthConfig(enabled, baseCooldownTicks, workerCap, allowedProfessions);
+            return new ClaimGrowthConfig(enabled, baseCooldownTicks, workerCap, allowedProfessions, requireHousing);
         }
     }
 

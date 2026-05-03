@@ -11,8 +11,15 @@ import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
 import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.settlement.BannerModSettlementBuildingCategory;
+import com.talhanation.bannermod.settlement.BannerModSettlementBuildingRecord;
+import com.talhanation.bannermod.settlement.BannerModSettlementManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
+import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentRuntime;
+import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentSavedData;
+import com.talhanation.bannermod.settlement.household.HomePreference;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.war.WarRuntimeContext;
@@ -53,7 +60,8 @@ final class WorkerSettlementClaimPolicy {
                 currentWorkerCount,
                 elapsedCooldownTicks,
                 config,
-                currentByProfession
+                currentByProfession,
+                housingSlackForClaim(level, claim)
         );
         if (!decision.allowed()) {
             return null;
@@ -63,6 +71,7 @@ final class WorkerSettlementClaimPolicy {
         AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnClaimWorker(level, spawnPos, decision, claim);
         if (worker != null) {
             claimWorkerGrowthSpawnTimes.put(claim.getUUID(), gameTime);
+            assignHomeIfAvailable(level, claim, worker.getUUID(), gameTime);
         }
         return worker;
     }
@@ -175,6 +184,73 @@ final class WorkerSettlementClaimPolicy {
             }
         }
         return counts;
+    }
+
+    /**
+     * Free housing capacity for {@code claim}: sum of residentCapacity over the
+     * claim's HOUSING/GENERAL buildings minus their current home assignments.
+     * Returns 0 when no snapshot is available — the spawn rules treat that as
+     * "no slack" and deny when {@code requireHousing} is on.
+     */
+    static int housingSlackForClaim(ServerLevel level, RecruitsClaim claim) {
+        if (level == null || claim == null) {
+            return 0;
+        }
+        BannerModSettlementSnapshot snapshot = BannerModSettlementManager.get(level).getSnapshot(claim.getUUID());
+        if (snapshot == null) {
+            return 0;
+        }
+        BannerModHomeAssignmentRuntime runtime = BannerModHomeAssignmentSavedData.get(level).runtime();
+        int slack = 0;
+        for (BannerModSettlementBuildingRecord building : snapshot.buildings()) {
+            if (!isHousingCategory(building.buildingCategory())) {
+                continue;
+            }
+            int capacity = building.residentCapacity();
+            if (capacity <= 0) {
+                continue;
+            }
+            int used = runtime.assignmentsForBuilding(building.buildingUuid()).size();
+            slack += Math.max(0, capacity - used);
+        }
+        return slack;
+    }
+
+    /**
+     * Bind a freshly spawned worker to a home in the same claim, if any free
+     * slot exists. Silent no-op when housing is exhausted — the spawn rules
+     * already gate on {@link #housingSlackForClaim} so this is a best-effort
+     * assignment for the path where housing is not strictly required.
+     */
+    static void assignHomeIfAvailable(ServerLevel level, RecruitsClaim claim, UUID residentUuid, long gameTime) {
+        if (level == null || claim == null || residentUuid == null) {
+            return;
+        }
+        BannerModSettlementSnapshot snapshot = BannerModSettlementManager.get(level).getSnapshot(claim.getUUID());
+        if (snapshot == null) {
+            return;
+        }
+        BannerModHomeAssignmentRuntime runtime = BannerModHomeAssignmentSavedData.get(level).runtime();
+        for (BannerModSettlementBuildingRecord building : snapshot.buildings()) {
+            if (!isHousingCategory(building.buildingCategory())) {
+                continue;
+            }
+            int capacity = building.residentCapacity();
+            if (capacity <= 0) {
+                continue;
+            }
+            int used = runtime.assignmentsForBuilding(building.buildingUuid()).size();
+            if (used >= capacity) {
+                continue;
+            }
+            HomePreference preference = used == 0 ? HomePreference.ASSIGNED : HomePreference.SHARED;
+            runtime.assign(residentUuid, building.buildingUuid(), preference, gameTime);
+            return;
+        }
+    }
+
+    private static boolean isHousingCategory(BannerModSettlementBuildingCategory category) {
+        return category == BannerModSettlementBuildingCategory.GENERAL;
     }
 
     @Nullable

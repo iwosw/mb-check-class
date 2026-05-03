@@ -372,7 +372,8 @@ public class WorkersServerConfig {
                 resolveBoolean(WorkerBirthEnabled, true),
                 resolveInt(SettlementSpawnMinimumVillagers, 6),
                 resolveInt(SettlementSpawnWorkerCap, 4),
-                resolveAllowedSettlementProfessions()
+                resolveAllowedSettlementProfessions(),
+                true
         );
     }
 
@@ -381,7 +382,8 @@ public class WorkersServerConfig {
                 resolveBoolean(ClaimBasedSettlementSpawnEnabled, true),
                 resolveInt(SettlementSpawnMinimumVillagers, 6),
                 resolveInt(SettlementSpawnWorkerCap, 4),
-                resolveAllowedSettlementProfessions()
+                resolveAllowedSettlementProfessions(),
+                true
         );
     }
 
@@ -398,7 +400,8 @@ public class WorkersServerConfig {
                 resolveBoolean(EnableClaimWorkerGrowth, true),
                 resolveLong(ClaimWorkerGrowthBaseCooldownTicks, 24000L),
                 resolveInt(ClaimWorkerMaxPerClaim, 4),
-                resolveAllowedClaimGrowthProfessions()
+                resolveAllowedClaimGrowthProfessions(),
+                true
         );
     }
 

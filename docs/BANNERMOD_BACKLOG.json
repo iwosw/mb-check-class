@@ -6629,7 +6629,7 @@
     {
       "id": "CIT-003",
       "title": "Gate citizen spawns and growth on housing slack",
-      "status": "open",
+      "status": "done",
       "updated": "2026-05-04",
       "why": "Settlement and claim-growth spawns currently ignore housing entirely — a claim with zero house prefabs but high villager count will still produce workers. This breaks the design intent that homes are the bottleneck for population growth and makes BannerModHomeAssignmentAdvisor's residentCapacity model decorative.",
       "scope": [
@@ -6640,8 +6640,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-04",
+          "result": "RuleConfig + ClaimGrowthConfig now carry requireHousing flag (5-arg ctor); 4-arg ctor defaults false to keep old tests stable. WorkerSettlementSpawnRules.evaluate / evaluateClaimWorkerGrowth take housingSlack and emit NO_FREE_HOUSING when requireHousing && slack<=0. WorkerSettlementClaimPolicy.housingSlackForClaim sums residentCapacity over GENERAL-category snapshot buildings minus current home assignments. WorkerSettlementClaimPolicy.assignHomeIfAvailable binds the freshly spawned worker to a free home slot via BannerModHomeAssignmentRuntime. WorkersServerConfig defaults requireHousing=true for all three rule factories, so live gameplay is housing-gated. Full ./gradlew test passes; new test cases (zeroHousingSlackDeniesWhenRequireHousingIsOn, positiveHousingSlackAllowsWhenRequireHousingIsOn, zeroHousingSlackIsIgnoredWhenRequireHousingIsOff) cover the gate behavior. MULTIPLAYER_GUIDE_RU.md and MULTIPLAYER_GUIDE_EN.md document the housing requirement and deficit selection."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-04"
     }
   ]
 }
