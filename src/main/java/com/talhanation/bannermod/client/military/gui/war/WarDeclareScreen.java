@@ -68,6 +68,7 @@ public class WarDeclareScreen extends Screen {
         this.casusBelliBox.setTextColor(INK);
         this.casusBelliBox.setTextColorUneditable(INK_MUTED);
         this.casusBelliBox.setBordered(true);
+        this.casusBelliBox.setHint(Component.translatable("gui.bannermod.war_declare.casus_belli.hint"));
         addRenderableWidget(this.attackerButton);
         addRenderableWidget(this.defenderButton);
         addRenderableWidget(this.goalButton);
@@ -132,6 +133,12 @@ public class WarDeclareScreen extends Screen {
         this.goalButton.setMessage(Component.translatable("gui.bannermod.war_declare.goal", localizedGoal(selectedGoal())));
         this.attackerButton.active = this.attackers.size() > 1;
         this.defenderButton.active = this.defenders.size() > 1;
+        // Cycle buttons go inert when there's only one valid option to cycle through;
+        // surface the gating reason rather than leaving the player to guess.
+        this.attackerButton.setTooltip(this.attackerButton.active ? null
+                : Tooltip.create(Component.translatable("gui.bannermod.war_declare.attacker.only_one")));
+        this.defenderButton.setTooltip(this.defenderButton.active ? null
+                : Tooltip.create(Component.translatable("gui.bannermod.war_declare.defender.only_one")));
         this.declareButton.active = attacker != null && defender != null;
         this.declareButton.setTooltip(this.declareButton.active ? null : Tooltip.create(declareDenial()));
     }

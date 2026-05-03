@@ -19,6 +19,7 @@ import com.talhanation.bannermod.persistence.civilian.WorkersMerchantTrade;
 import de.maxhenkel.corelib.inventory.ScreenBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -337,6 +338,10 @@ public class MerchantTradeScreen extends ScreenBase<MerchantTradeContainer> {
         }
         if(manageMenu != null){
             manageMenu.active = selection != null;
+            // Active state owns its own category-label rendering — only attach a denial
+            // tooltip when greyed out so we don't fight the dropdown's normal display.
+            manageMenu.setTooltip(manageMenu.active ? null
+                    : Tooltip.create(Component.translatable("gui.workers.merchant.manage.disabled")));
         }
 
         this.tradeButton.active = false;
