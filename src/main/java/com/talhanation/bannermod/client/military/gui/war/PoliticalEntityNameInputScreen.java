@@ -3,6 +3,7 @@ package com.talhanation.bannermod.client.military.gui.war;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -144,6 +145,10 @@ public class PoliticalEntityNameInputScreen extends Screen {
             return;
         }
         this.submitButton.active = this.allowEmpty || !this.editBox.getValue().trim().isEmpty();
+        // Surface the same denial reason the status line already shows so the
+        // greyed Submit explains why it is gated.
+        this.submitButton.setTooltip(this.submitButton.active ? null
+                : Tooltip.create(Component.translatable("gui.bannermod.political_entity.name.submit.disabled")));
     }
 
     private Component inputStatus() {

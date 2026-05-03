@@ -2344,6 +2344,7 @@
   "gui.bannermod.states.dialog.rename.title": "Переименовать владение",
   "gui.bannermod.states.dialog.status.ready": "Далее: отправь поле и дождись серверной проверки полномочий.",
   "gui.bannermod.states.dialog.status.required": "Сначала введи значение, чтобы управляющий мог запечатать запрос.",
+  "gui.bannermod.political_entity.name.submit.disabled": "Имя должно быть от 3 символов",
   "gui.bannermod.states.co_authority.active": "активно в республике",
   "gui.bannermod.states.co_authority.locked": "в списке, монархия блокирует",
   "gui.bannermod.states.color": "Цвет",

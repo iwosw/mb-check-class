@@ -2436,6 +2436,7 @@
   "gui.bannermod.states.dialog.rename.title": "Rename realm",
   "gui.bannermod.states.dialog.status.ready": "Next: submit this field and wait for the server authority check.",
   "gui.bannermod.states.dialog.status.required": "Enter a value before the steward can seal this request.",
+  "gui.bannermod.political_entity.name.submit.disabled": "Name must be 3+ characters",
   "gui.bannermod.states.co_authority.active": "active in republic",
   "gui.bannermod.states.co_authority.locked": "listed, monarchy locked",
   "gui.bannermod.states.color": "Color",
