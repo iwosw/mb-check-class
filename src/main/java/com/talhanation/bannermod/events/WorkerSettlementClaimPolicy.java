@@ -1,24 +1,46 @@
 package com.talhanation.bannermod.events;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
+import com.talhanation.bannermod.entity.civilian.AnimalFarmerEntity;
+import com.talhanation.bannermod.entity.civilian.BuilderEntity;
+import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.FishermanEntity;
+import com.talhanation.bannermod.entity.civilian.LumberjackEntity;
+import com.talhanation.bannermod.entity.civilian.MerchantEntity;
+import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.settlement.BannerModSettlementBuildingCategory;
+import com.talhanation.bannermod.settlement.BannerModSettlementBuildingRecord;
+import com.talhanation.bannermod.settlement.BannerModSettlementManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawner;
+import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentRuntime;
+import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentSavedData;
+import com.talhanation.bannermod.settlement.household.HomePreference;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 
+import java.util.List;
+
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,22 +59,26 @@ final class WorkerSettlementClaimPolicy {
         }
 
         int currentWorkerCount = countEntitiesInClaim(level, claim, AbstractWorkerEntity.class);
+        Map<WorkerSettlementSpawnRules.WorkerProfession, Integer> currentByProfession =
+                countWorkersByProfession(level, claim);
         long elapsedCooldownTicks = resolveClaimGrowthElapsedTicks(claim, gameTime, claimWorkerGrowthSpawnTimes);
         WorkerSettlementSpawnRules.Decision decision = WorkerSettlementSpawnRules.evaluateClaimWorkerGrowth(
                 binding.status(),
                 currentWorkerCount,
                 elapsedCooldownTicks,
-                config
+                config,
+                currentByProfession,
+                housingSlackForClaim(level, claim)
         );
-        WorkerSettlementSpawnRules.Decision deterministicDecision = applyClaimGrowthProfessionSeed(claim, currentWorkerCount, config, decision);
-        if (!deterministicDecision.allowed()) {
+        if (!decision.allowed()) {
             return null;
         }
 
         BlockPos spawnPos = resolveClaimGrowthSpawnPos(level, claim);
-        AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnClaimWorker(level, spawnPos, deterministicDecision, claim);
+        AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnClaimWorker(level, spawnPos, decision, claim);
         if (worker != null) {
             claimWorkerGrowthSpawnTimes.put(claim.getUUID(), gameTime);
+            assignHomeIfAvailable(level, claim, worker.getUUID(), gameTime);
         }
         return worker;
     }
@@ -150,18 +176,137 @@ final class WorkerSettlementClaimPolicy {
         return Math.max(0L, gameTime - lastSpawnTime);
     }
 
-    private static WorkerSettlementSpawnRules.Decision applyClaimGrowthProfessionSeed(RecruitsClaim claim,
-                                                                                       int currentWorkerCount,
-                                                                                       WorkerSettlementSpawnRules.ClaimGrowthConfig config,
-                                                                                       WorkerSettlementSpawnRules.Decision decision) {
-        if (claim == null || config == null || decision == null || !decision.allowed() || config.allowedProfessions().isEmpty()) {
-            return decision;
+    static Map<WorkerSettlementSpawnRules.WorkerProfession, Integer> countWorkersByProfession(ServerLevel level, RecruitsClaim claim) {
+        Map<WorkerSettlementSpawnRules.WorkerProfession, Integer> counts =
+                new EnumMap<>(WorkerSettlementSpawnRules.WorkerProfession.class);
+        if (level == null || claim == null || claim.getClaimedChunks().isEmpty()) {
+            return counts;
         }
+        ClaimOwnerKey ownerKey = resolveClaimOwnerKey(level, claim);
+        AABB claimBounds = getClaimBounds(level, claim);
+        for (AbstractWorkerEntity worker : level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds, w -> w.isAlive() && claim.containsChunk(w.chunkPosition()) && workerMatchesClaimOwner(level, w, ownerKey))) {
+            WorkerSettlementSpawnRules.WorkerProfession profession = professionOf(worker);
+            if (profession != null) {
+                counts.merge(profession, 1, Integer::sum);
+            }
+        }
+        return counts;
+    }
 
-        ChunkPos anchorChunk = resolveClaimAnchorChunk(claim);
-        int professionIndex = Math.floorMod(anchorChunk.x * 31 + anchorChunk.z * 17 + currentWorkerCount, config.allowedProfessions().size());
-        WorkerSettlementSpawnRules.WorkerProfession profession = config.allowedProfessions().get(professionIndex);
-        return new WorkerSettlementSpawnRules.Decision(true, profession, null, decision.requiredCooldownTicks());
+    /**
+     * Free housing capacity for {@code claim}: sum of residentCapacity over the
+     * claim's HOUSING/GENERAL buildings minus their current home assignments.
+     * Returns 0 when no snapshot is available — the spawn rules treat that as
+     * "no slack" and deny when {@code requireHousing} is on.
+     */
+    static int housingSlackForClaim(ServerLevel level, RecruitsClaim claim) {
+        if (level == null || claim == null) {
+            return 0;
+        }
+        BannerModSettlementSnapshot snapshot = BannerModSettlementManager.get(level).getSnapshot(claim.getUUID());
+        if (snapshot == null) {
+            return 0;
+        }
+        BannerModHomeAssignmentRuntime runtime = BannerModHomeAssignmentSavedData.get(level).runtime();
+        int slack = 0;
+        for (BannerModSettlementBuildingRecord building : snapshot.buildings()) {
+            if (!isHousingCategory(building.buildingCategory())) {
+                continue;
+            }
+            int capacity = building.residentCapacity();
+            if (capacity <= 0) {
+                continue;
+            }
+            int used = runtime.assignmentsForBuilding(building.buildingUuid()).size();
+            slack += Math.max(0, capacity - used);
+        }
+        return slack;
+    }
+
+    /**
+     * Aggregate count of vanilla food items across every {@link StorageArea}
+     * inside {@code claim}. Each storage area's container map is scanned for
+     * stacks carrying {@link DataComponents#FOOD}; the stack size is summed.
+     * Used by {@link CitizenBirthService} to gate births on a settlement
+     * actually having food.
+     */
+    static int claimFoodCount(ServerLevel level, RecruitsClaim claim) {
+        if (level == null || claim == null || claim.getClaimedChunks().isEmpty()) {
+            return 0;
+        }
+        List<StorageArea> storageAreas;
+        if (WorkAreaIndex.instance().sizeFor(level.dimension()) > 0) {
+            storageAreas = WorkAreaIndex.instance()
+                    .queryInChunks(level, claim.getClaimedChunks(), StorageArea.class).stream()
+                    .filter(entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()))
+                    .toList();
+        } else {
+            storageAreas = level.getEntitiesOfClass(StorageArea.class, getClaimBounds(level, claim),
+                    entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+        }
+        int total = 0;
+        for (StorageArea storageArea : storageAreas) {
+            storageArea.scanStorageBlocks();
+            for (Container container : storageArea.storageMap.values()) {
+                int size = container.getContainerSize();
+                for (int slot = 0; slot < size; slot++) {
+                    ItemStack stack = container.getItem(slot);
+                    if (!stack.isEmpty() && stack.has(DataComponents.FOOD)) {
+                        total += stack.getCount();
+                    }
+                }
+            }
+        }
+        return total;
+    }
+
+    /**
+     * Bind a freshly spawned worker to a home in the same claim, if any free
+     * slot exists. Silent no-op when housing is exhausted — the spawn rules
+     * already gate on {@link #housingSlackForClaim} so this is a best-effort
+     * assignment for the path where housing is not strictly required.
+     */
+    static void assignHomeIfAvailable(ServerLevel level, RecruitsClaim claim, UUID residentUuid, long gameTime) {
+        if (level == null || claim == null || residentUuid == null) {
+            return;
+        }
+        BannerModSettlementSnapshot snapshot = BannerModSettlementManager.get(level).getSnapshot(claim.getUUID());
+        if (snapshot == null) {
+            return;
+        }
+        BannerModHomeAssignmentRuntime runtime = BannerModHomeAssignmentSavedData.get(level).runtime();
+        for (BannerModSettlementBuildingRecord building : snapshot.buildings()) {
+            if (!isHousingCategory(building.buildingCategory())) {
+                continue;
+            }
+            int capacity = building.residentCapacity();
+            if (capacity <= 0) {
+                continue;
+            }
+            int used = runtime.assignmentsForBuilding(building.buildingUuid()).size();
+            if (used >= capacity) {
+                continue;
+            }
+            HomePreference preference = used == 0 ? HomePreference.ASSIGNED : HomePreference.SHARED;
+            runtime.assign(residentUuid, building.buildingUuid(), preference, gameTime);
+            return;
+        }
+    }
+
+    private static boolean isHousingCategory(BannerModSettlementBuildingCategory category) {
+        return category == BannerModSettlementBuildingCategory.GENERAL;
+    }
+
+    @Nullable
+    private static WorkerSettlementSpawnRules.WorkerProfession professionOf(AbstractWorkerEntity worker) {
+        if (worker instanceof FarmerEntity) return WorkerSettlementSpawnRules.WorkerProfession.FARMER;
+        if (worker instanceof LumberjackEntity) return WorkerSettlementSpawnRules.WorkerProfession.LUMBERJACK;
+        if (worker instanceof MinerEntity) return WorkerSettlementSpawnRules.WorkerProfession.MINER;
+        if (worker instanceof BuilderEntity) return WorkerSettlementSpawnRules.WorkerProfession.BUILDER;
+        if (worker instanceof MerchantEntity) return WorkerSettlementSpawnRules.WorkerProfession.MERCHANT;
+        if (worker instanceof FishermanEntity) return WorkerSettlementSpawnRules.WorkerProfession.FISHERMAN;
+        if (worker instanceof AnimalFarmerEntity) return WorkerSettlementSpawnRules.WorkerProfession.ANIMAL_FARMER;
+        return null;
     }
 
     private static ChunkPos resolveClaimAnchorChunk(RecruitsClaim claim) {

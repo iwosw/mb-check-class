@@ -28,6 +28,11 @@ final class WorkerSettlementEventService {
     static void resetRuntimeState() {
         CLAIM_WORKER_GROWTH_SPAWN_TIMES.clear();
         WorkerSettlementSpawnRuntime.reset();
+        CitizenBirthService.resetRuntimeState();
+    }
+
+    static void runCitizenBirthPass(ServerLevel level) {
+        CitizenBirthService.runCitizenBirthPass(level);
     }
 
     static void recordVillagerJoin(Villager villager) {
