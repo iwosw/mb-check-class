@@ -32,6 +32,12 @@
   - starter-fort bootstrap now seeds 2-4 family households instead of only flat identical free adults
   - approved housing petitions now reserve an explicit family lot inside the claim and the finished house is handed back to that requesting household first
   - the `Kinlot Staff` / `Родовая межа` now highlights the nearest reserved family lot while held and renders a floating household label over it
+- The first bounded hamlet-housing slice is now live:
+  - exported vanilla `structure block` `.nbt` house templates can now flow through the internal prefab/build-area path
+  - the first player-authored `землянка` / `zemlyanka` template is now shipped as a real prefab-backed hamlet house
+  - ordinary fort housing still uses the existing compact `HousePrefab`; the new zemlyanka path is reserved for remote hamlet-family placement only
+  - pressured family households can now reserve housing plots 3-4 claim chunks away from the settlement anchor instead of only near the fort center
+  - approved remote-family plots now place a fenced homestead version of the zemlyanka with a small yard/gate/pen slice instead of only the old flat fort house footprint
 - This document now serves two purposes:
   - record what was actually shipped
   - define how the next refactor pass should restructure and extend it
@@ -108,6 +114,12 @@ The current runtime already contains a first working NPC-society backbone.
   - approved requests become `PendingProject` house builds
   - project execution reuses the existing `HousePrefab` and settlement build-area pipeline
   - approved requests now also reserve a concrete family lot position in the claim, surface that lot in ruler-facing chat/command observability, and try to place/return the completed house back onto that lot for the same household
+- The first bounded hamlet-housing execution slice is now live:
+  - `StructureTemplateLoader` now also converts exported vanilla `structure block` `.nbt` templates into the internal sparse BuildArea structure format instead of only importing `.litematic` / `.schem`
+  - the first shipped player-authored template lives at `assets/bannermod/structures/zemlyanka.nbt`
+  - `settlement/prefab/impl/HamletZemlyankaPrefab.java` wraps that template in a fenced homestead lot so the remote-family slice places a real yard instead of only bare house walls
+  - `NpcHousingPlotPlanner` now distinguishes fort-near plots from remote hamlet plots and only offers the 3-4 chunk remote band to pressured multi-member households
+  - `NpcHousingProjectPlanner` now routes those remote-family housing projects through the dedicated hamlet zemlyanka prefab while preserving the older compact `HousePrefab` for near-fort housing
 - A first ruler-approved livelihood-infrastructure path now exists:
   - settlements can create dedicated saved-data requests for `lumber camp`, `mine`, and `animal pen`
   - requests are keyed by claim plus livelihood type rather than being folded into generic growth hints
@@ -180,7 +192,9 @@ The current runtime already contains a first working NPC-society backbone.
   - requests currently cover only `lumber camp`, `mine`, and `animal pen`
   - the village currently asks the ruler first, then uses prefab-backed project placement instead of emergent freeform site planning
   - the first shipped slice grants immediate build completion after ruler approval to break bootstrap deadlocks; it does not yet prove a full resource-haul-and-place construction loop
-  - autonomous off-claim hamlets, hut registration, and player-visible destruction consequences still do not exist yet in live code; the current autonomy slice only covers nearby self-started farm/fishing work areas
+  - full autonomous hamlets, hut registration, and player-visible destruction consequences still do not exist yet in live code
+  - however, the first bounded hamlet housing slice now exists: pressured family households can place remote 3-4 chunk zemlyanka homesteads inside the parent claim instead of only fort-adjacent houses
+  - the current hamlet slice still does not yet provide a dedicated persisted hamlet runtime, independent polity, or complete local self-sufficient economy
 - Worker self-crafting is now live in a first practical slice, but it is still limited:
   - only baseline stone tool replacement is covered
   - workers do not yet reserve recipes globally or negotiate shared access to a workshop
@@ -240,6 +254,10 @@ The next pass should not just append features. It should cleanly separate what a
 
 - The next concrete execution slice after the current worker-autonomy pass should be a bounded `hamlet` runtime rather than a freeform rewrite of all settlement AI.
 - That slice should stay near the existing claim and reuse current ownership, housing, livelihood-request, and memory systems.
+- A first partial execution step of that direction is now live:
+  - pressured multi-member households can already drift into a remote 3-4 chunk housing band
+  - those remote household housing projects can already resolve to a dedicated player-authored zemlyanka homestead prefab instead of the default fort house
+  - the first shipped slice deliberately stops at remote housing placement plus fenced lot presentation; it does not yet persist a standalone hamlet record or full local economy
 - Minimum deliverables for that slice:
   - persist a small claim-adjacent hamlet record with anchor, founder household, and registration state
   - let unassigned or under-employed households drift to a nearby hamlet anchor when local housing/work pressure stays high

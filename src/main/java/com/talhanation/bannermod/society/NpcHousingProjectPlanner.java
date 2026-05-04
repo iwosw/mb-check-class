@@ -9,6 +9,7 @@ import com.talhanation.bannermod.settlement.growth.PendingProject;
 import com.talhanation.bannermod.settlement.growth.ProjectBlocker;
 import com.talhanation.bannermod.settlement.growth.ProjectKind;
 import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentRuntime;
+import com.talhanation.bannermod.settlement.prefab.impl.HamletZemlyankaPrefab;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.ChatFormatting;
@@ -79,7 +80,7 @@ public final class NpcHousingProjectPlanner {
                         request.projectId(),
                         ProjectKind.NEW_BUILDING,
                         null,
-                        null,
+                        prefabIdFor(snapshot, request),
                         BannerModSettlementBuildingProfileSeed.GENERAL.category(),
                         BannerModSettlementBuildingProfileSeed.GENERAL,
                         HOUSE_REQUEST_PRIORITY,
@@ -142,6 +143,13 @@ public final class NpcHousingProjectPlanner {
         }
         PoliticalEntityRecord owner = WarRuntimeContext.registry(level).byId(claim.getOwnerPoliticalEntityId()).orElse(null);
         return owner == null ? null : owner.leaderUuid();
+    }
+
+    private static net.minecraft.resources.ResourceLocation prefabIdFor(BannerModSettlementSnapshot snapshot,
+                                                                        NpcHousingRequestRecord request) {
+        return NpcHousingPlotPlanner.isHamletPlot(snapshot, request == null ? null : request.reservedPlotPos())
+                ? HamletZemlyankaPrefab.ID
+                : null;
     }
 
     private static void notifyLord(ServerLevel level,

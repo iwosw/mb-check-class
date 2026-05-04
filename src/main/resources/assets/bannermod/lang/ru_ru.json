@@ -1856,6 +1856,8 @@
   "bannermod.surveyor.tooltip.manual_only": "Голограммы землемера только направляют. Они никогда не ставят блоки за игрока.",
   "bannermod.surveyor.tooltip.required_roles": "Обязательные роли: %s",
   "bannermod.surveyor.tooltip.fort_rules": "Для основания Starter Fort нужны AUTHORITY_POINT и одна INTERIOR-зона на весь пригодный для прохода форт, двор и крылья.",
+  "bannermod.prefab.hamlet_zemlyanka.name": "Хуторская землянка",
+  "bannermod.prefab.hamlet_zemlyanka.description": "Удаленная семейная землянка с огороженным участком.",
   "bannermod.surveyor.tooltip.loop_1": "Ручной цикл строительства: сначала форт, потом склад, ферма, дома и профильные мастерские.",
   "bannermod.surveyor.tooltip.loop_2": "Свободные жители становятся рабочими, когда доходят до якоря здания с открытой вакансией.",
   "bannermod.surveyor.no_session": "Нет сессии замера. Сначала отметьте якорь.",

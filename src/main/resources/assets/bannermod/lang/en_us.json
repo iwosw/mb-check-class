@@ -1855,6 +1855,8 @@
   "bannermod.prefab.storage.description": "Bulk storage with chest grid.",
   "bannermod.prefab.house.name": "House",
   "bannermod.prefab.house.description": "Small home for a villager.",
+  "bannermod.prefab.hamlet_zemlyanka.name": "Hamlet Zemlyanka",
+  "bannermod.prefab.hamlet_zemlyanka.description": "Remote family dugout with a fenced homestead lot.",
   "bannermod.prefab.barracks.name": "Barracks",
   "bannermod.prefab.barracks.description": "Quarters for recruits.",
   "bannermod.prefab.gatehouse.name": "Gatehouse",

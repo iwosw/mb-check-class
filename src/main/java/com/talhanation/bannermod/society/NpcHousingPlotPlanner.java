@@ -19,6 +19,8 @@ import java.util.UUID;
 public final class NpcHousingPlotPlanner {
     private static final int RESERVED_PLOT_SPACING = 7;
     private static final int RESERVED_HOME_MATCH_RADIUS = 12;
+    private static final int HAMLET_MIN_CHUNK_RADIUS = 3;
+    private static final int HAMLET_MAX_CHUNK_RADIUS = 4;
 
     private NpcHousingPlotPlanner() {
     }
@@ -96,7 +98,12 @@ public final class NpcHousingPlotPlanner {
         if (claim == null) {
             return null;
         }
-        List<BlockPos> candidates = candidatePlots(level, claim);
+        List<BlockPos> candidates = isHamletHousehold(household)
+                ? candidateHamletPlots(level, claim, snapshot)
+                : candidateFortPlots(level, claim, snapshot);
+        if (candidates.isEmpty()) {
+            candidates = candidateFortPlots(level, claim, snapshot);
+        }
         if (candidates.isEmpty()) {
             return null;
         }
@@ -181,21 +188,6 @@ public final class NpcHousingPlotPlanner {
         );
     }
 
-    private static List<BlockPos> candidatePlots(ServerLevel level, RecruitsClaim claim) {
-        List<BlockPos> candidates = new ArrayList<>();
-        List<ChunkPos> claimedChunks = claim.getClaimedChunks();
-        if (claimedChunks.isEmpty() && claim.getCenter() != null) {
-            claimedChunks = List.of(claim.getCenter());
-        }
-        for (ChunkPos chunk : claimedChunks) {
-            candidates.add(surfacePos(level, chunk, 4, 4));
-            candidates.add(surfacePos(level, chunk, 11, 4));
-            candidates.add(surfacePos(level, chunk, 4, 11));
-            candidates.add(surfacePos(level, chunk, 11, 11));
-        }
-        return candidates;
-    }
-
     private static BlockPos surfacePos(ServerLevel level, ChunkPos chunk, int localX, int localZ) {
         return level.getHeightmapPos(
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
@@ -204,10 +196,17 @@ public final class NpcHousingPlotPlanner {
     }
 
     private static boolean isHousingCandidate(@Nullable BannerModSettlementBuildingRecord building) {
+        if (building == null || building.buildingUuid() == null || building.residentCapacity() <= 0) {
+            return false;
+        }
+        String buildingTypeId = building.buildingTypeId();
+        if (buildingTypeId == null || buildingTypeId.isBlank()) {
+            return false;
+        }
+        net.minecraft.resources.ResourceLocation typeId = net.minecraft.resources.ResourceLocation.tryParse(buildingTypeId);
+        String path = typeId == null ? buildingTypeId.toLowerCase(java.util.Locale.ROOT) : typeId.getPath().toLowerCase(java.util.Locale.ROOT);
         return building != null
-                && building.buildingUuid() != null
-                && building.residentCapacity() > 0
-                && "house".equalsIgnoreCase(building.buildingTypeId());
+                && (path.contains("house") || path.contains("zemlyanka") || path.contains("hut"));
     }
 
     private static @Nullable RecruitsClaim resolveClaim(UUID claimUuid) {
@@ -226,5 +225,62 @@ public final class NpcHousingPlotPlanner {
                                   @Nullable NpcHouseholdRecord household,
                                   BlockPos plotPos,
                                   double distanceSqr) {
+    }
+
+    public static boolean isHamletPlot(BannerModSettlementSnapshot snapshot, @Nullable BlockPos plotPos) {
+        if (snapshot == null || plotPos == null || snapshot.anchorChunk() == null) {
+            return false;
+        }
+        ChunkPos plotChunk = new ChunkPos(plotPos);
+        int distance = chunkDistance(snapshot.anchorChunk(), plotChunk);
+        return distance >= HAMLET_MIN_CHUNK_RADIUS && distance <= HAMLET_MAX_CHUNK_RADIUS;
+    }
+
+    private static boolean isHamletHousehold(@Nullable NpcHouseholdRecord household) {
+        return household != null
+                && household.memberResidentUuids().size() >= 2
+                && household.housingState() != NpcHouseholdHousingState.NORMAL;
+    }
+
+    private static List<BlockPos> candidateFortPlots(ServerLevel level,
+                                                     RecruitsClaim claim,
+                                                     BannerModSettlementSnapshot snapshot) {
+        return candidatePlots(level, claim, snapshot == null ? claim.getCenter() : snapshot.anchorChunk(), false);
+    }
+
+    private static List<BlockPos> candidateHamletPlots(ServerLevel level,
+                                                       RecruitsClaim claim,
+                                                       BannerModSettlementSnapshot snapshot) {
+        return candidatePlots(level, claim, snapshot == null ? null : snapshot.anchorChunk(), true);
+    }
+
+    private static List<BlockPos> candidatePlots(ServerLevel level,
+                                                 RecruitsClaim claim,
+                                                 @Nullable ChunkPos anchorChunk,
+                                                 boolean hamletOnly) {
+        List<BlockPos> candidates = new ArrayList<>();
+        List<ChunkPos> claimedChunks = claim.getClaimedChunks();
+        if (claimedChunks.isEmpty() && claim.getCenter() != null) {
+            claimedChunks = List.of(claim.getCenter());
+        }
+        for (ChunkPos chunk : claimedChunks) {
+            int distance = anchorChunk == null ? 0 : chunkDistance(anchorChunk, chunk);
+            if (hamletOnly) {
+                if (distance < HAMLET_MIN_CHUNK_RADIUS || distance > HAMLET_MAX_CHUNK_RADIUS) {
+                    continue;
+                }
+            } else if (anchorChunk != null && distance >= HAMLET_MIN_CHUNK_RADIUS) {
+                continue;
+            }
+            candidates.add(surfacePos(level, chunk, 4, 4));
+            candidates.add(surfacePos(level, chunk, 11, 4));
+            candidates.add(surfacePos(level, chunk, 4, 11));
+            candidates.add(surfacePos(level, chunk, 11, 11));
+        }
+        return candidates;
+    }
+
+    private static int chunkDistance(ChunkPos anchor, ChunkPos other) {
+        return Math.max(Math.abs(anchor.x - other.x), Math.abs(anchor.z - other.z));
     }
 }
