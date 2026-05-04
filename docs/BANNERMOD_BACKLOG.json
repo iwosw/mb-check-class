@@ -6612,7 +6612,7 @@
     {
       "id": "CIT-002",
       "title": "Real citizen-on-citizen birth bound to housing",
-      "status": "in_progress",
+      "status": "done",
       "updated": "2026-05-04",
       "why": "The current 'birth' path is just a Villager-grows-up hook that converts a vanilla villager into a worker once. Citizens themselves never reproduce; settlements cannot grow organically once vanilla villagers are exhausted, and there is no demographic loop tying population to housing.",
       "scope": [
@@ -6628,8 +6628,14 @@
           "text": "Implementation landed: CitizenEntity now carries DATA_FEMALE/DATA_BABY synched fields plus a growUpTicks counter persisted via NBT (CitizenFemale/CitizenBaby/CitizenGrowUpTicks). Gender is randomized in the constructor and the baby flag is decremented in aiStep (server-side only). New CitizenBirthRules pure rule (FRIENDLY_CLAIM, opposite-gender pair, cooldown, baby cap, housing slack) returns Decision/DenialReason. CitizenBirthService runs every 200 ticks from WorkersVillagerEvents.onServerTick.Post, scans CitizenIndex per claim, evaluates the rule and spawns a baby CitizenEntity at the mother's position with setBabyForBirth. WorkerSettlementClaimPolicy.assignHomeIfAvailable binds the baby to a free home slot, so housing accounting stays consistent. Four config knobs (CitizenBirthEnabled default false, CitizenBirthCooldownTicks default 24000, CitizenBirthGrowUpTicks default 168000, CitizenBirthMaxBabiesPerClaim default 2). New CitizenBirthRulesTest covers all six denial paths and the allow path. Multiplayer guides RU+EN document the mechanic. ./gradlew test passes.\\n\\nDeviation from acceptance: the food precondition is NOT implemented — no claim-level food query exists in the codebase today, and adding one is its own slice (StorageArea iteration + food-item filter + config knob). Tracked as CIT-004. The rest of the acceptance items (paired adults produce baby on tick, baby grows up after configured time, no housing slot blocks birth, cooldown blocks back-to-back, guide updates) are observable from the current code."
         }
       ],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-04",
+          "result": "1) CitizenBirthService runs every 200 ticks via WorkersVillagerEvents.onServerTick and per-claim spawns a CitizenEntity at the mother's position when all gates pass — observable in CitizenBirthService.attemptBirthInClaim; 2) Baby grows up via CitizenEntity.tickGrowUp decrementing growUpTicks until DATA_BABY flips false; 3) Housing gate: CitizenBirthRules denies with NO_FREE_HOUSING when housingSlack <= 0 and CitizenBirthService.logDenialTransition writes a debug log entry with the reason + inputs on transition (rate-limited via LAST_DENIAL_REASON cache); 4) Cooldown gate: LAST_BIRTH_GAME_TIME map + elapsedCooldownTicks < requiredCooldownTicks denial blocks back-to-back births; 5) ./gradlew compileJava + ./gradlew test green; 6) CitizenBirthRulesTest.deniesWhenNoFreeHousing exercises the housing-gated denial; 7) MULTIPLAYER_GUIDE_EN.md and MULTIPLAYER_GUIDE_RU.md describe the mechanic (now also with CIT-004 food gate). Food precondition originally deferred to CIT-004 — CIT-004 closed earlier in this slice. tools/backlog validate green."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-04"
     },
     {
       "id": "CIT-003",
