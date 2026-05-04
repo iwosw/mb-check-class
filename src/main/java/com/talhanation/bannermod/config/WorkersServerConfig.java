@@ -49,6 +49,7 @@ public class WorkersServerConfig {
     public static ModConfigSpec.LongValue CitizenBirthCooldownTicks;
     public static ModConfigSpec.IntValue CitizenBirthGrowUpTicks;
     public static ModConfigSpec.IntValue CitizenBirthMaxBabiesPerClaim;
+    public static ModConfigSpec.IntValue CitizenBirthFoodMinUnits;
     public static ArrayList<String> FARMER_PICKUP = new ArrayList<>(
             Arrays.asList(
                     "minecraft:wheat",
@@ -400,6 +401,16 @@ public class WorkersServerConfig {
                 .worldRestart()
                 .defineInRange("CitizenBirthMaxBabiesPerClaim", 2, 1, 64);
 
+        CitizenBirthFoodMinUnits = BUILDER.comment("""
+
+                        Minimum aggregate count of vanilla food items across the claim's
+                        StorageArea containers required to permit a citizen birth. Set to 0
+                        to disable the food precondition.
+                        \t(takes effect after restart)
+                        \tdefault: 8""")
+                .worldRestart()
+                .defineInRange("CitizenBirthFoodMinUnits", 8, 0, Integer.MAX_VALUE);
+
         BUILDER.pop();
 
         SERVER = BUILDER.build();
@@ -448,7 +459,8 @@ public class WorkersServerConfig {
                 resolveBoolean(CitizenBirthEnabled, false),
                 resolveLong(CitizenBirthCooldownTicks, 24000L),
                 resolveInt(CitizenBirthGrowUpTicks, 168000),
-                resolveInt(CitizenBirthMaxBabiesPerClaim, 2)
+                resolveInt(CitizenBirthMaxBabiesPerClaim, 2),
+                resolveInt(CitizenBirthFoodMinUnits, 8)
         );
     }
 

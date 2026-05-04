@@ -9,6 +9,8 @@ import com.talhanation.bannermod.entity.civilian.LumberjackEntity;
 import com.talhanation.bannermod.entity.civilian.MerchantEntity;
 import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
+import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
+import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
 import com.talhanation.bannermod.entity.military.RecruitPoliticalContext;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.settlement.BannerModSettlementBuildingCategory;
@@ -26,12 +28,17 @@ import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
+
+import java.util.List;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -214,6 +221,43 @@ final class WorkerSettlementClaimPolicy {
             slack += Math.max(0, capacity - used);
         }
         return slack;
+    }
+
+    /**
+     * Aggregate count of vanilla food items across every {@link StorageArea}
+     * inside {@code claim}. Each storage area's container map is scanned for
+     * stacks carrying {@link DataComponents#FOOD}; the stack size is summed.
+     * Used by {@link CitizenBirthService} to gate births on a settlement
+     * actually having food.
+     */
+    static int claimFoodCount(ServerLevel level, RecruitsClaim claim) {
+        if (level == null || claim == null || claim.getClaimedChunks().isEmpty()) {
+            return 0;
+        }
+        List<StorageArea> storageAreas;
+        if (WorkAreaIndex.instance().sizeFor(level.dimension()) > 0) {
+            storageAreas = WorkAreaIndex.instance()
+                    .queryInChunks(level, claim.getClaimedChunks(), StorageArea.class).stream()
+                    .filter(entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()))
+                    .toList();
+        } else {
+            storageAreas = level.getEntitiesOfClass(StorageArea.class, getClaimBounds(level, claim),
+                    entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
+        }
+        int total = 0;
+        for (StorageArea storageArea : storageAreas) {
+            storageArea.scanStorageBlocks();
+            for (Container container : storageArea.storageMap.values()) {
+                int size = container.getContainerSize();
+                for (int slot = 0; slot < size; slot++) {
+                    ItemStack stack = container.getItem(slot);
+                    if (!stack.isEmpty() && stack.has(DataComponents.FOOD)) {
+                        total += stack.getCount();
+                    }
+                }
+            }
+        }
+        return total;
     }
 
     /**

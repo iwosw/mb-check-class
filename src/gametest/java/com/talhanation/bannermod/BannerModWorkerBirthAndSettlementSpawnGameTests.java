@@ -38,7 +38,8 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
             BannerModDedicatedServerGameTestSupport.joinTeam(level, FRIENDLY_TEAM_ID, leader);
 
             BlockPos villagerPos = helper.absolutePos(new BlockPos(2, 2, 2));
-            BannerModDedicatedServerGameTestSupport.seedClaim(level, villagerPos, FRIENDLY_TEAM_ID, FRIENDLY_LEADER_UUID, "phase30-friendly-leader");
+            RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, villagerPos, FRIENDLY_TEAM_ID, FRIENDLY_LEADER_UUID, "phase30-friendly-leader");
+            BannerModDedicatedServerGameTestSupport.seedHousingSnapshot(level, claim, 4);
             Villager villager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(2, 2, 2), "phase30-birth-villager");
 
             AbstractWorkerEntity worker = WorkersVillagerEvents.attemptBirthWorkerSpawn(level, villager);
@@ -68,6 +69,7 @@ public class BannerModWorkerBirthAndSettlementSpawnGameTests {
 
             BlockPos firstPos = helper.absolutePos(new BlockPos(2, 2, 2));
             RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, firstPos, FRIENDLY_TEAM_ID + "_cooldown", leader.getUUID(), "phase30-spawn-leader");
+            BannerModDedicatedServerGameTestSupport.seedHousingSnapshot(level, claim, 4);
             Villager firstVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(2, 2, 2), "phase30-first-spawn-villager");
             Villager secondVillager = BannerModGameTestSupport.spawnVillagerWithMemories(helper, new BlockPos(4, 2, 2), "phase30-second-spawn-villager");
 

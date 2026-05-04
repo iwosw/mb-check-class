@@ -12,14 +12,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CitizenBirthRulesTest {
 
-    private static final Config DEFAULT_CONFIG = new Config(true, 24000L, 168000, 2);
-    private static final Config DISABLED_CONFIG = new Config(false, 24000L, 168000, 2);
+    private static final int FOOD_MIN = 8;
+    private static final int FOOD_OK = 64;
+    private static final Config DEFAULT_CONFIG = new Config(true, 24000L, 168000, 2, FOOD_MIN);
+    private static final Config DISABLED_CONFIG = new Config(false, 24000L, 168000, 2, FOOD_MIN);
 
     @Test
     void allowsBirthWhenAllConditionsMet() {
         Decision decision = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                1, 1, 0, 1, Long.MAX_VALUE, DEFAULT_CONFIG);
+                1, 1, 0, 1, FOOD_OK, Long.MAX_VALUE, DEFAULT_CONFIG);
         assertTrue(decision.allowed());
     }
 
@@ -27,7 +29,7 @@ class CitizenBirthRulesTest {
     void deniesWhenFeatureDisabled() {
         Decision decision = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                1, 1, 0, 1, Long.MAX_VALUE, DISABLED_CONFIG);
+                1, 1, 0, 1, FOOD_OK, Long.MAX_VALUE, DISABLED_CONFIG);
         assertFalse(decision.allowed());
         assertEquals(DenialReason.FEATURE_DISABLED, decision.denialReason());
     }
@@ -36,7 +38,7 @@ class CitizenBirthRulesTest {
     void deniesWhenClaimNotFriendly() {
         Decision decision = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.HOSTILE_CLAIM,
-                1, 1, 0, 1, Long.MAX_VALUE, DEFAULT_CONFIG);
+                1, 1, 0, 1, FOOD_OK, Long.MAX_VALUE, DEFAULT_CONFIG);
         assertFalse(decision.allowed());
         assertEquals(DenialReason.NOT_FRIENDLY_CLAIM, decision.denialReason());
     }
@@ -45,10 +47,10 @@ class CitizenBirthRulesTest {
     void deniesWhenNoOppositeGenderPair() {
         Decision noFemale = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                3, 0, 0, 1, Long.MAX_VALUE, DEFAULT_CONFIG);
+                3, 0, 0, 1, FOOD_OK, Long.MAX_VALUE, DEFAULT_CONFIG);
         Decision noMale = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                0, 3, 0, 1, Long.MAX_VALUE, DEFAULT_CONFIG);
+                0, 3, 0, 1, FOOD_OK, Long.MAX_VALUE, DEFAULT_CONFIG);
         assertFalse(noFemale.allowed());
         assertEquals(DenialReason.NO_PAIRABLE_ADULTS, noFemale.denialReason());
         assertFalse(noMale.allowed());
@@ -59,7 +61,7 @@ class CitizenBirthRulesTest {
     void deniesWhenBabiesAtCap() {
         Decision decision = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                1, 1, 2, 1, Long.MAX_VALUE, DEFAULT_CONFIG);
+                1, 1, 2, 1, FOOD_OK, Long.MAX_VALUE, DEFAULT_CONFIG);
         assertFalse(decision.allowed());
         assertEquals(DenialReason.BABIES_AT_CAP, decision.denialReason());
     }
@@ -68,7 +70,7 @@ class CitizenBirthRulesTest {
     void deniesWhenCooldownActive() {
         Decision decision = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                1, 1, 0, 1, 100L, DEFAULT_CONFIG);
+                1, 1, 0, 1, FOOD_OK, 100L, DEFAULT_CONFIG);
         assertFalse(decision.allowed());
         assertEquals(DenialReason.COOLDOWN_ACTIVE, decision.denialReason());
     }
@@ -77,8 +79,34 @@ class CitizenBirthRulesTest {
     void deniesWhenNoFreeHousing() {
         Decision decision = CitizenBirthRules.evaluate(
                 BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
-                1, 1, 0, 0, Long.MAX_VALUE, DEFAULT_CONFIG);
+                1, 1, 0, 0, FOOD_OK, Long.MAX_VALUE, DEFAULT_CONFIG);
         assertFalse(decision.allowed());
         assertEquals(DenialReason.NO_FREE_HOUSING, decision.denialReason());
+    }
+
+    @Test
+    void deniesWhenClaimFoodBelowMinimum() {
+        Decision decision = CitizenBirthRules.evaluate(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                1, 1, 0, 1, FOOD_MIN - 1, Long.MAX_VALUE, DEFAULT_CONFIG);
+        assertFalse(decision.allowed());
+        assertEquals(DenialReason.NO_FOOD, decision.denialReason());
+    }
+
+    @Test
+    void allowsBirthAtFoodMinimumBoundary() {
+        Decision decision = CitizenBirthRules.evaluate(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                1, 1, 0, 1, FOOD_MIN, Long.MAX_VALUE, DEFAULT_CONFIG);
+        assertTrue(decision.allowed());
+    }
+
+    @Test
+    void foodGateDisabledWhenMinIsZero() {
+        Config zeroFood = new Config(true, 24000L, 168000, 2, 0);
+        Decision decision = CitizenBirthRules.evaluate(
+                BannerModSettlementBinding.Status.FRIENDLY_CLAIM,
+                1, 1, 0, 1, 0, Long.MAX_VALUE, zeroFood);
+        assertTrue(decision.allowed());
     }
 }
