@@ -6682,6 +6682,877 @@
       ],
       "evidence": [],
       "doneDate": "2026-05-04"
+    },
+    {
+      "id": "ENQUEUE-001",
+      "title": "Wrap every executeServerSide in context.enqueueWork",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "0 enqueueWork calls across ~140 packet handlers; all mutate entity AI state, claim manager, treasury, war runtime, SavedData from the network thread. NeoForge 1.21 contract requires explicit main-thread dispatch. Symptoms: sporadic CME, NPE on entity lookup, lost SavedData writes, crashes under packet flood. Source: review Part A section 7.1 / Top-20 #1.",
+      "scope": [
+        "Wrap every BannerModMessage subclass executeServerSide body in context.enqueueWork(() -> ...)",
+        "Audit BannerModMessage default in network/payload/BannerModMessage.java; wrap if applicable",
+        "Add a checkstyle/Spotless rule preventing future regressions",
+        "Remove BannerModNetworkContext.setPacketHandled no-op while in here"
+      ],
+      "acceptance": [
+        "Every executeServerSide body either calls context.enqueueWork(() -> ...) OR carries a // @safe-network-thread (reason) comment",
+        "Checkstyle rule fails the build on missing wrap",
+        "./gradlew runGameTestServer green",
+        "New gametest: 1000 MessageMovement packets dispatched in parallel with no CME observed",
+        "BannerModNetworkContext.setPacketHandled removed"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SCANPOOL-001",
+      "title": "Pool UseShield hostile scan per leader/group",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "ai/military/UseShield.findNearestHostile + collectMountedHostiles run getEntitiesOfClass(LivingEntity, AABB inflate(24..32)) per shield-wall recruit every HOSTILE_SCAN_INTERVAL_TICKS. At 80 recruits in shield-wall this is 80 redundant overlapping scans per scan-tick. Source: review Part A section 5.1.1 / Top-20 #7 / VERIFIED.",
+      "scope": [
+        "Introduce a per-leader hostile-scan cache (e.g. CommanderHostileScanCache keyed by leader UUID + scan-tick) shared across all recruits in the same group/formation",
+        "UseShield reads the cache instead of issuing its own scan",
+        "Same cache reusable by RecruitMoraleRoutGoal and RangedSpacingService (SCANPOOL-002 / SCANPOOL-003)"
+      ],
+      "acceptance": [
+        "New gametest: 80 recruits in shield-wall vs 100 zombies; profiling counter records exactly one hostile scan per group per scan-interval",
+        "Spark sampler shows UseShield.findNearestHostile cumulative time drops by >=80% at 80-recruit scale",
+        "Behavior parity test: stance-auto-block decision matches pre-pool behavior on a fixed scenario"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SCANPOOL-002",
+      "title": "Throttle/pool RecruitMoraleRoutGoal nearest-hostile scan (currently per-tick)",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "ai/military/RecruitMoraleRoutGoal.java line 38 FLEE_SCAN_RADIUS=24.0; class Javadoc states 'Each tick re-scans for the nearest hostile' = per-tick 24m AABB scan per routed recruit. 50 routed recruits = 50 main-thread AABB scans every tick. Source: review Part B 19.5 / B4 / VERIFIED.",
+      "scope": [
+        "Add a lastScanTick field to the goal and gate the scan to every N ticks (configurable; default 5-10)",
+        "OR consume SCANPOOL-001 per-leader cache directly",
+        "Update Javadoc to reflect actual cadence"
+      ],
+      "acceptance": [
+        "New gametest: 50 simultaneously-routed recruits; per-recruit goal-tick AABB-allocation count drops to <=1 per N ticks",
+        "Visible flee behavior parity confirmed in a fixed scenario test"
+      ],
+      "dependencies": [
+        "SCANPOOL-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SCANPOOL-003",
+      "title": "Pool RangedSpacingService nearestEnemyMeleeDistance scan",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "combat/RangedSpacingService.java line 131 calls level.getEntitiesOfClass per ranged recruit per EVALUATION_INTERVAL_TICKS. Own-side query (line 113) already uses chunk-aware RecruitIndex; enemy-side does not. Source: review Part A 5.1.3 / Part B 19.4 / Top-20 #9 / VERIFIED.",
+      "scope": [
+        "Reuse SCANPOOL-001 per-leader cache for the enemy-side scan, OR introduce a hostile-entity index keyed by chunk for the enemy lookup",
+        "Keep the firing-lane check separate (line 141) - that one is per-target-direction"
+      ],
+      "acceptance": [
+        "Enemy-scan call count per ranged recruit per evaluation drops to <=1/group",
+        "Action decisions parity-test against pre-pool fixture",
+        "Profiling counter exposes scan-pool hit rate"
+      ],
+      "dependencies": [
+        "SCANPOOL-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "DATAVERSION-001",
+      "title": "Add DataVersion field + migration switch to all SavedData",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "ctx search 'DataVersion|dataVersion' in src/main returns 0 hits. 12+ SavedData classes (BannerModTreasuryManager, BannerModSettlementManager, BannerModGovernorManager, WarDeclarationSavedData, OccupationSavedData, RevoltSavedData, WarAllyInviteSavedData, DemilitarizationSavedData, SiegeStandardSavedData, WarCooldownSavedData, WarAuditLogSavedData, RecruitsClaimSaveData, RecruitsGroupsSaveData) deserialize directly with no schema check. First persistent format change after release silently corrupts existing saves. Source: review Part A 8.1 / Part B 19.8 / Top-20 #4 / VERIFIED.",
+      "scope": [
+        "Common helper SavedDataVersioning with putVersion/getVersion + migration switch",
+        "Add CURRENT_VERSION constant + putInt('DataVersion', CURRENT_VERSION) in every SavedData.save()",
+        "In every load(): read DataVersion (defaults to 0 if absent) and apply v0->v1 migration (no-op for first version, logs migration when applied)"
+      ],
+      "acceptance": [
+        "Every SavedData.save() writes DataVersion",
+        "Every load() reads it",
+        "Round-trip: write v0-style tag (no DataVersion), load it, expect v1 in-memory shape, save again, expect DataVersion=1",
+        "New gametest: legacy save without DataVersion loads cleanly",
+        "Checkstyle/grep guard: no SavedData class compiles without DataVersion"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "WARRETENTION-001",
+      "title": "Cap and age-out war audit log, occupations, revolts",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "war/audit/WarAuditLogSavedData.java line 18 entries=ArrayList; append() at line 40 has no cap, no removal API at all. war/runtime/OccupationRuntime.java place() inserts to LinkedHashMap with random UUIDs; remove only via explicit remove(UUID). RevoltSavedData same. Long-running servers accumulate forever and write the full list on every save. Source: review Part A P2 / Part B 19 / Part C 26.5 / Top-20 #5 / VERIFIED.",
+      "scope": [
+        "Constants: MAX_AUDIT_ENTRIES (e.g. 4096), MAX_OCCUPATIONS (e.g. 1024), MAX_REVOLTS_PER_WAR (e.g. 64)",
+        "Truncation policy: oldest-first eviction in append",
+        "OR: separate WarHistoryArchiveSavedData that absorbs entries older than 30 game-days; live SavedData stays lean",
+        "Server tick sweeper that prunes resolved-war records"
+      ],
+      "acceptance": [
+        "New gametest: append 5000 audit entries; final size <= MAX_AUDIT_ENTRIES",
+        "Place 2000 occupations; final size <= MAX_OCCUPATIONS",
+        "Resolved war from 31+ game-days ago no longer appears in WarAuditLogSavedData.all()",
+        "Save-file size grows logarithmically not linearly under simulated long-run load"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "CLAIMFANOUT-001",
+      "title": "Treasury removeLedger + settlement/war cleanup on claim deletion",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "MessageDeleteClaim then claimManager.removeClaim() does NOT call BannerModTreasuryManager.removeLedger(UUID). Treasury ledgers for deleted claims accumulate forever. Worker boundWorkAreaUUID may still point into deleted claim buildings. War occupation/revolt records keyed on the deleted claim settlement may persist. Source: review Part A 6.1 / S1 / P3 / Top-20 #6 / VERIFIED.",
+      "scope": [
+        "On claim removal (MessageDeleteClaim and admin command paths): call removeLedger; trigger settlement-snapshot prune immediately (not next batch); detach worker boundWorkAreaUUID for any worker bound to a building inside the deleted claim; remove war occupations/revolts keyed on this claim",
+        "Make the fanout idempotent"
+      ],
+      "acceptance": [
+        "New gametest: create claim with treasury balance and a bound worker; delete claim; assert getLedger returns null in same tick, settlement snapshot is gone, worker.boundWorkAreaUUID is null, occupations referencing that claim are gone",
+        "Parity test: existing claim-deletion behavior unchanged for unrelated state"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SETTREFACTOR-001",
+      "title": "Split BannerModSettlementService (1585 LOC) god class",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "settlement/BannerModSettlementService.java holds claim refresh, snapshot building, validator binding, treasury hooks, sea-trade derivation, stockpile seeding in one class. Change-magnet, hard-to-review, slow-to-merge. Source: review Part A 3.4 / Top-20 #2 / VERIFIED. Note 1060-LOC test BannerModSettlementServiceTest must split alongside (Part B B7).",
+      "scope": [
+        "Extract three classes: SettlementClaimBindingService (refresh/binding), SettlementTreasuryDerivationService (treasury hook integration), SettlementSeaTradeAnalyzer (sea-trade hints derivation)",
+        "Residual core service stays for orchestration",
+        "Move the 1060-LOC unit test along the same boundary into three test classes"
+      ],
+      "acceptance": [
+        "BannerModSettlementService LOC <= 600",
+        "Each extracted class has its own test class",
+        "Behavior parity: full SettlementService test suite green pre/post split",
+        "Snapshot output byte-for-byte identical on a fixed scenario test"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "BLDGVALIDATOR-001",
+      "title": "Strategy-extract DefaultBuildingValidator (960 LOC) per building type",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "settlement/validation/DefaultBuildingValidator.java has 10+ inline type-specific validation branches. Adding/changing one rule requires touching the giant switch. Source: review Part A 3.4 / Top-20 #3 / VERIFIED.",
+      "scope": [
+        "Strategy interface BuildingTypeValidator. One implementation per type (FarmValidator, MineValidator, BarracksValidator, ...)",
+        "Dispatcher class is small and only routes BuildingType -> validator",
+        "Existing prefab-side DefaultBuildingValidator should be renamed PrefabFallbackValidator to remove the shadow conflict"
+      ],
+      "acceptance": [
+        "Dispatcher LOC <= 100",
+        "Each validator <= 150 LOC",
+        "settlement/validation/DefaultBuildingValidator.java deleted",
+        "Existing validation gametests + unit tests stay green",
+        "settlement/prefab/validation/DefaultBuildingValidator.java renamed PrefabFallbackValidator with all references updated"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "REFLCACHE-001",
+      "title": "Cache reflection Method lookups in BannerModMessage.invokeLegacy",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "network/payload/BannerModMessage.java lines 68-82 calls getClass().getMethod(name, paramType) on every packet send/receive. ~145 packet types, hot in battle. Latency tax measurable under movement spam. Source: review Part A 7.2 / Top-20 #10 / VERIFIED.",
+      "scope": [
+        "Static ConcurrentHashMap<Triple<Class,String,Class>, Method> cache. Lookup-then-invoke"
+      ],
+      "acceptance": [
+        "Micro-benchmark or jcmd profile shows getMethod calls drop to one-per-class-per-method-per-paramType",
+        "All ~145 packet round-trip gametests still pass"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "REFLLOG-001",
+      "title": "Stop swallowing NoSuchMethodException in invokeLegacy",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "network/payload/BannerModMessage.java line 72 catches NoSuchMethodException as 'one-way packets are intentional' but also silently masks typos (exectueServerSide), signature drift, refactor mistakes. Misregistration ships. Source: review Part A 7.3 / L1 / Top-20 #11 / VERIFIED.",
+      "scope": [
+        "At packet registration time, record the declared sides per packet class (server-only, client-only, both)",
+        "invokeLegacy asserts the side exists for the declared shape; logs a WARN-and-fail-fast on bootstrap if a class declares no sides at all"
+      ],
+      "acceptance": [
+        "Dummy packet that intentionally misnames executeServerSide fails bootstrap with a loud LOGGER.error and a clear message",
+        "One-way packets (server-only or client-only) load cleanly without warnings",
+        "All existing packets register without warnings"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "RATELIMIT-001",
+      "title": "Per-player cooldown table for movement / face / stance / attack packets",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Only one throttle exists today (MessageRequestFormationMapSnapshot). Movement/face/stance/combat packets are spammable. Even legitimate spam can corrupt state under network-thread races. Source: review Part A 7.5 / Sec3 / Top-20 #15 / VERIFIED.",
+      "scope": [
+        "Per-player + per-packet-type cooldown map keyed by (playerUuid, packetClass)",
+        "Sensible defaults (e.g. movement: 50 ms, stance: 100 ms, face: 50 ms, attack: 100 ms)",
+        "Reject silently or with a single rate-limited feedback message",
+        "Configurable via server config"
+      ],
+      "acceptance": [
+        "Gametest: client floods MessageMovement at 1 kHz; server processes <= 20 Hz",
+        "Per-player counters expose drop count",
+        "Existing combat/UI gametests still pass at normal cadence"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "FORMATIONDIM-001",
+      "title": "Leader-presence check in formation goals (cross-dimension safety)",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "ctx search PlayerChangedDimension = 0 hits. Formation index is in Player.PERSISTED_NBT_TAG.Formation, dimension-agnostic. Recruits in dimension A whose owner is now in dimension B would still try to follow / re-form. Source: review Part A 4.4 / Part B 18.3 / Top-20 #13 / reclassified MEDIUM.",
+      "scope": [
+        "Formation goals (RecruitFollowGoal, FormationFollowGoal, regroup goals) check that leader.level().dimension() == this.level().dimension() at the top of canUse() and tick()",
+        "When mismatched: hold position rather than blind-rebind",
+        "Add a debug counter for cross-dimension orphan events"
+      ],
+      "acceptance": [
+        "Gametest: place leader+formation in Overworld; teleport leader to Nether; verify recruits hold position rather than path toward stale anchors",
+        "PlayerChangedDimensionEvent test: orphan-counter increments by group size"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "STALEREF-001",
+      "title": "Null/dead-check cachedNearestHostile in UseShield",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "ai/military/UseShield.java line 48 holds a strong LivingEntity reference between scans (HOSTILE_SCAN_INTERVAL_TICKS). If the cached target dies between scans the goal still acts on it. Source: review Part A 4.6 / L4 / Top-20 #14 / VERIFIED.",
+      "scope": [
+        "At top of tick() and at top of methods that read cachedNearestHostile: null-check + isAlive() + !isRemoved()",
+        "Force a re-scan when stale",
+        "Apply same pattern to any other goal field of LivingEntity type identified during review"
+      ],
+      "acceptance": [
+        "Gametest: spawn target, let UseShield cache it, kill target before next scan, assert recruit does not block toward dead target",
+        "Static check (grep) confirms no goal field of type LivingEntity is dereferenced without isAlive() guard"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "NOBLESTREAM-001",
+      "title": "Replace stream chains in VillagerBecomeNobleGoal.canUse with for-loops",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Subagent A flagged ai/villager/VillagerBecomeNobleGoal.canUse as chaining three streams over getEntitiesOfClass results inside canUse() (called every tick). Allocation churn. Source: review Part A 5.2 / Top-20 #18 / LIKELY (needs read-confirm).",
+      "scope": [
+        "Read VillagerBecomeNobleGoal.canUse and confirm pattern",
+        "Replace stream chains with single for-loop fold",
+        "Add a lastEvaluationTick throttle if the goal is hot (e.g. every 20t)"
+      ],
+      "acceptance": [
+        "No streams used in canUse()",
+        "Allocation-profile shows stream/lambda allocations from this goal drop to zero",
+        "Behavior parity test: pre/post on a fixed villager+player scenario"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "WORKGOAL-001",
+      "title": "Migrate per-job worker goals to SettlementOrderWorkGoal-driven path",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "FarmerWorkGoal, MinerWorkGoal, BuilderWorkGoal, LumberjackWorkGoal, MerchantWorkGoal, FishermanWorkGoal, AnimalFarmerWorkGoal coexist with the newer SettlementOrderWorkGoal. Behavior divergence risk: bug fixed in one, not others. Source: review Part A 5.5 / 12.3 / VERIFIED.",
+      "scope": [
+        "Verify behavior parity per-job between SettlementOrderWorkGoal and each per-job goal",
+        "Migrate each entity registerGoals() to the unified goal",
+        "Delete the per-job goal classes and their tests once parity is proven"
+      ],
+      "acceptance": [
+        "src/main grep for FarmerWorkGoal etc returns zero usages outside the goal class itself",
+        "Classes deleted; existing worker gametests green"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "EVENTSPKG-001",
+      "title": "Move services out of events/ package into runtime/ subpackages",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "events/SettlementHeartbeatService, events/CitizenBirthService, events/ClaimRuntimeService, events/MovementFormationCommandService and ~5 others are services not event subscribers. Onboarding confusion. Source: review Part A 3.3 / 3.7 / A4 / Top-20 #16 / VERIFIED.",
+      "scope": [
+        "Move each service out of events/ into the matching subsystem runtime/ folder (settlement/runtime/, claim/runtime/, citizen/runtime/, army/command/runtime/)",
+        "Leave only true @SubscribeEvent classes in events/",
+        "Update imports across ~50-100 callsites in one mechanical commit per service"
+      ],
+      "acceptance": [
+        "events/ contains only classes whose methods carry @SubscribeEvent",
+        "./gradlew compileJava green",
+        "No behavior change",
+        "PR splittable by service"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "CONFIGMERGE-001",
+      "title": "Merge RecruitsServerConfig + WorkersServerConfig into BannerModServerConfig",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Two server configs after the merged-runtime work indicates incomplete merge. Drift risk. Source: review Part A 10.1 / Top-20 #17 / VERIFIED.",
+      "scope": [
+        "New BannerModServerConfig that consumes both legacy spec maps",
+        "Migrate every callsite (preferred) OR provide thin shims that delegate",
+        "Migration of existing config files: read legacy keys if present and map to new keys with a deprecation warning at server start"
+      ],
+      "acceptance": [
+        "Single config file generated on first run",
+        "Existing users with bannermod-recruits-server.toml + bannermod-workers-server.toml get a deprecation warning + automatic migration",
+        "New per-feature gametest verifies all gameplay knobs still work"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "EBSMIGRATE-001",
+      "title": "Replace deprecated EventBusSubscriber.bus() across all subscribers",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "compileJava emits 'bus() in EventBusSubscriber has been deprecated and marked for removal' across 10+ files: WorkersAttributeEvent, CitizenAttributeEvent, AttributeEvent, CitizenIndexEvents, WorkerIndexEvents, RecruitIndexEvents, WorkAreaIndexEvents, both ClientEvent classes, surveyor renderer events. When NeoForge removes the API, every static event subscriber stops compiling. Source: review Part C 25.1 / NEW.",
+      "scope": [
+        "Migrate to NeoForge replacement API (whichever is current at fix time - likely register-on-event-bus per Dist instead of @EventBusSubscriber(... bus = ...))",
+        "Pin to next NeoForge bump if API still flexing"
+      ],
+      "acceptance": [
+        "compileJava emits no '[removal] bus()' or '[removal] Bus' warnings",
+        "All subscriber sites still fire correctly under existing gametests"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTSAVELOAD-001",
+      "title": "Settlement save/load roundtrip test",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "No test deserializes BannerModSettlementSnapshot tag and asserts equality. SavedData fragility is highest-impact regression vector. Source: review Part A 11.2 #1.",
+      "scope": [
+        "Pure JUnit test under src/test that builds a representative snapshot, calls toTag, calls fromTag, asserts equality field-by-field",
+        "Cover: empty settlement, single building, full settlement, corrupted-but-valid edge case"
+      ],
+      "acceptance": [
+        "Test class BannerModSettlementSnapshotRoundtripTest with >=4 cases passes",
+        "Adding/removing a snapshot field without updating the codec fails this test"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTTREAS-001",
+      "title": "Treasury under simulated concurrent packet flow",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Once ENQUEUE-001 lands, treasury depositTaxes vs recordArmyUpkeepDebit is single-threaded; this test guards that property. Source: review Part A 6.5 / 11.2 #2.",
+      "scope": [
+        "Gametest that fires N MessageDepositTaxes-equivalents in the same tick on the same claim; assert final ledger == sum of inputs",
+        "Pre-condition: ENQUEUE-001 done"
+      ],
+      "acceptance": [
+        "Test fails if ENQUEUE-001 is reverted",
+        "Test passes with ENQUEUE-001 in place",
+        "Final treasury value is exactly the algebraic sum"
+      ],
+      "dependencies": [
+        "ENQUEUE-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTFANOUT-001",
+      "title": "Claim deletion fanout to treasury / settlement / worker / war test",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Acceptance test for CLAIMFANOUT-001. Source: review Part A 11.2 #3.",
+      "scope": [
+        "Gametest: create claim with treasury, settlement snapshot, bound worker, active occupation. Delete claim. Assert all four orphan paths cleaned in same tick"
+      ],
+      "acceptance": [
+        "Test guards against regression of CLAIMFANOUT-001"
+      ],
+      "dependencies": [
+        "CLAIMFANOUT-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTWORKER-001",
+      "title": "Worker unbinding when work-area entity removed",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Worker bound to a now-dead ValidatedBuildingRecord must auto-unbind. Source: review Part A 11.2 #4.",
+      "scope": [
+        "Gametest: spawn farmer + crop area; bind farmer; kill crop area; advance N ticks; assert farmer.boundWorkAreaUUID == null AND no goal references the dead area"
+      ],
+      "acceptance": [
+        "Worker is unbound within <=20 ticks after work-area removal"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTCHUNK-001",
+      "title": "Chunk unload / reload preserves settlement + claim state",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Force chunk unload must not corrupt SavedData. Source: review Part A 11.2 #5.",
+      "scope": [
+        "Gametest: set up settlement + claim in chunk; force unload chunk; force reload; assert state byte-for-byte identical"
+      ],
+      "acceptance": [
+        "No state mutation observed across unload/reload cycle"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTDIM-001",
+      "title": "Dimension change with formation set does not break recruits",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Acceptance test for FORMATIONDIM-001. Source: review Part A 11.2 #6.",
+      "scope": [
+        "Gametest: form a 5-recruit formation in Overworld; teleport leader to Nether; advance ticks; assert recruits hold position and no NPE / pathfind to invalid chunk"
+      ],
+      "acceptance": [
+        "Test guards FORMATIONDIM-001 fix"
+      ],
+      "dependencies": [
+        "FORMATIONDIM-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTLONGRUN-001",
+      "title": "Long-running war/audit/treasury accumulation simulation",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Acceptance test for WARRETENTION-001. Source: review Part A 11.2 #7.",
+      "scope": [
+        "Simulation gametest: declare-resolve war loop N=100 times; verify SavedData sizes plateau (not grow linearly) thanks to retention policy"
+      ],
+      "acceptance": [
+        "After 100 declare-resolve cycles, war SavedData sizes stay within configured caps (MAX_AUDIT_ENTRIES, MAX_OCCUPATIONS)"
+      ],
+      "dependencies": [
+        "WARRETENTION-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTFUZZ-001",
+      "title": "Bad-packet fuzz harness for ~145 packet types",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Handlers must not crash on malformed payloads (UUID null, group null, garbage state int). Source: review Part A 11.2 #8 / 13 vector.",
+      "scope": [
+        "Gametest harness that constructs each packet type with adversarial fields (null UUIDs, sentinel values, oversized strings) and dispatches; asserts no exception escapes the handler",
+        "Use reflection to enumerate packet classes"
+      ],
+      "acceptance": [
+        "Every BannerModMessage subclass survives at least 5 fuzzed inputs without RuntimeException leaking out"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTNETTHREAD-001",
+      "title": "Network-thread safety regression test",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Once ENQUEUE-001 lands, this guards against future regressions of the wrap. Source: review Part A 11.2 #9.",
+      "scope": [
+        "Test that runs 1000 movement packets in parallel from a fake netty pool and asserts zero CME on entity collections"
+      ],
+      "acceptance": [
+        "Test fails if any executeServerSide regresses without enqueueWork"
+      ],
+      "dependencies": [
+        "ENQUEUE-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTMIGRATE-001",
+      "title": "SavedData v0 to v1 migration test",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Acceptance test for DATAVERSION-001. Source: review Part A 11.2 #10.",
+      "scope": [
+        "Per SavedData class: write a tag without DataVersion (v0 shape); load it; expect v1 in-memory shape; save again; expect DataVersion=1"
+      ],
+      "acceptance": [
+        "Pre-versioning saves load cleanly into versioned form for every SavedData"
+      ],
+      "dependencies": [
+        "DATAVERSION-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "ADMINCMDS-001",
+      "title": "Admin recovery command suite",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Ops have no in-game commands to fix orphaned settlement / treasury / stuck worker / stuck war state. Source: review Part A 10.2 / Top-20 #20 / VERIFIED.",
+      "scope": [
+        "Add commands: /bannermod settlement prune <claimUuid>, /bannermod treasury set <claimUuid> <amount>, /bannermod treasury show <claimUuid>",
+        "/bannermod worker unbind <entityId>, /bannermod worker rehome <chunkX> <chunkZ>",
+        "/bannermod war wipe <warId>",
+        "/bannermod debug index recruits|workers|workareas <chunk>, /bannermod debug pathfinding stats, /bannermod debug counters dump, /bannermod debug save-versions",
+        "/bannermod claim trust prune-dead-uuids",
+        "All require permission level 2 (op)"
+      ],
+      "acceptance": [
+        "Each command listed above exists, requires op, validates inputs, executes server-side, has at least one gametest covering happy path"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UIAUDIT-001",
+      "title": "Move UI_AUDIT_FINDINGS.md into docs/ and commit",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Untracked 161-line per-screen UI audit (30 screens, summary table, top-5 severe findings) lives at repo root from a prior session. Real audit output, not noise. Source: review Part C 26.3 / Part A U6.",
+      "scope": [
+        "git mv UI_AUDIT_FINDINGS.md docs/UI_AUDIT_FINDINGS.md",
+        "Commit as 'docs: import per-screen UI audit from prior session'",
+        "Add link from docs/STATUS.md"
+      ],
+      "acceptance": [
+        "File lives at docs/UI_AUDIT_FINDINGS.md; tracked in git",
+        "Linked from STATUS.md",
+        "Working tree shows no untracked UI_AUDIT_FINDINGS.md"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "UIFIXES-001",
+      "title": "Implement fixes from UI_AUDIT_FINDINGS.md top-5 severe items",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "Once UI_AUDIT_FINDINGS.md is committed, its top-5 severe findings need code fixes. Source: review Part C 26.3 / Part A 9 / U1-U5.",
+      "scope": [
+        "Read docs/UI_AUDIT_FINDINGS.md top-5 section; create one acceptance bullet per finding; implement on a feature branch",
+        "Each fix is a focused commit per screen"
+      ],
+      "acceptance": [
+        "Each of the top-5 severe findings has a corresponding fix commit and a gametest or playtest verification recorded with tools/backlog progress"
+      ],
+      "dependencies": [
+        "UIAUDIT-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "DOCSTATUS-001",
+      "title": "Update docs/STATUS.md stale claims",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "STATUS.md says 'Worker AI still has legacy current*Area fields'; codebase actually has unified currentWorkArea (no legacy named fields). STATUS.md says reconnectedowner test failure exists; the test name is now verified at BannerModDedicatedServerReconnectGameTests.java line 90. Source: review Part B 19.9 / B5 / Part C 26 / VERIFIED.",
+      "scope": [
+        "Rewrite STATUS.md 'Known Open Areas' bullet about current*Area to describe the actual remaining gap (binding source-of-truth: currentWorkArea on entity vs ValidatedBuildingRecord in registry)",
+        "Update test-failure note with exact test method name once TESTRECONNECT-001 is run"
+      ],
+      "acceptance": [
+        "STATUS.md reads correctly per current code",
+        "Reviewers reading STATUS.md and code agree"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "DOCPACKETS-001",
+      "title": "Full audit of ~145 packets for client-trusted UUIDs",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "STATUS.md/CLAUDE.md note recent fixes pushed face/ranged/upkeep packets onto real-sender UUIDs. Spot-check passed; full inventory missing. Some pre-merge handlers may still trust client-supplied UUIDs. Source: review Part A 6.6 / 13.1 / Sec4 / VERIFIED-as-gap.",
+      "scope": [
+        "Inventory every BannerModMessage subclass",
+        "For each, classify: (a) reads no client UUID; (b) reads client UUID but verifies sender.equals(); (c) reads client UUID and trusts it (BUG)",
+        "Output: docs/PACKET_AUTHORITY_INVENTORY.md table",
+        "Open follow-up tasks per (c) finding"
+      ],
+      "acceptance": [
+        "docs/PACKET_AUTHORITY_INVENTORY.md committed with one row per packet class",
+        "Zero (c)-class packets remain (or each has a follow-up backlog ID)"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TESTRECONNECT-001",
+      "title": "Fix reconnectedOwnerRecoversAuthorityAfterOwnershipRoundTrip",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "STATUS.md line 43 mentions known failure. Test is real at src/gametest/java/com/talhanation/bannermod/BannerModDedicatedServerReconnectGameTests.java line 90. The test calls MessageMovement.dispatchToServer directly so it bypasses Issue #1 network thread; failure is independent of ENQUEUE-001 - it is a recoverControl/canWorkHere bug in the ownership round-trip path. Source: review Part B 19.3 / Top-20 #19 / VERIFIED.",
+      "scope": [
+        "Run ./gradlew runGameTestServer; capture failing assertion + stack trace",
+        "Localize the bug in the ownership-cycle code (likely in WorkerControlAccess / RecruitOwnershipAccess); fix",
+        "Add a smaller unit test for the failing assertion if possible"
+      ],
+      "acceptance": [
+        "BannerModDedicatedServerReconnectGameTests.reconnectedOwnerRecoversAuthorityAfterOwnershipRoundTrip green in CI",
+        "Sibling reconnectedOwnerRegainsRecruitAndWorkerAuthorityWithoutManualRebinding stays green"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "DEADSEAMS-001",
+      "title": "Delete migration/NetworkBootstrapSeams + unused SavedDataMutation",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "migration/NetworkBootstrapSeams.java is contract-only scaffolding from an abandoned 'Phase 7 migration prep' - three interfaces (OrderedMessageCatalog, ChannelRegistrar, LifecycleBinder) declared, zero implementations. migration/StatePersistenceSeams.SavedDataMutation record declared, never used. Source: review Part B 19.1 / B1, B2 / VERIFIED.",
+      "scope": [
+        "Delete NetworkBootstrapSeams.java entirely",
+        "Delete the SavedDataMutation record from StatePersistenceSeams (keep ClientSyncState/ClientSyncReset which are wired)"
+      ],
+      "acceptance": [
+        "ctx search 'NetworkBootstrapSeams|SavedDataMutation' src returns zero matches outside this commit",
+        "compileJava green"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "DEADMERGED-001",
+      "title": "Delete MergedRuntimeCleanupPolicy",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "bootstrap/MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers() always returns false. Functionally dead since merge stabilization. Source: review Part A 6.7 / 8.6 / P5 / VERIFIED.",
+      "scope": [
+        "Delete the class",
+        "Remove all references (likely zero or one)"
+      ],
+      "acceptance": [
+        "Class deleted; compileJava green"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "ROOTJARS-001",
+      "title": "Remove root-level reference jars + add gitignore rule",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "millenaire-9.0.0-dev-preview.5.jar and minecolonies-1.20.1-1.1.1214-snapshot.jar at repo root. ctx search build.gradle confirms zero references. Pure dead weight (~92 KB) cluttering working tree. Source: review Part B 19.2 / B3 / VERIFIED.",
+      "scope": [
+        "git rm both jars",
+        "Add /*.jar to .gitignore (excluding subdirs)",
+        "Verify they do not appear in build resolved classpath"
+      ],
+      "acceptance": [
+        "ls of repo root has no jars",
+        "compileJava + runGameTestServer green"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "TRANSLATABLE-001",
+      "title": "Move Translatable.java into util/i18n",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "src/main/java/com/talhanation/bannermod/Translatable.java sits alone at the bannermod package root. Wrong location. Source: review Part A 3.7 / A7 / Part B B10 / VERIFIED.",
+      "scope": [
+        "Move file into util/i18n/ (create the package)",
+        "Update all imports"
+      ],
+      "acceptance": [
+        "File at new location; compileJava green",
+        "No references to old fully-qualified name remain"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "NOOPCTX-001",
+      "title": "Remove BannerModNetworkContext.setPacketHandled no-op",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "network/compat/BannerModNetworkContext.java line 24 setPacketHandled(boolean) is a corelib-1.20.1 NetworkEvent.Context shim that NeoForge 1.21 does not need. Likely zero callers. Source: review Part A 7.4 / N5 / VERIFIED.",
+      "scope": [
+        "Delete the method",
+        "Search for callers; remove any",
+        "Consider doing this inside ENQUEUE-001 PR"
+      ],
+      "acceptance": [
+        "Method deleted; compileJava green",
+        "ctx search 'setPacketHandled' src returns zero hits"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PROGRESSDIR-001",
+      "title": "Delete progress/night-run.md (stale opencode log)",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "progress/night-run.md is stale opencode/get-shit-done agent working state from a prior Phase 24 session, references HOME/.config/opencode/. Not used by Claude. Its 'compile failures' note is wrong (build is green). Source: review Part C 24 / 26.2 / VERIFIED.",
+      "scope": [
+        "Delete file",
+        "Delete progress/ directory if empty"
+      ],
+      "acceptance": [
+        "ls progress/ does not exist or is empty and removed"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "SETTPREFIX-001",
+      "title": "Drop redundant BannerMod prefix on classes inside bannermod.settlement.*",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "30+ classes named BannerModSettlementXxx inside the bannermod.settlement package - package-prefix repetition. Bloats class headers + grep noise. Mechanical rename. Source: review Part A 12.2 / VERIFIED.",
+      "scope": [
+        "Rename via IDE refactor: BannerModSettlementService -> SettlementService, etc",
+        "Touches every reference (likely a few hundred sites)",
+        "Land in one mechanical commit"
+      ],
+      "acceptance": [
+        "compileJava + runGameTestServer green",
+        "Zero classes named BannerModSettlement* remain inside settlement/",
+        "Defer until SETTREFACTOR-001 / BLDGVALIDATOR-001 are merged to avoid double-conflict"
+      ],
+      "dependencies": [
+        "SETTREFACTOR-001",
+        "BLDGVALIDATOR-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "NAMINGCONV-001",
+      "title": "Establish + enforce Seed/Record/Snapshot/State naming convention",
+      "status": "open",
+      "updated": "2026-05-04",
+      "why": "These suffixes coexist in settlement/ with overlapping semantics (BannerModSettlementResidentScheduleSeed, ...SchedulePolicySeed, ...ScheduleWindowSeed, etc). Source: review Part A 12.2 / VERIFIED.",
+      "scope": [
+        "Document convention in docs/CONTRIBUTING.md: Seed = static config-derived input, Record = persistent immutable, Snapshot = live read-only view, State = mutable runtime",
+        "Audit existing settlement classes and rename mismatches",
+        "Optional: checkstyle rule"
+      ],
+      "acceptance": [
+        "CONTRIBUTING.md has the convention section",
+        "ctx audit table maps every existing *Seed/*Record/*Snapshot/*State class to its category; mismatches renamed"
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
