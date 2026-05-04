@@ -50,9 +50,15 @@ final class WorkerSettlementSpawnRuntime {
                 villagerCount,
                 WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, AbstractWorkerEntity.class),
                 false,
-                WorkersServerConfig.workerBirthRuleConfig()
+                WorkersServerConfig.workerBirthRuleConfig(),
+                WorkerSettlementClaimPolicy.countWorkersByProfession(level, claim),
+                WorkerSettlementClaimPolicy.housingSlackForClaim(level, claim)
         );
-        return WorkerSettlementSpawner.spawnWorkerFromVillager(level, villager, decision, claim);
+        AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnWorkerFromVillager(level, villager, decision, claim);
+        if (worker != null) {
+            WorkerSettlementClaimPolicy.assignHomeIfAvailable(level, claim, worker.getUUID(), level.getGameTime());
+        }
+        return worker;
     }
 
     static AbstractWorkerEntity attemptSettlementWorkerSpawn(ServerLevel level, Villager villager) {
@@ -72,7 +78,9 @@ final class WorkerSettlementSpawnRuntime {
                 villagerCount,
                 WorkerSettlementClaimPolicy.countEntitiesInClaim(level, claim, AbstractWorkerEntity.class),
                 isSettlementSpawnOnCooldown(claim, now),
-                WorkersServerConfig.workerSettlementSpawnRuleConfig()
+                WorkersServerConfig.workerSettlementSpawnRuleConfig(),
+                WorkerSettlementClaimPolicy.countWorkersByProfession(level, claim),
+                WorkerSettlementClaimPolicy.housingSlackForClaim(level, claim)
         );
 
         AbstractWorkerEntity worker = WorkerSettlementSpawner.spawnWorkerFromVillager(level, villager, decision, claim);
@@ -81,6 +89,7 @@ final class WorkerSettlementSpawnRuntime {
             if (cooldownTicks > 0L) {
                 settlementSpawnCooldowns.put(claim.getUUID(), now + cooldownTicks);
             }
+            WorkerSettlementClaimPolicy.assignHomeIfAvailable(level, claim, worker.getUUID(), now);
         }
         return worker;
     }
