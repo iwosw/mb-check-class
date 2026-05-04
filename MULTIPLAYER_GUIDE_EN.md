@@ -1,6 +1,6 @@
 # BannerMod Multiplayer Guide
 
-Last updated: 2026-04-30.
+Last updated: 2026-05-04.
 
 BannerMod adds settlements, workers, armies, political states, and wars. This guide is written for regular server players, not for developers.
 
@@ -148,7 +148,7 @@ Citizen-on-citizen birth runs as a separate optional pass (off by default — en
 
 Starter-fort bootstrap now seeds 2-4 family households instead of only a flat pile of identical free adults. In practice that means the first settlement population can include married couples, young families, adolescents, and children. Children and adolescents stay with their households and do not auto-convert into worker vacancies until they grow into the adult path.
 
-Use the `Kinlot Staff` (`Родовая межа`) near a claimed house lot to inspect which household reserved it, the petition state, and the current build-area marker. While held, it shows the nearest reserved family lot in the action bar; right-clicking the lot prints the household summary.
+Once an approved remote family house is actually settled, it can now turn into a named hamlet with `informal`, `registered`, or `abandoned` status. Rulers can review these hamlets with `/bannermod society hamlet list`, formally register one with `/bannermod society hamlet register <id>`, and rename it with `/bannermod society hamlet rename <id> <name>`. The same list is now reachable from the `War Room` on `U`: the first screen has a new `Hamlets` button that opens a dedicated hamlet ledger in the same parchment style. An already inhabited but still informal hamlet is now socially meaningful: if a player starts tearing it down, residents remember that as a hostile act and fear/anger rise. Use the `Kinlot Staff` (`Родовая межа`) near a claimed house lot to inspect which household reserved it and which hamlet the lot already belongs to; while held it shows the nearest reserved family lot in the action bar, and right-clicking the lot prints the household summary, hamlet name/status, petition state, and current build-area marker.
 
 The worker command screen (`X`) supports simple group orders: follow, guard, move to position, stop.
 

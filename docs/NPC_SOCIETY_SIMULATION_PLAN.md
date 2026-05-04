@@ -38,6 +38,14 @@
   - ordinary fort housing still uses the existing compact `HousePrefab`; the new zemlyanka path is reserved for remote hamlet-family placement only
   - pressured family households can now reserve housing plots 3-4 claim chunks away from the settlement anchor instead of only near the fort center
   - approved remote-family plots now place a fenced homestead version of the zemlyanka with a small yard/gate/pen slice instead of only the old flat fort house footprint
+- The first persisted hamlet runtime slice is now live:
+  - settled remote-family zemlyanka homesteads can now mature into named hamlets with explicit `INFORMAL`, `REGISTERED`, and `ABANDONED` state
+  - hamlet identity is now persisted separately from the raw housing request and can cluster multiple nearby remote households under one hamlet record
+  - rulers can inspect and formalize hamlets through `/bannermod society hamlet list`, `register`, and `rename`
+  - the `U` War Room path now exposes a dedicated hamlet ledger screen in the same parchment-style UI instead of forcing ruler observability to stay chat-command-only
+  - `Kinlot Staff` / `Родовая межа` can now surface hamlet identity in addition to household lot state once a reserved lot becomes a real hamlet homestead
+  - hostile block-breaking against an inhabited informal hamlet now leaves durable social memory instead of only deleting blocks silently
+  - active hamlets can now push a first food-support hint through the existing livelihood request path by pressuring `animal pen` requests
 - This document now serves two purposes:
   - record what was actually shipped
   - define how the next refactor pass should restructure and extend it
@@ -120,6 +128,13 @@ The current runtime already contains a first working NPC-society backbone.
   - `settlement/prefab/impl/HamletZemlyankaPrefab.java` wraps that template in a fenced homestead lot so the remote-family slice places a real yard instead of only bare house walls
   - `NpcHousingPlotPlanner` now distinguishes fort-near plots from remote hamlet plots and only offers the 3-4 chunk remote band to pressured multi-member households
   - `NpcHousingProjectPlanner` now routes those remote-family housing projects through the dedicated hamlet zemlyanka prefab while preserving the older compact `HousePrefab` for near-fort housing
+- The first persisted hamlet runtime slice is now live in code:
+  - `NpcHamletSavedData` and `NpcHamletRuntime` persist claim-adjacent hamlet records separately from households and housing requests
+  - a hamlet record now stores name, anchor, founder household, linked household homes, registration state, and hostile-action cooldown state
+  - settlement home assignment now reconciles eligible remote-family households into those hamlet records instead of leaving remote zemlyankas as anonymous houses in the field
+  - society commands now expose `hamlet list`, `hamlet register`, and `hamlet rename`
+  - `Kinlot Staff` now shows hamlet name/status when a reserved family lot has already matured into a hamlet
+  - `NpcSocietyEvents` plus `NpcMemoryAccess` now treat hostile player block-breaking near inhabited informal hamlets as a real remembered social event
 - A first ruler-approved livelihood-infrastructure path now exists:
   - settlements can create dedicated saved-data requests for `lumber camp`, `mine`, and `animal pen`
   - requests are keyed by claim plus livelihood type rather than being folded into generic growth hints
@@ -185,16 +200,15 @@ The current runtime already contains a first working NPC-society backbone.
 - Household housing requests are now household-driven, but they are still incomplete:
   - there is still no fairness queue between competing households
 - House self-build currently reuses the existing settlement builder pipeline; it is not yet a full citizen-driven gather-carry-place loop owned by the requesting household.
- - Family-lot rendering is now visible through the `Kinlot Staff`, but it is still intentionally lightweight:
+- Family-lot rendering is now visible through the `Kinlot Staff`, but it is still intentionally lightweight:
   - the highlighted lot is a reserved plot marker, not a full parcel-survey polygon system
-  - the floating label currently shows the representative/household identity slice, not a deep surname/lineage naming system
+  - the floating label can now also surface the hamlet identity slice after settlement, but it is still not a deep surname/lineage naming system
 - Livelihood self-build is now live in a first practical slice, but it is still intentionally coarse:
   - requests currently cover only `lumber camp`, `mine`, and `animal pen`
   - the village currently asks the ruler first, then uses prefab-backed project placement instead of emergent freeform site planning
   - the first shipped slice grants immediate build completion after ruler approval to break bootstrap deadlocks; it does not yet prove a full resource-haul-and-place construction loop
-  - full autonomous hamlets, hut registration, and player-visible destruction consequences still do not exist yet in live code
-  - however, the first bounded hamlet housing slice now exists: pressured family households can place remote 3-4 chunk zemlyanka homesteads inside the parent claim instead of only fort-adjacent houses
-  - the current hamlet slice still does not yet provide a dedicated persisted hamlet runtime, independent polity, or complete local self-sufficient economy
+  - the first persisted hamlet runtime now exists: remote family homesteads can become named hamlets, rulers can register them, and player destruction of inhabited informal hamlets now leaves memory consequences
+  - however, the hamlet slice is still intentionally bounded: it does not yet provide independent polity, a full local self-sufficient economy, deep parcel surveying, or a true off-fort migration AI that deliberately moves under-employed households to an existing hamlet anchor before housing is built
 - Worker self-crafting is now live in a first practical slice, but it is still limited:
   - only baseline stone tool replacement is covered
   - workers do not yet reserve recipes globally or negotiate shared access to a workshop

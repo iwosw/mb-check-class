@@ -1,6 +1,6 @@
 # Developer Status
 
-Last updated: 2026-05-03.
+Last updated: 2026-05-04.
 
 ## Runtime State
 
@@ -16,6 +16,7 @@ Last updated: 2026-05-03.
 - Compact Phase 26 combat AI is live: stance control, shield-wall behavior, reach weapons, second-rank poke, flank/cohesion/brace rules, unit counters, and Better Combat metadata/attack-presentation integration.
 - NPC housing requests now require explicit ruler approval in the first shipped slice: new petitions stay pending, rulers get clickable chat actions plus `/bannermod society housing list`, denied state is persisted, and only approved petitions enter the house-project path.
 - Settlements can now raise ruler-approved livelihood requests for `lumber camp`, `mine`, and `animal pen`; the new requests stay pending until approved via clickable chat or `/bannermod society livelihood list`, then flow into the prefab project path with exact prefab ids.
+- Remote family homesteads can now mature into named persistent hamlets: hamlet records track household membership, anchor, and registration state, `/bannermod society hamlet list|register|rename` expose ruler-side control, the `U` War Room now includes a dedicated `Hamlets` ledger button in the same parchment UI style, Kinlot Staff shows hamlet identity, active hamlets can push first-slice `animal pen` pressure through the existing livelihood request path, and hostile destruction of inhabited informal hamlets now leaves durable fear/anger memory.
 - Workers now craft first-slice replacement stone tools for themselves at nearby crafting tables when they can obtain the needed materials, reducing permanent idle states after tool loss.
 - Settlement-spawned workers now start with basic profession tools and auto-bind to existing friendly claim work areas for farmer/lumberjack/miner/fisherman/animal-farmer paths when those zones already exist.
 - Claim-grown farmers now seed their own starter field when no prepared field exists yet, and claim-grown fishermen now seed a fishing area from nearby water instead of idling immediately after spawn.
