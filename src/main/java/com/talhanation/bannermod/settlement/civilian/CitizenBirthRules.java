@@ -23,6 +23,7 @@ public final class CitizenBirthRules {
                                     int adultFemales,
                                     int currentBabies,
                                     int housingSlack,
+                                    int claimFoodUnits,
                                     long elapsedCooldownTicks,
                                     Config config) {
         long requiredCooldownTicks = config == null ? 0L : Math.max(0L, config.cooldownTicks());
@@ -44,6 +45,9 @@ public final class CitizenBirthRules {
         if (housingSlack <= 0) {
             return deny(DenialReason.NO_FREE_HOUSING, requiredCooldownTicks);
         }
+        if (claimFoodUnits < config.minFoodUnits()) {
+            return deny(DenialReason.NO_FOOD, requiredCooldownTicks);
+        }
         return new Decision(true, null, requiredCooldownTicks);
     }
 
@@ -57,7 +61,8 @@ public final class CitizenBirthRules {
         NO_PAIRABLE_ADULTS,
         BABIES_AT_CAP,
         COOLDOWN_ACTIVE,
-        NO_FREE_HOUSING
+        NO_FREE_HOUSING,
+        NO_FOOD
     }
 
     /**
@@ -65,16 +70,19 @@ public final class CitizenBirthRules {
      * @param cooldownTicks minimum ticks between consecutive births in the same claim
      * @param growUpTicks how long a freshly spawned baby remains a baby before becoming an adult
      * @param maxConcurrentBabies hard cap on simultaneous babies in a claim — keeps births bounded even if cooldown is small
+     * @param minFoodUnits minimum aggregate food-item count across the claim's storage areas required to permit a birth
      */
     public record Config(boolean enabled,
                          long cooldownTicks,
                          int growUpTicks,
-                         int maxConcurrentBabies) {
+                         int maxConcurrentBabies,
+                         int minFoodUnits) {
 
         public Config {
             cooldownTicks = Math.max(0L, cooldownTicks);
             growUpTicks = Math.max(1, growUpTicks);
             maxConcurrentBabies = Math.max(1, maxConcurrentBabies);
+            minFoodUnits = Math.max(0, minFoodUnits);
         }
     }
 

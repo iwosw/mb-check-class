@@ -84,9 +84,10 @@ final class CitizenBirthService {
                 WorkerSettlementClaimPolicy.resolveClaimGrowthBinding(claim, claim.getOwnerPoliticalEntityId().toString()).status();
         long elapsedCooldownTicks = elapsedSince(LAST_BIRTH_GAME_TIME.get(claim.getUUID()), gameTime);
         int housingSlack = WorkerSettlementClaimPolicy.housingSlackForClaim(level, claim);
+        int claimFoodUnits = WorkerSettlementClaimPolicy.claimFoodCount(level, claim);
 
         CitizenBirthRules.Decision decision = CitizenBirthRules.evaluate(
-                status, males, females, babies, housingSlack, elapsedCooldownTicks, config);
+                status, males, females, babies, housingSlack, claimFoodUnits, elapsedCooldownTicks, config);
         if (!decision.allowed()) {
             return null;
         }
