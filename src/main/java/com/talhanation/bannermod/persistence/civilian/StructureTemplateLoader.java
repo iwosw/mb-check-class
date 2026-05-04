@@ -42,19 +42,31 @@ public class StructureTemplateLoader {
     public static CompoundTag loadTemplate(Path templatePath, Consumer<CompoundTag> migrator) {
         String fileName = templatePath.getFileName().toString().toLowerCase(Locale.ROOT);
         try {
+            try (InputStream input = Files.newInputStream(templatePath)) {
+                return loadTemplate(input, fileName, migrator);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static CompoundTag loadTemplate(InputStream input, String fileName, Consumer<CompoundTag> migrator) {
+        if (input == null || fileName == null || fileName.isBlank()) {
+            return null;
+        }
+        String normalizedFileName = fileName.toLowerCase(Locale.ROOT);
+        try {
             CompoundTag root;
-            if (fileName.endsWith(".nbt")) {
-                try (InputStream input = Files.newInputStream(templatePath)) {
-                    root = NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap());
-                }
-            } else if (fileName.endsWith(".litematic") || fileName.endsWith(".forgematica") || fileName.endsWith(".forgematic")) {
-                try (InputStream input = Files.newInputStream(templatePath)) {
-                    root = convertLitematic(NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap()), stripExtension(fileName));
-                }
-            } else if (fileName.endsWith(".schem") || fileName.endsWith(".schematic")) {
-                try (InputStream input = Files.newInputStream(templatePath)) {
-                    root = convertSchematic(NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap()), stripExtension(fileName));
-                }
+            if (normalizedFileName.endsWith(".nbt")) {
+                CompoundTag raw = NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap());
+                root = isVanillaStructureTemplate(raw)
+                        ? convertVanillaStructure(raw, stripExtension(normalizedFileName))
+                        : raw;
+            } else if (normalizedFileName.endsWith(".litematic") || normalizedFileName.endsWith(".forgematica") || normalizedFileName.endsWith(".forgematic")) {
+                root = convertLitematic(NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap()), stripExtension(normalizedFileName));
+            } else if (normalizedFileName.endsWith(".schem") || normalizedFileName.endsWith(".schematic")) {
+                root = convertSchematic(NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap()), stripExtension(normalizedFileName));
             } else {
                 return null;
             }
@@ -177,6 +189,51 @@ public class StructureTemplateLoader {
         return root;
     }
 
+    private static CompoundTag convertVanillaStructure(CompoundTag structure, String fallbackName) {
+        int[] size = readVector(structure, "size");
+        int width = Math.max(1, Math.abs(size[0]));
+        int height = Math.max(1, Math.abs(size[1]));
+        int depth = Math.max(1, Math.abs(size[2]));
+
+        CompoundTag root = new CompoundTag();
+        root.putString("name", fallbackName);
+        root.putInt("width", width);
+        root.putInt("height", height);
+        root.putInt("depth", depth);
+        root.putString("facing", Direction.SOUTH.getName());
+        root.put("entities", new ListTag());
+
+        ListTag palette = structure.getList("palette", Tag.TAG_COMPOUND);
+        ListTag sourceBlocks = structure.getList("blocks", Tag.TAG_COMPOUND);
+        ListTag blocks = new ListTag();
+        for (int i = 0; i < sourceBlocks.size(); i++) {
+            CompoundTag blockEntry = sourceBlocks.getCompound(i);
+            int stateIndex = blockEntry.getInt("state");
+            if (stateIndex < 0 || stateIndex >= palette.size()) {
+                continue;
+            }
+            CompoundTag stateTag = palette.getCompound(stateIndex).copy();
+            String blockName = stateTag.getString("Name");
+            if (shouldSkipStructureBlock(blockName)) {
+                continue;
+            }
+
+            int[] pos = readVector(blockEntry, "pos");
+            CompoundTag normalized = new CompoundTag();
+            normalized.putInt("x", pos[0]);
+            normalized.putInt("y", pos[1]);
+            normalized.putInt("z", pos[2]);
+            normalized.putString("block", blockName);
+            normalized.put("state", stateTag);
+            if (blockEntry.contains("nbt", Tag.TAG_COMPOUND)) {
+                normalized.put("blockEntity", blockEntry.getCompound("nbt").copy());
+            }
+            blocks.add(normalized);
+        }
+        root.put("blocks", blocks);
+        return root;
+    }
+
     private static ConvertedRegion convertLitematicRegion(CompoundTag region) {
         int[] position = readVector(region, "Position");
         int[] size = readVector(region, "Size");
@@ -258,8 +315,21 @@ public class StructureTemplateLoader {
                 return new int[]{values[0], values[1], values[2]};
             }
         }
+        if (tag.contains(key, Tag.TAG_LIST)) {
+            ListTag values = tag.getList(key, Tag.TAG_INT);
+            if (values.size() >= 3) {
+                return new int[]{values.getInt(0), values.getInt(1), values.getInt(2)};
+            }
+        }
         CompoundTag vector = tag.getCompound(key);
         return new int[]{vector.getInt("x"), vector.getInt("y"), vector.getInt("z")};
+    }
+
+    private static boolean isVanillaStructureTemplate(CompoundTag root) {
+        return root != null
+                && root.contains("size")
+                && root.contains("palette", Tag.TAG_LIST)
+                && root.contains("blocks", Tag.TAG_LIST);
     }
 
     private static CompoundTag parseBlockStateString(String rawState) {

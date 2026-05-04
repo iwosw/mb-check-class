@@ -74,6 +74,27 @@ class StructureTemplateLoaderTest {
         assertEquals("bottom", state.getCompound("Properties").getString("half"));
     }
 
+    @Test
+    void loadTemplateConvertsVanillaStructureBlockNbtIntoSparseInternalFormat() throws IOException {
+        Path file = tempDir.resolve("zemlyanka.nbt");
+        NbtIo.writeCompressed(sampleVanillaStructure(), file);
+
+        CompoundTag root = StructureTemplateLoader.loadTemplate(file);
+
+        assertNotNull(root);
+        assertEquals("zemlyanka", root.getString("name"));
+        assertEquals(2, root.getInt("width"));
+        assertEquals(1, root.getInt("height"));
+        assertEquals(1, root.getInt("depth"));
+
+        ListTag blocks = root.getList("blocks", Tag.TAG_COMPOUND);
+        assertEquals(1, blocks.size());
+        CompoundTag block = blocks.getCompound(0);
+        assertEquals(1, block.getInt("x"));
+        assertEquals("minecraft:oak_stairs", block.getCompound("state").getString("Name"));
+        assertEquals("east", block.getCompound("state").getCompound("Properties").getString("facing"));
+    }
+
     private static CompoundTag sampleLitematic() {
         CompoundTag root = new CompoundTag();
         CompoundTag metadata = new CompoundTag();
@@ -99,6 +120,33 @@ class StructureTemplateLoaderTest {
         palette.putInt("minecraft:oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]", 1);
         root.put("Palette", palette);
         root.putByteArray("BlockData", new byte[]{1});
+        return root;
+    }
+
+    private static CompoundTag sampleVanillaStructure() {
+        CompoundTag root = new CompoundTag();
+        ListTag size = new ListTag();
+        size.add(net.minecraft.nbt.IntTag.valueOf(2));
+        size.add(net.minecraft.nbt.IntTag.valueOf(1));
+        size.add(net.minecraft.nbt.IntTag.valueOf(1));
+        root.put("size", size);
+
+        ListTag palette = new ListTag();
+        palette.add(state("minecraft:air"));
+        palette.add(state("minecraft:oak_stairs", "facing", "east", "half", "bottom", "shape", "straight", "waterlogged", "false"));
+        root.put("palette", palette);
+
+        ListTag blocks = new ListTag();
+        CompoundTag airBlock = new CompoundTag();
+        airBlock.putIntArray("pos", new int[]{0, 0, 0});
+        airBlock.putInt("state", 0);
+        blocks.add(airBlock);
+
+        CompoundTag stairBlock = new CompoundTag();
+        stairBlock.putIntArray("pos", new int[]{1, 0, 0});
+        stairBlock.putInt("state", 1);
+        blocks.add(stairBlock);
+        root.put("blocks", blocks);
         return root;
     }
 
