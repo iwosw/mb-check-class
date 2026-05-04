@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.persistence.military;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
@@ -15,10 +16,12 @@ public class RecruitPlayerUnitSaveData extends SavedData {
     private static final String DATA_NAME = "recruit_player_unit_data";
     private static final SavedData.Factory<RecruitPlayerUnitSaveData> FACTORY = new SavedData.Factory<>(RecruitPlayerUnitSaveData::new, RecruitPlayerUnitSaveData::load);
 
+    private static final int CURRENT_VERSION = 1;
     public RecruitPlayerUnitSaveData(){
     }
 
     public static RecruitPlayerUnitSaveData load(CompoundTag nbt, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(nbt, CURRENT_VERSION, "RecruitPlayerUnitSaveData");
         RecruitPlayerUnitSaveData data = new RecruitPlayerUnitSaveData();
         recruitCountMap.clear();
         CompoundTag recruitCounts = nbt.getCompound("recruitCounts");
@@ -34,6 +37,7 @@ public class RecruitPlayerUnitSaveData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(nbt, CURRENT_VERSION);
         CompoundTag recruitCounts = new CompoundTag();
 
         for (Map.Entry<UUID, Integer> entry : recruitCountMap.entrySet()) {

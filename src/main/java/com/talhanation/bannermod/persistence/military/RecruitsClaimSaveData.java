@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.persistence.military;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.ListTag;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class RecruitsClaimSaveData extends SavedData {
     private static final String FILE_ID = "recruitsClaims";
     private static final SavedData.Factory<RecruitsClaimSaveData> FACTORY = new SavedData.Factory<>(RecruitsClaimSaveData::new, RecruitsClaimSaveData::load);
+    private static final int CURRENT_VERSION = 1;
     private List<RecruitsClaim> claimList = new ArrayList<>();
 
     public static RecruitsClaimSaveData get(ServerLevel level) {
@@ -23,6 +25,7 @@ public class RecruitsClaimSaveData extends SavedData {
     }
 
     public static RecruitsClaimSaveData load(CompoundTag nbt, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(nbt, CURRENT_VERSION, "RecruitsClaimSaveData");
         RecruitsClaimSaveData data = new RecruitsClaimSaveData();
         if (nbt.contains("claims", Tag.TAG_LIST)) {
             ListTag list = nbt.getList("claims", Tag.TAG_COMPOUND);
@@ -35,6 +38,7 @@ public class RecruitsClaimSaveData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(nbt, CURRENT_VERSION);
         ListTag list = new ListTag();
         for (RecruitsClaim claim : this.claimList) {
             list.add(claim.toNBT());

@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.war.runtime;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import com.talhanation.bannermod.war.events.WarSyncDirtyTracker;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,7 @@ public class WarAllyInviteSavedData extends SavedData {
     private static final String FILE_ID = "bannermodWarAllyInvites";
     private static final SavedData.Factory<WarAllyInviteSavedData> FACTORY = new SavedData.Factory<>(WarAllyInviteSavedData::new, WarAllyInviteSavedData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final WarAllyInviteRuntime runtime;
 
     public WarAllyInviteSavedData() {
@@ -32,11 +34,13 @@ public class WarAllyInviteSavedData extends SavedData {
     }
 
     public static WarAllyInviteSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "WarAllyInviteSavedData");
         return new WarAllyInviteSavedData(WarAllyInviteRuntime.fromTag(tag));
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         CompoundTag inner = runtime.toTag();
         tag.put("Invites", inner.getList("Invites", Tag.TAG_COMPOUND));
         return tag;

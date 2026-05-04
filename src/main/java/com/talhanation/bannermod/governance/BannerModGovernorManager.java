@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.governance;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -17,6 +18,7 @@ public class BannerModGovernorManager extends SavedData {
     private static final String FILE_ID = "bannermodGovernors";
     private static final SavedData.Factory<BannerModGovernorManager> FACTORY = new SavedData.Factory<>(BannerModGovernorManager::new, BannerModGovernorManager::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final Map<UUID, BannerModGovernorSnapshot> snapshots = new LinkedHashMap<>();
 
     public static BannerModGovernorManager get(ServerLevel level) {
@@ -24,6 +26,7 @@ public class BannerModGovernorManager extends SavedData {
     }
 
     public static BannerModGovernorManager load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "BannerModGovernorManager");
         BannerModGovernorManager manager = new BannerModGovernorManager();
         if (tag.contains("Snapshots", Tag.TAG_LIST)) {
             ListTag snapshots = tag.getList("Snapshots", Tag.TAG_COMPOUND);
@@ -37,6 +40,7 @@ public class BannerModGovernorManager extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         ListTag list = new ListTag();
         for (BannerModGovernorSnapshot snapshot : this.snapshots.values()) {
             list.add(snapshot.toTag());
