@@ -7,9 +7,11 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.registry.citizen.ModCitizenEntityTypes;
 import com.talhanation.bannermod.settlement.civilian.CitizenBirthRules;
 import com.talhanation.bannermod.shared.settlement.BannerModSettlementBinding;
+import com.mojang.logging.LogUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -29,13 +31,16 @@ import java.util.UUID;
  * is acceptable for a 24000-tick (1 day) default.
  */
 final class CitizenBirthService {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, Long> LAST_BIRTH_GAME_TIME = new HashMap<>();
+    private static final Map<UUID, CitizenBirthRules.DenialReason> LAST_DENIAL_REASON = new HashMap<>();
 
     private CitizenBirthService() {
     }
 
     static void resetRuntimeState() {
         LAST_BIRTH_GAME_TIME.clear();
+        LAST_DENIAL_REASON.clear();
     }
 
     static void runCitizenBirthPass(ServerLevel level) {
@@ -89,8 +94,10 @@ final class CitizenBirthService {
         CitizenBirthRules.Decision decision = CitizenBirthRules.evaluate(
                 status, males, females, babies, housingSlack, claimFoodUnits, elapsedCooldownTicks, config);
         if (!decision.allowed()) {
+            logDenialTransition(claim.getUUID(), decision.denialReason(), housingSlack, claimFoodUnits, males, females, babies);
             return null;
         }
+        LAST_DENIAL_REASON.remove(claim.getUUID());
 
         CitizenEntity baby = ModCitizenEntityTypes.CITIZEN.get().create(level);
         if (baby == null) {
@@ -113,5 +120,23 @@ final class CitizenBirthService {
             return Long.MAX_VALUE;
         }
         return Math.max(0L, now - lastGameTime);
+    }
+
+    private static void logDenialTransition(UUID claimUuid,
+                                            @Nullable CitizenBirthRules.DenialReason reason,
+                                            int housingSlack,
+                                            int claimFoodUnits,
+                                            int males,
+                                            int females,
+                                            int babies) {
+        if (reason == null) {
+            return;
+        }
+        CitizenBirthRules.DenialReason previous = LAST_DENIAL_REASON.put(claimUuid, reason);
+        if (previous == reason) {
+            return;
+        }
+        LOGGER.debug("CitizenBirth denied for claim {}: {} (males={}, females={}, babies={}, housingSlack={}, foodUnits={})",
+                claimUuid, reason, males, females, babies, housingSlack, claimFoodUnits);
     }
 }
