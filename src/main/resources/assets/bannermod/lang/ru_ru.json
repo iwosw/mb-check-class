@@ -1819,6 +1819,7 @@
   "bannermod.prefab.wand.screen.status.none": "На жезле пока нет сохраненного плана. Выберите один ниже.",
   "bannermod.prefab.wand.screen.status.selected": "Текущий план жезла: %s",
   "item.bannermod.banner_almanac": "Альманах BannerMod",
+  "itemGroup.bannermod.main": "BannerMod",
   "item.bannermod.banner_almanac.tooltip.use": "Использование: открыть внутриигровое руководство.",
   "item.bannermod.banner_almanac.tooltip.scope": "Покрывает поселение, рабочих, рекрутов, политику, войны и осады.",
   "item.bannermod.banner_almanac.page_1": "Альманах BannerMod\n\nВ моде есть три слоя:\n1. Клейм = защищенная земля обычного мира.\n2. Поселение = живая база.\n3. Государство = твоя политическая сторона.\n\nКлавиши:\nM карта и клеймы\nU War Room\nR рекруты\nX рабочие\nV превью построек.",

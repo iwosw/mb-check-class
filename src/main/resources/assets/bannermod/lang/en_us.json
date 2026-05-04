@@ -1907,6 +1907,7 @@
   "gui.workers.command.text.up": "Up",
   "gui.workers.command.text.down": "Down",
   "item.bannermod.banner_almanac": "BannerMod Almanac",
+  "itemGroup.bannermod.main": "BannerMod",
   "item.bannermod.banner_almanac.tooltip.use": "Use: open the in-game handbook.",
   "item.bannermod.banner_almanac.tooltip.scope": "Covers settlement, workers, recruits, politics, war, and sieges.",
   "item.bannermod.banner_almanac.page_1": "BannerMod Almanac\n\nThree layers rule the mod:\n1. Claim = protected Overworld land.\n2. Settlement = your live base.\n3. State = your political side.\n\nHotkeys:\nM map and claims\nU War Room\nR recruits\nX workers\nV prefab preview.",

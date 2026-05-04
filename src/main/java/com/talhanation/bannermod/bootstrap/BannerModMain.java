@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.bootstrap;
 
 import com.talhanation.bannermod.network.BannerModNetworkBootstrap;
+import com.talhanation.bannermod.registry.ModCreativeTabs;
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.events.CommandEvents;
 import com.talhanation.bannermod.events.DamageEvent;
@@ -27,11 +28,9 @@ import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.events.WarPvpEvents;
 import com.talhanation.bannermod.war.events.WarRevoltAutoResolver;
 import com.talhanation.bannermod.war.events.WarStateBroadcaster;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -101,9 +100,7 @@ public class BannerModMain {
         com.talhanation.bannermod.registry.war.ModWarBlocks.BLOCKS.register(modEventBus);
         com.talhanation.bannermod.registry.war.ModWarItems.ITEMS.register(modEventBus);
         com.talhanation.bannermod.registry.war.ModWarBlockEntities.BLOCK_ENTITIES.register(modEventBus);
-
-        // Creative tabs
-        modEventBus.addListener(this::addCreativeTabs);
+        ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
 
         // Client-side setup
         if (dist == Dist.CLIENT) {
@@ -187,11 +184,4 @@ public class BannerModMain {
         NeoForge.EVENT_BUS.register(HudOverlayCoordinator.INSTANCE);
     }
 
-    private void addCreativeTabs(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
-            event.accept(com.talhanation.bannermod.registry.citizen.ModCitizenItems.CITIZEN_SPAWN_EGG.get());
-        } else if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
-            event.accept(com.talhanation.bannermod.registry.civilian.ModItems.BANNERMOD_ALMANAC.get());
-        }
-    }
 }
