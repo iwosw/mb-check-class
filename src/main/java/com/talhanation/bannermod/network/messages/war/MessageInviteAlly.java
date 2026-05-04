@@ -40,17 +40,19 @@ public class MessageInviteAlly implements BannerModMessage<MessageInviteAlly> {
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.warId == null || this.inviteeEntityId == null) return;
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) return;
-        WarSide side = attackerSide ? WarSide.ATTACKER : WarSide.DEFENDER;
-        WarAllyService.InviteResult result = WarAllyService.invite(level, player, this.warId, side, this.inviteeEntityId);
-        if (result.ok()) {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.ally_invite_issued"));
-        } else {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.invite", result.outcome().component()));
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.warId == null || this.inviteeEntityId == null) return;
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) return;
+            WarSide side = attackerSide ? WarSide.ATTACKER : WarSide.DEFENDER;
+            WarAllyService.InviteResult result = WarAllyService.invite(level, player, this.warId, side, this.inviteeEntityId);
+            if (result.ok()) {
+                sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.ally_invite_issued"));
+            } else {
+                sendFeedback(player, Component.translatable("gui.bannermod.war.denial.invite", result.outcome().component()));
+            }
+        });
     }
 
     private static void sendFeedback(ServerPlayer player, Component message) {

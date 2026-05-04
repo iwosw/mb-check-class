@@ -30,15 +30,17 @@ public class MessageOpenGovernorScreen implements BannerModMessage<MessageOpenGo
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruitEntity = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
-        if (recruitEntity != null) {
-            if (this.openMenu) {
-                RecruitEvents.openGovernorScreen(player, recruitEntity);
-            } else {
-                RecruitEvents.syncGovernorScreen(player, recruitEntity);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruitEntity = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
+            if (recruitEntity != null) {
+                if (this.openMenu) {
+                    RecruitEvents.openGovernorScreen(player, recruitEntity);
+                } else {
+                    RecruitEvents.syncGovernorScreen(player, recruitEntity);
+                }
             }
-        }
+        });
     }
 
     @Override

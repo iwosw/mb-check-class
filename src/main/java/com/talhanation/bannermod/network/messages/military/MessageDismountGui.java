@@ -30,11 +30,13 @@ public class MessageDismountGui implements BannerModMessage<MessageDismountGui> 
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.uuid, 16.0D);
-        if (recruit != null && RecruitCommandAuthority.canDirectlyControl(serverPlayer, recruit)) {
-            CommandEvents.onDismountButton(recruit.getOwnerUUID(), recruit, null);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.uuid, 16.0D);
+            if (recruit != null && RecruitCommandAuthority.canDirectlyControl(serverPlayer, recruit)) {
+                CommandEvents.onDismountButton(recruit.getOwnerUUID(), recruit, null);
+            }
+        });
     }
 
     public MessageDismountGui fromBytes(FriendlyByteBuf buf) {

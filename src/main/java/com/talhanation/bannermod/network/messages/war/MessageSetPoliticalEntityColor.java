@@ -41,37 +41,39 @@ public class MessageSetPoliticalEntityColor implements BannerModMessage<MessageS
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.entityId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) {
-            return;
-        }
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
-        if (recordOpt.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Cannot set color: state not found."));
-            return;
-        }
-        PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.canAct(player, record)) {
-            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
-            return;
-        }
-        PoliticalRegistryValidation.Result validation = PoliticalRegistryValidation.validateColor(this.newColor);
-        if (!validation.valid()) {
-            player.sendSystemMessage(Component.literal("Cannot set color: " + validation.reason()));
-            return;
-        }
-        if (!registry.updateColor(this.entityId, this.newColor)) {
-            player.sendSystemMessage(Component.literal("Failed to set color."));
-            return;
-        }
-        String normalized = PoliticalRegistryValidation.normalizeColor(this.newColor);
-        player.sendSystemMessage(Component.literal(
-                "Set state color to: " + (normalized.isEmpty() ? "(cleared)" : normalized)));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.entityId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) {
+                return;
+            }
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
+            if (recordOpt.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Cannot set color: state not found."));
+                return;
+            }
+            PoliticalEntityRecord record = recordOpt.get();
+            if (!PoliticalEntityAuthority.canAct(player, record)) {
+                player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
+                return;
+            }
+            PoliticalRegistryValidation.Result validation = PoliticalRegistryValidation.validateColor(this.newColor);
+            if (!validation.valid()) {
+                player.sendSystemMessage(Component.literal("Cannot set color: " + validation.reason()));
+                return;
+            }
+            if (!registry.updateColor(this.entityId, this.newColor)) {
+                player.sendSystemMessage(Component.literal("Failed to set color."));
+                return;
+            }
+            String normalized = PoliticalRegistryValidation.normalizeColor(this.newColor);
+            player.sendSystemMessage(Component.literal(
+                    "Set state color to: " + (normalized.isEmpty() ? "(cleared)" : normalized)));
+        });
     }
 
     @Override

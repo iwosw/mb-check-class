@@ -38,7 +38,9 @@ public class MessageFormationFollowMovement implements BannerModMessage<MessageF
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        dispatchToServer(Objects.requireNonNull(context.getSender()), this.player_uuid, this.group, this.formation);
+        context.enqueueWork(() -> {
+            dispatchToServer(Objects.requireNonNull(context.getSender()), this.player_uuid, this.group, this.formation);
+        });
     }
 
     public static void dispatchToServer(Player sender, UUID playerUuid, UUID group, int formation) {

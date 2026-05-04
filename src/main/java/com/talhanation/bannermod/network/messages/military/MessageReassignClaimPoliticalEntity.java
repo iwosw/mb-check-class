@@ -48,75 +48,77 @@ public class MessageReassignClaimPoliticalEntity implements BannerModMessage<Mes
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = context.getSender();
-        if (sender == null) return;
-        if (!RecruitsServerConfig.AllowClaiming.get()) return;
-        if (sender.level().dimension() != Level.OVERWORLD) return;
-        if (ClaimEvents.claimManager() == null) return;
-        if (claimUuid == null) {
-            sendDenial(sender, "chat.bannermod.claim.transfer.denied.missing");
-            return;
-        }
-
-        ServerLevel level = (ServerLevel) sender.getCommandSenderWorld();
-        RecruitsClaim existingClaim = MessageUpdateClaim.getExistingClaim(claimUuid);
-        if (existingClaim == null) {
-            sendDenial(sender, "chat.bannermod.claim.transfer.denied.missing");
-            return;
-        }
-
-        boolean isAdmin = MessageUpdateClaim.isAdmin(sender);
-        PoliticalEntityRecord sourcePeRecord = MessageUpdateClaim.resolvePoliticalOwner(sender, existingClaim);
-
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        PoliticalEntityRecord targetPeRecord = null;
-        if (targetPoliticalEntityId != null) {
-            targetPeRecord = registry.byId(targetPoliticalEntityId).orElse(null);
-            if (targetPeRecord == null) {
-                sendDenial(sender, "chat.bannermod.claim.transfer.denied.target_missing");
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null) return;
+            if (!RecruitsServerConfig.AllowClaiming.get()) return;
+            if (sender.level().dimension() != Level.OVERWORLD) return;
+            if (ClaimEvents.claimManager() == null) return;
+            if (claimUuid == null) {
+                sendDenial(sender, "chat.bannermod.claim.transfer.denied.missing");
                 return;
             }
-        }
 
-        UUID currentOwnerId = existingClaim.getOwnerPoliticalEntityId();
-        if (java.util.Objects.equals(currentOwnerId, targetPoliticalEntityId)) {
-            sendDenial(sender, "chat.bannermod.claim.transfer.denied.same");
-            return;
-        }
-
-        // Source authority — must be able to edit the existing claim.
-        if (!ClaimPacketAuthority.canEditClaim(sender.getUUID(), isAdmin, existingClaim, sourcePeRecord)) {
-            sendDenial(sender, "chat.bannermod.claim.transfer.denied.no_source_authority");
-            return;
-        }
-
-        // Target authority — only enforced when not admin and a target PE exists.
-        // Detaching to no-state requires admin; non-admin callers must always pick
-        // a target PE in which they hold authority.
-        if (!isAdmin) {
-            if (targetPeRecord == null) {
-                sendDenial(sender, "chat.bannermod.claim.transfer.denied.no_target_authority");
+            ServerLevel level = (ServerLevel) sender.getCommandSenderWorld();
+            RecruitsClaim existingClaim = MessageUpdateClaim.getExistingClaim(claimUuid);
+            if (existingClaim == null) {
+                sendDenial(sender, "chat.bannermod.claim.transfer.denied.missing");
                 return;
             }
-            if (!PoliticalEntityAuthority.canAct(sender.getUUID(), false, targetPeRecord)) {
-                String reasonKey = PoliticalEntityAuthority.denialReasonKey(sender.getUUID(), false, targetPeRecord);
-                sender.sendSystemMessage(Component.translatable("chat.bannermod.claim.transfer.denied.no_target_authority")
-                        .append(Component.literal(" "))
-                        .append(Component.translatable(reasonKey)));
+
+            boolean isAdmin = MessageUpdateClaim.isAdmin(sender);
+            PoliticalEntityRecord sourcePeRecord = MessageUpdateClaim.resolvePoliticalOwner(sender, existingClaim);
+
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            PoliticalEntityRecord targetPeRecord = null;
+            if (targetPoliticalEntityId != null) {
+                targetPeRecord = registry.byId(targetPoliticalEntityId).orElse(null);
+                if (targetPeRecord == null) {
+                    sendDenial(sender, "chat.bannermod.claim.transfer.denied.target_missing");
+                    return;
+                }
+            }
+
+            UUID currentOwnerId = existingClaim.getOwnerPoliticalEntityId();
+            if (java.util.Objects.equals(currentOwnerId, targetPoliticalEntityId)) {
+                sendDenial(sender, "chat.bannermod.claim.transfer.denied.same");
                 return;
             }
-        }
 
-        existingClaim.setOwnerPoliticalEntityId(targetPoliticalEntityId);
-        ClaimEvents.claimManager().addOrUpdateClaim(level, existingClaim);
+            // Source authority — must be able to edit the existing claim.
+            if (!ClaimPacketAuthority.canEditClaim(sender.getUUID(), isAdmin, existingClaim, sourcePeRecord)) {
+                sendDenial(sender, "chat.bannermod.claim.transfer.denied.no_source_authority");
+                return;
+            }
 
-        String targetName = targetPeRecord != null
-                ? targetPeRecord.name()
-                : Component.translatable("chat.bannermod.claim.transfer.detached").getString();
-        sender.sendSystemMessage(Component.translatable(
-                "chat.bannermod.claim.transfer.success",
-                existingClaim.getName(),
-                targetName));
+            // Target authority — only enforced when not admin and a target PE exists.
+            // Detaching to no-state requires admin; non-admin callers must always pick
+            // a target PE in which they hold authority.
+            if (!isAdmin) {
+                if (targetPeRecord == null) {
+                    sendDenial(sender, "chat.bannermod.claim.transfer.denied.no_target_authority");
+                    return;
+                }
+                if (!PoliticalEntityAuthority.canAct(sender.getUUID(), false, targetPeRecord)) {
+                    String reasonKey = PoliticalEntityAuthority.denialReasonKey(sender.getUUID(), false, targetPeRecord);
+                    sender.sendSystemMessage(Component.translatable("chat.bannermod.claim.transfer.denied.no_target_authority")
+                            .append(Component.literal(" "))
+                            .append(Component.translatable(reasonKey)));
+                    return;
+                }
+            }
+
+            existingClaim.setOwnerPoliticalEntityId(targetPoliticalEntityId);
+            ClaimEvents.claimManager().addOrUpdateClaim(level, existingClaim);
+
+            String targetName = targetPeRecord != null
+                    ? targetPeRecord.name()
+                    : Component.translatable("chat.bannermod.claim.transfer.detached").getString();
+            sender.sendSystemMessage(Component.translatable(
+                    "chat.bannermod.claim.transfer.success",
+                    existingClaim.getName(),
+                    targetName));
+        });
     }
 
     private static void sendDenial(ServerPlayer sender, String key) {

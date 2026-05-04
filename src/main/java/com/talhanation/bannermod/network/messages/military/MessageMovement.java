@@ -44,7 +44,9 @@ public class MessageMovement implements BannerModMessage<MessageMovement> {
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        dispatchToServer(Objects.requireNonNull(context.getSender()), this.player_uuid, this.group, this.state, this.formation, this.tight);
+        context.enqueueWork(() -> {
+            dispatchToServer(Objects.requireNonNull(context.getSender()), this.player_uuid, this.group, this.state, this.formation, this.tight);
+        });
     }
 
     public static void dispatchToServer(Player sender, UUID playerUuid, UUID group, int state, int formation, boolean tight) {

@@ -39,8 +39,10 @@ public class MessageFaceCommand implements BannerModMessage<MessageFaceCommand> 
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer sender = Objects.requireNonNull(context.getSender());
-        dispatchToServer(sender, this.player_uuid, this.group, this.formation, this.tight);
+        context.enqueueWork(() -> {
+            ServerPlayer sender = Objects.requireNonNull(context.getSender());
+            dispatchToServer(sender, this.player_uuid, this.group, this.formation, this.tight);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer sender, UUID playerUuid, UUID group, int formation, boolean tight) {

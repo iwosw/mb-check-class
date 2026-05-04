@@ -28,13 +28,15 @@ public class MessageTeleportPlayer implements BannerModMessage<MessageTeleportPl
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
 
-        if(player == null)return;
-        if (!isAuthorized(player.isCreative(), player.hasPermissions(2))) return;
+            if(player == null)return;
+            if (!isAuthorized(player.isCreative(), player.hasPermissions(2))) return;
 
-        BlockPos target = resolveSafeTeleportTarget(player.serverLevel(), pos);
-        player.teleportTo(target.getX(), target.getY(), target.getZ());
+            BlockPos target = resolveSafeTeleportTarget(player.serverLevel(), pos);
+            player.teleportTo(target.getX(), target.getY(), target.getZ());
+        });
     }
 
     static boolean isAuthorized(boolean creative, boolean hasPermission) {

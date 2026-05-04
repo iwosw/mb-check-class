@@ -57,41 +57,43 @@ public class MessageHireFromNobleVillager implements BannerModMessage<MessageHir
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        ServerLevel serverLevel = player.serverLevel();
-        Entity nobleEntity = serverLevel.getEntity(this.nobleUUID);
-        if (!(nobleEntity instanceof VillagerNobleEntity villagerNoble)
-                || !villagerNoble.isAlive()
-                || villagerNoble.distanceToSqr(player) > 32.0D * 32.0D) {
-            return;
-        }
-
-        if(closing){
-            villagerNoble.isTrading(false);
-            return;
-        }
-
-        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUUID);
-
-        if(this.needsVillager){
-            Entity villagerEntity = serverLevel.getEntity(this.villagerUUID);
-            if (villagerEntity instanceof Villager villager
-                    && villager.isAlive()
-                    && villager.distanceToSqr(player) <= 32.0D * 32.0D) {
-                this.createRecruit(serverLevel, villager, villagerNoble, player, group);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            ServerLevel serverLevel = player.serverLevel();
+            Entity nobleEntity = serverLevel.getEntity(this.nobleUUID);
+            if (!(nobleEntity instanceof VillagerNobleEntity villagerNoble)
+                    || !villagerNoble.isAlive()
+                    || villagerNoble.distanceToSqr(player) > 32.0D * 32.0D) {
+                return;
             }
-        }
-        else{
-            String string = resource.toString();
-            Optional<EntityType<?>> optionalType = EntityType.byString(string);
-            optionalType.ifPresent(type -> VillagerConversionService.spawnHiredRecruit(serverLevel, (EntityType<? extends AbstractRecruitEntity>) type, player, group));
 
-            villagerNoble.doTrade(resource);
-        }
+            if(closing){
+                villagerNoble.isTrading(false);
+                return;
+            }
 
-        String stringID = player.getTeam() != null ? player.getTeam().getName() : "";
-        boolean canHire = RecruitEvents.playerUnitManager().canPlayerRecruit(stringID, player.getUUID());
-        BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> player), new MessageToClientUpdateHireState(canHire));
+            RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUUID);
+
+            if(this.needsVillager){
+                Entity villagerEntity = serverLevel.getEntity(this.villagerUUID);
+                if (villagerEntity instanceof Villager villager
+                        && villager.isAlive()
+                        && villager.distanceToSqr(player) <= 32.0D * 32.0D) {
+                    this.createRecruit(serverLevel, villager, villagerNoble, player, group);
+                }
+            }
+            else{
+                String string = resource.toString();
+                Optional<EntityType<?>> optionalType = EntityType.byString(string);
+                optionalType.ifPresent(type -> VillagerConversionService.spawnHiredRecruit(serverLevel, (EntityType<? extends AbstractRecruitEntity>) type, player, group));
+
+                villagerNoble.doTrade(resource);
+            }
+
+            String stringID = player.getTeam() != null ? player.getTeam().getName() : "";
+            boolean canHire = RecruitEvents.playerUnitManager().canPlayerRecruit(stringID, player.getUUID());
+            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(()-> player), new MessageToClientUpdateHireState(canHire));
+        });
     }
     public void createRecruit(ServerLevel serverLevel, Villager villager, VillagerNobleEntity villagerNoble, Player player, RecruitsGroup group){
         String string = resource.toString();

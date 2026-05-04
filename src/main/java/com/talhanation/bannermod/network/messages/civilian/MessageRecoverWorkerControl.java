@@ -31,36 +31,38 @@ public class MessageRecoverWorkerControl implements BannerModMessage<MessageReco
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) return;
 
-        if (workerUuids.isEmpty()) {
-            player.sendSystemMessage(Component.literal("No workers selected for recovery."));
-            return;
-        }
-
-        int recovered = 0;
-
-        for (UUID workerUuid : workerUuids) {
-            Entity entity = player.serverLevel().getEntity(workerUuid);
-            AbstractWorkerEntity worker = entity instanceof AbstractWorkerEntity abstractWorkerEntity ? abstractWorkerEntity : null;
-
-            if (worker == null) {
-                continue;
+            if (workerUuids.isEmpty()) {
+                player.sendSystemMessage(Component.literal("No workers selected for recovery."));
+                return;
             }
 
-            if (!player.getUUID().equals(worker.getOwnerUUID()) && !player.hasPermissions(2)) {
-                continue;
+            int recovered = 0;
+
+            for (UUID workerUuid : workerUuids) {
+                Entity entity = player.serverLevel().getEntity(workerUuid);
+                AbstractWorkerEntity worker = entity instanceof AbstractWorkerEntity abstractWorkerEntity ? abstractWorkerEntity : null;
+
+                if (worker == null) {
+                    continue;
+                }
+
+                if (!player.getUUID().equals(worker.getOwnerUUID()) && !player.hasPermissions(2)) {
+                    continue;
+                }
+
+                if (worker.recoverControl(player)) {
+                    recovered++;
+                }
             }
 
-            if (worker.recoverControl(player)) {
-                recovered++;
+            if (recovered == 0) {
+                player.sendSystemMessage(Component.literal("No controlled workers could be recovered."));
             }
-        }
-
-        if (recovered == 0) {
-            player.sendSystemMessage(Component.literal("No controlled workers could be recovered."));
-        }
+        });
     }
 
     @Override

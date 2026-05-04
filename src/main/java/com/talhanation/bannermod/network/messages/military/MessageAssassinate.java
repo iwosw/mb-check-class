@@ -35,21 +35,23 @@ public class MessageAssassinate implements BannerModMessage<MessageAssassinate> 
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        ServerLevel world = player.serverLevel();
-        MinecraftServer server = world.getServer();
-        PlayerList list = server.getPlayerList();
-        ServerPlayer targetPlayer = list.getPlayerByName(name);
-        if (targetPlayer != null) {
-            player.sendSystemMessage(Component.literal("Successfully found the Target"));
-            //this.target = targetPlayer.getUUID();
-            //AssassinEvents.createAssassin(name, count, world);
-            //AssassinEvents.doPayment(player, costs);
-        }
-        else {
-            player.sendSystemMessage(Component.literal("Could not found the Target"));
-            //player.sendMessage(new StringTextComponent(": " + this.name), player.getUUID());
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            ServerLevel world = player.serverLevel();
+            MinecraftServer server = world.getServer();
+            PlayerList list = server.getPlayerList();
+            ServerPlayer targetPlayer = list.getPlayerByName(name);
+            if (targetPlayer != null) {
+                player.sendSystemMessage(Component.literal("Successfully found the Target"));
+                //this.target = targetPlayer.getUUID();
+                //AssassinEvents.createAssassin(name, count, world);
+                //AssassinEvents.doPayment(player, costs);
+            }
+            else {
+                player.sendSystemMessage(Component.literal("Could not found the Target"));
+                //player.sendMessage(new StringTextComponent(": " + this.name), player.getUUID());
+            }
+        });
     }
 
     public MessageAssassinate fromBytes(FriendlyByteBuf buf) {

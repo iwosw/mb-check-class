@@ -37,39 +37,41 @@ public class MessageSetPoliticalEntityStatus implements BannerModMessage<Message
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.entityId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
-        if (recordOpt.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Cannot update status: state not found."));
-            return;
-        }
-        PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.canAct(player.getUUID(), player.hasPermissions(2), record)) {
-            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
-            return;
-        }
-        PoliticalEntityStatus status = decodeStatus(this.statusOrdinal);
-        if (status == PoliticalEntityStatus.STATE && record.status() != PoliticalEntityStatus.STATE) {
-            PoliticalStatePromotionPolicy.Result promotion = PoliticalStatePromotionPolicy.evaluate(
-                    BannerModSettlementManager.get(level).getAllSnapshots().stream()
-                            .filter(snapshot -> record.id().toString().equals(snapshot.settlementFactionId()))
-                            .findFirst()
-                            .orElse(null));
-            if (!promotion.allowed()) {
-                player.sendSystemMessage(Component.literal(promotion.denialReason()));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.entityId == null) {
                 return;
             }
-        }
-        if (!registry.updateStatus(this.entityId, status)) {
-            player.sendSystemMessage(Component.literal("Failed to update status."));
-            return;
-        }
-        player.sendSystemMessage(Component.literal("Status of " + record.name() + " set to " + status.name() + "."));
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
+            if (recordOpt.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Cannot update status: state not found."));
+                return;
+            }
+            PoliticalEntityRecord record = recordOpt.get();
+            if (!PoliticalEntityAuthority.canAct(player.getUUID(), player.hasPermissions(2), record)) {
+                player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
+                return;
+            }
+            PoliticalEntityStatus status = decodeStatus(this.statusOrdinal);
+            if (status == PoliticalEntityStatus.STATE && record.status() != PoliticalEntityStatus.STATE) {
+                PoliticalStatePromotionPolicy.Result promotion = PoliticalStatePromotionPolicy.evaluate(
+                        BannerModSettlementManager.get(level).getAllSnapshots().stream()
+                                .filter(snapshot -> record.id().toString().equals(snapshot.settlementFactionId()))
+                                .findFirst()
+                                .orElse(null));
+                if (!promotion.allowed()) {
+                    player.sendSystemMessage(Component.literal(promotion.denialReason()));
+                    return;
+                }
+            }
+            if (!registry.updateStatus(this.entityId, status)) {
+                player.sendSystemMessage(Component.literal("Failed to update status."));
+                return;
+            }
+            player.sendSystemMessage(Component.literal("Status of " + record.name() + " set to " + status.name() + "."));
+        });
     }
 
     private static PoliticalEntityStatus decodeStatus(byte ordinal) {

@@ -42,8 +42,10 @@ public class MessageClaimIntent implements BannerModMessage<MessageClaimIntent> 
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        applyServerSide(player, decode(action), claimUuid, new ChunkPos(chunkLong));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            applyServerSide(player, decode(action), claimUuid, new ChunkPos(chunkLong));
+        });
     }
 
     public static boolean applyServerSide(ServerPlayer player, Action decoded, UUID claimUuid, ChunkPos chunk) {

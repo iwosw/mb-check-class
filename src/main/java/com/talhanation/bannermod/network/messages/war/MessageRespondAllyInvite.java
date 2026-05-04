@@ -36,22 +36,24 @@ public class MessageRespondAllyInvite implements BannerModMessage<MessageRespond
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.inviteId == null) return;
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) return;
-        WarAllyService.InviteResult result = accept
-                ? WarAllyService.accept(level, player, this.inviteId)
-                : WarAllyService.decline(level, player, this.inviteId);
-        if (result.ok()) {
-            sendFeedback(player, Component.translatable(accept
-                    ? "gui.bannermod.war.feedback.ally_joined"
-                    : "gui.bannermod.war.feedback.ally_invite_declined"));
-        } else {
-            sendFeedback(player, Component.translatable(accept
-                    ? "gui.bannermod.war.denial.accept_invite"
-                    : "gui.bannermod.war.denial.decline_invite", result.outcome().component()));
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.inviteId == null) return;
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) return;
+            WarAllyService.InviteResult result = accept
+                    ? WarAllyService.accept(level, player, this.inviteId)
+                    : WarAllyService.decline(level, player, this.inviteId);
+            if (result.ok()) {
+                sendFeedback(player, Component.translatable(accept
+                        ? "gui.bannermod.war.feedback.ally_joined"
+                        : "gui.bannermod.war.feedback.ally_invite_declined"));
+            } else {
+                sendFeedback(player, Component.translatable(accept
+                        ? "gui.bannermod.war.denial.accept_invite"
+                        : "gui.bannermod.war.denial.decline_invite", result.outcome().component()));
+            }
+        });
     }
 
     private static void sendFeedback(ServerPlayer player, Component message) {

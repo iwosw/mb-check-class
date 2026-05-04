@@ -37,35 +37,37 @@ public class MessageStrategicFire implements BannerModMessage<MessageStrategicFi
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        AABB commandBox = serverPlayer.getBoundingBox().inflate(100);
-        List<AbstractRecruitEntity> actors = RecruitIndex.instance().groupInRange(
-                serverPlayer.getCommandSenderWorld(),
-                this.group,
-                serverPlayer.position(),
-                200.0D
-        );
-        if (actors == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            actors = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    commandBox
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+            AABB commandBox = serverPlayer.getBoundingBox().inflate(100);
+            List<AbstractRecruitEntity> actors = RecruitIndex.instance().groupInRange(
+                    serverPlayer.getCommandSenderWorld(),
+                    this.group,
+                    serverPlayer.position(),
+                    200.0D
             );
-        } else {
-            actors.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
-        }
-        if (actors.isEmpty()) {
-            return;
-        }
-        long gameTime = serverPlayer.getCommandSenderWorld().getGameTime();
-        CommandIntent intent = new CommandIntent.StrategicFire(
-                gameTime,
-                CommandIntentPriority.NORMAL,
-                false,
-                this.group,
-                this.should
-        );
-        CommandIntentDispatcher.dispatch(serverPlayer, intent, actors);
+            if (actors == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                actors = serverPlayer.getCommandSenderWorld().getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        commandBox
+                );
+            } else {
+                actors.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
+            }
+            if (actors.isEmpty()) {
+                return;
+            }
+            long gameTime = serverPlayer.getCommandSenderWorld().getGameTime();
+            CommandIntent intent = new CommandIntent.StrategicFire(
+                    gameTime,
+                    CommandIntentPriority.NORMAL,
+                    false,
+                    this.group,
+                    this.should
+            );
+            CommandIntentDispatcher.dispatch(serverPlayer, intent, actors);
+        });
     }
 
     public MessageStrategicFire fromBytes(FriendlyByteBuf buf) {

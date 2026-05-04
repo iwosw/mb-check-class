@@ -28,13 +28,15 @@ public class MessagePatrolLeaderSetInfoMode implements BannerModMessage<MessageP
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractLeaderEntity leader
-                && leader.isAlive()
-                && player.getBoundingBox().inflate(16.0D).intersects(leader.getBoundingBox())) {
-            leader.setInfoMode(state);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof AbstractLeaderEntity leader
+                    && leader.isAlive()
+                    && player.getBoundingBox().inflate(16.0D).intersects(leader.getBoundingBox())) {
+                leader.setInfoMode(state);
+            }
+        });
     }
 
     public MessagePatrolLeaderSetInfoMode fromBytes(FriendlyByteBuf buf) {

@@ -26,12 +26,14 @@ public class MessageClearUpkeepGui implements BannerModMessage<MessageClearUpkee
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
-        if (recruit != null) {
-            recruit.clearUpkeepPos();
-            recruit.clearUpkeepEntity();
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
+            if (recruit != null) {
+                recruit.clearUpkeepPos();
+                recruit.clearUpkeepEntity();
+            }
+        });
     }
 
     public MessageClearUpkeepGui fromBytes(FriendlyByteBuf buf) {

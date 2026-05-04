@@ -32,8 +32,10 @@ public class MessagePatrolLeaderSetPatrolState implements BannerModMessage<Messa
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        dispatchToServer(player, this.recruit, this.state);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            dispatchToServer(player, this.recruit, this.state);
+        });
     }
 
     public static void dispatchToServer(Player player, UUID recruitId, byte state) {

@@ -34,17 +34,19 @@ public class MessageAssassinGui implements BannerModMessage<MessageAssassinGui> 
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        if (!player.getUUID().equals(uuid)) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            if (!player.getUUID().equals(uuid)) {
+                return;
+            }
 
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AssassinLeaderEntity assassin
-                && assassin.isAlive()
-                && player.getBoundingBox().inflate(16.0D).intersects(assassin.getBoundingBox())) {
-            assassin.openGUI(player);
-        }
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof AssassinLeaderEntity assassin
+                    && assassin.isAlive()
+                    && player.getBoundingBox().inflate(16.0D).intersects(assassin.getBoundingBox())) {
+                assassin.openGUI(player);
+            }
+        });
     }
 
     @Override

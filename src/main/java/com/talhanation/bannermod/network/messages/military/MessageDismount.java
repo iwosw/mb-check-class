@@ -31,8 +31,10 @@ public class MessageDismount implements BannerModMessage<MessageDismount> {
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        dispatchToServer(player, this.uuid, this.group);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            dispatchToServer(player, this.uuid, this.group);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer player, UUID playerUuid, UUID group) {

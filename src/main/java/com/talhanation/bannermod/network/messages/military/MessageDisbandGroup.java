@@ -36,29 +36,31 @@ public class MessageDisbandGroup implements BannerModMessage<MessageDisbandGroup
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUUID);
-        if(group == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            RecruitsGroup group = RecruitEvents.groupsManager().getGroup(groupUUID);
+            if(group == null) return;
 
-        group.setDisbandContext(new RecruitsGroup.DisbandContext(true, keepTeam, true));
+            group.setDisbandContext(new RecruitsGroup.DisbandContext(true, keepTeam, true));
 
-        RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
+            RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
 
-        List<AbstractRecruitEntity> list = null;
-        if (player.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
-            list = RecruitIndex.instance().allInBox(serverLevel, player.getBoundingBox().inflate(100D), false);
-        }
-        if (list == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            list = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(100D)
-            );
-        }
+            List<AbstractRecruitEntity> list = null;
+            if (player.getCommandSenderWorld() instanceof ServerLevel serverLevel) {
+                list = RecruitIndex.instance().allInBox(serverLevel, player.getBoundingBox().inflate(100D), false);
+            }
+            if (list == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                list = player.getCommandSenderWorld().getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        player.getBoundingBox().inflate(100D)
+                );
+            }
 
-        for(AbstractRecruitEntity recruit : list){
-            recruit.needsGroupUpdate = true;
-        }
+            for(AbstractRecruitEntity recruit : list){
+                recruit.needsGroupUpdate = true;
+            }
+        });
     }
 
     public MessageDisbandGroup fromBytes(FriendlyByteBuf buf) {

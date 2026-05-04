@@ -31,13 +31,15 @@ public class MessageMergeGroup implements BannerModMessage<MessageMergeGroup> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup groupToMerge = RecruitEvents.groupsManager().getGroup(mergeUUID);
-        RecruitsGroup baseGroup = RecruitEvents.groupsManager().getGroup(groupUUID);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            RecruitsGroup groupToMerge = RecruitEvents.groupsManager().getGroup(mergeUUID);
+            RecruitsGroup baseGroup = RecruitEvents.groupsManager().getGroup(groupUUID);
 
-        if(groupToMerge == null || baseGroup == null) return;
+            if(groupToMerge == null || baseGroup == null) return;
 
-        RecruitEvents.groupsManager().mergeGroups(groupToMerge, baseGroup, player.serverLevel());
+            RecruitEvents.groupsManager().mergeGroups(groupToMerge, baseGroup, player.serverLevel());
+        });
     }
 
     public MessageMergeGroup fromBytes(FriendlyByteBuf buf) {

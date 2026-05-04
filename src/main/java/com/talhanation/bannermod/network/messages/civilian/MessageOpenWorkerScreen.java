@@ -26,15 +26,17 @@ public class MessageOpenWorkerScreen implements BannerModMessage<MessageOpenWork
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.workerUuid == null) {
-            return;
-        }
-        if (player.serverLevel().getEntity(this.workerUuid) instanceof AbstractWorkerEntity worker
-                && worker.isAlive()
-                && player.distanceToSqr(worker) <= 16.0D * 16.0D) {
-            worker.openDepositsGUI(player);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.workerUuid == null) {
+                return;
+            }
+            if (player.serverLevel().getEntity(this.workerUuid) instanceof AbstractWorkerEntity worker
+                    && worker.isAlive()
+                    && player.distanceToSqr(worker) <= 16.0D * 16.0D) {
+                worker.openDepositsGUI(player);
+            }
+        });
     }
 
     @Override

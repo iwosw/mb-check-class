@@ -30,13 +30,15 @@ public class MessagePatrolLeaderRemoveWayPoint implements BannerModMessage<Messa
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.worker);
-        if (entity instanceof AbstractLeaderEntity leader
-                && leader.isAlive()
-                && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
-            this.removeLastWayPoint(player, leader);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.worker);
+            if (entity instanceof AbstractLeaderEntity leader
+                    && leader.isAlive()
+                    && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
+                this.removeLastWayPoint(player, leader);
+            }
+        });
     }
 
     private void removeLastWayPoint(ServerPlayer player, AbstractLeaderEntity leaderEntity) {
