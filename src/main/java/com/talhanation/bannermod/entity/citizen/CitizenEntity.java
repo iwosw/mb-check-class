@@ -131,7 +131,6 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         super.defineSynchedData(builder);
         builder.define(DATA_PROFESSION, CitizenProfession.NONE.name());
         builder.define(DATA_LIFE_STAGE, NpcLifeStage.ADULT.ordinal());
-        builder.define(DATA_LIFE_STAGE, NpcLifeStage.ADULT.ordinal());
         builder.define(DATA_FEMALE, false);
         builder.define(DATA_BABY, false);
     }
@@ -181,7 +180,6 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     public void aiStep() {
         super.aiStep();
         CitizenIndex.instance().onCitizenTick(this);
-        if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
         if (!this.level().isClientSide()) {
             tickGrowUp();
             if (this.tickCount % 20 == 0) {

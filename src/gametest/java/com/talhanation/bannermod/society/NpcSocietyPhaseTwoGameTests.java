@@ -31,6 +31,7 @@ import com.talhanation.bannermod.settlement.goal.impl.DefendResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.EatResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.HideResidentGoal;
 import com.talhanation.bannermod.settlement.goal.impl.SocialiseResidentGoal;
+import com.talhanation.bannermod.settlement.goal.impl.WorkResidentGoal;
 import com.talhanation.bannermod.settlement.household.BannerModHomeAssignmentRuntime;
 import com.talhanation.bannermod.settlement.household.GoHomeResidentGoal;
 import com.talhanation.bannermod.settlement.household.HomePreference;
@@ -238,6 +239,27 @@ public final class NpcSocietyPhaseTwoGameTests {
     }
 
     @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void assignedMissingBuildingWorkerStillChoosesWorkDuringActivePhase(GameTestHelper helper) {
+        UUID residentId = UUID.fromString("00000000-0000-0000-0000-000000042006");
+        BannerModResidentGoalScheduler scheduler = BannerModResidentGoalScheduler.withDefaultGoals();
+        NpcSocietyProfile profile = NpcSocietyProfile.createDefault(residentId, ACTIVE_TIME)
+                .withNeedState(10, 18, 72, 5, ACTIVE_TIME)
+                .withSocialState(50, 0, 0, 0, 62, ACTIVE_TIME);
+        ResidentGoalContext ctx = new ResidentGoalContext(
+                workerResident(residentId, null, null, BannerModSettlementResidentAssignmentState.ASSIGNED_MISSING_BUILDING),
+                null,
+                ACTIVE_TIME,
+                profile
+        );
+
+        scheduler.tick(ctx);
+
+        requireTask(helper, scheduler, residentId, WorkResidentGoal.ID.toString());
+        helper.succeed();
+    }
+
+    @PrefixGameTestTemplate(false)
     @GameTest(template = "harness_empty", timeoutTicks = 160)
     public static void citizenSocialIntentMovesTowardSettlementAnchor(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -304,6 +326,13 @@ public final class NpcSocietyPhaseTwoGameTests {
     }
 
     private static BannerModSettlementResidentRecord workerResident(UUID residentId, UUID ownerUuid, String teamId) {
+        return workerResident(residentId, ownerUuid, teamId, BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING);
+    }
+
+    private static BannerModSettlementResidentRecord workerResident(UUID residentId,
+                                                                    UUID ownerUuid,
+                                                                    String teamId,
+                                                                    BannerModSettlementResidentAssignmentState assignmentState) {
         UUID workAreaUuid = UUID.fromString("00000000-0000-0000-0000-000000042099");
         return new BannerModSettlementResidentRecord(
                 residentId,
@@ -319,7 +348,7 @@ public final class NpcSocietyPhaseTwoGameTests {
                 ownerUuid,
                 teamId,
                 workAreaUuid,
-                BannerModSettlementResidentAssignmentState.ASSIGNED_LOCAL_BUILDING
+                assignmentState
         );
     }
 

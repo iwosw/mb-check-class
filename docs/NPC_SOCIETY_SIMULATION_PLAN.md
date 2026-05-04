@@ -27,6 +27,7 @@
   - settlements can now also raise ruler-approved livelihood requests for `lumber camp`, `mine`, and `animal pen`
   - approved livelihood requests now flow into the prefab project path with exact prefab ids instead of only coarse growth categories
   - settlement-spawned workers now start with baseline profession tools, auto-bind to compatible existing claim work areas more aggressively, and can craft replacement stone tools for themselves at nearby crafting tables when materials are available
+  - claim-grown farmers now also seed a starter field for themselves when the claim has no prepared crop area yet, and claim-grown fishermen can seed a fishing area from nearby water instead of idling
 - The first family-lot observability slice is now live:
   - starter-fort bootstrap now seeds 2-4 family households instead of only flat identical free adults
   - approved housing petitions now reserve an explicit family lot inside the claim and the finished house is handed back to that requesting household first
@@ -115,6 +116,8 @@ The current runtime already contains a first working NPC-society backbone.
 - Worker self-sufficiency now has a first live runtime path:
   - settlement-spawned workers start with baseline stone profession tools
   - worker bootstrap now reuses existing compatible claim work areas for farmer, miner, lumberjack, fisherman, and animal-farmer paths where possible
+  - if no prepared crop area exists, a claim-grown farmer now lays out a starter field and binds to that new crop area instead of waiting for manual prep
+  - if nearby water exists, a claim-grown fisherman now seeds a fishing area and starts using it instead of staying permanently area-less
   - workers can now craft replacement stone tools for themselves at nearby crafting tables when they can obtain wood and cobblestone through their current inventory/storage flow
   - this first slice covers basic survival tools only; it is not yet a full smithing or workshop economy
 - A first real family identity slice now exists in persisted code:
@@ -177,6 +180,7 @@ The current runtime already contains a first working NPC-society backbone.
   - requests currently cover only `lumber camp`, `mine`, and `animal pen`
   - the village currently asks the ruler first, then uses prefab-backed project placement instead of emergent freeform site planning
   - the first shipped slice grants immediate build completion after ruler approval to break bootstrap deadlocks; it does not yet prove a full resource-haul-and-place construction loop
+  - autonomous off-claim hamlets, hut registration, and player-visible destruction consequences still do not exist yet in live code; the current autonomy slice only covers nearby self-started farm/fishing work areas
 - Worker self-crafting is now live in a first practical slice, but it is still limited:
   - only baseline stone tool replacement is covered
   - workers do not yet reserve recipes globally or negotiate shared access to a workshop
@@ -231,6 +235,22 @@ The next pass should not just append features. It should cleanly separate what a
   - reservation of newly built homes for the requesting resident or household
   - direct linkage between household shortage and project urgency
   - clearer use of resource gathering and hauling before or during build execution
+
+### 4A. First Hamlet Autonomy Slice
+
+- The next concrete execution slice after the current worker-autonomy pass should be a bounded `hamlet` runtime rather than a freeform rewrite of all settlement AI.
+- That slice should stay near the existing claim and reuse current ownership, housing, livelihood-request, and memory systems.
+- Minimum deliverables for that slice:
+  - persist a small claim-adjacent hamlet record with anchor, founder household, and registration state
+  - let unassigned or under-employed households drift to a nearby hamlet anchor when local housing/work pressure stays high
+  - let the hamlet raise its own first food/housing needs through the existing request pipeline instead of inventing a second economy system
+  - allow the player ruler to formally register the hamlet into the parent claim/settlement flow, or leave it informal
+  - treat player destruction of an unregistered but inhabited hamlet as a negative remembered event that raises fear/anger in linked households
+- Non-goals for that first hamlet slice:
+  - full off-claim sovereignty
+  - deep parcel surveying
+  - independent political entities
+  - complete hunting/foraging simulation before food autonomy near the claim is stable
 
 ### 5. Expand Adolescents Beyond A Data Flag
 

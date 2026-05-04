@@ -31,11 +31,13 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.scores.PlayerTeam;
 
@@ -184,7 +186,24 @@ public final class WorkerSettlementSpawner {
             return;
         }
 
+        if (worker instanceof FishermanEntity fisherman) {
+            seedFishingArea(level, claim, owner, spawnPos, fisherman);
+            return;
+        }
+
         if (!(worker instanceof FarmerEntity farmer)) {
+            return;
+        }
+
+        seedFarmerArea(level, claim, owner, spawnPos, farmer);
+    }
+
+    private static void seedFarmerArea(ServerLevel level,
+                                       RecruitsClaim claim,
+                                       PoliticalEntityRecord owner,
+                                       BlockPos spawnPos,
+                                       FarmerEntity farmer) {
+        if (farmer == null || claim == null || owner == null) {
             return;
         }
 
@@ -197,6 +216,10 @@ public final class WorkerSettlementSpawner {
         BlockPos fieldCenter = findFieldCenter(level, claim, spawnPos);
         if (fieldCenter == null) {
             return;
+        }
+
+        if (scoreFieldAround(level, fieldCenter) < 12) {
+            prepareStarterField(level, fieldCenter);
         }
 
         CropArea cropArea = new CropArea(ModEntityTypes.CROPAREA.get(), level);
@@ -216,11 +239,53 @@ public final class WorkerSettlementSpawner {
         if (!seedStack.isEmpty()) {
             cropArea.setSeedStack(seedStack);
             cropArea.updateType();
+        } else {
+            cropArea.setSeedStack(new ItemStack(Items.WHEAT_SEEDS));
+            cropArea.updateType();
         }
 
         level.addFreshEntity(cropArea);
         WorkAreaIndex.instance().onEntityJoin(cropArea);
         farmer.setCurrentWorkArea(cropArea);
+    }
+
+    private static void seedFishingArea(ServerLevel level,
+                                        RecruitsClaim claim,
+                                        PoliticalEntityRecord owner,
+                                        BlockPos spawnPos,
+                                        FishermanEntity fisherman) {
+        if (fisherman == null || claim == null || owner == null) {
+            return;
+        }
+
+        FishingArea existingArea = findClaimArea(level, claim, FishingArea.class, fisherman);
+        if (existingArea != null) {
+            fisherman.setCurrentWorkArea(existingArea);
+            return;
+        }
+
+        BlockPos waterPos = findNearbyWater(level, claim, spawnPos);
+        if (waterPos == null) {
+            return;
+        }
+
+        BlockPos anchorPos = waterPos.offset(2, 0, -2);
+        FishingArea fishingArea = new FishingArea(ModEntityTypes.FISHINGAREA.get(), level);
+        fishingArea.setWidthSize(5);
+        fishingArea.setHeightSize(2);
+        fishingArea.setDepthSize(5);
+        fishingArea.setFacing(Direction.SOUTH);
+        fishingArea.moveTo(anchorPos.getX(), anchorPos.getY(), anchorPos.getZ(), 0.0F, 0.0F);
+        fishingArea.createArea();
+        fishingArea.setDone(false);
+        fishingArea.setTeamStringID(owner.name());
+        fishingArea.setPlayerUUID(owner.leaderUuid());
+        fishingArea.setPlayerName(owner.name());
+        fishingArea.setCustomName(Component.literal(""));
+
+        level.addFreshEntity(fishingArea);
+        WorkAreaIndex.instance().onEntityJoin(fishingArea);
+        fisherman.setCurrentWorkArea(fishingArea);
     }
 
     private static boolean bindExistingClaimWorkArea(ServerLevel level,
@@ -302,7 +367,8 @@ public final class WorkerSettlementSpawner {
             return waterCenteredField;
         }
 
-        return findPreparedFieldFallbackCenter(level, claim);
+        BlockPos prepared = findPreparedFieldFallbackCenter(level, claim);
+        return prepared != null ? prepared : findAutonomousFieldCenter(level, claim);
     }
 
     @Nullable
@@ -383,6 +449,57 @@ public final class WorkerSettlementSpawner {
         }
 
         return new BlockPos((minX + maxX) / 2, fieldY, (minZ + maxZ) / 2);
+    }
+
+    @Nullable
+    private static BlockPos findAutonomousFieldCenter(ServerLevel level, RecruitsClaim claim) {
+        ChunkPos anchorChunk = claim.getCenter();
+        ChunkPos bestChunk = claim.getClaimedChunks().stream()
+                .max(java.util.Comparator.comparingDouble(chunk -> anchorChunk == null ? 0.0D : chunk.getWorldPosition().distSqr(anchorChunk.getWorldPosition())))
+                .orElse(anchorChunk);
+        if (bestChunk == null) {
+            return null;
+        }
+        return level.getHeightmapPos(
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                new BlockPos(bestChunk.getMiddleBlockX(), level.getSeaLevel(), bestChunk.getMiddleBlockZ())
+        );
+    }
+
+    private static void prepareStarterField(ServerLevel level, BlockPos center) {
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dz = -4; dz <= 4; dz++) {
+                BlockPos soilPos = center.offset(dx, 0, dz);
+                level.setBlockAndUpdate(soilPos, dx == 0 && dz == 0 ? Blocks.WATER.defaultBlockState() : Blocks.FARMLAND.defaultBlockState());
+                level.setBlockAndUpdate(soilPos.above(), Blocks.AIR.defaultBlockState());
+            }
+        }
+    }
+
+    @Nullable
+    private static BlockPos findNearbyWater(ServerLevel level, RecruitsClaim claim, BlockPos spawnPos) {
+        int minChunkX = claim.getClaimedChunks().stream().mapToInt(chunk -> chunk.x).min().orElse(claim.getCenter().x);
+        int maxChunkX = claim.getClaimedChunks().stream().mapToInt(chunk -> chunk.x).max().orElse(claim.getCenter().x);
+        int minChunkZ = claim.getClaimedChunks().stream().mapToInt(chunk -> chunk.z).min().orElse(claim.getCenter().z);
+        int maxChunkZ = claim.getClaimedChunks().stream().mapToInt(chunk -> chunk.z).max().orElse(claim.getCenter().z);
+        BlockPos best = null;
+        double bestDist = Double.POSITIVE_INFINITY;
+        for (int x = (minChunkX << 4) - 8; x <= ((maxChunkX << 4) + 15) + 8; x++) {
+            for (int z = (minChunkZ << 4) - 8; z <= ((maxChunkZ << 4) + 15) + 8; z++) {
+                for (int y = level.getMinBuildHeight(); y <= level.getMaxBuildHeight() - 1; y++) {
+                    BlockPos candidate = new BlockPos(x, y, z);
+                    if (!level.getBlockState(candidate).is(Blocks.WATER)) {
+                        continue;
+                    }
+                    double dist = candidate.distSqr(spawnPos);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        best = candidate;
+                    }
+                }
+            }
+        }
+        return best;
     }
 
     private static int scoreFieldAround(ServerLevel level, BlockPos center) {

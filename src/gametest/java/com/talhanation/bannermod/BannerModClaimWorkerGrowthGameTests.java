@@ -6,7 +6,9 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.events.WorkersVillagerEvents;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.FarmerEntity;
+import com.talhanation.bannermod.entity.civilian.FishermanEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
+import com.talhanation.bannermod.entity.civilian.workarea.FishingArea;
 import com.talhanation.bannermod.settlement.civilian.WorkerSettlementSpawnRules;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -142,6 +144,57 @@ public class BannerModClaimWorkerGrowthGameTests {
         });
     }
 
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void claimGrownFarmerSeedsStarterFieldWithoutPreparedField(GameTestHelper helper) {
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = claimGrowthConfig(20L, 4, List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER));
+
+        ServerLevel level = helper.getLevel();
+        String teamId = "phase31_claim_autofield";
+        ServerPlayer leader = createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003116"), "phase31-autofield-leader", teamId);
+        BlockPos claimPos = helper.absolutePos(new BlockPos(8, 2, 8));
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, teamId, leader.getUUID(), leader.getScoreboardName());
+
+        AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 20L, config);
+
+        helper.assertTrue(worker instanceof FarmerEntity, "Expected the configured claim-growth profession pool to spawn a farmer.");
+        FarmerEntity farmer = (FarmerEntity) worker;
+        helper.succeedWhen(() -> {
+            CropArea currentArea = farmer.getCurrentCropArea();
+            List<CropArea> cropAreas = level.getEntitiesOfClass(CropArea.class, new AABB(claimPos).inflate(20.0D));
+            helper.assertTrue(currentArea != null || !cropAreas.isEmpty(),
+                    "Expected a claim-grown farmer without a prepared field to seed a starter crop area instead of idling.");
+            helper.assertTrue((currentArea != null && currentArea.isAlive()) || cropAreas.stream().anyMatch(CropArea::isAlive),
+                    "Expected autonomous farmer startup to create a live crop area entity.");
+        });
+    }
+
+    @PrefixGameTestTemplate(false)
+    @GameTest(template = "harness_empty")
+    public static void claimGrownFishermanSeedsFishingAreaFromNearbyWater(GameTestHelper helper) {
+        WorkerSettlementSpawnRules.ClaimGrowthConfig config = claimGrowthConfig(20L, 4, List.of(WorkerSettlementSpawnRules.WorkerProfession.FISHERMAN));
+
+        ServerLevel level = helper.getLevel();
+        String teamId = "phase31_claim_autofish";
+        ServerPlayer leader = createLeader(helper, level, UUID.fromString("00000000-0000-0000-0000-000000003117"), "phase31-autofish-leader", teamId);
+        BlockPos claimPos = helper.absolutePos(new BlockPos(8, 2, 8));
+        RecruitsClaim claim = BannerModDedicatedServerGameTestSupport.seedClaim(level, claimPos, teamId, leader.getUUID(), leader.getScoreboardName());
+        prepareFishingWater(level, claimPos.east(3));
+
+        AbstractWorkerEntity worker = WorkersVillagerEvents.attemptClaimWorkerGrowth(level, claim, teamId, 20L, config);
+
+        helper.assertTrue(worker instanceof FishermanEntity, "Expected the configured claim-growth profession pool to spawn a fisherman.");
+        FishermanEntity fisherman = (FishermanEntity) worker;
+        helper.succeedWhen(() -> {
+            FishingArea currentArea = fisherman.getCurrentFishingArea();
+            List<FishingArea> fishingAreas = level.getEntitiesOfClass(FishingArea.class, new AABB(claimPos).inflate(24.0D));
+            helper.assertTrue(currentArea != null || !fishingAreas.isEmpty(),
+                    "Expected a claim-grown fisherman with nearby water to seed or bind a fishing area instead of idling.");
+            helper.assertTrue((currentArea != null && currentArea.isAlive()) || fishingAreas.stream().anyMatch(FishingArea::isAlive),
+                    "Expected autonomous fisherman startup to create a live fishing area entity.");
+        });
+    }
+
     private static ServerPlayer createLeader(GameTestHelper helper, ServerLevel level, UUID playerId, String name, String teamId) {
         Player player = BannerModDedicatedServerGameTestSupport.createFakeServerPlayer(level, playerId, name);
         BannerModDedicatedServerGameTestSupport.ensureFaction(level, teamId, playerId, name);
@@ -175,11 +228,17 @@ public class BannerModClaimWorkerGrowthGameTests {
     }
 
     private static WorkerSettlementSpawnRules.ClaimGrowthConfig claimGrowthConfig(long baseCooldownTicks, int workerCap) {
+        return claimGrowthConfig(baseCooldownTicks, workerCap, List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER));
+    }
+
+    private static WorkerSettlementSpawnRules.ClaimGrowthConfig claimGrowthConfig(long baseCooldownTicks,
+                                                                                  int workerCap,
+                                                                                  List<WorkerSettlementSpawnRules.WorkerProfession> professions) {
         return new WorkerSettlementSpawnRules.ClaimGrowthConfig(
                 true,
                 baseCooldownTicks,
                 workerCap,
-                List.of(WorkerSettlementSpawnRules.WorkerProfession.FARMER)
+                professions
         );
     }
 
@@ -192,6 +251,16 @@ public class BannerModClaimWorkerGrowthGameTests {
                 }
                 level.setBlockAndUpdate(center.offset(dx, 0, dz), Blocks.FARMLAND.defaultBlockState());
                 level.setBlockAndUpdate(center.offset(dx, 1, dz), Blocks.WHEAT.defaultBlockState());
+            }
+        }
+    }
+
+    private static void prepareFishingWater(ServerLevel level, BlockPos center) {
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                level.setBlockAndUpdate(center.offset(dx, -1, dz), Blocks.DIRT.defaultBlockState());
+                level.setBlockAndUpdate(center.offset(dx, 0, dz), Blocks.WATER.defaultBlockState());
+                level.setBlockAndUpdate(center.offset(dx, 1, dz), Blocks.AIR.defaultBlockState());
             }
         }
     }
