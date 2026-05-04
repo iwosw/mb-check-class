@@ -1,7 +1,6 @@
 package com.talhanation.bannermod.ai.pathfinding;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.talhanation.bannermod.migration.CompatPathingSeams;
 import net.minecraft.world.level.pathfinder.Path;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,9 +10,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class PathProcessingRuntime implements CompatPathingSeams.PathRuntime {
+public class PathProcessingRuntime {
 
-    @Override
     public ThreadPoolExecutor createExecutor(int workersCount) {
         int queueCapacity = workersCount * 8;
         return new ThreadPoolExecutor(
@@ -35,7 +33,6 @@ public class PathProcessingRuntime implements CompatPathingSeams.PathRuntime {
         );
     }
 
-    @Override
     public void deliver(@Nullable Path path, @Nullable Executor handoffExecutor, Consumer<@Nullable Path> afterProcessing) {
         Runnable delivery = () -> afterProcessing.accept(path);
         if (handoffExecutor != null) {

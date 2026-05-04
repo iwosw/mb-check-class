@@ -1,12 +1,10 @@
 package com.talhanation.bannermod.compat;
 
-import com.talhanation.bannermod.migration.CompatPathingSeams;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-public class ReflectiveCompatAccess implements CompatPathingSeams.ReflectiveLookup {
+public class ReflectiveCompatAccess {
 
     @FunctionalInterface
     public interface ClassResolver {
@@ -23,7 +21,6 @@ public class ReflectiveCompatAccess implements CompatPathingSeams.ReflectiveLook
         this.classResolver = classResolver;
     }
 
-    @Override
     public Optional<Class<?>> findClass(String className) {
         try {
             return Optional.of(classResolver.resolve(className));
