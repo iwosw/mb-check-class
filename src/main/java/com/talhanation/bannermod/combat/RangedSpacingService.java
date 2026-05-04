@@ -1,17 +1,19 @@
 package com.talhanation.bannermod.combat;
 
+import com.talhanation.bannermod.ai.military.CommanderHostileScanCache;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.entity.military.IRangedRecruit;
 import com.talhanation.bannermod.entity.military.RecruitIndex;
+import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Drives {@link RangedSpacingPolicy} on a per-recruit basis for {@link IRangedRecruit}
@@ -48,6 +50,20 @@ public final class RangedSpacingService {
     /** Lateral offset (blocks) the firing-lane check tolerates before flagging "blocked". */
     public static final double FIRING_LANE_HALF_WIDTH = 1.5D;
 
+    /**
+     * RuntimeProfilingCounters key for the absolute number of underlying world scans
+     * the {@link CommanderHostileScanCache} has performed on behalf of this service.
+     * Sourced from {@link CommanderHostileScanCache#scanCount()} on every read so the
+     * counter reflects the cache's authoritative running total.
+     */
+    public static final String COUNTER_ENEMY_SCAN_COUNT = "ranged_spacing.enemy_scan.count";
+
+    /** RuntimeProfilingCounters key for the per-evaluation enemy-scan invocations. */
+    public static final String COUNTER_ENEMY_SCAN_EVALUATIONS = "ranged_spacing.enemy_scan.evaluations";
+
+    /** RuntimeProfilingCounters key for evaluations that were served entirely from the cache. */
+    public static final String COUNTER_ENEMY_SCAN_HITS = "ranged_spacing.enemy_scan.hits";
+
     private static final Map<UUID, Entry> STATE = new ConcurrentHashMap<>();
 
     private RangedSpacingService() {
@@ -76,6 +92,7 @@ public final class RangedSpacingService {
 
     public static void resetForTests() {
         STATE.clear();
+        LAST_REPORTED_SCAN_COUNT.set(0L);
     }
 
     /**
@@ -126,17 +143,58 @@ public final class RangedSpacingService {
     private static double nearestEnemyMeleeDistance(AbstractRecruitEntity recruit,
                                                     ServerLevel level,
                                                     Vec3 selfPos) {
-        AABB box = recruit.getBoundingBox().inflate(SCAN_RADIUS);
-        double best = Double.POSITIVE_INFINITY;
-        for (LivingEntity hostile : level.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e != recruit && e.isAlive() && recruit.canAttack(e))) {
-            // Skip ranged hostile — the policy is about MELEE breakthrough.
-            if (RecruitRoleResolver.roleOf(hostile) == CombatRole.RANGED) continue;
-            double d = recruit.distanceTo(hostile);
-            if (d < best) best = d;
+        // Pool the per-recruit AABB scan through the per-group hostile cache so that
+        // an N-archer formation runs at most one underlying world scan per
+        // EVALUATION_INTERVAL_TICKS bucket (SCANPOOL-003 acceptance #1). The
+        // pure pickNearest filter preserves the legacy semantics: alive,
+        // canAttack-eligible, and not a ranged hostile.
+        long scansBefore = CommanderHostileScanCache.scanCount();
+        CommanderHostileScanCache.Snapshot snapshot = CommanderHostileScanCache.snapshotFor(
+                recruit,
+                SCAN_RADIUS,
+                EVALUATION_INTERVAL_TICKS,
+                CommanderHostileScanCache.LEVEL_SCANNER
+        );
+        long scansAfter = CommanderHostileScanCache.scanCount();
+        recordEnemyScanCounters(scansAfter, scansBefore == scansAfter);
+
+        Vec3 origin = recruit.position();
+        double radiusSqr = SCAN_RADIUS * SCAN_RADIUS;
+        LivingEntity nearest = CommanderHostileScanCache.pickNearest(
+                origin,
+                radiusSqr,
+                snapshot.hostiles(),
+                LivingEntity::position,
+                hostile -> hostile != recruit
+                        && hostile.isAlive()
+                        && recruit.canAttack(hostile)
+                        // Skip ranged hostile — the policy is about MELEE breakthrough.
+                        && RecruitRoleResolver.roleOf(hostile) != CombatRole.RANGED
+        );
+        if (nearest == null) {
+            return Double.POSITIVE_INFINITY;
         }
-        return best;
+        return recruit.distanceTo(nearest);
     }
+
+    private static void recordEnemyScanCounters(long totalScansFromCache, boolean cacheHit) {
+        RuntimeProfilingCounters.increment(COUNTER_ENEMY_SCAN_EVALUATIONS);
+        if (cacheHit) {
+            RuntimeProfilingCounters.increment(COUNTER_ENEMY_SCAN_HITS);
+        }
+        // Mirror the cache's authoritative running total into the profiling
+        // surface so dashboards that already snapshot RuntimeProfilingCounters
+        // observe scan-pool effectiveness without poking at internal cache APIs.
+        // We store the absolute value via add(delta) to keep the LongAdder semantics
+        // consistent with other counters (which monotonically grow per evaluation).
+        long previous = LAST_REPORTED_SCAN_COUNT.getAndSet(totalScansFromCache);
+        long delta = totalScansFromCache - previous;
+        if (delta > 0L) {
+            RuntimeProfilingCounters.add(COUNTER_ENEMY_SCAN_COUNT, delta);
+        }
+    }
+
+    private static final AtomicLong LAST_REPORTED_SCAN_COUNT = new AtomicLong();
 
     private static boolean firingLaneBlocked(AbstractRecruitEntity recruit,
                                              ServerLevel level,
