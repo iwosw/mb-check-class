@@ -10,6 +10,11 @@ import com.talhanation.bannermod.entity.military.RecruitIndex;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.settlement.BannerModSettlementBuildingCategory;
+import com.talhanation.bannermod.settlement.BannerModSettlementBuildingProfileSeed;
+import com.talhanation.bannermod.settlement.BannerModSettlementBuildingRecord;
+import com.talhanation.bannermod.settlement.BannerModSettlementManager;
+import com.talhanation.bannermod.settlement.BannerModSettlementSnapshot;
 import com.talhanation.bannermod.war.WarRuntimeContext;
 import com.talhanation.bannermod.war.registry.PoliticalEntityRecord;
 import net.minecraft.core.BlockPos;
@@ -29,6 +34,8 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.scores.PlayerTeam;
 import net.neoforged.neoforge.common.util.FakePlayer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -112,6 +119,83 @@ public final class BannerModDedicatedServerGameTestSupport {
     public static void removeClaim(ServerLevel level, RecruitsClaim claim) {
         ensureClaimManager(level);
         ClaimEvents.claimManager().removeClaim(claim);
+    }
+
+    /**
+     * Seed a synthetic housing snapshot for {@code claim} so the
+     * worker-spawn rules see free {@code residentCapacity} during tests.
+     * Without this, every spawn rule that runs through
+     * {@code WorkerSettlementClaimPolicy.housingSlackForClaim} denies with
+     * {@code NO_FREE_HOUSING}, because dedicated GameTest harnesses do not
+     * stand up real prefab housing buildings.
+     */
+    public static BannerModSettlementSnapshot seedHousingSnapshot(ServerLevel level,
+                                                                  RecruitsClaim claim,
+                                                                  int residentCapacity) {
+        BannerModSettlementManager manager = BannerModSettlementManager.get(level);
+        BannerModSettlementSnapshot existing = manager.getSnapshot(claim.getUUID());
+        BannerModSettlementBuildingRecord housing = new BannerModSettlementBuildingRecord(
+                UUID.randomUUID(),
+                "bannermod_test:housing",
+                claim.getCenter().getWorldPosition(),
+                claim.getPlayerInfo() == null ? null : claim.getPlayerInfo().getUUID(),
+                claim.getName(),
+                Math.max(1, residentCapacity),
+                0,
+                0,
+                List.of(),
+                false,
+                0,
+                0,
+                false,
+                false,
+                List.of(),
+                BannerModSettlementBuildingCategory.GENERAL,
+                BannerModSettlementBuildingProfileSeed.GENERAL
+        );
+        List<BannerModSettlementBuildingRecord> buildings = existing == null
+                ? new ArrayList<>()
+                : new ArrayList<>(existing.buildings());
+        buildings.add(housing);
+        BannerModSettlementSnapshot snapshot = existing == null
+                ? new BannerModSettlementSnapshot(
+                        claim.getUUID(),
+                        claim.getCenter().x,
+                        claim.getCenter().z,
+                        claim.getOwnerPoliticalEntityId() == null ? null : claim.getOwnerPoliticalEntityId().toString(),
+                        level.getGameTime(),
+                        Math.max(1, residentCapacity),
+                        0, 0, 0, 0, 0,
+                        com.talhanation.bannermod.settlement.BannerModSettlementStockpileSummary.empty(),
+                        com.talhanation.bannermod.settlement.BannerModSettlementMarketState.empty(),
+                        com.talhanation.bannermod.settlement.BannerModSettlementDesiredGoodsSeed.empty(),
+                        com.talhanation.bannermod.settlement.BannerModSettlementProjectCandidateSeed.empty(),
+                        com.talhanation.bannermod.settlement.BannerModSettlementTradeRouteHandoffSeed.empty(),
+                        com.talhanation.bannermod.settlement.BannerModSettlementSupplySignalState.empty(),
+                        List.of(),
+                        buildings)
+                : new BannerModSettlementSnapshot(
+                        existing.claimUuid(),
+                        existing.anchorChunkX(),
+                        existing.anchorChunkZ(),
+                        existing.settlementFactionId(),
+                        existing.lastRefreshedTick(),
+                        existing.residentCapacity() + Math.max(1, residentCapacity),
+                        existing.workplaceCapacity(),
+                        existing.assignedWorkerCount(),
+                        existing.assignedResidentCount(),
+                        existing.unassignedWorkerCount(),
+                        existing.missingWorkAreaAssignmentCount(),
+                        existing.stockpileSummary(),
+                        existing.marketState(),
+                        existing.desiredGoodsSeed(),
+                        existing.projectCandidateSeed(),
+                        existing.tradeRouteHandoffSeed(),
+                        existing.supplySignalState(),
+                        existing.residents(),
+                        buildings);
+        manager.putSnapshot(snapshot);
+        return snapshot;
     }
 
     /**
