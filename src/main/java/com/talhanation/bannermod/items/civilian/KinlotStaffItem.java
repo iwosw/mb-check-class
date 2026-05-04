@@ -2,6 +2,7 @@ package com.talhanation.bannermod.items.civilian;
 
 import com.talhanation.bannermod.events.ClaimEvents;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
+import com.talhanation.bannermod.society.NpcHamletAccess;
 import com.talhanation.bannermod.society.NpcHousingPlotPlanner;
 import com.talhanation.bannermod.society.NpcHousingRequestRecord;
 import com.talhanation.bannermod.util.ItemStackComponentData;
@@ -98,6 +99,7 @@ public class KinlotStaffItem extends Item {
                         ? Component.literal("-")
                         : Component.translatable("gui.bannermod.society.household_housing."
                         + info.household().housingState().name().toLowerCase(Locale.ROOT)),
+                NpcHamletAccess.displayName(info.hamlet()),
                 info.plotPos().getX(),
                 info.plotPos().getZ()
         ).withStyle(ChatFormatting.GOLD), true);
@@ -138,6 +140,11 @@ public class KinlotStaffItem extends Item {
         int members = info.household() == null ? 0 : info.household().memberResidentUuids().size();
         Component status = Component.translatable("gui.bannermod.society.housing_request."
                 + request.status().name().toLowerCase(Locale.ROOT));
+        Component hamletName = NpcHamletAccess.displayName(info.hamlet());
+        Component hamletStatus = info.hamlet() == null
+                ? Component.literal("-")
+                : Component.translatable("gui.bannermod.society.hamlet.status."
+                + info.hamlet().status().name().toLowerCase(Locale.ROOT));
         player.sendSystemMessage(Component.translatable(
                 "item.bannermod.kinlot_staff.detail.header",
                 shortId(request.householdId()),
@@ -150,6 +157,8 @@ public class KinlotStaffItem extends Item {
                 shortId(request.residentUuid()),
                 members,
                 housingState,
+                hamletName,
+                hamletStatus,
                 status,
                 request.buildAreaUuid() == null ? "-" : shortId(request.buildAreaUuid())
         ).withStyle(ChatFormatting.GRAY));
@@ -169,7 +178,7 @@ public class KinlotStaffItem extends Item {
         String label = residentDisplayName(player, info.request());
         ItemStackComponentData.update(stack, tag -> {
             tag.putLong(TAG_RENDER_PLOT, info.plotPos().asLong());
-            tag.putString(TAG_RENDER_LABEL, label);
+            tag.putString(TAG_RENDER_LABEL, info.hamlet() == null ? label : NpcHamletAccess.displayName(info.hamlet()).getString());
             tag.putString(TAG_RENDER_HOUSEHOLD, shortId(info.request().householdId()));
             tag.putString(TAG_RENDER_STATUS, info.request().status().name().toLowerCase(Locale.ROOT));
         });

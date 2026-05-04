@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
+import com.talhanation.bannermod.society.NpcHamletAccess;
 import com.talhanation.bannermod.society.NpcHousingProjectPlanner;
 import com.talhanation.bannermod.society.NpcLivelihoodProjectPlanner;
 import com.talhanation.bannermod.society.NpcMemoryAccess;
@@ -134,6 +135,7 @@ final class BannerModSettlementClaimTickService {
         java.util.Set<UUID> prioritizedResidents = level == null
                 ? java.util.Set.of()
                 : NpcHousingProjectPlanner.approvedRequesterIdsForClaim(level, snapshot.claimUuid());
+        Set<UUID> reconciledHamletHouseholds = new HashSet<>();
         Map<UUID, BannerModSettlementBuildingRecord> buildingsByUuid = indexBuildings(snapshot);
         List<BannerModSettlementResidentRecord> orderedResidents = new java.util.ArrayList<>(snapshot.residents());
         orderedResidents.sort((left, right) -> {
@@ -170,6 +172,9 @@ final class BannerModSettlementClaimTickService {
                                 .orElse(0),
                         gameTime
                 );
+                if (householdId != null && reconciledHamletHouseholds.add(householdId)) {
+                    NpcHamletAccess.reconcileHousehold(level, snapshot, householdId, gameTime);
+                }
                 com.talhanation.bannermod.society.NpcFamilyAccess.reconcileFamilyForResident(level, residentUuid, gameTime);
                 NpcSocietyAccess.reconcilePhaseOneState(
                         level,

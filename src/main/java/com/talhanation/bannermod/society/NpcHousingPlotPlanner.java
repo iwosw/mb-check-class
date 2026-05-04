@@ -87,7 +87,8 @@ public final class NpcHousingPlotPlanner {
             return null;
         }
         NpcHouseholdRecord household = NpcHouseholdAccess.householdFor(level, bestRequest.householdId()).orElse(null);
-        return new HousingPlotInfo(bestRequest, household, bestRequest.reservedPlotPos(), bestDistSqr);
+        NpcHamletRecord hamlet = household == null ? null : NpcHamletAccess.hamletForHousehold(level, household.householdId()).orElse(null);
+        return new HousingPlotInfo(bestRequest, household, hamlet, bestRequest.reservedPlotPos(), bestDistSqr);
     }
 
     private static @Nullable BlockPos chooseReservedPlot(ServerLevel level,
@@ -223,6 +224,7 @@ public final class NpcHousingPlotPlanner {
 
     public record HousingPlotInfo(NpcHousingRequestRecord request,
                                   @Nullable NpcHouseholdRecord household,
+                                  @Nullable NpcHamletRecord hamlet,
                                   BlockPos plotPos,
                                   double distanceSqr) {
     }

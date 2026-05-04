@@ -21,6 +21,7 @@ import java.util.UUID;
 public final class NpcMemoryAccess {
     private static final long ASSAULT_DURATION_TICKS = 24000L * 6L;
     private static final long PROTECTION_DURATION_TICKS = 24000L * 4L;
+    private static final long HAMLET_ATTACK_DURATION_TICKS = 24000L * 5L;
     private static final long STARVATION_DURATION_TICKS = 24000L * 3L;
     private static final long HOUSING_DURATION_TICKS = 24000L * 4L;
 
@@ -72,10 +73,10 @@ public final class NpcMemoryAccess {
     }
 
     public static void rememberProtectionByPlayer(ServerLevel level,
-                                                  UUID residentUuid,
-                                                  @Nullable UUID actorUuid,
-                                                  int intensity,
-                                                  long gameTime) {
+                                                   UUID residentUuid,
+                                                   @Nullable UUID actorUuid,
+                                                   int intensity,
+                                                   long gameTime) {
         rememberWithPropagation(level,
                 residentUuid,
                 actorUuid,
@@ -85,6 +86,35 @@ public final class NpcMemoryAccess {
                 true,
                 true,
                 gameTime);
+    }
+
+    public static void rememberHamletAttackedByPlayer(ServerLevel level,
+                                                      NpcHamletRecord hamlet,
+                                                      @Nullable UUID actorUuid,
+                                                      int intensity,
+                                                      long gameTime) {
+        if (level == null || hamlet == null) {
+            return;
+        }
+        for (NpcHamletHouseholdEntry entry : hamlet.householdEntries()) {
+            NpcHouseholdRecord household = NpcHouseholdAccess.householdFor(level, entry.householdId()).orElse(null);
+            if (household == null) {
+                continue;
+            }
+            for (UUID residentUuid : household.memberResidentUuids()) {
+                if (residentUuid != null) {
+                    rememberWithPropagation(level,
+                            residentUuid,
+                            actorUuid,
+                            NpcSocialMemoryType.HAMLET_ATTACKED_BY_PLAYER,
+                            intensity,
+                            HAMLET_ATTACK_DURATION_TICKS,
+                            true,
+                            true,
+                            gameTime);
+                }
+            }
+        }
     }
 
     public static List<NpcMemorySummarySnapshot> summarySnapshots(ServerLevel level,
@@ -309,6 +339,12 @@ public final class NpcMemoryAccess {
                     fear -= 18.0D * weight;
                     gratitude += 48.0D * weight;
                     loyalty += 18.0D * weight;
+                }
+                case HAMLET_ATTACKED_BY_PLAYER -> {
+                    trust -= 26.0D * weight;
+                    fear += 34.0D * weight;
+                    anger += 42.0D * weight;
+                    loyalty -= 16.0D * weight;
                 }
                 case STARVED -> {
                     fear += 12.0D * weight;

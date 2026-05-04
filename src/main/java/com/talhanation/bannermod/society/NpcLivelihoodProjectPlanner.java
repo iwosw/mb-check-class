@@ -44,16 +44,18 @@ public final class NpcLivelihoodProjectPlanner {
             return List.of();
         }
         UUID lordUuid = resolveLordUuid(level, snapshot.claimUuid());
+        boolean hamletFoodPressure = NpcHamletAccess.hasActiveHamlet(level, snapshot.claimUuid())
+                && !hasLivelihoodBuilding(snapshot, NpcLivelihoodRequestType.ANIMAL_PEN);
         List<PendingProject> projects = new ArrayList<>();
         for (NpcLivelihoodRequestType type : NpcLivelihoodRequestType.values()) {
-            if (!shouldRequest(snapshot, type)) {
+            if (!shouldRequest(snapshot, type, hamletFoodPressure)) {
                 continue;
             }
             if (hasLivelihoodBuilding(snapshot, type)) {
                 NpcLivelihoodRequestAccess.fulfill(level, snapshot.claimUuid(), type, gameTime);
                 continue;
             }
-            UUID requester = pickRepresentative(snapshot, type);
+            UUID requester = pickRepresentative(level, snapshot, type, hamletFoodPressure);
             if (requester == null) {
                 continue;
             }
@@ -86,16 +88,19 @@ public final class NpcLivelihoodProjectPlanner {
         return projects;
     }
 
-    private static boolean shouldRequest(BannerModSettlementSnapshot snapshot, NpcLivelihoodRequestType type) {
+    private static boolean shouldRequest(BannerModSettlementSnapshot snapshot,
+                                         NpcLivelihoodRequestType type,
+                                         boolean hamletFoodPressure) {
         if (snapshot == null) {
             return false;
         }
-        if (snapshot.unassignedWorkerCount() <= 0 && snapshot.missingWorkAreaAssignmentCount() <= 0) {
-            return false;
+        boolean laborPressure = snapshot.unassignedWorkerCount() > 0 || snapshot.missingWorkAreaAssignmentCount() > 0;
+        if (!laborPressure) {
+            return type == NpcLivelihoodRequestType.ANIMAL_PEN && hamletFoodPressure;
         }
         return switch (type) {
             case LUMBER_CAMP, MINE -> true;
-            case ANIMAL_PEN -> snapshot.residents().size() >= 4;
+            case ANIMAL_PEN -> snapshot.residents().size() >= 4 || hamletFoodPressure;
         };
     }
 
@@ -123,7 +128,20 @@ public final class NpcLivelihoodProjectPlanner {
     }
 
     @Nullable
-    private static UUID pickRepresentative(BannerModSettlementSnapshot snapshot, NpcLivelihoodRequestType type) {
+    private static UUID pickRepresentative(ServerLevel level,
+                                           BannerModSettlementSnapshot snapshot,
+                                           NpcLivelihoodRequestType type,
+                                           boolean hamletFoodPressure) {
+        if (level != null && snapshot != null && hamletFoodPressure && type == NpcLivelihoodRequestType.ANIMAL_PEN) {
+            for (NpcHamletRecord hamlet : NpcHamletAccess.hamletsForClaim(level, snapshot.claimUuid())) {
+                if (hamlet != null && hamlet.isInhabited()) {
+                    UUID representative = NpcHamletAccess.representativeResidentUuid(level, hamlet);
+                    if (representative != null) {
+                        return representative;
+                    }
+                }
+            }
+        }
         UUID fallback = null;
         for (BannerModSettlementResidentRecord resident : snapshot.residents()) {
             if (resident == null || resident.residentUuid() == null) {

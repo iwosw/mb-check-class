@@ -40,6 +40,10 @@ public final class CivilianPacketCatalog {
         MessageConvertWorkerToCitizen.class,
         MessageReassignWorkerProfession.class,
         MessageAssignCitizenVacancy.class,
+        MessageToClientUpdateHamletState.class,
+        MessageRequestHamletSnapshot.class,
+        MessageRegisterHamlet.class,
+        MessageRenameHamlet.class,
     };
 
     public static final PacketCatalog CATALOG = new PacketCatalog(MESSAGES);

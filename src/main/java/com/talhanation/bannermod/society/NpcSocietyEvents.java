@@ -5,23 +5,30 @@ import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
 import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.events.ClaimEvents;
+import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
 
 @EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class NpcSocietyEvents {
+    private static final double HAMLET_HOSTILE_BREAK_RADIUS = 14.0D;
+    private static final long HAMLET_HOSTILE_BREAK_COOLDOWN = 1200L;
+
     private NpcSocietyEvents() {
     }
 
@@ -70,6 +77,36 @@ public final class NpcSocietyEvents {
         if (actorUuid != null && victim instanceof Mob mob) {
             NpcMemoryAccess.onProtectedByPlayer(serverLevel, mob, actorUuid, serverLevel.getGameTime());
         }
+    }
+
+    @SubscribeEvent
+    public static void onHamletBlockBroken(BlockEvent.BreakEvent event) {
+        if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        Player player = event.getPlayer();
+        if (player == null || ClaimEvents.claimManager() == null || event.getPos() == null) {
+            return;
+        }
+        RecruitsClaim claim = ClaimEvents.claimManager().getClaim(new ChunkPos(event.getPos()));
+        if (claim == null) {
+            return;
+        }
+        NpcHamletRecord hamlet = NpcHamletAccess.nearestHamlet(
+                serverLevel,
+                claim.getUUID(),
+                event.getPos(),
+                HAMLET_HOSTILE_BREAK_RADIUS,
+                false
+        );
+        if (hamlet == null || !hamlet.isInhabited() || hamlet.status() == NpcHamletStatus.REGISTERED) {
+            return;
+        }
+        long gameTime = serverLevel.getGameTime();
+        if (!NpcHamletAccess.noteHostileAction(serverLevel, hamlet.hamletId(), gameTime, HAMLET_HOSTILE_BREAK_COOLDOWN)) {
+            return;
+        }
+        NpcMemoryAccess.rememberHamletAttackedByPlayer(serverLevel, hamlet, player.getUUID(), 68, gameTime);
     }
 
     private static @Nullable UUID resolveControllingPlayer(@Nullable DamageSource source) {
