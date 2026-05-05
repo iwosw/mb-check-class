@@ -1,10 +1,12 @@
 package com.talhanation.bannermod.war.runtime;
 
+import com.talhanation.bannermod.war.retention.WarRetentionPolicy;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,20 @@ public class RevoltRuntime {
         this.dirtyListener = dirtyListener == null ? () -> { } : dirtyListener;
     }
 
+    /**
+     * Backward-compatible overload — schedules a revolt with no recorded warId. New callers
+     * should prefer {@link #schedule(UUID, UUID, UUID, UUID, long)} so per-war eviction can
+     * cap runaway revolt counts under {@link WarRetentionPolicy#MAX_REVOLTS_PER_WAR}.
+     */
     public Optional<RevoltRecord> schedule(UUID occupationId,
+                                           UUID rebelEntityId,
+                                           UUID occupierEntityId,
+                                           long scheduledAtGameTime) {
+        return schedule(null, occupationId, rebelEntityId, occupierEntityId, scheduledAtGameTime);
+    }
+
+    public Optional<RevoltRecord> schedule(UUID warId,
+                                           UUID occupationId,
                                            UUID rebelEntityId,
                                            UUID occupierEntityId,
                                            long scheduledAtGameTime) {
@@ -32,11 +47,40 @@ public class RevoltRuntime {
                 return Optional.empty();
             }
         }
-        RevoltRecord record = new RevoltRecord(UUID.randomUUID(), occupationId,
+        RevoltRecord record = new RevoltRecord(UUID.randomUUID(), warId, occupationId,
                 rebelEntityId, occupierEntityId, scheduledAtGameTime, 0L, RevoltState.PENDING);
         recordsById.put(record.id(), record);
+        if (warId != null) {
+            enforcePerWarCap(warId);
+        }
         dirtyListener.run();
         return Optional.of(record);
+    }
+
+    /**
+     * Drop the oldest revolts for {@code warId} until the count is at or below
+     * {@link WarRetentionPolicy#MAX_REVOLTS_PER_WAR}. Iteration order is insertion order
+     * thanks to the backing {@link LinkedHashMap}.
+     */
+    private void enforcePerWarCap(UUID warId) {
+        int count = 0;
+        for (RevoltRecord record : recordsById.values()) {
+            if (warId.equals(record.warId())) {
+                count++;
+            }
+        }
+        if (count <= WarRetentionPolicy.MAX_REVOLTS_PER_WAR) {
+            return;
+        }
+        int toDrop = count - WarRetentionPolicy.MAX_REVOLTS_PER_WAR;
+        Iterator<Map.Entry<UUID, RevoltRecord>> iter = recordsById.entrySet().iterator();
+        while (iter.hasNext() && toDrop > 0) {
+            RevoltRecord record = iter.next().getValue();
+            if (warId.equals(record.warId())) {
+                iter.remove();
+                toDrop--;
+            }
+        }
     }
 
     public boolean resolve(UUID revoltId, RevoltState newState, long resolvedAtGameTime) {
