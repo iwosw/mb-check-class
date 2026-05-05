@@ -240,6 +240,27 @@ public final class RecruitIndex {
         return queryInRange(level, ownerUuid, center, radius, false, true);
     }
 
+    /**
+     * Count loaded recruits in a specific level owned by {@code ownerUuid}. Used by
+     * cross-dimension orphan accounting (FORMATIONDIM-001) to attribute the size of
+     * the cohort that a leader's portal transition just stranded.
+     */
+    public int countOwnedInLevel(ServerLevel level, UUID ownerUuid) {
+        if (level == null || ownerUuid == null) return 0;
+        LevelIndex index = byLevel.get(level.dimension());
+        if (index == null) return 0;
+        Set<UUID> candidates = index.byOwner.get(ownerUuid);
+        if (candidates == null || candidates.isEmpty()) return 0;
+        int count = 0;
+        for (UUID uuid : candidates) {
+            Entity entity = level.getEntity(uuid);
+            if (entity instanceof AbstractRecruitEntity recruit && recruit.isAlive()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     @Nullable
     private List<AbstractRecruitEntity> queryInRange(Level level, UUID key, Vec3 center, double radius, boolean groupQuery, boolean aliveOnly) {
         if (!(level instanceof ServerLevel serverLevel) || key == null || center == null) {
