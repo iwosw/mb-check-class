@@ -118,10 +118,29 @@ public final class NpcSocietyAccess {
         UUID workBuildingUuid = profile.workBuildingUuid() != null ? profile.workBuildingUuid() : fallbackWorkBuildingUuid;
         NpcHouseholdRecord household = NpcHouseholdAccess.householdForResident(level, residentUuid).orElse(null);
         UUID householdId = household == null ? profile.householdId() : household.householdId();
+        NpcHousingRequestRecord housingRequest = householdId == null ? null : NpcHousingRequestAccess.requestForHousehold(level, householdId);
+        String housingUrgencyTag = "LOW";
+        String housingReasonTag = "STABLE";
+        int housingWaitingDays = 0;
+        if (housingRequest != null
+                && housingRequest.status() != NpcHousingRequestStatus.NONE
+                && housingRequest.status() != NpcHousingRequestStatus.FULFILLED) {
+            NpcHousingLedgerEntry housingEntry = NpcHousingPriorityService.describe(housingRequest, household, level.getGameTime());
+            housingUrgencyTag = housingEntry.urgencyTag();
+            housingReasonTag = housingEntry.reasonTag();
+            housingWaitingDays = housingEntry.waitingDays();
+        } else if (household == null || household.housingState() == NpcHouseholdHousingState.HOMELESS) {
+            housingUrgencyTag = "CRITICAL";
+            housingReasonTag = "HOMELESS";
+        } else if (household.housingState() == NpcHouseholdHousingState.OVERCROWDED) {
+            housingUrgencyTag = "HIGH";
+            housingReasonTag = "OVERCROWDED";
+        }
         return new NpcPhaseOneSnapshot(
                 profile.lifeStage().name(),
                 profile.sex().name(),
                 householdId,
+                household == null ? null : household.headResidentUuid(),
                 profile.homeBuildingUuid(),
                 workBuildingUuid,
                 profile.cultureId(),
@@ -141,6 +160,9 @@ public final class NpcSocietyAccess {
                 profile.gratitudeScore(),
                 profile.loyaltyScore(),
                 NpcHousingRequestAccess.statusFor(level, residentUuid).name(),
+                housingUrgencyTag,
+                housingReasonTag,
+                housingWaitingDays,
                 NpcMemoryAccess.summarySnapshots(level, residentUuid, level.getGameTime())
         );
     }

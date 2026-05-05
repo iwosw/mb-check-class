@@ -8,12 +8,10 @@ import com.talhanation.bannermod.persistence.military.RecruitsClaim;
 import com.talhanation.bannermod.society.NpcHamletAccess;
 import com.talhanation.bannermod.society.NpcHamletRecord;
 import com.talhanation.bannermod.society.NpcHamletStatus;
-import com.talhanation.bannermod.society.NpcHouseholdAccess;
-import com.talhanation.bannermod.society.NpcHouseholdHousingState;
-import com.talhanation.bannermod.society.NpcHouseholdRecord;
 import com.talhanation.bannermod.society.NpcHousingRequestAccess;
+import com.talhanation.bannermod.society.NpcHousingLedgerEntry;
+import com.talhanation.bannermod.society.NpcHousingPriorityService;
 import com.talhanation.bannermod.society.NpcHousingRequestRecord;
-import com.talhanation.bannermod.society.NpcHousingRequestSavedData;
 import com.talhanation.bannermod.society.NpcHousingRequestStatus;
 import com.talhanation.bannermod.society.NpcLivelihoodRequestAccess;
 import com.talhanation.bannermod.society.NpcLivelihoodRequestRecord;
@@ -93,13 +91,7 @@ public final class BannerModSocietyCommands {
             return 0;
         }
 
-        List<NpcHousingRequestRecord> requests = new ArrayList<>(NpcHousingRequestSavedData.get(level).runtime().requestsForClaim(claim.getUUID()));
-        requests.removeIf(request -> request == null
-                || request.status() == NpcHousingRequestStatus.NONE
-                || request.status() == NpcHousingRequestStatus.FULFILLED);
-        requests.sort(Comparator
-                .comparingInt((NpcHousingRequestRecord request) -> severity(level, request.householdId()))
-                .thenComparingLong(NpcHousingRequestRecord::requestedAtGameTime));
+        List<NpcHousingLedgerEntry> requests = NpcHousingPriorityService.activeEntriesForClaim(level, claim.getUUID(), level.getGameTime());
 
         if (requests.isEmpty()) {
             ctx.getSource().sendSuccess(() -> Component.translatable("gui.bannermod.society.housing_request.command.empty"), false);
@@ -107,15 +99,11 @@ public final class BannerModSocietyCommands {
         }
 
         ctx.getSource().sendSuccess(() -> Component.translatable("gui.bannermod.society.housing_request.command.header", requests.size()), false);
-        for (NpcHousingRequestRecord request : requests) {
-            NpcHouseholdRecord household = NpcHouseholdAccess.householdFor(level, request.householdId()).orElse(null);
-            int members = household == null ? 0 : household.memberResidentUuids().size();
-            Component state = household == null
-                    ? Component.literal("unknown")
-                    : Component.translatable("gui.bannermod.society.household_housing."
-                    + household.housingState().name().toLowerCase(Locale.ROOT));
-            Component status = Component.translatable("gui.bannermod.society.housing_request."
-                    + request.status().name().toLowerCase(Locale.ROOT));
+        for (NpcHousingLedgerEntry request : requests) {
+            Component state = Component.translatable(request.housingStateTranslationKey());
+            Component status = Component.translatable(request.statusTranslationKey());
+            Component urgency = Component.translatable(request.urgencyTranslationKey());
+            Component reason = Component.translatable(request.reasonTranslationKey());
             Component plot = request.reservedPlotPos() == null
                     ? Component.literal("-")
                     : Component.literal(request.reservedPlotPos().getX() + " "
@@ -123,13 +111,16 @@ public final class BannerModSocietyCommands {
                     + request.reservedPlotPos().getZ());
             MutableComponent line = Component.translatable(
                     "gui.bannermod.society.housing_request.command.entry",
+                    request.queueRank(),
                     shortId(request.residentUuid()),
                     state,
-                    members,
+                    request.householdSize(),
                     status,
+                    urgency,
+                    reason,
                     plot
             );
-            if (request.status() == NpcHousingRequestStatus.REQUESTED || request.status() == NpcHousingRequestStatus.DENIED) {
+            if (NpcHousingPriorityService.canApprove(request)) {
                 line.append(Component.literal(" "))
                         .append(actionButton(
                                 "gui.bannermod.society.housing_request.action.approve",
@@ -138,7 +129,7 @@ public final class BannerModSocietyCommands {
                                 "gui.bannermod.society.housing_request.action.approve.tooltip"
                         ));
             }
-            if (request.status() == NpcHousingRequestStatus.REQUESTED) {
+            if (NpcHousingPriorityService.canDeny(request)) {
                 line.append(Component.literal(" "))
                         .append(actionButton(
                                 "gui.bannermod.society.housing_request.action.deny",
@@ -470,17 +461,6 @@ public final class BannerModSocietyCommands {
             return null;
         }
         return WarRuntimeContext.registry(level).byId(claim.getOwnerPoliticalEntityId()).orElse(null);
-    }
-
-    private static int severity(ServerLevel level, UUID householdId) {
-        NpcHouseholdHousingState state = NpcHouseholdAccess.householdFor(level, householdId)
-                .map(NpcHouseholdRecord::housingState)
-                .orElse(NpcHouseholdHousingState.NORMAL);
-        return switch (state) {
-            case HOMELESS -> 0;
-            case OVERCROWDED -> 1;
-            case NORMAL -> 2;
-        };
     }
 
     private static int livelihoodSeverity(NpcLivelihoodRequestType type) {

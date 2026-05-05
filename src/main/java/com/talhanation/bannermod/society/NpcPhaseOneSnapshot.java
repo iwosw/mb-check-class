@@ -12,6 +12,7 @@ public record NpcPhaseOneSnapshot(
         String lifeStageTag,
         String sexTag,
         @Nullable UUID householdId,
+        @Nullable UUID householdHeadResidentUuid,
         @Nullable UUID homeBuildingUuid,
         @Nullable UUID workBuildingUuid,
         @Nullable String cultureId,
@@ -31,12 +32,16 @@ public record NpcPhaseOneSnapshot(
         int gratitudeScore,
         int loyaltyScore,
         String housingRequestStatusTag,
+        String housingUrgencyTag,
+        String housingReasonTag,
+        int housingWaitingDays,
         List<NpcMemorySummarySnapshot> recentMemories
 ) {
     public static NpcPhaseOneSnapshot empty() {
         return new NpcPhaseOneSnapshot(
                 NpcLifeStage.UNSPECIFIED.name(),
                 NpcSex.UNSPECIFIED.name(),
+                null,
                 null,
                 null,
                 null,
@@ -56,8 +61,10 @@ public record NpcPhaseOneSnapshot(
                 0,
                 0,
                 50,
-                NpcHousingRequestStatus.NONE.name()
-                ,
+                NpcHousingRequestStatus.NONE.name(),
+                "LOW",
+                "STABLE",
+                0,
                 List.of()
         );
     }
@@ -66,6 +73,7 @@ public record NpcPhaseOneSnapshot(
         buf.writeUtf(safeTag(this.lifeStageTag));
         buf.writeUtf(safeTag(this.sexTag));
         writeNullableUuid(buf, this.householdId);
+        writeNullableUuid(buf, this.householdHeadResidentUuid);
         writeNullableUuid(buf, this.homeBuildingUuid);
         writeNullableUuid(buf, this.workBuildingUuid);
         writeNullableString(buf, this.cultureId);
@@ -85,6 +93,9 @@ public record NpcPhaseOneSnapshot(
         buf.writeVarInt(Math.max(0, this.gratitudeScore));
         buf.writeVarInt(Math.max(0, this.loyaltyScore));
         buf.writeUtf(safeTag(this.housingRequestStatusTag));
+        buf.writeUtf(safeTag(this.housingUrgencyTag));
+        buf.writeUtf(safeTag(this.housingReasonTag));
+        buf.writeVarInt(Math.max(0, this.housingWaitingDays));
         buf.writeVarInt(this.recentMemories == null ? 0 : this.recentMemories.size());
         if (this.recentMemories != null) {
             for (NpcMemorySummarySnapshot memory : this.recentMemories) {
@@ -98,6 +109,7 @@ public record NpcPhaseOneSnapshot(
         String lifeStageTag = buf.readUtf();
         String sexTag = buf.readUtf();
         UUID householdId = readNullableUuid(buf);
+        UUID householdHeadResidentUuid = readNullableUuid(buf);
         UUID homeBuildingUuid = readNullableUuid(buf);
         UUID workBuildingUuid = readNullableUuid(buf);
         String cultureId = readNullableString(buf);
@@ -117,6 +129,9 @@ public record NpcPhaseOneSnapshot(
         int gratitudeScore = buf.readVarInt();
         int loyaltyScore = buf.readVarInt();
         String housingRequestStatusTag = buf.readUtf();
+        String housingUrgencyTag = buf.readUtf();
+        String housingReasonTag = buf.readUtf();
+        int housingWaitingDays = buf.readVarInt();
         int memoryCount = buf.readVarInt();
         for (int i = 0; i < memoryCount; i++) {
             memories.add(NpcMemorySummarySnapshot.fromBytes(buf));
@@ -125,6 +140,7 @@ public record NpcPhaseOneSnapshot(
                 lifeStageTag,
                 sexTag,
                 householdId,
+                householdHeadResidentUuid,
                 homeBuildingUuid,
                 workBuildingUuid,
                 cultureId,
@@ -144,6 +160,9 @@ public record NpcPhaseOneSnapshot(
                 gratitudeScore,
                 loyaltyScore,
                 housingRequestStatusTag,
+                housingUrgencyTag,
+                housingReasonTag,
+                housingWaitingDays,
                 List.copyOf(memories)
         );
     }
@@ -174,6 +193,24 @@ public record NpcPhaseOneSnapshot(
 
     public String housingRequestTranslationKey() {
         return "gui.bannermod.society.housing_request." + safeTag(this.housingRequestStatusTag).toLowerCase(Locale.ROOT);
+    }
+
+    public String housingUrgencyTranslationKey() {
+        return "gui.bannermod.housing_ledger.urgency." + safeTag(this.housingUrgencyTag).toLowerCase(Locale.ROOT);
+    }
+
+    public String housingReasonTranslationKey() {
+        return "gui.bannermod.housing_ledger.reason." + safeTag(this.housingReasonTag).toLowerCase(Locale.ROOT);
+    }
+
+    public String householdRoleTranslationKey(@Nullable UUID residentUuid) {
+        if (residentUuid == null || this.householdId == null) {
+            return "gui.bannermod.society.household_role.unknown";
+        }
+        if (this.householdHeadResidentUuid != null && this.householdHeadResidentUuid.equals(residentUuid)) {
+            return "gui.bannermod.society.household_role.head";
+        }
+        return "gui.bannermod.society.household_role.member";
     }
 
     public String cultureLabel() {
