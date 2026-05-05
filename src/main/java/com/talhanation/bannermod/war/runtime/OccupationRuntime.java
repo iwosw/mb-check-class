@@ -47,6 +47,37 @@ public class OccupationRuntime {
         return removed;
     }
 
+    /**
+     * Removes every occupation record whose chunk set intersects the supplied claim chunks.
+     * Used by the claim-removal fanout so deleted claims do not leave dangling occupation
+     * records keyed on chunks the claim manager will never publish again.
+     *
+     * @return list of removed occupation IDs (empty if none matched)
+     */
+    public List<UUID> removeForClaim(List<ChunkPos> claimChunks) {
+        if (claimChunks == null || claimChunks.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> removed = new ArrayList<>();
+        for (Map.Entry<UUID, OccupationRecord> entry : new ArrayList<>(recordsById.entrySet())) {
+            OccupationRecord record = entry.getValue();
+            for (ChunkPos chunk : claimChunks) {
+                if (record.chunks().contains(chunk)) {
+                    removed.add(entry.getKey());
+                    break;
+                }
+            }
+        }
+        if (removed.isEmpty()) {
+            return List.of();
+        }
+        for (UUID id : removed) {
+            recordsById.remove(id);
+        }
+        dirtyListener.run();
+        return removed;
+    }
+
     public Optional<OccupationRecord> updateLastTaxedAt(UUID id, long lastTaxedAtGameTime) {
         OccupationRecord existing = recordsById.get(id);
         if (existing == null) {

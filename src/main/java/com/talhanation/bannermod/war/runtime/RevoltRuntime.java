@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,6 +73,33 @@ public class RevoltRuntime {
 
     public Collection<RevoltRecord> all() {
         return List.copyOf(recordsById.values());
+    }
+
+    /**
+     * Removes every revolt record whose {@code occupationId} appears in the supplied set.
+     * Used by the claim-removal fanout: when occupations get cleared because their claim
+     * was deleted, any revolts they spawned must follow.
+     *
+     * @return list of removed revolt IDs
+     */
+    public List<UUID> removeForOccupations(Collection<UUID> occupationIds) {
+        if (occupationIds == null || occupationIds.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> removed = new ArrayList<>();
+        for (Map.Entry<UUID, RevoltRecord> entry : new ArrayList<>(recordsById.entrySet())) {
+            if (occupationIds.contains(entry.getValue().occupationId())) {
+                removed.add(entry.getKey());
+            }
+        }
+        if (removed.isEmpty()) {
+            return List.of();
+        }
+        for (UUID id : removed) {
+            recordsById.remove(id);
+        }
+        dirtyListener.run();
+        return removed;
     }
 
     public boolean hasPendingRevoltFor(UUID occupationId) {
