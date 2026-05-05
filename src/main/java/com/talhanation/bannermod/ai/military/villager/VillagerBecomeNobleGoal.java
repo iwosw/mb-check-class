@@ -11,6 +11,9 @@ import java.util.List;
 
 public class VillagerBecomeNobleGoal extends Goal {
 
+    /** Minimum villager neighbours required to promote one of them to a noble. */
+    static final int MIN_VILLAGERS_FOR_PROMOTION = 7;
+
     public Villager villager;
 
     private int timer;
@@ -45,18 +48,39 @@ public class VillagerBecomeNobleGoal extends Goal {
     public void stop() {
         super.stop();
         if(this.villager.getCommandSenderWorld().isClientSide()) return;
-        List<LivingEntity> list = this.villager.getCommandSenderWorld().getEntitiesOfClass(LivingEntity.class, this.villager.getBoundingBox().inflate(100))
-                .stream()
-                .toList();
+        List<LivingEntity> list = this.villager.getCommandSenderWorld().getEntitiesOfClass(LivingEntity.class, this.villager.getBoundingBox().inflate(100));
 
-        boolean noblePresent = list.stream().anyMatch(living -> living instanceof VillagerNobleEntity);
-        if (noblePresent) {
-            return;
+        // Single-pass fold replacing the prior triple stream chain
+        // (toList + anyMatch + filter/count). Short-circuits on a nearby noble
+        // and avoids allocating intermediate streams / lambdas per invocation.
+        boolean noblePresent = false;
+        int villagers = 0;
+        for (int i = 0, n = list.size(); i < n; i++) {
+            LivingEntity e = list.get(i);
+            if (e instanceof VillagerNobleEntity) {
+                noblePresent = true;
+                break;
+            }
+            if (e instanceof Villager) {
+                villagers++;
+            }
         }
 
-        int villagers = (int) list.stream().filter(e -> e instanceof Villager).count();
-        if(villagers >= 7){
+        if (shouldPromote(noblePresent, villagers)) {
             VillagerConversionService.createNobleVillager(villager);
         }
+    }
+
+    /**
+     * Pure predicate: promote when no noble is already nearby and the villager
+     * neighbourhood has reached the promotion threshold. Extracted so the
+     * threshold / short-circuit semantics can be unit tested without standing
+     * up a full Minecraft {@code Level}.
+     */
+    static boolean shouldPromote(boolean noblePresent, int villagerCount) {
+        if (noblePresent) {
+            return false;
+        }
+        return villagerCount >= MIN_VILLAGERS_FOR_PROMOTION;
     }
 }
