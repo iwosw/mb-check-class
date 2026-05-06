@@ -169,7 +169,7 @@ Status: Complete (2/2 plans complete as of 2026-04-11); settlement-faction lifec
 
 - Validate the new settlement-faction contract through focused runtime tests instead of broad settlement rewrites.
 - Cover legal friendly binding, hostile or unclaimed denial, and claim-loss or faction-mismatch degradation behavior.
-- Keep the slices small so later `/gsd-plan-phase` work can execute them independently.
+- Keep the slices small so later phase work can execute them independently.
 
 **Goal:** Prove the first-class settlement-faction contract behaves in live BannerMod validation: friendly claims permit settlement participation, hostile or missing faction authority blocks it, and claim/faction loss degrades civilian throughput before any silent transfer can occur.
 

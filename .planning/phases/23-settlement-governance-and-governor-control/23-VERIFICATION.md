@@ -139,4 +139,4 @@ No orphaned requirement IDs: every plan's `requirements:` entry maps to GOV-01..
 ---
 
 *Verified: 2026-04-24T06:30:00Z*
-*Verifier: Claude (gsd-verifier, Opus 4.6)*
+*Verifier: Claude (Opus 4.6)*

@@ -1,6 +1,6 @@
-# GSD Debug Knowledge Base
+# Debug Knowledge Base
 
-Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypotheses at the start of new investigations.
+Resolved debug sessions. A reference dump of known-pattern hypotheses for new investigations.
 
 ---
 

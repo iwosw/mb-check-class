@@ -93,4 +93,4 @@ No blocking gaps found. The repository now clearly delivers one active root Grad
 ---
 
 _Verified: 2026-04-11T04:38:01Z_
-_Verifier: the agent (gsd-verifier)_
+_Verifier: the agent_

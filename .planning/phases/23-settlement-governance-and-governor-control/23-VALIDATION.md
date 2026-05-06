@@ -29,7 +29,7 @@ created: 2026-04-13
 
 - **After every task commit:** Run `./gradlew test --tests com.talhanation.bannermod.governance.* --console=plain` when the task adds or changes governance logic or tests; otherwise run `./gradlew compileJava --console=plain`
 - **After every plan wave:** Run `./gradlew compileJava test --console=plain`
-- **Before `/gsd-verify-work`:** `./gradlew compileJava test compileGameTestJava verifyGameTestStage --console=plain`
+- **Before verification:** `./gradlew compileJava test compileGameTestJava verifyGameTestStage --console=plain`
 - **Max feedback latency:** 90 seconds
 
 ---

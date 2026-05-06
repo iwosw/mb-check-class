@@ -115,7 +115,6 @@ All server-side movement / face / attack / aggro / stance / strategic-fire comma
 
 Prefer these plugins over ad-hoc shell commands or local scripts when the task fits.
 
-<!-- GSD:project-start source:.planning/PROJECT.md -->
 ## Project
 
 **BannerMod Merge Workspace**
@@ -123,11 +122,8 @@ Prefer these plugins over ad-hoc shell commands or local scripts when the task f
 This workspace is the realized merged runtime of the Forge mods historically living in `recruits/` and `workers/`. The active root build, runtime, and planning context are already unified under `bannermod`; ongoing work is stabilization, architecture cleanup, and gameplay repair without losing historical context.
 
 **Current merge stance:** active code lives under root `src/**`. `recruits/` and `workers/` remain on disk as archive/reference trees only unless a root doc explicitly points to them.
-<!-- GSD:project-end -->
 
-<!-- GSD:workflow-start -->
 ## Workflow
 
 - Use `.planning/` as the active planning context.
 - Prefer the real code over legacy plans when they disagree, and record material conflicts in `.planning/STATE.md` or `docs/STATUS.md`.
-<!-- GSD:workflow-end -->

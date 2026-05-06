@@ -98,4 +98,4 @@ Phase 21's goal is achieved: the active build, active production Java tree, acti
 ---
 
 _Verified: 2026-04-15T15:11:49Z_
-_Verifier: the agent (gsd-verifier)_
+_Verifier: the agent_
