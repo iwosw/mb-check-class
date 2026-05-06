@@ -7315,8 +7315,8 @@
     {
       "id": "TESTFANOUT-001",
       "title": "Claim deletion fanout to treasury / settlement / worker / war test",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Acceptance test for CLAIMFANOUT-001. Source: review Part A 11.2 #3.",
       "scope": [
         "Gametest: create claim with treasury, settlement snapshot, bound worker, active occupation. Delete claim. Assert all four orphan paths cleaned in same tick"
@@ -7328,8 +7328,14 @@
         "CLAIMFANOUT-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "runGameTestServer (151/151 passed) — BannerModClaimRemovalFanoutGameTests::claimDeletionCascadesAllPerClaimRuntimeState seeds treasury ledger via depositTaxes, settlement snapshot via putSnapshot, worker binding via setCurrentWorkArea, and occupation via OccupationRuntime.place; ClaimEvents.claimManager().removeClaim(claim) (same path as MessageDeleteClaim) clears all four in the same tick. Parity test unrelatedClaimStateIsPreservedWhenSiblingClaimIsDeleted guards regression by asserting sibling claim's treasury/snapshot/worker/occupation survive."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTWORKER-001",
