@@ -7287,8 +7287,8 @@
     {
       "id": "TESTTREAS-001",
       "title": "Treasury under simulated concurrent packet flow",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Once ENQUEUE-001 lands, treasury depositTaxes vs recordArmyUpkeepDebit is single-threaded; this test guards that property. Source: review Part A 6.5 / 11.2 #2.",
       "scope": [
         "Gametest that fires N MessageDepositTaxes-equivalents in the same tick on the same claim; assert final ledger == sum of inputs",
@@ -7303,8 +7303,14 @@
         "ENQUEUE-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "runGameTestServer reports '149 GAME TESTS COMPLETE' / 'All 149 required tests passed' (baseline before this slice = 147; +2 = the new BannerModTreasuryConcurrentDepositGameTests methods). Method 1 fires 1000 depositTaxes calls in one tick on a single claim and asserts ledger.accruedTaxes == 1000*7 (algebraic sum). Method 2 has 4 worker threads enqueue 250 deposits each through the server main-thread executor (post-ENQUEUE-001 path), asserts every runner thread name == server.getRunningThread().getName(), zero body exceptions, ledger == algebraic sum. Test green on 3 consecutive runs."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTFANOUT-001",
