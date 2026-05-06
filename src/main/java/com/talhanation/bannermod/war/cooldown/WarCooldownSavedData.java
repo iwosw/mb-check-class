@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.war.cooldown;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -11,6 +12,7 @@ public class WarCooldownSavedData extends SavedData {
     private static final String FILE_ID = "bannermodWarCooldowns";
     private static final SavedData.Factory<WarCooldownSavedData> FACTORY = new SavedData.Factory<>(WarCooldownSavedData::new, WarCooldownSavedData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final WarCooldownRuntime runtime;
 
     public WarCooldownSavedData() {
@@ -27,11 +29,13 @@ public class WarCooldownSavedData extends SavedData {
     }
 
     public static WarCooldownSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "WarCooldownSavedData");
         return new WarCooldownSavedData(WarCooldownRuntime.fromTag(tag));
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         CompoundTag inner = runtime.toTag();
         tag.put("WarCooldowns", inner.getList("WarCooldowns", Tag.TAG_COMPOUND));
         return tag;

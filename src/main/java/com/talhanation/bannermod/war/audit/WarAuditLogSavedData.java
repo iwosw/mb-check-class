@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.war.audit;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import com.talhanation.bannermod.war.retention.WarRetentionPolicy;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +21,7 @@ public class WarAuditLogSavedData extends SavedData {
     private static final String FILE_ID = "bannermodWarAuditLog";
     private static final SavedData.Factory<WarAuditLogSavedData> FACTORY = new SavedData.Factory<>(WarAuditLogSavedData::new, WarAuditLogSavedData::load);
 
+    private static final int CURRENT_VERSION = 1;
     /**
      * Backed by an {@link ArrayDeque} so oldest-first eviction in {@link #append} is O(1)
      * and full-list iteration / NBT serialization stays linear in surviving entries only.
@@ -39,6 +41,7 @@ public class WarAuditLogSavedData extends SavedData {
     }
 
     public static WarAuditLogSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "WarAuditLogSavedData");
         List<WarAuditEntry> loaded = new ArrayList<>();
         ListTag list = tag.getList("Entries", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -105,6 +108,7 @@ public class WarAuditLogSavedData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         ListTag list = new ListTag();
         for (WarAuditEntry entry : entries) {
             list.add(entry.toTag());

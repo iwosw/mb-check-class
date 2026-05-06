@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.shared.logistics;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -10,6 +11,7 @@ public class BannerModSeaTradeExecutionSavedData extends SavedData {
     private static final String FILE_ID = "bannermodSeaTradeExecutions";
     private static final SavedData.Factory<BannerModSeaTradeExecutionSavedData> FACTORY = new SavedData.Factory<>(BannerModSeaTradeExecutionSavedData::new, BannerModSeaTradeExecutionSavedData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final BannerModSeaTradeExecutionRuntime runtime;
 
     public BannerModSeaTradeExecutionSavedData() {
@@ -26,11 +28,13 @@ public class BannerModSeaTradeExecutionSavedData extends SavedData {
     }
 
     public static BannerModSeaTradeExecutionSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "BannerModSeaTradeExecutionSavedData");
         return new BannerModSeaTradeExecutionSavedData(BannerModSeaTradeExecutionRuntime.fromTag(tag));
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         CompoundTag runtimeTag = this.runtime.toTag();
         tag.put("Routes", runtimeTag.getList("Routes", Tag.TAG_COMPOUND));
         return tag;

@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.persistence.military;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.ListTag;
@@ -12,6 +13,7 @@ import java.util.*;
 public class RecruitsGroupsSaveData extends SavedData {
     private static final String FILE_ID = "recruitsGroups";
     private static final SavedData.Factory<RecruitsGroupsSaveData> FACTORY = new SavedData.Factory<>(RecruitsGroupsSaveData::new, RecruitsGroupsSaveData::load);
+    private static final int CURRENT_VERSION = 1;
     private List<RecruitsGroup> groups = new ArrayList<>();
     private Map<UUID, UUID> redirects = new HashMap<>();
     private Map<UUID, UUID> recruitRedirects = new HashMap<>();
@@ -20,6 +22,7 @@ public class RecruitsGroupsSaveData extends SavedData {
     }
 
     public static RecruitsGroupsSaveData load(CompoundTag nbt, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(nbt, CURRENT_VERSION, "RecruitsGroupsSaveData");
         RecruitsGroupsSaveData data = new RecruitsGroupsSaveData();
         if (nbt.contains("groups", Tag.TAG_LIST)) {
             ListTag list = nbt.getList("groups", Tag.TAG_COMPOUND);
@@ -53,6 +56,7 @@ public class RecruitsGroupsSaveData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(nbt, CURRENT_VERSION);
         ListTag list = new ListTag();
         for (RecruitsGroup group : this.groups) {
             list.add(group.toNBT());
