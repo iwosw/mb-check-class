@@ -45,7 +45,6 @@ public class MessageAttack implements BannerModMessage<MessageAttack> {
             return;
         }
         context.enqueueWork(() -> {
-            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
             dispatchToServer(serverPlayer, this.playerUuid, this.group);
         });
     }
