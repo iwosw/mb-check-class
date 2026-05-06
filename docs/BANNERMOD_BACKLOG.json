@@ -7479,8 +7479,8 @@
     {
       "id": "TESTMIGRATE-001",
       "title": "SavedData v0 to v1 migration test",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Acceptance test for DATAVERSION-001. Source: review Part A 11.2 #10.",
       "scope": [
         "Per SavedData class: write a tag without DataVersion (v0 shape); load it; expect v1 in-memory shape; save again; expect DataVersion=1"
@@ -7492,8 +7492,14 @@
         "DATAVERSION-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Verified 2026-05-06: SavedDataLegacyMigrationParameterizedTest merged at 04a2898d->commit; classloader-scan discovers 24 SavedData subclasses, each round-trips v0 (empty CompoundTag, no DataVersion) -> load -> save and asserts DataVersion=1 on resave. ./gradlew test green (24/24 dynamic cases). compileJava + full test suite green on master tip after merge."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "ADMINCMDS-001",
