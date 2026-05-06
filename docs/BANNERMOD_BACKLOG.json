@@ -7256,8 +7256,8 @@
     {
       "id": "TESTSAVELOAD-001",
       "title": "Settlement save/load roundtrip test",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "No test deserializes BannerModSettlementSnapshot tag and asserts equality. SavedData fragility is highest-impact regression vector. Source: review Part A 11.2 #1.",
       "scope": [
         "Pure JUnit test under src/test that builds a representative snapshot, calls toTag, calls fromTag, asserts equality field-by-field",
@@ -7269,8 +7269,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Added src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementSnapshotRoundtripTest.java with 4 cases: emptySnapshotRoundTripsThroughTagCodec, singleBuildingSnapshotRoundTripsThroughTagCodec, fullSnapshotRoundTripsAllNestedRecordsAndLists, corruptedButValidEdgeCaseRoundTripsWithDefaults. Each compares every snapshot record component field-by-field plus record-equals (auto-generated from full component list, so a new field added without codec update breaks the test). Verified: ./gradlew test --tests BannerModSettlementSnapshotRoundtripTest -> BUILD SUCCESSFUL, 4 tests, 0 failures, 0 errors."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTTREAS-001",
