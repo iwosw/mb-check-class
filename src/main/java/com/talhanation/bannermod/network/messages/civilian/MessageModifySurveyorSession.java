@@ -28,25 +28,27 @@ public class MessageModifySurveyorSession implements BannerModMessage<MessageMod
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        Action[] actions = Action.values();
-        if (actionOrdinal < 0 || actionOrdinal >= actions.length) {
-            return;
-        }
-        ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
-        if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
-            return;
-        }
-        switch (actions[actionOrdinal]) {
-            case CANCEL_PENDING_CORNER -> SettlementSurveyorToolItem.cancelPendingCorner(player, stack);
-            case CLEAR_CURRENT_ROLE -> SettlementSurveyorToolItem.clearSelectedRoleZone(player, stack);
-            case RESET_ALL_MARKS -> SettlementSurveyorToolItem.resetAllMarks(player, stack);
-            case TOGGLE_GUIDE_PREVIEW -> SettlementSurveyorToolItem.toggleGuidePreview(player, stack);
-            case SUGGEST_DRAFT_ZONES -> SettlementSurveyorToolItem.suggestDraftZones(player, stack);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            Action[] actions = Action.values();
+            if (actionOrdinal < 0 || actionOrdinal >= actions.length) {
+                return;
+            }
+            ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
+            if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
+                return;
+            }
+            switch (actions[actionOrdinal]) {
+                case CANCEL_PENDING_CORNER -> SettlementSurveyorToolItem.cancelPendingCorner(player, stack);
+                case CLEAR_CURRENT_ROLE -> SettlementSurveyorToolItem.clearSelectedRoleZone(player, stack);
+                case RESET_ALL_MARKS -> SettlementSurveyorToolItem.resetAllMarks(player, stack);
+                case TOGGLE_GUIDE_PREVIEW -> SettlementSurveyorToolItem.toggleGuidePreview(player, stack);
+                case SUGGEST_DRAFT_ZONES -> SettlementSurveyorToolItem.suggestDraftZones(player, stack);
+            }
+        });
     }
 
     @Override

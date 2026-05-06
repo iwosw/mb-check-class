@@ -44,7 +44,10 @@ public class MessageAttack implements BannerModMessage<MessageAttack> {
             RuntimeProfilingCounters.increment("network.rate_limit.dropped.attack");
             return;
         }
-        dispatchToServer(serverPlayer, this.playerUuid, this.group);
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+            dispatchToServer(serverPlayer, this.playerUuid, this.group);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer serverPlayer, UUID playerUuid, UUID group) {

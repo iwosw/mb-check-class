@@ -43,13 +43,15 @@ public class MessagePatrolLeaderAddWayPoint implements BannerModMessage<MessageP
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.worker);
-        if (entity instanceof AbstractLeaderEntity leader
-                && leader.isAlive()
-                && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
-            this.addWayPoint(new BlockPos(x, y, z), player, leader);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.worker);
+            if (entity instanceof AbstractLeaderEntity leader
+                    && leader.isAlive()
+                    && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
+                this.addWayPoint(new BlockPos(x, y, z), player, leader);
+            }
+        });
     }
 
     private void addWayPoint(BlockPos pos, Player player, AbstractLeaderEntity leaderEntity) {

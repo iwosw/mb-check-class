@@ -48,7 +48,10 @@ public class MessageCombatStance implements BannerModMessage<MessageCombatStance
             RuntimeProfilingCounters.increment("network.rate_limit.dropped.stance");
             return;
         }
-        dispatchToServer(sender, this.playerUuid, this.group, this.stance);
+        context.enqueueWork(() -> {
+            ServerPlayer sender = Objects.requireNonNull(context.getSender());
+            dispatchToServer(sender, this.playerUuid, this.group, this.stance);
+        });
     }
 
     public static void dispatchToServer(Player sender, UUID playerUuid, UUID group, CombatStance stance) {

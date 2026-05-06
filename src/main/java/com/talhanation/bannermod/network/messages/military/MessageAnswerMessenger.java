@@ -25,16 +25,17 @@ public class MessageAnswerMessenger implements BannerModMessage<MessageAnswerMes
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof MessengerEntity messenger && messenger.distanceToSqr(player) <= 16D * 16D) {
-            messenger.teleportWaitTimer = 100;
-            player.sendSystemMessage(messenger.MESSENGER_INFO_ON_MY_WAY());
-            messenger.giveDeliverItem(player);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof MessengerEntity messenger && messenger.distanceToSqr(player) <= 16D * 16D) {
+                messenger.teleportWaitTimer = 100;
+                player.sendSystemMessage(messenger.MESSENGER_INFO_ON_MY_WAY());
+                messenger.giveDeliverItem(player);
 
-            messenger.setMessengerState(MessengerEntity.MessengerState.TELEPORT_BACK);
-        }
-
+                messenger.setMessengerState(MessengerEntity.MessengerState.TELEPORT_BACK);
+            }
+        });
     }
     public MessageAnswerMessenger fromBytes(FriendlyByteBuf buf) {
         this.recruit = buf.readUUID();

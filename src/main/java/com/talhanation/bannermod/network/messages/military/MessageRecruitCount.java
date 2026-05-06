@@ -38,7 +38,9 @@ public class MessageRecruitCount implements BannerModMessage<MessageRecruitCount
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        // Intentional no-op: the original handler body was commented out at introduction.
+        context.enqueueWork(() -> {
+            // Intentional no-op: the original handler body was commented out at introduction.
+        });
     }
 
     @Override

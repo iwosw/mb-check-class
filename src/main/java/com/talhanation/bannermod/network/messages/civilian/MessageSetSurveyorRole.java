@@ -29,19 +29,21 @@ public class MessageSetSurveyorRole implements BannerModMessage<MessageSetSurvey
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        ZoneRole[] roles = ZoneRole.values();
-        if (roleOrdinal < 0 || roleOrdinal >= roles.length) {
-            return;
-        }
-        ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
-        if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
-            return;
-        }
-        SettlementSurveyorToolItem.setSelectedRole(stack, roles[roleOrdinal]);
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            ZoneRole[] roles = ZoneRole.values();
+            if (roleOrdinal < 0 || roleOrdinal >= roles.length) {
+                return;
+            }
+            ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
+            if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
+                return;
+            }
+            SettlementSurveyorToolItem.setSelectedRole(stack, roles[roleOrdinal]);
+        });
     }
 
     @Override

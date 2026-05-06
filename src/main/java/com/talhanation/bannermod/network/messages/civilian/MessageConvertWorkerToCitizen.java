@@ -28,22 +28,24 @@ public class MessageConvertWorkerToCitizen implements BannerModMessage<MessageCo
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.workerUuid == null) {
-            return;
-        }
-        if (!(player.serverLevel().getEntity(this.workerUuid) instanceof AbstractWorkerEntity worker)) {
-            player.sendSystemMessage(Component.translatable("gui.bannermod.worker_screen.convert.denied.missing"));
-            return;
-        }
-        String denialKey = WorkerCitizenConversionService.convertDeniedReasonKey(player, worker);
-        if (denialKey != null) {
-            player.sendSystemMessage(Component.translatable(denialKey));
-            return;
-        }
-        if (WorkerCitizenConversionService.convert(player, worker)) {
-            player.sendSystemMessage(Component.translatable("gui.bannermod.worker_screen.convert.success"));
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.workerUuid == null) {
+                return;
+            }
+            if (!(player.serverLevel().getEntity(this.workerUuid) instanceof AbstractWorkerEntity worker)) {
+                player.sendSystemMessage(Component.translatable("gui.bannermod.worker_screen.convert.denied.missing"));
+                return;
+            }
+            String denialKey = WorkerCitizenConversionService.convertDeniedReasonKey(player, worker);
+            if (denialKey != null) {
+                player.sendSystemMessage(Component.translatable(denialKey));
+                return;
+            }
+            if (WorkerCitizenConversionService.convert(player, worker)) {
+                player.sendSystemMessage(Component.translatable("gui.bannermod.worker_screen.convert.success"));
+            }
+        });
     }
 
     @Override

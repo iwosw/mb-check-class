@@ -42,22 +42,24 @@ public class MessageSendMessenger implements BannerModMessage<MessageSendMesseng
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof MessengerEntity messenger
-                && player.getBoundingBox().inflate(16D).intersects(messenger.getBoundingBox())) {
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof MessengerEntity messenger
+                    && player.getBoundingBox().inflate(16D).intersects(messenger.getBoundingBox())) {
 
-            messenger.setMessage(this.message);
+                messenger.setMessage(this.message);
 
-            if(!this.nbt.isEmpty()){
-                messenger.setTargetPlayerInfo(RecruitsPlayerInfo.getFromNBT(this.nbt));
+                if(!this.nbt.isEmpty()){
+                    messenger.setTargetPlayerInfo(RecruitsPlayerInfo.getFromNBT(this.nbt));
+                }
+
+                if(start){
+                    messenger.setIsTreatyMessenger(false);
+                    messenger.start();
+                }
             }
-
-            if(start){
-                messenger.setIsTreatyMessenger(false);
-                messenger.start();
-            }
-        }
+        });
     }
 
     public MessageSendMessenger fromBytes(FriendlyByteBuf buf) {

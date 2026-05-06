@@ -37,38 +37,40 @@ public class MessageUpdateCoLeader implements BannerModMessage<MessageUpdateCoLe
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.entityId == null || this.coLeaderToken == null || this.coLeaderToken.isBlank()) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
-        if (recordOpt.isEmpty()) {
-            player.sendSystemMessage(Component.translatable("gui.bannermod.states.co_leader.state_not_found"));
-            return;
-        }
-        PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
-            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_LEADER_ONLY));
-            return;
-        }
-        ResolvedPlayer resolved = resolvePlayer(player, this.coLeaderToken);
-        if (resolved == null) {
-            player.sendSystemMessage(Component.translatable("gui.bannermod.states.co_leader.player_not_found"));
-            return;
-        }
-        boolean changed = this.add
-                ? registry.addCoLeader(this.entityId, resolved.uuid())
-                : registry.removeCoLeader(this.entityId, resolved.uuid());
-        if (!changed) {
-            player.sendSystemMessage(Component.translatable("gui.bannermod.states.co_leader.no_change"));
-            return;
-        }
-        player.sendSystemMessage(Component.translatable(
-                this.add ? "gui.bannermod.states.co_leader.added" : "gui.bannermod.states.co_leader.removed",
-                resolved.label(),
-                record.name()));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.entityId == null || this.coLeaderToken == null || this.coLeaderToken.isBlank()) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
+            if (recordOpt.isEmpty()) {
+                player.sendSystemMessage(Component.translatable("gui.bannermod.states.co_leader.state_not_found"));
+                return;
+            }
+            PoliticalEntityRecord record = recordOpt.get();
+            if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
+                player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_LEADER_ONLY));
+                return;
+            }
+            ResolvedPlayer resolved = resolvePlayer(player, this.coLeaderToken);
+            if (resolved == null) {
+                player.sendSystemMessage(Component.translatable("gui.bannermod.states.co_leader.player_not_found"));
+                return;
+            }
+            boolean changed = this.add
+                    ? registry.addCoLeader(this.entityId, resolved.uuid())
+                    : registry.removeCoLeader(this.entityId, resolved.uuid());
+            if (!changed) {
+                player.sendSystemMessage(Component.translatable("gui.bannermod.states.co_leader.no_change"));
+                return;
+            }
+            player.sendSystemMessage(Component.translatable(
+                    this.add ? "gui.bannermod.states.co_leader.added" : "gui.bannermod.states.co_leader.removed",
+                    resolved.label(),
+                    record.name()));
+        });
     }
 
     private static ResolvedPlayer resolvePlayer(ServerPlayer requester, String token) {

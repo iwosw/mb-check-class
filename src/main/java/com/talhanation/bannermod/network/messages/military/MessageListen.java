@@ -29,11 +29,13 @@ public class MessageListen implements BannerModMessage<MessageListen> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 100.0D);
-        if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
-            recruit.setListen(bool);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 100.0D);
+            if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
+                recruit.setListen(bool);
+            }
+        });
     }
 
     public MessageListen fromBytes(FriendlyByteBuf buf) {

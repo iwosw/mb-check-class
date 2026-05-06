@@ -30,26 +30,28 @@ public class MessageApplyNoGroup implements BannerModMessage<MessageApplyNoGroup
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> recruitList = new ArrayList<>();
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            List<AbstractRecruitEntity> recruitList = new ArrayList<>();
 
-        ServerLevel serverLevel = (ServerLevel) player.getCommandSenderWorld();
+            ServerLevel serverLevel = (ServerLevel) player.getCommandSenderWorld();
 
-        List<AbstractRecruitEntity> indexed = RecruitIndex.instance().groupMembers(serverLevel, groupID);
-        if (indexed != null) {
-            recruitList.addAll(indexed);
-        } else {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            recruitList.addAll(serverLevel.getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(256.0D),
-                    recruit -> recruit.getGroup() != null && recruit.getGroup().equals(groupID)
-            ));
-        }
+            List<AbstractRecruitEntity> indexed = RecruitIndex.instance().groupMembers(serverLevel, groupID);
+            if (indexed != null) {
+                recruitList.addAll(indexed);
+            } else {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                recruitList.addAll(serverLevel.getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        player.getBoundingBox().inflate(256.0D),
+                        recruit -> recruit.getGroup() != null && recruit.getGroup().equals(groupID)
+                ));
+            }
 
-        for(AbstractRecruitEntity recruit : recruitList){
-            recruit.setGroupUUID(null);
-        }
+            for(AbstractRecruitEntity recruit : recruitList){
+                recruit.setGroupUUID(null);
+            }
+        });
     }
     public MessageApplyNoGroup fromBytes(FriendlyByteBuf buf) {
         this.owner = buf.readUUID();

@@ -20,14 +20,16 @@ public class MessageRequestFormationMapSnapshot implements BannerModMessage<Mess
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = context.getSender();
-        if (sender == null) return;
-        FormationMapSnapshotService.SnapshotRequestResult result = FormationMapSnapshotService.requestSnapshot(sender);
-        if (result.throttled()) return;
-        BannerModMain.SIMPLE_CHANNEL.send(
-                BannerModPacketDistributor.PLAYER.with(() -> sender),
-                new MessageToClientUpdateFormationMapSnapshot(result.contacts())
-        );
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null) return;
+            FormationMapSnapshotService.SnapshotRequestResult result = FormationMapSnapshotService.requestSnapshot(sender);
+            if (result.throttled()) return;
+            BannerModMain.SIMPLE_CHANNEL.send(
+                    BannerModPacketDistributor.PLAYER.with(() -> sender),
+                    new MessageToClientUpdateFormationMapSnapshot(result.contacts())
+            );
+        });
     }
 
     @Override

@@ -26,15 +26,17 @@ public class MessageValidateSurveyorSession implements BannerModMessage<MessageV
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
-        if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
-            return;
-        }
-        SettlementSurveyorToolItem.validateCurrentSession(player, stack);
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
+            if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
+                return;
+            }
+            SettlementSurveyorToolItem.validateCurrentSession(player, stack);
+        });
     }
 
     @Override

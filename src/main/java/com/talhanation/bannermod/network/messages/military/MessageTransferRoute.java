@@ -37,13 +37,15 @@ public class MessageTransferRoute implements BannerModMessage<MessageTransferRou
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = Objects.requireNonNull(context.getSender());
-        if (!isRouteTransferPayloadValid(targetPlayerUUID, routeNBT)) return;
+        context.enqueueWork(() -> {
+            ServerPlayer sender = Objects.requireNonNull(context.getSender());
+            if (!isRouteTransferPayloadValid(targetPlayerUUID, routeNBT)) return;
 
-        ServerPlayer target = sender.getServer().getPlayerList().getPlayer(targetPlayerUUID);
-        if (target == null) return;
-        SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> target),
-                new MessageToClientReceiveRoute(routeNBT));
+            ServerPlayer target = sender.getServer().getPlayerList().getPlayer(targetPlayerUUID);
+            if (target == null) return;
+            SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> target),
+                    new MessageToClientReceiveRoute(routeNBT));
+        });
     }
 
     static boolean isRouteTransferPayloadValid(UUID targetPlayerUUID, CompoundTag routeNBT) {

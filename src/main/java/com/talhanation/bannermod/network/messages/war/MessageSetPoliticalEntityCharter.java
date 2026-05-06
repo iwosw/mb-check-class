@@ -42,37 +42,39 @@ public class MessageSetPoliticalEntityCharter implements BannerModMessage<Messag
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.entityId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) {
-            return;
-        }
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
-        if (recordOpt.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Cannot set charter: state not found."));
-            return;
-        }
-        PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.canAct(player, record)) {
-            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
-            return;
-        }
-        PoliticalRegistryValidation.Result validation = PoliticalRegistryValidation.validateCharter(this.newCharter);
-        if (!validation.valid()) {
-            player.sendSystemMessage(Component.literal("Cannot set charter: " + validation.reason()));
-            return;
-        }
-        if (!registry.updateCharter(this.entityId, this.newCharter)) {
-            player.sendSystemMessage(Component.literal("Failed to set charter."));
-            return;
-        }
-        String normalized = PoliticalRegistryValidation.normalizeCharter(this.newCharter);
-        player.sendSystemMessage(Component.literal(
-                "Set state charter (" + normalized.length() + " chars)."));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.entityId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) {
+                return;
+            }
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
+            if (recordOpt.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Cannot set charter: state not found."));
+                return;
+            }
+            PoliticalEntityRecord record = recordOpt.get();
+            if (!PoliticalEntityAuthority.canAct(player, record)) {
+                player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
+                return;
+            }
+            PoliticalRegistryValidation.Result validation = PoliticalRegistryValidation.validateCharter(this.newCharter);
+            if (!validation.valid()) {
+                player.sendSystemMessage(Component.literal("Cannot set charter: " + validation.reason()));
+                return;
+            }
+            if (!registry.updateCharter(this.entityId, this.newCharter)) {
+                player.sendSystemMessage(Component.literal("Failed to set charter."));
+                return;
+            }
+            String normalized = PoliticalRegistryValidation.normalizeCharter(this.newCharter);
+            player.sendSystemMessage(Component.literal(
+                    "Set state charter (" + normalized.length() + " chars)."));
+        });
     }
 
     @Override

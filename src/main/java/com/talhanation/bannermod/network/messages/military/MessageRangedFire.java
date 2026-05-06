@@ -35,8 +35,10 @@ public class MessageRangedFire implements BannerModMessage<MessageRangedFire> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = Objects.requireNonNull(context.getSender());
-        dispatchToServer(sender, this.player, this.group, this.should);
+        context.enqueueWork(() -> {
+            ServerPlayer sender = Objects.requireNonNull(context.getSender());
+            dispatchToServer(sender, this.player, this.group, this.should);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer sender, UUID player, UUID group, boolean should) {

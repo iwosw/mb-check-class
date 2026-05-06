@@ -31,7 +31,9 @@ public class MessageScoutTask implements BannerModMessage<MessageScoutTask> {
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        dispatchToServer(Objects.requireNonNull(context.getSender()), this.recruit, this.state);
+        context.enqueueWork(() -> {
+            dispatchToServer(Objects.requireNonNull(context.getSender()), this.recruit, this.state);
+        });
     }
 
     public static void dispatchToServer(Player player, UUID recruitId, int state) {

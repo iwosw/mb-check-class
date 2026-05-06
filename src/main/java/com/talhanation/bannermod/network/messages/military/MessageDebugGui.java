@@ -32,12 +32,14 @@ public class MessageDebugGui implements BannerModMessage<MessageDebugGui> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
-        if (recruit != null) {
-            DebugEvents.handleMessage(id, recruit, context.getSender());
-            recruit.setCustomName(Component.literal(name));
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
+            if (recruit != null) {
+                DebugEvents.handleMessage(id, recruit, context.getSender());
+                recruit.setCustomName(Component.literal(name));
+            }
+        });
     }
 
     public MessageDebugGui fromBytes(FriendlyByteBuf buf) {

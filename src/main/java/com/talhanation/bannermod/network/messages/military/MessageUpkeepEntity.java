@@ -35,19 +35,21 @@ public class MessageUpkeepEntity implements BannerModMessage<MessageUpkeepEntity
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        UUID actorUuid = authorizedPlayerUuid(player.getUUID(), this.player_uuid);
-        List<AbstractRecruitEntity> recruits = this.group == null
-                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), actorUuid, player.position(), 100.0D)
-                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
-        if (recruits == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(100)
-            );
-        }
-        recruits.forEach(recruit -> CommandEvents.onUpkeepCommand(actorUuid, recruit, group, true, target, null));
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            UUID actorUuid = authorizedPlayerUuid(player.getUUID(), this.player_uuid);
+            List<AbstractRecruitEntity> recruits = this.group == null
+                    ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), actorUuid, player.position(), 100.0D)
+                    : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
+            if (recruits == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        player.getBoundingBox().inflate(100)
+                );
+            }
+            recruits.forEach(recruit -> CommandEvents.onUpkeepCommand(actorUuid, recruit, group, true, target, null));
+        });
     }
 
     static UUID authorizedPlayerUuid(UUID senderUuid, UUID ignoredWireUuid) {

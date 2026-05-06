@@ -37,24 +37,26 @@ public class MessageReassignWorkerProfession implements BannerModMessage<Message
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.workerUuid == null || this.targetProfessionTag == null) {
-            return;
-        }
-        if (!(player.serverLevel().getEntity(this.workerUuid) instanceof AbstractWorkerEntity worker)) {
-            player.sendSystemMessage(Component.translatable("chat.bannermod.workerui.reassign.denied.missing"));
-            return;
-        }
-        CitizenProfession target = CitizenProfession.fromTagName(this.targetProfessionTag);
-        String denialKey = WorkerCitizenConversionService.reassignProfession(player, worker, target);
-        if (denialKey != null) {
-            player.sendSystemMessage(Component.translatable(denialKey));
-            return;
-        }
-        player.sendSystemMessage(Component.translatable(
-                "chat.bannermod.workerui.reassign.success",
-                Component.translatable("gui.bannermod.worker_screen.reassign.option." + target.name().toLowerCase())
-        ));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.workerUuid == null || this.targetProfessionTag == null) {
+                return;
+            }
+            if (!(player.serverLevel().getEntity(this.workerUuid) instanceof AbstractWorkerEntity worker)) {
+                player.sendSystemMessage(Component.translatable("chat.bannermod.workerui.reassign.denied.missing"));
+                return;
+            }
+            CitizenProfession target = CitizenProfession.fromTagName(this.targetProfessionTag);
+            String denialKey = WorkerCitizenConversionService.reassignProfession(player, worker, target);
+            if (denialKey != null) {
+                player.sendSystemMessage(Component.translatable(denialKey));
+                return;
+            }
+            player.sendSystemMessage(Component.translatable(
+                    "chat.bannermod.workerui.reassign.success",
+                    Component.translatable("gui.bannermod.worker_screen.reassign.option." + target.name().toLowerCase())
+            ));
+        });
     }
 
     @Override

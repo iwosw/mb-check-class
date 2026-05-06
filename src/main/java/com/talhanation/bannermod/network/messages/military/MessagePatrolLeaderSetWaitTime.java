@@ -29,12 +29,14 @@ public class MessagePatrolLeaderSetWaitTime implements BannerModMessage<MessageP
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractLeaderEntity leader
-                && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
-            leader.setWaitTimeInMin(this.time);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof AbstractLeaderEntity leader
+                    && player.getBoundingBox().inflate(100.0D).intersects(leader.getBoundingBox())) {
+                leader.setWaitTimeInMin(this.time);
+            }
+        });
     }
 
     public MessagePatrolLeaderSetWaitTime fromBytes(FriendlyByteBuf buf) {

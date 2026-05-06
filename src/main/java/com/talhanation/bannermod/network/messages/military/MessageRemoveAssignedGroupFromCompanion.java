@@ -35,29 +35,31 @@ public class MessageRemoveAssignedGroupFromCompanion implements BannerModMessage
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer serverPlayer = context.getSender();
-        Entity entity = serverPlayer.serverLevel().getEntity(this.companion);
-        if (entity instanceof AbstractLeaderEntity companionEntity
-                && serverPlayer.getBoundingBox().inflate(100D).intersects(companionEntity.getBoundingBox())) {
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = context.getSender();
+            Entity entity = serverPlayer.serverLevel().getEntity(this.companion);
+            if (entity instanceof AbstractLeaderEntity companionEntity
+                    && serverPlayer.getBoundingBox().inflate(100D).intersects(companionEntity.getBoundingBox())) {
 
-            RecruitsGroup group = RecruitEvents.groupsManager().getGroup(companionEntity.getGroup());
-            if(group == null) return;
-            group.leaderUUID = null;
-            companionEntity.setGroupUUID(group.getUUID());
+                RecruitsGroup group = RecruitEvents.groupsManager().getGroup(companionEntity.getGroup());
+                if(group == null) return;
+                group.leaderUUID = null;
+                companionEntity.setGroupUUID(group.getUUID());
 
 
-            if(companionEntity.getArmySize() > 0){
-                RecruitCommanderUtil.setRecruitsListen(companionEntity.army.getAllRecruitUnits(), true);
-                RecruitCommanderUtil.setRecruitsFollow(companionEntity.army.getAllRecruitUnits(), null);
-                RecruitCommanderUtil.setRecruitsHoldPos(companionEntity.army.getAllRecruitUnits());
-                RecruitCommanderUtil.setRecruitsMoveSpeed(companionEntity.army.getAllRecruitUnits(), 1F);
+                if(companionEntity.getArmySize() > 0){
+                    RecruitCommanderUtil.setRecruitsListen(companionEntity.army.getAllRecruitUnits(), true);
+                    RecruitCommanderUtil.setRecruitsFollow(companionEntity.army.getAllRecruitUnits(), null);
+                    RecruitCommanderUtil.setRecruitsHoldPos(companionEntity.army.getAllRecruitUnits());
+                    RecruitCommanderUtil.setRecruitsMoveSpeed(companionEntity.army.getAllRecruitUnits(), 1F);
+                }
+
+                companionEntity.army = null;
+                RecruitEvents.groupsManager().broadCastGroupsToPlayer(serverPlayer);
+
+                BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
             }
-
-            companionEntity.army = null;
-            RecruitEvents.groupsManager().broadCastGroupsToPlayer(serverPlayer);
-
-            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(context::getSender), new MessageToClientUpdateLeaderScreen(companionEntity.WAYPOINTS, companionEntity.WAYPOINT_ITEMS, companionEntity.getArmySize()));
-        }
+        });
     }
 
     public MessageRemoveAssignedGroupFromCompanion fromBytes(FriendlyByteBuf buf) {

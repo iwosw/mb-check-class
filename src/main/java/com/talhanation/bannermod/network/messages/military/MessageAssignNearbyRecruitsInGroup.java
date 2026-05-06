@@ -31,33 +31,35 @@ public class MessageAssignNearbyRecruitsInGroup implements BannerModMessage<Mess
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup newGroup = RecruitEvents.groupsManager().getGroup(groupUUID);
-        if(newGroup == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            RecruitsGroup newGroup = RecruitEvents.groupsManager().getGroup(groupUUID);
+            if(newGroup == null) return;
 
-        List<AbstractRecruitEntity> recruits = RecruitIndex.instance().ownerInRange(
-                player.getCommandSenderWorld(),
-                player.getUUID(),
-                player.position(),
-                100.0D
-        );
-        if (recruits == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(100),
-                    (recruit) -> recruit.isEffectedByCommand(player.getUUID())
+            List<AbstractRecruitEntity> recruits = RecruitIndex.instance().ownerInRange(
+                    player.getCommandSenderWorld(),
+                    player.getUUID(),
+                    player.position(),
+                    100.0D
             );
-        }
-        recruits.forEach((recruit) -> {
-            if (recruit.isEffectedByCommand(player.getUUID())) {
-                this.setGroup(recruit, newGroup);
+            if (recruits == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        player.getBoundingBox().inflate(100),
+                        (recruit) -> recruit.isEffectedByCommand(player.getUUID())
+                );
             }
+            recruits.forEach((recruit) -> {
+                if (recruit.isEffectedByCommand(player.getUUID())) {
+                    this.setGroup(recruit, newGroup);
+                }
+            });
+
+            RecruitEvents.groupsManager().addOrUpdateGroup(player.serverLevel(), player, newGroup);
+
+            RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
         });
-
-        RecruitEvents.groupsManager().addOrUpdateGroup(player.serverLevel(), player, newGroup);
-
-        RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
     }
 
     public void setGroup(AbstractRecruitEntity recruit, RecruitsGroup group){

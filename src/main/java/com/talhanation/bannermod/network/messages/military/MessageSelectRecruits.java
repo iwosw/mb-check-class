@@ -41,17 +41,19 @@ public class MessageSelectRecruits implements BannerModMessage<MessageSelectRecr
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Set<UUID> set = new LinkedHashSet<>(this.recruitUuids);
-        if (this.clearFirst || set.isEmpty()) {
-            RecruitSelectionService.selectExplicit(player, set, SELECTION_RADIUS);
-        } else {
-            // Additive mode (shift+drag) — merge with current selection.
-            Set<UUID> current = new LinkedHashSet<>(
-                    com.talhanation.bannermod.army.command.RecruitSelectionRegistry.instance().get(player.getUUID()));
-            current.addAll(set);
-            RecruitSelectionService.selectExplicit(player, current, SELECTION_RADIUS);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Set<UUID> set = new LinkedHashSet<>(this.recruitUuids);
+            if (this.clearFirst || set.isEmpty()) {
+                RecruitSelectionService.selectExplicit(player, set, SELECTION_RADIUS);
+            } else {
+                // Additive mode (shift+drag) — merge with current selection.
+                Set<UUID> current = new LinkedHashSet<>(
+                        com.talhanation.bannermod.army.command.RecruitSelectionRegistry.instance().get(player.getUUID()));
+                current.addAll(set);
+                RecruitSelectionService.selectExplicit(player, current, SELECTION_RADIUS);
+            }
+        });
     }
 
     @Override

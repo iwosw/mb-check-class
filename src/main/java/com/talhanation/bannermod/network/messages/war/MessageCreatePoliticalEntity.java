@@ -42,35 +42,37 @@ public class MessageCreatePoliticalEntity implements BannerModMessage<MessageCre
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) {
-            return;
-        }
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        PoliticalRegistryValidation.Result validation = registry.canCreate(this.name, player.getUUID());
-        if (!validation.valid()) {
-            player.sendSystemMessage(Component.literal("Cannot create state: " + validation.reason()));
-            return;
-        }
-        Optional<PoliticalEntityRecord> created = registry.create(
-                this.name,
-                player.getUUID(),
-                player.blockPosition(),
-                "",
-                "",
-                "",
-                "",
-                level.getGameTime()
-        );
-        if (created.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Failed to create state."));
-            return;
-        }
-        player.sendSystemMessage(Component.literal("Created state: " + created.get().name()));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) {
+                return;
+            }
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            PoliticalRegistryValidation.Result validation = registry.canCreate(this.name, player.getUUID());
+            if (!validation.valid()) {
+                player.sendSystemMessage(Component.literal("Cannot create state: " + validation.reason()));
+                return;
+            }
+            Optional<PoliticalEntityRecord> created = registry.create(
+                    this.name,
+                    player.getUUID(),
+                    player.blockPosition(),
+                    "",
+                    "",
+                    "",
+                    "",
+                    level.getGameTime()
+            );
+            if (created.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Failed to create state."));
+                return;
+            }
+            player.sendSystemMessage(Component.literal("Created state: " + created.get().name()));
+        });
     }
 
     @Override

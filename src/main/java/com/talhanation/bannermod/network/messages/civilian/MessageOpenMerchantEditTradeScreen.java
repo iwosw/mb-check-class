@@ -33,19 +33,21 @@ public class MessageOpenMerchantEditTradeScreen implements BannerModMessage<Mess
     }
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        if (!context.getSender().getUUID().equals(player)) {
-            return;
-        }
-        ServerPlayer player = context.getSender();
-        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
-        if (entity instanceof MerchantEntity merchant
-                && merchant.isAlive()
-                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
-            if (!MerchantAccessControl.canManage(merchant.getOwnerUUID(), player.getUUID(), player.hasPermissions(2))) {
+        context.enqueueWork(() -> {
+            if (!context.getSender().getUUID().equals(player)) {
                 return;
             }
-            merchant.openAddEditTradeGUI(player, WorkersMerchantTrade.fromNbt(nbt));
-        }
+            ServerPlayer player = context.getSender();
+            Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+            if (entity instanceof MerchantEntity merchant
+                    && merchant.isAlive()
+                    && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+                if (!MerchantAccessControl.canManage(merchant.getOwnerUUID(), player.getUUID(), player.hasPermissions(2))) {
+                    return;
+                }
+                merchant.openAddEditTradeGUI(player, WorkersMerchantTrade.fromNbt(nbt));
+            }
+        });
     }
     @Override
     public MessageOpenMerchantEditTradeScreen fromBytes(FriendlyByteBuf buf) {

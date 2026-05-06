@@ -28,17 +28,19 @@ public class MessageMoveMerchantTrade implements BannerModMessage<MessageMoveMer
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) return;
 
-        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
-        if (entity instanceof MerchantEntity merchant
-                && merchant.isAlive()
-                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
-            if (!player.getUUID().equals(merchant.getOwnerUUID()) && !player.hasPermissions(2)) return;
-            if (moveUp) merchant.moveTradeUp(tradeUuid);
-            else        merchant.moveTradeDown(tradeUuid);
-        }
+            Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+            if (entity instanceof MerchantEntity merchant
+                    && merchant.isAlive()
+                    && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+                if (!player.getUUID().equals(merchant.getOwnerUUID()) && !player.hasPermissions(2)) return;
+                if (moveUp) merchant.moveTradeUp(tradeUuid);
+                else        merchant.moveTradeDown(tradeUuid);
+            }
+        });
     }
 
     @Override

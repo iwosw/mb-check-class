@@ -44,35 +44,37 @@ public class MessageDeclareWar implements BannerModMessage<MessageDeclareWar> {
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.attackerId == null || this.defenderId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> attacker = registry.byId(this.attackerId);
-        Optional<PoliticalEntityRecord> defender = registry.byId(this.defenderId);
-        if (attacker.isEmpty() || defender.isEmpty()) {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.entity_not_found"));
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.attackerId == null || this.defenderId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> attacker = registry.byId(this.attackerId);
+            Optional<PoliticalEntityRecord> defender = registry.byId(this.defenderId);
+            if (attacker.isEmpty() || defender.isEmpty()) {
+                sendFeedback(player, Component.translatable("gui.bannermod.war.denial.entity_not_found"));
+                return;
+            }
 
-        WarDeclarationService.Result result = WarDeclarationService.declare(
-                player.server, level, player.getUUID(), player.hasPermissions(2),
-                attacker.get(), defender.get(), decodeGoal(this.goalOrdinal), this.casusBelli);
-        sendFeedback(player, result.message());
-        if (result.success()) {
-            CompoundTag payload = WarClientState.encode(
-                    registry.all(),
-                    WarRuntimeContext.declarations(level).all(),
-                    WarRuntimeContext.sieges(level).all(),
-                    resolveSchedule(),
-                    WarRuntimeContext.allyInvites(level).all(),
-                    WarRuntimeContext.occupations(level).all(),
-                    WarRuntimeContext.revolts(level).all());
-            BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
-                    new MessageToClientUpdateWarState(payload));
-        }
+            WarDeclarationService.Result result = WarDeclarationService.declare(
+                    player.server, level, player.getUUID(), player.hasPermissions(2),
+                    attacker.get(), defender.get(), decodeGoal(this.goalOrdinal), this.casusBelli);
+            sendFeedback(player, result.message());
+            if (result.success()) {
+                CompoundTag payload = WarClientState.encode(
+                        registry.all(),
+                        WarRuntimeContext.declarations(level).all(),
+                        WarRuntimeContext.sieges(level).all(),
+                        resolveSchedule(),
+                        WarRuntimeContext.allyInvites(level).all(),
+                        WarRuntimeContext.occupations(level).all(),
+                        WarRuntimeContext.revolts(level).all());
+                BannerModMain.SIMPLE_CHANNEL.send(BannerModPacketDistributor.PLAYER.with(() -> player),
+                        new MessageToClientUpdateWarState(payload));
+            }
+        });
     }
 
     private static void sendFeedback(ServerPlayer player, Component message) {
