@@ -42,6 +42,12 @@ public class MessageCombatStance implements BannerModMessage<MessageCombatStance
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
+        ServerPlayer sender = Objects.requireNonNull(context.getSender());
+        if (!com.talhanation.bannermod.network.throttle.PacketRateLimiter.shared()
+                .tryAcquire(sender.getUUID(), MessageCombatStance.class)) {
+            RuntimeProfilingCounters.increment("network.rate_limit.dropped.stance");
+            return;
+        }
         context.enqueueWork(() -> {
             ServerPlayer sender = Objects.requireNonNull(context.getSender());
             dispatchToServer(sender, this.playerUuid, this.group, this.stance);

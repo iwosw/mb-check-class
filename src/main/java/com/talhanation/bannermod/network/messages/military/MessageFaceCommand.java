@@ -39,6 +39,12 @@ public class MessageFaceCommand implements BannerModMessage<MessageFaceCommand> 
     }
 
     public void executeServerSide(BannerModNetworkContext context){
+        ServerPlayer sender = Objects.requireNonNull(context.getSender());
+        if (!com.talhanation.bannermod.network.throttle.PacketRateLimiter.shared()
+                .tryAcquire(sender.getUUID(), MessageFaceCommand.class)) {
+            RuntimeProfilingCounters.increment("network.rate_limit.dropped.face");
+            return;
+        }
         context.enqueueWork(() -> {
             ServerPlayer sender = Objects.requireNonNull(context.getSender());
             dispatchToServer(sender, this.player_uuid, this.group, this.formation, this.tight);

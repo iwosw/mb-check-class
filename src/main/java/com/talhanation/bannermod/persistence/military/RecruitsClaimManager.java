@@ -78,6 +78,17 @@ public class RecruitsClaimManager {
             ServerLevel level = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer().overworld();
             NeoForge.EVENT_BUS.post(new ClaimEvent.Removed(claim, level));
 
+            // CLAIMFANOUT-001: cascade per-claim cleanup BEFORE we drop the chunk map
+            // entries, so the fanout sees the original claim chunks (worker-binding
+            // and occupation lookups need them).
+            try {
+                ClaimRemovalFanout.onClaimRemoved(level, claim);
+            } catch (Throwable t) {
+                // Per-claim fanout must never block the removal itself; log and continue.
+                org.slf4j.LoggerFactory.getLogger(RecruitsClaimManager.class)
+                        .warn("ClaimRemovalFanout failed for claim {}", claim.getUUID(), t);
+            }
+
             claims.entrySet().removeIf(entry -> entry.getValue().equals(claim));
             persistClaims(RecruitsClaimSaveData.get(level));
         }

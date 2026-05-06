@@ -11,6 +11,7 @@
     "GoalUtilsMixin",
     "LivingEntityMixin",
     "MobMixin",
+    "ServerLifecycleHooksMixin",
     "WalkNodeEvaluatorMixin"
   ],
   "client": [
