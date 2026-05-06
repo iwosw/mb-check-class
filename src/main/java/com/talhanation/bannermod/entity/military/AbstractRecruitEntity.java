@@ -1000,4 +1000,49 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
     <T> void setStateData(EntityDataAccessor<T> accessor, T value) {
         this.entityData.set(accessor, value);
     }
+
+    // ------------------------------------------------------------------
+    // HomeAssign aliasing — recruits reuse upkeepPos / upkeepUUID as home.
+    // (HOMEASSIGN-002.) Citizens and workers carry an independent homePos
+    // synched accessor on AbstractCitizenEntity; for recruits we forward
+    // to the upkeep fields so existing upkeep AI still sees one source of
+    // truth.
+    // ------------------------------------------------------------------
+
+    @Override
+    @Nullable
+    public BlockPos getHomePos() {
+        return this.getUpkeepPos();
+    }
+
+    @Override
+    public void setHomePos(@Nullable BlockPos pos) {
+        if (pos == null) {
+            this.clearUpkeepPos();
+        } else {
+            this.setUpkeepPos(pos);
+        }
+    }
+
+    @Override
+    public void clearHomePos() {
+        this.clearUpkeepPos();
+        this.clearUpkeepEntity();
+    }
+
+    @Override
+    @Nullable
+    public UUID getHomeBuildAreaUUID() {
+        return this.getUpkeepUUID();
+    }
+
+    @Override
+    public void setHomeBuildAreaUUID(@Nullable UUID uuid) {
+        this.setUpkeepUUID(uuid == null ? Optional.empty() : Optional.of(uuid));
+    }
+
+    @Override
+    public boolean hasHomeAssigned() {
+        return this.getUpkeepPos() != null;
+    }
 }
