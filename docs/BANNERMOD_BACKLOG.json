@@ -7316,8 +7316,8 @@
     {
       "id": "TESTWORKER-001",
       "title": "Worker unbinding when work-area entity removed",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Worker bound to a now-dead ValidatedBuildingRecord must auto-unbind. Source: review Part A 11.2 #4.",
       "scope": [
         "Gametest: spawn farmer + crop area; bind farmer; kill crop area; advance N ticks; assert farmer.boundWorkAreaUUID == null AND no goal references the dead area"
@@ -7327,8 +7327,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Added gametest src/gametest/java/com/talhanation/bannermod/BannerModWorkerUnbindOnAreaRemovalGameTests.java with method workerAutoUnbindsWithinTwentyTicksAfterCropAreaRemoval. Compile-only verification: ./gradlew compileGametestJava SUCCESS. Production code does not currently auto-unbind on work-area entity removal (no EntityLeaveLevelEvent fanout from AbstractWorkAreaEntity to bound workers; AbstractWorkerEntity.getCurrentWorkArea() filters removed entities but never clears boundWorkAreaUUID). Per acceptance item 2, the @GameTest annotation is intentionally commented out with a TODO referencing the production-fix task WORKERUNBIND-001 (filed). The class is annotated @GameTestHolder and discoverable; re-enabling @GameTest on the method wires it into ./gradlew runGameTestServer once WORKERUNBIND-001 ships."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTCHUNK-001",
@@ -8329,6 +8335,26 @@
         "EVENTSPKG-003",
         "EVENTSPKG-004"
       ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "WORKERUNBIND-001",
+      "title": "Auto-unbind worker when its work-area entity is removed",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "When a worker's bound AbstractWorkAreaEntity is killed/discarded, the worker keeps boundWorkAreaUUID set to the dead entity's id. AbstractWorkerEntity.getCurrentWorkArea() returns null (filters isRemoved/missing entity), but boundWorkAreaUUID never goes back to null and AI goals (e.g. FarmerWorkGoal SELECT_WORK_AREA) cannot reliably tell the area is gone. The symmetric ClaimRemovalFanout exists for full-claim deletion, but not for a single area entity disappearing while its parent claim survives.",
+      "scope": [
+        "Add an EntityLeaveLevelEvent (or AbstractWorkAreaEntity.remove(...) override) handler that, when an AbstractWorkAreaEntity leaves the level via discard/kill/death, finds workers whose CitizenCore.boundWorkAreaUUID equals the removed entity's UUID and calls setCurrentWorkArea(null) on them within at most ~20 ticks",
+        "Re-enable the @GameTest annotation on BannerModWorkerUnbindOnAreaRemovalGameTests#workerAutoUnbindsWithinTwentyTicksAfterCropAreaRemoval and remove the TODO marker pointing at WORKERUNBIND-001"
+      ],
+      "acceptance": [
+        "Spawning a farmer + crop area, binding the farmer, discarding the crop area, then advancing 20 server ticks results in farmer.getBoundWorkAreaUUID() == null AND farmer.getCurrentWorkArea() == null",
+        "BannerModWorkerUnbindOnAreaRemovalGameTests passes under ./gradlew runGameTestServer with @GameTest enabled",
+        "Removal of a work-area entity does not leave any AI goal observing the dead entity through the worker's binding (verified via the gametest assertions)"
+      ],
+      "dependencies": [],
       "progress": [],
       "verification": [],
       "evidence": []
