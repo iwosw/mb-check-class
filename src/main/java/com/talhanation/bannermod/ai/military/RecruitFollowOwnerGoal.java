@@ -3,6 +3,7 @@ package com.talhanation.bannermod.ai.military;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 
 import com.talhanation.bannermod.entity.military.CaptainEntity;
+import com.talhanation.bannermod.util.FormationDimensionGuard;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.vehicle.Boat;
@@ -34,6 +35,10 @@ public class RecruitFollowOwnerGoal extends Goal {
             if (livingentity == null) {
                 return false;
             }
+            // FORMATIONDIM-001: refuse to follow into another dimension; hold position instead.
+            if (FormationDimensionGuard.shouldHoldDueToDimensionMismatch(this.recruit, livingentity)) {
+                return false;
+            }
             else if (livingentity.isSpectator()) {
                 return false;
             }
@@ -53,6 +58,10 @@ public class RecruitFollowOwnerGoal extends Goal {
         if (this.recruit.getNavigation().isDone()) {
             return false;
         }
+        // FORMATIONDIM-001: stop the follow as soon as the leader crosses dimensions.
+        if (FormationDimensionGuard.shouldHoldDueToDimensionMismatch(this.recruit, this.owner)) {
+            return false;
+        }
         return !(this.recruit.distanceToSqr(this.owner) <= this.stopDistance) && this.recruit.getShouldFollow() && !recruit.getFleeing() && recruit.getFollowState() == 1 && !recruit.needsToGetFood() && !recruit.getShouldMount() && !recruit.getShouldMovePos();
     }
 
@@ -69,6 +78,11 @@ public class RecruitFollowOwnerGoal extends Goal {
     }
 
     public void tick() {
+        // FORMATIONDIM-001: belt-and-braces — bail out if leader crossed dimensions mid-tick.
+        if (FormationDimensionGuard.shouldHoldDueToDimensionMismatch(this.recruit, this.owner)) {
+            this.recruit.getNavigation().stop();
+            return;
+        }
         if (--this.timeToRecalcPath <= 0) {
             this.timeToRecalcPath = this.recruit.getVehicle() != null ? this.adjustedTickDelay(5) : this.adjustedTickDelay(10);
             this.recruit.getNavigation().moveTo(this.owner, this.speedModifier);
