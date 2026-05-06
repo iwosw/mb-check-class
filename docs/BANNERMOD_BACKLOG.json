@@ -7626,8 +7626,8 @@
     {
       "id": "DEADSEAMS-001",
       "title": "Delete migration/NetworkBootstrapSeams + unused SavedDataMutation",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "migration/NetworkBootstrapSeams.java is contract-only scaffolding from an abandoned 'Phase 7 migration prep' - three interfaces (OrderedMessageCatalog, ChannelRegistrar, LifecycleBinder) declared, zero implementations. migration/StatePersistenceSeams.SavedDataMutation record declared, never used. Source: review Part B 19.1 / B1, B2 / VERIFIED.",
       "scope": [
         "Delete NetworkBootstrapSeams.java entirely",
@@ -7639,14 +7639,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Verified 2026-05-06: ctx search 'NetworkBootstrapSeams|SavedDataMutation' src returns 0 matches. NetworkBootstrapSeams.java + StatePersistenceSeams.java fully deleted in commit 8a132108. (Commit went further than scope: ClientSyncState/ClientSyncReset were also collapsed - inlined into ClientManager.resetSynchronizedState - but were verified to be a no-op identity transform; build remains green.) compileJava green."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "DEADMERGED-001",
       "title": "Delete MergedRuntimeCleanupPolicy",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "bootstrap/MergedRuntimeCleanupPolicy.enableLegacyUpdateCheckers() always returns false. Functionally dead since merge stabilization. Source: review Part A 6.7 / 8.6 / P5 / VERIFIED.",
       "scope": [
         "Delete the class",
@@ -7657,14 +7663,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Verified 2026-05-06: bootstrap/MergedRuntimeCleanupPolicy.java absent. Removed in commit 8a132108 ('chore: drop unreferenced classes and vestigial migration seams'). compileJava green."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "ROOTJARS-001",
       "title": "Remove root-level reference jars + add gitignore rule",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "millenaire-9.0.0-dev-preview.5.jar and minecolonies-1.20.1-1.1.1214-snapshot.jar at repo root. ctx search build.gradle confirms zero references. Pure dead weight (~92 KB) cluttering working tree. Source: review Part B 19.2 / B3 / VERIFIED.",
       "scope": [
         "git rm both jars",
@@ -7677,14 +7689,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Verified 2026-05-06: 'find -maxdepth 1 -name *.jar' returns nothing. .gitignore lines 17-18 ignore *.jar with the gradle-wrapper.jar exception. compileJava green."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TRANSLATABLE-001",
       "title": "Move Translatable.java into util/i18n",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "src/main/java/com/talhanation/bannermod/Translatable.java sits alone at the bannermod package root. Wrong location. Source: review Part A 3.7 / A7 / Part B B10 / VERIFIED.",
       "scope": [
         "Move file into util/i18n/ (create the package)",
@@ -7696,14 +7714,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Verified 2026-05-06 by reading current tree: src/main/java/com/talhanation/bannermod/Translatable.java does not exist; ctx search 'com.talhanation.bannermod.Translatable' src returns 0 matches. Commit 8a132108 ('chore: drop unreferenced classes and vestigial migration seams') deleted the file entirely after auditing it as unreferenced. Closing as superseded: literal acceptance 'file at new location util/i18n' is unmet because the file was removed instead of moved, but the underlying motivation - clean up file misplaced at package root - is fully addressed and is a strictly better outcome than the originally proposed move. compileJava green on master tip 2d7c268c."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "NOOPCTX-001",
       "title": "Remove BannerModNetworkContext.setPacketHandled no-op",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "network/compat/BannerModNetworkContext.java line 24 setPacketHandled(boolean) is a corelib-1.20.1 NetworkEvent.Context shim that NeoForge 1.21 does not need. Likely zero callers. Source: review Part A 7.4 / N5 / VERIFIED.",
       "scope": [
         "Delete the method",
@@ -7716,14 +7740,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Verified 2026-05-06 by reading current tree (no new edits required, work landed previously): src/main/java/com/talhanation/bannermod/network/compat/BannerModNetworkContext.java now exposes only getSender() (line 15) and enqueueWork() (line 19); the setPacketHandled(boolean) shim is gone. ctx search 'setPacketHandled' src returns 3 matches all inside src/test/java/.../NetworkThreadGuardTest.java which is an intentional regression guard (asserts the no-op stays removed; cited in test comment as 'ENQUEUE-001'). compileJava green on master tip 2d7c268c. Task acceptance was 'method deleted; compileJava green; ctx search returns zero hits' - first two satisfied, third satisfied modulo the regression guard which is the desired state."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "PROGRESSDIR-001",
       "title": "Delete progress/night-run.md (stale opencode log)",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "progress/night-run.md is stale opencode/get-shit-done agent working state from a prior Phase 24 session, references HOME/.config/opencode/. Not used by Claude. Its 'compile failures' note is wrong (build is green). Source: review Part C 24 / 26.2 / VERIFIED.",
       "scope": [
         "Delete file",
@@ -7734,8 +7764,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Verified 2026-05-06: progress/ directory absent (find returned nothing), 'progress' is in .gitignore line 19. Cleanup landed in commit 8a132108. compileJava green."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "SETTPREFIX-001",
