@@ -24,7 +24,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 import javax.annotation.Nullable;
 
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, value = Dist.CLIENT)
 public class ClientEvent {
     public static ModelLayerLocation RECRUIT = new ModelLayerLocation(ResourceLocation.parse(BannerModMain.MOD_ID + "recruit"), "recruit");
     public static ModelLayerLocation RECRUIT_OUTER_ARMOR = new ModelLayerLocation(ResourceLocation.parse(BannerModMain.MOD_ID + "recruit_outer_layer"), "recruit_outer_layer");

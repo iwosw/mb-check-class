@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, value = Dist.CLIENT)
 public final class RecruitCrowdRenderEvents {
     private static final double IMPOSTOR_QUERY_RADIUS = 96.0D;
     private static final float BODY_WIDTH = 0.58F;
