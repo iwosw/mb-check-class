@@ -1,4 +1,6 @@
-You are working inside opencode with GPT 5.4.
+You are an AI coding agent working in the BannerMod repo. The same rule-set
+applies to opencode and Claude Code (`CLAUDE.md` is a symlink to this file);
+agent-specific quirks are noted inline.
 
 Behavior rules:
 
@@ -53,9 +55,9 @@ After coding, provide:
 - Verification results
 
 7. Multi-agent rule isolation
-- This repo carries multiple agent rule files: `AGENTS.md` (opencode), `CLAUDE.md` (Claude Code), `GEMINI.md` (Gemini), `.cursor/` (Cursor), `.windsurf/` (Windsurf), `.github/copilot-instructions.md` (Copilot).
-- Each file applies only to its own agent.
-- When adding or changing a rule, edit only the file matching the agent currently running — do not push opencode-specific rules into a sibling file.
+- This repo carries multiple agent rule files: `AGENTS.md` (opencode + Claude Code), `CLAUDE.md` (symlink to `AGENTS.md`), `GEMINI.md` (Gemini), `.cursor/` (Cursor), `.windsurf/` (Windsurf), `.github/copilot-instructions.md` (Copilot).
+- `AGENTS.md` and `CLAUDE.md` share one source of truth — edit `AGENTS.md`.
+- The other files apply only to their own agent. When adding or changing a rule for one of them, edit only the file matching that agent — do not push its rules back into `AGENTS.md`.
 
 8. Worktree freshness
 - Before treating a task as starting from a clean baseline, run `ctx status`.
@@ -104,6 +106,14 @@ All server-side movement / face / attack / aggro / stance / strategic-fire comma
 - **Formation is server-authoritative.** Player's saved formation lives in `Player.PERSISTED_NBT_TAG → "Formation"`. Read it on the server with `CommandEvents.getSavedFormation(player)` — do not pass formation indices from the client unless the UI is explicitly picking one. Hardcoding a non-zero formation in a packet silently rebinds the group.
 - **Explicit target positions:** when the move target arrives via network (world-map click, etc.) instead of `player.pick(...)`, use the 6-arg overload `CommandEvents.onMovementCommand(player, recruits, state, formation, tight, Vec3)` — the underlying `MovementFormationCommandService` short-circuits the hit-result lookup when `explicitTargetPos != null`.
 - **Verifying a wiring change:** `./gradlew compileJava` via `ctx log` is the cheap gate. For runtime verification of formation behavior, save a formation in the command screen, then exercise the command path; `formation == 0` means the player never opened the formation UI and the per-recruit fallback is the correct path.
+
+14. Claude Code plugins
+- `code-simplifier` — post-slice clean-up pass: review changed code for clarity / reuse and fix issues found. Run before committing a non-trivial slice.
+- `code-reviewer` — independent review of pending changes or a PR. Run before merging an integration branch into master.
+- `context7` — live documentation lookup for libraries, frameworks, SDKs, CLI tools (NeoForge, Mojang, Gradle plugins, JUnit, etc.). Use whenever a task touches third-party APIs instead of relying on training-data recollection.
+- `jd-tls` — Java decompilation / class-inspection tooling for compiled NeoForge and vendored jars. Use when tracing through bytecode is faster than spelunking sources.
+
+Prefer these plugins over ad-hoc shell commands or local scripts when the task fits.
 
 <!-- GSD:project-start source:.planning/PROJECT.md -->
 ## Project
