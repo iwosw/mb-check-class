@@ -15,11 +15,44 @@ import org.apache.logging.log4j.Logger;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Adapter for legacy packet classes while their registration/sending runs on NeoForge payload APIs.
  */
 public interface BannerModMessage<T extends BannerModMessage<T>> extends Message<T> {
+
+    /**
+     * Cache of resolved {@link Method} lookups keyed by (declaring class, method name, parameter type).
+     * Avoids repeated {@link Class#getMethod(String, Class[])} reflection on the hot packet path
+     * (~145 packet classes, called every send/receive). {@link #ABSENT_METHOD} marks intentional misses
+     * (one-way packets) since {@link ConcurrentHashMap} rejects {@code null} values.
+     */
+    ConcurrentHashMap<MethodKey, Method> METHOD_CACHE = new ConcurrentHashMap<>();
+
+    Method ABSENT_METHOD = AbsentMethodHolder.SENTINEL;
+
+    record MethodKey(Class<?> owner, String name, Class<?> paramType) {
+    }
+
+    final class AbsentMethodHolder {
+        private static final Method SENTINEL;
+
+        static {
+            try {
+                SENTINEL = AbsentMethodHolder.class.getDeclaredMethod("sentinel");
+            } catch (NoSuchMethodException e) {
+                throw new ExceptionInInitializerError(e);
+            }
+        }
+
+        private AbsentMethodHolder() {
+        }
+
+        @SuppressWarnings("unused")
+        private static void sentinel() {
+        }
+    }
     Logger LEGACY_LOGGER = LogManager.getLogger("BannerModMessage");
 
     PacketFlow getExecutingSide();
@@ -70,8 +103,14 @@ public interface BannerModMessage<T extends BannerModMessage<T>> extends Message
     }
 
     default void invokeLegacy(String methodName, Class<?> parameterType, Object argument) {
+        Method method = METHOD_CACHE.computeIfAbsent(
+                new MethodKey(getClass(), methodName, parameterType),
+                BannerModMessage::resolveMethod);
+        if (method == ABSENT_METHOD) {
+            // Some packets are one-way and intentionally omit the opposite-side handler.
+            return;
+        }
         try {
-            Method method = getClass().getMethod(methodName, parameterType);
             method.invoke(this, argument);
         } catch (NoSuchMethodException missing) {
             // For the side-handler reflection paths (executeServerSide/executeClientSide),
@@ -110,6 +149,13 @@ public interface BannerModMessage<T extends BannerModMessage<T>> extends Message
         }
     }
 
+    private static Method resolveMethod(MethodKey key) {
+        try {
+            return key.owner().getMethod(key.name(), key.paramType());
+        } catch (NoSuchMethodException e) {
+            return ABSENT_METHOD;
+        }
+    }
     private static PacketFlow sideForHandler(String methodName) {
         if (BannerModMessageSides.SERVER_SIDE_METHOD.equals(methodName)) {
             return PacketFlow.SERVERBOUND;
