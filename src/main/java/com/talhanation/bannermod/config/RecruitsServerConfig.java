@@ -999,7 +999,7 @@ public class RecruitsServerConfig {
                 .defineInRange("AttackCooldownMillis", 100, 0, 10_000);
         BUILDER.pop();
 
-        SERVER = BUILDER.build();
+        BUILDER.pop(); // Recruits (symmetric pop so caller's builder depth is unchanged)
     }
 
     public static void loadConfig(ModConfigSpec spec, Path path) {
