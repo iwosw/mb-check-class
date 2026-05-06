@@ -177,21 +177,24 @@ public class UseShield extends Goal {
         return this.cachedStanceAutoBlock;
     }
 
+    /**
+     * Single-recruit hostile pick that goes through {@link CommanderHostileScanCache}
+     * so all in-formation recruits sharing an owner reuse one underlying world scan
+     * per {@link #HOSTILE_SCAN_INTERVAL_TICKS} bucket. Pre-pool behavior: each
+     * recruit issued its own {@code getEntitiesOfClass} call inflated by {@code radius}.
+     * The cache scans with {@code radius + GROUP_AABB_PADDING} on the first request
+     * for the (level, owner, bucket) triple, and per-recruit filtering still uses
+     * {@code recruit.targetingConditions} and the recruit's own radius.
+     */
     @Nullable
     private static LivingEntity findNearestHostile(AbstractRecruitEntity recruit, double radius) {
-        LivingEntity best = null;
-        double bestDistSqr = Double.POSITIVE_INFINITY;
-        for (LivingEntity candidate : recruit.level().getEntitiesOfClass(
-                LivingEntity.class, recruit.getBoundingBox().inflate(radius))) {
-            if (candidate == recruit || !candidate.isAlive()) continue;
-            if (!recruit.targetingConditions.test(recruit, candidate)) continue;
-            double d = recruit.distanceToSqr(candidate);
-            if (d < bestDistSqr) {
-                bestDistSqr = d;
-                best = candidate;
-            }
-        }
-        return best;
+        return CommanderHostileScanCache.findNearestHostile(
+                recruit,
+                radius,
+                HOSTILE_SCAN_INTERVAL_TICKS,
+                (r, candidate) -> r.targetingConditions.test(r, candidate),
+                CommanderHostileScanCache.LEVEL_SCANNER
+        );
     }
 
     /**
