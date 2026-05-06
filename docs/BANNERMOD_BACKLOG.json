@@ -7237,8 +7237,8 @@
     {
       "id": "EBSMIGRATE-001",
       "title": "Replace deprecated EventBusSubscriber.bus() across all subscribers",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "compileJava emits 'bus() in EventBusSubscriber has been deprecated and marked for removal' across 10+ files: WorkersAttributeEvent, CitizenAttributeEvent, AttributeEvent, CitizenIndexEvents, WorkerIndexEvents, RecruitIndexEvents, WorkAreaIndexEvents, both ClientEvent classes, surveyor renderer events. When NeoForge removes the API, every static event subscriber stops compiling. Source: review Part C 25.1 / NEW.",
       "scope": [
         "Migrate to NeoForge replacement API (whichever is current at fix time - likely register-on-event-bus per Dist instead of @EventBusSubscriber(... bus = ...))",
@@ -7250,8 +7250,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Migrated 15 subscriber sites by dropping the deprecated 'bus = EventBusSubscriber.Bus.{GAME,MOD}' arg (auto-detection now drives bus selection per NeoForge 1.21.1 docs). Files: events/{AttributeEvent,CitizenAttributeEvent,WorkersAttributeEvent}.java, entity/{citizen/CitizenIndexEvents,civilian/WorkerIndexEvents,civilian/workarea/WorkAreaIndexEvents,military/RecruitIndexEvents,military/RecruitsChunkTicketEvents}.java, client/{civilian/events/ClientEvent,civilian/render/SettlementSurveyorGuidanceRenderEvents,civilian/render/SettlementSurveyorSelectionRenderEvents,military/events/ClientEvent,military/input/DragSelectionHandler,military/input/DragSelectionKeyBootstrap,military/render/RecruitCrowdRenderEvents}.java. compileJava removal warnings: 90 -> 0. runGameTestServer: all 147 gametests pass (BUILD SUCCESSFUL)."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTSAVELOAD-001",
