@@ -7972,8 +7972,8 @@
     {
       "id": "HOMEASSIGN-003",
       "title": "Pathfind-home AI goal for citizens, workers, recruits",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "HOMEASSIGN-001 phase 2: home assignment is meaningless without an AI goal that uses it. Recruits, workers, and citizens must pathfind to their assigned home at night / on low stamina and idle/sleep within range.",
       "scope": [
         "Add a shared pathfind-home goal that triggers at night or on low-stamina, pulls homePos from the HOMEASSIGN-002 fields, and uses AsyncGroundPathNavigation.",
@@ -7990,8 +7990,14 @@
         "HOMEASSIGN-002"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "compileJava SUCCESS (13s); test SUCCESS (15s); runGameTestServer 160 tests run with my 6 PathfindHomeGoal tests (recruit/worker/citizen night trigger, citizen day-dormant, no-home-dormant, bed-arrival sleep, post-reload rebuild) all passing; the 3 unrelated pre-existing failures (fiverecruitformationholdsacrossdimensionteleport, authoredroutecouriermovesitemsbetweenstorageendpoints, starterbootstrapseedsrealworkerassignmentsandwaitingreasons) reproduce on master pre-change. tools/backlog validate green."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "HOMEASSIGN-004",
