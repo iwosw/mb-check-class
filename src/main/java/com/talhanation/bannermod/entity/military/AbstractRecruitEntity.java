@@ -11,6 +11,7 @@ import com.talhanation.bannermod.events.RecruitEvent;
 import com.talhanation.bannermod.compat.IWeapon;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
 import com.talhanation.bannermod.config.RecruitsServerConfig;
+import com.talhanation.bannermod.ai.home.PathfindHomeGoal;
 import com.talhanation.bannermod.ai.military.*;
 import com.talhanation.bannermod.ai.military.async.AsyncManager;
 import com.talhanation.bannermod.ai.military.async.AsyncTaskWithCallback;
@@ -414,6 +415,16 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
         this.goalSelector.addGoal(3, new RecruitHoldPosGoal(this, 32.0F));
         //this.goalSelector.addGoal(7, new RecruitDodgeGoal(this));
         this.goalSelector.addGoal(4, new RestGoal(this));
+        // HOMEASSIGN-003: when the player has assigned a home for this recruit
+        // (or worker, since AbstractWorkerEntity inherits this registerGoals),
+        // prefer pathing to that home instead of the nearest free bed. Same
+        // priority slot as RestGoal so combat/work goals at priority <=3 still
+        // win during the day.
+        this.goalSelector.addGoal(4, new PathfindHomeGoal(
+                this,
+                this::getHomePos,
+                () -> this.getShouldRest() || this.getMorale() < 45.0F || this.getHealth() < this.getMaxHealth(),
+                1.0D));
         this.goalSelector.addGoal(10, new RecruitWanderGoal(this));
         this.goalSelector.addGoal(11, new LookAtPlayerGoal(this, Player.class, 8.0F) {
             @Override

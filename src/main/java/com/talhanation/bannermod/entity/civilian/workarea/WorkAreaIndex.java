@@ -51,7 +51,10 @@ public final class WorkAreaIndex {
         if (!(entity instanceof AbstractWorkAreaEntity)) return;
         if (entity.level() == null || entity.level().isClientSide()) return;
         ResourceKey<Level> key = entity.level().dimension();
-        ChunkPos cp = entity.chunkPosition();
+        // Use the entity's authoritative block position instead of the stale chunkPosition()
+        // field: EntityJoinLevelEvent fires before vanilla updates chunkPosition() via the
+        // chunk's setLevelCallback, so chunkPosition() can still be the default (0,0) here.
+        ChunkPos cp = new ChunkPos(entity.blockPosition());
         byLevel.computeIfAbsent(key, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(cp, c -> ConcurrentHashMap.newKeySet())
                 .add(entity.getUUID());
