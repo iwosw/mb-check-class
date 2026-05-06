@@ -7512,8 +7512,8 @@
     {
       "id": "DOCSTATUS-001",
       "title": "Update docs/STATUS.md stale claims",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "STATUS.md says 'Worker AI still has legacy current*Area fields'; codebase actually has unified currentWorkArea (no legacy named fields). STATUS.md says reconnectedowner test failure exists; the test name is now verified at BannerModDedicatedServerReconnectGameTests.java line 90. Source: review Part B 19.9 / B5 / Part C 26 / VERIFIED.",
       "scope": [
         "Rewrite STATUS.md 'Known Open Areas' bullet about current*Area to describe the actual remaining gap (binding source-of-truth: currentWorkArea on entity vs ValidatedBuildingRecord in registry)",
@@ -7525,8 +7525,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Inspected src/main/java/com/talhanation/bannermod/entity/civilian/AbstractWorkerEntity.java (currentWorkAreaCache field, no legacy current*Area fields) via ctx search; inspected src/gametest/java/com/talhanation/bannermod/BannerModDedicatedServerReconnectGameTests.java line 90 to confirm @GameTest method name reconnectedOwnerRecoversAuthorityAfterOwnershipRoundTrip. Edited docs/STATUS.md: rewrote Known Open Areas bullet to describe entity-vs-registry source-of-truth split (currentWorkArea on AbstractWorkerEntity vs ValidatedBuildingRecord in settlement registry), and replaced lowercase test name with exact camelCase method name in verifyGameTestStage failure note."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "DOCPACKETS-001",
