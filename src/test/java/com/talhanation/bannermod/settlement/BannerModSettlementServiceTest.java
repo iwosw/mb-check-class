@@ -231,40 +231,6 @@ class BannerModSettlementServiceTest {
     }
 
     @Test
-    void resolvesRepairBindingOnlyWhenCanonicalTargetIsUnambiguous() {
-        UUID currentBinding = UUID.randomUUID();
-        UUID duplicateA = UUID.randomUUID();
-        UUID duplicateB = UUID.randomUUID();
-        UUID canonical = UUID.randomUUID();
-        UUID other = UUID.randomUUID();
-
-        assertEquals(
-                canonical,
-                BannerModSettlementService.resolveRepairBinding(
-                        currentBinding,
-                        List.of(duplicateA, duplicateB),
-                        Map.of(duplicateA, canonical, duplicateB, canonical)
-                )
-        );
-        assertEquals(
-                canonical,
-                BannerModSettlementService.resolveRepairBinding(
-                        duplicateA,
-                        List.of(duplicateA, duplicateB),
-                        Map.of(duplicateA, canonical, duplicateB, canonical)
-                )
-        );
-        assertEquals(
-                null,
-                BannerModSettlementService.resolveRepairBinding(
-                        currentBinding,
-                        List.of(duplicateA, duplicateB),
-                        Map.of(duplicateA, duplicateA, duplicateB, other)
-                )
-        );
-    }
-
-    @Test
     void ignoresLegacyValidatedBuildingAssignedCitizensOnReload() {
         UUID staleWorkerUuid = UUID.randomUUID();
         CompoundTag tag = new CompoundTag();

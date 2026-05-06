@@ -6,6 +6,7 @@ import com.talhanation.bannermod.governance.BannerModTreasuryManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementManager;
 import com.talhanation.bannermod.settlement.BannerModSettlementOrchestrator;
 import com.talhanation.bannermod.settlement.BannerModSettlementService;
+import com.talhanation.bannermod.settlement.runtime.SettlementClaimBindingService;
 import com.talhanation.bannermod.util.AdaptiveRuntimeBudgets;
 import com.talhanation.bannermod.util.RuntimeProfilingCounters;
 import net.minecraft.server.level.ServerLevel;
@@ -65,7 +66,7 @@ final class SettlementHeartbeatService {
 
         if (governorMaintenanceStage == GOVERNOR_STAGE_REFRESH) {
             long startNanos = System.nanoTime();
-            BannerModSettlementService.BatchResult result = BannerModSettlementService.refreshClaimsBatch(
+            SettlementClaimBindingService.BatchResult result = BannerModSettlementService.refreshClaimsBatch(
                     level,
                     ClaimEvents.claimManager(),
                     settlementManager,
