@@ -1,6 +1,7 @@
 package com.talhanation.bannermod.network.messages.civilian;
 
 import com.talhanation.bannermod.entity.citizen.AbstractCitizenEntity;
+import com.talhanation.bannermod.entity.citizen.CitizenEntity;
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import com.talhanation.bannermod.network.compat.BannerModNetworkContext;
@@ -84,13 +85,13 @@ public class MessageAssignHome implements BannerModMessage<MessageAssignHome> {
         }
         ServerLevel level = sender.serverLevel();
         Entity entity = level.getEntity(entityUuid);
-        if (!(entity instanceof AbstractCitizenEntity citizen)) {
+        if (!(entity instanceof AbstractCitizenEntity) && !(entity instanceof CitizenEntity)) {
             LOGGER.debug("MessageAssignHome rejected: {} (entity={}) — {}",
                     REJECT_UNKNOWN_ENTITY, entityUuid, sender.getName().getString());
             sender.sendSystemMessage(Component.translatable(REJECT_UNKNOWN_ENTITY));
             return false;
         }
-        if (!isAuthorized(sender, citizen)) {
+        if (!isAuthorized(sender, entity)) {
             LOGGER.debug("MessageAssignHome rejected: {} (entity={}) — {}",
                     REJECT_NOT_OWNER, entityUuid, sender.getName().getString());
             sender.sendSystemMessage(Component.translatable(REJECT_NOT_OWNER));
@@ -105,31 +106,39 @@ public class MessageAssignHome implements BannerModMessage<MessageAssignHome> {
         // Anchor the canonical home and clear any stale prefab UUID; the
         // selector-driven entry point only carries a BlockPos and lets the
         // settlement runtime re-link a HousePrefab UUID later if appropriate.
-        citizen.setHomePos(pos.immutable());
-        citizen.setHomeBuildAreaUUID(null);
+        BlockPos immut = pos.immutable();
+        if (entity instanceof AbstractCitizenEntity citizen) {
+            citizen.setHomePos(immut);
+            citizen.setHomeBuildAreaUUID(null);
+        } else if (entity instanceof CitizenEntity citizen) {
+            citizen.setHomePos(immut);
+            citizen.setHomeBuildAreaUUID(null);
+        }
         sender.sendSystemMessage(Component.translatable(SUCCESS_KEY,
-                citizen.getDisplayName(), pos.getX(), pos.getY(), pos.getZ()));
+                entity.getDisplayName(), pos.getX(), pos.getY(), pos.getZ()));
         return true;
     }
 
-    private static boolean isAuthorized(ServerPlayer sender, AbstractCitizenEntity citizen) {
+    private static boolean isAuthorized(ServerPlayer sender, Entity entity) {
         if (sender.hasPermissions(2)) return true;
-        UUID owner = ownerOf(citizen);
+        UUID owner = ownerOf(entity);
         return owner != null && owner.equals(sender.getUUID());
     }
 
-    private static UUID ownerOf(AbstractCitizenEntity citizen) {
-        // Recruits / workers expose getOwnerUUID via RecruitOwnershipAccess; pure
-        // citizens via CitizenEntity#getOwnerUUID. Both surfaces resolve through
-        // CitizenCore.
-        if (citizen instanceof AbstractRecruitEntity recruit) {
+    private static UUID ownerOf(Entity entity) {
+        // Recruits / workers expose getOwnerUUID via RecruitOwnershipAccess.
+        // Pure CitizenEntity (PathfinderMob) exposes its own getOwnerUUID.
+        // AbstractCitizenEntity itself reads from CitizenCore.
+        if (entity instanceof AbstractRecruitEntity recruit) {
             return recruit.getOwnerUUID();
         }
-        if (citizen instanceof AbstractWorkerEntity worker) {
+        if (entity instanceof AbstractWorkerEntity worker) {
             return worker.getOwnerUUID();
         }
-        // Fallback: read via CitizenCore if available.
-        if (citizen.getCitizenCore() != null) {
+        if (entity instanceof CitizenEntity citizen) {
+            return citizen.getOwnerUUID();
+        }
+        if (entity instanceof AbstractCitizenEntity citizen && citizen.getCitizenCore() != null) {
             return citizen.getCitizenCore().getOwnerUUID();
         }
         return null;
