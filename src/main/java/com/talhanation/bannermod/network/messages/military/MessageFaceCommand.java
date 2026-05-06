@@ -46,7 +46,6 @@ public class MessageFaceCommand implements BannerModMessage<MessageFaceCommand> 
             return;
         }
         context.enqueueWork(() -> {
-            ServerPlayer sender = Objects.requireNonNull(context.getSender());
             dispatchToServer(sender, this.player_uuid, this.group, this.formation, this.tight);
         });
     }

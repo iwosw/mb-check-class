@@ -437,7 +437,8 @@ public class WorkersServerConfig {
                 .worldRestart()
                 .defineInRange("CitizenBirthFoodMinUnits", 8, 0, Integer.MAX_VALUE);
 
-        BUILDER.pop(); // ClaimWorkerGrowth (symmetric pop so caller's builder depth is unchanged)
+        BUILDER.pop(); // ClaimWorkerGrowth
+        BUILDER.pop(); // Workers (symmetric pop so caller's builder depth is unchanged)
     }
 
     public static WorkerSettlementSpawnRules.RuleConfig workerBirthRuleConfig() {

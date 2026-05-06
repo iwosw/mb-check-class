@@ -31,5 +31,5 @@ One maintainable mod workspace with preserved history, explicit merge decisions,
 |----------|-----------|--------|
 | Use root `src/**` as the active build/runtime base | Phase 21 completed the in-place merge into `com.talhanation.bannermod`; archive trees are reference only | Accepted |
 | Treat `workers` as an absorbed subsystem, not a peer runtime mod | Workers profession/work-area automation now lives in the root BannerMod runtime | Accepted |
-| Archive both old `.planning` trees at root instead of deleting them | Merge work needs historical context without leaving two active GSD roots in place | Accepted |
+| Archive both old `.planning` trees at root instead of deleting them | Merge work needs historical context without leaving two active planning roots in place | Accepted |
 | Keep registry-id migration separate from runtime merge | Allows one active mod/runtime without forcing risky save-data and registry-id changes in the same slice | Accepted |

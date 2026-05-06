@@ -122,6 +122,8 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
     /** Last tick this recruit fanned out a protect-target reaction after being hit. */
     public int lastProtectTargetPropagationTick = Integer.MIN_VALUE;
     private final CitizenCore citizenCore = RecruitCitizenBridge.createCore(this);
+    private final com.talhanation.bannermod.entity.military.perks.PerkProgress perkProgress
+            = new com.talhanation.bannermod.entity.military.perks.PerkProgress();
 
     public AbstractRecruitEntity(EntityType<? extends AbstractInventoryEntity> entityType, Level world) {
         super(entityType, world);
@@ -143,6 +145,14 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
 
     public CitizenCore getCitizenCore() {
         return this.citizenCore;
+    }
+
+    /**
+     * Server-authoritative perk store (SKILLTREE-002 phase 1). Serialized via
+     * {@link RecruitPersistenceBridge}; combat hooks land in SKILLTREE-003.
+     */
+    public com.talhanation.bannermod.entity.military.perks.PerkProgress getPerkProgress() {
+        return this.perkProgress;
     }
 
     @Override
@@ -999,5 +1009,50 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
 
     <T> void setStateData(EntityDataAccessor<T> accessor, T value) {
         this.entityData.set(accessor, value);
+    }
+
+    // ------------------------------------------------------------------
+    // HomeAssign aliasing — recruits reuse upkeepPos / upkeepUUID as home.
+    // (HOMEASSIGN-002.) Citizens and workers carry an independent homePos
+    // synched accessor on AbstractCitizenEntity; for recruits we forward
+    // to the upkeep fields so existing upkeep AI still sees one source of
+    // truth.
+    // ------------------------------------------------------------------
+
+    @Override
+    @Nullable
+    public BlockPos getHomePos() {
+        return this.getUpkeepPos();
+    }
+
+    @Override
+    public void setHomePos(@Nullable BlockPos pos) {
+        if (pos == null) {
+            this.clearUpkeepPos();
+        } else {
+            this.setUpkeepPos(pos);
+        }
+    }
+
+    @Override
+    public void clearHomePos() {
+        this.clearUpkeepPos();
+        this.clearUpkeepEntity();
+    }
+
+    @Override
+    @Nullable
+    public UUID getHomeBuildAreaUUID() {
+        return this.getUpkeepUUID();
+    }
+
+    @Override
+    public void setHomeBuildAreaUUID(@Nullable UUID uuid) {
+        this.setUpkeepUUID(uuid == null ? Optional.empty() : Optional.of(uuid));
+    }
+
+    @Override
+    public boolean hasHomeAssigned() {
+        return this.getUpkeepPos() != null;
     }
 }

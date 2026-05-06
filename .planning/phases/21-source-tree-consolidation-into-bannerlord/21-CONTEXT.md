@@ -46,7 +46,7 @@ Consolidate active Java ownership out of the legacy `recruits/` and `workers/` s
 - Exact commit ordering within each revert wave (planner decides).
 - Whether to revert `docs(21-XX)` commits as separate reverts or fold them into the corresponding feat-revert commit (planner decides based on what gives cleanest `git log`).
 - Mechanical rename tooling choice (sed/IDE refactor/jscodeshift-equivalent) for plan body amendments.
-- Handling of the existing stale worktree `/tmp/bannermod-31-03-red` flagged by `/gsd-health` — unrelated, planner may ignore.
+- Handling of the existing stale worktree `/tmp/bannermod-31-03-red` — unrelated, planner may ignore.
 
 </decisions>
 
@@ -115,7 +115,7 @@ Consolidate active Java ownership out of the legacy `recruits/` and `workers/` s
 - **Class prefix normalization** (`BannerMod` prefix on moved types) — out of phase 21 scope; file as a follow-up refactor phase once the move is green.
 - **Semantic merge of overlapping packages** (e.g., if moved `bannermod.config` overlaps with existing `bannermod.config`) — phase 21 documents the overlap in `MERGE_NOTES.md`; actual merge is a separate phase.
 - **Phase directory slug rename** (`21-source-tree-consolidation-into-bannerlord` → `-into-bannermod`) — deliberately deferred; would cause STATE.md/Git churn for zero runtime benefit.
-- **Stale worktree cleanup** (`/tmp/bannermod-31-03-red`) — surfaced by `/gsd-health`; unrelated to phase 21; handle separately.
+- **Stale worktree cleanup** (`/tmp/bannermod-31-03-red`) — unrelated to phase 21; handle separately.
 
 </deferred>
 

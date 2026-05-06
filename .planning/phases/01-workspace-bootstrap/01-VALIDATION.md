@@ -29,7 +29,7 @@ created: 2026-04-11
 
 - **After every task commit:** Run `./gradlew compileJava processResources`
 - **After every plan wave:** Run `./gradlew test`
-- **Before `/gsd-verify-work`:** Full suite must be green
+- **Before verification:** Full suite must be green
 - **Max feedback latency:** 60 seconds
 
 ---

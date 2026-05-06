@@ -4,7 +4,7 @@
 
 - Investigated the root verification surface from the actual merged build: JUnit is active at `src/test/java`, the root `gametest` source set exists but is still a placeholder, and build verification is anchored on `compileJava`, `processResources`, and the wrapper tasks declared in `build.gradle`.
 - Added lightweight regression coverage for merged Workers stabilization without requiring runtime E2E: smoke tests for merged runtime helper invariants and builder-progress flow helpers, while keeping the existing legacy-id migration regression coverage in place.
-- Added readiness docs so future GSD mapping/orchestration sees one merged project with explicit source-of-truth paths, preserved legacy archives, verification entrypoints, and open risks.
+- Added readiness docs so future planning/orchestration work sees one merged project with explicit source-of-truth paths, preserved legacy archives, verification entrypoints, and open risks.
 
 ## Changed Files
 
