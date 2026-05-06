@@ -7350,8 +7350,8 @@
     {
       "id": "TESTDIM-001",
       "title": "Dimension change with formation set does not break recruits",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Acceptance test for FORMATIONDIM-001. Source: review Part A 11.2 #6.",
       "scope": [
         "Gametest: form a 5-recruit formation in Overworld; teleport leader to Nether; advance ticks; assert recruits hold position and no NPE / pathfind to invalid chunk"
@@ -7363,8 +7363,14 @@
         "FORMATIONDIM-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "runGameTestServer: All 148 required tests passed (incl. fiveRecruitFormationHoldsAcrossDimensionTeleport: 5-recruit cohort, leader portal traversal simulated via fake-player swap, 40-tick advance, recruits held position, orphan counter advanced, no NPE)"
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTLONGRUN-001",
