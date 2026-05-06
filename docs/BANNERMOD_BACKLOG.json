@@ -7345,8 +7345,8 @@
     {
       "id": "TESTCHUNK-001",
       "title": "Chunk unload / reload preserves settlement + claim state",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Force chunk unload must not corrupt SavedData. Source: review Part A 11.2 #5.",
       "scope": [
         "Gametest: set up settlement + claim in chunk; force unload chunk; force reload; assert state byte-for-byte identical"
@@ -7356,8 +7356,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Added src/gametest/java/com/talhanation/bannermod/persistence/ChunkUnloadReloadRoundtripGameTests.java with 4 @GameTest methods (settlementSnapshotTagIsByteForByteIdenticalAfterRoundtrip, claimRoundtripTagIsByteForByteIdentical, treasuryLedgerRoundtripTagIsByteForByteIdentical, claimSettlementAndTreasuryAllSurviveSimulatedChunkUnloadReload) under @GameTestHolder(BannerModMain.MOD_ID); ./gradlew runGameTestServer reports 'All 151 required tests passed :)' (BUILD SUCCESSFUL in 28s). Each test drives the production save/load entry points (RecruitsClaimSaveData, BannerModSettlementManager, BannerModTreasuryManager, BannerModSettlementSnapshot.toTag/fromTag) the same way DimensionDataStorage does on a chunk unload, then asserts CompoundTag.equals on the pre-unload vs post-reload tags, covering claim UUID + chunk coords, snapshot tag roundtrip, and treasury ledger."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTDIM-001",
