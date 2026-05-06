@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, value = Dist.CLIENT)
 public final class SettlementSurveyorGuidanceRenderEvents {
     private static final int PANEL_BG = 0xCC2A2116;
     private static final int PANEL_INNER = 0xD63B2D1C;
