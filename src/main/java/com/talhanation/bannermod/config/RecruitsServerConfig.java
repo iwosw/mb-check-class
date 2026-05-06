@@ -12,7 +12,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RecruitsServerConfig {
-    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    /**
+     * Recruits config keys are now declared into the unified {@link BannerModServerConfig} spec
+     * via {@link #populate(ModConfigSpec.Builder)}. The legacy {@code SERVER} field stays
+     * non-null after {@link BannerModServerConfig} initialises so callsites that historically
+     * referenced it continue to compile, but registration of the {@code ModConfigSpec} happens
+     * exactly once through {@code BannerModServerConfig}.
+     */
+    private static ModConfigSpec.Builder BUILDER;
     public static ModConfigSpec SERVER;
     public static ModConfigSpec.IntValue PacketRateLimitMovementMillis;
     public static ModConfigSpec.IntValue PacketRateLimitFaceMillis;
@@ -143,6 +150,25 @@ public class RecruitsServerConfig {
     public static ArrayList<String> list = new ArrayList<>();
 
     static {
+        // Touching any RecruitsServerConfig.* value handle now requires BannerModServerConfig
+        // to have built the unified spec first (it calls populate(...) below). Force-load it
+        // here so callers that reference RecruitsServerConfig before BannerModServerConfig
+        // (e.g. unit tests, gametest fixtures) still get fully-initialised value handles.
+        try {
+            Class.forName(BannerModServerConfig.class.getName());
+        } catch (ClassNotFoundException unreachable) {
+            throw new ExceptionInInitializerError(unreachable);
+        }
+    }
+
+    /**
+     * Declares every Recruits-side config key onto the supplied builder. Called once by
+     * {@link BannerModServerConfig} when assembling the unified server spec; must not be
+     * invoked from a {@code static {}} block here so the keys land under the unified
+     * {@code recruits.*} sub-path instead of a separate spec.
+     */
+    public static void populate(ModConfigSpec.Builder builder) {
+        BUILDER = builder;
         BUILDER.comment("Recruits Config:").push("Recruits");
 
         RecruitCurrency = BUILDER.comment("""

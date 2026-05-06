@@ -20,9 +20,8 @@ import com.talhanation.bannermod.commands.military.PatrolSpawnCommand;
 import com.talhanation.bannermod.commands.military.RecruitsAdminCommands;
 import com.talhanation.bannermod.commands.war.BannerModWarCommands;
 import com.talhanation.bannermod.compat.MedievalSiegeMachinesCompat;
+import com.talhanation.bannermod.config.BannerModServerConfig;
 import com.talhanation.bannermod.config.RecruitsClientConfig;
-import com.talhanation.bannermod.config.RecruitsServerConfig;
-import com.talhanation.bannermod.config.WorkersServerConfig;
 import com.talhanation.bannermod.war.config.WarServerConfig;
 import com.talhanation.bannermod.war.events.WarPvpEvents;
 import com.talhanation.bannermod.war.events.WarRevoltAutoResolver;
@@ -61,14 +60,15 @@ public class BannerModMain {
     public static boolean isRPGZLoaded;
 
     public BannerModMain(IEventBus modEventBus, Dist dist, ModContainer modContainer) {
-        // Register recruits configs (explicit filenames avoid SERVER filename collision in ConfigTracker;
-        // default `<modid>-<type>.toml` would make both SERVER specs resolve to `bannermod-server.toml`
-        // and throw `Config conflict detected!` at ConfigTracker.trackConfig. See 21-10-PLAN.md.)
+        // Single unified server spec (CONFIGMERGE-001): both legacy
+        // bannermod-recruits-server.toml and bannermod-workers-server.toml keys live under
+        // BannerModServerConfig.SERVER as recruits.* and workers.* sub-paths. Existing
+        // installations have their old files migrated automatically on first server start
+        // by ServerLifecycleHooksMixin -> BannerModConfigMigration.
         modContainer.registerConfig(ModConfig.Type.CLIENT, RecruitsClientConfig.CLIENT, "bannermod-recruits-client.toml");
-        modContainer.registerConfig(ModConfig.Type.SERVER, RecruitsServerConfig.SERVER, "bannermod-recruits-server.toml");
-        // Register workers config
-        modContainer.registerConfig(ModConfig.Type.SERVER, WorkersServerConfig.SERVER, "bannermod-workers-server.toml");
-        // Register war/RP config — own filename to avoid the SERVER filename collision called out above.
+        modContainer.registerConfig(ModConfig.Type.SERVER, BannerModServerConfig.SERVER, "bannermod-server.toml");
+        // Register war/RP config — separate spec, intentionally kept out of the merge per
+        // CONFIGMERGE-001 scope (Recruits + Workers only).
         modContainer.registerConfig(ModConfig.Type.SERVER, WarServerConfig.SERVER, "bannermod-war-server.toml");
 
         // Lifecycle
@@ -144,6 +144,7 @@ public class BannerModMain {
         NeoForge.EVENT_BUS.register(new WarRevoltAutoResolver());
         NeoForge.EVENT_BUS.register(new WarStateBroadcaster());
         NeoForge.EVENT_BUS.register(new com.talhanation.bannermod.war.events.WarOccupationTaxTicker());
+        NeoForge.EVENT_BUS.register(new com.talhanation.bannermod.war.events.WarRetentionSweeper());
         NeoForge.EVENT_BUS.register(new SettlementMutationRefreshEvents());
         NeoForge.EVENT_BUS.register(new SettlementWorkOrderClaimReleaseEvents());
         // Wire the per-player packet rate limiter to the live server config so cooldown

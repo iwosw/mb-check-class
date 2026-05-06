@@ -229,7 +229,7 @@ public final class PoliticalRegistryCommands {
         }
         RevoltRuntime revolts = WarRuntimeContext.revolts(level);
         Optional<RevoltRecord> scheduled = revolts.schedule(
-                record.id(), record.occupiedEntityId(), record.occupierEntityId(),
+                record.warId(), record.id(), record.occupiedEntityId(), record.occupierEntityId(),
                 level.getGameTime());
         if (scheduled.isEmpty()) {
             context.getSource().sendFailure(Component.literal(

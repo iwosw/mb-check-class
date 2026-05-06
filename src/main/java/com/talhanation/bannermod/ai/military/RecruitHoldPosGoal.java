@@ -1,7 +1,9 @@
 package com.talhanation.bannermod.ai.military;
 
 import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
+import com.talhanation.bannermod.util.FormationDimensionGuard;
 import com.talhanation.bannermod.util.FormationFallbackPlanner;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
 
@@ -81,6 +83,11 @@ public class RecruitHoldPosGoal extends Goal {
 
     private void tryGapFillScan() {
         if (!this.recruit.isInFormation || this.recruit.getFollowState() != 3) {
+            return;
+        }
+        // FORMATIONDIM-001: do not migrate formation slots while leader is in another dimension.
+        LivingEntity leader = this.recruit.getOwner();
+        if (FormationDimensionGuard.shouldHoldDueToDimensionMismatch(this.recruit, leader)) {
             return;
         }
         CombatStance stance = this.recruit.getCombatStance();
