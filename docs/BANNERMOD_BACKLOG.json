@@ -7466,8 +7466,8 @@
     {
       "id": "UIAUDIT-001",
       "title": "Move UI_AUDIT_FINDINGS.md into docs/ and commit",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "in_progress",
+      "updated": "2026-05-06",
       "why": "Untracked 161-line per-screen UI audit (30 screens, summary table, top-5 severe findings) lives at repo root from a prior session. Real audit output, not noise. Source: review Part C 26.3 / Part A U6.",
       "scope": [
         "git mv UI_AUDIT_FINDINGS.md docs/UI_AUDIT_FINDINGS.md",
@@ -7480,7 +7480,12 @@
         "Working tree shows no untracked UI_AUDIT_FINDINGS.md"
       ],
       "dependencies": [],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-06",
+          "text": "Source file UI_AUDIT_FINDINGS.md no longer present at repo root and not in git history; cannot 'git mv' as scoped. Task stays open pending re-import of the audit content from prior-session backup. 2026-05-06 backlog-execute batch."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
