@@ -2562,5 +2562,17 @@
   "bannermod.surveyor.tooltip.founding_2": "Build Starter Fort: anchor + AUTHORITY_POINT + INTERIOR zones.",
   "bannermod.surveyor.tooltip.founding_3": "Right-click air to validate; then expand with Building Placement Wand.",
   "gui.bannermod.inv.tooltip.siege_engineer_disabled": "Siege-Engineer promotion is not implemented yet.",
-  "chat.bannermod.promote.unsupported_profession": "That promotion is not supported yet."
+  "chat.bannermod.promote.unsupported_profession": "That promotion is not supported yet.",
+  "perk.bannermod.universal.toughness_i": "Toughness I",
+  "perk.bannermod.universal.toughness_i.desc": "+2 max health.",
+  "perk.bannermod.swordsman.iron_grip_i": "Iron Grip I",
+  "perk.bannermod.swordsman.iron_grip_i.desc": "+0.5 melee attack damage.",
+  "perk.bannermod.bowman.steady_aim_i": "Steady Aim I",
+  "perk.bannermod.bowman.steady_aim_i.desc": "Tightens bow accuracy by 5%.",
+  "perk.bannermod.crossbowman.heavy_bolts_i": "Heavy Bolts I",
+  "perk.bannermod.crossbowman.heavy_bolts_i.desc": "+10% crossbow bolt velocity.",
+  "perk.bannermod.pikeman.braced_stance_i": "Braced Stance I",
+  "perk.bannermod.pikeman.braced_stance_i.desc": "+10% knockback resistance.",
+  "perk.bannermod.cavalry.swift_charge_i": "Swift Charge I",
+  "perk.bannermod.cavalry.swift_charge_i.desc": "+0.01 movement speed."
 }

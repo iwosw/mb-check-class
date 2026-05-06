@@ -2472,5 +2472,17 @@
   "gui.bannermod.inv.tooltip.siege_engineer_disabled": "Повышение до осадного инженера пока не реализовано.",
   "chat.bannermod.promote.unsupported_profession": "Это повышение пока не поддерживается.",
   "bannermod.prefab.gatehouse.name": "Надвратный дом",
-  "bannermod.prefab.gatehouse.description": "Крытый укрепленный вход с двумя башнями и сквозным проездом."
+  "bannermod.prefab.gatehouse.description": "Крытый укрепленный вход с двумя башнями и сквозным проездом.",
+  "perk.bannermod.universal.toughness_i": "Стойкость I",
+  "perk.bannermod.universal.toughness_i.desc": "+2 к максимальному здоровью.",
+  "perk.bannermod.swordsman.iron_grip_i": "Железная хватка I",
+  "perk.bannermod.swordsman.iron_grip_i.desc": "+0.5 к урону ближнего боя.",
+  "perk.bannermod.bowman.steady_aim_i": "Твёрдый прицел I",
+  "perk.bannermod.bowman.steady_aim_i.desc": "Точность стрельбы из лука повышена на 5%.",
+  "perk.bannermod.crossbowman.heavy_bolts_i": "Тяжёлые болты I",
+  "perk.bannermod.crossbowman.heavy_bolts_i.desc": "+10% к скорости полёта арбалетных болтов.",
+  "perk.bannermod.pikeman.braced_stance_i": "Упорная стойка I",
+  "perk.bannermod.pikeman.braced_stance_i.desc": "+10% к сопротивлению отбрасыванию.",
+  "perk.bannermod.cavalry.swift_charge_i": "Стремительный натиск I",
+  "perk.bannermod.cavalry.swift_charge_i.desc": "+0.01 к скорости передвижения."
 }
