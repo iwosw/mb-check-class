@@ -8018,8 +8018,8 @@
     {
       "id": "SETTREFACTOR-002",
       "title": "Extract SettlementClaimBindingService from BannerModSettlementService",
-      "status": "open",
-      "updated": "2026-05-05",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Phase 1 of the SETTREFACTOR-001 split: pull the claim refresh / binding responsibility into its own class so the residual orchestrator service shrinks and the binding behaviour has a focused test target.",
       "scope": [
         "Create SettlementClaimBindingService under settlement/runtime/ holding the claim-refresh and binding methods currently inside BannerModSettlementService.",
@@ -8034,8 +8034,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Created src/main/java/com/talhanation/bannermod/settlement/runtime/SettlementClaimBindingService.java owning refreshAllClaims/refreshClaimsBatch/refreshClaimAt/refreshClaim, BatchResult, repairClaimState, resolveRepairBinding, and the worker-binding helpers (repairWorkerBinding, isCompatibleWorkArea). BannerModSettlementService now contains only one-line delegating wrappers for the public refresh entry points and repairClaimState; the binding helpers and BatchResult are removed. Moved the binding test (resolvesRepairBindingOnlyWhenCanonicalTargetIsUnambiguous) into new SettlementClaimBindingServiceTest. ./gradlew compileJava SUCCESS (12s); ./gradlew test SUCCESS (15s) — BannerModSettlementServiceTest 26/26 green and SettlementClaimBindingServiceTest 1/1 green per build/test-results. tools/backlog validate: 'Backlog OK'. Commit 18ca8b25 on feature/settrefactor-002."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "SETTREFACTOR-003",
