@@ -31,38 +31,40 @@ public class MessageCombatStanceGui implements BannerModMessage<MessageCombatSta
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        if (this.stance == null) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            if (this.stance == null) {
+                return;
+            }
 
-        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruitUuid, 16.0D);
-        if (recruit == null) {
-            return;
-        }
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruitUuid, 16.0D);
+            if (recruit == null) {
+                return;
+            }
 
-        CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
-                serverPlayer.getUUID(),
-                serverPlayer.getTeam() == null ? null : serverPlayer.getTeam().getName(),
-                serverPlayer.hasPermissions(2),
-                this.recruitUuid,
-                List.of(new CommandTargeting.RecruitSnapshot(
-                        recruit.getUUID(),
-                        recruit.getOwnerUUID(),
-                        recruit.getGroup(),
-                        recruit.getTeam() == null ? null : recruit.getTeam().getName(),
-                        recruit.isOwned(),
-                        recruit.isAlive(),
-                        recruit.getListen(),
-                        recruit.distanceToSqr(serverPlayer)
-                ))
-        );
+            CommandTargeting.SingleRecruitSelection selection = CommandTargeting.forSingleRecruit(
+                    serverPlayer.getUUID(),
+                    serverPlayer.getTeam() == null ? null : serverPlayer.getTeam().getName(),
+                    serverPlayer.hasPermissions(2),
+                    this.recruitUuid,
+                    List.of(new CommandTargeting.RecruitSnapshot(
+                            recruit.getUUID(),
+                            recruit.getOwnerUUID(),
+                            recruit.getGroup(),
+                            recruit.getTeam() == null ? null : recruit.getTeam().getName(),
+                            recruit.isOwned(),
+                            recruit.isAlive(),
+                            recruit.getListen(),
+                            recruit.distanceToSqr(serverPlayer)
+                    ))
+            );
 
-        if (!selection.isSuccess()) {
-            return;
-        }
+            if (!selection.isSuccess()) {
+                return;
+            }
 
-        CommandEvents.onCombatStanceCommand(serverPlayer.getUUID(), recruit, this.stance, null);
+            CommandEvents.onCombatStanceCommand(serverPlayer.getUUID(), recruit, this.stance, null);
+        });
     }
 
     public MessageCombatStanceGui fromBytes(FriendlyByteBuf buf) {

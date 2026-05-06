@@ -31,11 +31,13 @@ public class MessageGroup implements BannerModMessage<MessageGroup> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruitUUID, 100.0D);
-        if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
-            this.setGroup(recruit, player, groupUUID);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruitUUID, 100.0D);
+            if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
+                this.setGroup(recruit, player, groupUUID);
+            }
+        });
     }
 
     public void setGroup(AbstractRecruitEntity recruit, ServerPlayer player , UUID groupUUID){

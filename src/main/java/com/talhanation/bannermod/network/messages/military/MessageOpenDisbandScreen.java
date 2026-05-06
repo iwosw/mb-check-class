@@ -30,10 +30,12 @@ public class MessageOpenDisbandScreen implements BannerModMessage<MessageOpenDis
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (!player.getUUID().equals(this.player)) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (!player.getUUID().equals(this.player)) {
+                return;
+            }
+        });
     }
 
     @Override

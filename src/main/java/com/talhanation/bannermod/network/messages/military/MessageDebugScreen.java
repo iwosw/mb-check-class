@@ -32,15 +32,17 @@ public class MessageDebugScreen implements BannerModMessage<MessageDebugScreen> 
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        if (!player.getUUID().equals(uuid)) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            if (!player.getUUID().equals(uuid)) {
+                return;
+            }
 
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
-        if (recruit != null) {
-            recruit.openDebugScreen(player);
-        }
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
+            if (recruit != null) {
+                recruit.openDebugScreen(player);
+            }
+        });
     }
 
     @Override

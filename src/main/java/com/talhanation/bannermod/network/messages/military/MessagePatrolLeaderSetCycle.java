@@ -30,11 +30,13 @@ public class MessagePatrolLeaderSetCycle implements BannerModMessage<MessagePatr
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractLeaderEntity leader && leader.distanceToSqr(player) <= 100.0D * 100.0D) {
-            leader.setCycle(this.cycle);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof AbstractLeaderEntity leader && leader.distanceToSqr(player) <= 100.0D * 100.0D) {
+                leader.setCycle(this.cycle);
+            }
+        });
     }
 
     public MessagePatrolLeaderSetCycle fromBytes(FriendlyByteBuf buf) {

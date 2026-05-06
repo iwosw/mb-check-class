@@ -46,16 +46,17 @@ public class MessageUpdateStorageArea implements BannerModMessage<MessageUpdateS
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        StorageArea storageArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, StorageArea.class);
-        if (storageArea == null) {
-            return;
-        }
+            StorageArea storageArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, StorageArea.class);
+            if (storageArea == null) {
+                return;
+            }
 
-        this.update(storageArea, player);
-
+            this.update(storageArea, player);
+        });
     }
 
     public void update(StorageArea storageArea, ServerPlayer player){

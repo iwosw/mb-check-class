@@ -42,43 +42,45 @@ public class MessageAssignCitizenVacancy implements BannerModMessage<MessageAssi
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = context.getSender();
-        if (sender == null || this.citizenUuid == null || this.anchorUuid == null) return;
-        ServerLevel level = sender.serverLevel();
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null || this.citizenUuid == null || this.anchorUuid == null) return;
+            ServerLevel level = sender.serverLevel();
 
-        Entity citizenEntity = level.getEntity(this.citizenUuid);
-        if (!(citizenEntity instanceof CitizenEntity citizen)) {
-            sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.citizen_missing"));
-            return;
-        }
-        if (!isOwnedBy(citizen, sender)) {
-            sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.denied"));
-            return;
-        }
-        // Don't reassign if the citizen has already converted into a worker/recruit on
-        // a previous tick — at that point the citizen entity is gone or has an active
-        // profession, and the manual binding would do nothing useful.
-        if (citizen.activeProfession() != com.talhanation.bannermod.citizen.CitizenProfession.NONE) {
-            sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.already_employed"));
-            return;
-        }
+            Entity citizenEntity = level.getEntity(this.citizenUuid);
+            if (!(citizenEntity instanceof CitizenEntity citizen)) {
+                sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.citizen_missing"));
+                return;
+            }
+            if (!isOwnedBy(citizen, sender)) {
+                sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.denied"));
+                return;
+            }
+            // Don't reassign if the citizen has already converted into a worker/recruit on
+            // a previous tick — at that point the citizen entity is gone or has an active
+            // profession, and the manual binding would do nothing useful.
+            if (citizen.activeProfession() != com.talhanation.bannermod.citizen.CitizenProfession.NONE) {
+                sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.already_employed"));
+                return;
+            }
 
-        Entity anchorEntity = level.getEntity(this.anchorUuid);
-        if (!(anchorEntity instanceof AbstractWorkAreaEntity workArea) || !workArea.isAlive()) {
-            sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.area_missing"));
-            return;
-        }
-        if (!workArea.canPlayerSee(sender)) {
-            sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.area_denied"));
-            return;
-        }
+            Entity anchorEntity = level.getEntity(this.anchorUuid);
+            if (!(anchorEntity instanceof AbstractWorkAreaEntity workArea) || !workArea.isAlive()) {
+                sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.area_missing"));
+                return;
+            }
+            if (!workArea.canPlayerSee(sender)) {
+                sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.area_denied"));
+                return;
+            }
 
-        boolean assigned = PrefabAutoStaffingRuntime.assignCitizenToSpecificVacancy(level, citizen, this.anchorUuid);
-        if (assigned) {
-            sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.ok"));
-        } else {
-            sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.no_profession"));
-        }
+            boolean assigned = PrefabAutoStaffingRuntime.assignCitizenToSpecificVacancy(level, citizen, this.anchorUuid);
+            if (assigned) {
+                sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.ok"));
+            } else {
+                sender.sendSystemMessage(Component.translatable("chat.bannermod.assign_vacancy.no_profession"));
+            }
+        });
     }
 
     private static boolean isOwnedBy(CitizenEntity citizen, ServerPlayer sender) {

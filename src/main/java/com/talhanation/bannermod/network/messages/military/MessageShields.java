@@ -38,8 +38,10 @@ public class MessageShields implements BannerModMessage<MessageShields> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        dispatchToServer(player, this.player, this.group, this.should);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            dispatchToServer(player, this.player, this.group, this.should);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer player, UUID playerUuid, UUID group, boolean should) {

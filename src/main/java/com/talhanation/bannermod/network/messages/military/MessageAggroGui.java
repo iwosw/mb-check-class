@@ -29,11 +29,13 @@ public class MessageAggroGui implements BannerModMessage<MessageAggroGui> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
-        if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
-            recruit.setAggroState(this.state);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.uuid, 16.0D);
+            if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
+                recruit.setAggroState(this.state);
+            }
+        });
     }
 
     public MessageAggroGui fromBytes(FriendlyByteBuf buf) {

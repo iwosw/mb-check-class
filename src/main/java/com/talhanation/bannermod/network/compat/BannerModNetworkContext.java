@@ -19,7 +19,4 @@ public final class BannerModNetworkContext {
     public CompletableFuture<Void> enqueueWork(Runnable runnable) {
         return delegate.enqueueWork(runnable);
     }
-
-    public void setPacketHandled(boolean handled) {
-    }
 }

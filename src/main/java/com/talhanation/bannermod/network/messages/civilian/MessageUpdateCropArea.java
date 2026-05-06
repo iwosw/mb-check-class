@@ -34,16 +34,18 @@ public class MessageUpdateCropArea implements BannerModMessage<MessageUpdateCrop
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        CropArea cropArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, CropArea.class);
-        if (cropArea == null) {
-            return;
-        }
+            CropArea cropArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, CropArea.class);
+            if (cropArea == null) {
+                return;
+            }
 
-        this.update(cropArea);
-        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), cropArea.blockPosition());
+            this.update(cropArea);
+            WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), cropArea.blockPosition());
+        });
     }
 
     public void update(CropArea cropArea){

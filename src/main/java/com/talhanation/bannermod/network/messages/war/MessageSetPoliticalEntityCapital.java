@@ -48,32 +48,34 @@ public class MessageSetPoliticalEntityCapital implements BannerModMessage<Messag
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.entityId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) {
-            return;
-        }
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
-        if (recordOpt.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Cannot set capital: state not found."));
-            return;
-        }
-        PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.canAct(player, record)) {
-            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
-            return;
-        }
-        BlockPos pos = this.usePlayerPos ? player.blockPosition() : this.capital;
-        if (!registry.updateCapital(this.entityId, pos)) {
-            player.sendSystemMessage(Component.literal("Failed to set capital."));
-            return;
-        }
-        player.sendSystemMessage(Component.literal(
-                "Capital of " + record.name() + " set to " + pos.toShortString() + "."));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.entityId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) {
+                return;
+            }
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
+            if (recordOpt.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Cannot set capital: state not found."));
+                return;
+            }
+            PoliticalEntityRecord record = recordOpt.get();
+            if (!PoliticalEntityAuthority.canAct(player, record)) {
+                player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
+                return;
+            }
+            BlockPos pos = this.usePlayerPos ? player.blockPosition() : this.capital;
+            if (!registry.updateCapital(this.entityId, pos)) {
+                player.sendSystemMessage(Component.literal("Failed to set capital."));
+                return;
+            }
+            player.sendSystemMessage(Component.literal(
+                    "Capital of " + record.name() + " set to " + pos.toShortString() + "."));
+        });
     }
 
     @Override

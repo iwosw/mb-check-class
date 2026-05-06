@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.war.runtime;
 
+import com.talhanation.bannermod.war.retention.WarRetentionPolicy;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -7,10 +8,12 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public class OccupationRuntime {
@@ -35,8 +38,48 @@ public class OccupationRuntime {
                 UUID.randomUUID(), warId, occupierEntityId, occupiedEntityId,
                 chunks, gameTime);
         recordsById.put(record.id(), record);
+        enforceCap();
         dirtyListener.run();
         return Optional.of(record);
+    }
+
+    /**
+     * Drop occupations whose {@link OccupationRecord#warId()} appears in
+     * {@code resolvedWarIds} and whose {@link OccupationRecord#startedAtGameTime()} is older
+     * than {@code currentGameTime - retentionTicks}. Returns the number of records removed.
+     */
+    public int pruneResolved(Collection<UUID> resolvedWarIds, long currentGameTime, long retentionTicks) {
+        if (resolvedWarIds == null || resolvedWarIds.isEmpty() || retentionTicks <= 0L) {
+            return 0;
+        }
+        Set<UUID> resolvedSet = Set.copyOf(resolvedWarIds);
+        long cutoff = currentGameTime - retentionTicks;
+        int removed = 0;
+        Iterator<Map.Entry<UUID, OccupationRecord>> iter = recordsById.entrySet().iterator();
+        while (iter.hasNext()) {
+            OccupationRecord record = iter.next().getValue();
+            if (record.warId() != null
+                    && resolvedSet.contains(record.warId())
+                    && record.startedAtGameTime() < cutoff) {
+                iter.remove();
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            dirtyListener.run();
+        }
+        return removed;
+    }
+
+    private void enforceCap() {
+        if (recordsById.size() <= WarRetentionPolicy.MAX_OCCUPATIONS) {
+            return;
+        }
+        Iterator<Map.Entry<UUID, OccupationRecord>> iter = recordsById.entrySet().iterator();
+        while (recordsById.size() > WarRetentionPolicy.MAX_OCCUPATIONS && iter.hasNext()) {
+            iter.next();
+            iter.remove();
+        }
     }
 
     public boolean remove(UUID id) {
@@ -44,6 +87,37 @@ public class OccupationRuntime {
         if (removed) {
             dirtyListener.run();
         }
+        return removed;
+    }
+
+    /**
+     * Removes every occupation record whose chunk set intersects the supplied claim chunks.
+     * Used by the claim-removal fanout so deleted claims do not leave dangling occupation
+     * records keyed on chunks the claim manager will never publish again.
+     *
+     * @return list of removed occupation IDs (empty if none matched)
+     */
+    public List<UUID> removeForClaim(List<ChunkPos> claimChunks) {
+        if (claimChunks == null || claimChunks.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> removed = new ArrayList<>();
+        for (Map.Entry<UUID, OccupationRecord> entry : new ArrayList<>(recordsById.entrySet())) {
+            OccupationRecord record = entry.getValue();
+            for (ChunkPos chunk : claimChunks) {
+                if (record.chunks().contains(chunk)) {
+                    removed.add(entry.getKey());
+                    break;
+                }
+            }
+        }
+        if (removed.isEmpty()) {
+            return List.of();
+        }
+        for (UUID id : removed) {
+            recordsById.remove(id);
+        }
+        dirtyListener.run();
         return removed;
     }
 
@@ -161,6 +235,7 @@ public class OccupationRuntime {
             OccupationRecord record = OccupationRecord.fromTag(list.getCompound(i));
             runtime.recordsById.put(record.id(), record);
         }
+        runtime.enforceCap();
         return runtime;
     }
 }

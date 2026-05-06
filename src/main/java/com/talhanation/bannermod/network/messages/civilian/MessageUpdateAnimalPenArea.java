@@ -35,16 +35,18 @@ public class MessageUpdateAnimalPenArea implements BannerModMessage<MessageUpdat
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        AnimalPenArea animalPenArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AnimalPenArea.class);
-        if (animalPenArea == null) {
-            return;
-        }
+            AnimalPenArea animalPenArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AnimalPenArea.class);
+            if (animalPenArea == null) {
+                return;
+            }
 
-        this.update(animalPenArea);
-        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), animalPenArea.blockPosition());
+            this.update(animalPenArea);
+            WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), animalPenArea.blockPosition());
+        });
     }
 
     public void update(AnimalPenArea animalPenArea){

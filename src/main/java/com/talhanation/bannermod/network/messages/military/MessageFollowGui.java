@@ -32,8 +32,10 @@ public class MessageFollowGui implements BannerModMessage<MessageFollowGui> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        dispatchToServer(serverPlayer, this.uuid, this.state);
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+            dispatchToServer(serverPlayer, this.uuid, this.state);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer serverPlayer, UUID recruitUuid, int state) {

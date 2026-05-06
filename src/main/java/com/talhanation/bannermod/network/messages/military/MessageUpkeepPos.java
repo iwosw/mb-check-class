@@ -35,8 +35,10 @@ public class MessageUpkeepPos implements BannerModMessage<MessageUpkeepPos> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        dispatchToServer(player, this.player, this.group, this.pos);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            dispatchToServer(player, this.player, this.group, this.pos);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer sender, UUID playerUuid, UUID group, BlockPos pos) {

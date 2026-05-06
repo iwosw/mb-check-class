@@ -34,16 +34,18 @@ public class MessageDoPayment implements BannerModMessage<MessageDoPayment> {
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer serverPlayer = context.getSender();
-        if(serverPlayer == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = context.getSender();
+            if(serverPlayer == null) return;
 
-        if(!serverPlayer.getUUID().equals(uuid)) return;
+            if(!serverPlayer.getUUID().equals(uuid)) return;
 
-        if(serverPlayer.isCreative() && serverPlayer.hasPermissions(2)){
-            return;
-        }
+            if(serverPlayer.isCreative() && serverPlayer.hasPermissions(2)){
+                return;
+            }
 
-        removeCurrency(serverPlayer, this.amount);
+            removeCurrency(serverPlayer, this.amount);
+        });
     }
 
     private static void removeCurrency(ServerPlayer player, int amount) {

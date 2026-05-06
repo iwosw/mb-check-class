@@ -35,19 +35,21 @@ public class MessageBackToMountEntity implements BannerModMessage<MessageBackToM
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        List<AbstractRecruitEntity> recruits = this.group == null
-                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
-                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
-        if (recruits == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(100)
-            );
-        }
-        CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
-                player.level().getGameTime(), CommandIntentPriority.HIGH, false, null, group, true), recruits);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            List<AbstractRecruitEntity> recruits = this.group == null
+                    ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
+                    : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
+            if (recruits == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        player.getBoundingBox().inflate(100)
+                );
+            }
+            CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
+                    player.level().getGameTime(), CommandIntentPriority.HIGH, false, null, group, true), recruits);
+        });
     }
 
     public MessageBackToMountEntity fromBytes(FriendlyByteBuf buf) {

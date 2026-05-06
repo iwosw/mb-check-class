@@ -33,15 +33,17 @@ public class MessageOpenPromoteScreen implements BannerModMessage<MessageOpenPro
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        if (!player.getUUID().equals(this.player)) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            if (!player.getUUID().equals(this.player)) {
+                return;
+            }
 
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 16.0D * 16.0D);
-        if (recruit != null) {
-            RecruitEvents.openPromoteScreen(player, recruit);
-        }
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 16.0D * 16.0D);
+            if (recruit != null) {
+                RecruitEvents.openPromoteScreen(player, recruit);
+            }
+        });
     }
 
     @Override

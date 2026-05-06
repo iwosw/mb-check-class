@@ -39,14 +39,16 @@ public class MessageRequestValidateBuilding implements BannerModMessage<MessageR
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        if (!BuildingRequestSecurity.canUseWandAt(player, cornerA, cornerB, center)) {
-            return;
-        }
-        BuildingValidationService.validate(player, prefabId, cornerA, cornerB, center);
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            if (!BuildingRequestSecurity.canUseWandAt(player, cornerA, cornerB, center)) {
+                return;
+            }
+            BuildingValidationService.validate(player, prefabId, cornerA, cornerB, center);
+        });
     }
 
     @Override

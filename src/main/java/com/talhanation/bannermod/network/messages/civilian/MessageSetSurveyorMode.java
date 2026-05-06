@@ -29,19 +29,21 @@ public class MessageSetSurveyorMode implements BannerModMessage<MessageSetSurvey
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        SurveyorMode[] modes = SurveyorMode.values();
-        if (modeOrdinal < 0 || modeOrdinal >= modes.length) {
-            return;
-        }
-        ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
-        if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
-            return;
-        }
-        SettlementSurveyorToolItem.setMode(player, stack, modes[modeOrdinal]);
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            SurveyorMode[] modes = SurveyorMode.values();
+            if (modeOrdinal < 0 || modeOrdinal >= modes.length) {
+                return;
+            }
+            ItemStack stack = player.getItemInHand(handIndex == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
+            if (!(stack.getItem() instanceof SettlementSurveyorToolItem)) {
+                return;
+            }
+            SettlementSurveyorToolItem.setMode(player, stack, modes[modeOrdinal]);
+        });
     }
 
     @Override

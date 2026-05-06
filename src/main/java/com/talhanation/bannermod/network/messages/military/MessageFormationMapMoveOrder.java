@@ -42,8 +42,10 @@ public class MessageFormationMapMoveOrder implements BannerModMessage<MessageFor
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = context.getSender();
-        dispatchToServer(sender, contactId, groupId, target);
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            dispatchToServer(sender, contactId, groupId, target);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer sender, UUID contactId, UUID groupId, BlockPos target) {

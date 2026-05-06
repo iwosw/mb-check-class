@@ -42,23 +42,25 @@ public class MessagePlaceSiegeStandardHere implements BannerModMessage<MessagePl
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.warId == null || this.sideId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel();
-        if (level == null) {
-            return;
-        }
-        SiegeStandardPlacementService.Result result = SiegeStandardPlacementService.placeAt(
-                level, player, this.warId, this.sideId, null, this.requestedRadius);
-        if (result.ok()) {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.siege_standard_placed",
-                    result.record().pos().toShortString(), result.record().radius()));
-        } else {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.siege_standard",
-                    SiegeStandardPlacementService.describeComponent(result.outcome())));
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.warId == null || this.sideId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel();
+            if (level == null) {
+                return;
+            }
+            SiegeStandardPlacementService.Result result = SiegeStandardPlacementService.placeAt(
+                    level, player, this.warId, this.sideId, null, this.requestedRadius);
+            if (result.ok()) {
+                sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.siege_standard_placed",
+                        result.record().pos().toShortString(), result.record().radius()));
+            } else {
+                sendFeedback(player, Component.translatable("gui.bannermod.war.denial.siege_standard",
+                        SiegeStandardPlacementService.describeComponent(result.outcome())));
+            }
+        });
     }
 
     private static void sendFeedback(ServerPlayer player, Component message) {

@@ -35,14 +35,16 @@ public class MessageConvertRecruitType implements BannerModMessage<MessageConver
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = context.getSender();
-        if (sender == null) return;
-        AbstractRecruitEntity target = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(sender, this.recruit, 16.0D);
-        if (target == null) return;
-        // Ownership gate: only the recruit's owner (or an op in creative) can mutate type.
-        if (!isOwnedBySender(target, sender)) return;
-        if (!RecruitTypeConverter.isConvertibleBaseType(target)) return;
-        RecruitTypeConverter.convert(target, RecruitTypeConverter.Kind.ofOrdinal(this.targetKind), sender);
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null) return;
+            AbstractRecruitEntity target = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(sender, this.recruit, 16.0D);
+            if (target == null) return;
+            // Ownership gate: only the recruit's owner (or an op in creative) can mutate type.
+            if (!isOwnedBySender(target, sender)) return;
+            if (!RecruitTypeConverter.isConvertibleBaseType(target)) return;
+            RecruitTypeConverter.convert(target, RecruitTypeConverter.Kind.ofOrdinal(this.targetKind), sender);
+        });
     }
 
     private static boolean isOwnedBySender(AbstractRecruitEntity recruit, ServerPlayer sender) {

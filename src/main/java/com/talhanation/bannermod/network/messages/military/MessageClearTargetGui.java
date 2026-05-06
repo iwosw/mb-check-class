@@ -29,11 +29,13 @@ public class MessageClearTargetGui implements BannerModMessage<MessageClearTarge
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
-        if (recruit != null && RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
-            CommandEvents.onClearTargetButton(recruit.getOwnerUUID(), recruit, null);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
+            if (recruit != null && RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
+                CommandEvents.onClearTargetButton(recruit.getOwnerUUID(), recruit, null);
+            }
+        });
     }
 
     public MessageClearTargetGui fromBytes(FriendlyByteBuf buf) {

@@ -38,27 +38,29 @@ public class MessageMountEntity implements BannerModMessage<MessageMountEntity> 
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity mount = player.serverLevel().getEntity(target);
-        if (mount == null
-                || mount.distanceToSqr(player) > 100.0D * 100.0D
-                || !RecruitsServerConfig.MountWhiteList.get().contains(mount.getEncodeId())) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity mount = player.serverLevel().getEntity(target);
+            if (mount == null
+                    || mount.distanceToSqr(player) > 100.0D * 100.0D
+                    || !RecruitsServerConfig.MountWhiteList.get().contains(mount.getEncodeId())) {
+                return;
+            }
 
-        List<AbstractRecruitEntity> recruits = this.group == null
-                ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
-                : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
-        if (recruits == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            recruits = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    player.getBoundingBox().inflate(100),
-                    (recruit) -> recruit.isEffectedByCommand(uuid, group)
-            );
-        }
-        CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
-                player.level().getGameTime(), CommandIntentPriority.HIGH, false, target, group, false), recruits);
+            List<AbstractRecruitEntity> recruits = this.group == null
+                    ? RecruitIndex.instance().ownerInRange(player.getCommandSenderWorld(), this.uuid, player.position(), 100.0D)
+                    : RecruitIndex.instance().groupInRange(player.getCommandSenderWorld(), this.group, player.position(), 100.0D);
+            if (recruits == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                recruits = player.getCommandSenderWorld().getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        player.getBoundingBox().inflate(100),
+                        (recruit) -> recruit.isEffectedByCommand(uuid, group)
+                );
+            }
+            CommandIntentDispatcher.dispatch(player, new CommandIntent.SiegeMachine(
+                    player.level().getGameTime(), CommandIntentPriority.HIGH, false, target, group, false), recruits);
+        });
     }
 
     public MessageMountEntity fromBytes(FriendlyByteBuf buf) {

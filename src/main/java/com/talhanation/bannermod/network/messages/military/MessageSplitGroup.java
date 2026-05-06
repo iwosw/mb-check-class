@@ -27,12 +27,14 @@ public class MessageSplitGroup implements BannerModMessage<MessageSplitGroup> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsGroup groupToSplit = RecruitEvents.groupsManager().getGroup(groupUUID);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            RecruitsGroup groupToSplit = RecruitEvents.groupsManager().getGroup(groupUUID);
 
-        if(groupToSplit == null) return;
+            if(groupToSplit == null) return;
 
-        RecruitEvents.groupsManager().splitGroup(groupToSplit, player.serverLevel());
+            RecruitEvents.groupsManager().splitGroup(groupToSplit, player.serverLevel());
+        });
     }
 
     public MessageSplitGroup fromBytes(FriendlyByteBuf buf) {

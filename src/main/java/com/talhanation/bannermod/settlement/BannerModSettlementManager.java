@@ -66,6 +66,18 @@ public class BannerModSettlementManager extends SavedData {
         }
     }
 
+    @Nullable
+    public BannerModSettlementSnapshot removeSnapshot(UUID claimUuid) {
+        if (claimUuid == null) {
+            return null;
+        }
+        BannerModSettlementSnapshot removed = this.snapshots.remove(claimUuid);
+        if (removed != null) {
+            this.setDirty();
+        }
+        return removed;
+    }
+
     public void pruneMissingClaims(Set<UUID> activeClaimUuids) {
         boolean removed = false;
         for (UUID claimUuid : new ArrayList<>(this.snapshots.keySet())) {

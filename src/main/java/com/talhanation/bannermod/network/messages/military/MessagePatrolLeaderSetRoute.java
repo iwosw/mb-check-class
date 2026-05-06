@@ -55,8 +55,10 @@ public class MessagePatrolLeaderSetRoute implements BannerModMessage<MessagePatr
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        dispatchToServer(player, this.recruit, this.routeId, this.waypoints, this.waitSeconds);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            dispatchToServer(player, this.recruit, this.routeId, this.waypoints, this.waitSeconds);
+        });
     }
 
     public static void dispatchToServer(Player player, UUID recruitId, @Nullable UUID routeId, List<BlockPos> waypoints, List<Integer> waitSeconds) {

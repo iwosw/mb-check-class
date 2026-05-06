@@ -39,24 +39,26 @@ public class MessageSetLeaderGroup implements BannerModMessage<MessageSetLeaderG
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.leaderUUID);
-        if (!(entity instanceof AbstractLeaderEntity leader)
-                || !leader.isAlive()
-                || !player.getBoundingBox().inflate(100D).intersects(leader.getBoundingBox())) {
-            return;
-        }
-        if (!canApplyLeaderGroup(player, leader, groupUUID)) {
-            return;
-        }
-        if (groupUUID == null) {
-            leader.setGroupUUID(null);
-            return;
-        }
-        RecruitsGroup group = RecruitCommandAuthority.ownedGroup(player, groupUUID);
-        if (group == null) return;
-        leader.setGroupUUID(group.getUUID());
-        RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.leaderUUID);
+            if (!(entity instanceof AbstractLeaderEntity leader)
+                    || !leader.isAlive()
+                    || !player.getBoundingBox().inflate(100D).intersects(leader.getBoundingBox())) {
+                return;
+            }
+            if (!canApplyLeaderGroup(player, leader, groupUUID)) {
+                return;
+            }
+            if (groupUUID == null) {
+                leader.setGroupUUID(null);
+                return;
+            }
+            RecruitsGroup group = RecruitCommandAuthority.ownedGroup(player, groupUUID);
+            if (group == null) return;
+            leader.setGroupUUID(group.getUUID());
+            RecruitEvents.groupsManager().broadCastGroupsToPlayer(player);
+        });
     }
 
     static boolean canApplyLeaderGroup(ServerPlayer player, AbstractLeaderEntity leader, @Nullable UUID groupUUID) {

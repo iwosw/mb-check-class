@@ -34,11 +34,13 @@ public class MessageSaveFormationFollowMovement implements BannerModMessage<Mess
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer sender = context.getSender();
-        if (sender == null || !sender.getUUID().equals(player_uuid)) return;
-        List<UUID> ownedGroups = RecruitCommandAuthority.filterOwnedGroups(sender, RecruitsGroup.uuidListFromNbt(groups));
-        CommandEvents.saveFormation(sender, formation);
-        CommandEvents.saveUUIDList(sender, "ActiveGroups", ownedGroups);
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null || !sender.getUUID().equals(player_uuid)) return;
+            List<UUID> ownedGroups = RecruitCommandAuthority.filterOwnedGroups(sender, RecruitsGroup.uuidListFromNbt(groups));
+            CommandEvents.saveFormation(sender, formation);
+            CommandEvents.saveUUIDList(sender, "ActiveGroups", ownedGroups);
+        });
     }
 
     public MessageSaveFormationFollowMovement fromBytes(FriendlyByteBuf buf) {

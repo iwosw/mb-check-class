@@ -29,11 +29,13 @@ public class MessageDisband implements BannerModMessage<MessageDisband> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16D);
-        if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
-            recruit.disband(context.getSender(), keepTeam, true);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16D);
+            if (RecruitCommandAuthority.canDirectlyControl(player, recruit)) {
+                recruit.disband(context.getSender(), keepTeam, true);
+            }
+        });
     }
 
     public MessageDisband fromBytes(FriendlyByteBuf buf) {

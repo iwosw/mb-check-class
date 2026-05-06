@@ -75,25 +75,27 @@ public class MessageFormationMapEngage implements BannerModMessage<MessageFormat
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer sender = context.getSender();
-        if (sender == null || target == null || actorContactId == null || mode == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null || target == null || actorContactId == null || mode == null) return;
 
-        ServerLevel level = sender.serverLevel();
-        BlockPos engagementTarget = new BlockPos(
-                target.getX(),
-                level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, target.getX(), target.getZ()),
-                target.getZ()
-        );
+            ServerLevel level = sender.serverLevel();
+            BlockPos engagementTarget = new BlockPos(
+                    target.getX(),
+                    level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, target.getX(), target.getZ()),
+                    target.getZ()
+            );
 
-        List<AbstractRecruitEntity> recruits = new ArrayList<>(resolveActors(sender));
-        recruits.removeIf(recruit -> !CommandHierarchy.canCommand(sender, recruit));
-        if (recruits.isEmpty()) return;
+            List<AbstractRecruitEntity> recruits = new ArrayList<>(resolveActors(sender));
+            recruits.removeIf(recruit -> !CommandHierarchy.canCommand(sender, recruit));
+            if (recruits.isEmpty()) return;
 
-        switch (mode) {
-            case ADVANCE_IN_FORMATION -> dispatchAdvance(sender, level, recruits, engagementTarget);
-            case FREE_CHARGE -> dispatchFreeCharge(sender, recruits, engagementTarget);
-            case OPEN_FIRE -> dispatchOpenFire(sender, recruits, engagementTarget);
-        }
+            switch (mode) {
+                case ADVANCE_IN_FORMATION -> dispatchAdvance(sender, level, recruits, engagementTarget);
+                case FREE_CHARGE -> dispatchFreeCharge(sender, recruits, engagementTarget);
+                case OPEN_FIRE -> dispatchOpenFire(sender, recruits, engagementTarget);
+            }
+        });
     }
 
     private void dispatchOpenFire(ServerPlayer sender, List<AbstractRecruitEntity> recruits, BlockPos engagementTarget) {

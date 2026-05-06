@@ -41,15 +41,17 @@ public class MessageUpdateMiningArea implements BannerModMessage<MessageUpdateMi
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        MiningArea miningArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, MiningArea.class);
-        if (miningArea == null) {
-            return;
-        }
-        this.update(miningArea);
-        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), miningArea.blockPosition());
+            MiningArea miningArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, MiningArea.class);
+            if (miningArea == null) {
+                return;
+            }
+            this.update(miningArea);
+            WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), miningArea.blockPosition());
+        });
     }
 
     public void update(MiningArea miningArea){

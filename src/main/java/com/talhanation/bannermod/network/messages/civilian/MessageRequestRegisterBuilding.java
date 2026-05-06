@@ -38,14 +38,16 @@ public class MessageRequestRegisterBuilding implements BannerModMessage<MessageR
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        if (!BuildingRequestSecurity.canUseWandAt(player, cornerA, cornerB, center, keyBlock)) {
-            return;
-        }
-        PlayerBuildingRegistrationService.register(player, prefabId, cornerA, cornerB, center, keyBlock);
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            if (!BuildingRequestSecurity.canUseWandAt(player, cornerA, cornerB, center, keyBlock)) {
+                return;
+            }
+            PlayerBuildingRegistrationService.register(player, prefabId, cornerA, cornerB, center, keyBlock);
+        });
     }
 
     @Override

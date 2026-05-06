@@ -39,7 +39,15 @@ public class MessageAttack implements BannerModMessage<MessageAttack> {
 
     public void executeServerSide(BannerModNetworkContext context) {
         ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        dispatchToServer(serverPlayer, this.playerUuid, this.group);
+        if (!com.talhanation.bannermod.network.throttle.PacketRateLimiter.shared()
+                .tryAcquire(serverPlayer.getUUID(), MessageAttack.class)) {
+            RuntimeProfilingCounters.increment("network.rate_limit.dropped.attack");
+            return;
+        }
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+            dispatchToServer(serverPlayer, this.playerUuid, this.group);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer serverPlayer, UUID playerUuid, UUID group) {

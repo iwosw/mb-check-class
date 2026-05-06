@@ -40,55 +40,57 @@ public class MessageAssignGroupToCompanion implements BannerModMessage<MessageAs
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer serverPlayer =  Objects.requireNonNull(context.getSender());
-        ServerLevel serverLevel =  serverPlayer.serverLevel();
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer =  Objects.requireNonNull(context.getSender());
+            ServerLevel serverLevel =  serverPlayer.serverLevel();
 
-        Entity entity = serverLevel.getEntity(this.companionUUID);
-        if (!(entity instanceof AbstractLeaderEntity companionEntity)
-                || !serverPlayer.getBoundingBox().inflate(100).intersects(companionEntity.getBoundingBox())
-                || !canAssignCompanionGroup(serverPlayer, companionEntity)) {
-            return;
-        }
+            Entity entity = serverLevel.getEntity(this.companionUUID);
+            if (!(entity instanceof AbstractLeaderEntity companionEntity)
+                    || !serverPlayer.getBoundingBox().inflate(100).intersects(companionEntity.getBoundingBox())
+                    || !canAssignCompanionGroup(serverPlayer, companionEntity)) {
+                return;
+            }
 
 
-        RecruitsGroup group = RecruitCommandAuthority.ownedGroup(serverPlayer, companionEntity.getGroup());
-        if(group == null) return;
+            RecruitsGroup group = RecruitCommandAuthority.ownedGroup(serverPlayer, companionEntity.getGroup());
+            if(group == null) return;
 
-        List<AbstractRecruitEntity> recruits = RecruitIndex.instance().groupMembersInRange(
-                serverLevel,
-                group.getUUID(),
-                serverPlayer.position(),
-                100.0D
-        );
-        List<AbstractRecruitEntity> list;
-        if (recruits == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            list = serverLevel.getEntitiesOfClass(AbstractRecruitEntity.class, serverPlayer.getBoundingBox().inflate(100));
-            list.removeIf(recruit -> (recruit.getGroup() == null || !recruit.getGroup().equals(group.getUUID()))
-                    || recruit.getUUID().equals(this.companionUUID));
-        } else {
-            list = new ArrayList<>();
-            for (AbstractRecruitEntity recruit : recruits) {
-                if (!recruit.getUUID().equals(this.companionUUID)) {
-                    list.add(recruit);
+            List<AbstractRecruitEntity> recruits = RecruitIndex.instance().groupMembersInRange(
+                    serverLevel,
+                    group.getUUID(),
+                    serverPlayer.position(),
+                    100.0D
+            );
+            List<AbstractRecruitEntity> list;
+            if (recruits == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                list = serverLevel.getEntitiesOfClass(AbstractRecruitEntity.class, serverPlayer.getBoundingBox().inflate(100));
+                list.removeIf(recruit -> (recruit.getGroup() == null || !recruit.getGroup().equals(group.getUUID()))
+                        || recruit.getUUID().equals(this.companionUUID));
+            } else {
+                list = new ArrayList<>();
+                for (AbstractRecruitEntity recruit : recruits) {
+                    if (!recruit.getUUID().equals(this.companionUUID)) {
+                        list.add(recruit);
+                    }
                 }
             }
-        }
 
-        list.removeIf(recruit -> !RecruitCommandAuthority.canDirectlyControl(serverPlayer, recruit));
-        if (list.isEmpty()) {
-            return;
-        }
+            list.removeIf(recruit -> !RecruitCommandAuthority.canDirectlyControl(serverPlayer, recruit));
+            if (list.isEmpty()) {
+                return;
+            }
 
-        for (AbstractRecruitEntity recruit : list) {
-            ICompanion.assignToLeaderCompanion(companionEntity, recruit);
-        }
-        List<LivingEntity> armyMembers = new ArrayList<>(list);
-        companionEntity.army = new NPCArmy(serverLevel, armyMembers, null);
-        group.leaderUUID = companionUUID;
-        companionEntity.setGroupUUID(group.getUUID());
+            for (AbstractRecruitEntity recruit : list) {
+                ICompanion.assignToLeaderCompanion(companionEntity, recruit);
+            }
+            List<LivingEntity> armyMembers = new ArrayList<>(list);
+            companionEntity.army = new NPCArmy(serverLevel, armyMembers, null);
+            group.leaderUUID = companionUUID;
+            companionEntity.setGroupUUID(group.getUUID());
 
-        RecruitEvents.groupsManager().broadCastGroupsToPlayer(serverPlayer);
+            RecruitEvents.groupsManager().broadCastGroupsToPlayer(serverPlayer);
+        });
     }
 
     static boolean canAssignCompanionGroup(ServerPlayer player, AbstractLeaderEntity companionEntity) {

@@ -53,50 +53,52 @@ public class MessageResolveWarOutcome implements BannerModMessage<MessageResolve
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.warId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        WarDeclarationRuntime declarations = WarRuntimeContext.declarations(level);
-        Optional<WarDeclarationRecord> warOpt = declarations.byId(this.warId);
-        if (warOpt.isEmpty()) {
-            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.not_found"));
-            return;
-        }
-        WarDeclarationRecord war = warOpt.get();
-        Action action = decodeAction(this.actionOrdinal);
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> attacker = registry.byId(war.attackerPoliticalEntityId());
-        if (action == Action.TRIBUTE && !player.hasPermissions(2)) {
-            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.op_only", actionName(action)));
-            return;
-        }
-        if (attacker.isEmpty() || !PoliticalEntityAuthority.canAct(player, attacker.get())) {
-            sendFeedback(player, PoliticalEntityAuthority.denialReason(player.getUUID(), player.hasPermissions(2), attacker.orElse(null)));
-            return;
-        }
-        if (!isOutcomeSupportedForGoal(action, war.goalType())) {
-            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.unsupported", actionName(action), war.goalType().name()));
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.warId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            WarDeclarationRuntime declarations = WarRuntimeContext.declarations(level);
+            Optional<WarDeclarationRecord> warOpt = declarations.byId(this.warId);
+            if (warOpt.isEmpty()) {
+                sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.not_found"));
+                return;
+            }
+            WarDeclarationRecord war = warOpt.get();
+            Action action = decodeAction(this.actionOrdinal);
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> attacker = registry.byId(war.attackerPoliticalEntityId());
+            if (action == Action.TRIBUTE && !player.hasPermissions(2)) {
+                sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.op_only", actionName(action)));
+                return;
+            }
+            if (attacker.isEmpty() || !PoliticalEntityAuthority.canAct(player, attacker.get())) {
+                sendFeedback(player, PoliticalEntityAuthority.denialReason(player.getUUID(), player.hasPermissions(2), attacker.orElse(null)));
+                return;
+            }
+            if (!isOutcomeSupportedForGoal(action, war.goalType())) {
+                sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.unsupported", actionName(action), war.goalType().name()));
+                return;
+            }
 
-        WarOutcomeApplier.Result result = apply(action, player, level, war);
-        if (!result.valid()) {
-            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.rejected", actionName(action), result.reason()));
-            return;
-        }
+            WarOutcomeApplier.Result result = apply(action, player, level, war);
+            if (!result.valid()) {
+                sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.denied.rejected", actionName(action), result.reason()));
+                return;
+            }
 
-        WarDeclarationRecord finalWar = declarations.byId(war.id()).orElse(war);
-        if (action == Action.CANCEL) {
-            WarNoticeService.broadcastCancelled(player.server, finalWar, registry);
-            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.accepted.cancel"));
-        } else {
-            String outcomeName = result.outcome() == null ? "RESOLVED" : result.outcome().name();
-            WarNoticeService.broadcastOutcome(player.server, finalWar, registry, outcomeName);
-            sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.accepted.resolved", outcomeName));
-        }
-        sendSnapshot(player, level, registry);
+            WarDeclarationRecord finalWar = declarations.byId(war.id()).orElse(war);
+            if (action == Action.CANCEL) {
+                WarNoticeService.broadcastCancelled(player.server, finalWar, registry);
+                sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.accepted.cancel"));
+            } else {
+                String outcomeName = result.outcome() == null ? "RESOLVED" : result.outcome().name();
+                WarNoticeService.broadcastOutcome(player.server, finalWar, registry, outcomeName);
+                sendFeedback(player, Component.translatable("chat.bannermod.war_outcome.accepted.resolved", outcomeName));
+            }
+            sendSnapshot(player, level, registry);
+        });
     }
 
     private static void sendFeedback(ServerPlayer player, Component message) {

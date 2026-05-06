@@ -36,38 +36,40 @@ public class MessageUpdateClaim implements BannerModMessage<MessageUpdateClaim> 
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer sender = context.getSender();
-        if (sender == null) return;
-        RecruitsClaim updatedClaim = RecruitsClaim.fromNBT(this.claimNBT);
-        if(!RecruitsServerConfig.AllowClaiming.get()) return;
-        if(sender.level().dimension() != Level.OVERWORLD) return;
-        if (ClaimEvents.claimManager() == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null) return;
+            RecruitsClaim updatedClaim = RecruitsClaim.fromNBT(this.claimNBT);
+            if(!RecruitsServerConfig.AllowClaiming.get()) return;
+            if(sender.level().dimension() != Level.OVERWORLD) return;
+            if (ClaimEvents.claimManager() == null) return;
 
-        ServerLevel level = (ServerLevel) sender.getCommandSenderWorld();
-        RecruitsClaim existingClaim = getExistingClaim(updatedClaim);
-        boolean isAdmin = isAdmin(sender);
-        if (existingClaim == null && !isAdmin) return;
-        if (existingClaim != null && !ClaimPacketAuthority.canEditClaim(
-                sender.getUUID(),
-                isAdmin,
-                existingClaim,
-                resolvePoliticalOwner(sender, existingClaim))) return;
-        if (!isAdmin && overlapsOtherClaim(updatedClaim, existingClaim)) return;
+            ServerLevel level = (ServerLevel) sender.getCommandSenderWorld();
+            RecruitsClaim existingClaim = getExistingClaim(updatedClaim);
+            boolean isAdmin = isAdmin(sender);
+            if (existingClaim == null && !isAdmin) return;
+            if (existingClaim != null && !ClaimPacketAuthority.canEditClaim(
+                    sender.getUUID(),
+                    isAdmin,
+                    existingClaim,
+                    resolvePoliticalOwner(sender, existingClaim))) return;
+            if (!isAdmin && overlapsOtherClaim(updatedClaim, existingClaim)) return;
 
-        if (existingClaim != null && !isAdmin) {
-            updatedClaim.setOwnerPoliticalEntityId(existingClaim.getOwnerPoliticalEntityId());
-            updatedClaim.setPlayer(existingClaim.getPlayerInfo());
-            updatedClaim.setAdminClaim(existingClaim.isAdmin);
-        }
-        if (updatedClaim.getPlayerInfo() != null) {
-            updatedClaim.removeTrustedPlayer(updatedClaim.getPlayerInfo().getUUID());
-        }
-        if (ClaimEvents.claimManager().isTownTooCloseToSameNationTown(
-                updatedClaim,
-                existingClaim,
-                RecruitsServerConfig.TownMinCenterDistance.get())) return;
+            if (existingClaim != null && !isAdmin) {
+                updatedClaim.setOwnerPoliticalEntityId(existingClaim.getOwnerPoliticalEntityId());
+                updatedClaim.setPlayer(existingClaim.getPlayerInfo());
+                updatedClaim.setAdminClaim(existingClaim.isAdmin);
+            }
+            if (updatedClaim.getPlayerInfo() != null) {
+                updatedClaim.removeTrustedPlayer(updatedClaim.getPlayerInfo().getUUID());
+            }
+            if (ClaimEvents.claimManager().isTownTooCloseToSameNationTown(
+                    updatedClaim,
+                    existingClaim,
+                    RecruitsServerConfig.TownMinCenterDistance.get())) return;
 
-        ClaimEvents.claimManager().addOrUpdateClaim(level, updatedClaim);
+            ClaimEvents.claimManager().addOrUpdateClaim(level, updatedClaim);
+        });
     }
 
     static RecruitsClaim getExistingClaim(RecruitsClaim updatedClaim) {

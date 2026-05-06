@@ -37,26 +37,28 @@ public class MessageResolveRevolt implements BannerModMessage<MessageResolveRevo
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || revoltId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        RevoltState outcome = decodeOutcome(outcomeOrdinal);
-        RevoltInteractionService.Result result = RevoltInteractionService.resolve(
-                WarRuntimeContext.revolts(level),
-                WarRuntimeContext.occupations(level),
-                WarRuntimeContext.applierFor(level),
-                revoltId,
-                outcome,
-                player.hasPermissions(2),
-                level.getGameTime());
-        if (!result.allowed()) {
-            player.sendSystemMessage(Component.translatable("chat.bannermod.revolt.denied." + result.reason()));
-            return;
-        }
-        player.sendSystemMessage(Component.translatable("chat.bannermod.revolt.resolved." + result.outcome().name().toLowerCase(java.util.Locale.ROOT)));
-        sendSnapshot(player, level);
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || revoltId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            RevoltState outcome = decodeOutcome(outcomeOrdinal);
+            RevoltInteractionService.Result result = RevoltInteractionService.resolve(
+                    WarRuntimeContext.revolts(level),
+                    WarRuntimeContext.occupations(level),
+                    WarRuntimeContext.applierFor(level),
+                    revoltId,
+                    outcome,
+                    player.hasPermissions(2),
+                    level.getGameTime());
+            if (!result.allowed()) {
+                player.sendSystemMessage(Component.translatable("chat.bannermod.revolt.denied." + result.reason()));
+                return;
+            }
+            player.sendSystemMessage(Component.translatable("chat.bannermod.revolt.resolved." + result.outcome().name().toLowerCase(java.util.Locale.ROOT)));
+            sendSnapshot(player, level);
+        });
     }
 
     private static RevoltState decodeOutcome(byte ordinal) {
