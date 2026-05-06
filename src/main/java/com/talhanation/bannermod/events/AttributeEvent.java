@@ -9,7 +9,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.Random;
 
-@EventBusSubscriber(modid = com.talhanation.bannermod.bootstrap.BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = com.talhanation.bannermod.bootstrap.BannerModMain.MOD_ID)
 public class AttributeEvent {
     protected final Random random = new Random();
 

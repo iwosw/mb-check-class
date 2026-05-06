@@ -12,7 +12,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
  * the actual handler in {@link DragSelectionHandler} is wired to the Forge event bus,
  * while {@link RegisterKeyMappingsEvent} fires on the mod bus.
  */
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, value = Dist.CLIENT)
 public final class DragSelectionKeyBootstrap {
     private DragSelectionKeyBootstrap() {
     }

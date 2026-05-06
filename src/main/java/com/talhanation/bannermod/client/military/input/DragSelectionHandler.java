@@ -46,7 +46,7 @@ import java.util.UUID;
  * <p>Renders on the Forge client event bus; key mapping registered on the mod event bus.</p>
  */
 @OnlyIn(Dist.CLIENT)
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, value = Dist.CLIENT)
 public final class DragSelectionHandler {
     public static final KeyMapping SELECT_KEY = new KeyMapping(
             "key.bannermod.drag_select",

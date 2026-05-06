@@ -7237,8 +7237,8 @@
     {
       "id": "EBSMIGRATE-001",
       "title": "Replace deprecated EventBusSubscriber.bus() across all subscribers",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "compileJava emits 'bus() in EventBusSubscriber has been deprecated and marked for removal' across 10+ files: WorkersAttributeEvent, CitizenAttributeEvent, AttributeEvent, CitizenIndexEvents, WorkerIndexEvents, RecruitIndexEvents, WorkAreaIndexEvents, both ClientEvent classes, surveyor renderer events. When NeoForge removes the API, every static event subscriber stops compiling. Source: review Part C 25.1 / NEW.",
       "scope": [
         "Migrate to NeoForge replacement API (whichever is current at fix time - likely register-on-event-bus per Dist instead of @EventBusSubscriber(... bus = ...))",
@@ -7250,14 +7250,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Migrated 15 subscriber sites by dropping the deprecated 'bus = EventBusSubscriber.Bus.{GAME,MOD}' arg (auto-detection now drives bus selection per NeoForge 1.21.1 docs). Files: events/{AttributeEvent,CitizenAttributeEvent,WorkersAttributeEvent}.java, entity/{citizen/CitizenIndexEvents,civilian/WorkerIndexEvents,civilian/workarea/WorkAreaIndexEvents,military/RecruitIndexEvents,military/RecruitsChunkTicketEvents}.java, client/{civilian/events/ClientEvent,civilian/render/SettlementSurveyorGuidanceRenderEvents,civilian/render/SettlementSurveyorSelectionRenderEvents,military/events/ClientEvent,military/input/DragSelectionHandler,military/input/DragSelectionKeyBootstrap,military/render/RecruitCrowdRenderEvents}.java. compileJava removal warnings: 90 -> 0. runGameTestServer: all 147 gametests pass (BUILD SUCCESSFUL)."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTSAVELOAD-001",
       "title": "Settlement save/load roundtrip test",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "No test deserializes BannerModSettlementSnapshot tag and asserts equality. SavedData fragility is highest-impact regression vector. Source: review Part A 11.2 #1.",
       "scope": [
         "Pure JUnit test under src/test that builds a representative snapshot, calls toTag, calls fromTag, asserts equality field-by-field",
@@ -7269,14 +7275,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Added src/test/java/com/talhanation/bannermod/settlement/BannerModSettlementSnapshotRoundtripTest.java with 4 cases: emptySnapshotRoundTripsThroughTagCodec, singleBuildingSnapshotRoundTripsThroughTagCodec, fullSnapshotRoundTripsAllNestedRecordsAndLists, corruptedButValidEdgeCaseRoundTripsWithDefaults. Each compares every snapshot record component field-by-field plus record-equals (auto-generated from full component list, so a new field added without codec update breaks the test). Verified: ./gradlew test --tests BannerModSettlementSnapshotRoundtripTest -> BUILD SUCCESSFUL, 4 tests, 0 failures, 0 errors."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTTREAS-001",
       "title": "Treasury under simulated concurrent packet flow",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Once ENQUEUE-001 lands, treasury depositTaxes vs recordArmyUpkeepDebit is single-threaded; this test guards that property. Source: review Part A 6.5 / 11.2 #2.",
       "scope": [
         "Gametest that fires N MessageDepositTaxes-equivalents in the same tick on the same claim; assert final ledger == sum of inputs",
@@ -7291,14 +7303,20 @@
         "ENQUEUE-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "runGameTestServer reports '149 GAME TESTS COMPLETE' / 'All 149 required tests passed' (baseline before this slice = 147; +2 = the new BannerModTreasuryConcurrentDepositGameTests methods). Method 1 fires 1000 depositTaxes calls in one tick on a single claim and asserts ledger.accruedTaxes == 1000*7 (algebraic sum). Method 2 has 4 worker threads enqueue 250 deposits each through the server main-thread executor (post-ENQUEUE-001 path), asserts every runner thread name == server.getRunningThread().getName(), zero body exceptions, ledger == algebraic sum. Test green on 3 consecutive runs."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTFANOUT-001",
       "title": "Claim deletion fanout to treasury / settlement / worker / war test",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Acceptance test for CLAIMFANOUT-001. Source: review Part A 11.2 #3.",
       "scope": [
         "Gametest: create claim with treasury, settlement snapshot, bound worker, active occupation. Delete claim. Assert all four orphan paths cleaned in same tick"
@@ -7310,14 +7328,20 @@
         "CLAIMFANOUT-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "runGameTestServer (151/151 passed) — BannerModClaimRemovalFanoutGameTests::claimDeletionCascadesAllPerClaimRuntimeState seeds treasury ledger via depositTaxes, settlement snapshot via putSnapshot, worker binding via setCurrentWorkArea, and occupation via OccupationRuntime.place; ClaimEvents.claimManager().removeClaim(claim) (same path as MessageDeleteClaim) clears all four in the same tick. Parity test unrelatedClaimStateIsPreservedWhenSiblingClaimIsDeleted guards regression by asserting sibling claim's treasury/snapshot/worker/occupation survive."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTWORKER-001",
       "title": "Worker unbinding when work-area entity removed",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Worker bound to a now-dead ValidatedBuildingRecord must auto-unbind. Source: review Part A 11.2 #4.",
       "scope": [
         "Gametest: spawn farmer + crop area; bind farmer; kill crop area; advance N ticks; assert farmer.boundWorkAreaUUID == null AND no goal references the dead area"
@@ -7327,14 +7351,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Added gametest src/gametest/java/com/talhanation/bannermod/BannerModWorkerUnbindOnAreaRemovalGameTests.java with method workerAutoUnbindsWithinTwentyTicksAfterCropAreaRemoval. Compile-only verification: ./gradlew compileGametestJava SUCCESS. Production code does not currently auto-unbind on work-area entity removal (no EntityLeaveLevelEvent fanout from AbstractWorkAreaEntity to bound workers; AbstractWorkerEntity.getCurrentWorkArea() filters removed entities but never clears boundWorkAreaUUID). Per acceptance item 2, the @GameTest annotation is intentionally commented out with a TODO referencing the production-fix task WORKERUNBIND-001 (filed). The class is annotated @GameTestHolder and discoverable; re-enabling @GameTest on the method wires it into ./gradlew runGameTestServer once WORKERUNBIND-001 ships."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTCHUNK-001",
       "title": "Chunk unload / reload preserves settlement + claim state",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Force chunk unload must not corrupt SavedData. Source: review Part A 11.2 #5.",
       "scope": [
         "Gametest: set up settlement + claim in chunk; force unload chunk; force reload; assert state byte-for-byte identical"
@@ -7344,14 +7374,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Added src/gametest/java/com/talhanation/bannermod/persistence/ChunkUnloadReloadRoundtripGameTests.java with 4 @GameTest methods (settlementSnapshotTagIsByteForByteIdenticalAfterRoundtrip, claimRoundtripTagIsByteForByteIdentical, treasuryLedgerRoundtripTagIsByteForByteIdentical, claimSettlementAndTreasuryAllSurviveSimulatedChunkUnloadReload) under @GameTestHolder(BannerModMain.MOD_ID); ./gradlew runGameTestServer reports 'All 151 required tests passed :)' (BUILD SUCCESSFUL in 28s). Each test drives the production save/load entry points (RecruitsClaimSaveData, BannerModSettlementManager, BannerModTreasuryManager, BannerModSettlementSnapshot.toTag/fromTag) the same way DimensionDataStorage does on a chunk unload, then asserts CompoundTag.equals on the pre-unload vs post-reload tags, covering claim UUID + chunk coords, snapshot tag roundtrip, and treasury ledger."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTDIM-001",
       "title": "Dimension change with formation set does not break recruits",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Acceptance test for FORMATIONDIM-001. Source: review Part A 11.2 #6.",
       "scope": [
         "Gametest: form a 5-recruit formation in Overworld; teleport leader to Nether; advance ticks; assert recruits hold position and no NPE / pathfind to invalid chunk"
@@ -7363,8 +7399,14 @@
         "FORMATIONDIM-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "runGameTestServer: All 148 required tests passed (incl. fiveRecruitFormationHoldsAcrossDimensionTeleport: 5-recruit cohort, leader portal traversal simulated via fake-player swap, 40-tick advance, recruits held position, orphan counter advanced, no NPE)"
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTLONGRUN-001",
@@ -7466,8 +7508,8 @@
     {
       "id": "UIAUDIT-001",
       "title": "Move UI_AUDIT_FINDINGS.md into docs/ and commit",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "in_progress",
+      "updated": "2026-05-06",
       "why": "Untracked 161-line per-screen UI audit (30 screens, summary table, top-5 severe findings) lives at repo root from a prior session. Real audit output, not noise. Source: review Part C 26.3 / Part A U6.",
       "scope": [
         "git mv UI_AUDIT_FINDINGS.md docs/UI_AUDIT_FINDINGS.md",
@@ -7480,7 +7522,12 @@
         "Working tree shows no untracked UI_AUDIT_FINDINGS.md"
       ],
       "dependencies": [],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-06",
+          "text": "Source file UI_AUDIT_FINDINGS.md no longer present at repo root and not in git history; cannot 'git mv' as scoped. Task stays open pending re-import of the audit content from prior-session backup. 2026-05-06 backlog-execute batch."
+        }
+      ],
       "verification": [],
       "evidence": []
     },
@@ -7507,8 +7554,8 @@
     {
       "id": "DOCSTATUS-001",
       "title": "Update docs/STATUS.md stale claims",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "STATUS.md says 'Worker AI still has legacy current*Area fields'; codebase actually has unified currentWorkArea (no legacy named fields). STATUS.md says reconnectedowner test failure exists; the test name is now verified at BannerModDedicatedServerReconnectGameTests.java line 90. Source: review Part B 19.9 / B5 / Part C 26 / VERIFIED.",
       "scope": [
         "Rewrite STATUS.md 'Known Open Areas' bullet about current*Area to describe the actual remaining gap (binding source-of-truth: currentWorkArea on entity vs ValidatedBuildingRecord in registry)",
@@ -7520,14 +7567,20 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Inspected src/main/java/com/talhanation/bannermod/entity/civilian/AbstractWorkerEntity.java (currentWorkAreaCache field, no legacy current*Area fields) via ctx search; inspected src/gametest/java/com/talhanation/bannermod/BannerModDedicatedServerReconnectGameTests.java line 90 to confirm @GameTest method name reconnectedOwnerRecoversAuthorityAfterOwnershipRoundTrip. Edited docs/STATUS.md: rewrote Known Open Areas bullet to describe entity-vs-registry source-of-truth split (currentWorkArea on AbstractWorkerEntity vs ValidatedBuildingRecord in settlement registry), and replaced lowercase test name with exact camelCase method name in verifyGameTestStage failure note."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "DOCPACKETS-001",
       "title": "Full audit of ~145 packets for client-trusted UUIDs",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "STATUS.md/CLAUDE.md note recent fixes pushed face/ranged/upkeep packets onto real-sender UUIDs. Spot-check passed; full inventory missing. Some pre-merge handlers may still trust client-supplied UUIDs. Source: review Part A 6.6 / 13.1 / Sec4 / VERIFIED-as-gap.",
       "scope": [
         "Inventory every BannerModMessage subclass",
@@ -7541,8 +7594,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Audited 146 BannerModMessage subclasses (146 source files matching 'implements BannerModMessage<' under src/main). docs/PACKET_AUTHORITY_INVENTORY.md committed with header (date 2026-05-06, methodology, totals), the (c)-class table mapping each bug to its PACKETAUTH-* follow-up, the (b)-class table noting the gate per packet, and (a)-class clientbound + serverbound-no-actor lists. Counts: 65 (a) + 47 (b) + 19 (c) + 15 pure clientbound = 146. Filed PACKETAUTH-001..019 (the 5 prior findings re-confirmed against current code, plus 14 new (c) findings: MessageDebugGui, MessageMountEntityGui, MessageAssassinCount, the seven MessagePatrolLeader* mutators, MessageRemoveAssignedGroupFromCompanion, MessageSendMessenger, MessagePromoteRecruit, MessageHire). No packet handlers were modified — fixes are deferred to the per-PACKETAUTH-* tasks per task scope."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTRECONNECT-001",
@@ -8329,6 +8388,349 @@
         "EVENTSPKG-003",
         "EVENTSPKG-004"
       ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-001",
+      "title": "Verify sender owns recruits in MessageBackToMountEntity",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageBackToMountEntity reads this.uuid (intended-owner UUID) from the wire and passes it to RecruitIndex.ownerInRange(...) to gather recruits, then dispatches a SiegeMachine intent. No equality check vs context.getSender().getUUID(); a malicious client can target another player's recruits in range.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageBackToMountEntity.java executeServerSide; either drop this.uuid in favour of player.getUUID() or short-circuit when sender.getUUID()!=this.uuid (mirror MessageRest/Shields/UpkeepEntity authorizedPlayerUuid pattern)."
+      ],
+      "acceptance": [
+        "Server handler ignores client-supplied this.uuid for ownerInRange lookup (uses sender.getUUID() or short-circuits on mismatch); regression unit test with a forged UUID confirms no SiegeMachine intent is dispatched to victim recruits."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-002",
+      "title": "Verify sender in MessageClearUpkeep",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageClearUpkeep reads this.uuid as the recruit-owner UUID, passes it both to RecruitIndex.ownerInRange(...) and to CommandEvents.onClearUpkeepButton(uuid, recruit, group). No equality check vs sender.getUUID(); any client can clear upkeep on another player's recruits in range.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageClearUpkeep.java executeServerSide; substitute sender.getUUID() (mirror MessageUpkeepEntity.authorizedPlayerUuid) or reject when this.uuid != sender.getUUID()."
+      ],
+      "acceptance": [
+        "Server handler uses sender.getUUID() (or rejects mismatched UUID) for ownerInRange and the onClearUpkeepButton actor parameter; regression test with forged UUID demonstrates no upkeep clear on victim recruits."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-003",
+      "title": "Verify sender in MessageMountEntity",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageMountEntity reads this.uuid as the recruit-owner UUID and passes it to RecruitIndex.ownerInRange(...) and to recruit.isEffectedByCommand in the fallback predicate. Sender authority is never validated; a client can mount-command another player's recruits onto a target entity in range.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageMountEntity.java executeServerSide; replace this.uuid with sender.getUUID() in both lookup branches and predicate, or short-circuit on mismatch."
+      ],
+      "acceptance": [
+        "Server handler uses sender.getUUID() for ownerInRange and isEffectedByCommand; forged-UUID regression test confirms no SiegeMachine intent dispatched to victim recruits."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-004",
+      "title": "Verify sender in MessageProtectEntity",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageProtectEntity reads this.uuid as the recruit-owner UUID, passes it to RecruitIndex.ownerInRange(...), and forwards it to CommandEvents.onProtectButton(uuid, recruit, target, group). Sender authority is never checked; any client can issue protect orders to another player's recruits.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageProtectEntity.java executeServerSide; replace this.uuid with sender.getUUID() (or reject mismatch) in ownerInRange call and onProtectButton actor argument."
+      ],
+      "acceptance": [
+        "Server handler uses sender.getUUID() (or rejects mismatch) before recruit lookup and CommandEvents.onProtectButton call; forged-UUID test demonstrates no protect order on victim recruits."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-005",
+      "title": "Reject foreign-owner edits in MessageUpdateGroup",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageUpdateGroup deserializes a RecruitsGroup from client-supplied NBT (including embedded playerUUID/playerName) and calls RecruitsGroupsManager.addOrUpdateGroup with no sender-vs-existing-owner check. A malicious client can rewrite arbitrary groups (rename, reassign owner, change image, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageUpdateGroup.java executeServerSide and/or RecruitsGroupsManager.addOrUpdateGroup; require that an existing group's playerUUID matches the sender (or sender is op) before applying mutations, and clamp/strip the incoming playerUUID/playerName so they cannot be transferred via this packet (transfer should go through MessageAssignGroupToPlayer's audited path)."
+      ],
+      "acceptance": [
+        "Server handler verifies sender owns the existing group before applying NBT-derived mutations; regression test with a non-owner sender confirms the existing group is unchanged; transfer-of-ownership still works through MessageAssignGroupToPlayer."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-006",
+      "title": "Gate MessageDebugGui behind ownership / op",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageDebugGui resolves any recruit within a 16-block AABB by UUID and forwards the action to DebugEvents.handleMessage, which allows kill, disband, heal, XP grants, color/variant edits and more. There is no ownership or permission gate; any client can mutate or destroy any nearby recruit.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageDebugGui.java executeServerSide and com/talhanation/bannermod/events/DebugEvents.java; require sender.hasPermissions(2) (debug tooling) and/or RecruitCommandAuthority.canDirectlyControl(sender, recruit) before invoking DebugEvents.handleMessage and recruit.setCustomName."
+      ],
+      "acceptance": [
+        "MessageDebugGui short-circuits when sender lacks both op permission and direct-control authority over the resolved recruit; regression test confirms a non-owner non-op sender cannot kill/disband/heal a foreign recruit through the debug screen."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-007",
+      "title": "Verify recruit ownership in MessageMountEntityGui",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageMountEntityGui resolves any recruit within 32 blocks by UUID and dispatches a SiegeMachine mount intent without any ownership / canDirectlyControl check. A client can mount-control any visible recruit (own or foreign).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageMountEntityGui.java executeServerSide / mount(); add RecruitCommandAuthority.canDirectlyControl(sender, recruit) before the dispatch (mirror MessageAggroGui/MessageDismountGui)."
+      ],
+      "acceptance": [
+        "Handler bails out when canDirectlyControl returns false; forged-UUID regression test confirms no SiegeMachine intent dispatched on a foreign recruit."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-008",
+      "title": "Verify leader ownership in MessageAssassinCount",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageAssassinCount targets an AssassinLeaderEntity by UUID and only checks a 16-block AABB before calling leader.setCount(this.count). No ownership check; any client in range can rewrite a foreign assassin leader's count.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageAssassinCount.java executeServerSide; add ownership / canDirectlyControl gate using leader.getOwnerUUID() vs sender.getUUID() (or sender.hasPermissions(2))."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign assassin leader confirms count is unchanged."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-009",
+      "title": "Verify leader ownership in MessagePatrolLeaderAddWayPoint",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePatrolLeaderAddWayPoint resolves an AbstractLeaderEntity by UUID and only verifies a range AABB / distance before calling leader.addWayPoint(...). No ownership check; any client in range can mutate a foreign player's leader entity (waypoints, cycle, speed, info mode, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePatrolLeaderAddWayPoint.java executeServerSide; add canDirectlyControl(sender, leader) (or equivalent owner-equality check via leader.getOwnerUUID()) before the mutation."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign leader confirms its state is unchanged after receiving the forged packet."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-010",
+      "title": "Verify leader ownership in MessagePatrolLeaderRemoveWayPoint",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePatrolLeaderRemoveWayPoint resolves an AbstractLeaderEntity by UUID and only verifies a range AABB / distance before calling leader.removeLastWayPoint(...). No ownership check; any client in range can mutate a foreign player's leader entity (waypoints, cycle, speed, info mode, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePatrolLeaderRemoveWayPoint.java executeServerSide; add canDirectlyControl(sender, leader) (or equivalent owner-equality check via leader.getOwnerUUID()) before the mutation."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign leader confirms its state is unchanged after receiving the forged packet."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-011",
+      "title": "Verify leader ownership in MessagePatrolLeaderSetCycle",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePatrolLeaderSetCycle resolves an AbstractLeaderEntity by UUID and only verifies a range AABB / distance before calling leader.setCycle(...). No ownership check; any client in range can mutate a foreign player's leader entity (waypoints, cycle, speed, info mode, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePatrolLeaderSetCycle.java executeServerSide; add canDirectlyControl(sender, leader) (or equivalent owner-equality check via leader.getOwnerUUID()) before the mutation."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign leader confirms its state is unchanged after receiving the forged packet."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-012",
+      "title": "Verify leader ownership in MessagePatrolLeaderSetEnemyAction",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePatrolLeaderSetEnemyAction resolves an AbstractLeaderEntity by UUID and only verifies a range AABB / distance before calling leader.setEnemyAction(...). No ownership check; any client in range can mutate a foreign player's leader entity (waypoints, cycle, speed, info mode, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePatrolLeaderSetEnemyAction.java executeServerSide; add canDirectlyControl(sender, leader) (or equivalent owner-equality check via leader.getOwnerUUID()) before the mutation."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign leader confirms its state is unchanged after receiving the forged packet."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-013",
+      "title": "Verify leader ownership in MessagePatrolLeaderSetInfoMode",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePatrolLeaderSetInfoMode resolves an AbstractLeaderEntity by UUID and only verifies a range AABB / distance before calling leader.setInfoMode(...). No ownership check; any client in range can mutate a foreign player's leader entity (waypoints, cycle, speed, info mode, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePatrolLeaderSetInfoMode.java executeServerSide; add canDirectlyControl(sender, leader) (or equivalent owner-equality check via leader.getOwnerUUID()) before the mutation."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign leader confirms its state is unchanged after receiving the forged packet."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-014",
+      "title": "Verify leader ownership in MessagePatrolLeaderSetPatrollingSpeed",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePatrolLeaderSetPatrollingSpeed resolves an AbstractLeaderEntity by UUID and only verifies a range AABB / distance before calling leader.setPatrolSpeed(...). No ownership check; any client in range can mutate a foreign player's leader entity (waypoints, cycle, speed, info mode, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePatrolLeaderSetPatrollingSpeed.java executeServerSide; add canDirectlyControl(sender, leader) (or equivalent owner-equality check via leader.getOwnerUUID()) before the mutation."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign leader confirms its state is unchanged after receiving the forged packet."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-015",
+      "title": "Verify leader ownership in MessagePatrolLeaderSetWaitTime",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePatrolLeaderSetWaitTime resolves an AbstractLeaderEntity by UUID and only verifies a range AABB / distance before calling leader.setWaitTimeInMin(...). No ownership check; any client in range can mutate a foreign player's leader entity (waypoints, cycle, speed, info mode, etc.).",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePatrolLeaderSetWaitTime.java executeServerSide; add canDirectlyControl(sender, leader) (or equivalent owner-equality check via leader.getOwnerUUID()) before the mutation."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign leader confirms its state is unchanged after receiving the forged packet."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-016",
+      "title": "Verify leader ownership in MessageRemoveAssignedGroupFromCompanion",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageRemoveAssignedGroupFromCompanion resolves an AbstractLeaderEntity by UUID and only checks a 100-block AABB before nulling its leader binding, resetting its army's listen/follow/hold-pos state, and broadcasting a leader-screen update. There is no sender-equality / canDirectlyControl gate; any client in range can detach a foreign player's companion's group.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageRemoveAssignedGroupFromCompanion.java executeServerSide; require canDirectlyControl(sender, leader) (or owner-equality via leader.getOwnerUUID()) before mutating leaderUUID, army state, or broadcasting screen updates."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the leader; regression test with a foreign companion leader confirms its group binding and army state are unchanged."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-017",
+      "title": "Verify messenger ownership in MessageSendMessenger",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageSendMessenger resolves a MessengerEntity by UUID with only a 16-block AABB check, then mutates messenger.setMessage / setTargetPlayerInfo and starts the delivery. There is no sender-equality check against messenger.getOwnerUUID(); any client in range can hijack a foreign messenger to deliver an arbitrary message and target.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageSendMessenger.java executeServerSide; require sender.getUUID().equals(messenger.getOwnerUUID()) (or sender.hasPermissions(2)) before mutating message/target/start."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the messenger; regression test with a foreign messenger confirms its message/target/state are unchanged."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-018",
+      "title": "Verify recruit ownership in MessagePromoteRecruit",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessagePromoteRecruit resolves any recruit within 16 blocks by UUID and calls RecruitEvents.promoteRecruit, which discards the original entity and spawns a companion with setOwnerName(sender.getName()). There is no ownership / canDirectlyControl gate; a non-owner can effectively steal a foreign recruit by promoting it.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessagePromoteRecruit.java executeServerSide and/or RecruitEvents.promoteRecruit; require canDirectlyControl(sender, recruit) before invoking promoteRecruit."
+      ],
+      "acceptance": [
+        "Handler bails when sender does not own the recruit; regression test with a foreign recruit confirms it is not discarded and no companion is spawned for the sender."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "PACKETAUTH-019",
+      "title": "Reject foreign-group target in MessageHire",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "MessageHire accepts any groupUUID from the wire and feeds it directly into RecruitsGroupsManager.getGroup + RecruitLifecycleService.hire. The hired recruit is added to that group's members list and (via RecruitLifecycleService.updateGroup) is later reassigned to the foreign group's owner. A sender can therefore pay to inject recruits into another player's group and bypass MessageAssignGroupToPlayer's audited transfer path.",
+      "scope": [
+        "src/main/java/com/talhanation/bannermod/network/messages/military/MessageHire.java executeServerSide; require RecruitCommandAuthority.ownedGroup(sender, groupUUID) (or null when not owned, falling back to no group) before passing the group into handleRecruiting."
+      ],
+      "acceptance": [
+        "Handler ignores foreign-group UUIDs (recruit is hired with no group or the request is rejected); regression test with a sender supplying another player's groupUUID confirms the recruit is owned by the sender, not the foreign player, and is not added to the foreign group's members list."
+      ],
+      "dependencies": [],
+      "progress": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "WORKERUNBIND-001",
+      "title": "Auto-unbind worker when its work-area entity is removed",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "When a worker's bound AbstractWorkAreaEntity is killed/discarded, the worker keeps boundWorkAreaUUID set to the dead entity's id. AbstractWorkerEntity.getCurrentWorkArea() returns null (filters isRemoved/missing entity), but boundWorkAreaUUID never goes back to null and AI goals (e.g. FarmerWorkGoal SELECT_WORK_AREA) cannot reliably tell the area is gone. The symmetric ClaimRemovalFanout exists for full-claim deletion, but not for a single area entity disappearing while its parent claim survives.",
+      "scope": [
+        "Add an EntityLeaveLevelEvent (or AbstractWorkAreaEntity.remove(...) override) handler that, when an AbstractWorkAreaEntity leaves the level via discard/kill/death, finds workers whose CitizenCore.boundWorkAreaUUID equals the removed entity's UUID and calls setCurrentWorkArea(null) on them within at most ~20 ticks",
+        "Re-enable the @GameTest annotation on BannerModWorkerUnbindOnAreaRemovalGameTests#workerAutoUnbindsWithinTwentyTicksAfterCropAreaRemoval and remove the TODO marker pointing at WORKERUNBIND-001"
+      ],
+      "acceptance": [
+        "Spawning a farmer + crop area, binding the farmer, discarding the crop area, then advancing 20 server ticks results in farmer.getBoundWorkAreaUUID() == null AND farmer.getCurrentWorkArea() == null",
+        "BannerModWorkerUnbindOnAreaRemovalGameTests passes under ./gradlew runGameTestServer with @GameTest enabled",
+        "Removal of a work-area entity does not leave any AI goal observing the dead entity through the worker's binding (verified via the gametest assertions)"
+      ],
+      "dependencies": [],
       "progress": [],
       "verification": [],
       "evidence": []

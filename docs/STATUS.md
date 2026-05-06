@@ -37,10 +37,10 @@ Last updated: 2026-04-28.
 ## Known Open Areas
 
 - Full settlement onboarding remains incomplete: a new player still needs clearer starter-fort/town-hall, surveyor, wand, citizen, and profession guidance in-game.
-- Worker AI still has legacy `current*Area` fields in live worker goals; `ValidatedBuildingRecord` should become the authoritative assignment source.
+- Worker assignment binding is split between two sources of truth: the entity-side `currentWorkArea` (cached on `AbstractWorkerEntity`) and the registry-side `ValidatedBuildingRecord` in the settlement validated-building registry. The remaining gap is making `ValidatedBuildingRecord` the authoritative assignment source and reducing `currentWorkArea` to a derived runtime cache.
 - Sea-trade production/consumption is documented as hints, but not yet a full gameplay loop.
 - Remaining war gaps are depth/coverage gaps, not absent systems: some outcomes are still command/admin-heavy, occupation control is lighter than a full governance loop, revolt resolution depends on objective presence rather than a richer objective campaign, siege-standard AI is basic attack/escort behavior, and morale plus ranged-backline polish still need follow-up.
-- `verifyGameTestStage` last had a known failure around `reconnectedownerrecoversauthorityafterownershiproundtrip` in a Better Combat-present smoke; do not claim full GameTest green until rerun successfully.
+- `verifyGameTestStage` last had a known failure around `reconnectedOwnerRecoversAuthorityAfterOwnershipRoundTrip` in a Better Combat-present smoke; do not claim full GameTest green until rerun successfully.
 
 ## Live Code References For War Status
 

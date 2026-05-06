@@ -7,7 +7,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.common.EventBusSubscriber;
 
-@EventBusSubscriber(modid = com.talhanation.bannermod.bootstrap.BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = com.talhanation.bannermod.bootstrap.BannerModMain.MOD_ID)
 public class WorkersAttributeEvent {
 
     @SubscribeEvent
