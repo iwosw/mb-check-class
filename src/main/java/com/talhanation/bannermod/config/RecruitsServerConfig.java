@@ -21,6 +21,10 @@ public class RecruitsServerConfig {
      */
     private static ModConfigSpec.Builder BUILDER;
     public static ModConfigSpec SERVER;
+    public static ModConfigSpec.IntValue PacketRateLimitMovementMillis;
+    public static ModConfigSpec.IntValue PacketRateLimitFaceMillis;
+    public static ModConfigSpec.IntValue PacketRateLimitStanceMillis;
+    public static ModConfigSpec.IntValue PacketRateLimitAttackMillis;
     public static ModConfigSpec.BooleanValue RecruitTablesPOIReleasing;
     public static ModConfigSpec.BooleanValue OverrideIronGolemSpawn;
     public static ModConfigSpec.BooleanValue PillagerFriendlyFire;
@@ -972,11 +976,30 @@ public class RecruitsServerConfig {
                 .worldRestart()
                 .define("FogOfWarEnabled", true);
 
-        // Symmetric pop so the caller's builder depth is the same after populate() returns
-        // as it was before the call. Pre-existing static-block layout left one unbalanced
-        // push (Claiming); without this closing pop the unified BannerModServerConfig spec
-        // would silently nest the workers.* sub-tree inside the recruits.Claiming branch.
-        BUILDER.pop(); // Claiming
+        BUILDER.push("packet_rate_limits");
+        PacketRateLimitMovementMillis = BUILDER.comment("""
+                        Minimum interval (ms) between accepted MessageMovement packets per player.
+                        Set 0 to disable throttling for this packet.
+                        \tdefault: 50""")
+                .defineInRange("MovementCooldownMillis", 50, 0, 10_000);
+        PacketRateLimitFaceMillis = BUILDER.comment("""
+                        Minimum interval (ms) between accepted MessageFaceCommand packets per player.
+                        Set 0 to disable throttling for this packet.
+                        \tdefault: 50""")
+                .defineInRange("FaceCommandCooldownMillis", 50, 0, 10_000);
+        PacketRateLimitStanceMillis = BUILDER.comment("""
+                        Minimum interval (ms) between accepted MessageCombatStance packets per player.
+                        Set 0 to disable throttling for this packet.
+                        \tdefault: 100""")
+                .defineInRange("CombatStanceCooldownMillis", 100, 0, 10_000);
+        PacketRateLimitAttackMillis = BUILDER.comment("""
+                        Minimum interval (ms) between accepted MessageAttack packets per player.
+                        Set 0 to disable throttling for this packet.
+                        \tdefault: 100""")
+                .defineInRange("AttackCooldownMillis", 100, 0, 10_000);
+        BUILDER.pop();
+
+        SERVER = BUILDER.build();
     }
 
     public static void loadConfig(ModConfigSpec spec, Path path) {

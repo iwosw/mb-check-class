@@ -147,6 +147,10 @@ public class BannerModMain {
         NeoForge.EVENT_BUS.register(new com.talhanation.bannermod.war.events.WarRetentionSweeper());
         NeoForge.EVENT_BUS.register(new SettlementMutationRefreshEvents());
         NeoForge.EVENT_BUS.register(new SettlementWorkOrderClaimReleaseEvents());
+        // Wire the per-player packet rate limiter to the live server config so cooldown
+        // changes apply without a restart. Limiter remains usable in tests if config is absent.
+        com.talhanation.bannermod.network.throttle.PacketRateLimitConfig.install();
+
         // Create shared channel; recruits at [0..N), workers at [N..N+M)
         SIMPLE_CHANNEL = BannerModNetworkBootstrap.createSharedChannel();
 
