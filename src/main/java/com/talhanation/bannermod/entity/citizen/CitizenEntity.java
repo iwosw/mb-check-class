@@ -162,6 +162,12 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         // via AsyncGroundPathNavigation instead of randomly bumping into walls until
         // chance places it within the 3-block conversion window.
         this.goalSelector.addGoal(2, new com.talhanation.bannermod.ai.citizen.CitizenSeekWorkAreaGoal(this));
+        // HOMEASSIGN-003: at night, walk to the player-assigned home (HOMEASSIGN-002)
+        // and sleep in the bed (or idle if not a bed). Priority 3 keeps work-area
+        // seeking (priority 2) winning during the day; without a home assigned the
+        // goal is dormant.
+        this.goalSelector.addGoal(3, new com.talhanation.bannermod.ai.home.PathfindHomeGoal(
+                this, this::getHomePos));
         this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.6D));
         this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
