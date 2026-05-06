@@ -187,17 +187,13 @@ public class ChunkUnloadReloadRoundtripGameTests {
         // ----- Seed: one claim + one settlement snapshot + one treasury ledger,
         // all anchored on the SAME chunk so this exercises the "settlement +
         // claim state inside one chunk" wording from the acceptance contract.
-        UUID claimUuid = UUID.fromString("33333333-4444-5555-6666-777777777777");
         UUID politicalEntity = UUID.fromString("bbbbbbbb-cccc-dddd-eeee-ffffffffffff");
 
         RecruitsClaim claim = new RecruitsClaim("Coordinated Capital", politicalEntity);
         claim.addChunk(ANCHOR_CHUNK);
         claim.setCenter(ANCHOR_CHUNK);
-        // Override the auto-generated UUID so claim.UUID == snapshot.claimUuid()
-        // and the snapshot/ledger key against this claim. This is the same
-        // identity-pairing production code relies on.
-        // RecruitsClaim's UUID is final; instead, align the snapshot/ledger to
-        // claim.getUUID() — that is the production contract anyway.
+        // RecruitsClaim's UUID is final; align the snapshot/ledger to
+        // claim.getUUID() — that is the production contract.
         UUID coherentClaimUuid = claim.getUUID();
 
         RecruitsClaimSaveData claimData = new RecruitsClaimSaveData();
