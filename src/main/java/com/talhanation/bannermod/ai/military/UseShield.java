@@ -91,6 +91,9 @@ public class UseShield extends Goal {
     }
 
     public void tick() {
+        // STALEREF-001: invalidate stale cached hostile before any read this tick.
+        invalidateStaleHostile();
+
         if (this.entity.getUsedItemHand() == InteractionHand.OFF_HAND) {
             this.entity.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.16D);
         } else {
@@ -105,7 +108,7 @@ public class UseShield extends Goal {
                 && recruit.getCombatStance() == CombatStance.SHIELD_WALL
                 && recruit.isBlocking()) {
             LivingEntity hostile = this.cachedNearestHostile;
-            if (hostile != null && hostile.isAlive()) {
+            if (hostile != null && isLiveTarget(hostile)) {
                 float targetYaw = ShieldBlockGeometry.yawToward(
                         recruit.yBodyRot,
                         recruit.getX(), recruit.getZ(),
@@ -118,10 +121,37 @@ public class UseShield extends Goal {
     }
 
     /**
+     * STALEREF-001: drop the cached hostile reference if it has died, despawned,
+     * or otherwise been removed since the last scan, and force a re-scan on the
+     * next {@link #shouldStanceAutoBlock} call. Called from the top of {@link #tick()}
+     * and from the top of any read site that may dereference the cached field.
+     */
+    public void invalidateStaleHostile() {
+        LivingEntity hostile = this.cachedNearestHostile;
+        if (hostile != null && !isLiveTarget(hostile)) {
+            this.cachedNearestHostile = null;
+            this.cachedStanceAutoBlock = false;
+            // Force a re-scan on the next stance-auto-block check.
+            this.nextHostileScanTick = Integer.MIN_VALUE;
+        }
+    }
+
+    /**
+     * STALEREF-001: shared liveness predicate for cached LivingEntity targets.
+     * A target is "live" only when non-null, still alive, and not removed from
+     * the world (covers despawn, kill, and chunk-unload removals).
+     */
+    public static boolean isLiveTarget(@Nullable LivingEntity target) {
+        return target != null && target.isAlive() && !target.isRemoved();
+    }
+
+    /**
      * Step 2.C: auto-raise shield under SHIELD_WALL / LINE_HOLD when a hostile is nearby.
      * Cached for {@link #HOSTILE_SCAN_INTERVAL_TICKS} to avoid per-tick scans.
      */
     private boolean shouldStanceAutoBlock(AbstractRecruitEntity recruit) {
+        // STALEREF-001: drop a stale cached hostile before we trust the cached scan result.
+        invalidateStaleHostile();
         CombatStance stance = recruit.getCombatStance();
         if (stance != CombatStance.SHIELD_WALL && stance != CombatStance.LINE_HOLD) {
             this.cachedNearestHostile = null;
@@ -247,7 +277,7 @@ public class UseShield extends Goal {
         boolean isSelfTargeted = false;
         LivingEntity target = this.entity.getTarget();
 
-        if (target != null && target.isAlive()) {
+        if (isLiveTarget(target)) {
 
             if (target instanceof Mob mobTarget) {
                 isSelfTargeted = mobTarget.getTarget() != null && mobTarget.getTarget().is(entity);
