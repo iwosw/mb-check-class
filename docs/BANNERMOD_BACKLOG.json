@@ -7411,8 +7411,8 @@
     {
       "id": "TESTLONGRUN-001",
       "title": "Long-running war/audit/treasury accumulation simulation",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Acceptance test for WARRETENTION-001. Source: review Part A 11.2 #7.",
       "scope": [
         "Simulation gametest: declare-resolve war loop N=100 times; verify SavedData sizes plateau (not grow linearly) thanks to retention policy"
@@ -7424,8 +7424,14 @@
         "WARRETENTION-001"
       ],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "./gradlew test --tests com.talhanation.bannermod.war.runtime.WarLongRunRetentionTest -> BUILD SUCCESSFUL (1 test, 0 failures, 0 errors). ./gradlew compileJava test -> BUILD SUCCESSFUL. New WarLongRunRetentionTest runs 100 declare-resolve cycles and asserts audit <= MAX_AUDIT_ENTRIES (4096), occupations <= MAX_OCCUPATIONS (1024), per-war revolts <= MAX_REVOLTS_PER_WAR (64), and that first-cycle audit entries are aged out by the sweeper-equivalent past the 30-day retention window. Style matches the existing unit-style WAR retention tests."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTFUZZ-001",
