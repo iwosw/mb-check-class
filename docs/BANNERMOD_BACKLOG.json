@@ -6583,7 +6583,7 @@
       "id": "HOMEASSIGN-001",
       "title": "Assign-home button for citizens, workers, and recruits",
       "status": "in_progress",
-      "updated": "2026-05-04",
+      "updated": "2026-05-06",
       "why": "Player wants to manually anchor a citizen/worker/recruit to a specific dwelling so they sleep / return to it. Recruits already carry an upkeepPos field that's conceptually a home, but workers/citizens have no equivalent and there's no UI to set one for any of the three. Without manual override the AI just wanders to whatever the staffing pipeline picked.",
       "scope": [
         "(a) Add homePos (BlockPos) + homeBuildAreaUUID (UUID) NBT/synched fields on AbstractCitizenEntity and AbstractWorkerEntity; reuse existing upkeepPos+upkeepUUID on AbstractRecruitEntity to mean 'home' for the recruit case (or alias). (b) Server-side packet MessageAssignHome(entityUuid, BlockPos|UUID) — validates ownership and that the target is a HousePrefab/bed/sleeping-zone block. (c) Client UI: 'Assign Home' button on CitizenProfileScreen, RecruitInventoryScreen, and worker profile screen. Two-step flow: click button → 'right-click target block within 30s'. (d) AI goal: at night or low-stamina, entity pathfinds back to homePos via AsyncGroundPathNavigation; once within 3 blocks, sleeps/idles. (e) Persistence + sync. (f) Localization en_us/ru_ru."
@@ -6600,6 +6600,10 @@
         {
           "date": "2026-05-04",
           "text": "Split into HOMEASSIGN-002 (server-side homePos fields + MessageAssignHome packet on citizen/worker/recruit), HOMEASSIGN-003 (pathfind-home AI goal), HOMEASSIGN-004 (Assign Home button + 30s selector + guide update). No code landed under HOMEASSIGN-001 yet; original scope spans data, AI, and UI for three entity families and cannot be carried to acceptance in one slice."
+        },
+        {
+          "date": "2026-05-06",
+          "text": "HOMEASSIGN-002 server data model + MessageAssignHome packet shipped (commits 9a535f8c..86da2ca5 on feature/homeassign-001). Acceptance items still open: HOMEASSIGN-003 (AI goto-home goal), HOMEASSIGN-004 (Assign Home button + 30s right-click selector on the three profile screens), and the player-guide updates that go with the UI slice. Compile / gametest gates green; baseline build was rescued (4 pre-existing javac errors fixed in the same branch)."
         }
       ],
       "verification": [],
@@ -7823,8 +7827,8 @@
     {
       "id": "HOMEASSIGN-002",
       "title": "Server-side home model + assign-home packet for citizens, workers, recruits",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "HOMEASSIGN-001 phase 1: nothing else can wire UI or AI behavior until citizens and workers actually carry a homePos field, recruits' upkeepPos is aliased to mean 'home', and a validated assign-home packet exists.",
       "scope": [
         "Add homePos (BlockPos) + homeBuildAreaUUID (UUID) NBT/synched fields on AbstractCitizenEntity and AbstractWorkerEntity; alias the existing upkeepPos+upkeepUUID on AbstractRecruitEntity to mean 'home'.",
@@ -7840,8 +7844,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "compileJava + compileGametestJava green. runGameTestServer: 5 new HOMEASSIGN-002 gametests pass (recruitHomePosRoundTripsThroughSaveLoad, workerHomePosRoundTripsThroughSaveLoad, citizenHomePosRoundTripsThroughSaveLoad, assignHomeAcceptsBedFromOwner, assignHomeRejectsNonBedBlock). One pre-existing test (farmercostknobreadsfromunifiedspec) still fails on master and is unrelated to this slice. AbstractCitizenEntity exposes Optional<BlockPos> homePos + Optional<UUID> homeBuildAreaUUID via SynchedEntityData, NBT-persisted under HomePosX/Y/Z + HomeBuildAreaUUID. AbstractRecruitEntity overrides getHomePos/setHomePos to alias the existing upkeepPos, so workers (which extend the recruit chain) inherit it. CitizenEntity (PathfinderMob) carries its own field with matching NBT keys. MessageAssignHome packet validates owner + BedBlock target, rejects with localized chat messages, registered in CivilianPacketCatalog. Lang keys present in en_us + ru_ru. BlockingArchitectural note: the codebase's worker/recruit hierarchy means workers inherit home through AbstractRecruitEntity, not via a direct field on AbstractWorkerEntity as the original scope assumed; aliasing keeps one source of truth for upkeep AI. HOMEASSIGN-003 (AI goal) and HOMEASSIGN-004 (UI) remain open; this slice ships only the data model + packet."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "HOMEASSIGN-003",
