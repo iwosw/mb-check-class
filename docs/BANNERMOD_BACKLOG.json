@@ -8734,6 +8734,28 @@
       "progress": [],
       "verification": [],
       "evidence": []
+    },
+    {
+      "id": "FUZZHARDEN-001",
+      "title": "Null-sender hardening for 73 packet handlers flagged by TESTFUZZ-001",
+      "status": "open",
+      "updated": "2026-05-06",
+      "why": "TESTFUZZ-001 fuzz harness identified 73 BannerModMessage subclasses that throw NullPointerException when context.getSender() is null (or when UUID/group fields are null/zero). On a real server these reach the PacketHandler future as exceptions; under our adapter (BannerModNetworkContext) they leak to the netty thread or the synchronous sender check. Each handler must explicitly null-check the sender and reject malformed payloads instead of NPE-ing.",
+      "scope": [
+        "Add a null-check + early return (with optional debug log) to context.getSender() at the entry of executeServerSide() for each of the 73 handlers listed in BannerModMessageFuzzHarnessTest.KNOWN_LEAKY_HANDLERS.",
+        "Where the handler also dereferences a UUID/group field, add the same null/zero-UUID guard before the dereference.",
+        "As each handler is hardened, remove its FQCN from BannerModMessageFuzzHarnessTest.KNOWN_LEAKY_HANDLERS so the harness regression-tests the fix going forward."
+      ],
+      "acceptance": [
+        "Every entry currently in BannerModMessageFuzzHarnessTest.KNOWN_LEAKY_HANDLERS is removed; the fuzz harness still passes (zero unexpected leaks) with an empty KNOWN_LEAKY_HANDLERS set.",
+        "compileJava + test green."
+      ],
+      "dependencies": [
+        "TESTFUZZ-001"
+      ],
+      "progress": [],
+      "verification": [],
+      "evidence": []
     }
   ]
 }
