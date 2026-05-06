@@ -6556,7 +6556,7 @@
       "id": "SKILLTREE-001",
       "title": "Bannerlord-style skill/perk tree for recruits and players",
       "status": "in_progress",
-      "updated": "2026-05-04",
+      "updated": "2026-05-06",
       "why": "Player asked for Mount&Blade-style progression: per-archetype perks (sword/bow/crossbow/cavalry) + general stats (HP/speed/damage/etc.) for both recruits and players, on top of the existing XP/level system in RecruitProgressionService. Promote system covers class-change but not in-class growth.",
       "scope": [
         "Design and implement: (a) perk/talent data model (server-authoritative, persisted) layered on top of existing XP/level system without breaking RecruitProgressionService; (b) per-archetype perk trees for swordsman/bowman/crossbowman/pikeman/cavalry; (c) general stat skills (HP, KB-resist, attack damage, attack speed, movement, ranged accuracy, ranged velocity); (d) player-side skill tree using NeoForge AttachmentType (new infra); (e) GUI screens for recruit and player skill trees in the existing parchment style; (f) skill-point earning (kills + per-level grants) and respec mechanic; (g) localization for all keys in en_us/ru_ru. Phase plan: 1) data layer + persistence, 2) recruit perks + combat hooks, 3) player attachment + perks, 4) GUI."
@@ -6574,6 +6574,10 @@
         {
           "date": "2026-05-04",
           "text": "Split into SKILLTREE-002 (data model + persistence), SKILLTREE-003 (recruit catalogs + combat hooks), SKILLTREE-004 (player perks + combat hooks), SKILLTREE-005 (GUI + key-binding + respec UI). No code landed under SKILLTREE-001 yet; original scope listed a 4-phase plan that cannot be carried to acceptance in one slice."
+        },
+        {
+          "date": "2026-05-06",
+          "text": "phase 1 (data + persistence + skill-point grant) shipped on feature/skilltree-001; child tasks 002/003/004/005 cover the remainder. Phase 1 deliverables: server-authoritative perk model (PerkNode/PerkRegistry/PerkProgress), recruit NBT round-trip, per-level point grant, en_us+ru_ru placeholder localization, JUnit coverage. Phase 2 (recruit perks + combat hooks) tracked in SKILLTREE-003; phase 3 (player AttachmentType + perks) in SKILLTREE-004; phase 4 (GUI screens) in SKILLTREE-005."
         }
       ],
       "verification": [],
@@ -7721,8 +7725,8 @@
     {
       "id": "SKILLTREE-002",
       "title": "Skill/perk data model + persistence",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "in_progress",
+      "updated": "2026-05-06",
       "why": "SKILLTREE-001 phase plan step 1: a server-authoritative perk store has to exist before any combat hook, GUI, or per-archetype catalog can be wired. Layered on top of RecruitProgressionService XP/level so promote/level still works.",
       "scope": [
         "Define a server-authoritative perk/talent data model (perk id, owning archetype, prerequisites, point cost) with JSON registration so non-code authors can extend trees later.",
@@ -7739,7 +7743,12 @@
         "tools/backlog validate passes; ./gradlew compileJava is green."
       ],
       "dependencies": [],
-      "progress": [],
+      "progress": [
+        {
+          "date": "2026-05-06",
+          "text": "Phase 1 recruit-side data model + persistence + skill-point grant shipped on feature/skilltree-001 (commits 9fa95338, a728735c, 8094af74, 27c1ca70). Done: PerkArchetype/PerkStat/PerkBonus/PerkNode/PerkRegistry/PerkProgress under entity.military.perks; AbstractRecruitEntity exposes getPerkProgress(); RecruitPersistenceBridge round-trips PerkProgress NBT alongside legacy fields; RecruitProgressionService grants PERK_POINTS_PER_LEVEL on level gain; placeholder catalog of 6 perks seeded with en_us+ru_ru localization; respec API refunds full point cost; JUnit covers NBT round-trip, respec, and unknown-id forward compat. Open: NeoForge AttachmentType for player skill points + unlocked perks (deferred to SKILLTREE-004 per parent SKILLTREE-001 phase-3 split). Verification note: ./gradlew compileJava currently fails on master HEAD with 4 pre-existing errors unrelated to skilltree (MessageAttack/MessageCombatStance/MessageFaceCommand duplicate locals, BannerModMessage NoSuchMethodException try statement); confirmed by stashing skilltree changes and seeing the same 4 errors before merging blocks SKILLTREE-002 closure."
+        }
+      ],
       "verification": [],
       "evidence": []
     },

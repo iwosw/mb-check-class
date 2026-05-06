@@ -46,6 +46,8 @@ final class RecruitPersistenceBridge {
         nbt.putString("CombatStance", recruit.getCombatStance().name());
         nbt.putString("CitizenRole", CitizenRole.CONTROLLED_RECRUIT.name());
 
+        nbt.put("PerkProgress", recruit.getPerkProgress().toNbt());
+
         AbstractRecruitEntity.persistCitizenStateToLegacy(recruit.getCitizenCore(), nbt);
 
         if (recruit.getMountUUID() != null) {
@@ -107,6 +109,12 @@ final class RecruitPersistenceBridge {
             );
         } else {
             recruit.setCombatStance(com.talhanation.bannermod.ai.military.CombatStance.LOOSE);
+        }
+
+        if (nbt.contains("PerkProgress", Tag.TAG_COMPOUND)) {
+            recruit.getPerkProgress().fromNbt(nbt.getCompound("PerkProgress"));
+        } else {
+            recruit.getPerkProgress().fromNbt(null);
         }
 
         AbstractRecruitEntity.hydrateCitizenStateFromLegacy(recruit.getCitizenCore(), nbt);

@@ -2480,5 +2480,17 @@
   "bannermod.assign_home.button": "Назначить дом",
   "bannermod.assign_home.prompt": "ПКМ по кровати в течение 30 секунд, чтобы назначить её домом (ESC - отмена).",
   "bannermod.assign_home.cancel.escape": "Назначение дома отменено.",
-  "bannermod.assign_home.cancel.timeout": "Время на выбор дома истекло - повторите."
+  "bannermod.assign_home.cancel.timeout": "Время на выбор дома истекло - повторите.",
+  "perk.bannermod.universal.toughness_i": "Стойкость I",
+  "perk.bannermod.universal.toughness_i.desc": "+2 к максимальному здоровью.",
+  "perk.bannermod.swordsman.iron_grip_i": "Железная хватка I",
+  "perk.bannermod.swordsman.iron_grip_i.desc": "+0.5 к урону ближнего боя.",
+  "perk.bannermod.bowman.steady_aim_i": "Твёрдый прицел I",
+  "perk.bannermod.bowman.steady_aim_i.desc": "Точность стрельбы из лука повышена на 5%.",
+  "perk.bannermod.crossbowman.heavy_bolts_i": "Тяжёлые болты I",
+  "perk.bannermod.crossbowman.heavy_bolts_i.desc": "+10% к скорости полёта арбалетных болтов.",
+  "perk.bannermod.pikeman.braced_stance_i": "Упорная стойка I",
+  "perk.bannermod.pikeman.braced_stance_i.desc": "+10% к сопротивлению отбрасыванию.",
+  "perk.bannermod.cavalry.swift_charge_i": "Стремительный натиск I",
+  "perk.bannermod.cavalry.swift_charge_i.desc": "+0.01 к скорости передвижения."
 }

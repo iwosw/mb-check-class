@@ -13,6 +13,9 @@ final class RecruitProgressionService {
     private RecruitProgressionService() {
     }
 
+    /** Skill-points granted to a recruit each time it gains a level. SKILLTREE-002 phase 1. */
+    static final int PERK_POINTS_PER_LEVEL = 1;
+
     static void addXpLevel(AbstractRecruitEntity recruit, int level) {
         int currentLevel = recruit.getXpLevel();
         int newLevel = currentLevel + level;
@@ -21,6 +24,10 @@ final class RecruitProgressionService {
         } else {
             recruit.makeLevelUpSound();
             applyLevelBuffs(recruit);
+        }
+        int gained = Math.max(0, newLevel - currentLevel);
+        if (gained > 0) {
+            recruit.getPerkProgress().grantPoints(gained * PERK_POINTS_PER_LEVEL);
         }
         recruit.setXpLevel(newLevel);
     }

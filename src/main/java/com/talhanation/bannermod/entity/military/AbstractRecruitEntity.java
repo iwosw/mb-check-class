@@ -122,6 +122,8 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
     /** Last tick this recruit fanned out a protect-target reaction after being hit. */
     public int lastProtectTargetPropagationTick = Integer.MIN_VALUE;
     private final CitizenCore citizenCore = RecruitCitizenBridge.createCore(this);
+    private final com.talhanation.bannermod.entity.military.perks.PerkProgress perkProgress
+            = new com.talhanation.bannermod.entity.military.perks.PerkProgress();
 
     public AbstractRecruitEntity(EntityType<? extends AbstractInventoryEntity> entityType, Level world) {
         super(entityType, world);
@@ -143,6 +145,14 @@ public abstract class AbstractRecruitEntity extends AbstractCitizenEntity implem
 
     public CitizenCore getCitizenCore() {
         return this.citizenCore;
+    }
+
+    /**
+     * Server-authoritative perk store (SKILLTREE-002 phase 1). Serialized via
+     * {@link RecruitPersistenceBridge}; combat hooks land in SKILLTREE-003.
+     */
+    public com.talhanation.bannermod.entity.military.perks.PerkProgress getPerkProgress() {
+        return this.perkProgress;
     }
 
     @Override
