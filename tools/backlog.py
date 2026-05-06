@@ -42,6 +42,7 @@ def main() -> int:
     p_batch.add_argument("--limit", type=int, default=5, help="Maximum tasks to print")
     p_batch.add_argument("--offset", type=int, default=0, help="Skip matching tasks")
     p_batch.add_argument("--json", action="store_true", help="Print machine-readable JSON")
+    p_batch.add_argument("--compact", action="store_true", help="One line per task: ID [status] title")
 
     p_ready = sub.add_parser("ready", help="Print N open tasks whose dependencies are already done")
     p_ready.add_argument("limit", type=int, help="Maximum tasks to print")
@@ -49,10 +50,12 @@ def main() -> int:
     p_ready.add_argument("--prefix", help="ID prefix filter, e.g. UI or PERF")
     p_ready.add_argument("--query", help="Case-insensitive text filter over id/title/why")
     p_ready.add_argument("--json", action="store_true", help="Print machine-readable JSON")
+    p_ready.add_argument("--compact", action="store_true", help="One line per task: ID [status] title")
 
     p_show = sub.add_parser("show", help="Show one full task")
     p_show.add_argument("id", help="Task id")
     p_show.add_argument("--json", action="store_true", help="Print machine-readable JSON")
+    p_show.add_argument("--compact", action="store_true", help="One line: ID [status] title (skip body)")
 
     p_add = sub.add_parser("add", help="Append a new open task")
     p_add.add_argument("id", help="Task id, e.g. UI-008")
@@ -213,8 +216,9 @@ def cmd_batch(data: dict[str, Any], args: argparse.Namespace) -> int:
         print(json.dumps(selected, indent=2, ensure_ascii=False))
         return 0
     for task in selected:
-        print_task(task, compact=False)
-        print()
+        print_task(task, compact=args.compact)
+        if not args.compact:
+            print()
     if not selected:
         print("No matching tasks.")
     return 0
@@ -232,8 +236,9 @@ def cmd_ready(data: dict[str, Any], args: argparse.Namespace) -> int:
         print(json.dumps(selected, indent=2, ensure_ascii=False))
         return 0
     for task in selected:
-        print_task(task, compact=False)
-        print()
+        print_task(task, compact=args.compact)
+        if not args.compact:
+            print()
     if not selected:
         print("No ready tasks.")
     return 0
@@ -244,7 +249,7 @@ def cmd_show(data: dict[str, Any], args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(task, indent=2, ensure_ascii=False))
     else:
-        print_task(task, compact=False)
+        print_task(task, compact=args.compact)
     return 0
 
 

@@ -32,8 +32,10 @@ public class MessageRest implements BannerModMessage<MessageRest> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
-        dispatchToServer(serverPlayer, this.player, this.group, this.should);
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+            dispatchToServer(serverPlayer, this.player, this.group, this.should);
+        });
     }
 
     public static void dispatchToServer(ServerPlayer serverPlayer, UUID playerUuid, UUID group, boolean should) {

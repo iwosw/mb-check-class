@@ -34,15 +34,17 @@ public class MessageOpenSpecialScreen implements BannerModMessage<MessageOpenSpe
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        if (!player.getUUID().equals(this.player)) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            if (!player.getUUID().equals(this.player)) {
+                return;
+            }
 
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
-        if (recruit != null) {
-            tryToOpenSpecialGUI(recruit, player);
-        }
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
+            if (recruit != null) {
+                tryToOpenSpecialGUI(recruit, player);
+            }
+        });
     }
 
     private void tryToOpenSpecialGUI(AbstractRecruitEntity recruit, ServerPlayer player) {

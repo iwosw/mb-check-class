@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.validation;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -17,6 +18,7 @@ public class BuildingInvalidationQueueData extends SavedData {
     private static final String FILE_ID = "bannermodBuildingInvalidationQueue";
     private static final SavedData.Factory<BuildingInvalidationQueueData> FACTORY = new SavedData.Factory<>(BuildingInvalidationQueueData::new, BuildingInvalidationQueueData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final Map<UUID, QueueEntry> queueByBuildingId = new LinkedHashMap<>();
 
     public static BuildingInvalidationQueueData get(ServerLevel level) {
@@ -24,6 +26,7 @@ public class BuildingInvalidationQueueData extends SavedData {
     }
 
     public static BuildingInvalidationQueueData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "BuildingInvalidationQueueData");
         BuildingInvalidationQueueData data = new BuildingInvalidationQueueData();
         ListTag queueTag = tag.getList("Queue", Tag.TAG_COMPOUND);
         for (Tag entry : queueTag) {
@@ -38,6 +41,7 @@ public class BuildingInvalidationQueueData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         ListTag queueTag = new ListTag();
         for (QueueEntry entry : this.queueByBuildingId.values()) {
             queueTag.add(entry.toTag());

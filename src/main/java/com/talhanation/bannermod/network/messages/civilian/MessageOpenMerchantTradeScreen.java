@@ -29,13 +29,15 @@ public class MessageOpenMerchantTradeScreen implements BannerModMessage<MessageO
     }
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
-        if (entity instanceof MerchantEntity merchant
-                && merchant.isAlive()
-                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
-            merchant.openTradeGUI(player);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+            if (entity instanceof MerchantEntity merchant
+                    && merchant.isAlive()
+                    && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+                merchant.openTradeGUI(player);
+            }
+        });
     }
     @Override
     public MessageOpenMerchantTradeScreen fromBytes(FriendlyByteBuf buf) {

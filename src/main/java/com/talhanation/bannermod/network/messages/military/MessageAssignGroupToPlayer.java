@@ -46,9 +46,11 @@ public class MessageAssignGroupToPlayer implements BannerModMessage<MessageAssig
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        RecruitsPlayerInfo newOwner = RecruitsPlayerInfo.getFromNBT(tag);
-        transferGroupToPlayer(player, groupUUID, newOwner);
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            RecruitsPlayerInfo newOwner = RecruitsPlayerInfo.getFromNBT(tag);
+            transferGroupToPlayer(player, groupUUID, newOwner);
+        });
     }
 
     static boolean transferGroupToPlayer(ServerPlayer sender, UUID groupUUID, RecruitsPlayerInfo requestedNewOwner) {

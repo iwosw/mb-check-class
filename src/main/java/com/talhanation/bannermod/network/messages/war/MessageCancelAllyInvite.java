@@ -34,16 +34,18 @@ public class MessageCancelAllyInvite implements BannerModMessage<MessageCancelAl
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.inviteId == null) return;
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) return;
-        WarAllyService.InviteResult result = WarAllyService.cancel(level, player, this.inviteId);
-        if (result.ok()) {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.ally_invite_cancelled"));
-        } else {
-            sendFeedback(player, Component.translatable("gui.bannermod.war.denial.cancel_invite", result.outcome().component()));
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.inviteId == null) return;
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) return;
+            WarAllyService.InviteResult result = WarAllyService.cancel(level, player, this.inviteId);
+            if (result.ok()) {
+                sendFeedback(player, Component.translatable("gui.bannermod.war.feedback.ally_invite_cancelled"));
+            } else {
+                sendFeedback(player, Component.translatable("gui.bannermod.war.denial.cancel_invite", result.outcome().component()));
+            }
+        });
     }
 
     private static void sendFeedback(ServerPlayer player, Component message) {

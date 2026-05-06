@@ -33,26 +33,28 @@ public class MessageDeleteClaim implements BannerModMessage<MessageDeleteClaim> 
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer sender = context.getSender();
-        if (sender == null) return;
-        if (!RecruitsServerConfig.AllowClaiming.get()) return;
-        if (sender.level().dimension() != Level.OVERWORLD) return;
-        if (ClaimEvents.claimManager() == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null) return;
+            if (!RecruitsServerConfig.AllowClaiming.get()) return;
+            if (sender.level().dimension() != Level.OVERWORLD) return;
+            if (ClaimEvents.claimManager() == null) return;
 
-        UUID claimUuid = claimUuid(this.claimNBT);
-        if (claimUuid == null) return;
-        RecruitsClaim existingClaim = MessageUpdateClaim.getExistingClaim(claimUuid);
-        if (existingClaim == null) return;
+            UUID claimUuid = claimUuid(this.claimNBT);
+            if (claimUuid == null) return;
+            RecruitsClaim existingClaim = MessageUpdateClaim.getExistingClaim(claimUuid);
+            if (existingClaim == null) return;
 
-        boolean isAdmin = MessageUpdateClaim.isAdmin(sender);
-        if (!ClaimPacketAuthority.canEditClaim(
-                sender.getUUID(),
-                isAdmin,
-                existingClaim,
-                MessageUpdateClaim.resolvePoliticalOwner(sender, existingClaim))) return;
+            boolean isAdmin = MessageUpdateClaim.isAdmin(sender);
+            if (!ClaimPacketAuthority.canEditClaim(
+                    sender.getUUID(),
+                    isAdmin,
+                    existingClaim,
+                    MessageUpdateClaim.resolvePoliticalOwner(sender, existingClaim))) return;
 
-        ClaimEvents.claimManager().removeClaim(existingClaim);
-        ClaimEvents.claimManager().broadcastClaimsToAll((ServerLevel) context.getSender().getCommandSenderWorld());
+            ClaimEvents.claimManager().removeClaim(existingClaim);
+            ClaimEvents.claimManager().broadcastClaimsToAll((ServerLevel) context.getSender().getCommandSenderWorld());
+        });
     }
 
     private static UUID claimUuid(CompoundTag tag) {

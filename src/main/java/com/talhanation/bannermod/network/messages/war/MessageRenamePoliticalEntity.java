@@ -43,36 +43,38 @@ public class MessageRenamePoliticalEntity implements BannerModMessage<MessageRen
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.entityId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) {
-            return;
-        }
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
-        if (recordOpt.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Cannot rename: state not found."));
-            return;
-        }
-        PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.canAct(player, record)) {
-            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
-            return;
-        }
-        PoliticalRegistryValidation.Result validation = registry.canRename(this.entityId, this.newName);
-        if (!validation.valid()) {
-            player.sendSystemMessage(Component.literal("Cannot rename state: " + validation.reason()));
-            return;
-        }
-        if (!registry.updateName(this.entityId, this.newName)) {
-            player.sendSystemMessage(Component.literal("Failed to rename state."));
-            return;
-        }
-        player.sendSystemMessage(Component.literal(
-                "Renamed state to: " + PoliticalRegistryValidation.normalizeName(this.newName)));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.entityId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) {
+                return;
+            }
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
+            if (recordOpt.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Cannot rename: state not found."));
+                return;
+            }
+            PoliticalEntityRecord record = recordOpt.get();
+            if (!PoliticalEntityAuthority.canAct(player, record)) {
+                player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_NOT_AUTHORIZED));
+                return;
+            }
+            PoliticalRegistryValidation.Result validation = registry.canRename(this.entityId, this.newName);
+            if (!validation.valid()) {
+                player.sendSystemMessage(Component.literal("Cannot rename state: " + validation.reason()));
+                return;
+            }
+            if (!registry.updateName(this.entityId, this.newName)) {
+                player.sendSystemMessage(Component.literal("Failed to rename state."));
+                return;
+            }
+            player.sendSystemMessage(Component.literal(
+                    "Renamed state to: " + PoliticalRegistryValidation.normalizeName(this.newName)));
+        });
     }
 
     @Override

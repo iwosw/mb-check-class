@@ -29,12 +29,14 @@ public class MessageAssassinCount implements BannerModMessage<MessageAssassinCou
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.uuid);
-        if (entity instanceof AssassinLeaderEntity leader
-                && player.getBoundingBox().inflate(16.0D).intersects(leader.getBoundingBox())) {
-            leader.setCount(this.count);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.uuid);
+            if (entity instanceof AssassinLeaderEntity leader
+                    && player.getBoundingBox().inflate(16.0D).intersects(leader.getBoundingBox())) {
+                leader.setCount(this.count);
+            }
+        });
     }
     public MessageAssassinCount fromBytes(FriendlyByteBuf buf) {
         this.count = buf.readInt();

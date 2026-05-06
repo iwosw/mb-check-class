@@ -29,15 +29,17 @@ public class MessageRotateWorkArea implements BannerModMessage<MessageRotateWork
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) return;
 
-        AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
-        if (workArea == null) {
-            return;
-        }
+            AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
+            if (workArea == null) {
+                return;
+            }
 
-        this.rotate(player, workArea);
+            this.rotate(player, workArea);
+        });
     }
 
     public void rotate(ServerPlayer player, AbstractWorkAreaEntity workArea) {

@@ -29,15 +29,16 @@ public class MessagePromoteRecruit implements BannerModMessage<MessagePromoteRec
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer sender = context.getSender();
-        if (sender == null) {
-            return;
-        }
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(sender, this.recruit, 16D * 16D);
-        if (recruit != null) {
-            RecruitEvents.promoteRecruit(recruit, profession, name, sender);
-        }
-
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            if (sender == null) {
+                return;
+            }
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(sender, this.recruit, 16D * 16D);
+            if (recruit != null) {
+                RecruitEvents.promoteRecruit(recruit, profession, name, sender);
+            }
+        });
     }
     public MessagePromoteRecruit fromBytes(FriendlyByteBuf buf) {
         this.recruit = buf.readUUID();

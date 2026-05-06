@@ -36,22 +36,23 @@ public class MessageUpdateOwner implements BannerModMessage<MessageUpdateOwner> 
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
-        if (workArea == null) {
-            return;
-        }
+            AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
+            if (workArea == null) {
+                return;
+            }
 
-        if (!this.updateWorkArea(workArea)) {
-            return;
-        }
+            if (!this.updateWorkArea(workArea)) {
+                return;
+            }
 
-        if (player.level() instanceof ServerLevel serverLevel) {
-            BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, workArea.blockPosition());
-        }
-
+            if (player.level() instanceof ServerLevel serverLevel) {
+                BannerModSettlementRefreshSupport.refreshSnapshot(serverLevel, workArea.blockPosition());
+            }
+        });
     }
 
     public boolean updateWorkArea(AbstractWorkAreaEntity workArea){

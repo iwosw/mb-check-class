@@ -43,33 +43,35 @@ public class MessageSetGovernmentForm implements BannerModMessage<MessageSetGove
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null || this.entityId == null) {
-            return;
-        }
-        ServerLevel level = player.serverLevel().getServer().overworld();
-        if (level == null) {
-            return;
-        }
-        PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
-        Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
-        if (recordOpt.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Cannot set government form: state not found."));
-            return;
-        }
-        PoliticalEntityRecord record = recordOpt.get();
-        if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
-            // Government-form changes are leader-only; co-leaders can't reshape the regime.
-            player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_LEADER_ONLY));
-            return;
-        }
-        GovernmentForm form = decodeForm(this.formOrdinal);
-        if (!registry.updateGovernmentForm(this.entityId, form)) {
-            player.sendSystemMessage(Component.literal("Failed to update government form."));
-            return;
-        }
-        player.sendSystemMessage(Component.literal(
-                "Government form of " + record.name() + " set to " + form.name() + "."));
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null || this.entityId == null) {
+                return;
+            }
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            if (level == null) {
+                return;
+            }
+            PoliticalRegistryRuntime registry = WarRuntimeContext.registry(level);
+            Optional<PoliticalEntityRecord> recordOpt = registry.byId(this.entityId);
+            if (recordOpt.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Cannot set government form: state not found."));
+                return;
+            }
+            PoliticalEntityRecord record = recordOpt.get();
+            if (!PoliticalEntityAuthority.isLeaderOrOp(player, record)) {
+                // Government-form changes are leader-only; co-leaders can't reshape the regime.
+                player.sendSystemMessage(Component.literal(PoliticalEntityAuthority.DENIAL_LEADER_ONLY));
+                return;
+            }
+            GovernmentForm form = decodeForm(this.formOrdinal);
+            if (!registry.updateGovernmentForm(this.entityId, form)) {
+                player.sendSystemMessage(Component.literal("Failed to update government form."));
+                return;
+            }
+            player.sendSystemMessage(Component.literal(
+                    "Government form of " + record.name() + " set to " + form.name() + "."));
+        });
     }
 
     private static GovernmentForm decodeForm(byte ordinal) {

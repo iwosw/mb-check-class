@@ -44,16 +44,17 @@ public class MessageUpdateWorkArea implements BannerModMessage<MessageUpdateWork
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
-        if (workArea == null) {
-            return;
-        }
+            AbstractWorkAreaEntity workArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, AbstractWorkAreaEntity.class);
+            if (workArea == null) {
+                return;
+            }
 
-        this.updateWorkArea(player, workArea);
-
+            this.updateWorkArea(player, workArea);
+        });
     }
 
     public void updateWorkArea(ServerPlayer player, AbstractWorkAreaEntity workArea){

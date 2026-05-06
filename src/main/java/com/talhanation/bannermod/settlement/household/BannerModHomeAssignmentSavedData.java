@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.household;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -10,6 +11,7 @@ public class BannerModHomeAssignmentSavedData extends SavedData {
     private static final String FILE_ID = "bannermodHomeAssignments";
     private static final SavedData.Factory<BannerModHomeAssignmentSavedData> FACTORY = new SavedData.Factory<>(BannerModHomeAssignmentSavedData::new, BannerModHomeAssignmentSavedData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final BannerModHomeAssignmentRuntime runtime;
 
     public BannerModHomeAssignmentSavedData() {
@@ -26,11 +28,13 @@ public class BannerModHomeAssignmentSavedData extends SavedData {
     }
 
     public static BannerModHomeAssignmentSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "BannerModHomeAssignmentSavedData");
         return new BannerModHomeAssignmentSavedData(BannerModHomeAssignmentRuntime.fromTag(tag));
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         CompoundTag runtimeTag = this.runtime.toTag();
         tag.put("Assignments", runtimeTag.getList("Assignments", Tag.TAG_COMPOUND));
         return tag;

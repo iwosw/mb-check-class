@@ -40,6 +40,7 @@ public final class CivilianPacketCatalog {
         MessageConvertWorkerToCitizen.class,
         MessageReassignWorkerProfession.class,
         MessageAssignCitizenVacancy.class,
+        MessageAssignHome.class,
         MessageToClientUpdateHousingState.class,
         MessageRequestHousingSnapshot.class,
         MessageApproveHousingRequest.class,

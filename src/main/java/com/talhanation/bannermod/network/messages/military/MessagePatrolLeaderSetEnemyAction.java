@@ -28,11 +28,13 @@ public class MessagePatrolLeaderSetEnemyAction implements BannerModMessage<Messa
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof AbstractLeaderEntity leader && leader.isAlive() && leader.distanceToSqr(player) <= 100.0D * 100.0D) {
-            leader.setEnemyAction(this.action);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof AbstractLeaderEntity leader && leader.isAlive() && leader.distanceToSqr(player) <= 100.0D * 100.0D) {
+                leader.setEnemyAction(this.action);
+            }
+        });
     }
 
     public MessagePatrolLeaderSetEnemyAction fromBytes(FriendlyByteBuf buf) {

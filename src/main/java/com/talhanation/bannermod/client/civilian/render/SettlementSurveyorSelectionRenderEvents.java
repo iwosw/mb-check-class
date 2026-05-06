@@ -27,7 +27,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID, value = Dist.CLIENT)
 public final class SettlementSurveyorSelectionRenderEvents {
     private SettlementSurveyorSelectionRenderEvents() {
     }

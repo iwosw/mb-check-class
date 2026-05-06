@@ -5,11 +5,9 @@ import com.talhanation.bannermod.entity.military.AbstractRecruitEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
-import java.util.List;
 
 /**
  * High-priority goal that takes over recruit movement when {@link RecruitMoraleService}
@@ -26,18 +24,33 @@ import java.util.List;
  *   <li>{@link #canUse()} returns true only while the rout window is open. The window is
  *       set by the morale service and decays over time, so the goal naturally hands control
  *       back to the normal combat goals once the squad recovers.</li>
- *   <li>Each tick re-scans for the nearest hostile within {@link #FLEE_SCAN_RADIUS} and
- *       walks away in a straight line for {@link #FLEE_STEP_DISTANCE} blocks. The pathfinder
- *       handles obstacle avoidance.</li>
+ *   <li>Re-scans for the nearest hostile within {@link #FLEE_SCAN_RADIUS} every
+ *       {@link #FLEE_SCAN_INTERVAL_TICKS} ticks via the leader-pool
+ *       {@link CommanderHostileScanCache}, so a routed shield-wall of N recruits sharing
+ *       one owner causes <strong>one</strong> underlying world scan per scan-interval
+ *       bucket instead of N. Walks away in a straight line for {@link #FLEE_STEP_DISTANCE}
+ *       blocks; the pathfinder handles obstacle avoidance.</li>
  *   <li>Combat target is cleared on start so the underlying attack controller stops reacting
  *       to the threat the recruit is fleeing from.</li>
  * </ul>
+ *
+ * <p>SCANPOOL-002 wiring: {@link CommanderHostileScanCache#findNearestHostile} replaces the
+ * previous per-recruit {@code level.getEntitiesOfClass} call. The cache scans with
+ * {@code FLEE_SCAN_RADIUS + GROUP_AABB_PADDING} once per (level, owner, scan-bucket) triple
+ * and serves the rest of the routed squad from the cached snapshot, while per-recruit
+ * filtering still uses the per-recruit radius and {@link AbstractRecruitEntity#canAttack}.
  */
 public class RecruitMoraleRoutGoal extends Goal {
 
     public static final double FLEE_SCAN_RADIUS = 24.0D;
     public static final double FLEE_STEP_DISTANCE = 8.0D;
     public static final double FLEE_SPEED = 1.25D;
+    /**
+     * Re-scan cadence (ticks) for the rout flee target. Matches
+     * {@code UseShield.HOSTILE_SCAN_INTERVAL_TICKS} so routed recruits share buckets with
+     * their shield-wall siblings inside {@link CommanderHostileScanCache}.
+     */
+    public static final int FLEE_SCAN_INTERVAL_TICKS = 10;
 
     private final AbstractRecruitEntity recruit;
     private LivingEntity threat;
@@ -74,11 +87,11 @@ public class RecruitMoraleRoutGoal extends Goal {
     @Override
     public void tick() {
         super.tick();
-        if (!(recruit.level() instanceof ServerLevel level)) return;
-        if (recruit.tickCount % 10 != 0) {
+        if (!(recruit.level() instanceof ServerLevel)) return;
+        if (recruit.tickCount % FLEE_SCAN_INTERVAL_TICKS != 0) {
             return;
         }
-        threat = nearestHostile(level);
+        threat = nearestHostile();
         Vec3 awayTarget;
         if (threat != null) {
             Vec3 away = recruit.position().subtract(threat.position());
@@ -99,19 +112,20 @@ public class RecruitMoraleRoutGoal extends Goal {
         recruit.getNavigation().moveTo(awayTarget.x, awayTarget.y, awayTarget.z, FLEE_SPEED);
     }
 
-    private LivingEntity nearestHostile(ServerLevel level) {
-        AABB box = recruit.getBoundingBox().inflate(FLEE_SCAN_RADIUS);
-        List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e != recruit && e.isAlive() && recruit.canAttack(e));
-        LivingEntity best = null;
-        double bestSqr = Double.POSITIVE_INFINITY;
-        for (LivingEntity e : candidates) {
-            double d = recruit.distanceToSqr(e);
-            if (d < bestSqr) {
-                bestSqr = d;
-                best = e;
-            }
-        }
-        return best;
+    /**
+     * Pulls the nearest hostile from the leader-pool cache. The cache scans once per
+     * {@link #FLEE_SCAN_INTERVAL_TICKS} per (level, owner) group; the per-recruit
+     * {@code canAttack} predicate is applied to the cached snapshot so flee-target
+     * selection is byte-for-byte equivalent to the previous per-recruit
+     * {@code level.getEntitiesOfClass} pick.
+     */
+    private LivingEntity nearestHostile() {
+        return CommanderHostileScanCache.findNearestHostile(
+                recruit,
+                FLEE_SCAN_RADIUS,
+                FLEE_SCAN_INTERVAL_TICKS,
+                (r, candidate) -> r.canAttack(candidate),
+                CommanderHostileScanCache.LEVEL_SCANNER
+        );
     }
 }

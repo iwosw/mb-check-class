@@ -43,48 +43,50 @@ public class MessageAggro implements BannerModMessage<MessageAggro> {
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
 
-        double boundBoxInflateModifier = fromGui ? 16.0D : 100.0D;
-        AABB commandBox = player.getBoundingBox().inflate(boundBoxInflateModifier);
+            double boundBoxInflateModifier = fromGui ? 16.0D : 100.0D;
+            AABB commandBox = player.getBoundingBox().inflate(boundBoxInflateModifier);
 
-        List<AbstractRecruitEntity> pool = RecruitIndex.instance().groupInRange(
-                player.getCommandSenderWorld(),
-                this.group,
-                player.position(),
-                boundBoxInflateModifier * 2.0D
-        );
-        if (pool == null) {
-            RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
-            pool = player.getCommandSenderWorld().getEntitiesOfClass(
-                    AbstractRecruitEntity.class,
-                    commandBox
+            List<AbstractRecruitEntity> pool = RecruitIndex.instance().groupInRange(
+                    player.getCommandSenderWorld(),
+                    this.group,
+                    player.position(),
+                    boundBoxInflateModifier * 2.0D
             );
-        } else {
-            pool.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
-        }
-
-        List<AbstractRecruitEntity> actors = new ArrayList<>();
-        for (AbstractRecruitEntity recruit : pool) {
-            if (fromGui && !recruit.getUUID().equals(this.recruit)) {
-                continue;
+            if (pool == null) {
+                RuntimeProfilingCounters.increment("recruit.index.fallback_scans");
+                pool = player.getCommandSenderWorld().getEntitiesOfClass(
+                        AbstractRecruitEntity.class,
+                        commandBox
+                );
+            } else {
+                pool.removeIf(recruit -> !recruit.getBoundingBox().intersects(commandBox));
             }
-            actors.add(recruit);
-        }
-        if (actors.isEmpty()) {
-            return;
-        }
 
-        long gameTime = player.getCommandSenderWorld().getGameTime();
-        CommandIntent intent = new CommandIntent.Aggro(
-                gameTime,
-                CommandIntentPriority.NORMAL,
-                false,
-                this.state,
-                this.group,
-                this.fromGui
-        );
-        CommandIntentDispatcher.dispatch(player, intent, actors);
+            List<AbstractRecruitEntity> actors = new ArrayList<>();
+            for (AbstractRecruitEntity recruit : pool) {
+                if (fromGui && !recruit.getUUID().equals(this.recruit)) {
+                    continue;
+                }
+                actors.add(recruit);
+            }
+            if (actors.isEmpty()) {
+                return;
+            }
+
+            long gameTime = player.getCommandSenderWorld().getGameTime();
+            CommandIntent intent = new CommandIntent.Aggro(
+                    gameTime,
+                    CommandIntentPriority.NORMAL,
+                    false,
+                    this.state,
+                    this.group,
+                    this.fromGui
+            );
+            CommandIntentDispatcher.dispatch(player, intent, actors);
+        });
     }
 
     public MessageAggro fromBytes(FriendlyByteBuf buf) {

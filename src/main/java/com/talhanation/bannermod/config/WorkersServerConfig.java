@@ -10,7 +10,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WorkersServerConfig {
-    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    /**
+     * Workers config keys are now declared into the unified {@link BannerModServerConfig} spec
+     * via {@link #populate(ModConfigSpec.Builder)}. The legacy {@code SERVER} field stays
+     * non-null after {@link BannerModServerConfig} initialises so callsites that historically
+     * referenced it continue to compile, but registration of the {@code ModConfigSpec} happens
+     * exactly once through {@code BannerModServerConfig}.
+     */
+    private static ModConfigSpec.Builder BUILDER;
     private static final List<String> DEFAULT_SETTLEMENT_WORKER_PROFESSIONS = List.of(
             "farmer",
             "miner",
@@ -144,6 +151,25 @@ public class WorkersServerConfig {
             ));
 
     static {
+        // Touching any WorkersServerConfig.* value handle now requires BannerModServerConfig
+        // to have built the unified spec first (it calls populate(...) below). Force-load it
+        // here so callers that reference WorkersServerConfig before BannerModServerConfig
+        // (e.g. unit tests, gametest fixtures) still get fully-initialised value handles.
+        try {
+            Class.forName(BannerModServerConfig.class.getName());
+        } catch (ClassNotFoundException unreachable) {
+            throw new ExceptionInInitializerError(unreachable);
+        }
+    }
+
+    /**
+     * Declares every Workers-side config key onto the supplied builder. Called once by
+     * {@link BannerModServerConfig} when assembling the unified server spec; must not be
+     * invoked from a {@code static {}} block here so the keys land under the unified
+     * {@code workers.*} sub-path instead of a separate spec.
+     */
+    public static void populate(ModConfigSpec.Builder builder) {
+        BUILDER = builder;
         BUILDER.comment("Workers Config:").push("Workers");
         FarmerCost = BUILDER.comment("""
                         
@@ -411,9 +437,8 @@ public class WorkersServerConfig {
                 .worldRestart()
                 .defineInRange("CitizenBirthFoodMinUnits", 8, 0, Integer.MAX_VALUE);
 
-        BUILDER.pop();
-
-        SERVER = BUILDER.build();
+        BUILDER.pop(); // ClaimWorkerGrowth
+        BUILDER.pop(); // Workers (symmetric pop so caller's builder depth is unchanged)
     }
 
     public static WorkerSettlementSpawnRules.RuleConfig workerBirthRuleConfig() {

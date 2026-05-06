@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -19,6 +20,7 @@ public class BannerModSettlementManager extends SavedData {
     private static final String FILE_ID = "bannermodSettlements";
     private static final SavedData.Factory<BannerModSettlementManager> FACTORY = new SavedData.Factory<>(BannerModSettlementManager::new, BannerModSettlementManager::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final Map<UUID, BannerModSettlementSnapshot> snapshots = new LinkedHashMap<>();
 
     public static BannerModSettlementManager get(ServerLevel level) {
@@ -26,6 +28,7 @@ public class BannerModSettlementManager extends SavedData {
     }
 
     public static BannerModSettlementManager load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "BannerModSettlementManager");
         BannerModSettlementManager manager = new BannerModSettlementManager();
         if (tag.contains("Snapshots", Tag.TAG_LIST)) {
             ListTag snapshots = tag.getList("Snapshots", Tag.TAG_COMPOUND);
@@ -39,6 +42,7 @@ public class BannerModSettlementManager extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         ListTag list = new ListTag();
         for (BannerModSettlementSnapshot snapshot : this.snapshots.values()) {
             list.add(snapshot.toTag());
@@ -60,6 +64,18 @@ public class BannerModSettlementManager extends SavedData {
         if (!snapshot.equals(previous)) {
             this.setDirty();
         }
+    }
+
+    @Nullable
+    public BannerModSettlementSnapshot removeSnapshot(UUID claimUuid) {
+        if (claimUuid == null) {
+            return null;
+        }
+        BannerModSettlementSnapshot removed = this.snapshots.remove(claimUuid);
+        if (removed != null) {
+            this.setDirty();
+        }
+        return removed;
     }
 
     public void pruneMissingClaims(Set<UUID> activeClaimUuids) {

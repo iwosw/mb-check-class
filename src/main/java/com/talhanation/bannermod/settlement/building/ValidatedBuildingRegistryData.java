@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.building;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import com.talhanation.bannermod.settlement.validation.BuildingValidationResult;
 import com.talhanation.bannermod.settlement.validation.ValidatedBuildingSnapshot;
 import net.minecraft.core.BlockPos;
@@ -27,6 +28,7 @@ public class ValidatedBuildingRegistryData extends SavedData {
     private static final String FILE_ID = "bannermodValidatedBuildingRegistry";
     private static final SavedData.Factory<ValidatedBuildingRegistryData> FACTORY = new SavedData.Factory<>(ValidatedBuildingRegistryData::new, ValidatedBuildingRegistryData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final Map<UUID, ValidatedBuildingRecord> records = new LinkedHashMap<>();
     private final Map<UUID, Map<BuildingType, List<UUID>>> bySettlementType = new HashMap<>();
     private final Map<Long, List<UUID>> byChunk = new HashMap<>();
@@ -36,6 +38,7 @@ public class ValidatedBuildingRegistryData extends SavedData {
     }
 
     public static ValidatedBuildingRegistryData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "ValidatedBuildingRegistryData");
         ValidatedBuildingRegistryData data = new ValidatedBuildingRegistryData();
         ListTag recordsTag = tag.getList("Records", Tag.TAG_COMPOUND);
         for (Tag entry : recordsTag) {
@@ -51,6 +54,7 @@ public class ValidatedBuildingRegistryData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         ListTag recordsTag = new ListTag();
         for (ValidatedBuildingRecord record : this.records.values()) {
             recordsTag.add(record.toTag());

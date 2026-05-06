@@ -33,15 +33,17 @@ public class MessageHireGui implements BannerModMessage<MessageHireGui> {
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        if (!player.getUUID().equals(uuid)) {
-            return;
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            if (!player.getUUID().equals(uuid)) {
+                return;
+            }
 
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 16.0D * 16.0D);
-        if (recruit != null) {
-            recruit.openHireGUI(player);
-        }
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitWithinDistance(player, this.recruit, 16.0D * 16.0D);
+            if (recruit != null) {
+                recruit.openHireGUI(player);
+            }
+        });
     }
 
     @Override

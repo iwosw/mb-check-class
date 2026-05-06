@@ -39,16 +39,18 @@ public class MessageUpdateLumberArea implements BannerModMessage<MessageUpdateLu
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        LumberArea lumberArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, LumberArea.class);
-        if (lumberArea == null) {
-            return;
-        }
+            LumberArea lumberArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, LumberArea.class);
+            if (lumberArea == null) {
+                return;
+            }
 
-        this.update(lumberArea);
-        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), lumberArea.blockPosition());
+            this.update(lumberArea);
+            WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), lumberArea.blockPosition());
+        });
     }
 
     public void update(LumberArea lumberArea){

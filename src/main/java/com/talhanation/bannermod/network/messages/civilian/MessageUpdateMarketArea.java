@@ -29,19 +29,21 @@ public class MessageUpdateMarketArea implements BannerModMessage<MessageUpdateMa
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) return;
 
-        MarketArea market = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, MarketArea.class);
-        if (market == null) {
-            return;
-        }
+            MarketArea market = WorkAreaMessageSupport.resolveAuthorizedWorkArea(player, this.uuid, MarketArea.class);
+            if (market == null) {
+                return;
+            }
 
-        market.setOpen(isOpen);
-        market.setMarketName(marketName);
-        if (player.level() instanceof ServerLevel serverLevel) {
-            WorkAreaMessageSupport.refreshSettlementSnapshot(serverLevel, market.blockPosition());
-        }
+            market.setOpen(isOpen);
+            market.setMarketName(marketName);
+            if (player.level() instanceof ServerLevel serverLevel) {
+                WorkAreaMessageSupport.refreshSettlementSnapshot(serverLevel, market.blockPosition());
+            }
+        });
     }
 
     @Override

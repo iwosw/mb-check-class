@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class ClientManager {
-    private static final ClientSyncState SYNCHRONIZED_STATE = new ClientSyncState();
     private static final int GROUP_COUNT_UPDATE_INTERVAL_TICKS = 10;
     private static int lastGroupCountUpdateTick = Integer.MIN_VALUE;
     private static int lastGroupCountScanTick = Integer.MIN_VALUE;
@@ -59,8 +58,7 @@ public class ClientManager {
     }
 
     public static void resetSynchronizedState() {
-        com.talhanation.bannermod.migration.StatePersistenceSeams.ClientSyncState resetState = SYNCHRONIZED_STATE.resetPreservingRoutes(routesMap);
-        recruitsClaims = new ArrayList<>(resetState.claims());
+        recruitsClaims = new ArrayList<>();
         markClaimsChanged();
         groups = new ArrayList<>();
         groupsVersion++;
@@ -87,7 +85,6 @@ public class ClientManager {
         hasClaimsSnapshot = false;
         claimsSnapshotStale = false;
         canPlayerHire = false;
-        routesMap = resetState.routes();
     }
 
     @OnlyIn(Dist.CLIENT)

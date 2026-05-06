@@ -14,7 +14,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
  * buffs apply as attribute modifiers via the profession controllers
  * in Cit-03+, not as base-attribute differences.
  */
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID)
 public final class CitizenAttributeEvent {
 
     private CitizenAttributeEvent() {

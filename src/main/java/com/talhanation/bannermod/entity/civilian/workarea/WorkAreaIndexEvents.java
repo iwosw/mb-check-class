@@ -12,7 +12,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
  * Forge-bus hooks that keep {@link WorkAreaIndex} populated. Registered statically via
  * {@link EventBusSubscriber} so no explicit registration call is needed.
  */
-@EventBusSubscriber(modid = BannerModMain.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = BannerModMain.MOD_ID)
 public final class WorkAreaIndexEvents {
     private WorkAreaIndexEvents() {
     }

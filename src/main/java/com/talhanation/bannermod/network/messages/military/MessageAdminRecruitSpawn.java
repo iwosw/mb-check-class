@@ -38,34 +38,36 @@ public class MessageAdminRecruitSpawn implements BannerModMessage<MessageAdminRe
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        if (!player.hasPermissions(2) || !player.isCreative()) {
-            return;
-        }
-        ServerLevel level = player.serverLevel();
-        ResourceLocation key = ResourceLocation.tryParse(this.entityId);
-        if (key == null) {
-            return;
-        }
-        EntityType<?> rawType = BuiltInRegistries.ENTITY_TYPE.get(key);
-        if (!(rawType instanceof EntityType<?> resolvedType) || !"bannermod".equals(key.getNamespace())) {
-            return;
-        }
-        int spawnCount = Math.max(1, Math.min(16, this.count));
-        int spawned = 0;
-        for (int i = 0; i < spawnCount; i++) {
-            if (!(resolvedType.create(level) instanceof AbstractRecruitEntity recruit)) {
-                continue;
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            if (!player.hasPermissions(2) || !player.isCreative()) {
+                return;
             }
-            BlockPos spawnPos = spawnPos(level, player.blockPosition(), player.getDirection(), i);
-            recruit.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, player.getYRot(), 0.0F);
-            recruit.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.COMMAND, null, null);
-            recruit.setPersistenceRequired();
-            level.addFreshEntity(recruit);
-            spawned++;
-        }
-        player.sendSystemMessage(Component.translatable("gui.bannermod.admin_recruit_spawn.feedback.spawned", spawned, rawType.getDescription())
-                .withStyle(ChatFormatting.GREEN));
+            ServerLevel level = player.serverLevel();
+            ResourceLocation key = ResourceLocation.tryParse(this.entityId);
+            if (key == null) {
+                return;
+            }
+            EntityType<?> rawType = BuiltInRegistries.ENTITY_TYPE.get(key);
+            if (!(rawType instanceof EntityType<?> resolvedType) || !"bannermod".equals(key.getNamespace())) {
+                return;
+            }
+            int spawnCount = Math.max(1, Math.min(16, this.count));
+            int spawned = 0;
+            for (int i = 0; i < spawnCount; i++) {
+                if (!(resolvedType.create(level) instanceof AbstractRecruitEntity recruit)) {
+                    continue;
+                }
+                BlockPos spawnPos = spawnPos(level, player.blockPosition(), player.getDirection(), i);
+                recruit.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, player.getYRot(), 0.0F);
+                recruit.finalizeSpawn(level, level.getCurrentDifficultyAt(spawnPos), MobSpawnType.COMMAND, null, null);
+                recruit.setPersistenceRequired();
+                level.addFreshEntity(recruit);
+                spawned++;
+            }
+            player.sendSystemMessage(Component.translatable("gui.bannermod.admin_recruit_spawn.feedback.spawned", spawned, rawType.getDescription())
+                    .withStyle(ChatFormatting.GREEN));
+        });
     }
 
     @Override

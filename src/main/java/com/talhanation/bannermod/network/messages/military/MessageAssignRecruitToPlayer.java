@@ -28,10 +28,12 @@ public class MessageAssignRecruitToPlayer implements BannerModMessage<MessageAss
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
+        context.enqueueWork(() -> {
+            ServerPlayer serverPlayer = Objects.requireNonNull(context.getSender());
 
-        AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruit, 64.0D);
-        assignRecruitToPlayer(serverPlayer, recruit, newOwner);
+            AbstractRecruitEntity recruit = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(serverPlayer, this.recruit, 64.0D);
+            assignRecruitToPlayer(serverPlayer, recruit, newOwner);
+        });
     }
 
     static boolean assignRecruitToPlayer(ServerPlayer serverPlayer, AbstractRecruitEntity recruit, UUID newOwner) {

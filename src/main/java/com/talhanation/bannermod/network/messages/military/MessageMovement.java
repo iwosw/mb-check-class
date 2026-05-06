@@ -44,7 +44,15 @@ public class MessageMovement implements BannerModMessage<MessageMovement> {
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        dispatchToServer(Objects.requireNonNull(context.getSender()), this.player_uuid, this.group, this.state, this.formation, this.tight);
+        ServerPlayer sender = Objects.requireNonNull(context.getSender());
+        if (!com.talhanation.bannermod.network.throttle.PacketRateLimiter.shared()
+                .tryAcquire(sender.getUUID(), MessageMovement.class)) {
+            RuntimeProfilingCounters.increment("network.rate_limit.dropped.movement");
+            return;
+        }
+        context.enqueueWork(() -> {
+            dispatchToServer(Objects.requireNonNull(context.getSender()), this.player_uuid, this.group, this.state, this.formation, this.tight);
+        });
     }
 
     public static void dispatchToServer(Player sender, UUID playerUuid, UUID group, int state, int formation, boolean tight) {

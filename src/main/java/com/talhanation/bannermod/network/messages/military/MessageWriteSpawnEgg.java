@@ -34,11 +34,13 @@ public class MessageWriteSpawnEgg implements BannerModMessage<MessageWriteSpawnE
     }
 
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        Entity entity = player.serverLevel().getEntity(this.recruit);
-        if (entity instanceof CitizenEntity citizenEntity && citizenEntity.distanceToSqr(player) <= 64.0D * 64.0D) {
-            writeCitizenSpawnEggToHand(player, citizenEntity, InteractionHand.MAIN_HAND);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            Entity entity = player.serverLevel().getEntity(this.recruit);
+            if (entity instanceof CitizenEntity citizenEntity && citizenEntity.distanceToSqr(player) <= 64.0D * 64.0D) {
+                writeCitizenSpawnEggToHand(player, citizenEntity, InteractionHand.MAIN_HAND);
+            }
+        });
     }
 
     public static boolean writeCitizenSpawnEggToHand(ServerPlayer player, CitizenEntity citizenEntity, InteractionHand hand) {

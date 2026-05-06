@@ -170,6 +170,12 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         // via AsyncGroundPathNavigation instead of randomly bumping into walls until
         // chance places it within the 3-block conversion window.
         this.goalSelector.addGoal(2, new com.talhanation.bannermod.ai.citizen.CitizenSeekWorkAreaGoal(this));
+        // HOMEASSIGN-003: at night, walk to the player-assigned home (HOMEASSIGN-002)
+        // and sleep in the bed (or idle if not a bed). Priority 3 keeps work-area
+        // seeking (priority 2) winning during the day; without a home assigned the
+        // goal is dormant.
+        this.goalSelector.addGoal(3, new com.talhanation.bannermod.ai.home.PathfindHomeGoal(
+                this, this::getHomePos));
         this.goalSelector.addGoal(7, new NpcSocietyAnchorGoal(this));
         this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.6D));
         this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -518,6 +524,14 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
         tag.putBoolean("CitizenFemale", this.entityData.get(DATA_FEMALE));
         tag.putBoolean("CitizenBaby", this.entityData.get(DATA_BABY));
         tag.putInt("CitizenGrowUpTicks", this.growUpTicks);
+        if (this.homePos != null) {
+            tag.putInt("HomePosX", this.homePos.getX());
+            tag.putInt("HomePosY", this.homePos.getY());
+            tag.putInt("HomePosZ", this.homePos.getZ());
+        }
+        if (this.homeBuildAreaUUID != null) {
+            tag.putUUID("HomeBuildAreaUUID", this.homeBuildAreaUUID);
+        }
     }
 
     @Override
@@ -576,6 +590,12 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
             this.entityData.set(DATA_BABY, tag.getBoolean("CitizenBaby"));
         }
         this.growUpTicks = tag.contains("CitizenGrowUpTicks") ? tag.getInt("CitizenGrowUpTicks") : 0;
+        if (tag.contains("HomePosX") && tag.contains("HomePosY") && tag.contains("HomePosZ")) {
+            this.homePos = new BlockPos(tag.getInt("HomePosX"), tag.getInt("HomePosY"), tag.getInt("HomePosZ"));
+        } else {
+            this.homePos = null;
+        }
+        this.homeBuildAreaUUID = tag.hasUUID("HomeBuildAreaUUID") ? tag.getUUID("HomeBuildAreaUUID") : null;
     }
 
     // ------------------------------------------------------------------
@@ -680,5 +700,46 @@ public class CitizenEntity extends PathfinderMob implements CitizenCore {
     @Override
     public void setRuntimeFlag(RuntimeFlag flag, boolean value) {
         this.state.setRuntimeFlag(flag, value);
+    }
+
+    // ------------------------------------------------------------------
+    // HOMEASSIGN-002 — manual home anchor (bed / sleeping zone).
+    //
+    // CitizenEntity does not extend AbstractCitizenEntity (despite the
+    // name, it sits on PathfinderMob); we therefore carry our own
+    // BlockPos field, mirror it through CitizenCore-shaped state, and
+    // round-trip via NBT alongside the other citizen state.
+    // ------------------------------------------------------------------
+
+    @Nullable
+    private BlockPos homePos;
+    @Nullable
+    private UUID homeBuildAreaUUID;
+
+    @Nullable
+    public BlockPos getHomePos() {
+        return this.homePos;
+    }
+
+    public void setHomePos(@Nullable BlockPos pos) {
+        this.homePos = pos == null ? null : pos.immutable();
+    }
+
+    public void clearHomePos() {
+        this.homePos = null;
+        this.homeBuildAreaUUID = null;
+    }
+
+    @Nullable
+    public UUID getHomeBuildAreaUUID() {
+        return this.homeBuildAreaUUID;
+    }
+
+    public void setHomeBuildAreaUUID(@Nullable UUID uuid) {
+        this.homeBuildAreaUUID = uuid;
+    }
+
+    public boolean hasHomeAssigned() {
+        return this.homePos != null;
     }
 }

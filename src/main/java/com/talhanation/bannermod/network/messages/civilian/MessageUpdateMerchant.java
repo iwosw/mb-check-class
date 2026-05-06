@@ -37,16 +37,17 @@ public class MessageUpdateMerchant implements BannerModMessage<MessageUpdateMerc
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        Entity entity = player.serverLevel().getEntity(this.merchantUuid);
-        if (entity instanceof MerchantEntity merchant
-                && merchant.isAlive()
-                && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
-            update(merchant, player);
-        }
-
+            Entity entity = player.serverLevel().getEntity(this.merchantUuid);
+            if (entity instanceof MerchantEntity merchant
+                    && merchant.isAlive()
+                    && player.getBoundingBox().inflate(32.0D).intersects(merchant.getBoundingBox())) {
+                update(merchant, player);
+            }
+        });
     }
 
     private void update(MerchantEntity merchant, ServerPlayer player){

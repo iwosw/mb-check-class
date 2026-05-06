@@ -37,18 +37,20 @@ public class MessageRequestPlaceBuilding implements BannerModMessage<MessageRequ
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            return;
-        }
-        if (prefabId == null || pos == null) {
-            return;
-        }
-        if (!BuildingRequestSecurity.canUseWandAt(player, pos)) {
-            return;
-        }
-        Direction facing = Direction.from3DDataValue(this.facingIndex);
-        BuildingPlacementService.placeFor(player, prefabId, pos, facing);
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player == null) {
+                return;
+            }
+            if (prefabId == null || pos == null) {
+                return;
+            }
+            if (!BuildingRequestSecurity.canUseWandAt(player, pos)) {
+                return;
+            }
+            Direction facing = Direction.from3DDataValue(this.facingIndex);
+            BuildingPlacementService.placeFor(player, prefabId, pos, facing);
+        });
     }
 
     @Override

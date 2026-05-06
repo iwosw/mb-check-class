@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.war.registry;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import com.talhanation.bannermod.war.events.WarSyncDirtyTracker;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,7 @@ public class WarPoliticalRegistrySavedData extends SavedData {
     private static final String FILE_ID = "bannermodPoliticalRegistry";
     private static final SavedData.Factory<WarPoliticalRegistrySavedData> FACTORY = new SavedData.Factory<>(WarPoliticalRegistrySavedData::new, WarPoliticalRegistrySavedData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final PoliticalRegistryRuntime runtime;
 
     public WarPoliticalRegistrySavedData() {
@@ -32,11 +34,13 @@ public class WarPoliticalRegistrySavedData extends SavedData {
     }
 
     public static WarPoliticalRegistrySavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "WarPoliticalRegistrySavedData");
         return new WarPoliticalRegistrySavedData(PoliticalRegistryRuntime.fromTag(tag));
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         CompoundTag runtimeTag = this.runtime.toTag();
         tag.put("PoliticalEntities", runtimeTag.getList("PoliticalEntities", Tag.TAG_COMPOUND));
         return tag;

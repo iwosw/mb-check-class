@@ -1,24 +1,15 @@
 package com.talhanation.bannermod.settlement;
 
 import com.talhanation.bannermod.entity.civilian.AbstractWorkerEntity;
-import com.talhanation.bannermod.entity.civilian.AnimalFarmerEntity;
-import com.talhanation.bannermod.entity.civilian.BuilderEntity;
-import com.talhanation.bannermod.entity.civilian.FarmerEntity;
-import com.talhanation.bannermod.entity.civilian.FishermanEntity;
-import com.talhanation.bannermod.entity.civilian.LumberjackEntity;
-import com.talhanation.bannermod.entity.civilian.MerchantEntity;
-import com.talhanation.bannermod.entity.civilian.MinerEntity;
 import com.talhanation.bannermod.entity.civilian.WorkerIndex;
 import com.talhanation.bannermod.entity.civilian.workarea.AbstractWorkAreaEntity;
-import com.talhanation.bannermod.entity.civilian.workarea.AnimalPenArea;
-import com.talhanation.bannermod.entity.civilian.workarea.BuildArea;
 import com.talhanation.bannermod.entity.civilian.workarea.CropArea;
-import com.talhanation.bannermod.entity.civilian.workarea.FishingArea;
 import com.talhanation.bannermod.entity.civilian.workarea.LumberArea;
 import com.talhanation.bannermod.entity.civilian.workarea.MarketArea;
 import com.talhanation.bannermod.entity.civilian.workarea.MiningArea;
 import com.talhanation.bannermod.entity.civilian.workarea.StorageArea;
 import com.talhanation.bannermod.entity.civilian.workarea.WorkAreaIndex;
+import com.talhanation.bannermod.settlement.runtime.SettlementClaimBindingService;
 import com.talhanation.bannermod.governance.BannerModGovernorManager;
 import com.talhanation.bannermod.governance.BannerModGovernorSnapshot;
 import com.talhanation.bannermod.persistence.military.RecruitsClaim;
@@ -68,60 +59,16 @@ public final class BannerModSettlementService {
                                         RecruitsClaimManager claimManager,
                                         BannerModSettlementManager settlementManager,
                                         BannerModGovernorManager governorManager) {
-        refreshClaimsBatch(level, claimManager, settlementManager, governorManager, 0, Integer.MAX_VALUE);
+        SettlementClaimBindingService.refreshAllClaims(level, claimManager, settlementManager, governorManager);
     }
 
-    public static BatchResult refreshClaimsBatch(ServerLevel level,
-                                                 RecruitsClaimManager claimManager,
-                                                 BannerModSettlementManager settlementManager,
-                                                 BannerModGovernorManager governorManager,
-                                                 int startIndex,
-                                                 int maxClaims) {
-        if (level == null || claimManager == null || settlementManager == null) {
-            return BatchResult.completedResult();
-        }
-        long startNanos = System.nanoTime();
-
-        List<RecruitsClaim> claims = new ArrayList<>(claimManager.getAllClaims());
-        claims.removeIf(claim -> claim == null || claim.getUUID() == null);
-        claims.sort(Comparator.comparing(RecruitsClaim::getUUID));
-        int total = claims.size();
-        if (total == 0 || maxClaims <= 0) {
-            if (total == 0) {
-                settlementManager.pruneMissingClaims(Set.of());
-            }
-            return recordBatchResult("settlement.heartbeat.refresh_batch", new BatchResult(0, total == 0 ? 0 : Math.max(0, Math.min(startIndex, total)), total, total == 0), startNanos);
-        }
-
-        int clampedStart = Math.max(0, Math.min(startIndex, total));
-        int endIndex = Math.min(total, clampedStart + maxClaims);
-        for (int i = clampedStart; i < endIndex; i++) {
-            settlementManager.putSnapshot(buildSnapshot(level, claims.get(i), governorManager));
-        }
-
-        if (endIndex >= total) {
-            Set<UUID> activeClaimUuids = new LinkedHashSet<>();
-            for (RecruitsClaim claim : claims) {
-                activeClaimUuids.add(claim.getUUID());
-            }
-            settlementManager.pruneMissingClaims(activeClaimUuids);
-        }
-
-        return recordBatchResult("settlement.heartbeat.refresh_batch", new BatchResult(clampedStart, endIndex, total, endIndex >= total), startNanos);
-    }
-
-    private static BatchResult recordBatchResult(String keyPrefix, BatchResult result, long startNanos) {
-        RuntimeProfilingCounters.recordBatch(keyPrefix, Math.max(0, result.nextIndex() - result.startIndex()), result.totalItems(), System.nanoTime() - startNanos, result.completed());
-        return result;
-    }
-
-    public record BatchResult(int startIndex,
-                              int nextIndex,
-                              int totalItems,
-                              boolean completed) {
-        private static BatchResult completedResult() {
-            return new BatchResult(0, 0, 0, true);
-        }
+    public static SettlementClaimBindingService.BatchResult refreshClaimsBatch(ServerLevel level,
+                                                                               RecruitsClaimManager claimManager,
+                                                                               BannerModSettlementManager settlementManager,
+                                                                               BannerModGovernorManager governorManager,
+                                                                               int startIndex,
+                                                                               int maxClaims) {
+        return SettlementClaimBindingService.refreshClaimsBatch(level, claimManager, settlementManager, governorManager, startIndex, maxClaims);
     }
 
     public static void refreshClaimAt(ServerLevel level,
@@ -129,10 +76,7 @@ public final class BannerModSettlementService {
                                       BannerModSettlementManager settlementManager,
                                       BannerModGovernorManager governorManager,
                                       BlockPos pos) {
-        if (level == null || claimManager == null || settlementManager == null || pos == null) {
-            return;
-        }
-        refreshClaim(level, claimManager, settlementManager, governorManager, claimManager.getClaim(new ChunkPos(pos)));
+        SettlementClaimBindingService.refreshClaimAt(level, claimManager, settlementManager, governorManager, pos);
     }
 
     public static void refreshClaim(ServerLevel level,
@@ -140,18 +84,12 @@ public final class BannerModSettlementService {
                                     BannerModSettlementManager settlementManager,
                                     @Nullable BannerModGovernorManager governorManager,
                                     @Nullable RecruitsClaim claim) {
-        if (level == null || claimManager == null || settlementManager == null) {
-            return;
-        }
-        if (claim == null) {
-            return;
-        }
-        settlementManager.putSnapshot(buildSnapshot(level, claim, governorManager));
+        SettlementClaimBindingService.refreshClaim(level, claimManager, settlementManager, governorManager, claim);
     }
 
-    static BannerModSettlementSnapshot buildSnapshot(ServerLevel level,
-                                                     RecruitsClaim claim,
-                                                     @Nullable BannerModGovernorManager governorManager) {
+    public static BannerModSettlementSnapshot buildSnapshot(ServerLevel level,
+                                                            RecruitsClaim claim,
+                                                            @Nullable BannerModGovernorManager governorManager) {
         return BannerModSettlementSnapshotBuilder.buildSnapshot(level, claim, governorManager);
     }
 
@@ -159,17 +97,7 @@ public final class BannerModSettlementService {
                                  RecruitsClaim claim,
                                  List<AbstractWorkAreaEntity> workAreas,
                                  List<ValidatedBuildingRecord> validatedBuildings) {
-        if (level == null || claim == null) {
-            return;
-        }
-        Map<UUID, UUID> canonicalBindings = buildCanonicalWorkAreaBindings(validatedBuildings, workAreas);
-        Map<UUID, AbstractWorkAreaEntity> areasById = new LinkedHashMap<>();
-        for (AbstractWorkAreaEntity workArea : workAreas) {
-            areasById.put(workArea.getUUID(), workArea);
-        }
-        for (AbstractWorkerEntity worker : workersInClaim(level, claim)) {
-            repairWorkerBinding(worker, workAreas, canonicalBindings, areasById);
-        }
+        SettlementClaimBindingService.repairClaimState(level, claim, workAreas, validatedBuildings);
     }
 
     static List<BannerModSettlementResidentRecord> collectResidents(ServerLevel level,
@@ -254,95 +182,13 @@ public final class BannerModSettlementService {
         return new ArrayList<>(residents.values());
     }
 
-    private static List<AbstractWorkerEntity> workersInClaim(ServerLevel level, RecruitsClaim claim) {
+    public static List<AbstractWorkerEntity> workersInClaim(ServerLevel level, RecruitsClaim claim) {
         return WorkerIndex.instance()
                 .queryInClaim(level, claim)
                 .orElseGet(() -> {
                     RuntimeProfilingCounters.increment("worker.index.fallback_scans");
                     return level.getEntitiesOfClass(AbstractWorkerEntity.class, claimBounds(level, claim), entity -> entity.isAlive() && claim.containsChunk(entity.chunkPosition()));
                 });
-    }
-
-    private static void repairWorkerBinding(AbstractWorkerEntity worker,
-                                            List<AbstractWorkAreaEntity> workAreas,
-                                            Map<UUID, UUID> canonicalBindings,
-                                            Map<UUID, AbstractWorkAreaEntity> areasById) {
-        if (worker == null) {
-            return;
-        }
-        UUID currentBinding = worker.getBoundWorkAreaUUID();
-        if (currentBinding == null) {
-            return;
-        }
-        List<UUID> compatibleAreaIds = new ArrayList<>();
-        for (AbstractWorkAreaEntity workArea : workAreas) {
-            if (isCompatibleWorkArea(worker, workArea) && workArea.canWorkHere(worker)) {
-                compatibleAreaIds.add(workArea.getUUID());
-            }
-        }
-        UUID repairedBinding = resolveRepairBinding(currentBinding, compatibleAreaIds, canonicalBindings);
-        if (repairedBinding == null) {
-            worker.setCurrentWorkArea(null);
-            worker.clearWorkStatus();
-            return;
-        }
-        AbstractWorkAreaEntity currentArea = worker.getCurrentWorkArea();
-        if (currentArea != null && repairedBinding.equals(currentArea.getUUID()) && currentArea.canWorkHere(worker)) {
-            return;
-        }
-        AbstractWorkAreaEntity repairedArea = areasById.get(repairedBinding);
-        if (repairedArea == null || !repairedArea.canWorkHere(worker)) {
-            worker.setCurrentWorkArea(null);
-            worker.clearWorkStatus();
-            return;
-        }
-        worker.setCurrentWorkArea(repairedArea);
-        worker.clearWorkStatus();
-    }
-
-    static UUID resolveRepairBinding(@Nullable UUID currentBinding,
-                                     List<UUID> compatibleAreaIds,
-                                     Map<UUID, UUID> canonicalBindings) {
-        if (currentBinding == null) {
-            return null;
-        }
-        UUID canonicalCurrent = canonicalBindings.get(currentBinding);
-        if (canonicalCurrent != null) {
-            return canonicalCurrent;
-        }
-        if (compatibleAreaIds.contains(currentBinding)) {
-            return currentBinding;
-        }
-        Set<UUID> distinctCanonicalCandidates = new LinkedHashSet<>();
-        for (UUID areaId : compatibleAreaIds) {
-            distinctCanonicalCandidates.add(canonicalBindings.getOrDefault(areaId, areaId));
-        }
-        return distinctCanonicalCandidates.size() == 1 ? distinctCanonicalCandidates.iterator().next() : null;
-    }
-
-    private static boolean isCompatibleWorkArea(AbstractWorkerEntity worker, AbstractWorkAreaEntity workArea) {
-        if (worker instanceof FarmerEntity) {
-            return workArea instanceof CropArea;
-        }
-        if (worker instanceof MinerEntity) {
-            return workArea instanceof MiningArea;
-        }
-        if (worker instanceof LumberjackEntity) {
-            return workArea instanceof LumberArea;
-        }
-        if (worker instanceof FishermanEntity) {
-            return workArea instanceof FishingArea;
-        }
-        if (worker instanceof MerchantEntity) {
-            return workArea instanceof MarketArea;
-        }
-        if (worker instanceof AnimalFarmerEntity) {
-            return workArea instanceof AnimalPenArea;
-        }
-        if (worker instanceof BuilderEntity) {
-            return workArea instanceof BuildArea;
-        }
-        return false;
     }
 
     static List<BannerModSettlementResidentRecord> applyResidentAssignmentSemantics(List<BannerModSettlementResidentRecord> residents,
@@ -713,8 +559,8 @@ public final class BannerModSettlementService {
         );
     }
 
-    private static Map<UUID, UUID> buildCanonicalWorkAreaBindings(Collection<ValidatedBuildingRecord> validatedBuildings,
-                                                                  List<AbstractWorkAreaEntity> workAreas) {
+    public static Map<UUID, UUID> buildCanonicalWorkAreaBindings(Collection<ValidatedBuildingRecord> validatedBuildings,
+                                                                 List<AbstractWorkAreaEntity> workAreas) {
         Map<UUID, UUID> canonicalBindings = new HashMap<>();
         for (ValidatedBuildingRecord record : validatedBuildings) {
             List<AbstractWorkAreaEntity> candidates = compatibleOverlappingWorkAreas(record, workAreas);
@@ -1567,7 +1413,7 @@ public final class BannerModSettlementService {
         return new ChunkPos(0, 0);
     }
 
-    private static AABB claimBounds(ServerLevel level, RecruitsClaim claim) {
+    public static AABB claimBounds(ServerLevel level, RecruitsClaim claim) {
         ChunkPos anchor = resolveAnchorChunk(claim);
         int minChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).min().orElse(anchor.x);
         int maxChunkX = claim.getClaimedChunks().stream().mapToInt(chunkPos -> chunkPos.x).max().orElse(anchor.x);

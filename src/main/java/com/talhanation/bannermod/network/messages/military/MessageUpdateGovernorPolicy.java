@@ -33,16 +33,18 @@ public class MessageUpdateGovernorPolicy implements BannerModMessage<MessageUpda
 
     @Override
     public void executeServerSide(BannerModNetworkContext context) {
-        ServerPlayer player = Objects.requireNonNull(context.getSender());
-        BannerModGovernorPolicy[] policies = BannerModGovernorPolicy.values();
-        if (this.policyOrdinal < 0 || this.policyOrdinal >= policies.length) {
-            return;
-        }
-        BannerModGovernorPolicy policy = policies[this.policyOrdinal];
-        AbstractRecruitEntity recruitEntity = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
-        if (recruitEntity != null) {
-            RecruitEvents.updateGovernorPolicy(player, recruitEntity, policy, this.value);
-        }
+        context.enqueueWork(() -> {
+            ServerPlayer player = Objects.requireNonNull(context.getSender());
+            BannerModGovernorPolicy[] policies = BannerModGovernorPolicy.values();
+            if (this.policyOrdinal < 0 || this.policyOrdinal >= policies.length) {
+                return;
+            }
+            BannerModGovernorPolicy policy = policies[this.policyOrdinal];
+            AbstractRecruitEntity recruitEntity = RecruitMessageEntityResolver.resolveRecruitInInflatedBox(player, this.recruit, 16.0D);
+            if (recruitEntity != null) {
+                RecruitEvents.updateGovernorPolicy(player, recruitEntity, policy, this.value);
+            }
+        });
     }
 
     @Override

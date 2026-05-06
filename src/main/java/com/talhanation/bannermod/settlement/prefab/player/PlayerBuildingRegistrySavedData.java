@@ -1,5 +1,6 @@
 package com.talhanation.bannermod.settlement.prefab.player;
 
+import com.talhanation.bannermod.persistence.SavedDataVersioning;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -17,6 +18,7 @@ public class PlayerBuildingRegistrySavedData extends SavedData {
     private static final String FILE_ID = "bannermodPlayerBuildingRegistry";
     private static final SavedData.Factory<PlayerBuildingRegistrySavedData> FACTORY = new SavedData.Factory<>(PlayerBuildingRegistrySavedData::new, PlayerBuildingRegistrySavedData::load);
 
+    private static final int CURRENT_VERSION = 1;
     private final List<Entry> entries = new ArrayList<>();
 
     public static PlayerBuildingRegistrySavedData get(ServerLevel level) {
@@ -24,6 +26,7 @@ public class PlayerBuildingRegistrySavedData extends SavedData {
     }
 
     public static PlayerBuildingRegistrySavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.migrate(tag, CURRENT_VERSION, "PlayerBuildingRegistrySavedData");
         PlayerBuildingRegistrySavedData data = new PlayerBuildingRegistrySavedData();
         ListTag list = tag.getList("Entries", Tag.TAG_COMPOUND);
         for (Tag raw : list) {
@@ -37,6 +40,7 @@ public class PlayerBuildingRegistrySavedData extends SavedData {
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        SavedDataVersioning.putVersion(tag, CURRENT_VERSION);
         ListTag list = new ListTag();
         for (Entry entry : entries) {
             list.add(entry.toTag());

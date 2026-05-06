@@ -45,28 +45,30 @@ public class MessageUpdateBuildArea implements BannerModMessage<MessageUpdateBui
     }
 
     public void executeServerSide(BannerModNetworkContext context){
-        ServerPlayer player = context.getSender();
-        if(player == null) return;
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if(player == null) return;
 
-        BuildArea buildArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(
-                player,
-                this.uuid,
-                BuildArea.class,
-                area -> WorkAreaAuthoringRules.modifyDecision(true, area.getAuthoringAccess(player))
-        );
-        if (buildArea == null) {
-            return;
-        }
+            BuildArea buildArea = WorkAreaMessageSupport.resolveAuthorizedWorkArea(
+                    player,
+                    this.uuid,
+                    BuildArea.class,
+                    area -> WorkAreaAuthoringRules.modifyDecision(true, area.getAuthoringAccess(player))
+            );
+            if (buildArea == null) {
+                return;
+            }
 
-        String denial = validationDenial();
-        if (denial != null) {
-            player.sendSystemMessage(Component.literal("Build Area update rejected: " + denial));
-            return;
-        }
+            String denial = validationDenial();
+            if (denial != null) {
+                player.sendSystemMessage(Component.literal("Build Area update rejected: " + denial));
+                return;
+            }
 
-        this.update(buildArea, player);
-        player.sendSystemMessage(Component.literal(build ? "Build Area build request accepted." : "Build Area scan settings accepted."));
-        WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), buildArea.blockPosition());
+            this.update(buildArea, player);
+            player.sendSystemMessage(Component.literal(build ? "Build Area build request accepted." : "Build Area scan settings accepted."));
+            WorkAreaMessageSupport.refreshSettlementSnapshot(player.serverLevel(), buildArea.blockPosition());
+        });
     }
 
     private String validationDenial() {
