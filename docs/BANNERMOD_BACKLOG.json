@@ -7606,8 +7606,8 @@
     {
       "id": "TESTRECONNECT-001",
       "title": "Fix reconnectedOwnerRecoversAuthorityAfterOwnershipRoundTrip",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "STATUS.md line 43 mentions known failure. Test is real at src/gametest/java/com/talhanation/bannermod/BannerModDedicatedServerReconnectGameTests.java line 90. The test calls MessageMovement.dispatchToServer directly so it bypasses Issue #1 network thread; failure is independent of ENQUEUE-001 - it is a recoverControl/canWorkHere bug in the ownership round-trip path. Source: review Part B 19.3 / Top-20 #19 / VERIFIED.",
       "scope": [
         "Run ./gradlew runGameTestServer; capture failing assertion + stack trace",
@@ -7620,8 +7620,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Root cause: WorkAreaIndex.onEntityJoin used Entity.chunkPosition(), which is stale (default (0,0)) when EntityJoinLevelEvent fires for freshly-spawned work-area entities. This caused collectWorkAreas to return empty for the just-bound crop area, repairWorkerBinding cleared the worker's binding, and the saved NBT lost 'boundWorkArea'. Fix: index using new ChunkPos(entity.blockPosition()) instead. Verification: ./gradlew compileJava SUCCESS; ./gradlew test SUCCESS; ./gradlew runGameTestServer x15 — reconnectedownerrecoversauthorityafterownershiproundtrip green every run, sibling reconnectedownerregainsrecruitandworkerauthoritywithoutmanualrebinding stays green. Pre-existing unrelated flakes (authoredroutecourier..., fiverecruitformationholdsacrossdimensionteleport, unrelatedclaimstateispreservedwhensiblingclaimisdeleted) are out of scope."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "DEADSEAMS-001",
