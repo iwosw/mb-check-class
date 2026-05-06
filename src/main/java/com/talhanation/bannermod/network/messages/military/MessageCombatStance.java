@@ -49,7 +49,6 @@ public class MessageCombatStance implements BannerModMessage<MessageCombatStance
             return;
         }
         context.enqueueWork(() -> {
-            ServerPlayer sender = Objects.requireNonNull(context.getSender());
             dispatchToServer(sender, this.playerUuid, this.group, this.stance);
         });
     }

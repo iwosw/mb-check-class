@@ -107,19 +107,11 @@ public interface BannerModMessage<T extends BannerModMessage<T>> extends Message
                 new MethodKey(getClass(), methodName, parameterType),
                 BannerModMessage::resolveMethod);
         if (method == ABSENT_METHOD) {
-            // Some packets are one-way and intentionally omit the opposite-side handler.
-            return;
-        }
-        try {
-            method.invoke(this, argument);
-        } catch (NoSuchMethodException missing) {
-            // For the side-handler reflection paths (executeServerSide/executeClientSide),
-            // distinguish between an intentional one-way packet (we never declared the
-            // opposite side) and a typo / refactor bug (we DID declare this side at
-            // registration time but reflection still cannot find the method, e.g.
-            // someone wrote `exectueServerSide`). The latter is what REFLLOG-001 stops
-            // swallowing: the registration scan recorded the declared sides, so a
-            // mismatch here is observable and loud.
+            // REFLLOG-001: distinguish a legitimately one-way packet (we never
+            // declared the opposite side at registration time) from a typo /
+            // refactor bug (we DID declare this side but reflection cannot find
+            // the method, e.g. someone wrote `exectueServerSide`). The first
+            // case stays a silent no-op; the second is loud.
             PacketFlow side = sideForHandler(methodName);
             if (side != null
                     && BannerModMessageSides.isRegistered(getClass())
@@ -129,12 +121,13 @@ public interface BannerModMessage<T extends BannerModMessage<T>> extends Message
                         + methodName + "(" + parameterType.getSimpleName() + ") failed."
                         + " This usually means the handler method was renamed or"
                         + " misspelled (e.g. 'exectueServerSide').";
-                LEGACY_LOGGER.error(msg, missing);
-                throw new IllegalStateException(msg, missing);
+                LEGACY_LOGGER.error(msg);
+                throw new IllegalStateException(msg);
             }
-            // Otherwise: legitimate one-way packet (declared the other side only),
-            // or a non-side method (fromBytes/toBytes) for which we keep the
-            // historical "missing default is a no-op" behaviour.
+            return;
+        }
+        try {
+            method.invoke(this, argument);
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("Cannot access packet method " + methodName + " on " + getClass().getName(), e);
         } catch (InvocationTargetException e) {
