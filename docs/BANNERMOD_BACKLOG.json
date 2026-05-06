@@ -7430,8 +7430,8 @@
     {
       "id": "TESTFUZZ-001",
       "title": "Bad-packet fuzz harness for ~145 packet types",
-      "status": "open",
-      "updated": "2026-05-04",
+      "status": "done",
+      "updated": "2026-05-06",
       "why": "Handlers must not crash on malformed payloads (UUID null, group null, garbage state int). Source: review Part A 11.2 #8 / 13 vector.",
       "scope": [
         "Gametest harness that constructs each packet type with adversarial fields (null UUIDs, sentinel values, oversized strings) and dispatches; asserts no exception escapes the handler",
@@ -7442,8 +7442,14 @@
       ],
       "dependencies": [],
       "progress": [],
-      "verification": [],
-      "evidence": []
+      "verification": [
+        {
+          "date": "2026-05-06",
+          "result": "Harness lives at src/test/java/com/talhanation/bannermod/network/BannerModMessageFuzzHarnessTest.java; classloader scan finds 146 concrete BannerModMessage subclasses (>= EXPECTED_MIN_SUBCLASSES floor) and dispatches 5 adversarial variants each via executeServerSide on a JDK-Proxy IPayloadContext stub. ./gradlew compileJava and ./gradlew test both green on commit a290a83b. 73 handlers found to leak NullPointerException on null sender / null UUID; gated in KNOWN_LEAKY_HANDLERS with a TODO(FUZZHARDEN-001) marker and tracked under follow-up FUZZHARDEN-001 added in the same commit."
+        }
+      ],
+      "evidence": [],
+      "doneDate": "2026-05-06"
     },
     {
       "id": "TESTNETTHREAD-001",
